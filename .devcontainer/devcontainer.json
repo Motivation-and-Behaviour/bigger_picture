@@ -6,9 +6,9 @@
   "image": "ghcr.io/rocker-org/devcontainer/r-ver:4",
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
-    "ghcr.io/rocker-org/devcontainer-features/pandoc:1": {},
+    // "ghcr.io/rocker-org/devcontainer-features/pandoc:1": {},
     "ghcr.io/rocker-org/devcontainer-features/r-packages:1": {
-      "packages": "prereg",
+      "packages": "glue, crsh/papaja",
       "installSystemRequirements": true
     }
   },
@@ -33,7 +33,8 @@
         "ms-vscode.live-server"
       ]
     }
-  }
+  },
+  "postCreateCommand": "Rscript -e 'tinytex::install_tinytex()'"
   // "mounts": [
   // 	"source=source,target=target,type=bind,consistency=cached"
   // ]
