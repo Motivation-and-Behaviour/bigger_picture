@@ -1,22 +1,82 @@
 ---
 title           : "Seeing the Bigger Picture: Exploring Children's Screen Time and Outcomes through Collaborative Data Analysis"
 shorttitle      : "Bigger Picture"
-date            : "`r Sys.setlocale('LC_TIME', 'C'); format(Sys.time(), '%d\\\\. %B %Y')`"
 
 author: 
-  - name        : First Author
+  - name        : Taren Sanders
     affiliation : 1
-  - name        : Ernst-August Doelle
-    affiliation : "1,2"
+  - name        : James Conigrave
+    affiliation : 2
+  - name        : Michael Noetel
+    affiliation : 3
+  - name        : Rebecca Pagano
+    affiliation : 1
+  - name        : Chloe Gordon
+    affiliation : 1
+  - name        : Bridget Booker
+    affiliation : 1
+  - name        : Chris Lonsdale
+    affiliation : 1
+  - name        : Aliza Werner-Seidler
+    affiliation : 4
+  - name        : Leon Straker
+    affiliation : 5
+  - name        : Dylan Cliff
+    affiliation : 6
 
 affiliation:
   - id          : 1
-    institution : Wilhelm-Wundt-University
+    institution : Australian Catholic University
   - id          : 2
-    institution : Konstanz Business School
+    institution : La Trobe University
+  - id          : 3
+    institution : University of Queensland
+  - id          : 4
+    institution : Black Dog Institute
+  - id          : 5
+    institution : Curtin University
+  - id          : 6
+    institution : University of Wollongong
 
-output: prereg::prereg_pdf
+bibliography    : "references.bib"
+
+draft           : yes
+floatsintext    : yes
+
+output: 
+  papaja::apa6_pdf: 
+    default
+  papaja::apa6_word:
+    default
+  github_document:
+    html_preview: false
+
+header-includes:
+  - \pagenumbering{gobble}
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r comment-fn}
+cmt_num <- 0
+word_comment <- function(highlight = "",
+                         comment = "",
+                         author = "Taren Sanders",
+                         time = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ"),
+                         id = cmt_num) {
+  if (isTRUE(knitr:::pandoc_to() == "docx")) {
+    cmt_str <-
+      glue::glue('[{comment}]{{.comment-start id="{id}" author="{author}" \\
+      date="{time}"}} {highlight} []{{.comment-end id="{id}"}}')
+  } else {
+    cmt_str <- glue::glue("{highlight} {{>> {comment} <<}}")
+  }
+  assign("cmt_num", cmt_num + 1, envir = .GlobalEnv)
+  return(cmt_str)
+}
+```
 
 # Study Information
 
@@ -27,22 +87,52 @@ Example: Effect of sugar on brownie tastiness. -->
 
 `r rmarkdown::metadata$title`
 
+## Authors
+
+```{r author-names, results='asis'}
+core_team <- sapply(rmarkdown::metadata$author, function(x) x$name)
+cat(paste(core_team, collapse = ", "))
+```
+
+Data contributors will be invited to co-author resulting publications (up to two authors per team).
 
 ## Description
 <!-- Please give a brief description of your study, including some background, the purpose of the of the study, or broad research questions. The description should be no longer than the length of an abstract. It can give some context for the proposed study, but great detail is not needed here for your preregistration.
 
 Example: Though there is strong evidence to suggest that sugar affects taste preferences, the effect has never been demonstrated in brownies. Therefore, we will measure taste preference for four different levels of sugar concentration in a standard brownie recipe to determine if the effect exists in this pastry. -->
 
-Enter your response here.
+This study will pool and analyze individual-level data from multiple research projects to clarify how screen time affects children's and adolescents' learning, mental health, and behavior.
+By uniting data from diverse samples, our team can pinpoint the specific amount of screen use (i.e., the dose) that may lead to either positive or negative outcomes, as well as how these relationships vary by characteristics such as age and gender.
+By examining the type and/or content of the screen time, we can also get a better understanding of how engaging with screens may impact on children's development.
+We will invite authors of relevant studies to contribute their de-identified data or share results through secure remote analysis (DataSHIELD).
+After harmonizing the data, piecewise regression models will be applied to identify thresholds where screen time use notably shifts from beneficial to harmful.
+The findings of this IPD meta-analysis will be translated into an evidence toolkit for parents, teachers, and students.
 
+We aim to follow answer these research questions:
+
+1. What is the impact of screen use on children's learning, cognitive abilities, mental health, wellbeing, and behaviour?
+2. Does the relationship vary by different types of screen use (e.g., content or type of device)?
+3. Is there a specific duration at which notable harm/benefit becomes apparent?
+4. Does the relationship/duration vary by where the screen time occurs (i.e., home vs school)?
+5. Does the relationship/duration vary by characteristics of the children?
 
 ## Hypotheses
 <!-- List specific, concise, and testable hypotheses. Please state if the hypotheses are directional or non-directional. If directional, state the direction. A predicted effect is also appropriate here. If a specific interaction or moderation is important to your research, you can list that as a separate hypothesis.
 
 Example: If taste affects preference, then mean preference indices will be higher with higher concentrations of sugar. -->
 
-Enter your response here.
+We hypothesise the `r word_comment("following", "Comments or suggested changes to these hypothese are very welcome")`:
 
+1. [RQ1] Overall screen use will have a small but statistically significant negative association with children's learning, cognitive abilities, mental health, wellbeing, and behaviour.
+2. [RQ2] The type of screen time (i.e., the content or type of device) will moderate the relationship between screen use and children's outcomes.
+   a. Educational content (i.e., screen time intended to educate children) will have a small-to-moderate positive associations with children's learning and cognitive abilities, but no association with mental health, wellbeing, or behaviour.
+   b. Non-interactive entertainment content (e.g., television) will have a small negative association with children's learning, cognitive abilities, mental health, wellbeing, and behaviour.
+   c. Interactive entertainment content (e.g., video games) will have a small negative association with children's mental health, wellbeing, and behaviour, but a negligible association with learning and cognitive abilities.
+3. [RQ3] There will be a threshold of screen time at which notable harm/benefit becomes apparent, and this threshold will vary by the type of content.
+4. [RQ4] The relationship between screen time and children's outcomes will not be significantly moderated by the location of the screen time (i.e., home vs school), after adjusting for content.
+5. [RQ5] The relationship between screen time and children's outcomes will be moderated by characteristics of the children. Specifically:
+   a. Age will moderate the relationship between screen time and children's outcomes, with `r word_comment("younger children", "I'm actually not very confident with this one. From a theory view, it seems like younger children should be more susceptible, but in the few cases where we could look at age in the umbrella review it was pretty mixed or mostly older kids. Maybe we just don't include this hypothesis.")` experiencing a stronger associations.
+   b. Child gender will moderate the relationship between some forms of screen time and children's outcomes, with stronger negative effects for girls' mental health and wellbeing outcomes than boys for screen time that encourages social comparisons.
 
 # Design Plan
 <!-- In this section, you will be asked to describe the overall design of your study. Remember that this research plan is designed to register a single study, so if you have multiple experimental designs, please complete a separate preregistration. -->
@@ -50,26 +140,15 @@ Enter your response here.
 
 ## Study type
 
-**Experiment**. A researcher randomly assigns treatments to study subjects, this includes field or lab experiments. This is also known as an intervention experiment and includes randomized controlled trials.
+**Other** `r word_comment(comment= "Note: this is a dropdown")`
 
-**Observational Study**. Data is collected from study subjects that are not randomly assigned to a treatment. This includes surveys, natural experiments, and regression discontinuity designs.
-
-**Meta-Analysis**. A systematic review of published studies.
-
-**Other**. Please explain.
+This will be an individual participant data (IPD) meta-analysis.
 
 
 ## Blinding
 <!-- Blinding describes who is aware of the experimental manipulations within a study. Select all that apply. Is there any additional blinding in this study? -->
 
 No blinding is involved in this study.
-
-For studies that involve human subjects, they will not know the treatment group to which they have been assigned.
-
-Personnel who interact directly with the study subjects (either human or non-human subjects) will not be aware of the assigned treatments.
-
-Personnel who analyze the data collected from the study are not aware of the treatment applied to any given group.
-
 
 ## Study design
 <!-- Describe your study design. Examples include two-group, factorial, randomized block, and repeated measures. Is it a between (unpaired), within-subject (paired), or mixed design? Describe any counterbalancing required. Typical study designs for observation studies include cohort, cross sectional, and case-control studies.
@@ -78,7 +157,7 @@ This question has a variety of possible answers. The key is for a researcher to 
 
 Example: We have a between subjects design with 1 factor (sugar by mass) with 4 levels. -->
 
-Enter your response here.
+Enter your response here. [@sandersUmbrellaReviewBenefits2023]
 
 
 ## Randomization
@@ -86,7 +165,7 @@ Enter your response here.
 
 Example: We will use block randomization, where each participant will be randomly assigned to one of the four equally sized, predetermined blocks. The random number list used to create these four blocks will be created using the web applications available at https://random.org. -->
 
-Enter your response here.
+There is no randomization involved in this study.
 
 
 # Sampling Plan
@@ -253,11 +332,6 @@ Enter your response here.
 
 Enter your response here.
 
+\newpage
 
 # References
-## 
-\vspace{-2pc}
-\setlength{\parindent}{-0.5in}
-\setlength{\leftskip}{-1in}
-\setlength{\parskip}{8pt}
-\noindent
