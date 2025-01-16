@@ -8,7 +8,7 @@
   "features": {
     // "ghcr.io/rocker-org/devcontainer-features/pandoc:1": {},
     "ghcr.io/rocker-org/devcontainer-features/r-packages:1": {
-      "packages": "glue, crsh/papaja",
+      "packages": "glue, tarensanders/prereg, crsh/papaja",
       "installSystemRequirements": true
     }
   },
@@ -23,6 +23,10 @@
         "REditorSupport.r-lsp", // R Extension for Visual Studio Code
         "RDebugger.r-debugger", // R Debugger for VS Code
         "christian-kohler.path-intellisense", // Visual Studio Code plugin that autocompletes filenames
+        "streetsidesoftware.code-spell-checker", // Spelling checker for source code
+        "streetsidesoftware.code-spell-checker-australian-english", // Australian English dictionary for code spell checker
+        "streetsidesoftware.code-spell-checker-scientific-terms", // Scientific terms dictionary for code spell checker
+        "DavidAnson.vscode-markdownlint", // Markdown linting and style checking for Visual Studio Code
         "ionutvmi.path-autocomplete",
         "GitHub.vscode-pull-request-github",
         "GitHub.copilot",
