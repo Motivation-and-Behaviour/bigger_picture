@@ -44,7 +44,7 @@ draft           : yes
 floatsintext    : yes
 
 output: 
-  papaja::apa6_pdf: 
+  prereg::prereg_pdf:
     default
   papaja::apa6_word:
     default
@@ -101,11 +101,11 @@ Data contributors will be invited to co-author resulting publications (up to two
 
 Example: Though there is strong evidence to suggest that sugar affects taste preferences, the effect has never been demonstrated in brownies. Therefore, we will measure taste preference for four different levels of sugar concentration in a standard brownie recipe to determine if the effect exists in this pastry. -->
 
-This study will pool and analyze individual-level data from multiple research projects to clarify how screen time affects children's and adolescents' learning, mental health, and behavior.
+This study will pool and analyze individual-level data from multiple research projects to clarify how screen time affects children's and adolescents' learning, mental health, wellbeing, and behaviour.
 By uniting data from diverse samples, our team can pinpoint the specific amount of screen use (i.e., the dose) that may lead to either positive or negative outcomes, as well as how these relationships vary by characteristics such as age and gender.
 By examining the type and/or content of the screen time, we can also get a better understanding of how engaging with screens may impact on children's development.
 We will invite authors of relevant studies to contribute their de-identified data or share results through secure remote analysis (DataSHIELD).
-After harmonizing the data, piecewise regression models will be applied to identify thresholds where screen time use notably shifts from beneficial to harmful.
+After harmonising the data, piecewise regression models will be applied to identify thresholds where screen time use notably shifts from beneficial to harmful.
 The findings of this IPD meta-analysis will be translated into an evidence toolkit for parents, teachers, and students.
 
 We aim to follow answer these research questions:
@@ -165,7 +165,7 @@ We will include both cross-sectional and longitudinal studies in the pooled anal
 
 Example: We will use block randomization, where each participant will be randomly assigned to one of the four equally sized, predetermined blocks. The random number list used to create these four blocks will be created using the web applications available at https://random.org. -->
 
-There is no randomization involved in this study.
+There is no randomisation involved in this study.
 
 
 # Sampling Plan
@@ -210,7 +210,7 @@ We will identify potentially relevant datasets in two ways:
 To be included in the pooled analysis, datasets must meet the following criteria:
 
 1. Have quantitatively measured screen time exposure.
-   Given the increasing evidence that the content of screen time is perhaps the most important factor in determining impact, we will only include studies that have a deaggregate measure of screen time (i.e., they have measured the content or the type as a proxy for content).
+   Given the increasing evidence that the content of screen time is perhaps the most important factor in determining impact, we will only include studies that have a disaggregate measure of screen time (i.e., they have measured the content or the type as a proxy for content).
 2. Have quantitatively measured at least one outcome related to children's learning, cognitive abilities, mental health, wellbeing, or behaviour. `r word_comment(comment= "This is probably too broad. Do we want to a priori pick outcomes for these?")`
 3. Have a mean sample age older than 5 years and younger than 18 years.
    That is, a sample who are predominantly school-aged children and adolescents.
@@ -220,7 +220,7 @@ To be included in the pooled analysis, datasets must meet the following criteria
 
 We expect that the process of harmonising and collating data will be very time-consuming, and the time required to complete this process will grow linearly with the number of datasets included.
 Therefore, we may not be able to include all datasets that are identified, and instead need to prioritise datasets that are most likely to add value.
-To do this, we will calculate the expected value of each dataset based on the followling criteria:
+To do this, we will calculate the expected value of each dataset based on the following criteria:
 
 1. The size of the sample.
 2. The extent to which the dataset provides underrepresented outcomes.
@@ -282,7 +282,7 @@ where:
 
   Thus, $S_i$ is large if and only if *both* $O_i$ and $A_i$ are large.
 
-Finally, $\alpha$, $\beta$, $\gamma$, and $\delta$ are *weights* that reflect how strongly we prioritize each component.
+Finally, $\alpha$, $\beta$, $\gamma$, and $\delta$ are *weights* that reflect how strongly we prioritise each component.
 For example:
 
 - $\alpha$ captures our emphasis on sample size,
@@ -303,7 +303,7 @@ We will submit these letters of agreement to the lead institution's Human Resear
 Once ethics approval has been granted, we will ask authors to provide their de-identified data.
 We will give authors two options for sharing their data:
 
-1. Securely sharing the deidentified raw data files with us directly. This method is less work for contributors but requires them to have ethical approval that allows for data sharing.
+1. Securely sharing the de-identified raw data files with us directly. This method is less work for contributors but requires them to have ethical approval that allows for data sharing.
 2. Setting up a [DataSHIELD](https://www.datashield.org/) server, an open-source solution to federated analysis where the individual-level data can be analysed remotely but without risking disclosure.
    Analysis code is sent from a central machine to each of the servers, and only non-disclosive summary statistics are returned.
    This software allows for IPDs to be conducted without accessing the data directly, which can meet the requirements of many ethics boards.
@@ -349,8 +349,7 @@ However, as we intend to conduct further analyses on this dataset in the future,
 
 Example: We manipulated the percentage of sugar by mass added to brownies. The four levels of this categorical variable are: 15%, 20%, 25%, or 40% cane sugar by mass. -->
 
-Enter your response here.
-
+There are no manipulated variables in this study.
 
 ## Measured variables
 <!-- Describe each variable that you will measure. This will include outcome measures, as well as any predictors or covariates that you will measure. You do not need to include any variables that you plan on collecting if they are not going to be included in the confirmatory analyses of this study.
@@ -359,8 +358,51 @@ Observational studies and meta-analyses will include only measured variables. As
 
 Example: The single outcome variable will be the perceived tastiness of the single brownie each participant will eat. We will measure this by asking participants ‘How much did you enjoy eating the brownie' (on a scale of 1-7, 1 being 'not at all', 7 being 'a great deal') and 'How good did the brownie taste' (on a scale of 1-7, 1 being 'very bad', 7 being 'very good'). -->
 
-Enter your response here.
+The exact variables that will be measured will depend on the datasets that are included in the pooled analysis, and the extent to which they are able to be harmonised.
+However we expect to include at least the following variables:
 
+### Measures of screen use
+
+While there is no consensus or standard tool for measuring screen, several survey tools have gained popularity in the literature. `r word_comment(comment= "For team to consider: should we be including studies that use time use diaries? This would make harmonising more difficult, but lots of studies have used MARCA etc as their measure.")`
+These include the Screen Based Media Use Scale [@houghtonVirtuallyImpossibleLimiting2015], and Youth Risk Behavior Survey [@schmitzReliabilityValidityBrief2004], and time use diary methods such as the Multimedia Activity Recall for Children and Adolescents [@ridleyMultimediaActivityRecall2006].
+From these, we can predict some of the measures we expect to be included in the pooled dataset.
+
+* **Total screen time**: As an aggregated measure of screen time.
+  We expect most studies to have already calculated this value, but if not, we will calculate it as the sum of time spent on different devices or types.
+* **Video game**: Time spent playing video games.
+* **Television**: Time spent watching television.
+* **Mobile device**: Time spent on mobile devices, such as phones and tablets.
+* **Social media**: Time spent on social media.
+* **Computer**: Time spent on computers.
+* **Educational time**: Time spent on using devices for educational purposes, such as to complete homework.
+
+We will harmonise all measures of screen use to a common unit (average hours per day).
+In addition, we will record the the tool used to `r word_comment("test", "or adjust?")` for systematic differences across tools.
+
+Note that we will not include measures which only indicate 'problematic' screen use, or have only a dichotomous measure of screen use (e.g., 'meets guidelines' or 'does not meet guidelines').
+
+### Outcome measures
+
+`r word_comment(comment= "Outcomes are the part of this I am most concerned about. We need to balance the extent to which we can meaningfully combine measures, with the extent to which we can reasonably expect to find datasets. E.g., if we limit 'beahviour' to the SDQ, we may not find enough datasets. But if we include all measures of behaviour, we may not be able to meaningfully combine them. Thoughts on how we address this are welcome.")`
+We will include a range of outcome measures related to children's learning, cognitive abilities, mental health, wellbeing, and behaviour.
+After identifying datasets, we will examine the measures used in these datasets and determine which measures can be harmonised and have sufficient data before contacting authors.
+
+The below outline some of the measures we expect to be included.
+
+* **Learning**: Measures of academic performance, such as standardised test scores, grades, or teacher ratings.
+* **Cognitive abilities**: Measures of cognitive function, executive function, or memory.
+* **Mental health**: Measures of mental health, such as measures of depression and anxiety.
+* **Behaviour**: Measures of behavioural problems in children, such as the Strengths and Difficulties Questionnaire [@goodmanStrengthsDifficultiesQuestionnaire1997], or the Child Behaviour Checklist [@achenbachManualASEBASchoolage2001] `r word_comment(".", "Would be good to include some positive behaviour measures (prosociality) too, if feasible.")`
+* **Wellbeing**: Measures of subjective `r word_comment("wellbeing", "As always, I'm not really confident on what wellbeing really means. We might consider dropping it.")`.
+
+### Covariates and moderators of effects
+
+We will also ask authors to provide data on a range of covariates and moderators that may influence the relationship between screen time and children's outcomes, if they were measured in the study.
+These include:
+
+* Child demographics, such as age, gender, and ethnicity.
+* Socioeconomic status, such as parental education and income.
+* Location of screen time, such as home or school.
 
 ## Indices
 <!-- If any measurements are  going to be combined into an index (or even a mean), what measures will you use and how will they be combined? Include either a formula or a precise description of your method. If your are using a more complicated statistical method to combine measures (e.g. a factor analysis), you can note that here but describe the exact method in the analysis plan section.
@@ -369,7 +411,8 @@ If you are using multiple pieces of data to construct a single variable, how wil
 
 Example: We will take the mean of the two questions above to create a single measure of 'brownie enjoyment.'  -->
 
-Enter your response here.
+The nature of this study makes it hard to predict which measures will be combined in an index, beyond aggregated total screen time.
+However, we will publish a codebook which includes the variables and how to create them as part of the harmonisation process, which will be prior to analysis.
 
 
 # Analysis Plan
@@ -441,3 +484,9 @@ Enter your response here.
 \newpage
 
 # References
+## 
+\vspace{-2pc}
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{-1in}
+\setlength{\parskip}{8pt}
+\noindent
