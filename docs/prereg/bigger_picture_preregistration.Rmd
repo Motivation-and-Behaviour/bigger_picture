@@ -46,7 +46,7 @@ floatsintext    : yes
 output: 
   prereg::prereg_pdf:
     default
-  papaja::apa6_word:
+  word_document:
     default
   github_document:
     html_preview: false
