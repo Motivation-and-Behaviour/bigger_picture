@@ -98,11 +98,11 @@ Data contributors will be invited to co-author resulting publications (up to two
 This study will pool and analyze individual-level data from multiple research projects to clarify how screen time affects children's and adolescents' learning, mental health, wellbeing, and behaviour.
 By uniting data from diverse samples, our team can pinpoint the specific amount of screen use (i.e., the dose) that may lead to either positive or negative outcomes, as well as how these relationships vary by characteristics such as age and gender.
 By examining the type and/or content of the screen time, we can also get a better understanding of how engaging with screens may impact on children's development.
-We will invite authors of relevant studies to contribute their de-identified data or share results through secure remote analysis (DataSHIELD).
-After harmonising the data, piecewise regression models will be applied to identify thresholds where screen time use notably shifts from beneficial to harmful.
+We will invite authors of relevant studies to contribute their de-identified data or share results through secure remote analysis (via DataSHIELD).
+After harmonising the data, piecewise regression models will be applied to identify thresholds where screen time use shifts from beneficial to harmful.
 The findings of this IPD meta-analysis will be translated into an evidence toolkit for parents, teachers, and students.
 
-We aim to follow answer these research questions:
+We aim to answer these research questions:
 
 1. What is the impact of screen use on children's learning, cognitive abilities, mental health, wellbeing, and behaviour?
 2. Does the relationship vary by different types of screen use (e.g., content or type of device)?
