@@ -105,10 +105,10 @@ The findings of this IPD meta-analysis will be translated into an evidence toolk
 We aim to answer these research questions:
 
 1. What is the impact of screen use on children's learning, cognitive abilities, mental health, wellbeing, and behaviour?
-2. Does the relationship vary by different types of screen use (e.g., content or type of device)?
-3. Is there a specific duration at which notable harm/benefit becomes apparent?
+2. Does the relationship between screen use and outcomes vary by different types of screen use (e.g., content or type of device)?
+3. Is there a specific screen use duration at which notable harm/benefit becomes apparent, and does it vary by type of screen use?
 4. Does the relationship/duration vary by where the screen time occurs (i.e., home vs school)?
-5. Does the relationship/duration vary by characteristics of the children?
+5. Does the relationship/duration vary by characteristics of the children (i.e., age, gender, socioeconomic status)?
 
 ## Hypotheses
 
@@ -116,15 +116,19 @@ We hypothesise the `r word_comment("following", "Comments or suggested changes t
 
 1. [RQ1] Overall screen use will have a small but statistically significant negative association with children's learning, cognitive abilities, mental health, wellbeing, and behaviour.
 2. [RQ2] The type of screen time (i.e., the content or type of device) will moderate the relationship between screen use and children's outcomes.
-   a. Educational content (i.e., screen time intended to educate children) will have a small-to-moderate positive associations with children's learning and cognitive abilities, but no association with mental health, wellbeing, or behaviour.
-   b. Non-interactive entertainment content (e.g., television) will have a small negative association with children's learning, cognitive abilities, mental health, wellbeing, and behaviour.
+   a. Educational content (i.e., screen time intended to educate children) will have a small-to-moderate positive association with children's learning and cognitive abilities, but no association with mental health, wellbeing, or behaviour.
+   b. Non-interactive entertainment content (e.g., television/streaming) will have a small negative association with children's learning, cognitive abilities, mental health, wellbeing, and behaviour.
    c. Interactive entertainment content (e.g., video games) will have a small negative association with children's mental health, wellbeing, and behaviour, but a negligible association with learning and cognitive abilities.
+   d. Social media will have a small to moderate negative association with childrens' mental health and wellbeing, but no association with learning, cognitive abilities, or behaviour.
 3. [RQ3] There will be a threshold of screen time at which notable harm/benefit becomes apparent, and this threshold will vary by the type of content.
 4. [RQ4] The relationship between screen time and children's outcomes will not be significantly moderated by the location of the screen time (i.e., home vs school), after adjusting for content.
 5. [RQ5] The relationship between screen time and children's outcomes will be moderated by characteristics of the children.
    Specifically:
-   a. Age will moderate the relationship between screen time and children's outcomes, with `r word_comment("younger children", "I'm actually not very confident with this one. From a theory view, it seems like younger children should be more susceptible, but in the few cases where we could look at age in the umbrella review it was pretty mixed or mostly older kids. Maybe we just don't include this hypothesis.")` experiencing a stronger associations.
-   b. Child gender will moderate the relationship between some forms of screen time and children's outcomes, with stronger negative effects for girls' mental health and wellbeing outcomes than boys for screen time that encourages social comparisons.
+   a. Age will moderate the relationship between screen time and children's outcomes. 
+   However, given the inconsistency in previous findings on this relationship, we do not make a specific prediction about the direction of this moderation.
+   Instead, this hypothesis will be considered exploratory.
+   b. Child gender will moderate the relationship between some forms of screen time and children's outcomes: for social media, there will be stronger negative effects for girls' mental health and wellbeing outcomes than boys.
+   c. Socioeconomic status will moderate the relationship between screen time and children's outcomes, with children from lower socioeconomic backgrounds experiencing stronger negative effects of screen time on educational, mental health, and behaviour outcomes.
 
 # Design Plan
 
@@ -155,10 +159,11 @@ There is no randomisation involved in this study.
 
 ## Explanation of existing data
 
-We will be collating datasets from multiple existing studies on children's screen time.
-The data will be de-identified, and shared with the research team either through secure transfer of data files or through secure remote analysis (DataSHIELD).
+We will be collating datasets from multiple existing studies on children's screen time and outcomes of interest.
+The data will be de-identified, and shared with the research team either through secure transfer of data files or through secure remote analysis (using DataSHIELD).
 The research team may contribute their data to the pooled analysis, and therefore have prior knowledge of these data.
 But, as the final analysis will be based on the pooled data, this prior knowledge does not meaningfully affect the nature of the analysis.
+We will include a sensitivity analysis that excludes these datasets to ensure that the results are robust to this prior knowledge.
 
 ## Data collection procedures
 
@@ -176,10 +181,10 @@ We will identify potentially relevant datasets in two ways:
 To be included in the pooled analysis, datasets must meet the following criteria:
 
 1. Have quantitatively measured screen time exposure.
-   Given the increasing evidence that the content of screen time is perhaps the most important factor in determining impact, we will only include studies that have a disaggregate measure of screen time (i.e., they have measured the content or the type as a proxy for content).
+   Given the increasing evidence that the content of screen time is an important factor in determining impact, we will only include studies that have a disaggregate measure of screen time (i.e., they have measured the content [e.g., social media], or the type as a proxy for content[e.g., TV as ‘video’]).
 2. Have quantitatively measured at least one outcome related to children's learning, cognitive abilities, mental health, wellbeing, or behaviour. `r word_comment(comment= "This is probably too broad. Do we want to a priori pick outcomes for these?")`
-3. Have a mean sample age older than 5 years and younger than 18 years.
-   That is, a sample who are predominantly school-aged children and adolescents.
+3. Have a mean sample age younger than 18 years.
+   That is, a sample who are predominantly pre-school or school-aged children and adolescents.
    If a mean study age is not available, we will use the midpoint of the age range.
 
 #### Prioritising datasets
@@ -278,7 +283,7 @@ We will give authors two options for sharing their data:
 
 Before conducting the analysis, we will harmonise the data to ensure variables are consistent across datasets.
 We will follow a process used in other federated analyses [@pinotdemoiraEUChildCohort2021].
-We will pilot the harmonisation process on a subset of datasets that we have direct access to to ensure that the process is feasible and that the data can be harmonised in a meaningful way.
+To ensure that the process is feasible and that the data can be harmonised in a meaningful way, we will pilot the harmonisation process on a subset of datasets that we can directly access.
 We will then ask data contributors who are using DataSHIELD to harmonise their data in the same way.
 To validate that this has happened correctly, we will provide a script to contributors that will check that the data matches expectations.
 This harmonised data can then be added to a DataShield server for analysis.
@@ -289,7 +294,7 @@ Given the volume of research on children's screen time, we anticipate that we wi
 
 ## Sample size rationale
 
-Given that we expect to recruit a very large sample, we are not concerned about statistical power.
+Given that we expect to recruit a very large sample (>10,000 participants), we are not concerned about statistical power.
 
 ## Stopping rule
 
@@ -315,15 +320,15 @@ From these, we can predict some of the measures we expect to be included in the 
 
 - **Total screen time**: As an aggregated measure of screen time.
   We expect most studies to have already calculated this value, but if not, we will calculate it as the sum of time spent on different devices or types.
-- **Video game**: Time spent playing video games.
+- **Video/e-games**: Time spent playing video/e-games.
 - **Television**: Time spent watching television.
-- **Mobile device**: Time spent on mobile devices, such as phones and tablets.
+- **Mobile device**: Time spent on mobile devices, such as smartphones and tablets.
 - **Social media**: Time spent on social media.
-- **Computer**: Time spent on computers.
+- **Computer**: Time spent on laptop or desktop general-purpose computers.
 - **Educational time**: Time spent on using devices for educational purposes, such as to complete homework.
 
 We will harmonise all measures of screen use to a common unit (average hours per day).
-In addition, we will record the the tool used to `r word_comment("test", "or adjust?")` for systematic differences across tools.
+In addition, we will record the tool used and include it as a covariate to adjust for any systematic differences across tools.
 
 Note that we will not include measures which only indicate 'problematic' screen use, or have only a dichotomous measure of screen use (e.g., 'meets guidelines' or 'does not meet guidelines').
 
@@ -365,13 +370,13 @@ We will examine the extent to which these thresholds vary by the type or content
 
 ## Transformations
 
-The nature of this study makes it hard to predict which measures will need to be transformed or categorised.
+The nature of this study, where data collection is outside of our control, makes it hard to predict which measures and what transformations or re-codes will be necessary for harmonisation.
 However, we will publish a codebook which includes the variables and how to create them as part of the harmonisation process, which will be prior to analysis.
 
 ## Inference criteria
 
 We will use the standard p<0.05 criteria for determining statistical significance.
-We will report all tests conducted, and will not adjust for multiple comparisons.
+We will report all tests conducted and will not adjust for multiple comparisons.
 
 ## Data exclusion
 
