@@ -489,11 +489,13 @@ accounting not only for the number of comparisons within a tier but also
 for the number of higher-level comparisons leading into it.
 
 For each individual hypothesis, the total number of comparisons
-($k_{total}$) used to compute the adjusted q-value will reflect: -
-$k_0$: the number of primary outcome families tested, - $k_{1,f}$: the
-number of content or moderator components within the relevant family, -
-$k_{2,f}$: the number of specific items or interaction terms within that
-component.
+($k_{total}$) used to compute the adjusted q-value will reflect:
+
+- $k_0$: the number of primary outcome families tested,
+- $k_{1,f}$: the number of content or moderator components within the
+  relevant family,
+- $k_{2,f}$: the number of specific items or interaction terms within
+  that component.
 
 Thus, each q-value reflects the **full testing burden up to that
 point**, not just the number of tests in the immediate family.

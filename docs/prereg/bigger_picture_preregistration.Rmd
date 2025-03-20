@@ -95,7 +95,7 @@ Data contributors will be invited to co-author resulting publications (up to two
 
 ## Description
 
-This study will pool and analyze individual-level data from multiple research projects to clarify how screen time affects children's and adolescents' learning, mental health, wellbeing, and behaviour.
+This study will pool and analyse individual-level data from multiple research projects to clarify how screen time affects children's and adolescents' learning, mental health, wellbeing, and behaviour.
 By uniting data from diverse samples, our team can pinpoint the specific amount of screen use (i.e., the dose) that may lead to either positive or negative outcomes, as well as how these relationships vary by characteristics such as age and gender.
 By examining the type and/or content of the screen time, we can also get a better understanding of how engaging with screens may impact on children's development.
 We will invite authors of relevant studies to contribute their de-identified data or share results through secure remote analysis (via DataSHIELD).
@@ -405,21 +405,22 @@ Following the approach outlined in @bartik2024impact and @guessResharesSocialMed
 We will apply the FDR adjustment described by @benjamini1995controlling cumulatively at each level by accounting not only for the number of comparisons within a tier but also for the number of higher-level comparisons leading into it.
 
 For each individual hypothesis, the total number of comparisons ($k_{total}$) used to compute the adjusted q-value will reflect:
+
 - $k_0$: the number of primary outcome families tested,
 - $k_{1,f}$: the number of content or moderator components within the relevant family,
 - $k_{2,f}$: the number of specific items or interaction terms within that component.
 
-Thus, each q-value reflects the **full testing burden up to that point**, not just the number of tests in the immediate family.
+Thus, each q-value reflects the full testing burden up to that point, not just the number of tests in the immediate family.
 
 The tiered structure of hypotheses is as follows:
 
-| **Tier**                                | **Description**                                                   | **Examples**                                                                  | **Correction from**     |
-|------                                   |----------                                                         |----------                                                                     |------                   |
-| **Tier 1: Primary Outcomes**            | Main effects of total screen time on key outcomes                 | Learning, mental health, wellbeing, cognitive ability, behaviour              | Tier 1 only             |
-| **Tier 2: Content-Specific Effects**    | Effects of screen content/type on each outcome                    | Educational content, Social media, Video games, Non-interactive entertainment | Tier 1 + Tier 2         |
-| **Tier 3: Dose-Response / Thresholds**  | Identification of thresholds where screen time effects change     | Piecewise regression estimating turning points per outcome/content            | Tier 1 + Tier 2 + Tier 3|
-| **Tier 4: Moderation Analyses**         | Moderation by child characteristics or context                    | Age, Gender, SES, Home vs School                                              | Tier 1 + Tier 2 + Tier 4|
-| **Tier 5: Exploratory / Secondary**     | Additional exploratory analyses, interactions, sensitivity tests  | 3-way interactions, less theory-driven tests                                  | Tier 1 + Tier 2 + Tier 5|
+| **Tier**                                | **Description**                                                   | **Examples**                                                                  | **Correction from**                       |
+|------                                   |----------                                                         |----------                                                                     |------                                     |
+| **Tier 1: Primary Outcomes**            | Main effects of total screen time on key outcomes                 | Learning, mental health, wellbeing, cognitive ability, behaviour              | Tier 1 only                               |
+| **Tier 2: Content-Specific Effects**    | Effects of screen content/type on each outcome                    | Educational content, social media, Video games, Non-interactive entertainment | Tier 1 + Tier 2                           |
+| **Tier 3: Dose-Response / Thresholds**  | Identification of thresholds where screen time effects change     | Piecewise regression estimating turning points per outcome/content            | Tier 1 + Tier 2 + Tier 3                  |
+| **Tier 4: Moderation Analyses**         | Moderation by child characteristics or context                    | Age, Gender, SES, Home vs School                                              | Tier 1 + Tier 2 + Tier 3 + Tier 4         |
+| **Tier 5: Exploratory / Secondary**     | Additional exploratory analyses, interactions, sensitivity tests  | 3-way interactions, less theory-driven tests                                  | Tier 1 + Tier 2 + Tier 3 + Tier 4 + Tier 5|
 
 For each hypothesis test, we will compute FDR-adjusted q-values using the @benjamini1995controlling, adjusting for the cumulative number of comparisons.
 This ensures that finer-grained or exploratory analyses are appropriately penalised for preceding layers of multiple testing.
