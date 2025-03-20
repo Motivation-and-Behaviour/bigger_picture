@@ -23,7 +23,7 @@ Data contributors will be invited to co-author resulting publications
 
 ## Description
 
-This study will pool and analyze individual-level data from multiple
+This study will pool and analyse individual-level data from multiple
 research projects to clarify how screen time affects children’s and
 adolescents’ learning, mental health, wellbeing, and behaviour. By
 uniting data from diverse samples, our team can pinpoint the specific
@@ -105,7 +105,7 @@ We hypothesise the following:
 
 ## Study type
 
-**Other** {\>\> Note: this is a dropdown \<\<}
+**Other**
 
 This will be an individual participant data (IPD) meta-analysis.
 
@@ -130,7 +130,7 @@ There is no randomisation involved in this study.
 **Registration prior to accessing the data**. As of the date of
 submission, the data exist, but have not been accessed by you or your
 collaborators. Commonly, this includes data that has been collected by
-another researcher or institution. {\>\> Note: This is a dropdown \<\<}
+another researcher or institution.
 
 ## Explanation of existing data
 
@@ -175,8 +175,7 @@ criteria:
     content\[e.g., TV as ‘video’\]).
 2.  Have quantitatively measured at least one outcome related to
     children’s learning, cognitive abilities, mental health, wellbeing,
-    or behaviour. {\>\> This is probably too broad. Do we want to a
-    priori pick outcomes for these? \<\<}
+    or behaviour.
 3.  Have a mean sample age younger than 18 years. That is, a sample who
     are predominantly pre-school or school-aged children and
     adolescents. If a mean study age is not available, we will use the
@@ -368,15 +367,12 @@ following variables:
 ### Measures of screen use
 
 While there is no consensus or standard tool for measuring screen,
-several survey tools have gained popularity in the literature. {\>\> For
-team to consider: should we be including studies that use time use
-diaries? This would make harmonising more difficult, but lots of studies
-have used MARCA etc as their measure. \<\<} These include the Screen
-Based Media Use Scale (Houghton et al. 2015), and Youth Risk Behavior
-Survey (Schmitz et al. 2004), and time use diary methods such as the
-Multimedia Activity Recall for Children and Adolescents (Ridley, Olds,
-and Hill 2006). From these, we can predict some of the measures we
-expect to be included in the pooled dataset.
+several survey tools have gained popularity in the literature. These
+include the Screen Based Media Use Scale (Houghton et al. 2015), and
+Youth Risk Behavior Survey (Schmitz et al. 2004), and time use diary
+methods such as the Multimedia Activity Recall for Children and
+Adolescents (Ridley, Olds, and Hill 2006). From these, we can predict
+some of the measures we expect to be included in the pooled dataset.
 
 - **Total screen time**: As an aggregated measure of screen time. We
   expect most studies to have already calculated this value, but if not,
@@ -402,17 +398,11 @@ screen use, or have only a dichotomous measure of screen use (e.g.,
 
 ### Outcome measures
 
-{\>\> Outcomes are the part of this I am most concerned about. We need
-to balance the extent to which we can meaningfully combine measures,
-with the extent to which we can reasonably expect to find datasets.
-E.g., if we limit ‘beahviour’ to the SDQ, we may not find enough
-datasets. But if we include all measures of behaviour, we may not be
-able to meaningfully combine them. Thoughts on how we address this are
-welcome. \<\<} We will include a range of outcome measures related to
-children’s learning, cognitive abilities, mental health, wellbeing, and
-behaviour. After identifying datasets, we will examine the measures used
-in these datasets and determine which measures can be harmonised and
-have sufficient data before contacting authors.
+We will include a range of outcome measures related to children’s
+learning, cognitive abilities, mental health, wellbeing, and behaviour.
+After identifying datasets, we will examine the measures used in these
+datasets and determine which measures can be harmonised and have
+sufficient data before contacting authors.
 
 The below outline some of the measures we expect to be included.
 
@@ -497,18 +487,18 @@ For each individual hypothesis, the total number of comparisons
 - $k_{2,f}$: the number of specific items or interaction terms within
   that component.
 
-Thus, each q-value reflects the **full testing burden up to that
-point**, not just the number of tests in the immediate family.
+Thus, each q-value reflects the full testing burden up to that point,
+not just the number of tests in the immediate family.
 
 The tiered structure of hypotheses is as follows:
 
 | **Tier** | **Description** | **Examples** | **Correction from** |
 |----|----|----|----|
 | **Tier 1: Primary Outcomes** | Main effects of total screen time on key outcomes | Learning, mental health, wellbeing, cognitive ability, behaviour | Tier 1 only |
-| **Tier 2: Content-Specific Effects** | Effects of screen content/type on each outcome | Educational content, Social media, Video games, Non-interactive entertainment | Tier 1 + Tier 2 |
+| **Tier 2: Content-Specific Effects** | Effects of screen content/type on each outcome | Educational content, social media, Video games, Non-interactive entertainment | Tier 1 + Tier 2 |
 | **Tier 3: Dose-Response / Thresholds** | Identification of thresholds where screen time effects change | Piecewise regression estimating turning points per outcome/content | Tier 1 + Tier 2 + Tier 3 |
-| **Tier 4: Moderation Analyses** | Moderation by child characteristics or context | Age, Gender, SES, Home vs School | Tier 1 + Tier 2 + Tier 4 |
-| **Tier 5: Exploratory / Secondary** | Additional exploratory analyses, interactions, sensitivity tests | 3-way interactions, less theory-driven tests | Tier 1 + Tier 2 + Tier 5 |
+| **Tier 4: Moderation Analyses** | Moderation by child characteristics or context | Age, Gender, SES, Home vs School | Tier 1 + Tier 2 + Tier 3 + Tier 4 |
+| **Tier 5: Exploratory / Secondary** | Additional exploratory analyses, interactions, sensitivity tests | 3-way interactions, less theory-driven tests | Tier 1 + Tier 2 + Tier 3 + Tier 4 + Tier 5 |
 
 For each hypothesis test, we will compute FDR-adjusted q-values using
 the Benjamini and Hochberg (1995), adjusting for the cumulative number

@@ -134,7 +134,7 @@ We hypothesise the following:
 
 ## Study type
 
-**Other** `r word_comment(comment= "Note: this is a dropdown")`
+**Other**
 
 This will be an individual participant data (IPD) meta-analysis.
 
@@ -155,7 +155,7 @@ There is no randomisation involved in this study.
 
 ## Existing data
 
-**Registration prior to accessing the data**. As of the date of submission, the data exist, but have not been accessed by you or your collaborators. Commonly, this includes data that has been collected by another researcher or institution. `r word_comment(comment= "Note: This is a dropdown")`
+**Registration prior to accessing the data**. As of the date of submission, the data exist, but have not been accessed by you or your collaborators. Commonly, this includes data that has been collected by another researcher or institution.
 
 ## Explanation of existing data
 
@@ -181,8 +181,8 @@ We will identify potentially relevant datasets in two ways:
 To be included in the pooled analysis, datasets must meet the following criteria:
 
 1. Have quantitatively measured screen time exposure.
-   Given the increasing evidence that the content of screen time is an important factor in determining impact, we will only include studies that have a disaggregate measure of screen time (i.e., they have measured the content [e.g., social media], or the type as a proxy for content[e.g., TV as ‘video’]).
-2. Have quantitatively measured at least one outcome related to children's learning, cognitive abilities, mental health, wellbeing, or behaviour. `r word_comment(comment= "This is probably too broad. Do we want to a priori pick outcomes for these?")`
+   Given the increasing evidence that the content of screen time is an important factor in determining impact, we will only include studies that have a disaggregate measure of screen time (i.e., they have measured the content [e.g., social media], or the type as a proxy for content[e.g., TV as 'video']).
+2. Have quantitatively measured at least one outcome related to children's learning, cognitive abilities, mental health, wellbeing, or behaviour.
 3. Have a mean sample age younger than 18 years.
    That is, a sample who are predominantly pre-school or school-aged children and adolescents.
    If a mean study age is not available, we will use the midpoint of the age range.
@@ -321,7 +321,7 @@ However we expect to include at least the following variables:
 
 ### Measures of screen use
 
-While there is no consensus or standard tool for measuring screen, several survey tools have gained popularity in the literature. `r word_comment(comment= "For team to consider: should we be including studies that use time use diaries? This would make harmonising more difficult, but lots of studies have used MARCA etc as their measure.")`
+While there is no consensus or standard tool for measuring screen, several survey tools have gained popularity in the literature.
 These include the Screen Based Media Use Scale [@houghtonVirtuallyImpossibleLimiting2015], and Youth Risk Behavior Survey [@schmitzReliabilityValidityBrief2004], and time use diary methods such as the Multimedia Activity Recall for Children and Adolescents [@ridleyMultimediaActivityRecall2006].
 From these, we can predict some of the measures we expect to be included in the pooled dataset.
 
@@ -341,7 +341,6 @@ Note that we will not include measures which only indicate 'problematic' screen 
 
 ### Outcome measures
 
-`r word_comment(comment= "Outcomes are the part of this I am most concerned about. We need to balance the extent to which we can meaningfully combine measures, with the extent to which we can reasonably expect to find datasets. E.g., if we limit 'beahviour' to the SDQ, we may not find enough datasets. But if we include all measures of behaviour, we may not be able to meaningfully combine them. Thoughts on how we address this are welcome.")`
 We will include a range of outcome measures related to children's learning, cognitive abilities, mental health, wellbeing, and behaviour.
 After identifying datasets, we will examine the measures used in these datasets and determine which measures can be harmonised and have sufficient data before contacting authors.
 
