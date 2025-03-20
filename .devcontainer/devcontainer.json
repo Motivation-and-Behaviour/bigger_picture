@@ -8,7 +8,7 @@
   "features": {
     // "ghcr.io/rocker-org/devcontainer-features/pandoc:1": {},
     "ghcr.io/rocker-org/devcontainer-features/r-packages:1": {
-      "packages": "glue, tarensanders/prereg",
+      "packages": "glue, crsh/prereg",
       "installSystemRequirements": true
     }
   },
