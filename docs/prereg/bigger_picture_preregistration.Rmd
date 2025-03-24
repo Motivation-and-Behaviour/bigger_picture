@@ -132,9 +132,12 @@ We hypothesise the following:
 
 # Design Plan
 
-## Study type
+## Study type (dropdown)
 
-**Other**
+- Experiment.
+- Observational Study.
+- Meta-Analysis.
+- \fbox{\textbf{Other.}}
 
 This will be an individual participant data (IPD) meta-analysis.
 
@@ -153,9 +156,13 @@ There is no randomisation involved in this study.
 
 # Sampling Plan
 
-## Existing data
+## Existing data (dropdown)
 
-**Registration prior to accessing the data**. As of the date of submission, the data exist, but have not been accessed by you or your collaborators. Commonly, this includes data that has been collected by another researcher or institution.
+- Registration prior to creation of data. 
+- Registration prior to any human observation of the data. 
+- \fbox{\textbf{Registration prior to accessing the data}}. 
+- Registration prior to analysis of the data. 
+- Registration following analysis of the data. 
 
 ## Explanation of existing data
 
