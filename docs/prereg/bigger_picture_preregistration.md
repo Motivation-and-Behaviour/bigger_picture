@@ -270,7 +270,7 @@ where:
   $$
 
 - $R_i$ (**Recency**) quantifies the fact that we consider newer data to
-  be more valuable value added by more recent data. We define $R_i$ as:
+  be more valuable than older data. We define $R_i$ as:
 
   $$
   R_i = \frac{\text{year}_i - \text{year}_{\text{min}}}{\text{year}_{\text{max}} - \text{year}_{\text{min}}},
