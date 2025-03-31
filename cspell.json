@@ -1,0 +1,44 @@
+{
+  "language": "en-AU, en",
+  "enabled": true,
+  "files": [
+    "**/*.Rmd"
+  ],
+  "patterns": [
+    {
+      "name": "references",
+      "pattern": "@\\w+"
+    },
+    {
+      "name": "code_fence",
+      "pattern": "```[\\s\\S]*?```"
+    },
+    {
+      "name": "inline_r_code",
+      "pattern": "`r [^`]+`"
+    },
+    {
+      "name": "yaml_header",
+      "pattern": "^---[\\s\\S]*?---"
+    },
+    {
+      "name": "latex_commands",
+      "pattern": "\\\\[a-zA-Z]+"
+    }
+  ],
+  "ignoreRegExpList": [
+    "references",
+    "code_fence",
+    "inline_r_code",
+    "yaml_header",
+    "latex_commands"
+  ],
+  "words": [
+    "codebook",
+    "covariate",
+    "covariates",
+    "disaggregate",
+    "disclosive",
+    "wellbeing"
+  ]
+}
