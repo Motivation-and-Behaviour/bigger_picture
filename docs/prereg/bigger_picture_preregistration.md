@@ -23,7 +23,7 @@ Data contributors will be invited to co-author resulting publications
 
 ## Description
 
-This study will pool and analyze individual-level data from multiple
+This study will pool and analyse individual-level data from multiple
 research projects to clarify how screen time affects children’s and
 adolescents’ learning, mental health, wellbeing, and behaviour. By
 uniting data from diverse samples, our team can pinpoint the specific
@@ -33,29 +33,29 @@ characteristics such as age and gender. By examining the type and/or
 content of the screen time, we can also get a better understanding of
 how engaging with screens may impact on children’s development. We will
 invite authors of relevant studies to contribute their de-identified
-data or share results through secure remote analysis (DataSHIELD). After
-harmonising the data, piecewise regression models will be applied to
-identify thresholds where screen time use notably shifts from beneficial
-to harmful. The findings of this IPD meta-analysis will be translated
-into an evidence toolkit for parents, teachers, and students.
+data or share results through secure remote analysis (via DataSHIELD).
+After harmonising the data, piecewise regression models will be applied
+to identify thresholds where screen time use shifts from beneficial to
+harmful. The findings of this IPD meta-analysis will be translated into
+an evidence toolkit for parents, teachers, and students.
 
-We aim to follow answer these research questions:
+We aim to answer these research questions:
 
 1.  What is the impact of screen use on children’s learning, cognitive
     abilities, mental health, wellbeing, and behaviour?
-2.  Does the relationship vary by different types of screen use (e.g.,
-    content or type of device)?
-3.  Is there a specific duration at which notable harm/benefit becomes
-    apparent?
+2.  Does the relationship between screen use and outcomes vary by
+    different types of screen use (e.g., content or type of device)?
+3.  Is there a specific screen use duration at which notable
+    harm/benefit becomes apparent, and does it vary by type of screen
+    use?
 4.  Does the relationship/duration vary by where the screen time occurs
     (i.e., home vs school)?
 5.  Does the relationship/duration vary by characteristics of the
-    children?
+    children (i.e., age, gender, socioeconomic status)?
 
 ## Hypotheses
 
-We hypothesise the following {\>\> Comments or suggested changes to
-these hypothese are very welcome \<\<}:
+We hypothesise the following:
 
 1.  \[RQ1\] Overall screen use will have a small but statistically
     significant negative association with children’s learning, cognitive
@@ -64,16 +64,20 @@ these hypothese are very welcome \<\<}:
     device) will moderate the relationship between screen use and
     children’s outcomes.
     1.  Educational content (i.e., screen time intended to educate
-        children) will have a small-to-moderate positive associations
+        children) will have a small-to-moderate positive association
         with children’s learning and cognitive abilities, but no
         association with mental health, wellbeing, or behaviour.
-    2.  Non-interactive entertainment content (e.g., television) will
-        have a small negative association with children’s learning,
-        cognitive abilities, mental health, wellbeing, and behaviour.
+    2.  Non-interactive entertainment content (e.g.,
+        television/streaming) will have a small negative association
+        with children’s learning, cognitive abilities, mental health,
+        wellbeing, and behaviour.
     3.  Interactive entertainment content (e.g., video games) will have
         a small negative association with children’s mental health,
         wellbeing, and behaviour, but a negligible association with
         learning and cognitive abilities.
+    4.  Social media will have a small to moderate negative association
+        with children’s mental health and wellbeing, but no association
+        with learning, cognitive abilities, or behaviour.
 3.  \[RQ3\] There will be a threshold of screen time at which notable
     harm/benefit becomes apparent, and this threshold will vary by the
     type of content.
@@ -83,22 +87,31 @@ these hypothese are very welcome \<\<}:
 5.  \[RQ5\] The relationship between screen time and children’s outcomes
     will be moderated by characteristics of the children. Specifically:
     1.  Age will moderate the relationship between screen time and
-        children’s outcomes, with younger children {\>\> I’m actually
-        not very confident with this one. From a theory view, it seems
-        like younger children should be more susceptible, but in the few
-        cases where we could look at age in the umbrella review it was
-        pretty mixed or mostly older kids. Maybe we just don’t include
-        this hypothesis. \<\<} experiencing a stronger associations.
+        children’s outcomes. However, given the inconsistency in
+        previous findings on this relationship, we do not make a
+        specific prediction about the direction of this moderation.
+        Instead, this hypothesis will be considered exploratory.
     2.  Child gender will moderate the relationship between some forms
-        of screen time and children’s outcomes, with stronger negative
-        effects for girls’ mental health and wellbeing outcomes than
-        boys for screen time that encourages social comparisons.
+        of screen time and children’s outcomes: for social media, there
+        will be stronger negative effects for girls’ mental health and
+        wellbeing outcomes than boys.
+    3.  Socioeconomic status will moderate the relationship between
+        screen time and children’s outcomes, with children from lower
+        socioeconomic backgrounds experiencing stronger negative effects
+        of screen time on educational, mental health, and behaviour
+        outcomes.
 
 # Design Plan
 
-## Study type
+## Study type (dropdown)
 
-**Other** {\>\> Note: this is a dropdown \<\<}
+- Experiment.
+
+- Observational Study.
+
+- Meta-Analysis.
+
+- 
 
 This will be an individual participant data (IPD) meta-analysis.
 
@@ -118,23 +131,26 @@ There is no randomisation involved in this study.
 
 # Sampling Plan
 
-## Existing data
+## Existing data (dropdown)
 
-**Registration prior to accessing the data**. As of the date of
-submission, the data exist, but have not been accessed by you or your
-collaborators. Commonly, this includes data that has been collected by
-another researcher or institution. {\>\> Note: This is a dropdown \<\<}
+- Registration prior to creation of data.
+- Registration prior to any human observation of the data.
+- .
+- Registration prior to analysis of the data.
+- Registration following analysis of the data.
 
 ## Explanation of existing data
 
 We will be collating datasets from multiple existing studies on
-children’s screen time. The data will be de-identified, and shared with
-the research team either through secure transfer of data files or
-through secure remote analysis (DataSHIELD). The research team may
-contribute their data to the pooled analysis, and therefore have prior
-knowledge of these data. But, as the final analysis will be based on the
-pooled data, this prior knowledge does not meaningfully affect the
-nature of the analysis.
+children’s screen time and outcomes of interest. The data will be
+de-identified, and shared with the research team either through secure
+transfer of data files or through secure remote analysis (using
+DataSHIELD). The research team may contribute their data to the pooled
+analysis, and therefore have prior knowledge of these data. But, as the
+final analysis will be based on the pooled data, this prior knowledge
+does not meaningfully affect the nature of the analysis. We will include
+a sensitivity analysis that excludes these datasets to ensure that the
+results are robust to this prior knowledge.
 
 ## Data collection procedures
 
@@ -159,16 +175,16 @@ To be included in the pooled analysis, datasets must meet the following
 criteria:
 
 1.  Have quantitatively measured screen time exposure. Given the
-    increasing evidence that the content of screen time is perhaps the
-    most important factor in determining impact, we will only include
-    studies that have a disaggregate measure of screen time (i.e., they
-    have measured the content or the type as a proxy for content).
+    increasing evidence that the content of screen time is an important
+    factor in determining impact, we will only include studies that have
+    a disaggregate measure of screen time (i.e., they have measured the
+    content \[e.g., social media\], or the type as a proxy for
+    content\[e.g., TV as ‘video’\]).
 2.  Have quantitatively measured at least one outcome related to
     children’s learning, cognitive abilities, mental health, wellbeing,
-    or behaviour. {\>\> This is probably too broad. Do we want to a
-    priori pick outcomes for these? \<\<}
-3.  Have a mean sample age older than 5 years and younger than 18 years.
-    That is, a sample who are predominantly school-aged children and
+    or behaviour.
+3.  Have a mean sample age younger than 18 years. That is, a sample who
+    are predominantly pre-school or school-aged children and
     adolescents. If a mean study age is not available, we will use the
     midpoint of the age range.
 
@@ -186,28 +202,29 @@ following criteria:
 2.  The extent to which the dataset provides underrepresented outcomes.
 3.  The extent to which the dataset provides underrepresented age
     groups.
+4.  The recency of the dataset, with more recent data considered more
+    valuable.
 
-We will calculate the value of each dataset ($i$) as: {\>\> This is
-almost certainly over-engineered. I got a little carried away with the
-idea. But, I do think we need to determine how we prioritise datasets,
-beyond just picking the biggest ones. \<\<}
+We will calculate the value of each dataset ($i$) as:
 
 $$
 \text{Value}_i
 =
-\underbrace{\alpha \,\ln\bigl(N_i + 1\bigr)}_{\text{sample size component}}
+\underbrace{\alpha \,\ln\bigl(N_i + 1\bigr)}_{\text{sample size}}
 \;+\;
-\underbrace{\beta \,O_i}_{\text{outcome need component}}
+\underbrace{\beta \,O_i}_{\text{outcome need}}
 \;+\;
-\underbrace{\gamma \,A_i}_{\text{age need component}}
+\underbrace{\gamma \,A_i}_{\text{age need}}
 \;+\;
-\underbrace{\delta \,S_i}_{\text{synergy component}},
+\underbrace{\delta \,S_i}_{\text{synergy}}
+\;+\;
+\underbrace{\varepsilon \,R_i}_{\text{recency}},
 $$
 
 where:
 
-- $N_i$ is the sample size of dataset $i$. We apply the logarithm to
-  dampen the impact of extremely large sample sizes.
+- $N_i$ is the sample size of dataset $i$, with a logarithmic
+  transformation to dampen the influence of very large samples.
 
 - $O_i$ (**Outcome Need**) quantifies how underrepresented the dataset’s
   outcome is in our overall pool. For instance:
@@ -222,9 +239,9 @@ where:
   underrepresented.
 
 - $A_i$ (**Age Need**) captures how underrepresented the dataset’s age
-  distribution is. We will calculate this based on the dataset’s mean
-  age $\mu_i$ and standard deviation $\sigma_i$ by following this
-  approach:
+  distribution is in set of included datasets. We will calculate this
+  based on the dataset’s mean age $\mu_i$ and standard deviation
+  $\sigma_i$ by following this approach:
 
   1.  Maintain a coverage table, $\text{Cov}(a)$, for each relevant age
       (or bin) $a$ of datasets already included.
@@ -244,30 +261,46 @@ where:
       $$ This ensures $A_i$ is larger when the dataset’s mean (and
       spread) falls in underrepresented ages.
 
-- $S_i$ (**Synergy**) captures the fact that a dataset filling *both* an
-  underrepresented outcome *and* an underrepresented age range is
-  *especially* valuable. A common approach is to define
+- $S_i$ (**Synergy**) captures the additional value when a dataset
+  contributes *both* an underrepresented outcome *and* an
+  underrepresented age group.
 
   $$
   S_i = O_i \times A_i.
   $$
 
-  Thus, $S_i$ is large if and only if *both* $O_i$ and $A_i$ are large.
+- $R_i$ (**Recency**) quantifies the fact that we consider newer data to
+  be more valuable than older data. We define $R_i$ as:
 
-Finally, $\alpha$, $\beta$, $\gamma$, and $\delta$ are *weights* that
-reflect how strongly we prioritise each component. For example:
+  $$
+  R_i = \frac{\text{year}_i - \text{year}_{\text{min}}}{\text{year}_{\text{max}} - \text{year}_{\text{min}}},
+  $$
 
-- $\alpha$ captures our emphasis on sample size,
-- $\beta$ on underrepresented outcomes,
-- $\gamma$ on underrepresented age ranges, and
-- $\delta$ on the *interaction* of outcome and age coverage.
+  where $\text{year}_i$ is the data collection year of dataset $i$, and
+  $\text{year}_{\text{min}}$ and $\text{year}_{\text{max}}$ are the
+  earliest and most recent data collection years, respectively, in our
+  pool of candidate datasets. This scales $R_i$ between 0 (oldest) and 1
+  (newest).
+
+Finally, $\alpha$, $\beta$, $\gamma$, $\delta$, and $\varepsilon$ are
+weights reflecting how strongly we prioritise each component:
+
+- $\alpha$ emphasises sample size,
+- $\beta$ underrepresented outcomes,
+- $\gamma$ underrepresented age groups,
+- $\delta$ the synergy between outcome and age coverage,
+- $\varepsilon$ dataset recency.
 
 We will initially set these weights to $\alpha = 2$, $\beta = 1$,
-$\gamma = 1$, and $\delta = 2$, but may adjust these based on relative
-importance as data is collected.
+$\gamma = 1$, $\delta = 2$, and $\varepsilon = 1$, but may adjust these
+based on relative importance as data is collected.
 
-We will then rank-order datasets based on their value, and work through
-the list in order of value until we reach a point where the time
+Note that since $O_i$ and $A_i$ are undefined in the initial state (as
+there are no included datasets), our initial calculation for value will
+leave out these terms and only be based on $N_i$ and $R_i$. We will then
+rank-order datasets based on their value, and work through the list in
+order of value, updating the values each time a new dataset is added. We
+will continue this process until we reach a point where the time
 required to harmonise and collate the data is no longer feasible.
 
 ### Collating and harmonising data
@@ -297,10 +330,10 @@ their data:
 
 Before conducting the analysis, we will harmonise the data to ensure
 variables are consistent across datasets. We will follow a process used
-in other federated analyses (Pinot De Moira et al. 2021). We will pilot
-the harmonisation process on a subset of datasets that we have direct
-access to to ensure that the process is feasible and that the data can
-be harmonised in a meaningful way. We will then ask data contributors
+in other federated analyses (Pinot De Moira et al. 2021). To ensure that
+the process is feasible and that the data can be harmonised in a
+meaningful way, we will pilot the harmonisation process on a subset of
+datasets that we can directly access. We will then ask data contributors
 who are using DataSHIELD to harmonise their data in the same way. To
 validate that this has happened correctly, we will provide a script to
 contributors that will check that the data matches expectations. This
@@ -315,8 +348,8 @@ participants.
 
 ## Sample size rationale
 
-Given that we expect to recruit a very large sample, we are not
-concerned about statistical power.
+Given that we expect to recruit a very large sample (\>10,000
+participants), we are not concerned about statistical power.
 
 ## Stopping rule
 
@@ -341,32 +374,30 @@ following variables:
 ### Measures of screen use
 
 While there is no consensus or standard tool for measuring screen,
-several survey tools have gained popularity in the literature. {\>\> For
-team to consider: should we be including studies that use time use
-diaries? This would make harmonising more difficult, but lots of studies
-have used MARCA etc as their measure. \<\<} These include the Screen
-Based Media Use Scale (Houghton et al. 2015), and Youth Risk Behavior
-Survey (Schmitz et al. 2004), and time use diary methods such as the
-Multimedia Activity Recall for Children and Adolescents (Ridley, Olds,
-and Hill 2006). From these, we can predict some of the measures we
-expect to be included in the pooled dataset.
+several survey tools have gained popularity in the literature. These
+include the Screen Based Media Use Scale (Houghton et al. 2015), and
+Youth Risk Behavior Survey (Schmitz et al. 2004), and time use diary
+methods such as the Multimedia Activity Recall for Children and
+Adolescents (Ridley, Olds, and Hill 2006). From these, we can predict
+some of the measures we expect to be included in the pooled dataset.
 
 - **Total screen time**: As an aggregated measure of screen time. We
   expect most studies to have already calculated this value, but if not,
   we will calculate it as the sum of time spent on different devices or
   types.
-- **Video game**: Time spent playing video games.
+- **Video/e-games**: Time spent playing video/e-games.
 - **Television**: Time spent watching television.
-- **Mobile device**: Time spent on mobile devices, such as phones and
-  tablets.
+- **Mobile device**: Time spent on mobile devices, such as smartphones
+  and tablets.
 - **Social media**: Time spent on social media.
-- **Computer**: Time spent on computers.
+- **Computer**: Time spent on laptop or desktop general-purpose
+  computers.
 - **Educational time**: Time spent on using devices for educational
   purposes, such as to complete homework.
 
 We will harmonise all measures of screen use to a common unit (average
-hours per day). In addition, we will record the the tool used to test
-{\>\> or adjust? \<\<} for systematic differences across tools.
+hours per day). In addition, we will record the tool used and include it
+as a covariate to adjust for any systematic differences across tools.
 
 Note that we will not include measures which only indicate ‘problematic’
 screen use, or have only a dichotomous measure of screen use (e.g.,
@@ -374,34 +405,32 @@ screen use, or have only a dichotomous measure of screen use (e.g.,
 
 ### Outcome measures
 
-{\>\> Outcomes are the part of this I am most concerned about. We need
-to balance the extent to which we can meaningfully combine measures,
-with the extent to which we can reasonably expect to find datasets.
-E.g., if we limit ‘beahviour’ to the SDQ, we may not find enough
-datasets. But if we include all measures of behaviour, we may not be
-able to meaningfully combine them. Thoughts on how we address this are
-welcome. \<\<} We will include a range of outcome measures related to
-children’s learning, cognitive abilities, mental health, wellbeing, and
-behaviour. After identifying datasets, we will examine the measures used
-in these datasets and determine which measures can be harmonised and
-have sufficient data before contacting authors.
+We will include a range of outcome measures related to children’s
+learning, cognitive abilities, mental health, wellbeing, and behaviour.
+After identifying datasets, we will examine the measures used in these
+datasets and determine which measures can be harmonised and have
+sufficient data before contacting authors.
 
 The below outline some of the measures we expect to be included.
 
-- **Learning**: Measures of academic performance, such as standardised
-  test scores, grades, or teacher ratings.
-- **Cognitive abilities**: Measures of cognitive function, executive
-  function, or memory.
-- **Mental health**: Measures of mental health, such as measures of
-  depression and anxiety.
-- **Behaviour**: Measures of behavioural problems in children, such as
-  the Strengths and Difficulties Questionnaire (Goodman 1997), or the
-  Child Behaviour Checklist (Achenbach and Rescorla 2001) . {\>\> Would
-  be good to include some positive behaviour measures (prosociality)
-  too, if feasible. \<\<}
-- **Wellbeing**: Measures of subjective wellbeing {\>\> As always, I’m
-  not really confident on what wellbeing really means. We might consider
-  dropping it. \<\<}.
+| **Main Outcome** | **Specific Outcomes** | **Example Measures** |
+|----|----|----|
+| **Learning** | General education | Standardised test scores |
+|  | Numeracy | Grades |
+|  | Literacy | Reading comprehension |
+| **Cognitive abilities** | Executive function | Inhibitory control |
+|  | Cognitive function | Working memory |
+|  |  | Cognitive flexibility |
+|  |  | Attention |
+| **Mental health** | Anxiety | Multidimensional Anxiety Scale for Children |
+|  | Depression | Children’s Depression Inventory |
+|  | Emotions | Emotion Regulation Questionnaire for Children and Adolescents |
+| **Behaviour** | Aggression | Child Behaviour Checklist |
+|  | Self-regulation | Strengths and Difficulties Questionnaire |
+|  | Prosocial behaviour | Behavior Rating Inventory of Executive Function |
+| **Wellbeing** | Self-perceptions | General Self-Efficacy Scale |
+|  | Positive mental health | Students’ Life Satisfaction Scale |
+|  |  | Pediatric Quality of Life Inventory TM |
 
 ### Covariates and moderators of effects
 
@@ -411,7 +440,10 @@ children’s outcomes, if they were measured in the study. These include:
 
 - Child demographics, such as age, gender, and ethnicity.
 - Socioeconomic status, such as parental education and income.
+- The regional location of the child, such as urban or rural.
 - Location of screen time, such as home or school.
+- The country of data collection.
+- The year of data collection.
 
 ## Indices
 
@@ -433,16 +465,53 @@ characteristics of the children.
 
 ## Transformations
 
-The nature of this study makes it hard to predict which measures will
-need to be transformed or categorised. However, we will publish a
-codebook which includes the variables and how to create them as part of
-the harmonisation process, which will be prior to analysis.
+The nature of this study, where data collection is outside of our
+control, makes it hard to predict which measures and what
+transformations or re-codes will be necessary for harmonisation.
+However, we will publish a codebook which includes the variables and how
+to create them as part of the harmonisation process, which will be prior
+to analysis.
 
 ## Inference criteria
 
-We will use the standard p\<0.05 criteria for determining statistical
-significance. We will report all tests conducted, and will not adjust
-for multiple comparisons.
+Given the large number of outcomes, exposures, and potential moderators
+in this IPD meta-analysis, we will control the risk of false discoveries
+using a tiered false discovery rate (FDR) adjustment procedure.
+
+Following the approach outlined in Bartik et al. (2024) and Guess et al.
+(2023), we will organize hypotheses into nested tiers based on
+conceptual importance and relatedness. We will apply the FDR adjustment
+described by Benjamini and Hochberg (1995) cumulatively at each level by
+accounting not only for the number of comparisons within a tier but also
+for the number of higher-level comparisons leading into it.
+
+For each individual hypothesis, the total number of comparisons
+($k_{total}$) used to compute the adjusted q-value will reflect:
+
+- $k_0$: the number of primary outcome families tested,
+- $k_{1,f}$: the number of content or moderator components within the
+  relevant family,
+- $k_{2,f}$: the number of specific items or interaction terms within
+  that component.
+
+Thus, each q-value reflects the full testing burden up to that point,
+not just the number of tests in the immediate family.
+
+The tiered structure of hypotheses is as follows:
+
+| **Tier** | **Description** | **Examples** | **Correction from** |
+|----|----|----|----|
+| **Tier 1: Primary Outcomes** | Main effects of total screen time on key outcomes | Learning, mental health, wellbeing, cognitive ability, behaviour | Tier 1 only |
+| **Tier 2: Content-Specific Effects** | Effects of screen content/type on each outcome | Educational content, social media, Video games, Non-interactive entertainment | Tier 1 + Tier 2 |
+| **Tier 3: Dose-Response / Thresholds** | Identification of thresholds where screen time effects change | Piecewise regression estimating turning points per outcome/content | Tier 1 + Tier 2 + Tier 3 |
+| **Tier 4: Moderation Analyses** | Moderation by child characteristics or context | Age, Gender, SES, Home vs School | Tier 1 + Tier 2 + Tier 3 + Tier 4 |
+| **Tier 5: Exploratory / Secondary** | Additional exploratory analyses, interactions, sensitivity tests | 3-way interactions, less theory-driven tests | Tier 1 + Tier 2 + Tier 3 + Tier 4 + Tier 5 |
+
+For each hypothesis test, we will compute FDR-adjusted q-values using
+the Benjamini and Hochberg (1995), adjusting for the cumulative number
+of comparisons. This ensures that finer-grained or exploratory analyses
+are appropriately penalised for preceding layers of multiple testing. We
+will report both the original p-values and the adjusted q-values.
 
 ## Data exclusion
 
@@ -483,21 +552,31 @@ Not applicable.
 <div id="refs" class="references csl-bib-body hanging-indent"
 entry-spacing="0">
 
-<div id="ref-achenbachManualASEBASchoolage2001" class="csl-entry">
+<div id="ref-bartik2024impact" class="csl-entry">
 
-Achenbach, Thomas M., and Leslie A. Rescorla. 2001. *Manual for the
-ASEBA School-Age Forms & Profiles: Child Behavior Checklist for Ages
-6-18, Teachers Report Form, Youth Self-Report: An Integrated System of
-Multi-Informant Assessment*. Burlington: ASEBA.
+Bartik, Alexander W, Elizabeth Rhodes, David E Broockman, Patrick K
+Krause, Sarah Miller, and Eva Vivalt. 2024. “The Impact of Unconditional
+Cash Transfers on Consumption and Household Balance Sheets: Experimental
+Evidence from Two US States.” National Bureau of Economic Research.
 
 </div>
 
-<div id="ref-goodmanStrengthsDifficultiesQuestionnaire1997"
-class="csl-entry">
+<div id="ref-benjamini1995controlling" class="csl-entry">
 
-Goodman, Robert. 1997. “Strengths and Difficulties Questionnaire.”
-American Psychological Association.
-<https://doi.org/10.1037/t00540-000>.
+Benjamini, Yoav, and Yosef Hochberg. 1995. “Controlling the False
+Discovery Rate: A Practical and Powerful Approach to Multiple Testing.”
+*Journal of the Royal Statistical Society: Series B (Methodological)* 57
+(1): 289–300.
+
+</div>
+
+<div id="ref-guessResharesSocialMedia2023" class="csl-entry">
+
+Guess, Andrew M., Neil Malhotra, Jennifer Pan, Pablo Barberá, Hunt
+Allcott, Taylor Brown, Adriana Crespo-Tenorio, et al. 2023. “Reshares on
+Social Media Amplify Political News but Do Not Detectably Affect Beliefs
+or Opinions.” *Science* 381 (6656): 404–8.
+<https://doi.org/10.1126/science.add8424>.
 
 </div>
 
