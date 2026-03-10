@@ -1,0 +1,209 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Bigger Picture
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+This repository contains the data infrastructure for the **Bigger Picture** project:
+an individual participant data (IPD) meta-analysis investigating how children's and adolescents' screen use relates to learning, cognition, mental health, wellbeing, and behaviour.
+
+The codebase is focused on:
+- discovering eligible datasets in a mounted data directory
+- reading data from dataset-spec-defined sources
+- harmonising each dataset into a common structure
+- combining harmonised outputs into an analysis-ready table
+
+The scientific background and preregistration are in `docs/prereg/`.
+
+## Project Goals
+
+The pipeline is designed to support reproducible, auditable harmonisation across many studies with heterogeneous file formats and layouts.
+
+Key principles:
+- **spec-driven ingestion**: dataset inputs are described in per-study YAML specs
+- **table-driven harmonisation**: the shared schema, per-study mappings, layout steps, and lookup tables are stored as CSV files
+- **inline recodes by default**: prefer readable `dplyr::recode()` expressions in `variables.csv` for short one-off mappings
+- **optional helper functions**: reusable transforms live in R, but mappings remain explicit in the study CSVs
+- **pipeline orchestration with `targets`**: rebuilds are dependency-aware and reproducible
+
+## Repository Structure
+
+```text
+.
+├── _targets.R                     # Main pipeline definition
+├── R/
+│   ├── config.R                   # Global config (data dir, naming pattern, schema helper)
+│   ├── tidy/
+│   │   ├── tidy_from_spec.R               # Optional dataset-specific tidying
+│   │   └── tidy_BPIPD_TEMPLATE.R          # Template tidier
+│   ├── harmonise/
+│   │   ├── harmonise_from_spec.R          # Harmonisation dispatcher
+│   │   ├── harmonisation_engine.R         # Table-driven harmonisation engine
+│   │   ├── harmonisation_io.R             # Read/validate schema + study config
+│   │   └── helpers_BPIPD_TEMPLATE.R       # Template helper file
+│   └── registry/
+│       ├── list_datasets.R
+│       ├── read_dataset_specs.R
+│       ├── create_dataset_plan.R
+│       ├── read_dataset_from_spec.R
+│       ├── read_resource_table.R
+│       ├── read_tabular_file.R
+│       └── resolve_glob_paths.R
+├── harmonisation/
+│   ├── dataschema.csv             # Shared harmonised variable schema
+│   ├── dataset.schema.json        # Dataset spec schema
+│   ├── datasets/
+│   │   └── BPIPD-*/               # Per-dataset dataset.yaml, layout.csv, variables.csv, optional lookups/
+│   └── templates/
+│       └── dataset/               # Template dataset spec + harmonisation metadata
+└── docs/prereg/                   # Preregistration and supporting documents
+```
+
+## How the Pipeline Works
+
+At a high level, `_targets.R` performs the following:
+
+1. Discover dataset folders under `/data` with names like `BPIPD-<id> - <name>`.
+2. Read all dataset spec YAML files in `harmonisation/datasets/`.
+3. Build a dataset plan by joining discovered datasets to dataset specs.
+4. For each planned dataset:
+   - read the dataset spec
+   - track source data files
+   - read raw resources into structured lists (`data`, `codebook`, `docs`, `meta`)
+   - run the optional dataset-specific tidier to produce tidied study tables
+5. For each dataset with harmonisation metadata:
+   - track `layout.csv`, `variables.csv`, and any lookup CSVs as target inputs
+   - read and validate the shared `dataschema.csv`
+   - build `analysis_base` from the tidied study tables and `layout.csv`
+   - derive harmonised variables from `variables.csv`
+6. Combine all harmonised outputs into `analysis_data`.
+
+## Data Discovery Convention
+
+By default, datasets are expected under:
+
+- `/data`
+
+with directory names matching:
+
+- `BPIPD-<numeric_id> - <dataset_name>`
+
+This is configured in `R/config.R` and used by `R/registry/list_datasets.R`.
+
+## Dataset Spec Overview
+
+Each dataset has a YAML file at `harmonisation/datasets/BPIPD-<id>/dataset.yaml`, for example:
+
+```yaml
+dataset_id: "21"
+dataset_name: "Example Study"
+status: "in_progress"
+tidier: "tidy_BPIPD_21"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "data.csv"
+    reader: "csv"
+```
+
+Main fields:
+- `dataset_id`, `dataset_name`, `status`
+- optional `tidier` function name for study-specific pre-harmonisation tidying
+- `resources` (dataset-level)
+- optional `waves` (wave-specific resources)
+
+Supported `reader` values:
+- `csv`, `tsv`, `stata`, `spss`, `sas`, `rds`, `parquet`, `excel`
+
+The full contract is documented by `harmonisation/dataset.schema.json`.
+
+## Harmonisation Contract
+
+The default harmonisation path is table-driven.
+
+Shared schema:
+- `harmonisation/dataschema.csv`
+- one row per harmonised output variable
+
+Per-dataset files:
+- `harmonisation/datasets/BPIPD-<id>/layout.csv`
+- `harmonisation/datasets/BPIPD-<id>/variables.csv`
+- `harmonisation/datasets/BPIPD-<id>/lookups/*.csv` (optional, for large recode tables)
+
+Inputs to the engine:
+- `raw_dataset`: full ingestion bundle available to the optional tidier (`data`, `codebook`, `docs`, `meta`)
+- `tidied_dataset$data`: named list of tidied tibbles used by the harmoniser
+- `tidied_dataset$meta`: optional tidying metadata
+- `spec`: parsed YAML spec
+- `dataschema`: shared schema table
+- `layout.csv`: how to build `analysis_base`
+- `variables.csv`: how each schema variable is derived
+- lookup CSVs: optional explicit value recodes for mappings that are too large to keep inline
+
+Outputs:
+- `analysis_data`: one harmonised tibble per dataset
+
+Use `harmonisation/templates/dataset/` as the starting point for new datasets.
+Use `R/tidy/tidy_BPIPD_TEMPLATE.R` when a dataset needs study-specific tidying before harmonisation.
+Prefer inline `dplyr::recode()` expressions in `variables.csv` for short one-off recodes.
+Use lookup CSVs only when a value map becomes large enough that inline code is hard to read.
+
+## Getting Started
+
+### 1. Environment
+
+Recommended workflow is the included devcontainer (`.devcontainer/devcontainer.json`), which installs required R packages and mounts an external dataset directory to `/data`.
+
+### 2. Run the pipeline
+
+From R:
+
+```r
+targets::tar_make()
+```
+
+Useful commands:
+
+```r
+targets::tar_visnetwork()
+targets::tar_read(analysis_data)
+```
+
+### 3. Add a new dataset
+
+1. Ensure dataset folder exists in `/data` and follows naming convention.
+2. Copy `harmonisation/templates/dataset/` to `harmonisation/datasets/BPIPD-<id>/`.
+3. Fill in `dataset.yaml`, `layout.csv`, and `variables.csv`.
+4. Add a `lookups/` folder only if a mapping is too large to keep inline.
+5. Add `tidier: "tidy_BPIPD_<id>"` to `dataset.yaml` and create `R/tidy/tidy_BPIPD_<id>.R` when a study needs pre-harmonisation tidying.
+6. Add optional helper functions in `R/harmonise/helpers_BPIPD_<id>.R` only when needed.
+7. Run `targets::tar_make()`.
+
+## Development Notes
+
+- This repo uses `README.Rmd` as the source of truth; `README.md` is generated.
+- `_targets/` is generated runtime state and should not be edited manually.
+- Keep ingestion logic generic in `R/registry/`.
+- Keep study-specific tidying in `R/tidy/tidy_BPIPD_<id>.R` when needed.
+- Keep study-specific harmonisation metadata in `harmonisation/datasets/BPIPD-<id>/`.
+- Prefer inline `dplyr::recode()` for small dataset-specific value maps.
+- Use lookup CSVs only when a recode table is large enough to justify separating it from `variables.csv`.
+- Keep reusable transformation code in `R/harmonise/`; prefer explicit mapping rows over opaque custom functions.
+
+## Related Documentation
+
+- Preregistration source: `docs/prereg/bigger_picture_preregistration.Rmd`
+- Rendered preregistration outputs are in the same folder (`.pdf`, `.docx`, `.md`)

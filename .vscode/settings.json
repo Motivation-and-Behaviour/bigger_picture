@@ -1,5 +1,12 @@
 {
   "markdownlint.config": {
     "default": true,
-  }
+  },
+  "yaml.schemas": {
+    "./harmonisation/dataset.schema.json": [
+      "./harmonisation/*/dataset.yml",
+      "./harmonisation/*/dataset.yaml",
+    ]
+  },
+  "yaml.validate": true
 }

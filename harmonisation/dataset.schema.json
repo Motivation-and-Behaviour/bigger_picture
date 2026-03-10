@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/bp-dataset.schema.json",
+  "title": "BP IPD Dataset Specification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dataset_id",
+    "dataset_name",
+    "status"
+  ],
+  "properties": {
+    "dataset_id": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "BPIPD numeric identifier as a string (e.g., \"27\")."
+    },
+    "dataset_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "in_progress",
+        "harmonised",
+        "blocked"
+      ],
+      "description": "Pipeline status for this dataset."
+    },
+    "tidier": {
+      "type": "string",
+      "description": "Optional R function name for dataset-specific tidying before harmonisation."
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/resource"
+      }
+    },
+    "waves": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/wave"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "glob": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      ]
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "role",
+        "glob"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "data",
+            "codebook",
+            "docs"
+          ]
+        },
+        "glob": {
+          "$ref": "#/$defs/glob"
+        },
+        "reader": {
+          "type": "string",
+          "enum": [
+            "csv",
+            "tsv",
+            "stata",
+            "spss",
+            "sas",
+            "rds",
+            "parquet",
+            "excel"
+          ],
+          "description": "How to read this resource when role is data."
+        },
+        "sheet": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "description": "Excel sheet name or 1-based index (if reader is excel)."
+        },
+        "range": {
+          "type": "string",
+          "description": "Optional Excel range, e.g. \"A1:H200\"."
+        },
+        "wave_from": {
+          "type": "string",
+          "enum": [
+            "filename",
+            "column"
+          ],
+          "description": "Only relevant if this resource is wave-specific and needs wave labelling."
+        },
+        "wave_regex": {
+          "type": "string",
+          "description": "Regex to extract wave from filename when wave_from is filename."
+        },
+        "wave_column": {
+          "type": "string",
+          "description": "Column name containing wave when wave_from is column."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "docs"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "reader"
+                  ]
+                },
+                {
+                  "required": [
+                    "sheet"
+                  ]
+                },
+                {
+                  "required": [
+                    "range"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "data"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "required": [
+              "reader"
+            ]
+          }
+        }
+      ]
+    },
+    "wave": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wave",
+        "wave_dir",
+        "resources"
+      ],
+      "properties": {
+        "wave": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Wave identifier you want to use in harmonised outputs (e.g., \"2\")."
+        },
+        "label": {
+          "type": "string"
+        },
+        "wave_dir": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Literal subdirectory name/path within the dataset dir for this wave (not a glob pattern)."
+        },
+        "resources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/resource"
+          }
+        }
+      }
+    }
+  }
+}
