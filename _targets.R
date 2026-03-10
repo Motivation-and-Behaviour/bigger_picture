@@ -5,7 +5,7 @@ library(tarchetypes)
 tar_option_set(
   packages = c("dplyr"),
   controller = crew::crew_controller_local(
-    workers = min(parallel::detectCores() - 2, 20), seconds_idle = 15
+    workers = max(1, min(parallel::detectCores() - 2, 20)), seconds_idle = 15
   )
 )
 
