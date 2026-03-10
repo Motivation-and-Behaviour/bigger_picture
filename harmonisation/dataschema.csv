@@ -1,0 +1,7 @@
+variable_name,label,description,domain,entity,row_grain,data_type,unit,allowed_values,min_value,max_value,missing_rule,core,notes
+dataset_id,Dataset ID,Dataset specification identifier,provenance,dataset,participant_wave,character,,,,,Always populated from the dataset specification,TRUE,System variable injected during harmonisation
+dataset_name,Dataset name,Dataset specification name,provenance,dataset,participant_wave,character,,,,,Always populated from the dataset specification,TRUE,System variable injected during harmonisation
+participant_id,Participant ID,Study-specific participant identifier,provenance,participant,participant_wave,character,,,,,Should uniquely identify a participant within a dataset,TRUE,Required core identifier
+wave,Wave,Study wave or collection occasion,provenance,participant,participant_wave,character,,,,,Use NA when no repeated-wave structure is available,TRUE,Required core longitudinal field
+age_years,Age in years,Participant age at the observation in years,demographics,participant,participant_wave,double,years,,0,19,Use NA when age cannot yet be derived,TRUE,Continuous age measure
+sex,Sex,Harmonised participant sex/gender field,demographics,participant,participant_wave,character,,"male=Male|female=Female|other=Other|unknown=Unknown",,,,TRUE,Use explicit lookup tables when recoding source categories

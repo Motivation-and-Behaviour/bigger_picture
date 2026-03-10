@@ -1,0 +1,18 @@
+dataset_id: "TEMPLATE_ID"
+dataset_name: "Template Study"
+status: "in_progress"
+tidier: "tidy_BPIPD_TEMPLATE"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "data.csv"
+    reader: "csv"
+
+notes: |
+  Copy the matching dataset templates from:
+  - harmonisation/templates/dataset/layout_TEMPLATE.csv
+  - harmonisation/templates/dataset/variables_TEMPLATE.csv
+  Prefer inline `dplyr::recode()` in `variables.csv` for short one-off
+  recodes. Create a `lookups/` folder only when a mapping is large enough
+  that keeping it inline becomes hard to read.
