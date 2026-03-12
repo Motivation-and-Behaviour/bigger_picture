@@ -74,7 +74,7 @@ word_comment <- function(highlight = "",
     cmt_str <- glue::glue("{highlight} {{>> {comment} <<}}")
   }
   assign("cmt_num", cmt_num + 1, envir = .GlobalEnv)
-  return(cmt_str)
+  cmt_str
 }
 ```
 
