@@ -1,5 +1,5 @@
 target_variable,status,source_table,source_columns,expression,algorithm_summary,lookup_table,assumptions,notes,review_status
-participant_id,compatible,analysis_base,TODO_source_id,TODO_participant_id_expression,Document how the participant identifier is created.,,Replace the placeholder source columns and expression before use.,,draft
-wave,compatible,analysis_base,TODO_wave_source,TODO_wave_expression,Document how wave is defined or derived.,,Use `NA_character_` only if the dataset is truly cross-sectional.,,draft
-age_years,compatible,analysis_base,TODO_age_source,TODO_age_expression,Document how age is measured or derived.,,Use `NA_real_` only when age cannot yet be harmonised.,,draft
-sex,compatible,analysis_base,TODO_sex_source,TODO_inline_recode_expression,Document the inline recode or other derivation used for sex/gender harmonisation.,,Prefer inline `dplyr::recode()` for short one-off mappings.,Use `lookup_table` only when the mapping is too large to read comfortably inline.,draft
+participant_id,compatible,tidied_data,TODO_source_id,TODO_participant_id_expression,Document how the participant identifier is created.,,Replace the placeholder source columns and expression before use.,,draft
+wave,compatible,tidied_data,TODO_wave_source,TODO_wave_expression,Document how wave is defined or derived.,,Use `NA_character_` only if the dataset is truly cross-sectional.,,draft
+age_years,compatible,tidied_data,TODO_age_source,TODO_age_expression,Document how age is measured or derived.,,Use `NA_real_` only when age cannot yet be harmonised.,,draft
+sex,compatible,tidied_data,TODO_sex_source,TODO_inline_recode_expression,Document the inline recode or other derivation used for sex/gender harmonisation.,,Prefer inline `dplyr::recode()` for short one-off mappings.,Use `lookup_table` only when the mapping is too large to read comfortably inline.,draft

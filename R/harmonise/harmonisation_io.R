@@ -9,35 +9,12 @@ read_harmonisation_config <- function(dataset_id, dataschema) {
 
   config <- list(
     dataset_id = as.character(dataset_id),
-    layout = read_harmonisation_layout(paths$layout_file),
     variables = read_harmonisation_variables(paths$variables_file),
     lookups = read_lookup_tables(paths$lookup_dir),
     paths = paths
   )
 
   validate_harmonisation_config(config, dataschema)
-}
-
-read_harmonisation_layout <- function(path) {
-  layout <- readr::read_csv(path, show_col_types = FALSE)
-
-  expected <- c(
-    "step_order",
-    "step_type",
-    "output_table",
-    "table_name",
-    "table_name_2",
-    "input_tables",
-    "join_keys",
-    "expression",
-    "notes"
-  )
-
-  ensure_required_columns(layout, expected, "layout.csv")
-  layout <- add_missing_columns(layout, expected)
-
-  layout$step_order <- as.integer(layout$step_order)
-  layout
 }
 
 read_harmonisation_variables <- function(path) {
@@ -124,55 +101,18 @@ validate_dataschema <- function(dataschema) {
 }
 
 validate_harmonisation_config <- function(config, dataschema) {
-  validate_harmonisation_layout(config$layout)
   validate_harmonisation_vars(
-    config$variables, dataschema, names(config$lookups)
+    config$variables,
+    dataschema,
+    names(config$lookups)
   )
   config
 }
 
-validate_harmonisation_layout <- function(layout) {
-  if (nrow(layout) == 0) {
-    stop("layout.csv must contain at least one row.", call. = FALSE)
-  }
-
-  if (any(is.na(layout$step_order))) {
-    stop("layout.csv contains missing `step_order` values.", call. = FALSE)
-  }
-
-  missing_step_type <- is.na(layout$step_type) | !nzchar(layout$step_type)
-  if (any(missing_step_type)) {
-    stop("layout.csv contains empty `step_type` values.", call. = FALSE)
-  }
-
-  missing_output <- is.na(layout$output_table) | !nzchar(layout$output_table)
-  if (any(missing_output)) {
-    stop("layout.csv contains empty `output_table` values.", call. = FALSE)
-  }
-
-  unknown_steps <- setdiff(unique(layout$step_type), bp_layout_step_types())
-  unknown_steps <- unknown_steps[!is.na(unknown_steps) & nzchar(unknown_steps)]
-
-  if (length(unknown_steps) > 0) {
-    stop(
-      "Unknown `step_type` values in layout.csv: ",
-      paste(unknown_steps, collapse = ", "),
-      call. = FALSE
-    )
-  }
-
-  if (!"analysis_base" %in% layout$output_table) {
-    stop(
-      "layout.csv must define an `analysis_base` output table.",
-      call. = FALSE
-    )
-  }
-
-  invisible(layout)
-}
-
 validate_harmonisation_vars <- function(
-  variables, dataschema, lookup_names
+  variables,
+  dataschema,
+  lookup_names
 ) {
   if (nrow(variables) == 0) {
     stop("variables.csv must contain at least one row.", call. = FALSE)
@@ -254,9 +194,8 @@ validate_harmonisation_vars <- function(
     )
   }
 
-  missing_summary <- active_rows & (
-    is.na(variables$algorithm_summary) | !nzchar(variables$algorithm_summary)
-  )
+  missing_summary <- active_rows &
+    (is.na(variables$algorithm_summary) | !nzchar(variables$algorithm_summary))
   if (any(missing_summary)) {
     stop(
       "variables.csv must provide `algorithm_summary` for mapped variables: ",

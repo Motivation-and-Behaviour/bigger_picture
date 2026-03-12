@@ -1,5 +1,9 @@
-harmonise_from_spec <- function(tidied_dataset, spec, dataschema = NULL,
-                                harmonisation_config = NULL) {
+harmonise_from_spec <- function(
+  analysis_base,
+  spec,
+  dataschema = NULL,
+  harmonisation_config = NULL
+) {
   if (is.null(dataschema) || is.null(harmonisation_config)) {
     stop(
       "Harmonisation requires both `dataschema` and `harmonisation_config`.",
@@ -8,7 +12,7 @@ harmonise_from_spec <- function(tidied_dataset, spec, dataschema = NULL,
   }
 
   harmonise_from_tables(
-    tidied_dataset = tidied_dataset,
+    analysis_base = analysis_base,
     spec = spec,
     dataschema = dataschema,
     harmonisation_config = harmonisation_config
