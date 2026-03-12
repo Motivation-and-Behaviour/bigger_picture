@@ -34,17 +34,6 @@ bp_harmonisation_status_values <- function() {
   )
 }
 
-bp_layout_step_types <- function() {
-  c(
-    "use_table",
-    "transform",
-    "left_join",
-    "inner_join",
-    "full_join",
-    "bind_rows"
-  )
-}
-
 bp_system_schema_variables <- function() {
   c("dataset_id", "dataset_name")
 }

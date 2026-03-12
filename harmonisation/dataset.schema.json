@@ -29,10 +29,6 @@
       ],
       "description": "Pipeline status for this dataset."
     },
-    "tidier": {
-      "type": "string",
-      "description": "Optional R function name for dataset-specific tidying before harmonisation."
-    },
     "resources": {
       "type": "array",
       "items": {

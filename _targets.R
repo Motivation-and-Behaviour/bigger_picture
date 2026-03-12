@@ -57,6 +57,11 @@ if (nrow(.dataset_map_plan) == 0) {
         spec,
         yaml::read_yaml(spec_file)
       ),
+      tar_target(
+        tidier_file,
+        find_tidier_file(dataset_id),
+        format = "file"
+      ),
 
       # Track DATA files only
       tar_target(
@@ -73,7 +78,10 @@ if (nrow(.dataset_map_plan) == 0) {
       ),
       tar_target(
         tidied,
-        tidy_from_spec(raw, spec)
+        {
+          tidier_file
+          tidy_from_spec(raw, spec)
+        }
       )
     )
   )

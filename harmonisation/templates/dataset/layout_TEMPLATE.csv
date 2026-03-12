@@ -1,2 +1,0 @@
-step_order,step_type,output_table,table_name,table_name_2,input_tables,join_keys,expression,notes
-1,use_table,analysis_base,data,,,,,Start from the primary raw data table.
