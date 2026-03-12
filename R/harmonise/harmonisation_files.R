@@ -24,7 +24,9 @@ list_harmonisation_files <- function(dataset_id) {
       files,
       fs::dir_ls(
         paths$lookup_dir,
-        recurse = TRUE, type = "file", glob = "*.csv"
+        recurse = TRUE,
+        type = "file",
+        glob = "*.csv"
       )
     )
   }
@@ -38,7 +40,9 @@ conventional_tidier_name <- function(dataset_id) {
 
 find_tidier_file <- function(dataset_id) {
   path <- fs::path(
-    "R", "tidy", paste0(conventional_tidier_name(dataset_id), ".R")
+    "R",
+    "tidy",
+    paste0(conventional_tidier_name(dataset_id), ".R")
   )
 
   if (!fs::file_exists(path)) {

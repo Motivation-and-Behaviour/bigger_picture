@@ -1,5 +1,9 @@
-harmonise_from_tables <- function(analysis_base, spec, dataschema,
-                                  harmonisation_config) {
+harmonise_from_tables <- function(
+  analysis_base,
+  spec,
+  dataschema,
+  harmonisation_config
+) {
   analysis_base <- tibble::as_tibble(analysis_base)
   outputs <- vector("list", nrow(dataschema))
 
@@ -9,7 +13,8 @@ harmonise_from_tables <- function(analysis_base, spec, dataschema,
     schema_row <- dataschema[i, , drop = FALSE]
     variable_name <- schema_row$variable_name[[1]]
     mapping_row <- get_mapping_row(
-      harmonisation_config$variables, variable_name
+      harmonisation_config$variables,
+      variable_name
     )
 
     values <- derive_schema_variable(
@@ -36,8 +41,13 @@ get_mapping_row <- function(variables, variable_name) {
   row
 }
 
-derive_schema_variable <- function(schema_row, mapping_row, analysis_base, spec,
-                                   lookups) {
+derive_schema_variable <- function(
+  schema_row,
+  mapping_row,
+  analysis_base,
+  spec,
+  lookups
+) {
   variable_name <- schema_row$variable_name[[1]]
   data_type <- schema_row$data_type[[1]]
   n_rows <- nrow(analysis_base)
@@ -51,7 +61,8 @@ derive_schema_variable <- function(schema_row, mapping_row, analysis_base, spec,
   if (identical(variable_name, "dataset_name")) {
     return(
       cast_to_schema_type(
-        rep(as.character(spec$dataset_name), n_rows), data_type
+        rep(as.character(spec$dataset_name), n_rows),
+        data_type
       )
     )
   }
@@ -79,7 +90,8 @@ derive_schema_variable <- function(schema_row, mapping_row, analysis_base, spec,
   )
 
   cast_to_schema_type(
-    recycle_to_n_rows(raw_value, n_rows, variable_name), data_type
+    recycle_to_n_rows(raw_value, n_rows, variable_name),
+    data_type
   )
 }
 
@@ -131,7 +143,9 @@ recycle_to_n_rows <- function(value, n_rows, variable_name) {
   }
 
   stop(
-    "Expression for `", variable_name, "` returned length ",
+    "Expression for `",
+    variable_name,
+    "` returned length ",
     length(value),
     " but expected 1 or ",
     n_rows,
@@ -141,7 +155,8 @@ recycle_to_n_rows <- function(value, n_rows, variable_name) {
 }
 
 typed_na_vector <- function(data_type, n_rows) {
-  switch(data_type,
+  switch(
+    data_type,
     character = rep(NA_character_, n_rows),
     double = rep(NA_real_, n_rows),
     integer = rep(NA_integer_, n_rows),
@@ -152,7 +167,8 @@ typed_na_vector <- function(data_type, n_rows) {
 }
 
 cast_to_schema_type <- function(value, data_type) {
-  switch(data_type,
+  switch(
+    data_type,
     character = as.character(value),
     double = as.numeric(value),
     integer = as.integer(value),

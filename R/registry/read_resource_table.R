@@ -1,5 +1,8 @@
 read_resource_table <- function(
-  resource, base_dir, wave = NULL, wave_label = NULL
+  resource,
+  base_dir,
+  wave = NULL,
+  wave_label = NULL
 ) {
   role <- resource$role
   name <- resource$name
@@ -14,7 +17,10 @@ read_resource_table <- function(
 
   if (length(paths) == 0) {
     return(list(
-      data = list(), codebook = list(), docs = character(), meta = meta
+      data = list(),
+      codebook = list(),
+      docs = character(),
+      meta = meta
     ))
   }
 
@@ -27,7 +33,9 @@ read_resource_table <- function(
     out <- list()
     for (i in seq_along(paths)) {
       nm <- name
-      if (length(paths) > 1) nm <- paste0(name, "__", i)
+      if (length(paths) > 1) {
+        nm <- paste0(name, "__", i)
+      }
       out[[nm]] <- paths[[i]]
     }
     return(list(data = list(), codebook = out, docs = character(), meta = meta))
@@ -41,11 +49,15 @@ read_resource_table <- function(
   out <- list()
   for (i in seq_along(paths)) {
     nm <- name
-    if (length(paths) > 1) nm <- paste0(name, "__", i)
+    if (length(paths) > 1) {
+      nm <- paste0(name, "__", i)
+    }
 
     tbl <- read_tabular_file(
       paths[[i]],
-      reader = reader, sheet = sheet, range = range
+      reader = reader,
+      sheet = sheet,
+      range = range
     )
 
     if (!is.null(wave)) {

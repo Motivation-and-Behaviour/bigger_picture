@@ -102,13 +102,17 @@ validate_dataschema <- function(dataschema) {
 
 validate_harmonisation_config <- function(config, dataschema) {
   validate_harmonisation_vars(
-    config$variables, dataschema, names(config$lookups)
+    config$variables,
+    dataschema,
+    names(config$lookups)
   )
   config
 }
 
 validate_harmonisation_vars <- function(
-  variables, dataschema, lookup_names
+  variables,
+  dataschema,
+  lookup_names
 ) {
   if (nrow(variables) == 0) {
     stop("variables.csv must contain at least one row.", call. = FALSE)
@@ -190,9 +194,8 @@ validate_harmonisation_vars <- function(
     )
   }
 
-  missing_summary <- active_rows & (
-    is.na(variables$algorithm_summary) | !nzchar(variables$algorithm_summary)
-  )
+  missing_summary <- active_rows &
+    (is.na(variables$algorithm_summary) | !nzchar(variables$algorithm_summary))
   if (any(missing_summary)) {
     stop(
       "variables.csv must provide `algorithm_summary` for mapped variables: ",

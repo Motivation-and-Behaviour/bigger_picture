@@ -12,7 +12,9 @@ tidy_from_spec <- function(raw_dataset, spec) {
 as_tidied_dataset <- function(x, tidier_name) {
   if (!inherits(x, "data.frame")) {
     stop(
-      "Tidier `", tidier_name, "` must return a data frame or tibble.",
+      "Tidier `",
+      tidier_name,
+      "` must return a data frame or tibble.",
       call. = FALSE
     )
   }

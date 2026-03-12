@@ -13,7 +13,7 @@
 tidy_BPIPD_TEMPLATE <- function(raw_dataset, spec) {
   if (length(raw_dataset$data) != 1L) {
     stop(
-      "Replace the template tidier with study-specific code that returns one tibble.",
+      "Replace the template tidier with study-specific code",
       call. = FALSE
     )
   }

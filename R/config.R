@@ -50,12 +50,12 @@ bp_schema <- function() {
       "sex"
     ),
     types = c(
-      dataset_id      = "character",
-      dataset_name    = "character",
-      participant_id  = "character",
-      wave            = "character",
-      age_years       = "double",
-      sex             = "character"
+      dataset_id = "character",
+      dataset_name = "character",
+      participant_id = "character",
+      wave = "character",
+      age_years = "double",
+      sex = "character"
     )
   )
 }

@@ -7,7 +7,9 @@ list_data_files_from_spec <- function(dataset_dir, spec) {
     }
 
     for (res in resources) {
-      if (!identical(res$role, "data")) next
+      if (!identical(res$role, "data")) {
+        next
+      }
       files <<- c(files, resolve_glob_paths(base_dir, res$glob))
     }
 

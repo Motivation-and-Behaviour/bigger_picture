@@ -8,5 +8,13 @@
       "./harmonisation/*/dataset.yaml",
     ]
   },
-  "yaml.validate": true
+  "yaml.validate": true,
+  "[r]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "Posit.air-vscode"
+  },
+  "[quarto]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "quarto.quarto"
+  }
 }
