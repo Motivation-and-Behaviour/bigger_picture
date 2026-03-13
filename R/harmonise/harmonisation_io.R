@@ -23,7 +23,6 @@ read_harmonisation_variables <- function(path) {
   expected <- c(
     "target_variable",
     "status",
-    "source_table",
     "source_columns",
     "expression",
     "algorithm_summary",
