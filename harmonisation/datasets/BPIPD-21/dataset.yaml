@@ -1,0 +1,9 @@
+dataset_id: "21"
+dataset_name: "Przybylski"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "data.sav"
+    reader: "spss"

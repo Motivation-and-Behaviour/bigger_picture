@@ -1,0 +1,5 @@
+target_variable,status,source_columns,expression,algorithm_summary,lookup_table,assumptions,notes,review_status
+participant_id,compatible,Serial,as.character(Serial),Assume Serial is the participant ID,,Replace the placeholder source columns and expression before use.,,draft
+wave,incompatible,,NA,Document how wave is defined or derived.,,Use `NA_character_` only if the dataset is truly cross-sectional.,,draft
+age_years,incompatible,,NA,Document how age is measured or derived.,,Use `NA_real_` only when age cannot yet be harmonised.,,draft
+sex,compatible,Genderg,"recode_values(haven::as_factor(Genderg), ""Female or unknown"" ~ ""female"", ""Male"" ~ ""male"")",Convert labels to harmonised values,,Assume 'unknown' was minimal (aligns with publication),Use `lookup_table` only when the mapping is too large to read comfortably inline.,draft
