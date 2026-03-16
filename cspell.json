@@ -1,8 +1,8 @@
 {
-  "language": "en-AU, en",
-  "enabled": true,
+  "language": "en-AU",
   "files": [
-    "**/*.Rmd"
+    "**/*.Rmd",
+    "**/*.md"
   ],
   "patterns": [
     {
@@ -18,10 +18,6 @@
       "pattern": "`r [^`]+`"
     },
     {
-      "name": "yaml_header",
-      "pattern": "^---[\\s\\S]*?---"
-    },
-    {
       "name": "latex_commands",
       "pattern": "\\\\[a-zA-Z]+"
     }
@@ -30,7 +26,6 @@
     "references",
     "code_fence",
     "inline_r_code",
-    "yaml_header",
     "latex_commands"
   ],
   "words": [
@@ -39,6 +34,7 @@
     "covariates",
     "disaggregate",
     "disclosive",
+    "Taren",
     "wellbeing"
   ]
 }
