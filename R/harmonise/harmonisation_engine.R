@@ -72,7 +72,7 @@ derive_schema_variable <- function(
   }
 
   status <- mapping_row$status[[1]]
-  if (status %in% c("incompatible", "unavailable")) {
+  if (status %in% c("incompatible", "unavailable", "in_progress")) {
     return(typed_na_vector(data_type, n_rows))
   }
 
