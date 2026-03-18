@@ -25,11 +25,8 @@ read_harmonisation_variables <- function(path) {
     "status",
     "source_columns",
     "expression",
-    "algorithm_summary",
-    "lookup_table",
-    "assumptions",
     "notes",
-    "review_status"
+    "lookup_table"
   )
 
   ensure_required_columns(variables, expected, "variables.csv")
@@ -55,7 +52,6 @@ validate_dataschema <- function(dataschema) {
     "description",
     "domain",
     "entity",
-    "row_grain",
     "data_type",
     "unit",
     "allowed_values",
@@ -182,23 +178,14 @@ validate_harmonisation_vars <- function(
     )
   }
 
-  active_rows <- !variables$status %in% c("incompatible", "unavailable")
+  active_rows <- !variables$status %in%
+    c("incompatible", "unavailable", "in_progress")
   missing_expr <-
     active_rows & (is.na(variables$expression) | !nzchar(variables$expression))
   if (any(missing_expr)) {
     stop(
       "variables.csv must provide an `expression` for mapped variables: ",
       paste(variables$target_variable[missing_expr], collapse = ", "),
-      call. = FALSE
-    )
-  }
-
-  missing_summary <- active_rows &
-    (is.na(variables$algorithm_summary) | !nzchar(variables$algorithm_summary))
-  if (any(missing_summary)) {
-    stop(
-      "variables.csv must provide `algorithm_summary` for mapped variables: ",
-      paste(variables$target_variable[missing_summary], collapse = ", "),
       call. = FALSE
     )
   }

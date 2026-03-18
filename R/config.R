@@ -25,12 +25,11 @@ bp_harmonisation_dataset_dir <- function(dataset_id) {
 
 bp_harmonisation_status_values <- function() {
   c(
-    "identical",
     "compatible",
-    "proximate",
-    "tentative",
     "incompatible",
-    "unavailable"
+    "unavailable",
+    "inferred",
+    "in_progress" # default - tells harmoniser to skip
   )
 }
 

@@ -1,7 +1,22 @@
-variable_name,label,description,domain,entity,row_grain,data_type,unit,allowed_values,min_value,max_value,missing_rule,core,notes
-dataset_id,Dataset ID,Dataset specification identifier,provenance,dataset,participant_wave,character,,,,,Always populated from the dataset specification,TRUE,System variable injected during harmonisation
-dataset_name,Dataset name,Dataset specification name,provenance,dataset,participant_wave,character,,,,,Always populated from the dataset specification,TRUE,System variable injected during harmonisation
-participant_id,Participant ID,Study-specific participant identifier,provenance,participant,participant_wave,character,,,,,Should uniquely identify a participant within a dataset,TRUE,Required core identifier
-wave,Wave,Study wave or collection occasion,provenance,participant,participant_wave,character,,,,,Use NA when no repeated-wave structure is available,TRUE,Required core longitudinal field
-age_years,Age in years,Participant age at the observation in years,demographics,participant,participant_wave,double,years,,0,19,Use NA when age cannot yet be derived,TRUE,Continuous age measure
-sex,Sex,Harmonised participant sex/gender field,demographics,participant,participant_wave,character,,"male=Male|female=Female|other=Other|unknown=Unknown",,,,TRUE,Use explicit lookup tables when recoding source categories
+variable_name,label,description,domain,entity,data_type,unit,allowed_values,min_value,max_value,missing_rule,core,notes
+dataset_id,Dataset ID,Dataset specification identifier,provenance,dataset,character,,,,,Always populated from the dataset specification,TRUE,System variable injected during harmonisation
+dataset_name,Dataset name,Dataset specification name,provenance,dataset,character,,,,,Always populated from the dataset specification,TRUE,System variable injected during harmonisation
+participant_id,Participant ID,Study-specific participant identifier,provenance,participant,character,,,,,Should uniquely identify a participant within a dataset,TRUE,Required core identifier
+wave,Wave,Study wave or collection occasion,provenance,participant,character,,,,,Use NA when no repeated-wave structure is available,TRUE,Required core longitudinal field
+age_years,Age in years,Participant age at the observation in years,demographics,participant,double,years,,0,19,Use NA when age cannot yet be derived,TRUE,Continuous age measure
+sex,Sex,Harmonised participant sex/gender field,demographics,participant,character,,"Male|Female|Other|Unknown",,,Use Unknown if cannot be derived,TRUE,Use explicit lookup tables when recoding source categories
+country,Country,Participant's location at observation point,demographics,participant,character,,United Kingdom|Unknown,,,Use Unknown if cannot be derived,TRUE,"If not in dataset, assume based on where data were collected"
+ethnicity,Ethnicity,Participant ethnicity,demographics,participant,character,,White|Black|Mixed|Asian|Other|Unknown,,,Use Unknown if cannot be derived,TRUE,
+minority,Minority,Indicator for if the participant ethnicity indicates they are a minority within their country/region,demographics,participant,character,,Minority|Non-minority|Unknown,,,Use Unknown if cannot be derived,TRUE,
+ses_area,Area-level SES,Socioeconomic status for the area the participant lives,demographics,participant,character,,High|Medium|Low|Unknown,,,Use Unknown if cannot be derived,TRUE,"Where feasible, based on quintiles, where top 2 and bottom 2 are high and low."
+st_measure_type,Screen Time Measurement Type,Type of measure used for screen time,screen_time,study,character,,Continuous|Categorical,,,Should not be missing,TRUE,Record the type of variable the original study used to capture screen time
+st_measure_name,Screen Time Measure Name,"Name for screen time measure, if known or provided",screen_time,,,,,,,Should not be missing - using 'Unknown' or 'Custom' as required,TRUE,
+st_watch_wd,"Screen Time: Watching (e.g., TV, streaming) on average weekday","Time spent watching content (e.g., TV, movies, streaming) on weekdays",screen_time,participant,double,hours,,0,24,Use NA if not available,TRUE,
+st_watch_we,"Screen Time: Watching (e.g., TV, streaming) on average weekend day","Time spent watching content (e.g., TV, movies, streaming) on weekends",screen_time,participant,double,hours,,0,24,Use NA if not available,TRUE,
+st_game_wd,Screen Time: Gaming (computer or console) on average weekday,"Time spent playing games (e.g., console or computer games) on weekdays",screen_time,participant,double,hours,,0,24,Use NA if not available,TRUE,
+st_game_we,Screen Time: Gaming (computer or console) on average weekend day,"Time spent playing games (e.g., console or computer games) on weekends",screen_time,participant,double,hours,,0,24,Use NA if not available,TRUE,
+st_comp_wd,Screen Time: Computer (non-gaming) on average weekday,Time spent using a computer (non-gaming) on weekdays,screen_time,participant,double,hours,,0,24,Use NA if not available,TRUE,
+st_comp_we,Screen Time: Computer (non-gaming) on average weekend day,Time spent using a computer (non-gaming) on weekends,screen_time,participant,double,hours,,0,24,Use NA if not available,TRUE,
+st_phone_wd,"Screen Time: Smartphone (e.g., social media) on average weekday","Time spent using a smartphone (e.g., social media) on weekdays",screen_time,participant,double,hours,,0,24,Use NA if not available,TRUE,
+st_phone_we,"Screen Time: Smartphone (e.g., social media) on average weekend day","Time spent using a smartphone (e.g., social media) on weekends",screen_time,participant,double,hours,,0,24,Use NA if not available,TRUE,
+wb_mwb_wemwbs,Wellbeing: Mental Wellbeing - Warwick Edinburgh Mental Wellbeing Scale,Raw summed score on WEMWBS,wellbeing,participant,double,,,14,70,Use NA if not available,FALSE,Initial variable - likely to be revised

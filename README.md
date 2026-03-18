@@ -31,10 +31,9 @@ described in per-study YAML specs - **tidy first, harmonise second**:
 each study is reshaped into one canonical tibble before variable-level
 harmonisation - **table-driven harmonisation**: the shared schema,
 per-study mappings, and optional lookup tables are stored as CSV files -
-**inline recodes by default**: prefer readable `dplyr::recode()`
-expressions in `variables.csv` for short one-off mappings - **pipeline
-orchestration with `targets`**: rebuilds are dependency-aware and
-reproducible
+**inline recodes by default**: prefer readable inline recode expressions
+in `variables.csv` for short one-off mappings - **pipeline orchestration
+with `targets`**: rebuilds are dependency-aware and reproducible
 
 ## Repository Structure
 
@@ -43,24 +42,28 @@ reproducible
 ├── _targets.R                     # Main pipeline definition
 ├── R/
 │   ├── config.R                   # Global config (data dir, naming pattern, schema helper)
+│   ├── helpers.R                  # Small shared helpers
 │   ├── tidy/
 │   │   ├── tidy_from_spec.R               # Study-specific tidying dispatcher
-│   │   └── tidy_BPIPD_TEMPLATE.R          # Template tidier
+│   │   ├── tidy_BPIPD_TEMPLATE.R          # Template tidier
+│   │   └── tidy_BPIPD_<id>.R              # Per-study tidier implementations
 │   ├── harmonise/
 │   │   ├── harmonise_from_spec.R          # Harmonisation dispatcher
 │   │   ├── harmonisation_engine.R         # Table-driven harmonisation engine
+│   │   ├── harmonisation_files.R          # Harmonisation/tidier file discovery helpers
 │   │   └── harmonisation_io.R             # Read/validate schema + study config
 │   └── registry/
 │       ├── list_datasets.R
 │       ├── read_dataset_specs.R
 │       ├── create_dataset_plan.R
+│       ├── list_data_files_from_spec.R
 │       ├── read_dataset_from_spec.R
 │       ├── read_resource_table.R
 │       ├── read_tabular_file.R
 │       └── resolve_glob_paths.R
 ├── harmonisation/
 │   ├── dataschema.csv             # Shared harmonised variable schema
-│   ├── dataset.schema.json        # Dataset spec schema
+│   ├── dataset.schema.json        # Dataset spec schema documentation
 │   ├── datasets/
 │   │   └── BPIPD-*/               # Per-dataset dataset.yaml, variables.csv, optional lookups/
 │   └── templates/
@@ -87,9 +90,10 @@ At a high level, `_targets.R` performs the following:
 5.  For each dataset with harmonisation metadata:
     - track `variables.csv` and any lookup CSVs as target inputs
     - read and validate the shared `dataschema.csv`
+    - read and validate the per-dataset harmonisation config
     - derive harmonised variables from the tidied study tibble and
       `variables.csv`
-6.  Combine all harmonised outputs into `analysis_data`.
+6.  Row-bind all harmonised dataset outputs into `analysis_data`.
 
 ## Data Discovery Convention
 
@@ -128,6 +132,9 @@ Supported `reader` values: - `csv`, `tsv`, `stata`, `spss`, `sas`,
 `rds`, `parquet`, `excel`
 
 The full contract is documented by `harmonisation/dataset.schema.json`.
+At present this schema is descriptive documentation for contributors;
+the pipeline reads YAML specs directly and does not yet validate them
+against the JSON schema at runtime.
 
 ## Harmonisation Contract
 
@@ -142,20 +149,32 @@ recode tables)
 
 Inputs to the engine: - `raw_dataset`: full ingestion bundle available
 to the study tidier (`data`, `codebook`, `docs`, `meta`) -
-`tidied_data`: one tidied tibble returned by `tidy_from_spec()` -
-`spec`: parsed YAML spec - `dataschema`: shared schema table -
-`variables.csv`: how each schema variable is derived - lookup CSVs:
-optional explicit value recodes for mappings that are too large to keep
-inline
+`tidied_data`: one tidied tibble returned by `tidy_from_spec()`; this is
+the table the harmoniser actually transforms - `spec`: parsed YAML
+spec - `dataschema`: shared schema table - `variables.csv`: how each
+schema variable is derived - lookup CSVs: optional explicit value
+recodes for mappings that are too large to keep inline
 
-Outputs: - `analysis_data`: one harmonised tibble per dataset
+Outputs: - one harmonised tibble per dataset during branching -
+`analysis_data`: the row-bound combined table across all harmonised
+datasets
+
+Expressions in `variables.csv` are evaluated against the tidied study
+tibble and can reference: - columns in the tidied tibble directly -
+`tbl` / `analysis_base` for the full tidied table - `spec` for dataset
+metadata - `lookup_tables` and individual `lookup_<name>` objects for
+any loaded lookup CSVs
+
+`raw_dataset` is not available inside harmonisation expressions; any
+work that depends on the raw ingestion bundle should happen in the study
+tidier before harmonisation.
 
 Use `harmonisation/templates/dataset/` as the starting point for new
 datasets. Every dataset must provide `R/tidy/tidy_BPIPD_<id>.R`. Use
 `R/tidy/tidy_BPIPD_TEMPLATE.R` as the starting point when creating a new
-study tidier. Prefer inline `dplyr::recode()` expressions in
-`variables.csv` for short one-off recodes. Use lookup CSVs only when a
-value map becomes large enough that inline code is hard to read.
+study tidier. Prefer inline recode expressions in `variables.csv` for
+short one-off recodes. Use lookup CSVs only when a value map becomes
+large enough that inline code is hard to read.
 
 ## Getting Started
 
@@ -205,7 +224,11 @@ targets::tar_read(tidied_BPIPD_21)
   return one tibble.
 - Keep study-specific harmonisation metadata in
   `harmonisation/datasets/BPIPD-<id>/`.
-- Prefer inline `dplyr::recode()` for small dataset-specific value maps.
+- `harmonisation/dataset.schema.json` documents the intended
+  dataset-spec contract, but the current pipeline does not validate
+  against it automatically.
+- Prefer inline recode expressions in `variables.csv` for small
+  dataset-specific value maps.
 - Use lookup CSVs only when a recode table is large enough to justify
   separating it from `variables.csv`.
 
