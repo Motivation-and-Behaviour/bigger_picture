@@ -3,9 +3,10 @@
     "default": true,
   },
   "yaml.schemas": {
-    "./harmonisation/dataset.schema.json": [
-      "./harmonisation/*/dataset.yml",
-      "./harmonisation/*/dataset.yaml",
+    "harmonisation/dataset.schema.json": [
+      "/harmonisation/datasets/*/dataset.yml",
+      "/harmonisation/datasets/*/dataset.yaml",
+      "/harmonisation/templates/dataset/dataset.yaml"
     ]
   },
   "yaml.validate": true,
@@ -16,5 +17,5 @@
   "[quarto]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "quarto.quarto"
-  }
+  },
 }
