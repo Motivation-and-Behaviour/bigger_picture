@@ -1,5 +1,20 @@
-target_variable,status,source_columns,expression,algorithm_summary,lookup_table,assumptions,notes,review_status
-participant_id,compatible,TODO_participant_id,TODO_participant_id_expression,Document how the participant identifier is created.,,Replace the placeholder source columns and expression before use.,,draft
-wave,compatible,TODO_wave,TODO_wave_expression,Document how wave is defined or derived.,,Use `NA_character_` only if the dataset is truly cross-sectional.,,draft
-age_years,compatible,TODO_age,TODO_age_expression,Document how age is measured or derived.,,Use `NA_real_` only when age cannot yet be harmonised.,,draft
-sex,compatible,TODO_sex,TODO_inline_recode_expression,Document the inline recode or other derivation used for sex/gender harmonisation.,,Prefer inline `dplyr::recode()` for short one-off mappings.,Use `lookup_table` only when the mapping is too large to read comfortably inline.,draft
+target_variable,status,source_columns,expression,notes,lookup_table
+participant_id,in_progress,,,,
+wave,in_progress,,,,
+age_years,in_progress,,,,
+sex,in_progress,,,,
+country,in_progress,,,,
+ethnicity,in_progress,,,,
+minority,in_progress,,,,
+ses_area,in_progress,,,,
+st_measure_type,in_progress,,,,
+st_measure_name,in_progress,,,,
+st_watch_wd,in_progress,,,,
+st_watch_we,in_progress,,,,
+st_game_wd,in_progress,,,,
+st_game_we,in_progress,,,,
+st_comp_wd,in_progress,,,,
+st_comp_we,in_progress,,,,
+st_phone_wd,in_progress,,,,
+st_phone_we,in_progress,,,,
+wb_mwb_wemwbs,in_progress,,,,
