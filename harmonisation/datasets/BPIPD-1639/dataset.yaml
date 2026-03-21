@@ -1,0 +1,26 @@
+dataset_id: "1639"
+dataset_name: "Prevention of Overweight in Infancy (POI) study"
+status: "in_progress"
+
+resources:
+  - name: "demographics"
+    role: "data"
+    glob: "Demographics.xls"
+    sheet: "Data"
+    reader: "excel"
+  - name: "questionnaire"
+    role: "data"
+    glob: "Questionnaire5FINAL.xlsx"
+    sheet: "Data"
+    reader: "excel"
+  - name: "self_control"
+    role: "data"
+    glob: "Selfcontrol5years.xlsx"
+    sheet: "Data"
+    reader: "excel"
+
+notes: |
+  This is a longitudinal dataset, but the 3.5 year data does not have useable screen time measure.
+  So we have treated this like cross-sectional study at age 5.
+  Note that there are lots of additional variables, especially on parenting, that haven't been harmonised.
+  Where possible, prefered scaled scores for instruments like NEPSY.

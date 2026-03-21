@@ -14,5 +14,7 @@ notes: |
   Create `R/tidy/tidy_BPIPD_<id>.R` for this dataset. The pipeline expects one
   tidier file per study and tracks that file directly.
   Prefer inline `dplyr::recode()` in `variables.csv` for short one-off
-  recodes. Create a `lookups/` folder only when a mapping is large enough
-  that keeping it inline becomes hard to read.
+  recodes. Put common cross-study recodes (for example ethnicity category
+  mappings) in `harmonisation/lookups/*.csv`. Create a dataset-specific
+  `lookups/` folder only when a large one-off mapping is not shared across
+  studies and is too large to keep inline.

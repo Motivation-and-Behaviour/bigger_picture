@@ -1,0 +1,5 @@
+dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
+1639,maternal_education,6th/7th for,Secondary school or less,compatible,Original values cutoff
+1639,maternal_education,5th form or,Secondary school or less,compatible,Original values cutoff
+1639,maternal_education,Post-second,Post-secondary,compatible,Original values cutoff
+1639,maternal_education,Degree or h,Bachelor degree or higher,compatible,Original values cutoff

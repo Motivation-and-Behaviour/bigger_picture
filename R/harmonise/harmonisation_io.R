@@ -6,11 +6,33 @@ read_dataschema <- function(path = bp_dataschema_path()) {
 
 read_harmonisation_config <- function(dataset_id, dataschema) {
   paths <- dataset_harmonisation_paths(dataset_id)
+  variables <- read_harmonisation_variables(paths$variables_file)
+  lookup_files <- resolve_lookup_files(
+    paths,
+    declared_lookup_from_vars(variables)
+  )
+
+  shared_lookups <- read_lookup_tables(
+    lookup_files[lookup_files$scope == "shared", , drop = FALSE]
+  )
+  if (length(shared_lookups) > 0) {
+    validate_shared_lookup_tables(shared_lookups)
+  }
+
+  dataset_lookups <- read_lookup_tables(
+    lookup_files[lookup_files$scope == "dataset", , drop = FALSE]
+  )
 
   config <- list(
     dataset_id = as.character(dataset_id),
-    variables = read_harmonisation_variables(paths$variables_file),
-    lookups = read_lookup_tables(paths$lookup_dir),
+    variables = variables,
+    shared_lookups = shared_lookups,
+    dataset_lookups = dataset_lookups,
+    lookups = merge_lookup_tables(
+      shared_lookups,
+      dataset_lookups,
+      dataset_id = dataset_id
+    ),
     paths = paths
   )
 
@@ -33,16 +55,31 @@ read_harmonisation_variables <- function(path) {
   add_missing_columns(variables, expected)
 }
 
-read_lookup_tables <- function(dir_path) {
-  if (!fs::dir_exists(dir_path)) {
+read_lookup_tables <- function(lookup_files) {
+  if (nrow(lookup_files) == 0) {
     return(list())
   }
 
-  files <- fs::dir_ls(dir_path, recurse = TRUE, type = "file", glob = "*.csv")
-
-  out <- lapply(files, readr::read_csv, show_col_types = FALSE)
-  names(out) <- fs::path_ext_remove(fs::path_file(files))
+  out <- lapply(lookup_files$path, readr::read_csv, show_col_types = FALSE)
+  names(out) <- lookup_files$lookup_name
   out
+}
+
+merge_lookup_tables <- function(shared_lookups, dataset_lookups, dataset_id) {
+  duplicate_names <- intersect(names(shared_lookups), names(dataset_lookups))
+
+  if (length(duplicate_names) > 0) {
+    stop(
+      "Lookup table names are duplicated between shared and dataset-specific ",
+      "lookups for dataset `",
+      dataset_id,
+      "`: ",
+      paste(duplicate_names, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  c(shared_lookups, dataset_lookups)
 }
 
 validate_dataschema <- function(dataschema) {
@@ -102,6 +139,114 @@ validate_harmonisation_config <- function(config, dataschema) {
     names(config$lookups)
   )
   config
+}
+
+validate_shared_lookup_tables <- function(lookups) {
+  invisible(lapply(
+    names(lookups),
+    function(name) validate_shared_lookup_table(lookups[[name]], name)
+  ))
+}
+
+validate_shared_lookup_table <- function(lookup, lookup_name) {
+  required <- c(
+    "dataset_id",
+    "target_variable",
+    "source_value",
+    "harmonised_value",
+    "mapping_status",
+    "notes"
+  )
+
+  ensure_required_columns(
+    lookup,
+    required,
+    paste0("shared lookup table `", lookup_name, "`")
+  )
+
+  missing_dataset_id <- is.na(lookup$dataset_id) |
+    !nzchar(as.character(lookup$dataset_id))
+  if (any(missing_dataset_id)) {
+    stop(
+      "Shared lookup table `",
+      lookup_name,
+      "` contains empty `dataset_id` values.",
+      call. = FALSE
+    )
+  }
+
+  missing_target <- is.na(lookup$target_variable) |
+    !nzchar(as.character(lookup$target_variable))
+  if (any(missing_target)) {
+    stop(
+      "Shared lookup table `",
+      lookup_name,
+      "` contains empty `target_variable` values.",
+      call. = FALSE
+    )
+  }
+
+  missing_source <- is.na(lookup$source_value) |
+    !nzchar(as.character(lookup$source_value))
+  if (any(missing_source)) {
+    stop(
+      "Shared lookup table `",
+      lookup_name,
+      "` contains empty `source_value` values.",
+      call. = FALSE
+    )
+  }
+
+  missing_value <- is.na(lookup$harmonised_value) |
+    !nzchar(as.character(lookup$harmonised_value))
+  if (any(missing_value)) {
+    stop(
+      "Shared lookup table `",
+      lookup_name,
+      "` contains empty `harmonised_value` values.",
+      call. = FALSE
+    )
+  }
+
+  declared_status <- lookup$mapping_status
+  declared_status <- declared_status[
+    !is.na(declared_status) & nzchar(as.character(declared_status))
+  ]
+  unknown_status <- setdiff(
+    unique(declared_status),
+    bp_harmonisation_status_values()
+  )
+  if (length(unknown_status) > 0) {
+    stop(
+      "Shared lookup table `",
+      lookup_name,
+      "` contains unknown `mapping_status` values: ",
+      paste(unknown_status, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  duplicated_rows <- duplicated(
+    dplyr::select(lookup, dataset_id, target_variable, source_value)
+  )
+  if (any(duplicated_rows)) {
+    duplicated_values <- lookup[duplicated_rows, , drop = FALSE]
+    labels <- paste(
+      duplicated_values$dataset_id,
+      duplicated_values$target_variable,
+      duplicated_values$source_value,
+      sep = "::"
+    )
+    stop(
+      "Shared lookup table `",
+      lookup_name,
+      "` contains duplicate dataset/variable/source rows: ",
+      paste(unique(labels), collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  invisible(lookup)
 }
 
 validate_harmonisation_vars <- function(
