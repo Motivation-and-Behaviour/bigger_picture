@@ -11,8 +11,8 @@
 #' Output:
 #' - one tibble to be used as the harmonisation input
 tidy_BPIPD_1639 <- function(raw_dataset, spec) {
-  df <- raw_dataset$data$demographics %>%
-    dplyr::full_join(raw_dataset$data$questionnaire, by = "personid") %>%
+  df <- raw_dataset$data$demographics |>
+    dplyr::full_join(raw_dataset$data$questionnaire, by = "personid") |>
     dplyr::full_join(raw_dataset$data$self_control, by = "personid")
   df
 }
