@@ -1,0 +1,104 @@
+target_variable,status,source_columns,expression,notes,lookup_table
+participant_id,compatible,personid,personid,,
+wave,unavailable,,NA,,
+data_year,inferred,,2014,Assumed from 10.1186/s12966-021-01185-w,
+age_years,inferred,,5,Assumed from 10.1186/s12966-021-01185-w,
+sex,compatible,isex,"recode_values(isex, ""M"" ~ ""Male"", ""F"" ~ ""Female"")",,
+country,inferred,,"""New Zealand""",,
+ethnicity,proximate,iethnic4,"lookup_values(
+      iethnic4,
+      lookup_ethnicity,
+      dataset_id = spec$dataset_id,
+      target_variable = ""ethnicity""
+    )",Shared ethnicity mapping stored in harmonisation/lookups/ethnicity.csv,ethnicity
+indigenous,inferred,iethnic4,"if_else(iethnic4 %in% c(""Maori"", ""Pacific""), ""Indigenous"", ""Non-Indigenous"")",,
+minority,inferred,iethnic4,"if_else(iethnic4 == ""European"", ""Non-minority"", ""Minority"")",,
+ses_area,compatible,fnzdepcat3,"recode_values(
+      fnzdepcat3,
+      ""NZDep 1-3"" ~ ""High"",
+      ""NZDep 4-7"" ~ ""Medium"",
+      ""NZDep 8-10"" ~ ""Low""
+    )",,
+maternal_education,proximate,meducat4,"lookup_values(
+      meducat4,
+      lookup_maternal_education,
+      dataset_id = spec$dataset_id,
+      target_variable = ""maternal_education""
+    )",Shared mapping in harmonisation/lookups/maternal_education.csv,maternal_education
+st_measure_type,inferred,,"""Continuous""",,
+st_measure_name,inferred,,"""Unknown/custom""",,
+st_watch_wd,unavailable,,,,
+st_watch_we,unavailable,,,,
+st_watch,compatible,"mdvdt_gqt, mfreet_gqt, mskyt_gqt, monlinet_gqt","sum_nonmissing(
+      mdvdt_gqt,
+      mfreet_gqt,
+      mskyt_gqt,
+      monlinet_gqt
+    )/60","Sums:
+How many minutes would they spend each day - DVD or video
+How many minutes would they spend each day - free to air TV
+How many minutes would they spend each day - sky TV
+How many minutes would they spend each day - online TV streaming",
+st_game_wd,unavailable,,,,
+st_game_we,unavailable,,,,
+st_game,compatible,"mcomgamt_gqt, mcomotht_gqt, mconsstt_gqt, mconsmvt_gqt, mconshht_gqt, mmobilet_gqt","sum_nonmissing(
+      mcomgamt_gqt,
+      mcomotht_gqt,
+      mconsstt_gqt,
+      mconsmvt_gqt,
+      mconshht_gqt,
+      mmobilet_gqt
+    )/60","Sums:
+How many minutes would they spend each day - computer for games
+How many minutes would they spend each day - computer for other than games
+How many minutes would they spend each day - console standard controllers
+How many minutes would they spend each day - console movement controllers
+How many minutes would they spend each day - handheld games console
+How many minutes would they spend each day - mobile phone for games",
+st_game_comp_wd,unavailable,,,,
+st_game_comp_we,unavailable,,,,
+st_game_comp,compatible,mcomgamt_gqt,mcomgamt_gqt/60,,
+st_game_console_wd,unavailable,,,,
+st_game_console_we,unavailable,,,,
+st_game_console,compatible,mconsstt_gqt,mconsstt_gqt/60,,
+st_game_handheldconsole_wd,unavailable,,,,
+st_game_handheldconsole_we,unavailable,,,,
+st_game_handheldconsole,compatible,mconshht_gqt,mconshht_gqt/60,,
+st_game_active_wd,unavailable,,,,
+st_game_active_we,unavailable,,,,
+st_game_active,compatible,mconsmvt_gqt,mconsmvt_gqt/60,,
+st_game_phone_wd,unavailable,,,,
+st_game_phone_we,unavailable,,,,
+st_game_phone,compatible,mmobilet_gqt,mmobilet_gqt/60,,
+st_comp_nongaming_wd,unavailable,,,,
+st_comp_nongaming_we,unavailable,,,,
+st_comp_nongaming,compatible,mcomotht_gqt,mcomotht_gqt,,
+st_comp_wd,unavailable,,,,
+st_comp_we,unavailable,,,,
+st_comp,compatible,"mcomgamt_gqt, mcomotht_gqt","sum_nonmissing(
+      mcomgamt_gqt,
+      mcomotht_gqt
+)/60","Sums:
+How many minutes would they spend each day - computer for games
+How many minutes would they spend each day - computer for other than games",
+st_tablet_wd,unavailable,,,,
+st_tablet_we,unavailable,,,,
+st_tablet,compatible,mipadt_gqt,mipadt_gqt/60,,
+st_phone_wd,unavailable,,,,
+st_phone_we,unavailable,,,,
+st_phone,compatible,mmobilet_gqt,mmobilet_gqt/60,,
+beh_hyper_basc2,compatible,bhyper_gqt,bhyper_gqt,,
+beh_atten_basc2,compatible,battprob_gqt,battprob_gqt,,
+mh_anx_basc2,compatible,banxiety_gqt,banxiety_gqt,,
+mh_dep_basc2,compatible,bdepress_gqt,bdepress_gqt,,
+cog_execfunc_basc2,compatible,bexecfun_gqt,bexecfun_gqt,,
+wb_resil_basc2,compatible,bresili_gqt,bresili_gqt,,
+wb_emotsc_basc2,compatible,bemotsc_gqt,bemotsc_gqt,,
+cog_langexec_nepsy,compatible,compscal_cst,compscal_cst,,
+cog_phono_nepsy,compatible,phonscal_cst,phonscal_cst,,
+cog_inhibcont_nepsy,compatible,statscal_cst,statscal_cst,,
+cog_vismotor_nepsy,compatible,vmtscal_cst,vmtscal_cst,,
+cog_verbalfluency_nepsy,compatible,wordscal_cst,wordscal_cst,,
+beh_selfreg_htks,compatible,htksraw_cst,"htksraw_cst
+",,
+wb_mwb_wemwbs,unavailable,,,,
