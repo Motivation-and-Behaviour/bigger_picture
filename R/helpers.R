@@ -7,9 +7,10 @@ sum_nonmissing <- function(...) {
     stop("`sum_nonmissing()` requires at least one input.", call. = FALSE)
   }
 
-  if (length(values) == 1L && (
-    is.data.frame(values[[1]]) || is.matrix(values[[1]])
-  )) {
+  if (
+    length(values) == 1L &&
+      (is.data.frame(values[[1]]) || is.matrix(values[[1]]))
+  ) {
     values <- values[[1]]
   } else {
     values <- as.data.frame(
@@ -72,7 +73,9 @@ lookup_values <- function(
   }
 
   lookup_keys <- as.character(lookup[[source_col]])
-  duplicated_keys <- unique(lookup_keys[duplicated(lookup_keys) & !is.na(lookup_keys)])
+  duplicated_keys <- unique(lookup_keys[
+    duplicated(lookup_keys) & !is.na(lookup_keys)
+  ])
   if (length(duplicated_keys) > 0) {
     stop(
       "Lookup table contains duplicate source values after filtering: ",

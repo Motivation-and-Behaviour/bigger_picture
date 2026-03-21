@@ -47,7 +47,10 @@ resolve_lookup_files <- function(paths, lookup_names) {
 
   resolved <- lapply(lookup_names, function(lookup_name) {
     dataset_path <- fs::path(paths$lookup_dir, paste0(lookup_name, ".csv"))
-    shared_path <- fs::path(paths$shared_lookup_dir, paste0(lookup_name, ".csv"))
+    shared_path <- fs::path(
+      paths$shared_lookup_dir,
+      paste0(lookup_name, ".csv")
+    )
 
     has_dataset_lookup <- fs::file_exists(dataset_path)
     has_shared_lookup <- fs::file_exists(shared_path)
