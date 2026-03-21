@@ -1,5 +1,30 @@
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
+sum_nonmissing <- function(...) {
+  values <- list(...)
+
+  if (length(values) == 0) {
+    stop("`sum_nonmissing()` requires at least one input.", call. = FALSE)
+  }
+
+  if (length(values) == 1L && (
+    is.data.frame(values[[1]]) || is.matrix(values[[1]])
+  )) {
+    values <- values[[1]]
+  } else {
+    values <- as.data.frame(
+      values,
+      optional = TRUE,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  observed_count <- rowSums(!is.na(values))
+  totals <- rowSums(values, na.rm = TRUE)
+  totals[observed_count == 0] <- NA_real_
+  totals
+}
+
 lookup_values <- function(
   values,
   lookup,

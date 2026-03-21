@@ -1,0 +1,10 @@
+dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
+21,ethnicity,White,White,compatible,Direct label match
+21,ethnicity,Mixed,Mixed,compatible,Direct label match
+21,ethnicity,Asian,Asian,compatible,Direct label match
+21,ethnicity,Black,Black,compatible,Direct label match
+21,ethnicity,"Other or unknown",Other,compatible,Collapsed into Other to match schema
+1639,ethnicity,European,White,proximate,Not an ideal match - may be revisited as more data are added
+1639,ethnicity,Maori,Black,proximate,Not an ideal match - may be revisited as more data are added
+1639,ethnicity,Pacific,Black,proximate,Not an ideal match - may be revisited as more data are added
+1639,ethnicity,Other (incl,Other,compatible,
