@@ -41,16 +41,14 @@ How many minutes would they spend each day - sky TV
 How many minutes would they spend each day - online TV streaming",
 st_game_wd,unavailable,,,,
 st_game_we,unavailable,,,,
-st_game,compatible,"mcomgamt_gqt, mcomotht_gqt, mconsstt_gqt, mconsmvt_gqt, mconshht_gqt, mmobilet_gqt","sum_nonmissing(
+st_game,compatible,"mcomgamt_gqt, mconsstt_gqt, mconsmvt_gqt, mconshht_gqt, mmobilet_gqt","sum_nonmissing(
       mcomgamt_gqt,
-      mcomotht_gqt,
       mconsstt_gqt,
       mconsmvt_gqt,
       mconshht_gqt,
       mmobilet_gqt
     )/60","Sums:
 How many minutes would they spend each day - computer for games
-How many minutes would they spend each day - computer for other than games
 How many minutes would they spend each day - console standard controllers
 How many minutes would they spend each day - console movement controllers
 How many minutes would they spend each day - handheld games console
@@ -72,7 +70,7 @@ st_game_phone_we,unavailable,,,,
 st_game_phone,compatible,mmobilet_gqt,mmobilet_gqt/60,,
 st_comp_nongaming_wd,unavailable,,,,
 st_comp_nongaming_we,unavailable,,,,
-st_comp_nongaming,compatible,mcomotht_gqt,mcomotht_gqt,,
+st_comp_nongaming,compatible,mcomotht_gqt,mcomotht_gqt/60,,
 st_comp_wd,unavailable,,,,
 st_comp_we,unavailable,,,,
 st_comp,compatible,"mcomgamt_gqt, mcomotht_gqt","sum_nonmissing(
