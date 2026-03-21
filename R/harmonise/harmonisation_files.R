@@ -15,7 +15,7 @@ dataset_has_harmonisation <- function(dataset_id) {
   file.exists(paths$variables_file)
 }
 
-declared_lookup_names_from_variables <- function(variables) {
+declared_lookup_from_vars <- function(variables) {
   if (!"lookup_table" %in% names(variables)) {
     return(character())
   }
@@ -25,13 +25,13 @@ declared_lookup_names_from_variables <- function(variables) {
   unique(lookup_names)
 }
 
-declared_lookup_names_from_file <- function(variables_file) {
+declared_lookup_from_file <- function(variables_file) {
   if (!fs::file_exists(variables_file)) {
     return(character())
   }
 
   variables <- readr::read_csv(variables_file, show_col_types = FALSE)
-  declared_lookup_names_from_variables(variables)
+  declared_lookup_from_vars(variables)
 }
 
 resolve_lookup_files <- function(paths, lookup_names) {
@@ -85,7 +85,7 @@ resolve_lookup_files <- function(paths, lookup_names) {
 
 list_harmonisation_files <- function(dataset_id) {
   paths <- dataset_harmonisation_paths(dataset_id)
-  lookup_names <- declared_lookup_names_from_file(paths$variables_file)
+  lookup_names <- declared_lookup_from_file(paths$variables_file)
   lookup_files <- resolve_lookup_files(paths, lookup_names)
 
   unique(unname(c(paths$variables_file, lookup_files$path)))

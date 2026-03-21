@@ -9,7 +9,7 @@ read_harmonisation_config <- function(dataset_id, dataschema) {
   variables <- read_harmonisation_variables(paths$variables_file)
   lookup_files <- resolve_lookup_files(
     paths,
-    declared_lookup_names_from_variables(variables)
+    declared_lookup_from_vars(variables)
   )
 
   shared_lookups <- read_lookup_tables(
