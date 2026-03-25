@@ -7,7 +7,8 @@ tar_option_set(
   controller = crew::crew_controller_local(
     workers = max(1, min(parallel::detectCores() - 2, 20)),
     seconds_idle = 15
-  )
+  ),
+  format = "qs"
 )
 
 tar_source()
