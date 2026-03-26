@@ -4,6 +4,7 @@ read_tabular_file <- function(path, reader, sheet = NULL, range = NULL) {
   out <- switch(
     reader,
     "csv" = readr::read_csv(path, show_col_types = FALSE),
+    "csv2" = readr::read_csv2(path, show_col_types = FALSE), # ; delimited
     "tsv" = readr::read_tsv(path, show_col_types = FALSE),
     "stata" = haven::read_dta(path),
     "spss" = haven::read_sav(path),
