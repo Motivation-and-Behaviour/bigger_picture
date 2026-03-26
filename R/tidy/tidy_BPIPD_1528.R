@@ -34,15 +34,15 @@ tidy_BPIPD_1528 <- function(raw_dataset, spec) {
   df <- dplyr::bind_rows(data_2001, data_2006, data_2010, data_2014)
 
   # The built-in ID is not guaranteed to be unique, so we create a new one
-  df <- df %>%
-    dplyr::group_by(surveyyear, countryno) %>%
+  df <- df |>
+    dplyr::group_by(surveyyear, countryno) |>
     mutate(
       partid = paste0(
         surveyyear,
         countryno,
         sprintf("%05d", dplyr::row_number())
       )
-    ) %>%
+    ) |>
     dplyr::ungroup()
 
   df
