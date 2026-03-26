@@ -90,6 +90,7 @@
           "type": "string",
           "enum": [
             "csv",
+            "csv2",
             "tsv",
             "stata",
             "spss",
