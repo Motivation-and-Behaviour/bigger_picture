@@ -6,7 +6,7 @@ wave,Wave,Study wave or collection occasion,provenance,participant,character,,,,
 data_year,Year data were collected,The year that data collection occured.,provenance,study,double,years,,1900,2026,Use NA if unknown,TRUE,
 age_years,Age in years,Participant age at the observation in years,demographics,participant,double,years,,0,19,Use NA when age cannot yet be derived,TRUE,Continuous age measure
 sex,Sex,Harmonised participant sex/gender field,demographics,participant,character,,"Male|Female|Other|Unknown",,,Use Unknown if cannot be derived,TRUE,Use explicit lookup tables when recoding source categories
-country,Country,Participant's location at observation point,demographics,participant,character,,New Zealand|United Kingdom|Unknown,,,Use Unknown if cannot be derived,TRUE,"If not in dataset, assume based on where data were collected"
+country,Country,Participant's location at observation point,demographics,participant,character,,Albania|Armenia|Austria|Azerbaijan|Belgium|Bulgaria|Canada|Croatia|Czech Republic|Denmark|England|Estonia|Finland|France|Georgia|Germany|Greece|Greenland|Hungary|Iceland|Ireland|Israel|Italy|Kazakhstan|Latvia|Lithuania|Luxembourg|Macedonia|Malta|Netherlands|New Zealand|Norway|Poland|Portugal|Republic of Moldova|Romania|Russia|Scotland|Serbia|Slovakia|Slovenia|Spain|Sweden|Switzerland|Turkey|Ukraine|USA|Wales|Unknown,,,Use Unknown if cannot be derived,TRUE,"If not in dataset, assume based on where data were collected"
 ethnicity,Ethnicity,Participant ethnicity,demographics,participant,character,,White|Black|Mixed|Asian|Other|Unknown,,,Use Unknown if cannot be derived,TRUE,
 indigenous,Participant indigenous status,Would this participant be considered indigenous for their country,demographics,participant,character,,Indigenous|Non-Indigenous|Unknown,,,Use Unknown if cannot be derived,TRUE,
 minority,Minority,Indicator for if the participant ethnicity indicates they are a minority within their country/region,demographics,participant,character,,Minority|Non-minority|Unknown,,,Use Unknown if cannot be derived,TRUE,
@@ -47,17 +47,27 @@ st_tablet,Screen Time: Tablet for any purpose on usual day,Time spent using a ta
 st_phone_wd,"Screen Time: Smartphone (e.g., social media) on average weekday","Time spent using a smartphone (e.g., social media) on weekdays",screen_time,participant,double,hours,,0,24,Use NA if not available,TRUE,
 st_phone_we,"Screen Time: Smartphone (e.g., social media) on average weekend day","Time spent using a smartphone (e.g., social media) on weekends",screen_time,participant,double,hours,,0,24,Use NA if not available,TRUE,
 st_phone,"Screen Time: Smartphone (e.g., social media) on usual day","Time spent using a smartphone (e.g., social media) on regular or average day",screen_time,participant,double,hours,,0,24,Use NA if not available,TRUE,
-wb_mwb_wemwbs,Wellbeing: Mental Wellbeing - Warwick Edinburgh Mental Wellbeing Scale,Raw summed score on WEMWBS,wellbeing,participant,double,,,14,70,Use NA if not available,FALSE,Initial variable - likely to be revised
+acc_academachment_selfrated,Academic Achievement: Academic Achievement - self-rated,Based on HBSC Item of teacher perception,academic,participant,character,,Very good|Good|Average|Below average,,,,FALSE,Initial variable - likely to be revised
 beh_hyper_basc2,Behaviour: Hyperactivity - Behavior Assessment System for Children-2 Hyperactivity subscale,Raw score on BASC-2,behaviour,participant,double,,,,,,FALSE,
 beh_atten_basc2,Behaviour: Attention - Behavior Assessment System for Children-2 Attention subscale,Raw score on BASC-2,behaviour,participant,double,,,,,,FALSE,
-mh_anx_basc2,Mental Health: Anxiety - Behavior Assessment System for Children-2 Anxiety subscale,Raw score on BASC-2,mental_health,participant,double,,,,,,FALSE,
-mh_dep_basc2,Mental Health: Depression - Behavior Assessment System for Children-2 Depression subscale,Raw score on BASC-2,mental_health,participant,double,,,,,,FALSE,
+beh_selfreg_htks,Behaviour: Self-regulation - Head-Toes-Knees-Shoulders,Raw score on HTKS,behaviour,participant,double,,,,,,FALSE,
+beh_bullied,Behaviour: Bullying - Engaged in bullying other students,Binary where TRUE means engaged in behaviour,behaviour,participant,character,,TRUE|FALSE,,,,FALSE,Initial variable - likely to be revised
+beh_beenbullied,Behaviour: Bullying - Bullied by other students in the past few months,Binary where TRUE means engaged in behaviour,behaviour,participant,character,,TRUE|FALSE,,,,FALSE,Initial variable - likely to be revised
+beh_fight,Behaviour: Fighting - Engaged in fighting,Binary where TRUE means engaged in behaviour,behaviour,participant,character,,TRUE|FALSE,participant,character,,,
 cog_execfunc_basc2,Cognition: Executive Functioning - Behavior Assessment System for Children-2 Executive Functioning subscale,Raw score on BASC-2,cognition,participant,double,,,,,,FALSE,
-wb_resil_basc2,Wellbeing: Resilience - Behavior Assessment System for Children-2 Resilience subscale,Raw score on BASC-2,wellbeing,participant,double,,,,,,FALSE,
 cog_langexec_nepsy,Cognition: Comprehension of Instructions - NEPSY,Scaled score on NEPSY,cognition,participant,double,,,,,,FALSE,
 cog_phono_nepsy,Cognition: Phonological Processing - NEPSY,Scaled score on NEPSY,cognition,participant,double,,,,,,FALSE,
 cog_inhibcont_nepsy,Cognition: Inhibition Control - NEPSY,Scaled score on NEPSY,cognition,participant,double,,,,,,FALSE,
 cog_vismotor_nepsy,Cognition: Visuomotor Precision - NEPSY,Scaled score on NEPSY,cognition,participant,double,,,,,,FALSE,
 cog_verbalfluency_nepsy,Cognition: Word Generation - NEPSY,Scaled score on NEPSY,cognition,participant,double,,,,,,FALSE,
-beh_selfreg_htks,Behaviour: Self-regulation - Head-Toes-Knees-Shoulders,Raw score on HTKS,behaviour,participant,double,,,,,,FALSE,
+mh_anx_basc2,Mental Health: Anxiety - Behavior Assessment System for Children-2 Anxiety subscale,Raw score on BASC-2,mental_health,participant,double,,,,,,FALSE,
+mh_dep_basc2,Mental Health: Depression - Behavior Assessment System for Children-2 Depression subscale,Raw score on BASC-2,mental_health,participant,double,,,,,,FALSE,
 wb_emotsc_basc2,Wellbeing: Emotional Self-control - Behavior Assessment System for Children-2 Emotional Self-control subscale,Raw score on BASC-2,wellbeing,participant,double,,,,,,FALSE,
+wb_mwb_wemwbs,Wellbeing: Mental Wellbeing - Warwick Edinburgh Mental Wellbeing Scale,Raw summed score on WEMWBS,wellbeing,participant,double,,,14,70,Use NA if not available,FALSE,Initial variable - likely to be revised
+wb_lifesatisfaction_cantrilladder,Wellbeing: Life Satisfaction - Cantril Ladder,Score on Cantril Ladder,wellbeing,participant,double,,,0,10,,FALSE,
+wb_resil_basc2,Wellbeing: Resilience - Behavior Assessment System for Children-2 Resilience subscale,Raw score on BASC-2,wellbeing,participant,double,,,,,,FALSE,
+wb_psychcomplaints_feellow,Wellbeing: Psychological Complains - Feeling Low from HBSC-SCL,Score from HBSC-SCL,wellbeing,participant,character,,,,,,FALSE,
+wb_psychcomplaints_irritable,Wellbeing: Irritable - Feeling Low from HBSC-SCL,Score from HBSC-SCL,wellbeing,participant,character,,,,,,FALSE,
+wb_psychcomplaints_nervous,Wellbeing: Nervous - Feeling Low from HBSC-SCL,Score from HBSC-SCL,wellbeing,participant,character,,,,,,FALSE,
+wb_psychcomplaints_diffsleep,Wellbeing: Difficulty Sleeping - Feeling Low from HBSC-SCL,Score from HBSC-SCL,wellbeing,participant,character,,,,,,FALSE,
+wb_bodyimage,Wellbeing: Body Image - from HBSC,On 5 point likert,wellbeing,participant,character,,Much too thin|A bit too thin|About right|A bit too fat|Much too fat,,,,,

@@ -8,7 +8,7 @@
   "features": {
     // "ghcr.io/rocker-org/devcontainer-features/pandoc:1": {},
     "ghcr.io/rocker-org/devcontainer-features/r-packages:1": {
-      "packages": "crew, devtools, ggplot2, github::crsh/prereg, github::crsh/papaja, github::milesmcbain/fnmate, github::milesmcbain/tflow, github::nx10/httpgd, github::nx10/unigd, gittargets, glue, gt, gtsummary, janitor, knitr, languageserver, readxl, rlang, rmarkdown, rstudioapi, shiny, shinyWidgets, shinybusy, tarchetypes, targets, tidyverse, visNetwork",
+      "packages": "crew, devtools, ggplot2, github::crsh/prereg, github::crsh/papaja, github::milesmcbain/fnmate, github::milesmcbain/tflow, github::nx10/httpgd, github::nx10/unigd, gittargets, glue, gt, gtsummary, janitor, knitr, languageserver, qs2, readxl, rlang, rmarkdown, rstudioapi, shiny, shinyWidgets, shinybusy, tarchetypes, targets, tidyverse, visNetwork",
       "installSystemRequirements": true
     }
   },

@@ -1,0 +1,53 @@
+dataset_id: "1528"
+dataset_name: "HBSC"
+status: "in_progress"
+
+waves:
+  - wave: "2001"
+    label: "2001"
+    wave_dir: "."
+    resources:
+      - name: "data_2001"
+        role: "data"
+        glob: "HBSC2001OAed1.0_F4.csv"
+        reader: "csv"
+      - name: "codebook_2001"
+        role: "codebook"
+        glob: "HBSC2001OAed1.0.pdf"
+  - wave: "2006"
+    label: "2006"
+    wave_dir: "."
+    resources:
+      - name: "data_2006"
+        role: "data"
+        glob: "HBSC2006OAed1.0_F1.csv"
+        reader: "csv"
+      - name: "codebook_2006"
+        role: "codebook"
+        glob: "HBSC2006OAed1.0.pdf"
+  - wave: "2010"
+    label: "2010"
+    wave_dir: "."
+    resources:
+      - name: "data_2010"
+        role: "data"
+        glob: "HBSC2010OAed1.0_F4.csv"
+        reader: "csv"
+      - name: "codebook_2010"
+        role: "codebook"
+        glob: "HBSC2010OAed1.0.pdf"
+  - wave: "2014"
+    label: "2014"
+    wave_dir: "."
+    resources:
+      - name: "data_2014"
+        role: "data"
+        glob: "HBSC2014OAed1.1_F1.csv"
+        reader: "csv"
+      - name: "codebook_2014"
+        role: "codebook"
+        glob: "HBSC2014OAed1.1.pdf"
+
+notes: |
+  Multiwave study with four root-level files/waves: 2001, 2006, 2010, and 2014. 
+  Each wave has one CSV data file and one PDF codebook.
