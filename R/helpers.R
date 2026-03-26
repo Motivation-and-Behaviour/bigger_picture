@@ -11,7 +11,7 @@ harmonisation_variable_columns <- function() {
   )
 }
 
-list_harmonisation_variables_files <- function(
+list_harmonisation_var_files <- function(
   dataset_specs_dir = bp_dataset_specs_dir()
 ) {
   fs::dir_ls(
@@ -23,7 +23,7 @@ list_harmonisation_variables_files <- function(
     sort()
 }
 
-sync_harmonisation_variables_file <- function(
+sync_harmonisation_vars_file <- function(
   path,
   dataschema = read_dataschema(),
   default_status = "in_progress",
@@ -115,7 +115,9 @@ sync_harmonisation_variables_file <- function(
     variables <- dplyr::bind_rows(variables, tibble::as_tibble(missing_rows))
   }
 
-  synced <- variables[match(schema_targets, variables$target_variable), ,
+  synced <- variables[
+    match(schema_targets, variables$target_variable),
+    ,
     drop = FALSE
   ]
 
@@ -146,8 +148,8 @@ sync_harmonisation_variables_file <- function(
   )
 }
 
-sync_harmonisation_variables <- function(
-  variables_files = list_harmonisation_variables_files(),
+sync_harmonisation_vars <- function(
+  variables_files = list_harmonisation_var_files(),
   dataschema = read_dataschema(),
   default_status = "in_progress",
   remove_unknown_variables = FALSE,
@@ -169,7 +171,7 @@ sync_harmonisation_variables <- function(
 
   results <- lapply(
     variables_files,
-    sync_harmonisation_variables_file,
+    sync_harmonisation_vars_file,
     dataschema = dataschema,
     default_status = default_status,
     remove_unknown_variables = remove_unknown_variables,
