@@ -1,0 +1,10 @@
+dataset_id: "621"
+dataset_name: "Ellis"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "EllisDataSummary (1).sav"
+    reader: "spss"
+
