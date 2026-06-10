@@ -1,6 +1,6 @@
 bp_data_dir <- function() {
   dotenv::load_dot_env()
-  dataset_path <- Sys.getenv("DATASET_PATH")
+  dataset_path <- Sys.getenv("DATASET_PATH", unset = NA)
   if (is.na(dataset_path)) {
     stop(
       "DATASET_PATH environment variable is not set. Please set in .env file."
