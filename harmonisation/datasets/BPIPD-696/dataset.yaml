@@ -1,0 +1,59 @@
+dataset_id: "696"
+dataset_name: "Kaur"
+status: "in_progress"
+
+Waves:
+  - wave: "Baseline"
+    label: "Baseline"
+    wave_dir: "."
+    resources:
+      - name: "data-baseline"
+        role: "data"
+        glob: "Clean.Baseline .xlsx"
+        sheet: "Baseline"
+        reader: "excel"
+      - name: "data-control"
+        role: "data"
+        glob: "Clean.Baseline .xlsx"
+        sheet: "Control arm"
+        reader: "excel"
+      - name: "data-intervention"
+        role: "data"
+        glob: "Clean.Baseline .xlsx"
+        sheet: "Intervention arm"
+        reader: "excel"
+  - wave: "Midline"
+    label: "Midline"
+    wave_dir: "."
+    resources:
+      - name: "data-control"
+        role: "data"
+        glob: "Midline.xlsx"
+        sheet: "Control arm"
+        reader: "excel"
+      - name: "data-intervention"
+        role: "data"
+        glob: "Midline.xlsx"
+        sheet: "Intervention arm"
+        reader: "excel"
+  - wave: "Endline"
+    label: "Endline"
+    wave_dir: "."
+    resources:
+      - name: "data-control"
+        role: "data"
+        glob: "Endline clean.xlsx"
+        sheet: "Control arm"
+        reader: "excel"
+      - name: "data-intervention"
+        role: "data"
+        glob: "Endline clean.xlsx"
+        sheet: "Intervention arm"
+        reader: "excel"
+
+notes: |
+  3 waves: Baseline, midline, endline. 
+  Each have dataset only (.xlsx)
+  Each wave has control arm and intervention arm sheets.
+  Baseline has an additional sheet called "Baseline"
+  File also contains an ANOVA.sav (not read in)
