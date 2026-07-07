@@ -1,0 +1,13 @@
+dataset_id: "655"
+dataset_name: "Košir"
+status: "in_progress"
+
+resources:
+  - name: "Kosir_data_2014"
+    role: "data"
+    glob: "Kosir_data_2014.sav"
+    reader: "spss"
+  - name: "Variable list"
+    role: "docs"
+    glob: "Variable list.docx"
+    
