@@ -1,0 +1,70 @@
+dataset_id: "666"
+dataset_name: "Mallawaarachchi"
+status: "in_progress"
+
+waves:
+  - wave: "data_cleaning"
+    label: "data_cleaning"
+    wave_dir: "."
+    resources:
+      - name: "Master Baseline Data"
+        role: "data"
+        glob: "MASTER_BL_dataset_thesis SM.csv"
+        reader: "csv"
+      - name: "Cleaning Documentation"
+        role: "docs"
+        glob: "{1. General variable recoding.Rmd,1. General-variable-recoding.docx}"
+
+  - wave: "descriptives"
+    label: "descriptives"
+    wave_dir: "."
+    resources:
+      - name: "Working Baseline Data"
+        role: "data"
+        glob: "BL_workingcopy.csv"
+        reader: "csv"
+      - name: "Descriptives Documentation"
+        role: "docs"
+        glob: "{2. Total sample descriptives.Rmd,2. Total-sample-descriptives.docx}"
+
+  - wave: "preschooler_corr"
+    label: "preschooler_corr"
+    wave_dir: "."
+    resources:
+      - name: "Preschooler/Toddler Baseline Data"
+        role: "data"
+        glob: "{data_bl_P.csv,data_bl_T.csv}"
+        reader: "csv"
+      - name: "Correlation Documentation"
+        role: "docs"
+        glob: "{3. Preschooler recoding and corr.Rmd,3. Preschooler-recoding and corr.docx,3. Toddler recoding and corr.Rmd}"
+
+  - wave: "regressions"
+    label: "regressions"
+    wave_dir: "."
+    resources:
+      - name: "Regression Analysis Data"
+        role: "data"
+        glob: "{BL_P_reg.csv,BL_T_all.csv}"
+        reader: "csv"
+      - name: "Regression Documentation"
+        role: "docs"
+        glob: "{4. Preschoolers_reg_NEW.docx,4. Preschoolers_reg_NEW.Rmd,4. toddler_reg_NEW.docx,4. toddler_reg_NEW.Rmd}"
+
+  - wave: "longitudinal"
+    label: "longitudinal"
+    wave_dir: "."
+    resources:
+      - name: "Longitudinal Dataset"
+        role: "data"
+        glob: "{data_longit_cleaned_v2.csv,data_longit_P_v4.csv,data_longit_recoded_v3.csv,data_longit_T_v4.csv,Data_Longit2022.csv,data_longitudinal_v1.csv,Longit_P_analyses_v5.csv,Longit_p_reg_log.csv,Longit_T_analyses_v5.csv,Longit_t_reg_log.csv}"
+        reader: "csv"
+      - name: "Longitudinal Scripts/Docs"
+        role: "docs"
+        glob: "{Longit_preschoolers_analyses 08Nov22.Rmd,Longit_toddlers_analyses 08Nov22.Rmd,Preschooler_longit_reg 17Aug22.Rmd,R script_data merging_BL&F 12Aug22.R,Rscript_cleaning _longit12Aug22.R,Rscript_descriptives 12Aug22.R,Rscript_preschooler_longit corr_09Nov22.R,Rscript_preschoolerrecoding_15Aug22.R,Rscript_toddlerlongit corr_09Nov22.R,Rscript_toddlerrecoding_12Aug22.R,Rscript_variablerecoding_12Aug22.R,Toddler_longit_reg 17Aug22.Rmd}"
+
+notes: |
+  Dataset is organized by analytical stage. It includes CSV data files for cleaning, 
+  descriptives, correlations, regressions, and longitudinal analyses, supported 
+  by R scripts and Word/Rmd documentation.
+  
