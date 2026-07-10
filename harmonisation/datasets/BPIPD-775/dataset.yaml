@@ -1,0 +1,18 @@
+dataset_id: "775"
+dataset_name: "ECLS-B"
+status: "in_progress"
+
+resources:
+  - name: "Child Data Files"
+    role: "data"
+    glob: "{childK5p.dat,childk8p.dat}"
+    reader: "stata"
+  - name: "STATA Dictionaries and Do-Files"
+    role: "docs"
+    glob: "{ECLSK_Kto8_child_STATA.dct,ECLSK_Kto8_child_STATA.do,ECLSK2011_K5PUF.dct,ECLSK2011_K5PUF.do}"
+
+notes: |
+  Dataset includes longitudinal child data files (.dat) alongside 
+  corresponding STATA dictionary (.dct) and do-files (.do) used for 
+  data processing and importation.
+  
