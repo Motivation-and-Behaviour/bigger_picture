@@ -1,0 +1,64 @@
+dataset_id: "788"
+dataset_name: "KiGGS"
+status: "in_progress"
+
+waves:
+  - wave: "2"
+    label: "KiGGS Wave 2"
+    wave_dir: "."
+    resources:
+      - name: "Main Dataset (Stata Format)"
+        role: "data"
+        glob: "KiGGS2.dta"
+        reader: "stata"
+      - name: "Main Dataset (SAS Format)"
+        role: "data"
+        glob: "kiggs2.sas7bdat"
+        reader: "sas"
+      - name: "Main Dataset (SPSS Format)"
+        role: "data"
+        glob: "KiGGS2.sav"
+        reader: "spss"
+      - name: "SAS Format Catalog"
+        role: "data"
+        glob: "kiggs2_formate.sas7bcat"
+        reader: "sas"
+      - name: "Dataset Info (QSDB Sheet)"
+        role: "data"
+        glob: "KiGGS2_DatenInfo.xlsx"
+        reader: "excel"
+        sheet: "QSDB"
+      - name: "Dataset Info Generated Variables"
+        role: "data"
+        glob: "KiGGS2_Dateninfo_generierte_Variablen.xlsx"
+        reader: "excel"
+        sheet: "Dateninfo_generierte_Variablen"
+      - name: "Variable Overview"
+        role: "data"
+        glob: "KiGGS2_Variablenuebersicht.xlsx"
+        reader: "excel"
+        sheet: "Variablenuebersicht"
+      - name: "Laboratory Parameters - Parameter Comparison"
+        role: "data"
+        glob: "Laborparameter_KiGGS2.xlsx"
+        reader: "excel"
+        sheet: "Parametervergleich_all"
+      - name: "Laboratory Parameters - Children Reference Ranges"
+        role: "data"
+        glob: "Laborparameter_KiGGS2.xlsx"
+        reader: "excel"
+        sheet: "RB_Kinder_KiGGSW2"
+      - name: "Analysis Complex Survey Plan Files"
+        role: "codebook"
+        glob: ["wQS.csaplan", "wQSFB.csaplan", "wQSlab.csaplan", "wQSpop.csaplan", "wQSUS.csaplan", "wQSUSpop.csaplan"]
+      - name: "Documentation"
+        role: "docs"
+        glob: ["Liesmich_KiGGS2.txt", "KiGGS_Migrantenvariablen_Erklärung.pdf", "KiGGS2_Datensatzbeschreibung_SUF.pdf", "Monitoring_Auswertungshinweise_v2.pdf", "KiGGS2_FFQ_E_3-10_mL.pdf", "KiGGS2_FFQ_PB_11-17_mL.pdf", "KiGGS2_GFB_E_0-2_QS_mL.pdf", "KiGGS2_GFB_E_3-10_QS_mL.pdf", "KiGGS2_GFB_E_11-17_QS_mL.pdf", "KiGGS2_GFB_PB_11-17_QS_mL.pdf", "KiGGS2_KHFB_E_0-17_QS_mL.pdf", "KiGGS2_MB_V3_mL.pdf"]
+
+notes: |
+  KiGGS Wave 2 includes data for children and adolescents. 
+  The dataset includes primary health data in multiple formats (Stata, SAS, SPSS). Includes
+  documentation - laboratory parameter comparisons and variable dictionaries. Questionnaires are categorized by target 
+  group: "E" for Parents (Eltern) and "PB" for Participants/Adolescents (Probanden). 
+  Also includes survey plan files (.csaplan) for statistical weighting and analysis.
+  
