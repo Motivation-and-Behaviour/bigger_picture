@@ -5,23 +5,28 @@ status: "in_progress"
 resources:
   - name: "Primary Dataset"
     role: "data"
-    glob: "eu_kids_online_2010.dta"
+    glob: "stata9/eu_kids_online_2010.dta"
     reader: "stata"
   - name: "Data Dictionaries"
     role: "codebook"
-    glob: "{eu_kids_online_2010_ukda_data_dictionary.rtf,eu_kids_online_2010_data_dictionary.xls}"
+    glob: ["mrdoc/allissue/eu_kids_online_2010_ukda_data_dictionary.rtf", "mrdoc/excel/eu_kids_online_2010_data_dictionary.xls"]
   - name: "Analytical and Supplemental Packs"
     role: "data"
-    glob: "{eu_kids_online_education_pack_by_country.xls,eu_kids_online_ses_pack.xls}"
+    glob: ["mrdoc/excel/eu_kids_online_education_pack_by_country.xls", "mrdoc/excel/eu_kids_online_ses_pack.xls"]
     reader: "excel"
   - name: "Documentation and Reports"
     role: "docs"
-    glob: ["6885_file_information.rtf", "6885_fieldwork_documents.pdf", "6885_questionnaires_austria_to_estonia.pdf", "6885_questionnaires_finland_to_netherlands.pdf", "6885_questionnaires_norway_to_uk.pdf", "6885_reports.pdf", "6885_technical_report_user_guide.pdf", "6885_spss_to_stata_conversion.rtf", "UKDA_Study_6885_Information.htm", "read6885.htm"]
+    glob: 
+      - "6885_file_information.rtf"
+      - "mrdoc/pdf/*.pdf"
+      - "mrdoc/stataissue/6885_spss_to_stata_conversion.rtf"
+      - "mrdoc/UKDA/UKDA_Study_6885_Information.htm"
+      - "read6885.htm"
 
 notes: |
-  Dataset includes primary survey data in Stata format (.dta), accompanied 
-  by data dictionaries (.rtf, .xls) and supplemental analytical packs (.xls). 
-  Documentation and reports are provided in PDF, RTF, and HTM 
-  formats, covering technical user guides, comparative country questionnaires, 
-  and cross-platform conversion instructions.
+  Dataset includes primary survey data in Stata format (.dta) located in 'stata9/', 
+  accompanied by data dictionaries and supplemental analytical packs found within 'mrdoc/'. 
+  Documentation and reports are provided in PDF, RTF, and HTM formats across various 
+  subdirectories in 'mrdoc/', covering technical user guides, comparative country 
+  questionnaires, and cross-platform conversion instructions.
   
