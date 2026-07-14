@@ -2635,17 +2635,18 @@ waves:
         reader: "spss"
 notes: |
   2 cohorts - 8th-10th Graders and 12th Graders. Waves every year from 2000-2024. Each wave has multiple datasets.
-  Waves 2000-2011 datafiles are .dta. 2012-2024 are .rda. All codebooks PDF (2023-2024 also include an EPUB duplicate).
+  Waves 2000-2011 datafiles are .dta. 2012-2024 are .rda. All codebooks PDF (2023-2024 also include an EPUB duplicate, included as a docs resource).
+  Note: supplemental syntax (.do), user guides, documentation files, and EPUB codebook duplicates were not in the original glob list but have since been added as docs-role resources - none of these are "not read in" any more.
   8th-10th Grades:
-  Eight datasets in each wave from 2000-2008 (and 2009-2011). Each has data, codebook, and supplemental syntax (not read in).
-  2012-2018 have 1 dataset each with a user guide in addition to data and codebook.
+  Eight datasets in each wave from 2000-2008 (and 2009-2011). Each has data, codebook, and supplemental syntax (docs).
+  2012-2018 have 1 dataset each with a user guide (docs) in addition to data and codebook.
   2019 has 2 datasets, each without a codebook.
-  2020-2024 have 1 dataset each. Have extra "Documentation" files (not read in) in addition to the data and codebook.
-  2023-2024 additionally include a user guide and an EPUB duplicate of the codebook (not read in).
+  2020-2024 have 1 dataset each. Have extra "Documentation" files (docs) in addition to the data and codebook.
+  2023-2024 additionally include a user guide (docs) and an EPUB duplicate of the codebook (docs).
   12th Grade:
   Seven datasets in each wave except 2019 which has nine datasets.
-  2000-2011 has data, codebook and supplemental syntax (not read in).
+  2000-2011 has data, codebook and supplemental syntax (docs).
   2012-2016 has only codebook and data.
   2017-2022 no codebook, only data.
-  2023-2024 has codebook (PDF + EPUB duplicate, not read in) and data.
-  
+  2023-2024 has codebook (PDF) and an EPUB duplicate (docs) and data.
+
