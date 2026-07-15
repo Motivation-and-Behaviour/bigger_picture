@@ -1,0 +1,39 @@
+dataset_id: "50"
+dataset_name: "NSLY-Child"
+status: "in_progress"
+
+resources:
+  # --- PRIMARY DATA FILES ---
+  - name: "Main Dataset (CSV Format)"
+    role: "data"
+    glob: "biggerpicture.csv"
+    reader: "csv"
+
+  - name: "Raw Data File"
+    role: "data"
+    glob: "biggerpicture.dat"
+    reader: "csv" # Flat plain-text data file
+
+  # --- CODEBOOKS AND METADATA ---
+  - name: "NLSY Codebook File"
+    role: "codebook"
+    glob: "biggerpicture.cdb"
+
+  - name: "Child/Young Adult Cohort Specification"
+    role: "codebook"
+    glob: "biggerpicture.CHILDYA"
+
+  - name: "Data Loading R Script"
+    role: "codebook"
+    glob: "biggerpicture.R"
+
+  # --- DOCUMENTATION / LOGS ---
+  - name: "Data Extraction Log"
+    role: "docs"
+    glob: "extract.log"
+
+notes: |
+  This dataset represents an extract from the NLSY Child/Young Adult cohort (BPIPD-50).
+  It includes a flat raw data file (.dat), an export companion (.csv), and the standard 
+  NLSY metadata files (.cdb and .CHILDYA). The .R file is an R setup script for loading the data.
+  
