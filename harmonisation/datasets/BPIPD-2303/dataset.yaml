@@ -1,0 +1,20 @@
+dataset_id: "2303"
+dataset_name: "MiMic Project"
+status: "in_progress"
+
+resources:
+  - name: "Measures Appendix"
+    role: "docs"
+    glob: "Appendix A_Measures.pdf"
+  - name: "Mplus Data"
+    role: "data"
+    reader: "spss"
+    glob: "mplus.sav"
+  - name: "PDBWA Data"
+    role: "data"
+    reader: "spss"
+    glob: "PDBWA SPSS.sav"
+  - name: "Mplus Syntax"
+    role: "codebook"
+    glob: "Syntax mplus ready.sps"
+    
