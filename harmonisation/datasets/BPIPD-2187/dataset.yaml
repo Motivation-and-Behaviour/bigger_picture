@@ -31,4 +31,3 @@ notes: |
   and app notification logs (CSV files). App categories are defined in a separate mapping CSV file, 
   data definitions are documented in an Excel data dictionary, and descriptive metadata is stored in 
   a JSON file.
-  
