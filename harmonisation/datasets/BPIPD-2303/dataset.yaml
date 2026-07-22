@@ -1,0 +1,31 @@
+dataset_id: "2303"
+dataset_name: "MiMic project"
+status: "in_progress"
+
+resources:
+  - name: "Mplus Dat Dataset"
+    role: "data"
+    reader: "tsv"
+    glob: "mplus.dat"
+
+  - name: "Mplus SAV Dataset"
+    role: "data"
+    reader: "spss"
+    glob: "mplus.sav"
+
+  - name: "PDBWA SPSS Dataset"
+    role: "data"
+    reader: "spss"
+    glob: "PDBWA SPSS.sav"
+
+  - name: "Appendix A Measures Codebook"
+    role: "codebook"
+    glob: "Appendix A_Measures.pdf"
+
+  - name: "Syntax Mplus Ready Codebook"
+    role: "codebook"
+    glob: "Syntax mplus ready.sps"
+
+notes: |
+  Dataset contents include primary data files in SPSS (.sav) and space/tab-delimited Mplus data format (.dat). 
+  Documentation and setup materials include measure details (.pdf) and SPSS syntax script (.sps).
