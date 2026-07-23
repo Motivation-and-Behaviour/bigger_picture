@@ -1,0 +1,9 @@
+dataset_id: "160"
+dataset_name: "Topic"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Pilar_Bigger picture.sav"
+    reader: "spss"
