@@ -30,3 +30,9 @@ Suggests:
     lintr,
     testthat (>= 3.0.0),
     withr
+Config/Needs/website:
+    DT,
+    jsonlite,
+    knitr,
+    rmarkdown,
+    tidyr

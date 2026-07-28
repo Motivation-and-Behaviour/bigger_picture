@@ -16,8 +16,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-This repository contains the data infrastructure for the **Bigger Picture** project:
-an individual participant data (IPD) meta-analysis investigating how children's and adolescents' screen use relates to learning, cognition, mental health, wellbeing, and behaviour.
+This repository contains the data infrastructure for the **Bigger Picture** project: an individual participant data (IPD) meta-analysis investigating how children's and adolescents' screen use relates to learning, cognition, mental health, wellbeing, and behaviour.
 
 The codebase is focused on:
 - discovering eligible datasets in a mounted data directory
@@ -26,6 +25,7 @@ The codebase is focused on:
 - harmonising each dataset into a common structure
 - combining harmonised outputs into an analysis-ready table
 
+Full documentation — including guides for adding and harmonising datasets — is at <https://motivation-and-behaviour.github.io/bigger_picture/>.
 The scientific background and preregistration are in `docs/prereg/`.
 
 ## Project Goals
@@ -73,7 +73,11 @@ Key principles:
 │   │   └── BPIPD-*/               # Per-dataset dataset.yaml, variables.csv, optional local lookups/
 │   └── templates/
 │       └── dataset/               # Template dataset spec + harmonisation metadata
-└── docs/prereg/                   # Preregistration and supporting documents
+└── docs/                          # Quarto documentation site (deployed to GitHub Pages)
+    ├── guides/                    # How-to guides for adding and harmonising datasets
+    ├── reference/                 # Generated dataschema + progress tables
+    ├── decisions/                 # Project decision register
+    └── prereg/                    # Preregistration and supporting documents
 ```
 
 ## How the Pipeline Works
@@ -110,91 +114,18 @@ This is configured in `R/config.R` and used by `R/registry/list_datasets.R`.
 
 ## Dataset Spec Overview
 
-Each dataset has a YAML file at `harmonisation/datasets/BPIPD-<id>/dataset.yaml`, for example:
+Each dataset has a YAML file at `harmonisation/datasets/BPIPD-<id>/dataset.yaml` describing its files (`resources`, or `waves` for multi-wave studies), their roles (`data`, `codebook`, `docs`), and how to read them (`reader`, plus reader-specific keys such as `sheet` or `table`).
+The intended contract is documented by `harmonisation/dataset.schema.json`; the pipeline reads YAML specs directly and does not yet validate them against the JSON schema at runtime.
 
-```yaml
-dataset_id: "21"
-dataset_name: "Example Study"
-status: "in_progress"
-
-resources:
-  - name: "data"
-    role: "data"
-    glob: "data.csv"
-    reader: "csv"
-```
-
-Main fields:
-- `dataset_id`, `dataset_name`, `status`
-- `resources` (dataset-level)
-- optional `waves` (wave-specific resources)
-
-Supported `reader` values:
-- `csv`, `csv2`, `tsv`, `stata`, `spss`, `sas`, `rds`, `parquet`, `excel`, `mdb`, `rda`
-
-For `mdb` (Microsoft Access) resources, set `table` to the Access table name; it can be omitted when the file contains exactly one table.
-For `rda` (R data, read via `load()`) resources, set `object` to the name of the object to extract; it can be omitted when the file contains exactly one object.
-
-The full contract is documented by `harmonisation/dataset.schema.json`.
-At present this schema is descriptive documentation for contributors; the pipeline reads YAML specs directly and does not yet validate them against the JSON schema at runtime.
+See the documentation site for the [field-by-field reference](https://motivation-and-behaviour.github.io/bigger_picture/guides/dataset-yaml.html) and a [cookbook of spec patterns](https://motivation-and-behaviour.github.io/bigger_picture/guides/spec-cookbook.html) for common dataset layouts.
 
 ## Harmonisation Contract
 
-The default harmonisation path is table-driven.
+Harmonisation is table-driven: the shared schema lives in `harmonisation/dataschema.csv`, each dataset maps onto it via `harmonisation/datasets/BPIPD-<id>/variables.csv`, and recode tables live in shared (`harmonisation/lookups/`) or dataset-specific (`BPIPD-<id>/lookups/`) CSVs.
+Mapping expressions are evaluated against the tidied study tibble in a sandboxed environment: bare function calls resolve from base R plus the curated allowlist in `bp_harmonisation_functions()` (`R/harmonise/harmonisation_functions.R`), and namespaced calls such as `haven::as_factor()` are also allowed.
+Per-dataset harmonised tibbles are row-bound into `analysis_data`.
 
-Shared schema:
-- `harmonisation/dataschema.csv`
-- one row per harmonised output variable
-
-Per-dataset files:
-- `harmonisation/datasets/BPIPD-<id>/variables.csv`
-- `harmonisation/datasets/BPIPD-<id>/lookups/*.csv` (optional, for large study-specific recode tables)
-
-Shared lookup files:
-- `harmonisation/lookups/*.csv` (for cross-study recodes that should be reviewed centrally, such as ethnicity mappings)
-
-Inputs to the engine:
-- `raw_dataset`: full ingestion bundle available to the study tidier (`data`, `codebook`, `docs`, `meta`)
-- `tidied_data`: one tidied tibble returned by `tidy_from_spec()`; this is the table the harmoniser actually transforms
-- `spec`: parsed YAML spec
-- `dataschema`: shared schema table
-- `variables.csv`: how each schema variable is derived
-- shared lookup CSVs: centrally reviewed mappings for recurring recodes across studies
-- dataset-specific lookup CSVs: optional large one-off mappings that are not shared across studies
-
-Outputs:
-- one harmonised tibble per dataset during branching
-- `analysis_data`: the row-bound combined table across all harmonised datasets
-
-Expressions in `variables.csv` are evaluated against the tidied study tibble and can reference:
-- columns in the tidied tibble directly
-- `tbl` / `analysis_base` for the full tidied table
-- `spec` for dataset metadata
-- `lookup_tables` and individual `lookup_<name>` objects for any loaded lookup CSVs
-
-Expressions run in a sandboxed environment, not the global R session.
-Bare function calls resolve from base R plus the curated allowlist in `bp_harmonisation_functions()` (`R/harmonise/harmonisation_functions.R`), which includes `recode_values()`, `if_else()`, `case_when()`, `lookup_values()`, and `sum_nonmissing()`.
-Namespaced calls such as `haven::as_factor()` are also allowed.
-To make a new function available as a bare name, add it to the allowlist; the test suite verifies that every expression only calls functions that resolve there.
-
-Shared lookup tables in `harmonisation/lookups/` must follow a common audit-friendly schema with columns:
-- `dataset_id`
-- `target_variable`
-- `source_value`
-- `harmonised_value`
-- `mapping_status`
-- `notes`
-
-Only lookup files named in a dataset's `lookup_table` column are tracked as file dependencies and loaded for that dataset.
-
-`raw_dataset` is not available inside harmonisation expressions; any work that depends on the raw ingestion bundle should happen in the study tidier before harmonisation.
-
-Use `harmonisation/templates/dataset/` as the starting point for new datasets.
-Every dataset must provide `R/tidy/tidy_BPIPD_<id>.R`.
-Use `R/tidy/tidy_BPIPD_TEMPLATE.R` as the starting point when creating a new study tidier.
-Prefer inline recode expressions in `variables.csv` for short one-off study-specific recodes.
-Use shared lookup CSVs for recurring, cross-study recodes that need to be auditable in one place.
-Use dataset-specific lookup CSVs only when a mapping is large, not shared, and hard to read inline.
+The [harmonisation guide](https://motivation-and-behaviour.github.io/bigger_picture/guides/harmonisation.html) covers the full workflow (statuses, expressions, lookups, validation), and the [dataschema reference](https://motivation-and-behaviour.github.io/bigger_picture/reference/dataschema.html) is generated from `dataschema.csv` on every site build.
 
 ## Getting Started
 
@@ -223,14 +154,20 @@ targets::tar_read(tidied_BPIPD_21)
 1. Ensure dataset folder exists in `/data` and follows naming convention.
 2. Copy `harmonisation/templates/dataset/` to `harmonisation/datasets/BPIPD-<id>/`.
 3. Fill in `dataset.yaml` and `variables.csv`.
-4. Add rows to `harmonisation/lookups/*.csv` for common cross-study recodes, and add a dataset-specific `lookups/` folder only for large one-off mappings.
-5. Create `R/tidy/tidy_BPIPD_<id>.R`. The pipeline requires one tidier file per study and tracks that file as a target input.
-6. Run `targets::tar_make()`.
+4. Create `R/tidy/tidy_BPIPD_<id>.R`.
+   The pipeline requires one tidier file per study and tracks that file as a target input.
+5. Run `targets::tar_make()`.
+
+The [adding a dataset guide](https://motivation-and-behaviour.github.io/bigger_picture/guides/adding-a-dataset.html) walks through this workflow in full, including branching, validation, and the pull request process.
 
 ## Development Notes
 
 - This repo uses `README.Rmd` as the source of truth; `README.md` is generated.
-- Run the test suite with `testthat::test_dir("tests/testthat")`. It validates all harmonisation metadata (schema, `variables.csv` expressions, lookups) and unit-tests the harmonisation engine; it runs entirely from files in the repository and never needs the `/data` mount, so it also runs on CI for every pull request.
+- The documentation site source lives in `docs/` (Quarto).
+  Preview locally with `quarto render docs`; CI builds it on every PR and deploys to GitHub Pages on merge to `main`.
+  Generated pages (dataschema, progress, the reader and allowlist tables) read repository files at build time, so they never need manual updates.
+- Run the test suite with `testthat::test_dir("tests/testthat")`.
+  It validates all harmonisation metadata (schema, `variables.csv` expressions, lookups) and unit-tests the harmonisation engine; it runs entirely from files in the repository and never needs the `/data` mount, so it also runs on CI for every pull request.
 - `DESCRIPTION` declares the R package dependencies for CI and the devcontainer; this repository is not an R package.
 - `_targets/` is generated runtime state and should not be edited manually.
 - Keep ingestion logic generic in `R/registry/`.
@@ -243,5 +180,7 @@ targets::tar_read(tidied_BPIPD_21)
 
 ## Related Documentation
 
+- Documentation site: <https://motivation-and-behaviour.github.io/bigger_picture/> (source in `docs/`, built by `.github/workflows/docs.yaml`, deployed to GitHub Pages)
 - Preregistration source: `docs/prereg/bigger_picture_preregistration.Rmd`
 - Rendered preregistration outputs are in the same folder (`.pdf`, `.docx`, `.md`)
+- Decision register: `docs/decisions/`
