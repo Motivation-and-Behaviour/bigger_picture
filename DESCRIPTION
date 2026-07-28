@@ -17,7 +17,7 @@ Imports:
     fs,
     haven,
     mdbr,
-    qs,
+    qs2,
     readr,
     readxl,
     rlang,
