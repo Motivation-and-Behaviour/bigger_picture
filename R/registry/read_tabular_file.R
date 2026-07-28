@@ -3,7 +3,8 @@ read_tabular_file <- function(
   reader,
   sheet = NULL,
   range = NULL,
-  table = NULL
+  table = NULL,
+  object = NULL
 ) {
   reader <- tolower(reader)
 
@@ -47,6 +48,39 @@ read_tabular_file <- function(
         table <- tables
       }
       mdbr::read_mdb(path, table)
+    },
+    "rda" = {
+      env <- new.env(parent = emptyenv())
+      objects <- load(path, envir = env)
+      if (is.null(object)) {
+        if (length(objects) == 0) {
+          stop("No objects found in rda file (", path, ")", call. = FALSE)
+        }
+        if (length(objects) > 1) {
+          stop(
+            "Multiple objects in rda file; set `object` in the dataset spec. ",
+            "Available objects: ",
+            paste(objects, collapse = ", "),
+            " (",
+            path,
+            ")",
+            call. = FALSE
+          )
+        }
+        object <- objects
+      } else if (!object %in% objects) {
+        stop(
+          "Object not found in rda file: ",
+          object,
+          ". Available objects: ",
+          paste(objects, collapse = ", "),
+          " (",
+          path,
+          ")",
+          call. = FALSE
+        )
+      }
+      get(object, envir = env)
     },
     stop("Unsupported reader: ", reader, " (", path, ")", call. = FALSE)
   )

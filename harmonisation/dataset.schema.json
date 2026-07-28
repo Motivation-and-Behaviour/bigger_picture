@@ -98,7 +98,8 @@
             "rds",
             "parquet",
             "excel",
-            "mdb"
+            "mdb",
+            "rda"
           ],
           "description": "How to read this resource when role is data."
         },
@@ -120,6 +121,10 @@
         "table": {
           "type": "string",
           "description": "Access table name (if reader is mdb). Optional when the file contains exactly one table."
+        },
+        "object": {
+          "type": "string",
+          "description": "R object name to extract (if reader is rda). Optional when the file contains exactly one object."
         },
         "wave_from": {
           "type": "string",
@@ -171,6 +176,11 @@
                 {
                   "required": [
                     "table"
+                  ]
+                },
+                {
+                  "required": [
+                    "object"
                   ]
                 }
               ]
