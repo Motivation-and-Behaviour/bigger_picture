@@ -52,3 +52,4 @@ renv/
 
 # Scratch files
 scratch.*
+.claude/settings.local.json

@@ -1,0 +1,30 @@
+# Runs the standalone testthat suite. The suite only reads files tracked in
+# the repository (harmonisation metadata + inline fixtures); it never needs
+# the mounted dataset directory, so CI requires no data access or secrets.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+name: test-project.yaml
+
+permissions: read-all
+
+jobs:
+  test-project:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # Installs Imports + Suggests from DESCRIPTION (with caching)
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Run tests
+        run: testthat::test_dir("tests/testthat", stop_on_failure = TRUE)
+        shell: Rscript {0}
