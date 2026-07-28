@@ -10,6 +10,7 @@ resources:
   - name: "Data Dictionary"
     role: "codebook"
     glob: "Data Dictionary.xlsx"
+    sheet: "Sheet1"
   - name: "Datacite Metadata"
     role: "docs"
     glob: "pcd2b-datacite.json"
