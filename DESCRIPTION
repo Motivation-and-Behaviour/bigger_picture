@@ -1,0 +1,32 @@
+Package: biggerpicture
+Title: Bigger Picture IPD Harmonisation Pipeline
+Version: 0.0.0.9000
+Authors@R:
+    person("Taren", "Sanders", email = "taren.sanders@acu.edu.au", role = c("aut", "cre"))
+Description: Dependency manifest for the Bigger Picture targets pipeline.
+    This repository is not an R package; this file declares the packages
+    required by the pipeline so that CI workflows and the devcontainer can
+    install them with pak or r-lib/actions/setup-r-dependencies.
+License: GPL-3
+Encoding: UTF-8
+Imports:
+    arrow,
+    crew,
+    dotenv,
+    dplyr,
+    fs,
+    haven,
+    mdbr,
+    qs,
+    readr,
+    readxl,
+    rlang,
+    stringr,
+    tarchetypes,
+    targets,
+    tibble,
+    yaml
+Suggests:
+    lintr,
+    testthat (>= 3.0.0),
+    withr

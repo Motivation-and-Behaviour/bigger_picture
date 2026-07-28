@@ -179,6 +179,16 @@ tibble and can reference: - columns in the tidied tibble directly -
 metadata - `lookup_tables` and individual `lookup_<name>` objects for
 any loaded lookup CSVs
 
+Expressions run in a sandboxed environment, not the global R session.
+Bare function calls resolve from base R plus the curated allowlist in
+`bp_harmonisation_functions()`
+(`R/harmonise/harmonisation_functions.R`), which includes
+`recode_values()`, `if_else()`, `case_when()`, `lookup_values()`, and
+`sum_nonmissing()`. Namespaced calls such as `haven::as_factor()` are
+also allowed. To make a new function available as a bare name, add it to
+the allowlist; the test suite verifies that every expression only calls
+functions that resolve there.
+
 Shared lookup tables in `harmonisation/lookups/` must follow a common
 audit-friendly schema with columns: - `dataset_id` - `target_variable` -
 `source_value` - `harmonised_value` - `mapping_status` - `notes`
@@ -241,6 +251,13 @@ targets::tar_read(tidied_BPIPD_21)
 
 - This repo uses `README.Rmd` as the source of truth; `README.md` is
   generated.
+- Run the test suite with `testthat::test_dir("tests/testthat")`. It
+  validates all harmonisation metadata (schema, `variables.csv`
+  expressions, lookups) and unit-tests the harmonisation engine; it runs
+  entirely from files in the repository and never needs the `/data`
+  mount, so it also runs on CI for every pull request.
+- `DESCRIPTION` declares the R package dependencies for CI and the
+  devcontainer; this repository is not an R package.
 - `_targets/` is generated runtime state and should not be edited
   manually.
 - Keep ingestion logic generic in `R/registry/`.
