@@ -1,4 +1,10 @@
-read_tabular_file <- function(path, reader, sheet = NULL, range = NULL) {
+read_tabular_file <- function(
+  path,
+  reader,
+  sheet = NULL,
+  range = NULL,
+  table = NULL
+) {
   reader <- tolower(reader)
 
   out <- switch(
@@ -20,6 +26,27 @@ read_tabular_file <- function(path, reader, sheet = NULL, range = NULL) {
         args$range <- range
       }
       do.call(readxl::read_excel, args)
+    },
+    "mdb" = {
+      if (is.null(table)) {
+        tables <- mdbr::mdb_tables(path)
+        if (length(tables) == 0) {
+          stop("No tables found in mdb file (", path, ")", call. = FALSE)
+        }
+        if (length(tables) > 1) {
+          stop(
+            "Multiple tables in mdb file; set `table` in the dataset spec. ",
+            "Available tables: ",
+            paste(tables, collapse = ", "),
+            " (",
+            path,
+            ")",
+            call. = FALSE
+          )
+        }
+        table <- tables
+      }
+      mdbr::read_mdb(path, table)
     },
     stop("Unsupported reader: ", reader, " (", path, ")", call. = FALSE)
   )
