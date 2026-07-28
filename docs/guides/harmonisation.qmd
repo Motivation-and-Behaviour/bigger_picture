@@ -1,0 +1,196 @@
+---
+title: "Harmonising variables"
+---
+
+Harmonisation maps a dataset's [tidied table](tidy-scripts.qmd) onto the project [dataschema](../reference/dataschema.qmd), so that every study contributes the same variables with the same meanings.
+It is entirely table-driven: you edit CSV files, not R scripts.
+
+The files involved:
+
+| File | Purpose |
+|------|---------|
+| `harmonisation/dataschema.csv` | The shared schema — one row per harmonised variable (shown in the [Dataschema reference](../reference/dataschema.qmd)) |
+| `harmonisation/datasets/BPIPD-<id>/variables.csv` | How *this* dataset derives each schema variable |
+| `harmonisation/lookups/*.csv` | Shared recode tables reused across studies (e.g. ethnicity) |
+| `harmonisation/datasets/BPIPD-<id>/lookups/*.csv` | Large one-off recode tables specific to this dataset |
+
+## variables.csv
+
+One row per dataschema variable, in dataschema order.
+The template copy starts with every variable set to `in_progress`; harmonising a dataset means working through the rows.
+
+| Column | Meaning |
+|--------|---------|
+| `target_variable` | The dataschema variable being derived. Every non-system schema variable must have a row (`dataset_id` and `dataset_name` are injected by the pipeline). |
+| `status` | How well the study supports this variable (table below). |
+| `source_columns` | Which tidied columns the mapping uses — documentation for reviewers, not executed. |
+| `expression` | R code that computes the value (required unless the status says the variable can't be derived). |
+| `notes` | Anything a reviewer needs: assumptions, DOIs, caveats. |
+| `lookup_table` | Basename of a lookup CSV this expression uses, if any (e.g. `ethnicity` for `harmonisation/lookups/ethnicity.csv`). |
+
+A few illustrative rows (the column names are fictional, but the shapes mirror real mappings in the project):
+
+```csv
+target_variable,status,source_columns,expression,notes,lookup_table
+participant_id,compatible,serial,as.character(serial),Assume serial is the participant ID,
+wave,unavailable,,,Cross-sectional study,
+data_year,inferred,,2016,Not in the data; taken from the study protocol,
+sex,compatible,sex_raw,"recode_values(haven::as_factor(sex_raw), ""F"" ~ ""Female"", ""M"" ~ ""Male"")",Convert labels to harmonised values,
+```
+
+## Statuses
+
+Statuses follow the [Maelstrom Research](https://www.maelstrom-research.org/) harmonisation vocabulary:
+
+```{r}
+#| label: status-table
+statuses <- tibble::tribble(
+  ~Status, ~Meaning, ~Evaluated,
+  "compatible",
+  paste(
+    "The study variable can generate the target with an explicit,",
+    "scientifically defensible transformation and without meaningful",
+    "loss of meaning."
+  ), "Yes",
+  "partial",
+  paste(
+    "The study only supports part of the target construct, or the",
+    "harmonised value requires a simplification that should be",
+    "interpreted with caution."
+  ), "Yes",
+  "proximate",
+  paste(
+    "A categorical subtype of partial: the study captures a close but",
+    "not fully equivalent category structure."
+  ), "Yes",
+  "inferred",
+  paste(
+    "The value is derived from study metadata or surrounding context",
+    "(e.g. a fixed collection year from the study's publication)",
+    "rather than a like-for-like study variable."
+  ), "Yes",
+  "incompatible",
+  paste(
+    "Related information exists, but it cannot be transformed into a",
+    "defensible version of the target variable."
+  ), "No — output is NA",
+  "unavailable",
+  "The study does not collect the required information.",
+  "No — output is NA",
+  "in_progress",
+  "The mapping has not been completed yet (the template default).",
+  "No — output is NA"
+)
+knitr::kable(statuses)
+```
+
+```{r}
+#| label: status-drift-check
+#| include: false
+# Fail the site build if this table drifts from the pipeline's status set.
+source("../R/config.R")
+stopifnot(setequal(statuses$Status, bp_harmonisation_status_values()))
+```
+
+Rows with an "evaluated" status must have an `expression`; rows with the other three statuses are skipped and the variable is filled with typed `NA` values for that dataset.
+
+## Writing expressions
+
+An expression is a single R expression evaluated against the tidied table.
+Its result is recycled to the table's row count (so a constant like `2016` is fine) and cast to the schema's declared type.
+Inside an expression you can reference:
+
+- **columns of the tidied table** directly by name (`serial`, `sex_raw`);
+- `tbl` or `analysis_base` — the whole tidied table, if you need it;
+- `spec` — the parsed `dataset.yaml` (e.g. `spec$dataset_id`);
+- `lookup_<name>` — any lookup table named in the row's `lookup_table` column (e.g. `lookup_ethnicity`).
+
+Expressions run in a **sandboxed environment**, not your R session.
+Bare function calls resolve from base R plus this curated allowlist:
+
+```{r}
+#| label: allowlist-table
+source("../R/helpers.R")
+source("../R/harmonise/harmonisation_functions.R")
+fns <- bp_harmonisation_functions()
+origin <- vapply(
+  fns,
+  function(fn) {
+    env_name <- environmentName(topenv(environment(fn)))
+    if (env_name %in% c("R_GlobalEnv", "")) "pipeline helper" else env_name
+  },
+  character(1)
+)
+allowlist <- tibble::tibble(
+  Function = paste0("`", names(fns), "()`"),
+  From = origin
+)
+knitr::kable(allowlist)
+```
+
+Namespaced calls such as `haven::as_factor()` also work for anything not on the list.
+If an expression calls a bare function that is neither base R nor allowlisted, the test suite fails with a message telling you to either namespace it or add it to `bp_harmonisation_functions()` (`R/harmonise/harmonisation_functions.R`) — extending the allowlist is a one-line change, reviewed like any other.
+
+Typical recodes use `recode_values()` with formula syntax:
+
+```r
+recode_values(
+  haven::as_factor(sex_raw),
+  "F" ~ "Female",
+  "M" ~ "Male"
+)
+```
+
+## Lookup tables
+
+Three tiers, from smallest to largest:
+
+1. **Inline** — short, study-specific recodes stay in the expression itself (like the `sex` example above).
+2. **Shared lookups** (`harmonisation/lookups/*.csv`) — recurring recodes that should be reviewed centrally, such as ethnicity or maternal education.
+   These must have the columns `dataset_id`, `target_variable`, `source_value`, `harmonised_value`, `mapping_status`, `notes`, with one row per source value per dataset.
+3. **Dataset lookups** (`harmonisation/datasets/BPIPD-<id>/lookups/*.csv`) — mappings too large to read inline but not shared across studies.
+   At minimum they need `source_value` and `harmonised_value` columns.
+
+To use one, put its basename in the row's `lookup_table` column and call `lookup_values()` with the matching `lookup_<name>` object.
+For example, an `ethnicity` row with `lookup_table` = `ethnicity`:
+
+```r
+lookup_values(
+  haven::as_factor(ethnicity_raw),
+  lookup_ethnicity,
+  dataset_id = spec$dataset_id,
+  target_variable = "ethnicity"
+)
+```
+
+The `dataset_id`/`target_variable` arguments filter a shared lookup down to this dataset's rows; omit them for a dataset-specific lookup.
+A lookup name must exist in exactly one of the two locations — the validator errors if it is missing from both or present in both.
+
+## Keeping variables.csv in sync with the dataschema
+
+When the dataschema gains a variable, every dataset's `variables.csv` needs a matching row.
+Don't do this by hand:
+
+```r
+targets::tar_source()
+sync_harmonisation_vars() # all datasets
+```
+
+This appends any missing variables as `in_progress` and reorders rows to dataschema order.
+The validator (and therefore CI) rejects a `variables.csv` with missing, duplicate, or unknown target variables.
+
+## Testing your harmonisation
+
+```r
+targets::tar_make(names = harmonised_BPIPD_9999) # your dataset id
+targets::tar_read(harmonised_BPIPD_9999)
+```
+
+Check derived values look sensible (tabulate `sex`, summarise `age_years`, …).
+Then run the repository test suite, which validates all harmonisation metadata without needing the data:
+
+```r
+testthat::test_dir("tests/testthat")
+```
+
+Both run on every pull request — CI validates the metadata and expressions, but only your local `tar_make()` sees real values.
