@@ -46,6 +46,7 @@ read_resource_table <- function(
   sheet <- resource$sheet %||% NULL
   range <- resource$range %||% NULL
   table <- resource$table %||% NULL
+  object <- resource$object %||% NULL
 
   out <- list()
   for (i in seq_along(paths)) {
@@ -59,7 +60,8 @@ read_resource_table <- function(
       reader = reader,
       sheet = sheet,
       range = range,
-      table = table
+      table = table,
+      object = object
     )
 
     if (!is.null(wave)) {

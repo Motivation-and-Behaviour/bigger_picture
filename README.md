@@ -133,10 +133,13 @@ Main fields: - `dataset_id`, `dataset_name`, `status` - `resources`
 (dataset-level) - optional `waves` (wave-specific resources)
 
 Supported `reader` values: - `csv`, `csv2`, `tsv`, `stata`, `spss`,
-`sas`, `rds`, `parquet`, `excel`, `mdb`
+`sas`, `rds`, `parquet`, `excel`, `mdb`, `rda`
 
 For `mdb` (Microsoft Access) resources, set `table` to the Access table
-name; it can be omitted when the file contains exactly one table.
+name; it can be omitted when the file contains exactly one table. For
+`rda` (R data, read via `load()`) resources, set `object` to the name of
+the object to extract; it can be omitted when the file contains exactly
+one object.
 
 The full contract is documented by `harmonisation/dataset.schema.json`.
 At present this schema is descriptive documentation for contributors;
