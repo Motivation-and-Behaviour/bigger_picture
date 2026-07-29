@@ -70,6 +70,28 @@ test_that("sum_nonmissing sums observed values and keeps all-NA as NA", {
   expect_error(sum_nonmissing(), "requires at least one input")
 })
 
+test_that("list_harmonisation_var_files includes the dataset template", {
+  dataset_specs_dir <- withr::local_tempdir()
+  template_dir <- withr::local_tempdir()
+  fs::dir_create(fs::path(dataset_specs_dir, "BPIPD-9999"))
+  fs::file_create(fs::path(dataset_specs_dir, "BPIPD-9999", "variables.csv"))
+  fs::file_create(fs::path(template_dir, "variables.csv"))
+
+  files <- list_harmonisation_var_files(dataset_specs_dir, template_dir)
+
+  expect_length(files, 2)
+  expect_true(any(fs::path_has_parent(files, template_dir)))
+
+  # A missing template directory is not an error
+  expect_length(
+    list_harmonisation_var_files(
+      dataset_specs_dir,
+      fs::path(template_dir, "does-not-exist")
+    ),
+    1
+  )
+})
+
 test_that("sync_harmonisation_vars_file adds, reorders, and reports", {
   dataschema <- tibble::tibble(
     variable_name = c("dataset_id", "dataset_name", "participant_id", "sex")
@@ -159,4 +181,31 @@ test_that("sync_harmonisation_vars_file validates its inputs", {
   )
   expect_true(unwritten$changed)
   expect_identical(readLines(variables_file), before)
+})
+
+test_that("ridit_scores() computes weighted and unweighted ridit scores", {
+  # groups: value 1 (n = 2), value 2 (n = 1), value 3 (n = 1)
+  expect_equal(
+    ridit_scores(c(1, 1, 2, 3)),
+    c(0.25, 0.25, 0.625, 0.875)
+  )
+
+  # weights of 2 behave like duplicated observations
+  expect_equal(
+    ridit_scores(c(1, 1, 2, 3)),
+    ridit_scores(c(1, 2, 3), weights = c(2, 1, 1))[c(1, 1, 2, 3)]
+  )
+
+  # NA values pass through; NA weights fall back to 1
+  expect_equal(
+    ridit_scores(c(1, NA, 2), weights = c(1, 1, NA)),
+    c(0.25, NA, 0.75)
+  )
+
+  expect_equal(ridit_scores(c(NA_real_, NA_real_)), c(NA_real_, NA_real_))
+
+  expect_error(
+    ridit_scores(c(1, 2), weights = 1),
+    "same length"
+  )
 })
