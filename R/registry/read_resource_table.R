@@ -65,10 +65,11 @@ read_resource_table <- function(
     )
 
     if (!is.null(wave)) {
+      # `label` is optional in the spec; fall back to the wave identifier.
       tbl <- dplyr::mutate(
         tbl,
         .wave = as.character(wave),
-        .wave_label = as.character(wave_label)
+        .wave_label = as.character(wave_label %||% wave)
       )
     }
 
