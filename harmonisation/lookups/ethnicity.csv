@@ -8,3 +8,19 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1639,ethnicity,Maori,Black,proximate,Not an ideal match - may be revisited as more data are added
 1639,ethnicity,Pacific,Black,proximate,Not an ideal match - may be revisited as more data are added
 1639,ethnicity,Other (incl,Other,compatible,
+677,ethnicity,White British,White,compatible,UK census categories reported by carer
+677,ethnicity,White Irish,White,compatible,
+677,ethnicity,Other White,White,compatible,
+677,ethnicity,White and Black Caribbean,Mixed,compatible,
+677,ethnicity,White and Black African,Mixed,compatible,
+677,ethnicity,White and Asian,Mixed,compatible,
+677,ethnicity,Indian,Asian,compatible,
+677,ethnicity,Pakistani,Asian,compatible,
+677,ethnicity,Bangladeshi,Asian,compatible,
+677,ethnicity,Any other Asian or Asian British background,Asian,compatible,
+677,ethnicity,Chinese,Asian,compatible,Chinese is a separate group in UK census categories; collapsed into Asian to match schema
+677,ethnicity,Caribbean,Black,compatible,
+677,ethnicity,African,Black,compatible,
+677,ethnicity,Any other Black or Black British background,Black,compatible,
+677,ethnicity,Any other ethnic group,Other,compatible,
+677,ethnicity,Would rather not say,Unknown,compatible,Explicit non-response

@@ -182,3 +182,30 @@ test_that("sync_harmonisation_vars_file validates its inputs", {
   expect_true(unwritten$changed)
   expect_identical(readLines(variables_file), before)
 })
+
+test_that("ridit_scores() computes weighted and unweighted ridit scores", {
+  # groups: value 1 (n = 2), value 2 (n = 1), value 3 (n = 1)
+  expect_equal(
+    ridit_scores(c(1, 1, 2, 3)),
+    c(0.25, 0.25, 0.625, 0.875)
+  )
+
+  # weights of 2 behave like duplicated observations
+  expect_equal(
+    ridit_scores(c(1, 1, 2, 3)),
+    ridit_scores(c(1, 2, 3), weights = c(2, 1, 1))[c(1, 1, 2, 3)]
+  )
+
+  # NA values pass through; NA weights fall back to 1
+  expect_equal(
+    ridit_scores(c(1, NA, 2), weights = c(1, 1, NA)),
+    c(0.25, NA, 0.75)
+  )
+
+  expect_equal(ridit_scores(c(NA_real_, NA_real_)), c(NA_real_, NA_real_))
+
+  expect_error(
+    ridit_scores(c(1, 2), weights = 1),
+    "same length"
+  )
+})

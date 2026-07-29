@@ -218,6 +218,38 @@ sum_nonmissing <- function(...) {
   totals
 }
 
+# Ridit-score `x` against its own (optionally weighted) distribution: each
+# value receives the proportion of observations below it plus half the
+# proportion at it, giving a 0-1 relative rank. NA values pass through; NA
+# weights fall back to 1.
+ridit_scores <- function(x, weights = NULL) {
+  if (is.null(weights)) {
+    weights <- rep(1, length(x))
+  }
+  if (length(weights) != length(x)) {
+    stop("`x` and `weights` must be the same length.", call. = FALSE)
+  }
+
+  weights <- as.numeric(weights)
+  weights[is.na(weights)] <- 1
+
+  observed <- !is.na(x)
+  if (!any(observed)) {
+    return(rep(NA_real_, length(x)))
+  }
+
+  values <- sort(unique(x[observed]))
+  value_weights <- vapply(
+    values,
+    function(value) sum(weights[observed][x[observed] == value]),
+    numeric(1)
+  )
+  proportions <- value_weights / sum(value_weights)
+  ridits <- cumsum(proportions) - proportions / 2
+
+  ridits[match(x, values)]
+}
+
 lookup_values <- function(
   values,
   lookup,
