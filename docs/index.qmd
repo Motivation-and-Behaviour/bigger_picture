@@ -1,0 +1,24 @@
+---
+title: "Bigger Picture documentation"
+---
+
+Bigger Picture is an individual participant data (IPD) meta-analysis of the relationship between screen use and child and adolescent outcomes.
+This site documents the data pipeline that ingests, tidies, and harmonises the contributing datasets.
+The pipeline itself lives in the [`bigger_picture` repository](https://github.com/Motivation-and-Behaviour/bigger_picture); the scientific background and planned analyses are in the [preregistration](prereg/bigger_picture_preregistration.pdf).
+
+## Where to start
+
+If you are preparing a dataset for the project, work through the guides in order:
+
+1. [Getting started](guides/getting-started.qmd) — install the tools and get access to the data.
+2. [Adding a dataset](guides/adding-a-dataset.qmd) — the end-to-end workflow, from picking a dataset to submitting a pull request.
+3. [The dataset.yaml spec](guides/dataset-yaml.qmd) — every field explained, plus how to validate your spec.
+4. [Spec cookbook](guides/spec-cookbook.qmd) — copy-paste patterns for common dataset layouts (multiple files, waves, nested folders, and every reader).
+5. [Tidy scripts](guides/tidy-scripts.qmd) — turning raw resources into one tidy table.
+6. [Harmonising variables](guides/harmonisation.qmd) — mapping a tidied dataset onto the project dataschema.
+
+## Reference
+
+- [Dataschema](reference/dataschema.qmd) — a searchable table of every harmonised variable, generated from `harmonisation/dataschema.csv`.
+- [Harmonisation progress](reference/progress.qmd) — which datasets are in the pipeline and how far along each variable mapping is.
+- [Decision register](decisions/README.md) — records of key project decisions and why they were made.

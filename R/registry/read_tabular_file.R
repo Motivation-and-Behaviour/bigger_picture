@@ -1,4 +1,11 @@
-read_tabular_file <- function(path, reader, sheet = NULL, range = NULL) {
+read_tabular_file <- function(
+  path,
+  reader,
+  sheet = NULL,
+  range = NULL,
+  table = NULL,
+  object = NULL
+) {
   reader <- tolower(reader)
 
   out <- switch(
@@ -20,6 +27,60 @@ read_tabular_file <- function(path, reader, sheet = NULL, range = NULL) {
         args$range <- range
       }
       do.call(readxl::read_excel, args)
+    },
+    "mdb" = {
+      if (is.null(table)) {
+        tables <- mdbr::mdb_tables(path)
+        if (length(tables) == 0) {
+          stop("No tables found in mdb file (", path, ")", call. = FALSE)
+        }
+        if (length(tables) > 1) {
+          stop(
+            "Multiple tables in mdb file; set `table` in the dataset spec. ",
+            "Available tables: ",
+            paste(tables, collapse = ", "),
+            " (",
+            path,
+            ")",
+            call. = FALSE
+          )
+        }
+        table <- tables
+      }
+      mdbr::read_mdb(path, table)
+    },
+    "rda" = {
+      env <- new.env(parent = emptyenv())
+      objects <- load(path, envir = env)
+      if (is.null(object)) {
+        if (length(objects) == 0) {
+          stop("No objects found in rda file (", path, ")", call. = FALSE)
+        }
+        if (length(objects) > 1) {
+          stop(
+            "Multiple objects in rda file; set `object` in the dataset spec. ",
+            "Available objects: ",
+            paste(objects, collapse = ", "),
+            " (",
+            path,
+            ")",
+            call. = FALSE
+          )
+        }
+        object <- objects
+      } else if (!object %in% objects) {
+        stop(
+          "Object not found in rda file: ",
+          object,
+          ". Available objects: ",
+          paste(objects, collapse = ", "),
+          " (",
+          path,
+          ")",
+          call. = FALSE
+        )
+      }
+      get(object, envir = env)
     },
     stop("Unsupported reader: ", reader, " (", path, ")", call. = FALSE)
   )
