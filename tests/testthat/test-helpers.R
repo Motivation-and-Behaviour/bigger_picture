@@ -70,6 +70,28 @@ test_that("sum_nonmissing sums observed values and keeps all-NA as NA", {
   expect_error(sum_nonmissing(), "requires at least one input")
 })
 
+test_that("list_harmonisation_var_files includes the dataset template", {
+  dataset_specs_dir <- withr::local_tempdir()
+  template_dir <- withr::local_tempdir()
+  fs::dir_create(fs::path(dataset_specs_dir, "BPIPD-9999"))
+  fs::file_create(fs::path(dataset_specs_dir, "BPIPD-9999", "variables.csv"))
+  fs::file_create(fs::path(template_dir, "variables.csv"))
+
+  files <- list_harmonisation_var_files(dataset_specs_dir, template_dir)
+
+  expect_length(files, 2)
+  expect_true(any(fs::path_has_parent(files, template_dir)))
+
+  # A missing template directory is not an error
+  expect_length(
+    list_harmonisation_var_files(
+      dataset_specs_dir,
+      fs::path(template_dir, "does-not-exist")
+    ),
+    1
+  )
+})
+
 test_that("sync_harmonisation_vars_file adds, reorders, and reports", {
   dataschema <- tibble::tibble(
     variable_name = c("dataset_id", "dataset_name", "participant_id", "sex")
