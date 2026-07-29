@@ -2,14 +2,6 @@
 # from files tracked in the repository and never touch the mounted data
 # directory, so they are safe to run in CI.
 
-active_expression_rows <- function(variables) {
-  active <- !variables$status %in%
-    c("incompatible", "unavailable", "in_progress")
-  has_expression <- !is.na(variables$expression) &
-    nzchar(variables$expression)
-  variables[active & has_expression, , drop = FALSE]
-}
-
 dataset_dirs <- withr::with_dir(
   repo_root,
   fs::dir_ls(bp_dataset_specs_dir(), type = "directory")
@@ -52,76 +44,29 @@ test_that("every dataset harmonisation config reads and validates", {
 })
 
 test_that("every active expression parses and only calls known functions", {
-  eval_env <- harmonisation_eval_env(
-    spec = make_test_spec(),
-    analysis_base = tibble::tibble(),
-    lookups = list(),
-    tbl = tibble::tibble()
-  )
-
   withr::with_dir(repo_root, {
-    for (dataset_dir in dataset_dirs) {
-      variables_file <- fs::path(dataset_dir, "variables.csv")
-      if (!fs::file_exists(variables_file)) {
-        next
-      }
+    # Formatting is advisory and deliberately not enforced here; CI should
+    # fail on expressions that cannot run, not on their layout.
+    issues <- check_harmonisation_exprs(check_format = FALSE)
 
-      variables <- readr::read_csv(variables_file, show_col_types = FALSE)
-      rows <- active_expression_rows(variables)
-
-      for (i in seq_len(nrow(rows))) {
-        expression <- rows$expression[[i]]
-        label <- paste0(
-          fs::path_file(dataset_dir),
-          "::",
-          rows$target_variable[[i]]
+    expect_identical(
+      nrow(issues),
+      0L,
+      label = paste0(
+        "variables.csv expression problems:\n",
+        paste0(
+          "  ",
+          issues$variables_file,
+          " [",
+          issues$target_variable,
+          "] ",
+          issues$issue,
+          ": ",
+          issues$message,
+          collapse = "\n"
         )
-
-        calls <- tryCatch(
-          harmonisation_expression_calls(expression),
-          error = identity
-        )
-        if (inherits(calls, "error")) {
-          fail(paste0(
-            "Expression failed to parse for ",
-            label,
-            ": ",
-            conditionMessage(calls)
-          ))
-          next
-        }
-        succeed()
-
-        for (call_name in calls) {
-          if (grepl("::", call_name, fixed = TRUE)) {
-            parts <- strsplit(call_name, ":{2,3}")[[1]]
-            expect_true(
-              requireNamespace(parts[[1]], quietly = TRUE) &&
-                parts[[2]] %in% getNamespaceExports(parts[[1]]),
-              label = paste0(
-                "`",
-                call_name,
-                "` (used by ",
-                label,
-                ") resolves to an installed package export"
-              )
-            )
-          } else {
-            expect_true(
-              exists(call_name, envir = eval_env, mode = "function"),
-              label = paste0(
-                "`",
-                call_name,
-                "()` (used by ",
-                label,
-                ") is available in the harmonisation environment; add it to ",
-                "bp_harmonisation_functions() if it should be allowed"
-              )
-            )
-          }
-        }
-      }
-    }
+      )
+    )
   })
 })
 

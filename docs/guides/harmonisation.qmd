@@ -180,6 +180,30 @@ This appends any missing variables as `in_progress` and reorders rows to datasch
 It covers the template under `harmonisation/templates/dataset/` as well, so a newly copied dataset spec starts with the full set of variables.
 The validator (and therefore CI) rejects a `variables.csv` with missing, duplicate, or unknown target variables.
 
+## Checking your expressions
+
+Before running the pipeline or the test suite, you can check every `expression` in one go:
+
+```r
+targets::tar_source()
+check_harmonisation_exprs()
+```
+
+It returns one row per problem — an empty tibble means everything is fine — with the columns `variables_file`, `target_variable`, `status`, `issue`, `message`, and `suggestion`.
+There are three kinds of `issue`:
+
+| Issue | Meaning |
+|-------|---------|
+| `parse_error` | The expression is not valid R and will fail the moment it is evaluated. |
+| `unknown_function` | It calls a function that is neither base R, allowlisted, nor namespaced (see [Writing expressions](#writing-expressions)). |
+| `unformatted` | It is valid, but [Air](https://posit-dev.github.io/air) would format it differently; `suggestion` holds the reformatted text. |
+
+The first two are what CI enforces, so a clean run here means the expressions will survive the test suite.
+Formatting is advisory only and is never enforced by CI — pass `check_format = FALSE` to skip it, which also avoids needing Air installed.
+
+By default only rows with an evaluated status are checked, matching what the harmoniser actually runs.
+Pass `active_only = FALSE` to include `in_progress` and other skipped rows while you are still drafting them.
+
 ## Testing your harmonisation
 
 ```r
