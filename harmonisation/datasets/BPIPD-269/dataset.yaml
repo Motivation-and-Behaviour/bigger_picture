@@ -1,0 +1,65 @@
+dataset_id: "269"
+dataset_name: "Goldin"
+status: "in_progress"
+
+resources:
+  - name: "gender_age_data"
+    role: "data"
+    reader: "excel"
+    sheet: "Gender + Age"
+    glob: "Goldin-MateMaroteCOMPLETE.xlsx"
+  - name: "ses_data"
+    role: "data"
+    reader: "excel"
+    sheet: "SES"
+    glob: "Goldin-MateMaroteCOMPLETE.xlsx"
+  - name: "grades_data"
+    role: "data"
+    reader: "excel"
+    sheet: "Grades"
+    glob: "Goldin-MateMaroteCOMPLETE.xlsx"
+  - name: "corsi_blocks_data"
+    role: "data"
+    reader: "excel"
+    sheet: "Corsi Blocks"
+    glob: "Goldin-MateMaroteCOMPLETE.xlsx"
+  - name: "k_bit_data"
+    role: "data"
+    reader: "excel"
+    sheet: "K-Bit"
+    glob: "Goldin-MateMaroteCOMPLETE.xlsx"
+  - name: "heart_flower_stroop_data"
+    role: "data"
+    reader: "excel"
+    sheet: "Heart-Flower Stroop"
+    glob: "Goldin-MateMaroteCOMPLETE.xlsx"
+  - name: "tower_of_london_data"
+    role: "data"
+    reader: "excel"
+    sheet: "Tower of London"
+    glob: "Goldin-MateMaroteCOMPLETE.xlsx"
+  - name: "child_ant_task_data"
+    role: "data"
+    reader: "excel"
+    sheet: "Child-ANT task"
+    glob: "Goldin-MateMaroteCOMPLETE.xlsx"
+  - name: "codebook_final"
+    role: "codebook"
+    glob: "Goldin-Mate Marote Codebook FINAL.odt"
+  - name: "letter_of_agreement"
+    role: "docs"
+    glob: "LETTER OF AGREEMENT - Goldin.pdf"
+  - name: "codebook_pdf_alt"
+    role: "docs"
+    glob: "Mate Marote Codebook.pdf"
+
+notes: |
+  The dataset was originally supplied as an OpenDocument Spreadsheet ("Goldin-MateMaroteCOMPLETE.ods") and has
+  since been converted to "Goldin-MateMaroteCOMPLETE.xlsx" to fit the schema's supported reader types. It has
+  8 sheets, each covering a distinct measure/domain (Gender + Age, SES, Grades, Corsi Blocks, K-Bit,
+  Heart-Flower Stroop, Tower of London, Child-ANT task), each represented as a separate data resource
+  (reader: excel) pointing at the same file.
+  The authoritative codebook is "Goldin-Mate Marote Codebook FINAL.odt".
+  "Mate Marote Codebook.pdf" may be an older/duplicate version of the .odt codebook (in which case it may not be needed),
+  so it is included as "docs". 
+  "LETTER OF AGREEMENT - Goldin.pdf" is an administrative document, included as docs.
