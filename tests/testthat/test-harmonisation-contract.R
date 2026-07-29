@@ -159,9 +159,26 @@ test_that("every dataset.yaml is well-formed and has a tidier", {
 test_that("the dataset template variables.csv has the expected columns", {
   withr::with_dir(repo_root, {
     template <- readr::read_csv(
-      fs::path("harmonisation", "templates", "dataset", "variables.csv"),
+      fs::path(bp_dataset_template_dir(), "variables.csv"),
       show_col_types = FALSE
     )
     expect_true(all(harmonisation_variable_columns() %in% names(template)))
+  })
+})
+
+test_that("the dataset template variables.csv is in sync with the dataschema", {
+  withr::with_dir(repo_root, {
+    result <- sync_harmonisation_vars_file(
+      fs::path(bp_dataset_template_dir(), "variables.csv"),
+      write = FALSE
+    )
+    expect_false(
+      result$changed,
+      label = paste0(
+        "The dataset template is out of sync with dataschema.csv. ",
+        "Run `sync_harmonisation_vars()` to update it. Missing: ",
+        result$added_variables
+      )
+    )
   })
 })

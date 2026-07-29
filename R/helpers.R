@@ -12,14 +12,25 @@ harmonisation_variable_columns <- function() {
 }
 
 list_harmonisation_var_files <- function(
-  dataset_specs_dir = bp_dataset_specs_dir()
+  dataset_specs_dir = bp_dataset_specs_dir(),
+  template_dir = bp_dataset_template_dir()
 ) {
+  # The template ships with a full set of dataschema rows so that a new dataset
+  # starts in sync; it is kept up to date alongside the real dataset specs.
+  search_dirs <- c(dataset_specs_dir, template_dir)
+  search_dirs <- search_dirs[fs::dir_exists(search_dirs)]
+
+  if (length(search_dirs) == 0) {
+    return(fs::path())
+  }
+
   fs::dir_ls(
-    dataset_specs_dir,
+    search_dirs,
     recurse = TRUE,
     type = "file",
     regexp = "variables\\.csv$"
   ) |>
+    unique() |>
     sort()
 }
 

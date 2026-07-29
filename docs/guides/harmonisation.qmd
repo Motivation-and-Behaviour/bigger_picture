@@ -173,10 +173,11 @@ Don't do this by hand:
 
 ```r
 targets::tar_source()
-sync_harmonisation_vars() # all datasets
+sync_harmonisation_vars() # all datasets, plus the new-dataset template
 ```
 
 This appends any missing variables as `in_progress` and reorders rows to dataschema order.
+It covers the template under `harmonisation/templates/dataset/` as well, so a newly copied dataset spec starts with the full set of variables.
 The validator (and therefore CI) rejects a `variables.csv` with missing, duplicate, or unknown target variables.
 
 ## Testing your harmonisation
