@@ -189,20 +189,42 @@ targets::tar_source()
 check_harmonisation_exprs()
 ```
 
-It returns one row per problem — an empty tibble means everything is fine — with the columns `variables_file`, `target_variable`, `status`, `issue`, `message`, and `suggestion`.
-There are three kinds of `issue`:
+It returns one row per problem — an empty tibble means everything is fine — with the columns `variables_file`, `target_variable`, `status`, `issue`, `message`, `suggestion`, and `fixed`.
+There are four kinds of `issue`:
 
 | Issue | Meaning |
 |-------|---------|
 | `parse_error` | The expression is not valid R and will fail the moment it is evaluated. |
 | `unknown_function` | It calls a function that is neither base R, allowlisted, nor namespaced (see [Writing expressions](#writing-expressions)). |
+| `missing_expression` | The status says the row is evaluated, but no expression was given. |
 | `unformatted` | It is valid, but [Air](https://posit-dev.github.io/air) would format it differently; `suggestion` holds the reformatted text. |
 
-The first two are what CI enforces, so a clean run here means the expressions will survive the test suite.
+The first three are what CI enforces, so a clean run here means the expressions will survive the test suite.
 Formatting is advisory only and is never enforced by CI — pass `check_format = FALSE` to skip it, which also avoids needing Air installed.
+Air ships inside a VS Code extension in this devcontainer, and that directory is only on the *terminal's* `PATH`, so `Sys.which("air")` comes up empty in an R console; the check looks in the extension directory too, and warns rather than failing if it finds nothing.
 
 By default only rows with an evaluated status are checked, matching what the harmoniser actually runs.
 Pass `active_only = FALSE` to include `in_progress` and other skipped rows while you are still drafting them.
+
+### Fixing formatting
+
+`fix = TRUE` writes each `suggestion` back into the `expression` column and reports what it changed in the `fixed` column:
+
+```r
+check_harmonisation_exprs(fix = TRUE)
+```
+
+Only `unformatted` rows are rewritten; the other three issues need a human decision and are left untouched.
+Every other column is read and written as text, so a fix cannot disturb cells it was not asked to change.
+
+Expressions are formatted to their own settings rather than the ones in the repository's `air.toml`, which continues to govern the `.R` files:
+
+| Setting | Default | Why |
+|---------|---------|-----|
+| `line_width` | `120` | An expression in a CSV cell has no surrounding indentation to pay for, and the 80-column default explodes ordinary recodes into one argument per line. |
+| `persistent_line_breaks` | `FALSE` | Air normally keeps a call expanded if the source has a line break straight after the opening `(`. In a CSV cell that break reflects hand-editing rather than intent, so width alone should decide. |
+
+Both are arguments, so you can widen or narrow a run without editing any configuration.
 
 ## Testing your harmonisation
 
