@@ -1,0 +1,16 @@
+dataset_id: "1760"
+dataset_name: "Swift"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Bigger Picture RAW.xlsx"
+    reader: "excel"
+    sheet: "Sheet1"
+  - name: "codebook"
+    role: "codebook"
+    glob: "Codebook Bigger Picture Dataset.docx"
+
+notes: |
+  Includes one excel data file and one docx codebook.
