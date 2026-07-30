@@ -5,6 +5,7 @@ data_year,inferred,,2016,Inferred from 10.1177/0956797616678438,
 age_years,inferred,,15,"Age not in dataset, but described in recruitment of 10.1177/0956797616678438",
 sex,compatible,Genderg,"recode_values(haven::as_factor(Genderg), ""Female or unknown"" ~ ""Female"", ""Male"" ~ ""Male"")",Convert labels to harmonised values,
 country,inferred,,"""England""",Described in recruitment of 10.1177/0956797616678438,
+state,unavailable,,,,
 ethnicity,compatible,Ethnicg,"lookup_values(haven::as_factor(Ethnicg), lookup_ethnicity, dataset_id = spec$dataset_id, target_variable = ""ethnicity"")",Shared ethnicity mapping stored in harmonisation/lookups/ethnicity.csv,ethnicity
 indigenous,unavailable,,,,
 minority,compatible,minority,"recode_values(minority, 0 ~ ""Non-minority"", 1 ~ ""Minority"", )",,
