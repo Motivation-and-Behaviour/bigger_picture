@@ -11,4 +11,3 @@ resources:
   - name: "questionnaire"
     role: "codebook"
     glob: "bigger picture_questionnaire_english.docx"
-    reader: "officer"
