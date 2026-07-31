@@ -1,0 +1,15 @@
+dataset_id: "728"
+dataset_name: "Marrero"
+status: "in_progress"
+
+resources:
+  - name: "Marrero Data"
+    role: "data"
+    glob: "Internet y juegos TESIS_3.sav"
+    reader: "spss"
+  - name: "Marrero Syntax"
+    role: "docs"
+    glob: "SINTAXGAMING.sps"
+  - name: "Marrero Variable Documentation"
+    role: "docs"
+    glob: "Data_ Name Variables.docx"
