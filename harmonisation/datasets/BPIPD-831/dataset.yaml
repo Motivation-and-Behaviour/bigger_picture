@@ -1,0 +1,18 @@
+dataset_id: "831"
+dataset_name: "Pastor-Ruiz"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "data_set_PB.xlsx"
+    reader: "excel"
+    sheet: "Respuestas de formulario 1"
+  - name: "codebook"
+    role: "codebook"
+    glob: "data_set_PB.xlsx"
+    reader: "excel"
+    sheet: "Hoja1"
+notes: 
+ Codebook is in same excel file as data
+ 
