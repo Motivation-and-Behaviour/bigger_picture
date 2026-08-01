@@ -11,6 +11,7 @@ country,compatible,gor,"recode_values(
   c(2, 3, 4, 5, 6, 8, 9, 10, 11) ~ ""England"",
   default = ""Unknown""
 )",UK Government Office Region; only England regions/Scotland/Wales observed; Northern Ireland/Isle of Man/Channel Islands would fall to Unknown as not in allowed values,
+state,unavailable,,,,
 ethnicity,compatible,d5,"lookup_values(haven::as_factor(d5), lookup_ethnicity, dataset_id = spec$dataset_id, target_variable = ""ethnicity"")",Carer's own ethnic group (UK census categories) used as proxy for child; shared mapping in harmonisation/lookups/ethnicity.csv,ethnicity
 indigenous,unavailable,,,Not collected (UK sample),
 minority,compatible,d5,"recode_values(

@@ -5,6 +5,7 @@ data_year,inferred,,2014,Assumed from 10.1186/s12966-021-01185-w,
 age_years,inferred,,5,Assumed from 10.1186/s12966-021-01185-w,
 sex,compatible,isex,"recode_values(isex, ""M"" ~ ""Male"", ""F"" ~ ""Female"")",,
 country,inferred,,"""New Zealand""",,
+state,unavailable,,,,
 ethnicity,proximate,iethnic4,"lookup_values(iethnic4, lookup_ethnicity, dataset_id = spec$dataset_id, target_variable = ""ethnicity"")",Shared ethnicity mapping stored in harmonisation/lookups/ethnicity.csv,ethnicity
 indigenous,inferred,iethnic4,"if_else(iethnic4 %in% c(""Maori"", ""Pacific""), ""Indigenous"", ""Non-Indigenous"")",,
 minority,inferred,iethnic4,"if_else(iethnic4 == ""European"", ""Non-minority"", ""Minority"")",,

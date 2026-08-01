@@ -5,6 +5,7 @@ data_year,compatible,"yearcollect, surveyyear","if_else(!is.na(yearcollect), yea
 age_years,compatible,age,age,,
 sex,compatible,sex,"recode_values(sex, 1 ~ ""Male"", 2 ~ ""Female"")",,
 country,compatible,countryno,"lookup_values(countryno, lookup_country)",,country
+state,unavailable,,,,
 ethnicity,unavailable,,,,
 indigenous,unavailable,,,,
 minority,unavailable,,,,
