@@ -11,12 +11,11 @@
 #' Output:
 #' - one tibble to be used as the harmonisation input
 tidy_BPIPD_270 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
+  # The rda files seem to be the most complete
+  rda_names <- grep("_rda$", names(raw_dataset$data), value = TRUE)
+  rda_list <- raw_dataset$data[rda_names]
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  # TODO: These need to be full-joined by wave and then row bound
+  combined_df <- dplyr::bind_rows(rda_list, .id = "source")
+  combined_df
 }
