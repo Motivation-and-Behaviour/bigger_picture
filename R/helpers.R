@@ -162,7 +162,7 @@ sync_harmonisation_vars_file <- function(
 sync_harmonisation_vars <- function(
   variables_files = list_harmonisation_var_files(),
   dataschema = read_dataschema(),
-  default_status = "unavailable",
+  default_status = "in_progress",
   remove_unknown_variables = FALSE,
   write = TRUE
 ) {

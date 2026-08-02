@@ -3,3 +3,8 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1639,maternal_education,5th form or,Secondary school or less,compatible,Original values cutoff
 1639,maternal_education,Post-second,Post-secondary,compatible,Original values cutoff
 1639,maternal_education,Degree or h,Bachelor degree or higher,compatible,Original values cutoff
+"232","maternal_education","Less than high school","Secondary school or less","compatible","A#_GRADE codes 1-2, grouped as in the DRC HIGRADE_TVIS derivation"
+"232","maternal_education","High school or GED","Secondary school or less","compatible","A#_GRADE codes 3-4, grouped as in the DRC HIGRADE_TVIS derivation"
+"232","maternal_education","Some college or technical school","Post-secondary","compatible","A#_GRADE codes 5-6, grouped as in the DRC HIGRADE_TVIS derivation"
+"232","maternal_education","College degree or higher","Bachelor degree or higher","compatible","A#_GRADE codes 7-9, grouped as in the DRC HIGRADE_TVIS derivation"
+"232","maternal_education","Mother not identified or education not reported","Unknown","compatible","No caregiver met the DRC mother definition, or that caregiver had no education recorded"
