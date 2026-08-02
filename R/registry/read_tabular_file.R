@@ -10,9 +10,9 @@ read_tabular_file <- function(
 
   out <- switch(
     reader,
-    "csv" = readr::read_csv(path, show_col_types = FALSE),
-    "csv2" = readr::read_csv2(path, show_col_types = FALSE), # ; delimited
-    "tsv" = readr::read_tsv(path, show_col_types = FALSE),
+    "csv" = readr::read_csv(path, show_col_types = FALSE, guess_max = Inf),
+    "csv2" = readr::read_csv2(path, show_col_types = FALSE, guess_max = Inf), # ; delimited
+    "tsv" = readr::read_tsv(path, show_col_types = FALSE, guess_max = Inf),
     "stata" = haven::read_dta(path),
     "spss" = haven::read_sav(path),
     "sas" = haven::read_sas(path),

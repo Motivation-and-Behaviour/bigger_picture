@@ -13,3 +13,8 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 677,ses_household,"Between £100,000 and £149,999",High,compatible,Within-sample income quintile 5
 677,ses_household,"£150,000 or more",High,compatible,Within-sample income quintile 5
 677,ses_household,Would rather not say,Unknown,compatible,Explicit non-response
+"232","ses_household","0-99% FPL","Low","proximate","Census-imputed household income as a percent of the federal poverty level; bottom two bands are 29.8% of the sample"
+"232","ses_household","100-199% FPL","Low","proximate","Census-imputed household income as a percent of the federal poverty level; bottom two bands are 29.8% of the sample"
+"232","ses_household","200-399% FPL","Medium","proximate","Middle band is 30.5% of the sample"
+"232","ses_household","400% FPL or greater","High","proximate","Top band is 39.7% of the sample"
+"232","ses_household","Unknown","Unknown","proximate","POVLEV4 is never missing in 2016-2023; branch retained as a guard"

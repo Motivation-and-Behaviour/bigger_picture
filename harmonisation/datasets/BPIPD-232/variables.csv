@@ -1,0 +1,186 @@
+"target_variable","status","source_columns","expression","notes","lookup_table"
+"participant_id","compatible","hhid","as.character(hhid)","Census household ID; one sampled child per household, and the 334,708 IDs are unique across all eight annual files",""
+"wave","compatible","year","as.character(year)","NSCH is a repeated cross-section, so each annual file is a separate sample rather than a follow-up of the same children; wave records the survey year",""
+"data_year","compatible","year","as.numeric(year)","Survey year, 2016-2023",""
+"age_years","compatible","sc_age_years","as.numeric(sc_age_years)","Caregiver-reported age of the sampled child in whole years, 0-17",""
+"sex","compatible","sc_sex","recode_values(as.numeric(sc_sex), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","Caregiver-reported sex of the sampled child; never missing in 2016-2023",""
+"country","inferred","","""USA""","NSCH is a nationally representative US survey (all 50 states and DC)",""
+"state","unavailable","","","Schema field records Australian states; NSCH is a US survey, so it is not applicable (the NSCH state variable is a US state FIPS code)",""
+"ethnicity","proximate","sc_hispanic_r, sc_race_r","lookup_values(
+  case_when(
+    as.numeric(sc_hispanic_r) == 1 ~ ""Hispanic"",
+    as.numeric(sc_race_r) == 1 ~ ""White alone, non-Hispanic"",
+    as.numeric(sc_race_r) == 2 ~ ""Black or African American alone, non-Hispanic"",
+    as.numeric(sc_race_r) == 3 ~ ""American Indian or Alaska Native alone, non-Hispanic"",
+    as.numeric(sc_race_r) == 4 ~ ""Asian alone, non-Hispanic"",
+    as.numeric(sc_race_r) == 5 ~ ""Native Hawaiian or Other Pacific Islander alone, non-Hispanic"",
+    as.numeric(sc_race_r) == 6 ~ ""Some other race alone, non-Hispanic"",
+    as.numeric(sc_race_r) == 7 ~ ""Two or more races, non-Hispanic"",
+    .default = ""Unknown""
+  ),
+  lookup_ethnicity,
+  dataset_id = spec$dataset_id,
+  target_variable = ""ethnicity"",
+  default = ""Unknown""
+)","Hispanic origin (SC_HISPANIC_R) is taken ahead of race, then non-Hispanic children are classified by their SC_RACE_R race-alone category. This reproduces the DRC race7 derivation exactly (verified against race7_nschyr on all 279,673 rows where it exists, 2017-2023) while also covering 2016, where DRC published no race7. Still proximate because the US treats race and Hispanic origin as two axes and this flattens them into one, and because American Indian/Alaska Native and Native Hawaiian/Pacific Islander have no schema equivalent and land in Other; shared mapping in harmonisation/lookups/ethnicity.csv","ethnicity"
+"indigenous","partial","sc_race_r","recode_values(as.numeric(sc_race_r), 3 ~ ""Indigenous"", c(1, 2, 4, 5, 6, 7) ~ ""Non-Indigenous"", default = ""Unknown"")","American Indian or Alaska Native alone treated as Indigenous. Under-counts: children reporting AIAN in combination with another race fall in the Two or more races code and are classified Non-Indigenous, and Native Hawaiians are inside the combined NHPI code so are not separable. SC_AIAN (AIAN alone or in combination) exists only from 2020 and was not used, to keep one definition across all eight waves",""
+"minority","compatible","race4_nschyr","recode_values(as.numeric(race4_nschyr), 2 ~ ""Non-minority"", c(1, 3, 4) ~ ""Minority"", default = ""Unknown"")","DRC race/ethnicity variable combining SC_RACE_R and SC_HISPANIC_R; non-Hispanic White is the US majority group and everything else (Hispanic, Black non-Hispanic, other/multi-racial non-Hispanic) is treated as minority",""
+"ses_area","unavailable","","","No area-level socioeconomic measure; the only geographic variables are state FIPS and metropolitan status",""
+"ses_household","proximate","povlev4_nschyr","lookup_values(
+  recode_values(
+    as.numeric(povlev4_nschyr),
+    1 ~ ""0-99% FPL"",
+    2 ~ ""100-199% FPL"",
+    3 ~ ""200-399% FPL"",
+    4 ~ ""400% FPL or greater"",
+    default = ""Unknown""
+  ),
+  lookup_ses_household,
+  dataset_id = spec$dataset_id,
+  target_variable = ""ses_household"",
+  default = ""Unknown""
+)","Household income as a percent of the federal poverty level, in the four DRC bands (Census single-imputation FPL_I1). Quintiles are not recoverable from four bands, so the two lowest bands become Low (29.8%), the third Medium (30.5%) and the top High (39.7%); shared mapping in harmonisation/lookups/ses_household.csv","ses_household"
+"ses_household_measure","inferred","","""Household income as a percent of the federal poverty level (4 bands)""","Census-imputed household income relative to the DHHS/Census federal poverty guidelines",""
+"maternal_education","compatible","a1_relation, a1_sex, a1_grade, a2_relation, a2_sex, a2_grade","lookup_values(
+  recode_values(
+    case_when(
+      as.numeric(a1_relation) %in% c(1, 2, 4) & as.numeric(a1_sex) == 2 ~ as.numeric(a1_grade),
+      as.numeric(a2_relation) %in% c(1, 2, 4) & as.numeric(a2_sex) == 2 ~ as.numeric(a2_grade)
+    ),
+    c(1, 2) ~ ""Less than high school"",
+    c(3, 4) ~ ""High school or GED"",
+    c(5, 6) ~ ""Some college or technical school"",
+    c(7, 8, 9) ~ ""College degree or higher"",
+    default = ""Mother not identified or education not reported""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education""
+)","Highest completed schooling of the caregiver who meets the DRC mother definition (A#_RELATION in 1/2/4 and A#_SEX = 2, i.e. biological, adoptive, step or foster mother), taking Adult 1 first when both caregivers are mothers, exactly as DRC derives mother1/mother2. A#_GRADE codes are grouped as in the DRC HIGRADE_TVIS derivation, verified against HIGRADE_TVIS on all 334,708 rows; shared mapping in harmonisation/lookups/maternal_education.csv","maternal_education"
+"st_measure_type","inferred","","""Categorical""","All NSCH screen-time items are caregiver-reported hour bands",""
+"st_measure_name","inferred","","""Custom""","Bespoke NSCH items: separate weekday TV (K7Q60_R) and electronic-device (K7Q91_R) questions in 2016-2017, replaced from 2018 by one combined weekday screen-time question (SCREENTIME)",""
+"st_total_wd","partial","screentime, k7q60_r, k7q91_r","coalesce(
+  recode_values(na_if(na_if(as.numeric(screentime), 90), 99), 1 ~ 0.5, 2 ~ 1, 3 ~ 2, 4 ~ 3, 5 ~ 4),
+  recode_values(na_if(na_if(as.numeric(k7q60_r), 90), 99), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4) +
+    recode_values(na_if(na_if(as.numeric(k7q91_r), 90), 99), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4)
+)","Total weekday screen time across all eight waves, but built from two different instruments, so the two eras are not directly comparable. 2018-2023 uses the single combined item SCREENTIME (TV, computer, cellphone or other device: watching programs, playing games, internet or social media, excluding schoolwork), whose bands run less than 1 hour to 4 or more hours and have no None option, so the floor is 0.5 and the ceiling 4. 2016-2017 sums the two separate weekday items K7Q60_R (TV, videos, video games) and K7Q91_R (computers, cellphones, handheld games, other devices, excluding schoolwork), each with a None option, so the range is 0 to 8. Bands converted at their midpoint with the open top band held at its floor (4), so every value is a lower bound. The 2016-2017 sum also double-counts nothing but cannot net off concurrent device use, and is NA if either item is missing",""
+"st_total_we","unavailable","","","All NSCH screen-time items ask about weekdays only",""
+"st_total","unavailable","","","Weekday-only items; a usual-day value cannot be formed without a weekend measure",""
+"st_watch_wd","partial","k7q60_r","recode_values(na_if(na_if(as.numeric(k7q60_r), 90), 99), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4)","2016-2017 only (21.5% of rows). K7Q60_R: 'On an average weekday, about how much time does this child usually spend in front of a TV watching TV programs, videos, or playing video games?' Bands converted at their midpoint: None 0, less than 1 hour 0.5, 1/2/3 hours as stated, '4 or more hours' held at 4 so the top band is a floor rather than a midpoint. Broader than the schema's watching construct because console gaming in front of a TV is included. Codes 90 (child aged under 6) and 99 (missing) set to NA. From 2018 NSCH replaced this item with a single all-device measure that has no schema row",""
+"st_watch_we","unavailable","","","Weekday-only item; no weekend measure in any wave",""
+"st_watch","unavailable","","","Weekday-only item; a usual-day value cannot be formed without a weekend measure",""
+"st_game_wd","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_we","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_comp_wd","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_comp_we","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_comp","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_console_wd","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_console_we","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_console","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_handheldconsole_wd","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_handheldconsole_we","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_handheldconsole","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_active_wd","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_active_we","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_active","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_phone_wd","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_phone_we","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_game_phone","unavailable","","","NSCH never separates gaming from other screen use; gaming is bundled inside K7Q60_R (2016-2017), K7Q91_R (2016-2017) and SCREENTIME (2018-2023)",""
+"st_comp_nongaming_wd","incompatible","k7q91_r","","K7Q91_R (2016-2017) covers 'computers, cell phones, handheld video games, and other electronic devices, doing things other than schoolwork' on an average weekday. It explicitly includes handheld video games, so it cannot be read as non-gaming computer use",""
+"st_comp_nongaming_we","unavailable","","","Weekday-only item",""
+"st_comp_nongaming","unavailable","","","Weekday-only item",""
+"st_comp_wd","incompatible","k7q91_r","","K7Q91_R (2016-2017) pools computers, cell phones, handheld video games and other electronic devices into one figure, so it cannot be attributed to computer use for any purpose",""
+"st_comp_we","unavailable","","","Weekday-only item",""
+"st_comp","unavailable","","","Weekday-only item",""
+"st_tablet_wd","unavailable","","","Tablet use is not asked about separately in any wave",""
+"st_tablet_we","unavailable","","","Tablet use is not asked about separately in any wave",""
+"st_tablet","unavailable","","","Tablet use is not asked about separately in any wave",""
+"st_phone_wd","incompatible","k7q91_r","","Cell phone use is only ever reported inside the pooled device item K7Q91_R (2016-2017) or the pooled all-device item SCREENTIME (2018-2023); neither can be attributed to smartphone use",""
+"st_phone_we","unavailable","","","Weekday-only item",""
+"st_phone","unavailable","","","Weekday-only item",""
+"acc_academachment_selfrated","unavailable","","","NSCH collects no self-report from the child and no rating of the teacher's perception; the caregiver-reported letter grades item is mapped to acc_academachment_lettergrades instead",""
+"acc_academachment_lettergrades","compatible","grades","recode_values(
+  as.numeric(grades),
+  1 ~ ""Mostly A's"",
+  2 ~ ""Mostly A's and B's"",
+  3 ~ ""Mostly B's and C's"",
+  4 ~ ""Mostly C's and D's"",
+  5 ~ ""Mostly D's or lower""
+)","2022-2023 only, ages 6-17. GRADES: 'Across all subjects, what grades did this child get during the school year?' Caregiver-reported, not self-reported. Source response labels are emitted verbatim because the schema declares no allowed_values yet; the project will need a canonical letter-grade vocabulary before this pools across studies. Code 6 (this child's school does not give these grades, 8.5% of the eligible ages) becomes NA rather than a grade, as do 90 (aged under 6) and 99 (missing)",""
+"acc_academachment_stdtest","unavailable","","","No standardised test scores; NSCH is a caregiver-report survey with no direct assessment",""
+"acc_schoolengage_caresschool","partial","k7q82_r, year","if_else(
+  as.numeric(year) >= 2018,
+  recode_values(as.numeric(k7q82_r), 1 ~ ""Always"", 2 ~ ""Usually"", 3 ~ ""Sometimes"", 4 ~ ""Never""),
+  NA_character_
+)","2018-2023 only (78.5% of rows), ages 6-17. K7Q82_R: ""How often does this child care about doing well in school?"" answered Always / Usually / Sometimes / Never. The 2016-2017 waves asked the same item on a three-level agreement scale (definitely true / somewhat true / not true), which cannot be expressed on a frequency vocabulary without inventing a correspondence, so those waves are guarded out rather than recoded - the guard is essential because the source column reuses codes 1-3 with different meanings across the two eras. Codes 90 (aged under 6) and 99 (missing) fall through to NA. Single caregiver-reported item developed for the NSCH by an MCHB Technical Expert Panel, not from a named instrument",""
+"acc_schoolengage_homework","partial","k7q83_r, year","if_else(
+  as.numeric(year) >= 2018,
+  recode_values(as.numeric(k7q83_r), 1 ~ ""Always"", 2 ~ ""Usually"", 3 ~ ""Sometimes"", 4 ~ ""Never""),
+  NA_character_
+)","2018-2023 only (78.5% of rows), ages 6-17. K7Q83_R: ""How often does this child do all the homework they are required to do?"" answered Always / Usually / Sometimes / Never. The 2016-2017 waves asked the same item on a three-level agreement scale (definitely true / somewhat true / not true), which cannot be expressed on a frequency vocabulary without inventing a correspondence, so those waves are guarded out rather than recoded - the guard is essential because the source column reuses codes 1-3 with different meanings across the two eras. Codes 90 (aged under 6) and 99 (missing) fall through to NA. Single caregiver-reported item developed for the NSCH by an MCHB Technical Expert Panel, not from a named instrument",""
+"beh_hyper_basc2","unavailable","","","BASC-2 not administered",""
+"beh_atten_basc2","unavailable","","","BASC-2 not administered",""
+"beh_selfreg_htks","unavailable","","","HTKS not administered",""
+"beh_bullied","partial","k7q71_r, bully","case_when(
+  as.numeric(k7q71_r) %in% c(1, 2) ~ ""TRUE"",
+  as.numeric(k7q71_r) == 3 ~ ""FALSE"",
+  as.numeric(bully) %in% c(2, 3, 4, 5) ~ ""TRUE"",
+  as.numeric(bully) == 1 ~ ""FALSE""
+)","Caregiver report, ages 6-17. The item changed format mid-series and the two halves are not equivalent. 2016-2017 (K7Q71_R) asked how well 'this child bullies others, picks on them, or excludes them' describes the child: definitely or somewhat true becomes TRUE (5.7% in 2016), not true becomes FALSE. 2018-2023 (BULLY) asked how often in the past 12 months: never becomes FALSE, any other frequency becomes TRUE (20.7% in 2018). Thresholding 2018-2023 at 1-2 times per month instead would give 3.8%, so the split point drives the prevalence and should be confirmed. Codes 90 (aged under 6) and 99 (missing) fall through to NA",""
+"beh_beenbullied","partial","bullied, bullied_r","case_when(
+  as.numeric(bullied) %in% c(1, 2) ~ ""TRUE"",
+  as.numeric(bullied) == 3 ~ ""FALSE"",
+  as.numeric(bullied_r) %in% c(2, 3, 4, 5) ~ ""TRUE"",
+  as.numeric(bullied_r) == 1 ~ ""FALSE""
+)","Caregiver report, ages 6-17, and the schema's reference period (past few months) matches neither half. 2016-2017 (BULLIED) asked how well 'this child is bullied, picked on, or excluded by other children' describes the child: definitely or somewhat true becomes TRUE (22.9% in 2016), not true becomes FALSE. 2018-2023 (BULLIED_R) asked how often in the past 12 months: never becomes FALSE, any other frequency becomes TRUE (49.6% in 2018). Same threshold judgement as beh_bullied. Codes 90 and 99 fall through to NA",""
+"beh_fight","unavailable","","","No fighting item in any wave",""
+"beh_conduct_sdq_parent","unavailable","","","SDQ not administered",""
+"beh_hyper_sdq_parent","unavailable","","","SDQ not administered",""
+"beh_peerprob_sdq_parent","unavailable","","","SDQ not administered",""
+"beh_prosocial_sdq_parent","unavailable","","","SDQ not administered",""
+"beh_aggphys_bpaq_self","unavailable","","","BPAQ not administered; NSCH collects no self-report from the child",""
+"beh_aggverb_bpaq_self","unavailable","","","BPAQ not administered; NSCH collects no self-report from the child",""
+"beh_agganger_bpaq_self","unavailable","","","BPAQ not administered; NSCH collects no self-report from the child",""
+"beh_agghostility_bpaq_self","unavailable","","","BPAQ not administered; NSCH collects no self-report from the child",""
+"beh_argues","partial","k7q70_r, year","if_else(
+  as.numeric(year) >= 2018,
+  recode_values(as.numeric(k7q70_r), 1 ~ ""Always"", 2 ~ ""Usually"", 3 ~ ""Sometimes"", 4 ~ ""Never""),
+  NA_character_
+)","2018-2023 only (78.5% of rows), ages 6-17. K7Q70_R: ""How often does this child argue too much?"" answered Always / Usually / Sometimes / Never. The 2016-2017 waves asked the same item on a three-level agreement scale (definitely true / somewhat true / not true), which cannot be expressed on a frequency vocabulary without inventing a correspondence, so those waves are guarded out rather than recoded - the guard is essential because the source column reuses codes 1-3 with different meanings across the two eras. Codes 90 (aged under 6) and 99 (missing) fall through to NA. Single caregiver-reported item developed for the NSCH by an MCHB Technical Expert Panel, not from a named instrument",""
+"beh_persistence_finishwork","partial","k7q84_r, year","if_else(
+  as.numeric(year) >= 2018,
+  recode_values(as.numeric(k7q84_r), 1 ~ ""Always"", 2 ~ ""Usually"", 3 ~ ""Sometimes"", 4 ~ ""Never""),
+  NA_character_
+)","2018-2023 only (78.5% of rows), ages 6-17. K7Q84_R: ""How often does this child work to finish the tasks they start?"" answered Always / Usually / Sometimes / Never. The 2016-2017 waves asked the same item on a three-level agreement scale (definitely true / somewhat true / not true), which cannot be expressed on a frequency vocabulary without inventing a correspondence, so those waves are guarded out rather than recoded - the guard is essential because the source column reuses codes 1-3 with different meanings across the two eras. Codes 90 (aged under 6) and 99 (missing) fall through to NA. Single caregiver-reported item developed for the NSCH by an MCHB Technical Expert Panel, not from a named instrument",""
+"beh_emotreg_stayscalm","partial","k7q85_r, year","if_else(
+  as.numeric(year) >= 2018,
+  recode_values(as.numeric(k7q85_r), 1 ~ ""Always"", 2 ~ ""Usually"", 3 ~ ""Sometimes"", 4 ~ ""Never""),
+  NA_character_
+)","2018-2023 only (78.5% of rows), ages 6-17. K7Q85_R: ""How often does this child stay calm and in control when faced with a challenge?"" answered Always / Usually / Sometimes / Never. The 2016-2017 waves asked the same item on a three-level agreement scale (definitely true / somewhat true / not true), which cannot be expressed on a frequency vocabulary without inventing a correspondence, so those waves are guarded out rather than recoded - the guard is essential because the source column reuses codes 1-3 with different meanings across the two eras. Codes 90 (aged under 6) and 99 (missing) fall through to NA. Single caregiver-reported item developed for the NSCH by an MCHB Technical Expert Panel, not from a named instrument",""
+"beh_peerprob_makefriends","compatible","makefriend","recode_values(as.numeric(makefriend), 1 ~ ""No difficulty"", 2 ~ ""A little difficulty"", 3 ~ ""A lot of difficulty"")","MAKEFRIEND: ""Compared to other children his or her age, how much difficulty does this child have making or keeping friends?"" Asked of ages 3-17 in 2016-2021 and 6-17 in 2022-2023, on the same three-level scale in every wave. Mapped from the raw item rather than the DRC makefriend_nschyr indicator, because DRC dichotomised it in 2016 (a little and a lot collapsed) while keeping three levels from 2017, so the derived column silently changes meaning between waves. All ages who were asked are kept; DRC's published indicator restricts the denominator to 6-17. Codes 90, 95 and 99 fall through to NA. Single caregiver-reported item, not from a named instrument",""
+"beh_conduct_diagnosed","compatible","behavior_nschyr","recode_values(as.numeric(behavior_nschyr), 1 ~ ""Never diagnosed"", 2 ~ ""Previously diagnosed"", 3 ~ ""Currently diagnosed"")","DRC indicator combining K2Q34A and K2Q34B (""Has a doctor or other health care provider EVER told you that this child has behavioural or conduct problems?"" and ""Does this child CURRENTLY have the condition?""), ages 3-17. Caregiver recollection, not independently verified, and a diagnosis indicator rather than a symptom score. Codes 95 (aged under 3) and 99 (missing) fall through to NA",""
+"beh_conduct_diagnosed_severity","compatible","k2q34c","recode_values(as.numeric(k2q34c), 1 ~ ""Mild"", 2 ~ ""Moderate"", 3 ~ ""Severe"")","K2Q34C: ""If YES, is it Mild, Moderate, or Severe?"", asked only where the child currently has behavioural or conduct problems. Kept at three levels; DRC's published severity indicator collapses moderate and severe. Everyone not currently diagnosed is NA, so this is conditional on beh_conduct_diagnosed being Currently diagnosed. Codes 95 and 99 fall through to NA",""
+"cog_execfunc_basc2","unavailable","","","BASC-2 not administered",""
+"cog_langexec_nepsy","unavailable","","","NEPSY not administered; NSCH has no direct cognitive assessment",""
+"cog_phono_nepsy","unavailable","","","NEPSY not administered; NSCH has no direct cognitive assessment",""
+"cog_inhibcont_nepsy","unavailable","","","NEPSY not administered; NSCH has no direct cognitive assessment",""
+"cog_vismotor_nepsy","unavailable","","","NEPSY not administered; NSCH has no direct cognitive assessment",""
+"cog_verbalfluency_nepsy","unavailable","","","NEPSY not administered; NSCH has no direct cognitive assessment",""
+"mh_anx_basc2","unavailable","","","BASC-2 not administered. NSCH records only whether a doctor ever told the caregiver the child has anxiety problems (K2Q33A/B) and a three-level severity rating, which is a diagnosis indicator rather than a symptom score",""
+"mh_dep_basc2","unavailable","","","BASC-2 not administered. Depression is likewise captured only as a caregiver-reported diagnosis (K2Q32A/B) with a severity rating",""
+"mh_emotsymp_sdq_parent","unavailable","","","SDQ not administered",""
+"mh_totaldiff_sdq_parent","unavailable","","","SDQ not administered",""
+"mh_anx_diagnosed","compatible","anxiety_nschyr","recode_values(as.numeric(anxiety_nschyr), 1 ~ ""Never diagnosed"", 2 ~ ""Previously diagnosed"", 3 ~ ""Currently diagnosed"")","DRC indicator combining K2Q33A and K2Q33B (""Has a doctor or other health care provider EVER told you that this child has anxiety problems?"" and ""Does this child CURRENTLY have the condition?""), ages 3-17. Caregiver recollection, not independently verified, and a diagnosis indicator rather than a symptom score. Codes 95 (aged under 3) and 99 (missing) fall through to NA",""
+"mh_anx_diagnosed_severity","compatible","k2q33c","recode_values(as.numeric(k2q33c), 1 ~ ""Mild"", 2 ~ ""Moderate"", 3 ~ ""Severe"")","K2Q33C: ""If YES, is it Mild, Moderate, or Severe?"", asked only where the child currently has anxiety. Kept at three levels; DRC's published severity indicator collapses moderate and severe. Everyone not currently diagnosed is NA, so this is conditional on mh_anx_diagnosed being Currently diagnosed. Codes 95 and 99 fall through to NA",""
+"mh_dep_diagnosed","compatible","depress_nschyr","recode_values(as.numeric(depress_nschyr), 1 ~ ""Never diagnosed"", 2 ~ ""Previously diagnosed"", 3 ~ ""Currently diagnosed"")","DRC indicator combining K2Q32A and K2Q32B (""Has a doctor or other health care provider EVER told you that this child has depression?"" and ""Does this child CURRENTLY have the condition?""), ages 3-17. Caregiver recollection, not independently verified, and a diagnosis indicator rather than a symptom score. Codes 95 (aged under 3) and 99 (missing) fall through to NA",""
+"mh_dep_diagnosed_severity","compatible","k2q32c","recode_values(as.numeric(k2q32c), 1 ~ ""Mild"", 2 ~ ""Moderate"", 3 ~ ""Severe"")","K2Q32C: ""If YES, is it Mild, Moderate, or Severe?"", asked only where the child currently has depression. Kept at three levels; DRC's published severity indicator collapses moderate and severe. Everyone not currently diagnosed is NA, so this is conditional on mh_dep_diagnosed being Currently diagnosed. Codes 95 and 99 fall through to NA",""
+"wb_emotsc_basc2","unavailable","","","BASC-2 not administered",""
+"wb_mwb_wemwbs","unavailable","","","WEMWBS not administered",""
+"wb_lifesatisfaction_cantrilladder","unavailable","","","Cantril ladder not administered",""
+"wb_resil_basc2","unavailable","","","BASC-2 not administered; the single DRC resilience item (K7Q85_R, stays calm and in control when challenged) is not a BASC-2 subscale",""
+"wb_psychcomplaints_feellow","unavailable","","","HBSC-SCL not administered",""
+"wb_psychcomplaints_irritable","unavailable","","","HBSC-SCL not administered",""
+"wb_psychcomplaints_nervous","unavailable","","","HBSC-SCL not administered",""
+"wb_psychcomplaints_diffsleep","unavailable","","","HBSC-SCL not administered",""
+"wb_bodyimage","incompatible","bodyimage","","BODYIMAGE (2022-2023) asks how concerned the caregiver is about the child's body weight, shape or size on a three-level scale. The schema variable is the HBSC five-level self-perception of body size (much too thin to much too fat), which the NSCH item cannot express",""
