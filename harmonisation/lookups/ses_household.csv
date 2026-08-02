@@ -1,0 +1,20 @@
+dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
+677,ses_household,"Less than £6,500",Low,compatible,Within-sample income quintile 1
+677,ses_household,"Between £6,500 and £12,499",Low,compatible,Within-sample income quintile 1
+677,ses_household,"Between £12,500 and £17,499",Low,compatible,Within-sample income quintile 1
+677,ses_household,"Between £17,500 and £24,499",Low,compatible,Within-sample income quintile 1
+677,ses_household,"Between £24,500 and £34,499",Low,compatible,Within-sample income quintile 2
+677,ses_household,"Between £34,500 and £44,499",Medium,compatible,Within-sample income quintile 3
+677,ses_household,"Between £44,500 and £54,499",Medium,compatible,Within-sample income quintile 3
+677,ses_household,"Between £54,500 and £64,499",High,compatible,Within-sample income quintile 4
+677,ses_household,"Between £64,500 and £74,499",High,compatible,Within-sample income quintile 4
+677,ses_household,"Between £74,500 and £89,999",High,compatible,Within-sample income quintile 5
+677,ses_household,"Between £90,000 and £99,999",High,compatible,Within-sample income quintile 5
+677,ses_household,"Between £100,000 and £149,999",High,compatible,Within-sample income quintile 5
+677,ses_household,"£150,000 or more",High,compatible,Within-sample income quintile 5
+677,ses_household,Would rather not say,Unknown,compatible,Explicit non-response
+"232","ses_household","0-99% FPL","Low","proximate","Census-imputed household income as a percent of the federal poverty level; bottom two bands are 29.8% of the sample"
+"232","ses_household","100-199% FPL","Low","proximate","Census-imputed household income as a percent of the federal poverty level; bottom two bands are 29.8% of the sample"
+"232","ses_household","200-399% FPL","Medium","proximate","Middle band is 30.5% of the sample"
+"232","ses_household","400% FPL or greater","High","proximate","Top band is 39.7% of the sample"
+"232","ses_household","Unknown","Unknown","proximate","POVLEV4 is never missing in 2016-2023; branch retained as a guard"

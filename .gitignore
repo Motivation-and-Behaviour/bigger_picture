@@ -38,6 +38,10 @@ rsconnect/
 # targets
 _targets/
 
+# Quarto site build output
+docs/_site/
+docs/.quarto/
+
 # html
 *.html
 
@@ -47,8 +51,6 @@ renv/
 # Environment variables
 .env
 
-# Codex storage
-.codex/
-
 # Scratch files
 scratch.*
+.claude/*

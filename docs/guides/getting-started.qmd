@@ -1,0 +1,55 @@
+---
+title: "Getting started"
+---
+
+This page covers the one-time setup you need before preparing datasets for the Bigger Picture project.
+
+## What you need access to
+
+- **Asana** — to select and track which dataset you are working on.
+- **The shared OneDrive folder** — the raw data lives in *Bigger Picture – DOE Grant – Documents → IPD Component → datasets*.
+  Each dataset sits in a folder named `BPIPD-<id> - <name>` (for example `BPIPD-9999 - Example Cohort Study`).
+- **GitHub** — you need to be a member of the [Motivation-and-Behaviour](https://github.com/Motivation-and-Behaviour) organisation to push branches and open pull requests.
+
+## Install the tools
+
+1. **R and RStudio** — install both from [posit.co/download](https://posit.co/download/rstudio-desktop/).
+2. **GitHub Desktop** — install from [desktop.github.com](https://desktop.github.com/), sign in, and clone the `Motivation-and-Behaviour/bigger_picture` repository.
+3. **R packages** — open the repository in RStudio (GitHub Desktop → *Repository → Open in RStudio*) and run this in the Console:
+
+   ```r
+   install.packages("pak")
+   pak::local_install_dev_deps()
+   ```
+
+   This installs everything listed in the repository's `DESCRIPTION` file, so there is no package list to keep up to date by hand.
+
+::: {.callout-note}
+## Developers: devcontainer
+
+If you are working on the pipeline itself (rather than preparing datasets), the repository includes a devcontainer (`.devcontainer/devcontainer.json`) that ships with all packages installed and mounts the data directory automatically.
+The rest of this page assumes the plain RStudio setup used for dataset preparation.
+:::
+
+## Point the pipeline at the data
+
+The pipeline discovers datasets in the directory named by the `DATASET_PATH` environment variable, which it reads from a `.env` file at the repository root.
+Create a file called `.env` (it is gitignored, so it never ends up in a commit) containing the path to your synced OneDrive datasets folder, for example:
+
+```sh
+DATASET_PATH="C:/Users/you/OneDrive/.../IPD Component/datasets"
+```
+
+To check it works, run this from the repository in RStudio:
+
+```r
+targets::tar_source()
+list_datasets()
+```
+
+You should see one row per `BPIPD-*` folder in the datasets directory.
+If the path is wrong you will get an error saying `DATASET_PATH` is not set, or an empty result.
+
+## Next step
+
+You are ready to prepare a dataset — continue with [Adding a dataset](adding-a-dataset.qmd).
