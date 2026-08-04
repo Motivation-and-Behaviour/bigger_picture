@@ -1,0 +1,73 @@
+---
+title: "Adding a dataset"
+---
+
+This is the end-to-end workflow for bringing a new dataset into the pipeline, from picking it up on Asana to a merged pull request.
+The detail for each artefact lives on its own page — this page is the checklist that ties them together.
+
+Every dataset ends up with three things:
+
+| File | Purpose |
+|------|---------|
+| `harmonisation/datasets/BPIPD-<id>/dataset.yaml` | Describes the files in the dataset and how to read them ([guide](dataset-yaml.qmd)) |
+| `R/tidy/tidy_BPIPD_<id>.R` | Reshapes the raw files into one tidy table ([guide](tidy-scripts.qmd)) |
+| `harmonisation/datasets/BPIPD-<id>/variables.csv` | Maps the tidy table onto the project dataschema ([guide](harmonisation.qmd)) |
+
+## 1. Pick a dataset and create a branch
+
+1. Pick a dataset from Asana and assign it to yourself.
+2. In GitHub Desktop, make sure you are on `main` and click *Fetch origin* so you start from the latest version.
+3. Create a new branch named after the dataset, e.g. `BPIPD-9999`.
+
+## 2. Set up the dataset folder
+
+1. Create `harmonisation/datasets/BPIPD-<id>/` (matching the dataset's ID number).
+2. Copy `dataset.yaml` and `variables.csv` from `harmonisation/templates/dataset/` into the new folder.
+3. Duplicate `R/tidy/tidy_BPIPD_TEMPLATE.R`, rename the copy to `R/tidy/tidy_BPIPD_<id>.R`, and rename the function inside it to match (`tidy_BPIPD_TEMPLATE` → `tidy_BPIPD_<id>`).
+   The pipeline requires one tidier file per dataset, named exactly this way.
+
+## 3. Write the spec file
+
+Open the raw data folder (OneDrive → *IPD Component → datasets → BPIPD-<id> - <name>*) side by side with your `dataset.yaml`, and describe every file: what it is (`role`), where it is (`glob`), and how to read it (`reader`).
+
+- Field-by-field reference: [The dataset.yaml spec](dataset-yaml.qmd)
+- Copy-paste patterns for common layouts: [Spec cookbook](spec-cookbook.qmd)
+
+Then check that the spec reads the data correctly:
+
+```r
+targets::tar_make(names = raw_BPIPD_9999) # use your dataset id
+```
+
+If that errors, see the [validation checklist](dataset-yaml.qmd#validating-your-spec).
+
+## 4. Tidy and harmonise
+
+For many datasets the spec file is the assigned task, and tidying and harmonisation happen later or by someone else — check the Asana task.
+When it is in scope:
+
+1. Fill in the tidier so it returns one table with one row per participant (or participant-wave): [Tidy scripts](tidy-scripts.qmd).
+2. Fill in `variables.csv` to map each dataschema variable: [Harmonising variables](harmonisation.qmd).
+
+## 5. Commit and open a pull request
+
+1. In GitHub Desktop, review the changed files — you should see the new dataset folder, the tidier, and nothing unrelated.
+2. Write a short summary (e.g. *"Create spec file for BPIPD-9999"*) and click **Commit to BPIPD-9999**.
+3. Click **Publish branch**, then **Create Pull Request** (or open the repository on GitHub — the new branch is offered at the top of the page).
+4. Add reviewers in the right-hand panel and submit the pull request.
+
+## 6. Understand the automated checks
+
+Every pull request runs three checks.
+All must pass before merging:
+
+| Check | What it does | If it fails |
+|-------|--------------|-------------|
+| `test-project` | Runs the test suite, which validates every `dataset.yaml`, `variables.csv`, and lookup table in the repository — without touching any real data | Read the test failure message; it names the file and problem (e.g. an invalid `status`, a missing lookup, or an expression calling an unknown function) |
+| `lint-project` | Checks R code style with `lintr` | Fix the reported lines; the message includes the file, line, and rule |
+| `format-suggest` | Checks R code formatting with `air` | Accept the suggested changes it posts on the PR, or run `air format .` locally and push |
+
+The checks never read the raw data, so a passing PR does not guarantee the spec matches the real files — that is what your `tar_make()` run in step 3 verified.
+Both matter.
+
+Once the checks pass and a reviewer approves, the PR is merged and the dataset's status on Asana can be updated.
