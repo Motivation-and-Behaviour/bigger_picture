@@ -1,6 +1,6 @@
 dataset_id: "232"
 dataset_name: "NSCH"
-status: "in_progress"
+status: "harmonised"
 waves:
   - wave: "2016"
     wave_dir: "2016 NSCH_Topical_Implicate_CSV_CAHMI_DRCv2"
@@ -127,11 +127,10 @@ waves:
         role: "docs"
         glob:
           - "2023 NSCH_Topical_Variable lables_CAHMI_DRC.xlsx"
- 
+
 notes: |
   8 waves, one each year from 2016-2023.
   Each wave contains a CSV data file and a PDF codebook.
   Extra documentation is included in each wave (fast facts, guides to topics/questions,
   sampling administration notes, variable label files, and content maps where present) -
-  grouped under a "docs" resource per wave. 
-  
+  grouped under a "docs" resource per wave.
