@@ -52,9 +52,9 @@ waves:
       - name: "kcyps_w1_docs"
         role: "docs"
         glob:
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 eYw1 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 mYw1 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 Pw1 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 eYw1 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 mYw1 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 Pw1 Questionnaires.pdf"
   - wave: "2-2019"
     wave_dir: "."
     resources:
@@ -121,9 +121,9 @@ waves:
       - name: "kcyps_w2_docs"
         role: "docs"
         glob:
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 eYw2 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 mYw2 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 Pw2 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 eYw2 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 mYw2 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 Pw2 Questionnaires.pdf"
   - wave: "3-2020"
     wave_dir: "."
     resources:
@@ -190,9 +190,9 @@ waves:
       - name: "kcyps_w3_docs"
         role: "docs"
         glob:
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 eYw3 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 mYw3 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 Pw3 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 eYw3 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 mYw3 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 Pw3 Questionnaires.pdf"
   - wave: "4-2021"
     wave_dir: "."
     resources:
@@ -259,9 +259,9 @@ waves:
       - name: "kcyps_w4_docs"
         role: "docs"
         glob:
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 eYw4 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 mYw4 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 Pw4 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 eYw4 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 mYw4 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 Pw4 Questionnaires.pdf"
   - wave: "5-2022"
     wave_dir: "."
     resources:
@@ -328,9 +328,9 @@ waves:
       - name: "kcyps_w5_docs"
         role: "docs"
         glob:
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 eYw5 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 mYw5 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 Pw5 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 eYw5 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 mYw5 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 Pw5 Questionnaires.pdf"
   - wave: "6-2023"
     wave_dir: "."
     resources:
@@ -397,9 +397,9 @@ waves:
       - name: "kcyps_w6_docs"
         role: "docs"
         glob:
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 eYw6 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 mYw6 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 Pw6 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 eYw6 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 mYw6 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 Pw6 Questionnaires.pdf"
   - wave: "7-2024"
     wave_dir: "."
     resources:
@@ -466,15 +466,17 @@ waves:
       - name: "kcyps_w7_docs"
         role: "docs"
         glob:
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 eYw7 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 mYw7 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 Pw7 Questionnaires.pdf"
-          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/KCYPS2018 hYw7 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 eYw7 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 mYw7 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 Pw7 Questionnaires.pdf"
+          - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 hYw7 Questionnaires.pdf"
 notes: >
   KCYPS 2018 tracks Elementary (e4) and Middle/High School (m1) student cohorts across 7 waves.
   Data is available in two parallel formats -- CSV and RDA -- both included as separate resources
   per wave/cohort/file. Main-panel (Y) and guardian (P) files run waves 1-7; sibling (S) files run
-  waves 2-7 only. A shared root-level Excel file (KCYPS2018 Codebook_ENG.xlsx) contains three
-  codebook sheets: elementary (CB_e), middle/high school (CB_m), and guardian (CB_p).
-  Wave 7 questionnaires include an additional 'hYw7' file whose cohort is unconfirmed; included
-  as a docs resource pending clarification.
+  waves 2-7 only. A shared root-level Excel file (KCYPS2018 Codebook_ENG.xlsx) contains four
+  codebook sheets: elementary (CB_e), middle/high school (CB_m), adult (CB_h), and guardian (CB_p),
+  each paired with a LAYOUT_* sheet giving per-wave variable availability.
+  Wave 7 questionnaires include an additional 'hYw7' file: this is the adult questionnaire put to
+  the m1 cohort, who have left school by 2024. Its variables ship inside the ordinary m1 wave 7
+  main-panel file rather than a separate data file, so it is included as a docs resource only.

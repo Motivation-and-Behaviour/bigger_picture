@@ -28,25 +28,42 @@ tidy_BPIPD_270 <- function(raw_dataset, spec) {
       dplyr::rename_with(\(x) sub("w[0-9]+$", "", x))
   }
 
+  # The released files keep the full panel roster, so a youth who did not take
+  # part in a wave still has a row: `SURVEY1 == 2` with every questionnaire item
+  # missing. Those rows carry no observation, so drop them. `SURVEY1` is absent
+  # at wave 1, where every panel member responded.
+  drop_nonparticipants <- function(df) {
+    if (is.null(df) || !"SURVEY1" %in% names(df)) {
+      return(df)
+    }
+    df[!(!is.na(df$SURVEY1) & df$SURVEY1 == 2), , drop = FALSE]
+  }
+
   read_wave_cohort <- function(this_wave, this_cohort) {
     # `main` and `sibling` are the same youth questionnaire put to two different
     # children in the same household: they share most of their columns and none
     # of their IDs, so they stack as extra participants rather than joining as
     # extra variables.
     youth <- dplyr::bind_rows(
-      main = read_respondent(this_wave, this_cohort, "main"),
-      sibling = read_respondent(this_wave, this_cohort, "sibling"),
+      main = drop_nonparticipants(
+        read_respondent(this_wave, this_cohort, "main")
+      ),
+      sibling = drop_nonparticipants(
+        read_respondent(this_wave, this_cohort, "sibling")
+      ),
       .id = "respondent"
     )
 
-    # The guardian file holds exactly one row per child across both youth
-    # files, keyed on the child's ID, so it joins one-to-one.
+    # The guardian file holds at most one row per child across both youth
+    # files, keyed on the child's ID, so it joins one-to-one. It is joined from
+    # the left so that guardians of a non-participating youth do not reappear
+    # as rows with no youth data.
     guardian <- read_respondent(this_wave, this_cohort, "guardian")
 
     # `cohort` is the file-derived label, not the study's own `COHORT` column
     # which is not present in every wave.
     youth |>
-      dplyr::full_join(
+      dplyr::left_join(
         guardian,
         by = c("ID", "HID", "PID"),
         relationship = "one-to-one"
