@@ -1,0 +1,28 @@
+dataset_id: "631"
+dataset_name: "UK Understanding Society"
+status: "in_progress"
+
+resources:
+  - name: "BHPS Stata Data Files"
+    role: "data"
+    glob: "stata/stata14_se/bhps/*.dta"
+    reader: "stata"
+  - name: "UKHLS Stata Data Files"
+    role: "data"
+    glob: "stata/stata14_se/ukhls/*.dta"
+    reader: "stata"
+  - name: "Technical and Survey Documentation"
+    role: "docs"
+    glob: ["mrdoc/pdf/*.pdf", "mrdoc/UKDA/UKDA_Study_6614_Information.htm", "mrdoc/read6614.htm", "mrdoc/6614_file_information.rtf"]
+  - name: "Data Dictionaries"
+    role: "codebook"
+    glob: "mrdoc/ukda_data_dictionaries.zip"
+
+notes: |
+  Understanding Society (UKHLS) study, including historical BHPS data. 
+  The dataset comprises longitudinal survey data in Stata format (.dta) 
+  categorized by wave and respondent type. Extensive documentation is 
+  included, featuring technical reports, questionnaires, and fieldwork 
+  materials provided in PDF, RTF, and HTM formats. Data dictionaries are 
+  provided in a compressed archive (.zip).
+  
