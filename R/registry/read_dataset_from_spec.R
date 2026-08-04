@@ -1,4 +1,6 @@
 read_dataset_from_spec <- function(dataset_dir, spec) {
+  check_resource_names(spec)
+
   data <- list()
   codebook <- list()
   docs <- character()
