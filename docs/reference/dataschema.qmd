@@ -1,0 +1,46 @@
+---
+title: "Dataschema"
+---
+
+The dataschema (`harmonisation/dataschema.csv`) defines every variable in the harmonised analysis dataset: its name, meaning, type, units, and allowed values.
+Each dataset's `variables.csv` must explain how it derives each of these variables — see [Harmonising variables](../guides/harmonisation.qmd).
+
+This table is generated from the CSV on every site build, so it is always current.
+Use the search box and column filters to find variables; the `domain` column groups related variables (screen time, wellbeing, demographics, …), and `core = TRUE` marks variables prioritised for harmonisation in every dataset.
+
+```{r}
+#| label: dataschema-table
+#| column: page
+dataschema <- readr::read_csv(
+  "../harmonisation/dataschema.csv",
+  show_col_types = FALSE
+)
+DT::datatable(
+  dataschema,
+  filter = "top",
+  rownames = FALSE,
+  options = list(
+    pageLength = 25,
+    scrollX = TRUE,
+    autoWidth = FALSE
+  )
+)
+```
+
+## Column meanings
+
+| Column | Meaning |
+|--------|---------|
+| `variable_name` | The harmonised column name (unique). |
+| `label` / `description` | Short label and full definition of the construct. |
+| `domain` | Thematic grouping (e.g. `screen_time`, `wellbeing`, `demographics`). |
+| `entity` | What one value describes: a `participant`, a `study`, or the `dataset`. |
+| `data_type` | Storage type (`double` or `character`); harmonised values are cast to this type. |
+| `unit` | Measurement unit where applicable (e.g. minutes/day). |
+| `allowed_values` | Pipe-delimited set of valid values for categorical variables. |
+| `min_value` / `max_value` | Plausible range for numeric variables. |
+| `missing_rule` | What to do when the value cannot be derived. |
+| `core` | Whether the variable is prioritised for harmonisation in every dataset. |
+| `notes` | Guidance for harmonisers. |
+
+Changing the dataschema is a project-level decision: adding a variable requires a row in every dataset's `variables.csv` (run `sync_harmonisation_vars()` to add them as `in_progress`), and significant definition changes should be recorded in the [decision register](../decisions/README.md).

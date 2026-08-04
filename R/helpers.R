@@ -12,14 +12,25 @@ harmonisation_variable_columns <- function() {
 }
 
 list_harmonisation_var_files <- function(
-  dataset_specs_dir = bp_dataset_specs_dir()
+  dataset_specs_dir = bp_dataset_specs_dir(),
+  template_dir = bp_dataset_template_dir()
 ) {
+  # The template ships with a full set of dataschema rows so that a new dataset
+  # starts in sync; it is kept up to date alongside the real dataset specs.
+  search_dirs <- c(dataset_specs_dir, template_dir)
+  search_dirs <- search_dirs[fs::dir_exists(search_dirs)]
+
+  if (length(search_dirs) == 0) {
+    return(fs::path())
+  }
+
   fs::dir_ls(
-    dataset_specs_dir,
+    search_dirs,
     recurse = TRUE,
     type = "file",
     regexp = "variables\\.csv$"
   ) |>
+    unique() |>
     sort()
 }
 
@@ -205,6 +216,38 @@ sum_nonmissing <- function(...) {
   totals <- rowSums(values, na.rm = TRUE)
   totals[observed_count == 0] <- NA_real_
   totals
+}
+
+# Ridit-score `x` against its own (optionally weighted) distribution: each
+# value receives the proportion of observations below it plus half the
+# proportion at it, giving a 0-1 relative rank. NA values pass through; NA
+# weights fall back to 1.
+ridit_scores <- function(x, weights = NULL) {
+  if (is.null(weights)) {
+    weights <- rep(1, length(x))
+  }
+  if (length(weights) != length(x)) {
+    stop("`x` and `weights` must be the same length.", call. = FALSE)
+  }
+
+  weights <- as.numeric(weights)
+  weights[is.na(weights)] <- 1
+
+  observed <- !is.na(x)
+  if (!any(observed)) {
+    return(rep(NA_real_, length(x)))
+  }
+
+  values <- sort(unique(x[observed]))
+  value_weights <- vapply(
+    values,
+    function(value) sum(weights[observed][x[observed] == value]),
+    numeric(1)
+  )
+  proportions <- value_weights / sum(value_weights)
+  ridits <- cumsum(proportions) - proportions / 2
+
+  ridits[match(x, values)]
 }
 
 lookup_values <- function(

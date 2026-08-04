@@ -97,7 +97,9 @@
             "sas",
             "rds",
             "parquet",
-            "excel"
+            "excel",
+            "mdb",
+            "rda"
           ],
           "description": "How to read this resource when role is data."
         },
@@ -115,6 +117,14 @@
         "range": {
           "type": "string",
           "description": "Optional Excel range, e.g. \"A1:H200\"."
+        },
+        "table": {
+          "type": "string",
+          "description": "Access table name (if reader is mdb). Optional when the file contains exactly one table."
+        },
+        "object": {
+          "type": "string",
+          "description": "R object name to extract (if reader is rda). Optional when the file contains exactly one object."
         },
         "wave_from": {
           "type": "string",
@@ -161,6 +171,16 @@
                 {
                   "required": [
                     "range"
+                  ]
+                },
+                {
+                  "required": [
+                    "table"
+                  ]
+                },
+                {
+                  "required": [
+                    "object"
                   ]
                 }
               ]

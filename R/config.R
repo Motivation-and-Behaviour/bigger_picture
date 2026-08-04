@@ -22,6 +22,10 @@ bp_dataset_specs_dir <- function() {
   fs::path(bp_harmonisation_dir(), "datasets")
 }
 
+bp_dataset_template_dir <- function() {
+  fs::path(bp_harmonisation_dir(), "templates", "dataset")
+}
+
 bp_dataschema_path <- function() {
   fs::path(bp_harmonisation_dir(), "dataschema.csv")
 }

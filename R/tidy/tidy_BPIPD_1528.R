@@ -45,5 +45,22 @@ tidy_BPIPD_1528 <- function(raw_dataset, spec) {
     ) |>
     dplyr::ungroup()
 
+  # Family Affluence Scale (FAS III): items only collected from the 2014 wave.
+  # The composite is ridit-scored within country and wave so affluence is
+  # relative to the national sample, matching HBSC's own relative FAS
+  # (validated against IRFAS / IRRELFAS_LMH in the 2018 open-access file).
+  df <- df |>
+    dplyr::mutate(
+      fas_sum = fasfamcar +
+        fasbedroom +
+        fascomputers +
+        fasbathroom +
+        fasdishwash +
+        fasholidays
+    ) |>
+    dplyr::group_by(surveyyear, countryno) |>
+    dplyr::mutate(fas_ridit = ridit_scores(fas_sum)) |>
+    dplyr::ungroup()
+
   df
 }

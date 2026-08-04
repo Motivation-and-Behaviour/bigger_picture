@@ -8,3 +8,28 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1639,ethnicity,Maori,Black,proximate,Not an ideal match - may be revisited as more data are added
 1639,ethnicity,Pacific,Black,proximate,Not an ideal match - may be revisited as more data are added
 1639,ethnicity,Other (incl,Other,compatible,
+677,ethnicity,White British,White,compatible,UK census categories reported by carer
+677,ethnicity,White Irish,White,compatible,
+677,ethnicity,Other White,White,compatible,
+677,ethnicity,White and Black Caribbean,Mixed,compatible,
+677,ethnicity,White and Black African,Mixed,compatible,
+677,ethnicity,White and Asian,Mixed,compatible,
+677,ethnicity,Indian,Asian,compatible,
+677,ethnicity,Pakistani,Asian,compatible,
+677,ethnicity,Bangladeshi,Asian,compatible,
+677,ethnicity,Any other Asian or Asian British background,Asian,compatible,
+677,ethnicity,Chinese,Asian,compatible,Chinese is a separate group in UK census categories; collapsed into Asian to match schema
+677,ethnicity,Caribbean,Black,compatible,
+677,ethnicity,African,Black,compatible,
+677,ethnicity,Any other Black or Black British background,Black,compatible,
+677,ethnicity,Any other ethnic group,Other,compatible,
+677,ethnicity,Would rather not say,Unknown,compatible,Explicit non-response
+"232","ethnicity","Hispanic","Hispanic","compatible","SC_HISPANIC_R = 1, taken ahead of race as in the DRC race7 derivation"
+"232","ethnicity","White alone, non-Hispanic","White","compatible","SC_RACE_R race-alone category among non-Hispanic children"
+"232","ethnicity","Black or African American alone, non-Hispanic","Black","compatible","SC_RACE_R race-alone category among non-Hispanic children"
+"232","ethnicity","American Indian or Alaska Native alone, non-Hispanic","Other","proximate","US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous"
+"232","ethnicity","Asian alone, non-Hispanic","Asian","compatible","SC_RACE_R race-alone category among non-Hispanic children"
+"232","ethnicity","Native Hawaiian or Other Pacific Islander alone, non-Hispanic","Other","proximate","US Census race group with no schema equivalent; collapsed into Other"
+"232","ethnicity","Some other race alone, non-Hispanic","Other","compatible","SC_RACE_R residual race category, present 2016-2018 only"
+"232","ethnicity","Two or more races, non-Hispanic","Mixed","compatible","Two or more races maps onto the schema Mixed category"
+"232","ethnicity","Unknown","Unknown","compatible","SC_HISPANIC_R and SC_RACE_R are never missing in 2016-2023; branch retained as a guard"
