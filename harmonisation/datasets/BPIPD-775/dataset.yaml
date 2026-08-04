@@ -1,18 +1,29 @@
 dataset_id: "775"
 dataset_name: "ECLS-B"
 status: "in_progress"
-
 resources:
-  - name: "Child Data Files"
+  - name: "Child Data Files - childK5p.dat"
     role: "data"
-    glob: "{childK5p.dat,childk8p.dat}"
+    glob: "childK5p.dat"
     reader: "stata"
-  - name: "STATA Dictionaries and Do-Files"
+  - name: "Child Data Files - childk8p.dat"
+    role: "data"
+    glob: "childk8p.dat"
+    reader: "stata"
+  - name: "STATA Dictionaries and Do-Files - ECLSK_Kto8_child_STATA.dct"
     role: "docs"
-    glob: "{ECLSK_Kto8_child_STATA.dct,ECLSK_Kto8_child_STATA.do,ECLSK2011_K5PUF.dct,ECLSK2011_K5PUF.do}"
-
+    glob: "ECLSK_Kto8_child_STATA.dct"
+  - name: "STATA Dictionaries and Do-Files - ECLSK_Kto8_child_STATA.do"
+    role: "docs"
+    glob: "ECLSK_Kto8_child_STATA.do"
+  - name: "STATA Dictionaries and Do-Files - ECLSK2011_K5PUF.dct"
+    role: "docs"
+    glob: "ECLSK2011_K5PUF.dct"
+  - name: "STATA Dictionaries and Do-Files - ECLSK2011_K5PUF.do"
+    role: "docs"
+    glob: "ECLSK2011_K5PUF.do"
 notes: |
-  Dataset includes longitudinal child data files (.dat) alongside 
-  corresponding STATA dictionary (.dct) and do-files (.do) used for 
+  Dataset includes longitudinal child data files (.dat) alongside
+  corresponding STATA dictionary (.dct) and do-files (.do) used for
   data processing and importation.
   
