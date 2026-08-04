@@ -29,7 +29,7 @@ read_dataset_from_spec <- function(dataset_dir, spec) {
           res,
           base_dir = wave_dir,
           wave = w$wave,
-          wave_label = w$label %||% NULL
+          wave_label = w$label
         )
 
         data <- c(data, chunk$data)
