@@ -1,0 +1,9 @@
+dataset_id: "119"
+dataset_name: "Chonchaiya"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Bigger Picture_Dr.Chonchaiya_Thailand.sav"
+    reader: "spss"
