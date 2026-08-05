@@ -16,3 +16,17 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 270,maternal_education,Graduated 4 year college,Bachelor degree or higher,compatible,PSCHOOL2 code 6
 270,maternal_education,Graduated graduate school,Bachelor degree or higher,compatible,PSCHOOL2 code 7; master or doctorate
 270,maternal_education,Not reported or not applicable,Unknown,compatible,"PSCHOOL2 codes 8 (Not sure), 9 (undocumented, father/mother absent) and 10 (Not applicable), plus missing guardian records"
+838,maternal_education,Primary or below,Secondary school or less,compatible,Hong Kong primary schooling or none
+838,maternal_education,Lower secondary,Secondary school or less,compatible,Hong Kong lower secondary (Forms 1-3)
+838,maternal_education,Uppwer secondary,Secondary school or less,compatible,Hong Kong upper secondary (Forms 4-6); source label carries the typo 'Uppwer'
+838,maternal_education,Post-secondary,Post-secondary,proximate,"Hong Kong post-secondary spans sub-degree and degree study, so degree holders cannot be separated into Bachelor degree or higher"
+788,maternal_education,"Keinen Abschluss, noch in beruflicher Ausbildung",Secondary school or less,compatible,"No vocational qualification yet, still in training; school level only."
+788,maternal_education,Keinen Berufsabschluss und nicht in Ausbildung,Secondary school or less,compatible,No vocational qualification and not in training; school level only.
+788,maternal_education,"Lehre, also beruflich-betriebliche Ausbildung",Secondary school or less,compatible,Dual-system apprenticeship; ISCED 3B upper-secondary vocational rather than post-secondary.
+788,maternal_education,"Ausbildung an Berufsfachschule, Handelsschule (beruflich-schulische Ausbildung)",Secondary school or less,compatible,School-based vocational training (Berufsfachschule/Handelsschule); ISCED 3B/4.
+788,maternal_education,"Fachschule, z.B. Meister-, Technikerschule, Berufs- oder Fachakademie",Post-secondary,compatible,"Fachschule, Meister, Techniker or Fachakademie; ISCED 5B tertiary-level but below degree."
+788,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 5A).
+788,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 5A/6).
+788,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Residual other qualification, e.g. obtained abroad; not rankable against the German ladder."
+788,maternal_education,Filterbed. fehlend (Elternteil nicht im HH),Unknown,unavailable,"Mother not resident in the household, so no qualification was asked."
+788,maternal_education,Nicht erhoben,Unknown,unavailable,Item not administered for this respondent.
