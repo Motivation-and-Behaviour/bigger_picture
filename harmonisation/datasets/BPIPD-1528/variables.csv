@@ -197,7 +197,7 @@ wb_resil_basc2,unavailable,,,,
 wb_psychcomplaints_feellow,compatible,feellow,"recode_values(
   feellow,
   1 ~ ""About every day"",
-  2 ~ ""More than once/week"",
+  2 ~ ""More than once a week"",
   3 ~ ""About every week"",
   4 ~ ""About every month"",
   5 ~ ""Rarely or never""
@@ -205,7 +205,7 @@ wb_psychcomplaints_feellow,compatible,feellow,"recode_values(
 wb_psychcomplaints_irritable,compatible,irritable,"recode_values(
   irritable,
   1 ~ ""About every day"",
-  2 ~ ""More than once/week"",
+  2 ~ ""More than once a week"",
   3 ~ ""About every week"",
   4 ~ ""About every month"",
   5 ~ ""Rarely or never""
@@ -213,7 +213,7 @@ wb_psychcomplaints_irritable,compatible,irritable,"recode_values(
 wb_psychcomplaints_nervous,compatible,nervous,"recode_values(
   nervous,
   1 ~ ""About every day"",
-  2 ~ ""More than once/week"",
+  2 ~ ""More than once a week"",
   3 ~ ""About every week"",
   4 ~ ""About every month"",
   5 ~ ""Rarely or never""
@@ -221,7 +221,7 @@ wb_psychcomplaints_nervous,compatible,nervous,"recode_values(
 wb_psychcomplaints_diffsleep,compatible,sleepdifficulty,"recode_values(
   sleepdifficulty,
   1 ~ ""About every day"",
-  2 ~ ""More than once/week"",
+  2 ~ ""More than once a week"",
   3 ~ ""About every week"",
   4 ~ ""About every month"",
   5 ~ ""Rarely or never""
