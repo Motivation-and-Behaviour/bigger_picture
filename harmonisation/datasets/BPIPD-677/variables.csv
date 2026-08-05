@@ -114,7 +114,7 @@ st_game_active_we,unavailable,,,,
 st_game_active,unavailable,,,,
 st_game_phone_wd,unavailable,,,,
 st_game_phone_we,unavailable,,,,
-st_game_phone,compatible,"a2, a4_1, a4_2, a4_3, a6_1, a6_2, a6_3","case_when(
+st_game_phone,partial,"a2, a4_1, a4_2, a4_3, a6_1, a6_2, a6_3","case_when(
   as.numeric(a2) == 2 ~ 0,
   is.na(a4_1) ~ NA,
   .default = if_else(
@@ -132,7 +132,10 @@ st_game_phone,compatible,"a2, a4_1, a4_2, a4_3, a6_1, a6_2, a6_3","case_when(
       recode_values(as.numeric(a6_3), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
       0
     )
-)",Games played on a smartphone or tablet (a4=2); same construction as st_game,
+)","Games played on a smartphone or tablet (a4=2); same construction as st_game. Partial because item a4 bundles the two devices, so phone gaming cannot be separated from tablet gaming (st_game_tablet).",
+st_game_tablet_wd,in_progress,,,,
+st_game_tablet_we,in_progress,,,,
+st_game_tablet,in_progress,,,,
 st_comp_nongaming_wd,unavailable,,,,
 st_comp_nongaming_we,unavailable,,,,
 st_comp_nongaming,unavailable,,,,
@@ -278,6 +281,7 @@ mh_distress_k6_self,unavailable,,,,
 mh_distress_k10_self,unavailable,,,,
 mh_anx_masc_self,unavailable,,,,
 mh_anx_scas_self,unavailable,,,,
+mh_anx_scas_parent,in_progress,,,,
 mh_anx_scared_self,unavailable,,,,
 mh_anx_scared_parent,unavailable,,,,
 mh_anx_gad7_self,unavailable,,,,
