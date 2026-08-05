@@ -3,9 +3,15 @@ dataset_name: "HERMES"
 status: "in_progress"
 
 resources:
-  - name: "bigger_picture_hermes_codebook"
+  - name: "bigger_picture_hermes_codebook_hermes1_2"
     role: "codebook"
     reader: "excel"
+    sheet: "HERMES1_2"
+    glob: "Bigger_Picture_HERMES_Codebook_25_06_2026.xlsx"
+  - name: "bigger_picture_hermes_codebook_hermes3"
+    role: "codebook"
+    reader: "excel"
+    sheet: "HERMES3"
     glob: "Bigger_Picture_HERMES_Codebook_25_06_2026.xlsx"
   - name: "hermes1_2_biggerpicture_shared_stata"
     role: "data"
@@ -15,8 +21,9 @@ resources:
     role: "data"
     reader: "rds"
     glob: "hermes3_biggerpicture.rds"
-
-notes: >
-  HERMES dataset (BPIPD-1711). Contains shared Stata data (.dta) and RDS data (.rds) 
-  for the HERMES waves, along with its authoritative Excel codebook ledger.
-  
+    
+notes: |
+  HERMES dataset (BPIPD-1711). Contains shared Stata data (.dta) and RDS data (.rds)
+  for the HERMES waves, along with its authoritative Excel codebook ledger. The codebook
+  workbook has two sheets - HERMES1_2 and HERMES3 - each represented as a separate
+  codebook resource pointing at the same file.
