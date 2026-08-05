@@ -10,7 +10,7 @@ waves:
       - name: "PeNSE 2009 Data"
         role: "data"
         glob: "PeNSE_2009/Dados/Base_Pense Completa_2009.txt"
-        reader: "csv2"
+        reader: "csv2" # PLACEHOLDER - this is a fixed-width or whitespace-delimited flat text data file
       - name: "PeNSE 2009 Dictionary"
         role: "codebook"
         glob: "PeNSE_2009/Documentaç╞o/Dicionario_Base Pense_Completa.xls"
