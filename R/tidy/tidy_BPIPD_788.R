@@ -11,12 +11,5 @@
 #' Output:
 #' - one tibble to be used as the harmonisation input
 tidy_BPIPD_788 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
-
-  tibble::as_tibble(raw_dataset$data[[1]])
+  tibble::as_tibble(raw_dataset$data$`Main Dataset (Stata Format)`)
 }

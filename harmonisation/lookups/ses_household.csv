@@ -18,3 +18,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 "232","ses_household","200-399% FPL","Medium","proximate","Middle band is 30.5% of the sample"
 "232","ses_household","400% FPL or greater","High","proximate","Top band is 39.7% of the sample"
 "232","ses_household","Unknown","Unknown","proximate","POVLEV4 is never missing in 2016-2023; branch retained as a guard"
+788,ses_household,1. Quintil,Low,compatible,"Bottom quintile of the KiGGS composite SES score (SDEses_score, range 3-21)."
+788,ses_household,2. Quintil,Low,compatible,Second quintile; bottom two quintiles collapse to Low per the dataschema convention.
+788,ses_household,3. Quintil,Medium,compatible,Middle quintile.
+788,ses_household,4. Quintil,High,compatible,Fourth quintile; top two quintiles collapse to High per the dataschema convention.
+788,ses_household,5. Quintil,High,compatible,Top quintile.
+788,ses_household,Nicht erhoben (18+ Jahre),Unknown,unavailable,Missing-value label carried by the variable; no participant in this cross-section falls here.
