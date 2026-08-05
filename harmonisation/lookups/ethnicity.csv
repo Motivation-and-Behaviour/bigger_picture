@@ -73,3 +73,6 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 80,ethnicity,Hui,Asian,compatible,ALLETH code 44.
 80,ethnicity,First Nations,Other,proximate,ALLETH code 45. Indigenous Canadian; captured separately in `indigenous`
 80,ethnicity,East Indian,Asian,compatible,ALLETH code 46.
+170,ethnicity,White,White,compatible,Direct label match. MTF releases only a Black/White/Hispanic recode; every other group is set to missing in the source and reaches Unknown through the expression default
+170,ethnicity,Black,Black,compatible,Direct label match. MTF releases only a Black/White/Hispanic recode; every other group is set to missing in the source and reaches Unknown through the expression default
+170,ethnicity,Hispanic,Hispanic,compatible,Direct label match. MTF releases only a Black/White/Hispanic recode; every other group is set to missing in the source and reaches Unknown through the expression default
