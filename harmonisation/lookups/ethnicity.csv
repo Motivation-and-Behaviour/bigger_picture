@@ -24,6 +24,16 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 677,ethnicity,Any other Black or Black British background,Black,compatible,
 677,ethnicity,Any other ethnic group,Other,compatible,
 677,ethnicity,Would rather not say,Unknown,compatible,Explicit non-response
+31,ethnicity,Youth: white only non-Hispanic,White,compatible,CK6ETHRACE code 1; youth self-description at Year 15
+31,ethnicity,Youth: black or African American only non-Hispanic,Black,compatible,CK6ETHRACE code 2
+31,ethnicity,Youth: Hispanic or Latino,Hispanic,compatible,CK6ETHRACE code 3
+31,ethnicity,Youth: other only non-Hispanic,Other,compatible,"CK6ETHRACE code 4; FFCWS collapses American Indian/Alaska Native, Asian and Pacific Islander into this residual, so none of them can be recovered"
+31,ethnicity,Youth: multi-racial non-Hispanic,Mixed,compatible,CK6ETHRACE code 5
+31,ethnicity,Mother: white non-Hispanic,White,proximate,CM1ETHRACE code 1; mother's own report at baseline used where the child never self-described
+31,ethnicity,Mother: black non-Hispanic,Black,proximate,CM1ETHRACE code 2
+31,ethnicity,Mother: Hispanic,Hispanic,proximate,CM1ETHRACE code 3
+31,ethnicity,Mother: other,Other,proximate,"CM1ETHRACE code 4; residual category, not separable into schema groups"
+31,ethnicity,Unknown,Unknown,compatible,"Neither the youth self-description nor the mother's baseline race is recorded"
 232,ethnicity,Hispanic,Hispanic,compatible,"SC_HISPANIC_R = 1, taken ahead of race as in the DRC race7 derivation"
 232,ethnicity,"White alone, non-Hispanic",White,compatible,SC_RACE_R race-alone category among non-Hispanic children
 232,ethnicity,"Black or African American alone, non-Hispanic",Black,compatible,SC_RACE_R race-alone category among non-Hispanic children
