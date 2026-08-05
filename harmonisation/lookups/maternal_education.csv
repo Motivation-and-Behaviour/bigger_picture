@@ -30,3 +30,10 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 788,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Residual other qualification, e.g. obtained abroad; not rankable against the German ladder."
 788,maternal_education,Filterbed. fehlend (Elternteil nicht im HH),Unknown,unavailable,"Mother not resident in the household, so no qualification was asked."
 788,maternal_education,Nicht erhoben,Unknown,unavailable,Item not administered for this respondent.
+170,maternal_education,Completed grade school or less,Secondary school or less,compatible,MTF code 1
+170,maternal_education,Some high school,Secondary school or less,compatible,MTF code 2
+170,maternal_education,Completed high school,Secondary school or less,compatible,MTF code 3
+170,maternal_education,Some college,Post-secondary,compatible,MTF code 4; college entered but not completed
+170,maternal_education,Completed college,Bachelor degree or higher,compatible,MTF code 5
+170,maternal_education,Graduate or professional school after college,Bachelor degree or higher,compatible,MTF code 6
+170,maternal_education,"Don't know, or does not apply",Unknown,compatible,"MTF code 7, plus the -9 missing code used up to 2011"
