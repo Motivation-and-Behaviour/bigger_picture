@@ -33,3 +33,13 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 "232","ethnicity","Some other race alone, non-Hispanic","Other","compatible","SC_RACE_R residual race category, present 2016-2018 only"
 "232","ethnicity","Two or more races, non-Hispanic","Mixed","compatible","Two or more races maps onto the schema Mixed category"
 "232","ethnicity","Unknown","Unknown","compatible","SC_HISPANIC_R and SC_RACE_R are never missing in 2016-2023; branch retained as a guard"
+31,ethnicity,Youth: white only non-Hispanic,White,compatible,CK6ETHRACE code 1; youth self-description at Year 15
+31,ethnicity,Youth: black or African American only non-Hispanic,Black,compatible,CK6ETHRACE code 2
+31,ethnicity,Youth: Hispanic or Latino,Hispanic,compatible,CK6ETHRACE code 3
+31,ethnicity,Youth: other only non-Hispanic,Other,compatible,"CK6ETHRACE code 4; FFCWS collapses American Indian/Alaska Native, Asian and Pacific Islander into this residual, so none of them can be recovered"
+31,ethnicity,Youth: multi-racial non-Hispanic,Mixed,compatible,CK6ETHRACE code 5
+31,ethnicity,Mother: white non-Hispanic,White,proximate,CM1ETHRACE code 1; mother's own report at baseline used where the child never self-described
+31,ethnicity,Mother: black non-Hispanic,Black,proximate,CM1ETHRACE code 2
+31,ethnicity,Mother: Hispanic,Hispanic,proximate,CM1ETHRACE code 3
+31,ethnicity,Mother: other,Other,proximate,"CM1ETHRACE code 4; residual category, not separable into schema groups"
+31,ethnicity,Unknown,Unknown,compatible,"Neither the youth self-description nor the mother's baseline race is recorded"

@@ -30,3 +30,8 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 788,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Residual other qualification, e.g. obtained abroad; not rankable against the German ladder."
 788,maternal_education,Filterbed. fehlend (Elternteil nicht im HH),Unknown,unavailable,"Mother not resident in the household, so no qualification was asked."
 788,maternal_education,Nicht erhoben,Unknown,unavailable,Item not administered for this respondent.
+31,maternal_education,Less than high school,Secondary school or less,compatible,CM#EDU code 1
+31,maternal_education,High school or equivalent,Secondary school or less,compatible,CM#EDU code 2; includes GED
+31,maternal_education,Some college or technical school,Post-secondary,compatible,CM#EDU code 3
+31,maternal_education,College degree or higher,Bachelor degree or higher,compatible,CM#EDU code 4
+31,maternal_education,Unknown,Unknown,compatible,"Mother not interviewed at the wave, or (Year 15) the primary caregiver is not the biological mother"

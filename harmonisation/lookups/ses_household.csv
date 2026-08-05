@@ -34,3 +34,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 788,ses_household,4. Quintil,High,compatible,Fourth quintile; top two quintiles collapse to High per the dataschema convention.
 788,ses_household,5. Quintil,High,compatible,Top quintile.
 788,ses_household,Nicht erhoben (18+ Jahre),Unknown,unavailable,Missing-value label carried by the variable; no participant in this cross-section falls here.
+31,ses_household,Under 50% of the federal poverty line,Low,proximate,"CM#POVCA/CP6POVCA band 1; bottom two of five bands map to Low per the dataschema convention (37.7% of mapped rows)"
+31,ses_household,50-99% of the federal poverty line,Low,proximate,Band 2
+31,ses_household,100-199% of the federal poverty line,Medium,proximate,Band 3; middle band (27.0% of mapped rows)
+31,ses_household,200-299% of the federal poverty line,High,proximate,Band 4; top two of five bands map to High (35.3% of mapped rows)
+31,ses_household,300% or more of the federal poverty line,High,proximate,Band 5
+31,ses_household,Unknown,Unknown,proximate,No household income reported for the wave

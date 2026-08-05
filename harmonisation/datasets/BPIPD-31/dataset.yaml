@@ -21,7 +21,7 @@ resources:
   - name: "Primary Survey Microdata (R Format)"
     role: "data"
     glob: "DS0001/31622-0001-Data.rda"
-    reader: "rds"
+    reader: "rda"
   - name: "Documentation Notes"
     role: "docs"
     glob: "DS0001/31622-0001-Documentation-notes.pdf"
@@ -58,4 +58,3 @@ notes: |
   The root directory contains ICPSR catalog-level text, HTML files, and an R factor recoding script. 
   The 'DS0001' folder contains the primary .rda dataset and extensive PDF documentation 
   including survey wave user guides (Baseline through Year 22) and Year 22 multi-mode questionnaires.
-  
