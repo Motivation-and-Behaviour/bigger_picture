@@ -119,6 +119,14 @@ harmonisation_eval_env <- function(spec, analysis_base, lookups, tbl) {
     names(lookup_bindings) <- paste0("lookup_", names(lookups))
   }
 
+  # Sandbox: dataset bindings -> allowlisted functions -> base R. Expressions
+  # cannot reach the global environment or attached packages; see
+  # `bp_harmonisation_functions()` for the bare-name vocabulary.
+  functions_env <- rlang::new_environment(
+    bp_harmonisation_functions(),
+    parent = baseenv()
+  )
+
   list2env(
     c(
       list(
@@ -129,7 +137,7 @@ harmonisation_eval_env <- function(spec, analysis_base, lookups, tbl) {
       ),
       lookup_bindings
     ),
-    parent = globalenv()
+    parent = functions_env
   )
 }
 

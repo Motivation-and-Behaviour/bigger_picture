@@ -1,0 +1,180 @@
+---
+title: "The dataset.yaml spec"
+---
+
+Every dataset has a spec file at `harmonisation/datasets/BPIPD-<id>/dataset.yaml` that tells the pipeline what files exist, where they live, and how to read them.
+This page is the field-by-field reference; for worked examples of common layouts, see the [Spec cookbook](spec-cookbook.qmd).
+
+The shape of the file is defined by `harmonisation/dataset.schema.json`.
+A minimal spec looks like this:
+
+```yaml
+dataset_id: "9999"
+dataset_name: "Example Cohort Study"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "data.sav"
+    reader: "spss"
+```
+
+## Top-level fields
+
+| Field | Required? | Notes |
+|-------|-----------|-------|
+| `dataset_id` | Yes | The dataset number **only**, as a string of digits (e.g. `"9999"`, not `"BPIPD-9999"`). Must match the folder name. |
+| `dataset_name` | Yes | The name shown next to the dataset ID on the original data folder, e.g. `"Example Cohort Study"`. |
+| `status` | Yes | One of `planned`, `in_progress`, `harmonised`, `blocked`. Leave as `in_progress` until harmonisation is complete. Only `in_progress` and `harmonised` datasets are included in the pipeline. |
+| `resources` | Optional | File list for datasets **without waves** (see below). |
+| `waves` | Optional | File lists per wave for datasets **with waves** (see below). |
+| `notes` | Optional | Free-text notes about the dataset. |
+
+A dataset normally has *either* `resources` *or* `waves` — not both, unless there are dataset-wide files that sit outside any single wave (such as a shared codebook), in which case a top-level `resources` list can coexist with `waves`.
+
+## Resources
+
+Each item in `resources` describes one file — or one group of related files — in the dataset.
+
+| Field | Required? | Notes |
+|-------|-----------|-------|
+| `name` | Yes | A short label, e.g. `"data"`, `"codebook"`. Names must be unique across the whole file (including across waves) — this is the name the tidier uses to access the table. |
+| `role` | Yes | One of `data`, `codebook`, `docs` (see below). |
+| `glob` | Yes | The filename, including the folder path if nested (see below). |
+| `reader` | **Only for `role: data`** | How to read the file (see the reader table). |
+| `sheet` | Excel only | Sheet name or 1-based index. |
+| `range` | Excel only, optional | A cell range, e.g. `"A1:H200"`. |
+| `table` | Access (`mdb`) only | The table to read; may be omitted when the file contains exactly one table. |
+| `object` | `rda` only | The object to extract; may be omitted when the file contains exactly one object. |
+
+### Roles
+
+| Role | Use for |
+|------|---------|
+| `data` | The actual dataset file(s) — `.sav`, `.dta`, `.csv`, `.xlsx`, etc. **Requires a `reader`.** Read into R and passed to the tidier. |
+| `codebook` | Data dictionaries and variable documentation. The file path is recorded for reference, but the file is **not read into R**. |
+| `docs` | Anything else: technical reports, user guides, questionnaires, syntax files. Paths only — must not have a `reader`, `sheet`, or `range`. |
+
+### Globs
+
+`glob` locates files relative to the dataset's root folder (or the wave's `wave_dir`, for wave resources).
+
+- **File in the dataset folder**: `glob: "data.sav"`
+- **File nested in a subfolder** — include the full path: `glob: "Survey Files/2000/data.dta"`
+- **Wildcards** — `*` and `?` are supported and can match several files: `glob: "stata/*.dta"`.
+  Each match becomes its own table, named `<name>__1`, `<name>__2`, … (see [Tidy scripts](tidy-scripts.qmd#what-the-tidier-receives)).
+- **Several named files in one resource** — as a YAML list:
+
+  ```yaml
+  glob:
+    - "file1.sav"
+    - "file2.sav"
+  ```
+
+  or with brace notation: `glob: "{file1.sav,file2.sav}"`.
+  Both are equivalent; pick whichever reads better and stay consistent within a file.
+
+Paths must match the real files exactly, including capitalisation and spacing — typos in globs are the most common reason a spec reads nothing.
+
+## Readers
+
+`reader` is required whenever `role: data`.
+Pick it from the file extension:
+
+```{r}
+#| label: reader-table
+readers <- tibble::tribble(
+  ~Reader, ~`File types`, ~`Extra keys`,
+  "csv", "`.csv` (comma-separated)", "",
+  "csv2", "`.csv` (semicolon-separated, comma decimal)", "",
+  "tsv", "`.tsv` (tab-separated)", "",
+  "stata", "`.dta` (Stata)", "",
+  "spss", "`.sav` (SPSS)", "",
+  "sas", "`.sas7bdat` (SAS)", "",
+  "rds", "`.rds` (single R object)", "",
+  "rda", "`.rda` / `.RData` (saved R workspace)",
+  "`object` (optional if the file holds one object)",
+  "parquet", "`.parquet` (Apache Parquet)", "",
+  "excel", "`.xlsx` / `.xls` (Excel)",
+  "`sheet` (recommended), `range` (optional)",
+  "mdb", "`.mdb` / `.accdb` (Microsoft Access)",
+  "`table` (optional if the file holds one table)"
+)
+knitr::kable(readers)
+```
+
+```{r}
+#| label: reader-drift-check
+#| include: false
+# Fail the site build if the table above drifts from the schema's enum.
+schema <- jsonlite::read_json("../harmonisation/dataset.schema.json")
+schema_readers <- unlist(
+  schema$definitions$resource$properties$reader$enum
+)
+stopifnot(setequal(readers$Reader, schema_readers))
+```
+
+For **Excel data files**, always set `sheet` — open the file in the original data folder to check the exact sheet name:
+
+```yaml
+- name: "questionnaire"
+  role: "data"
+  glob: "questionnaire.xlsx"
+  reader: "excel"
+  sheet: "Data"
+```
+
+(`reader` and `sheet` are only meaningful on `role: data` resources — codebooks are recorded by path but never read.)
+
+::: {.callout-warning}
+`.rda` files use `reader: "rda"`, not `rds`.
+An `.rds` file stores exactly one object; an `.rda` file is a saved workspace that can hold several, which is why `rda` takes an optional `object` key.
+:::
+
+## Waves
+
+If a dataset has files for multiple waves (years, sweeps), use `waves` instead of a top-level `resources` list:
+
+```yaml
+waves:
+  - wave: "2010"
+    label: "2010"
+    wave_dir: "."
+    resources:
+      - name: "data_2010"
+        role: "data"
+        glob: "survey_2010.csv"
+        reader: "csv"
+```
+
+| Field | Required? | Notes |
+|-------|-----------|-------|
+| `wave` | Yes | The wave identifier, e.g. `"2001"`, `"sweep_2"`. Added to every data table from this wave as a `.wave` column. |
+| `label` | No | A human-readable label; usually the same as `wave`. Added as `.wave_label`. |
+| `wave_dir` | Yes | The folder the wave's globs are resolved against, relative to the dataset folder. Use `"."` when all waves share the dataset root and the wave is distinguished by filename; use the subfolder name when each wave has its own folder. |
+| `resources` | Yes | A list of resources for this wave, structured exactly as above (minimum one). |
+
+Repeat the whole wave block for every wave, and give resources wave-specific names (`data_2010`, `data_2014`, …) so the tidier can tell them apart.
+See the [cookbook](spec-cookbook.qmd) for both wave layouts.
+
+## Validating your spec {#validating-your-spec}
+
+Once `dataset.yaml` is filled in, check that it reads the real files:
+
+```r
+targets::tar_make(names = raw_BPIPD_9999) # your dataset id
+```
+
+If this completes without error, the spec is reading the data.
+If not:
+
+1. Do the paths in every `glob` match the real folder structure exactly (capitalisation, spaces, subfolders)?
+2. Does `reader` match the file extension (table above)?
+3. Does every `role: data` resource have a `reader`?
+4. Is every `role: docs` resource free of `reader`/`sheet`/`range`?
+5. Do Excel resources name the correct `sheet`?
+6. If the same filename exists in two folders, is the glob specific enough to match only the authoritative one?
+   (When in doubt about which copy is authoritative, ask the team lead.)
+
+The repository's test suite additionally checks every committed spec's structure (ID matches the folder, valid `status`, tidier file exists) on every pull request — but only a local `tar_make()` proves the globs match the real files, because CI has no access to the data.

@@ -45,6 +45,8 @@ read_resource_table <- function(
   reader <- resource$reader
   sheet <- resource$sheet %||% NULL
   range <- resource$range %||% NULL
+  table <- resource$table %||% NULL
+  object <- resource$object %||% NULL
 
   out <- list()
   for (i in seq_along(paths)) {
@@ -57,14 +59,17 @@ read_resource_table <- function(
       paths[[i]],
       reader = reader,
       sheet = sheet,
-      range = range
+      range = range,
+      table = table,
+      object = object
     )
 
     if (!is.null(wave)) {
+      # `label` is optional in the spec; fall back to the wave identifier.
       tbl <- dplyr::mutate(
         tbl,
         .wave = as.character(wave),
-        .wave_label = as.character(wave_label)
+        .wave_label = as.character(wave_label %||% wave)
       )
     }
 
