@@ -29,6 +29,7 @@ Harmonisation ([next step](harmonisation.qmd)) only sees this one table, so anyt
 
 - `data`: a named list of tibbles, one per matched `role: data` file.
   The names come from the spec's resource `name`; a resource whose glob matched several files appears as `<name>__1`, `<name>__2`, …
+  Resource names are unique across the whole spec — the pipeline refuses to read one where they are not — so `raw_dataset$data[["some_name"]]` always identifies a single file.
 - `codebook`: named list of codebook file paths (not read into R).
 - `docs`: character vector of documentation file paths.
 - `meta`: the spec, dataset directory, and a table of matched files — useful for debugging what the globs picked up.

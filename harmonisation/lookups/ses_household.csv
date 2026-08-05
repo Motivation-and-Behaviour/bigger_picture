@@ -40,3 +40,7 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 31,ses_household,200-299% of the federal poverty line,High,proximate,Band 4; top two of five bands map to High (35.3% of mapped rows)
 31,ses_household,300% or more of the federal poverty line,High,proximate,Band 5
 31,ses_household,Unknown,Unknown,proximate,No household income reported for the wave
+80,ses_household,1,Low,proximate,"IncLevel 1, lowest of four site-specific gross annual household income bands (26.2% of respondents)"
+80,ses_household,2,Medium,proximate,"IncLevel 2 (25.6%); source has four bands rather than quintiles, so the two middle bands both map to Medium"
+80,ses_household,3,Medium,proximate,"IncLevel 3 (21.9%); source has four bands rather than quintiles, so the two middle bands both map to Medium"
+80,ses_household,4,High,proximate,"IncLevel 4, highest of four site-specific bands (26.2%)"

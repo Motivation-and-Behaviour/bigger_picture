@@ -86,6 +86,9 @@ st_educational,incompatible,,,"Homework time items (hworkwd/hworkwe, 2001 wave o
 st_internet_wd,unavailable,,,No internet-specific time item; generic computer/device use including internet is captured under st_comp.,
 st_internet_we,unavailable,,,No internet-specific time item; generic computer/device use including internet is captured under st_comp.,
 st_internet,unavailable,,,No internet-specific time item; generic computer/device use including internet is captured under st_comp.,
+st_videochat,in_progress,,,,
+st_email,in_progress,,,,
+st_shopping,in_progress,,,,
 st_total_school,unavailable,,,All HBSC screen-time items ask about free time; screen use at school is not measured.,
 st_educational_school,unavailable,,,All HBSC screen-time items ask about free time; screen use at school is not measured.,
 st_comp_school,unavailable,,,All HBSC screen-time items ask about free time; screen use at school is not measured.,
@@ -107,6 +110,7 @@ beh_atten_self,in_progress,,,,
 beh_selfreg_htks,unavailable,,,,
 beh_bullied,compatible,bulliedothers,"recode_values(bulliedothers, 1 ~ FALSE, c(2, 3, 4, 5) ~ TRUE)",,
 beh_beenbullied,compatible,beenbullied,"recode_values(beenbullied, 1 ~ FALSE, c(2, 3, 4, 5) ~ TRUE)",,
+beh_beenbullied_online,in_progress,,,,
 beh_fight,compatible,fight12m,"recode_values(fight12m, 1 ~ FALSE, c(2, 3, 4, 5) ~ TRUE)",,
 beh_conduct_sdq_parent,unavailable,,,,
 beh_hyper_sdq_parent,unavailable,,,,
@@ -193,7 +197,7 @@ wb_resil_basc2,unavailable,,,,
 wb_psychcomplaints_feellow,compatible,feellow,"recode_values(
   feellow,
   1 ~ ""About every day"",
-  2 ~ ""More than once/week"",
+  2 ~ ""More than once a week"",
   3 ~ ""About every week"",
   4 ~ ""About every month"",
   5 ~ ""Rarely or never""
@@ -201,7 +205,7 @@ wb_psychcomplaints_feellow,compatible,feellow,"recode_values(
 wb_psychcomplaints_irritable,compatible,irritable,"recode_values(
   irritable,
   1 ~ ""About every day"",
-  2 ~ ""More than once/week"",
+  2 ~ ""More than once a week"",
   3 ~ ""About every week"",
   4 ~ ""About every month"",
   5 ~ ""Rarely or never""
@@ -209,7 +213,7 @@ wb_psychcomplaints_irritable,compatible,irritable,"recode_values(
 wb_psychcomplaints_nervous,compatible,nervous,"recode_values(
   nervous,
   1 ~ ""About every day"",
-  2 ~ ""More than once/week"",
+  2 ~ ""More than once a week"",
   3 ~ ""About every week"",
   4 ~ ""About every month"",
   5 ~ ""Rarely or never""
@@ -217,7 +221,7 @@ wb_psychcomplaints_nervous,compatible,nervous,"recode_values(
 wb_psychcomplaints_diffsleep,compatible,sleepdifficulty,"recode_values(
   sleepdifficulty,
   1 ~ ""About every day"",
-  2 ~ ""More than once/week"",
+  2 ~ ""More than once a week"",
   3 ~ ""About every week"",
   4 ~ ""About every month"",
   5 ~ ""Rarely or never""
@@ -232,11 +236,14 @@ wb_bodyimage,compatible,thinkbody,"recode_values(
 )",,
 wb_lifesat_slss_self,unavailable,,,Life satisfaction is measured with the Cantril ladder (mapped to wb_lifesatisfaction_cantrilladder); SLSS not administered.,
 wb_lifesat_swls_self,in_progress,,,,
+wb_lifesat_singleitem_self,in_progress,,,,
 wb_qol_pedsql_self,unavailable,,,,
 wb_qol_pedsql_parent,unavailable,,,,
 wb_qol_kidscreen10_self,unavailable,,,,
 wb_qol_kidscreen10_parent,in_progress,,,,
 wb_selfesteem_rosenberg_self,unavailable,,,,
+wb_selfesteem_self,in_progress,,,,
+wb_selfesteem_measure,in_progress,,,,
 wb_selfefficacy_gse_self,unavailable,,,,
 wb_mwb_who5_self,unavailable,,,,
 wb_happiness_shs_self,in_progress,,,,
