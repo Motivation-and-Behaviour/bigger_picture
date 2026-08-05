@@ -104,6 +104,7 @@ school_grade,partial,"SGRADE, cohort, wave, respondent","case_when(
 )","Sibling respondents report their own grade (SGRADE). Main-panel respondents have no grade item, so grade is inferred from the cohort design: the e4 cohort was in elementary grade 4 and the m1 cohort in middle grade 1 at w1, advancing one grade per wave (grade repetition is effectively absent in Korean compulsory schooling). The m1 cohort has left school by w7 and is left missing, as are siblings with the undocumented SGRADE code 13 (mean age 20.7, i.e. no longer in school).",
 st_measure_type,inferred,,"""Categorical""",Time-use items use seven ordered duration bands.,
 st_measure_name,inferred,,"""Custom""","Bespoke KCYPS time-use grid (Q1), not a named instrument.",
+st_responder,in_progress,,,,
 st_total_wd,partial,"YTIM1K01, YTIM1L01, YTIM1M01, YTIM1F01","sum_nonmissing(
   recode_values(as.numeric(YTIM1K01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
   recode_values(as.numeric(YTIM1L01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
@@ -318,6 +319,7 @@ wb_lifesat_swls_self,partial,"YPSY1A01, YPSY1A02, YPSY1A03, YPSY1A04, YPSY1A05",
 wb_qol_pedsql_self,unavailable,,,No health-related quality-of-life instrument.,
 wb_qol_pedsql_parent,unavailable,,,No health-related quality-of-life instrument.,
 wb_qol_kidscreen10_self,unavailable,,,No health-related quality-of-life instrument.,
+wb_qol_kidscreen10_parent,in_progress,,,,
 wb_selfesteem_rosenberg_self,compatible,"YPSY3A01, YPSY3A02, YPSY3A03, YPSY3A04, YPSY3A05, YPSY3A06, YPSY3A07, YPSY3A08, YPSY3A09, YPSY3A10","(as.numeric(YPSY3A01) +
   (5 - as.numeric(YPSY3A02)) +
   as.numeric(YPSY3A03) +

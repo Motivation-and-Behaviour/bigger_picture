@@ -28,3 +28,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 838,ses_household,"$40,000–$49,999",High,compatible,Within-sample income quintile 4
 838,ses_household,"$50,000 or above",High,compatible,Within-sample income quintile 5
 838,ses_household,Refusal,Unknown,compatible,Explicit non-response (19% of the T1 sample)
+788,ses_household,1. Quintil,Low,compatible,"Bottom quintile of the KiGGS composite SES score (SDEses_score, range 3-21)."
+788,ses_household,2. Quintil,Low,compatible,Second quintile; bottom two quintiles collapse to Low per the dataschema convention.
+788,ses_household,3. Quintil,Medium,compatible,Middle quintile.
+788,ses_household,4. Quintil,High,compatible,Fourth quintile; top two quintiles collapse to High per the dataschema convention.
+788,ses_household,5. Quintil,High,compatible,Top quintile.
+788,ses_household,Nicht erhoben (18+ Jahre),Unknown,unavailable,Missing-value label carried by the variable; no participant in this cross-section falls here.
