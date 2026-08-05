@@ -31,7 +31,7 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
     computer_hrs_week_school = "HR/W CO?MPUTR SC",
     computer_hrs_week_job = "HR/W CO?MPUTR JO",
     computer_hrs_week_other = "HR/W CO?MPUTR OT",
-    internet_hrs_week_school = "HR/W INTERNET S",
+    internet_hrs_week_leisure = "HR/W INTERNET S",
     gaming_hrs_week = "HR/W GAMING",
     social_media_hrs_week = "HR/W SOCIAL NET WEB",
     texting_hrs_week = "HR/W TEXT CELL PHO",
@@ -191,6 +191,15 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
       if (!is.null(col)) {
         out[[nm]] <- as_code(df[[col]], col, file)
       }
+    }
+
+    if ("race" %in% names(out)) {
+      labels <- if (year <= 2004L) {
+        c("0" = "White", "1" = "Black")
+      } else {
+        c("1" = "Black", "2" = "White", "3" = "Hispanic")
+      }
+      out$race <- unname(labels[as.character(out$race)])
     }
 
     out

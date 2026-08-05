@@ -3,7 +3,7 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 21,ethnicity,Mixed,Mixed,compatible,Direct label match
 21,ethnicity,Asian,Asian,compatible,Direct label match
 21,ethnicity,Black,Black,compatible,Direct label match
-21,ethnicity,"Other or unknown",Other,compatible,Collapsed into Other to match schema
+21,ethnicity,Other or unknown,Other,compatible,Collapsed into Other to match schema
 1639,ethnicity,European,White,proximate,Not an ideal match - may be revisited as more data are added
 1639,ethnicity,Maori,Black,proximate,Not an ideal match - may be revisited as more data are added
 1639,ethnicity,Pacific,Black,proximate,Not an ideal match - may be revisited as more data are added
@@ -24,12 +24,15 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 677,ethnicity,Any other Black or Black British background,Black,compatible,
 677,ethnicity,Any other ethnic group,Other,compatible,
 677,ethnicity,Would rather not say,Unknown,compatible,Explicit non-response
-"232","ethnicity","Hispanic","Hispanic","compatible","SC_HISPANIC_R = 1, taken ahead of race as in the DRC race7 derivation"
-"232","ethnicity","White alone, non-Hispanic","White","compatible","SC_RACE_R race-alone category among non-Hispanic children"
-"232","ethnicity","Black or African American alone, non-Hispanic","Black","compatible","SC_RACE_R race-alone category among non-Hispanic children"
-"232","ethnicity","American Indian or Alaska Native alone, non-Hispanic","Other","proximate","US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous"
-"232","ethnicity","Asian alone, non-Hispanic","Asian","compatible","SC_RACE_R race-alone category among non-Hispanic children"
-"232","ethnicity","Native Hawaiian or Other Pacific Islander alone, non-Hispanic","Other","proximate","US Census race group with no schema equivalent; collapsed into Other"
-"232","ethnicity","Some other race alone, non-Hispanic","Other","compatible","SC_RACE_R residual race category, present 2016-2018 only"
-"232","ethnicity","Two or more races, non-Hispanic","Mixed","compatible","Two or more races maps onto the schema Mixed category"
-"232","ethnicity","Unknown","Unknown","compatible","SC_HISPANIC_R and SC_RACE_R are never missing in 2016-2023; branch retained as a guard"
+232,ethnicity,Hispanic,Hispanic,compatible,"SC_HISPANIC_R = 1, taken ahead of race as in the DRC race7 derivation"
+232,ethnicity,"White alone, non-Hispanic",White,compatible,SC_RACE_R race-alone category among non-Hispanic children
+232,ethnicity,"Black or African American alone, non-Hispanic",Black,compatible,SC_RACE_R race-alone category among non-Hispanic children
+232,ethnicity,"American Indian or Alaska Native alone, non-Hispanic",Other,proximate,US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous
+232,ethnicity,"Asian alone, non-Hispanic",Asian,compatible,SC_RACE_R race-alone category among non-Hispanic children
+232,ethnicity,"Native Hawaiian or Other Pacific Islander alone, non-Hispanic",Other,proximate,US Census race group with no schema equivalent; collapsed into Other
+232,ethnicity,"Some other race alone, non-Hispanic",Other,compatible,"SC_RACE_R residual race category, present 2016-2018 only"
+232,ethnicity,"Two or more races, non-Hispanic",Mixed,compatible,Two or more races maps onto the schema Mixed category
+232,ethnicity,Unknown,Unknown,compatible,SC_HISPANIC_R and SC_RACE_R are never missing in 2016-2023; branch retained as a guard
+170,ethnicity,White,White,compatible,Direct label match. MTF releases only a Black/White/Hispanic recode; every other group is set to missing in the source and reaches Unknown through the expression default
+170,ethnicity,Black,Black,compatible,Direct label match. MTF releases only a Black/White/Hispanic recode; every other group is set to missing in the source and reaches Unknown through the expression default
+170,ethnicity,Hispanic,Hispanic,compatible,Direct label match. MTF releases only a Black/White/Hispanic recode; every other group is set to missing in the source and reaches Unknown through the expression default
