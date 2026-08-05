@@ -3,7 +3,7 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 21,ethnicity,Mixed,Mixed,compatible,Direct label match
 21,ethnicity,Asian,Asian,compatible,Direct label match
 21,ethnicity,Black,Black,compatible,Direct label match
-21,ethnicity,"Other or unknown",Other,compatible,Collapsed into Other to match schema
+21,ethnicity,Other or unknown,Other,compatible,Collapsed into Other to match schema
 1639,ethnicity,European,White,proximate,Not an ideal match - may be revisited as more data are added
 1639,ethnicity,Maori,Black,proximate,Not an ideal match - may be revisited as more data are added
 1639,ethnicity,Pacific,Black,proximate,Not an ideal match - may be revisited as more data are added
@@ -24,12 +24,52 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 677,ethnicity,Any other Black or Black British background,Black,compatible,
 677,ethnicity,Any other ethnic group,Other,compatible,
 677,ethnicity,Would rather not say,Unknown,compatible,Explicit non-response
-"232","ethnicity","Hispanic","Hispanic","compatible","SC_HISPANIC_R = 1, taken ahead of race as in the DRC race7 derivation"
-"232","ethnicity","White alone, non-Hispanic","White","compatible","SC_RACE_R race-alone category among non-Hispanic children"
-"232","ethnicity","Black or African American alone, non-Hispanic","Black","compatible","SC_RACE_R race-alone category among non-Hispanic children"
-"232","ethnicity","American Indian or Alaska Native alone, non-Hispanic","Other","proximate","US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous"
-"232","ethnicity","Asian alone, non-Hispanic","Asian","compatible","SC_RACE_R race-alone category among non-Hispanic children"
-"232","ethnicity","Native Hawaiian or Other Pacific Islander alone, non-Hispanic","Other","proximate","US Census race group with no schema equivalent; collapsed into Other"
-"232","ethnicity","Some other race alone, non-Hispanic","Other","compatible","SC_RACE_R residual race category, present 2016-2018 only"
-"232","ethnicity","Two or more races, non-Hispanic","Mixed","compatible","Two or more races maps onto the schema Mixed category"
-"232","ethnicity","Unknown","Unknown","compatible","SC_HISPANIC_R and SC_RACE_R are never missing in 2016-2023; branch retained as a guard"
+232,ethnicity,Hispanic,Hispanic,compatible,"SC_HISPANIC_R = 1, taken ahead of race as in the DRC race7 derivation"
+232,ethnicity,"White alone, non-Hispanic",White,compatible,SC_RACE_R race-alone category among non-Hispanic children
+232,ethnicity,"Black or African American alone, non-Hispanic",Black,compatible,SC_RACE_R race-alone category among non-Hispanic children
+232,ethnicity,"American Indian or Alaska Native alone, non-Hispanic",Other,proximate,US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous
+232,ethnicity,"Asian alone, non-Hispanic",Asian,compatible,SC_RACE_R race-alone category among non-Hispanic children
+232,ethnicity,"Native Hawaiian or Other Pacific Islander alone, non-Hispanic",Other,proximate,US Census race group with no schema equivalent; collapsed into Other
+232,ethnicity,"Some other race alone, non-Hispanic",Other,compatible,"SC_RACE_R residual race category, present 2016-2018 only"
+232,ethnicity,"Two or more races, non-Hispanic",Mixed,compatible,Two or more races maps onto the schema Mixed category
+232,ethnicity,Unknown,Unknown,compatible,SC_HISPANIC_R and SC_RACE_R are never missing in 2016-2023; branch retained as a guard
+80,ethnicity,White/Caucasian,White,compatible,ALLETH code 1.
+80,ethnicity,African American,Black,compatible,ALLETH code 2.
+80,ethnicity,Asian,Asian,compatible,ALLETH code 3.
+80,ethnicity,White English/Welsh/Scottish Northern Irish/British,White,compatible,ALLETH code 4.
+80,ethnicity,White Irish,White,compatible,ALLETH code 5.
+80,ethnicity,Gypsy or Irish Traveller,Other,proximate,ALLETH code 6. Dataschema has no traveller/Roma category
+80,ethnicity,White and Black Caribbean,Mixed,compatible,ALLETH code 7.
+80,ethnicity,White and Black African,Mixed,compatible,ALLETH code 8.
+80,ethnicity,White and Asian,Mixed,compatible,ALLETH code 9.
+80,ethnicity,Indian,Asian,compatible,ALLETH code 10.
+80,ethnicity,Pakistani,Asian,compatible,ALLETH code 11.
+80,ethnicity,Bangladeshi,Asian,compatible,ALLETH code 12.
+80,ethnicity,Chinese,Asian,compatible,ALLETH code 13.
+80,ethnicity,African or African (black),Black,compatible,ALLETH code 14.
+80,ethnicity,Caribbean,Black,compatible,ALLETH code 15.
+80,ethnicity,Arab,Other,proximate,ALLETH code 16. Dataschema has no Middle Eastern/North African category
+80,ethnicity,European origin,White,compatible,ALLETH code 17.
+80,ethnicity,Aboriginal or Torres Strait Islander,Other,proximate,"ALLETH code 18. Indigenous Australian; dataschema has no Indigenous ethnicity category, captured separately in `indigenous`"
+80,ethnicity,"American Indian, Aleutian, Alaskan native or Eskimo",Other,proximate,"ALLETH code 21. Indigenous North American; dataschema has no Indigenous ethnicity category, captured separately in `indigenous`"
+80,ethnicity,Pacific Islander,Other,proximate,ALLETH code 22. Dataschema has no Pacific Islander category
+80,ethnicity,Black South African,Black,compatible,ALLETH code 23.
+80,ethnicity,Mixed Ancestry or Coloured,Mixed,proximate,ALLETH code 24. South African Coloured is a distinct multiracial population group rather than a simple mixed-parentage category
+80,ethnicity,Indigenous,Other,proximate,ALLETH code 25. Site-specific Colombian response for Indigenous peoples; captured separately in `indigenous`
+80,ethnicity,Gypsy,Other,proximate,ALLETH code 26. Dataschema has no traveller/Roma category
+80,ethnicity,Islander afrocaribean ethnic group,Black,proximate,ALLETH code 27. Colombian island Afro-Caribbean group treated as Black
+80,ethnicity,A colombian and spanish creole,Mixed,proximate,ALLETH code 28. Colombian criollo (Spanish-Colombian) heritage
+80,ethnicity,Mixed afro-colombians heritage,Mixed,compatible,ALLETH code 29.
+80,ethnicity,Black,Black,compatible,ALLETH code 31.
+80,ethnicity,Brazilian Indian,Other,proximate,ALLETH code 32. Indigenous Brazilian; captured separately in `indigenous`
+80,ethnicity,Mixed,Mixed,compatible,ALLETH code 33.
+80,ethnicity,Don't Know,Unknown,compatible,ALLETH code 37.t Know'
+80,ethnicity,Other,Other,compatible,ALLETH code 38.
+80,ethnicity,Indian Hindu,Asian,compatible,ALLETH code 39.
+80,ethnicity,Indian Christian,Asian,compatible,ALLETH code 40.
+80,ethnicity,Indian Muslim,Asian,compatible,ALLETH code 41.
+80,ethnicity,Indian Jain,Asian,compatible,ALLETH code 42.
+80,ethnicity,Han,Asian,compatible,ALLETH code 43.
+80,ethnicity,Hui,Asian,compatible,ALLETH code 44.
+80,ethnicity,First Nations,Other,proximate,ALLETH code 45. Indigenous Canadian; captured separately in `indigenous`
+80,ethnicity,East Indian,Asian,compatible,ALLETH code 46.
