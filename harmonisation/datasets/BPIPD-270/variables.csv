@@ -1,0 +1,352 @@
+target_variable,status,source_columns,expression,notes,lookup_table
+participant_id,compatible,ID,as.character(ID),Numeric panel ID in source; unique within dataset across both cohorts and both youth files (checked in the tidier).,
+wave,compatible,wave,as.character(wave),"Study wave label from the tidier (w1-w7), corresponding to the 2018-2024 annual collections.",
+data_year,inferred,wave,"recode_values(wave, ""w1"" ~ 2018, ""w2"" ~ 2019, ""w3"" ~ 2020, ""w4"" ~ 2021, ""w5"" ~ 2022, ""w6"" ~ 2023, ""w7"" ~ 2024)","KCYPS 2018 runs one annual collection per wave: w1 = 2018 through w7 = 2024. Taken from the dataset specification, not from a source variable.",
+rct_arm,unavailable,,,Observational panel survey with no randomised allocation.,
+age_years,partial,"YBRT1A, wave","recode_values(wave, ""w1"" ~ 2018, ""w2"" ~ 2019, ""w3"" ~ 2020, ""w4"" ~ 2021, ""w5"" ~ 2022, ""w6"" ~ 2023, ""w7"" ~ 2024) -
+  as.numeric(YBRT1A)","Age in completed years at the end of the collection year: collection year minus self-reported year of birth. KCYPS releases no interview date, so age cannot be adjusted for birth month (YBRT1B) and is accurate to +/- 1 year. 238 rows at w7 (the m1 cohort and older siblings) exceed the schema's declared maximum of 19.",
+sex,compatible,YGENDER,"recode_values(as.numeric(YGENDER), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","Single self-reported item with no 'other' or 'prefer not to say' option; the tidier drops non-participating panel records, so no row falls to the Unknown default; the default is retained as a guard.",
+country,inferred,,"""South Korea""","All KCYPS 2018 fieldwork is in the Republic of Korea. NOTE: ""South Korea"" is not yet in the dataschema allowed_values for country - the schema needs the value added.",
+state,unavailable,,,Australian states only; KCYPS is a Korean study. ARA1A/ARA1B record Korean city/province.,
+ethnicity,unavailable,,,"KCYPS collects no participant ethnicity or race item. The guardian's own birthplace (PBRP1, Korea vs abroad) is the nearest item and does not describe the child's ethnicity.",
+indigenous,unavailable,,,No indigenous-status item; the concept is not used in the Korean context.,
+minority,unavailable,,,No ethnicity or migrant-background item for the child. PBRP1 (guardian born abroad) was considered and rejected as too indirect.,
+ses_area,unavailable,,,"No area-level deprivation measure. ARA2A is settlement size, mapped to urbanicity instead.",
+ses_household,proximate,"PINCOME, wave","case_when(
+  is.na(na_if(as.numeric(PINCOME), 9999)) ~ ""Unknown"",
+  na_if(as.numeric(PINCOME), 9999) <=
+    recode_values(wave, c(""w1"", ""w2"") ~ 5, c(""w3"", ""w4"", ""w5"", ""w6"") ~ 6, ""w7"" ~ 7) ~ ""Low"",
+  na_if(as.numeric(PINCOME), 9999) <=
+    recode_values(wave, c(""w1"", ""w2"") ~ 6, c(""w3"", ""w4"", ""w5"") ~ 7, c(""w6"", ""w7"") ~ 8) ~ ""Medium"",
+  .default = ""High""
+)","Guardian-reported banded average monthly household income (12 bands). Cut so the bottom two and top two within-study quintiles become Low and High, per the schema note. Cut points are chosen per wave as the band whose cumulative share is closest to 40 and 60 percent, and hard-coded rather than computed at run time so the recode is auditable: Low is bands 1-5 at w1-w2, 1-6 at w3-w6 and 1-7 at w7, with Medium the next band up. The cut points shift over time because nominal incomes rose across 2018-2024. Proximate because the coarse bands and heavy ties make the splits approximate rather than exact quintiles (39/23/37 percent Low/Medium/High among respondents, but High ranges from 31 to 47 percent across waves). 9999 = No response and missing guardian records become Unknown.",
+ses_household_measure,inferred,,"""Banded average monthly household income (12 bands, guardian report)""",Records the source measure behind ses_household.,
+maternal_education,compatible,PSCHOOL2,"lookup_values(
+  recode_values(
+    as.numeric(PSCHOOL2),
+    1 ~ ""Did not go to school"",
+    2 ~ ""Graduated elementary school"",
+    3 ~ ""Graduated middle school"",
+    4 ~ ""Graduated high school"",
+    5 ~ ""Graduated 2-3 year college"",
+    6 ~ ""Graduated 4 year college"",
+    7 ~ ""Graduated graduate school"",
+    c(8, 9, 10) ~ ""Not reported or not applicable"",
+    default = ""Not reported or not applicable""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education""
+)","Guardian-reported highest level of education for the mother. Codes 8 (Not sure), 9 (undocumented in the English codebook, concentrated in father-absent households) and 10 (Not applicable) all map to Unknown.",maternal_education
+paternal_education,compatible,PSCHOOL1,"recode_values(
+  as.numeric(PSCHOOL1),
+  c(1, 2, 3, 4) ~ ""Secondary school or less"",
+  5 ~ ""Post-secondary"",
+  c(6, 7) ~ ""Bachelor degree or higher"",
+  default = ""Unknown""
+)","Guardian-reported highest level of education for the father, using the same collapsed vocabulary as the shared maternal_education lookup. Codes 8/9/10 and missing become Unknown.",
+parental_education,compatible,"PSCHOOL1, PSCHOOL2","recode_values(
+  pmax(
+    ifelse(as.numeric(PSCHOOL1) %in% 1:7, as.numeric(PSCHOOL1), NA),
+    ifelse(as.numeric(PSCHOOL2) %in% 1:7, as.numeric(PSCHOOL2), NA),
+    na.rm = TRUE
+  ),
+  c(1, 2, 3, 4) ~ ""Secondary school or less"",
+  5 ~ ""Post-secondary"",
+  c(6, 7) ~ ""Bachelor degree or higher"",
+  default = ""Unknown""
+)","Higher of the father's and mother's education. The source codes 1-7 are ordered by level, so the maximum is the higher qualification; codes 8/9/10 are dropped before taking the maximum so a single reported parent still contributes.",
+urbanicity,proximate,ARA2A,"recode_values(as.numeric(ARA2A), 1 ~ ""Urban"", 2 ~ ""Suburban"", 3 ~ ""Rural"", default = ""Unknown"")",Settlement size of the participant's school location. Proximate because KCYPS's middle category is small and medium-sized cities rather than suburbs of large cities; the three-level ordering is preserved but the middle label is not equivalent.,
+family_structure,partial,PFAM1A00,"recode_values(
+  as.numeric(PFAM1A00),
+  c(1, 4) ~ ""Two biological/adoptive parents"",
+  c(2, 5) ~ ""Single parent"",
+  c(3, 6) ~ ""Other"",
+  default = ""Unknown""
+)","Guardian-reported household composition. Codes 4 and 5 add co-resident grandparents to a two-parent or one-parent household and are classified on the parental figures present. Partial because the source does not distinguish step-parents from biological or adoptive parents, so 'Step family' can never be assigned and those households fall into 'Two biological/adoptive parents'.",
+school_grade,partial,"SGRADE, cohort, wave, respondent","case_when(
+  as.numeric(SGRADE) %in% 1:12 ~ recode_values(
+    as.numeric(SGRADE),
+    1 ~ ""Elementary School 1st Grade"",
+    2 ~ ""Elementary School 2nd Grade"",
+    3 ~ ""Elementary School 3rd Grade"",
+    4 ~ ""Elementary School 4th Grade"",
+    5 ~ ""Elementary School 5th Grade"",
+    6 ~ ""Elementary School 6th Grade"",
+    7 ~ ""Middle School 1st Grade"",
+    8 ~ ""Middle School 2nd Grade"",
+    9 ~ ""Middle School 3rd Grade"",
+    10 ~ ""High School 1st Grade"",
+    11 ~ ""High School 2nd Grade"",
+    12 ~ ""High School 3rd Grade""
+  ),
+  respondent == ""main"" & cohort == ""elem"" ~ recode_values(
+    wave,
+    ""w1"" ~ ""Elementary School 4th Grade"",
+    ""w2"" ~ ""Elementary School 5th Grade"",
+    ""w3"" ~ ""Elementary School 6th Grade"",
+    ""w4"" ~ ""Middle School 1st Grade"",
+    ""w5"" ~ ""Middle School 2nd Grade"",
+    ""w6"" ~ ""Middle School 3rd Grade"",
+    ""w7"" ~ ""High School 1st Grade""
+  ),
+  respondent == ""main"" & cohort == ""mid"" ~ recode_values(
+    wave,
+    ""w1"" ~ ""Middle School 1st Grade"",
+    ""w2"" ~ ""Middle School 2nd Grade"",
+    ""w3"" ~ ""Middle School 3rd Grade"",
+    ""w4"" ~ ""High School 1st Grade"",
+    ""w5"" ~ ""High School 2nd Grade"",
+    ""w6"" ~ ""High School 3rd Grade"",
+    ""w7"" ~ NA_character_
+  ),
+  .default = NA_character_
+)","Sibling respondents report their own grade (SGRADE). Main-panel respondents have no grade item, so grade is inferred from the cohort design: the e4 cohort was in elementary grade 4 and the m1 cohort in middle grade 1 at w1, advancing one grade per wave (grade repetition is effectively absent in Korean compulsory schooling). The m1 cohort has left school by w7 and is left missing, as are siblings with the undocumented SGRADE code 13 (mean age 20.7, i.e. no longer in school).",
+st_measure_type,inferred,,"""Categorical""",Time-use items use seven ordered duration bands.,
+st_measure_name,inferred,,"""Custom""","Bespoke KCYPS time-use grid (Q1), not a named instrument.",
+st_responder,in_progress,,,,
+st_total_wd,partial,"YTIM1K01, YTIM1L01, YTIM1M01, YTIM1F01","sum_nonmissing(
+  recode_values(as.numeric(YTIM1K01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+  recode_values(as.numeric(YTIM1L01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+  recode_values(as.numeric(YTIM1M01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+  recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)
+)","Sum of the four screen-based weekday time-use items: leisure smartphone, leisure computer, leisure TV, and internet/TV lectures. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'. Partial because the grid measures leisure and lecture-watching only (school and homework screen use are not separated from non-screen study time), and because each component is capped by its open top band, so heavy users are underestimated.",
+st_total_we,partial,"YTIM1K02, YTIM1L02, YTIM1M02, YTIM1F02","sum_nonmissing(
+  recode_values(as.numeric(YTIM1K02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+  recode_values(as.numeric(YTIM1L02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+  recode_values(as.numeric(YTIM1M02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+  recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)
+)",Weekend counterpart of st_total_wd; see that row for the derivation and caveats.,
+st_total,partial,"YTIM1K01, YTIM1K02, YTIM1L01, YTIM1L02, YTIM1M01, YTIM1M02, YTIM1F01, YTIM1F02","((sum_nonmissing(
+  recode_values(as.numeric(YTIM1K01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+  recode_values(as.numeric(YTIM1L01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+  recode_values(as.numeric(YTIM1M01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+  recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)
+) *
+  5) +
+  (sum_nonmissing(
+    recode_values(as.numeric(YTIM1K02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+    recode_values(as.numeric(YTIM1L02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+    recode_values(as.numeric(YTIM1M02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
+    recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)
+  ) *
+    2)) /
+  7",Usual-day total. Usual-day value is the project's 5:2 weekday:weekend weighted mean. See st_total_wd for the components and caveats.,
+st_watch_wd,compatible,YTIM1M01,"recode_values(as.numeric(YTIM1M01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","Leisure time watching TV on a weekday. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_watch_we,compatible,YTIM1M02,"recode_values(as.numeric(YTIM1M02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","Leisure time watching TV on a weekend day. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_watch,compatible,"YTIM1M01, YTIM1M02","((recode_values(as.numeric(YTIM1M01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 5) +
+  (recode_values(as.numeric(YTIM1M02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 2)) /
+  7","Usual-day value is the project's 5:2 weekday:weekend weighted mean. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_game_wd,incompatible,,,"KCYPS measures gaming only as how often the smartphone is used for playing games (YMDA1B06: Never / Rarely / Occasionally / Frequently). That is a frequency, not a duration, and covers only one device, so it cannot defensibly be converted to hours per day.",
+st_game_we,incompatible,,,"KCYPS measures gaming only as how often the smartphone is used for playing games (YMDA1B06: Never / Rarely / Occasionally / Frequently). That is a frequency, not a duration, and covers only one device, so it cannot defensibly be converted to hours per day.",
+st_game,incompatible,,,"KCYPS measures gaming only as how often the smartphone is used for playing games (YMDA1B06: Never / Rarely / Occasionally / Frequently). That is a frequency, not a duration, and covers only one device, so it cannot defensibly be converted to hours per day.",
+st_game_comp_wd,unavailable,,,No device-specific gaming duration item.,
+st_game_comp_we,unavailable,,,No device-specific gaming duration item.,
+st_game_comp,unavailable,,,No device-specific gaming duration item.,
+st_game_console_wd,unavailable,,,No device-specific gaming duration item.,
+st_game_console_we,unavailable,,,No device-specific gaming duration item.,
+st_game_console,unavailable,,,No device-specific gaming duration item.,
+st_game_handheldconsole_wd,unavailable,,,No device-specific gaming duration item.,
+st_game_handheldconsole_we,unavailable,,,No device-specific gaming duration item.,
+st_game_handheldconsole,unavailable,,,No device-specific gaming duration item.,
+st_game_active_wd,unavailable,,,No device-specific gaming duration item.,
+st_game_active_we,unavailable,,,No device-specific gaming duration item.,
+st_game_active,unavailable,,,No device-specific gaming duration item.,
+st_game_phone_wd,unavailable,,,No device-specific gaming duration item.,
+st_game_phone_we,unavailable,,,No device-specific gaming duration item.,
+st_game_phone,unavailable,,,No device-specific gaming duration item.,
+st_game_tablet_wd,in_progress,,,,
+st_game_tablet_we,in_progress,,,,
+st_game_tablet,in_progress,,,,
+st_comp_nongaming_wd,unavailable,,,"Leisure computer time (YTIM1L) is not split by activity, so non-gaming computer time cannot be isolated. Mapped to st_comp instead.",
+st_comp_nongaming_we,unavailable,,,"Leisure computer time (YTIM1L) is not split by activity, so non-gaming computer time cannot be isolated. Mapped to st_comp instead.",
+st_comp_nongaming,unavailable,,,"Leisure computer time (YTIM1L) is not split by activity, so non-gaming computer time cannot be isolated. Mapped to st_comp instead.",
+st_comp_wd,partial,YTIM1L01,"recode_values(as.numeric(YTIM1L01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","'Leisure time using a computer' from the time-use grid. Partial because it covers leisure use only: computer use for schoolwork sits inside the separate 'studying on your own' item, which is not screen-specific. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_comp_we,partial,YTIM1L02,"recode_values(as.numeric(YTIM1L02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","'Leisure time using a computer' from the time-use grid. Partial because it covers leisure use only: computer use for schoolwork sits inside the separate 'studying on your own' item, which is not screen-specific. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_comp,partial,"YTIM1L01, YTIM1L02","((recode_values(as.numeric(YTIM1L01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 5) +
+  (recode_values(as.numeric(YTIM1L02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 2)) /
+  7","'Leisure time using a computer' from the time-use grid. Partial because it covers leisure use only: computer use for schoolwork sits inside the separate 'studying on your own' item, which is not screen-specific. Usual-day value is the project's 5:2 weekday:weekend weighted mean. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_tablet_wd,unavailable,,,Tablets are not asked about separately.,
+st_tablet_we,unavailable,,,Tablets are not asked about separately.,
+st_tablet,unavailable,,,Tablets are not asked about separately.,
+st_phone_wd,partial,YTIM1K01,"recode_values(as.numeric(YTIM1K01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","'Leisure time using a smartphone' from the time-use grid. Partial because it covers leisure use only, so smartphone use for schoolwork or information seeking is excluded. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_phone_we,partial,YTIM1K02,"recode_values(as.numeric(YTIM1K02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","'Leisure time using a smartphone' from the time-use grid. Partial because it covers leisure use only, so smartphone use for schoolwork or information seeking is excluded. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_phone,partial,"YTIM1K01, YTIM1K02","((recode_values(as.numeric(YTIM1K01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 5) +
+  (recode_values(as.numeric(YTIM1K02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 2)) /
+  7","'Leisure time using a smartphone' from the time-use grid. Partial because it covers leisure use only, so smartphone use for schoolwork or information seeking is excluded. Usual-day value is the project's 5:2 weekday:weekend weighted mean. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_socmedia_wd,incompatible,,,"KCYPS measures social media only as how often the smartphone is used for it (YMDA1B05: Never / Rarely / Occasionally / Frequently). That is a frequency rather than a duration, and the schema explicitly forbids deriving this category from device-based items such as st_phone.",
+st_socmedia_we,incompatible,,,"KCYPS measures social media only as how often the smartphone is used for it (YMDA1B05: Never / Rarely / Occasionally / Frequently). That is a frequency rather than a duration, and the schema explicitly forbids deriving this category from device-based items such as st_phone.",
+st_socmedia,incompatible,,,"KCYPS measures social media only as how often the smartphone is used for it (YMDA1B05: Never / Rarely / Occasionally / Frequently). That is a frequency rather than a duration, and the schema explicitly forbids deriving this category from device-based items such as st_phone.",
+st_educational_wd,partial,YTIM1F01,"recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","'Time spent watching internet and TV lectures' from the time-use grid. Partial because it captures recorded or broadcast lessons only, not the wider category of screen use for homework and study. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_educational_we,partial,YTIM1F02,"recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","'Time spent watching internet and TV lectures' from the time-use grid. Partial because it captures recorded or broadcast lessons only, not the wider category of screen use for homework and study. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_educational,partial,"YTIM1F01, YTIM1F02","((recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 5) +
+  (recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 2)) /
+  7","'Time spent watching internet and TV lectures' from the time-use grid. Partial because it captures recorded or broadcast lessons only, not the wider category of screen use for homework and study. Usual-day value is the project's 5:2 weekday:weekend weighted mean. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_internet_wd,unavailable,,,No generic internet or online-time duration item; the time-use grid is organised by device and activity instead.,
+st_internet_we,unavailable,,,No generic internet or online-time duration item; the time-use grid is organised by device and activity instead.,
+st_internet,unavailable,,,No generic internet or online-time duration item; the time-use grid is organised by device and activity instead.,
+st_videochat,in_progress,,,,
+st_email,in_progress,,,,
+st_shopping,in_progress,,,,
+st_total_school,unavailable,,,No school-context screen-use items; the time-use grid records total time at school without separating screen use.,
+st_educational_school,unavailable,,,No school-context screen-use items; the time-use grid records total time at school without separating screen use.,
+st_comp_school,unavailable,,,No school-context screen-use items; the time-use grid records total time at school without separating screen use.,
+st_tablet_school,unavailable,,,No school-context screen-use items; the time-use grid records total time at school without separating screen use.,
+st_internet_school,unavailable,,,No school-context screen-use items; the time-use grid records total time at school without separating screen use.,
+st_phone_school,unavailable,,,No school-context screen-use items; the time-use grid records total time at school without separating screen use.,
+acc_academachment_selfrated,proximate,YINT1A00,"recode_values(as.numeric(YINT1A00), 5 ~ ""Very good"", 4 ~ ""Good"", 3 ~ ""Average"", c(1, 2) ~ ""Below average"")","'Which of the following best represents your overall grades last semester?' on a five-point scale. Proximate because the source's two below-average categories ('Very bad', 'Not good') collapse onto the schema's single 'Below average'. Code 6 ('Don't know') is left missing.",
+acc_academachment_lettergrades,unavailable,,,"No standardised tests, recorded grades, or teacher report; achievement is self- and guardian-rated only.",
+acc_academachment_stdtest,unavailable,,,"No standardised tests, recorded grades, or teacher report; achievement is self- and guardian-rated only.",
+acc_schoolengage_caresschool,unavailable,,,"No standardised tests, recorded grades, or teacher report; achievement is self- and guardian-rated only.",
+acc_schoolengage_homework,unavailable,,,"No standardised tests, recorded grades, or teacher report; achievement is self- and guardian-rated only.",
+acc_academachment_numgrades,unavailable,,,"No standardised tests, recorded grades, or teacher report; achievement is self- and guardian-rated only.",
+acc_academachment_teacherrated,unavailable,,,"No teacher report. The guardian rates the child's overall grades on the same five-point scale (PFAM3A00), but that is a parent report and the schema has no row for it.",
+acc_numeracy_stdtest,unavailable,,,"No standardised tests, recorded grades, or teacher report; achievement is self- and guardian-rated only.",
+acc_literacy_stdtest,unavailable,,,"No standardised tests, recorded grades, or teacher report; achievement is self- and guardian-rated only.",
+beh_hyper_basc2,unavailable,,,Instrument not administered.,
+beh_atten_basc2,incompatible,,,"KCYPS measures attention with its own seven-item concentration scale (YPSY4A01-A07, 1-4 agreement), not the BASC-2, so no BASC-2 raw score can be produced. See the report for a proposed schema row.",
+beh_atten_self,compatible,"YPSY4A01, YPSY4A02, YPSY4A03, YPSY4A04, YPSY4A05, YPSY4A06, YPSY4A07","(as.numeric(YPSY4A01) +
+  as.numeric(YPSY4A02) +
+  as.numeric(YPSY4A03) +
+  as.numeric(YPSY4A04) +
+  as.numeric(YPSY4A05) +
+  as.numeric(YPSY4A06) +
+  as.numeric(YPSY4A07))","KCYPS seven-item concentration scale (getting distracted, skimming questions, avoiding sustained concentration, losing school supplies, careless mistakes, difficulty sitting still, dropping letters when writing), each 1 = Strongly Disagree to 4 = Strongly Agree. All items are worded as problems and none is reverse-scored (all inter-item correlations positive), so the sum runs 7-28 with higher meaning more attention problems, the direction the schema requires. Self-report, all seven waves. Every item is answered by every respondent once the tidier drops non-participating panel records (43,409 complete cases in 43,409 rows), so the total is a plain sum with no partial-completion allowance.",
+beh_selfreg_htks,unavailable,,,Instrument not administered.,
+beh_bullied,compatible,YDLQ1A06,"if_else(as.numeric(YDLQ1A06) > 1, ""TRUE"", ""FALSE"")","'Bullying others (harassment)' from the past-year delinquency checklist; any non-zero frequency counts as engaged. Asked from middle-school age onward, so the e4 cohort contributes from w4 and older siblings from w2.",
+beh_beenbullied,partial,"YSVL1C01, YSVL1C02, YSVL1C03, YSVL1C04, YSVL1C05, YSVL1C06, YSVL1C07","if_else(pmax(YSVL1C01, YSVL1C02, YSVL1C03, YSVL1C04, YSVL1C05, YSVL1C06, YSVL1C07, na.rm = TRUE) > 1, ""TRUE"", ""FALSE"")","Victimisation in the w6 school-violence module: TRUE if any of the seven types (severe teasing, ostracism, physical violence, threats, extortion, verbal abuse, online harassment) occurred at least once. Partial because the module ran only at w6 and 'any of seven types over the past year' is a broader screen than the schema's single recent-months item.",
+beh_beenbullied_online,in_progress,,,,
+beh_fight,compatible,YDLQ1A07,"if_else(as.numeric(YDLQ1A07) > 1, ""TRUE"", ""FALSE"")",'Fighting or engaging in a brawl' from the past-year delinquency checklist; any non-zero frequency counts as engaged. Same age coverage as beh_bullied.,
+beh_conduct_sdq_parent,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_hyper_sdq_parent,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_peerprob_sdq_parent,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_prosocial_sdq_parent,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_aggphys_bpaq_self,incompatible,,,"KCYPS measures aggression with a six-item unidimensional scale (YPSY4B01-B06, 1-4 agreement) that has no physical, verbal, anger, or hostility subscales, so it cannot be split into BPAQ subscale scores. See the report for a proposed schema row.",
+beh_aggverb_bpaq_self,incompatible,,,"KCYPS measures aggression with a six-item unidimensional scale (YPSY4B01-B06, 1-4 agreement) that has no physical, verbal, anger, or hostility subscales, so it cannot be split into BPAQ subscale scores. See the report for a proposed schema row.",
+beh_agganger_bpaq_self,incompatible,,,"KCYPS measures aggression with a six-item unidimensional scale (YPSY4B01-B06, 1-4 agreement) that has no physical, verbal, anger, or hostility subscales, so it cannot be split into BPAQ subscale scores. See the report for a proposed schema row.",
+beh_agghostility_bpaq_self,incompatible,,,"KCYPS measures aggression with a six-item unidimensional scale (YPSY4B01-B06, 1-4 agreement) that has no physical, verbal, anger, or hostility subscales, so it cannot be split into BPAQ subscale scores. See the report for a proposed schema row.",
+beh_agg_self,compatible,"YPSY4B01, YPSY4B02, YPSY4B03, YPSY4B04, YPSY4B05, YPSY4B06","(as.numeric(YPSY4B01) +
+  as.numeric(YPSY4B02) +
+  as.numeric(YPSY4B03) +
+  as.numeric(YPSY4B04) +
+  as.numeric(YPSY4B05) +
+  as.numeric(YPSY4B06))","KCYPS six-item aggression scale (upset over small things, disrupting others, arguing or fighting back, fighting over trivial matters, staying angry, crying for no reason), each 1 = Strongly Disagree to 4 = Strongly Agree. Unidimensional with no physical, verbal, anger, or hostility subscales; no reverse-scored items, so the sum runs 6-24 with higher meaning more aggression. Self-report, all seven waves. Every item is answered by every respondent once the tidier drops non-participating panel records (43,409 complete cases in 43,409 rows), so the total is a plain sum with no partial-completion allowance.",
+beh_argues,unavailable,,,No equivalent single item on an Always/Usually/Sometimes/Never frequency scale.,
+beh_persistence_finishwork,unavailable,,,No equivalent single item on an Always/Usually/Sometimes/Never frequency scale.,
+beh_emotreg_stayscalm,unavailable,,,No equivalent single item on an Always/Usually/Sometimes/Never frequency scale.,
+beh_peerprob_makefriends,unavailable,,,No equivalent single item on an Always/Usually/Sometimes/Never frequency scale.,
+beh_conduct_diagnosed,unavailable,,,No diagnosis or health-professional items.,
+beh_conduct_diagnosed_severity,unavailable,,,No diagnosis or health-professional items.,
+beh_conduct_sdq_self,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_hyper_sdq_self,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_peerprob_sdq_self,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_prosocial_sdq_self,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_conduct_sdq_teacher,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_hyper_sdq_teacher,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_peerprob_sdq_teacher,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_prosocial_sdq_teacher,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_ext_sdq_parent,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_ext_sdq_self,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_ext_sdq_teacher,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+beh_agg_cbcl_parent,in_progress,,,,
+beh_atten_cbcl_parent,in_progress,,,,
+beh_rulebreak_cbcl_parent,in_progress,,,,
+beh_ext_cbcl_parent,in_progress,,,,
+beh_cbcl_measure,in_progress,,,,
+cog_execfunc_basc2,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_langexec_nepsy,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_phono_nepsy,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_inhibcont_nepsy,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_vismotor_nepsy,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_verbalfluency_nepsy,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_inhib_nihtb_flanker,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_flex_nihtb_dccs,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_wm_nihtb_listsort,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_speed_nihtb_pattern,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_epimem_nihtb_picseq,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_vocab_nihtb_picvocab,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_fluidcomp_nihtb,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_crystcomp_nihtb,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_totalcomp_nihtb,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_wm_digitspan,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_iq_fullscale,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_vocab_bpvs,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+cog_vocab_ppvt,in_progress,,,,
+cog_execfunc_brief_parent,unavailable,,,KCYPS administers no cognitive performance tasks or cognition rating scales.,
+mh_anx_basc2,unavailable,,,KCYPS administers no anxiety or general psychological distress scale.,
+mh_dep_basc2,incompatible,,,"KCYPS measures depression with a ten-item self-report scale (YPSY4E01-E10, 1-4 agreement) adapted from the Symptom Checklist-90-Revision, administered at all seven waves. It is not this instrument and the scoring is not convertible. See the report for a proposed schema row.",
+mh_emotsymp_sdq_parent,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+mh_totaldiff_sdq_parent,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+mh_anx_diagnosed,unavailable,,,No diagnosis or health-professional items.,
+mh_anx_diagnosed_severity,unavailable,,,No diagnosis or health-professional items.,
+mh_dep_diagnosed,unavailable,,,No diagnosis or health-professional items.,
+mh_dep_diagnosed_severity,unavailable,,,No diagnosis or health-professional items.,
+mh_emotsymp_sdq_self,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+mh_emotsymp_sdq_teacher,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+mh_totaldiff_sdq_self,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+mh_totaldiff_sdq_teacher,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+mh_int_sdq_parent,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+mh_int_sdq_self,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+mh_int_sdq_teacher,unavailable,,,"The SDQ is not administered in KCYPS, and there is no teacher-report instrument at all.",
+mh_dep_smfq_self,incompatible,,,"KCYPS measures depression with a ten-item self-report scale (YPSY4E01-E10, 1-4 agreement) adapted from the Symptom Checklist-90-Revision, administered at all seven waves. It is not this instrument and the scoring is not convertible. See the report for a proposed schema row.",
+mh_dep_smfq_parent,incompatible,,,"KCYPS measures depression with a ten-item self-report scale (YPSY4E01-E10, 1-4 agreement) adapted from the Symptom Checklist-90-Revision, administered at all seven waves. It is not this instrument and the scoring is not convertible. See the report for a proposed schema row.",
+mh_dep_cdi_self,incompatible,,,"KCYPS measures depression with a ten-item self-report scale (YPSY4E01-E10, 1-4 agreement) adapted from the Symptom Checklist-90-Revision, administered at all seven waves. It is not this instrument and the scoring is not convertible. See the report for a proposed schema row.",
+mh_dep_cesd_self,incompatible,,,"KCYPS measures depression with a ten-item self-report scale (YPSY4E01-E10, 1-4 agreement) adapted from the Symptom Checklist-90-Revision, administered at all seven waves. It is not this instrument and the scoring is not convertible. See the report for a proposed schema row.",
+mh_dep_phq9_self,incompatible,,,"KCYPS measures depression with a ten-item self-report scale (YPSY4E01-E10, 1-4 agreement) adapted from the Symptom Checklist-90-Revision, administered at all seven waves. It is not this instrument and the scoring is not convertible. See the report for a proposed schema row.",
+mh_dep_rcads_self,incompatible,,,"KCYPS measures depression with a ten-item self-report scale (YPSY4E01-E10, 1-4 agreement) adapted from the Symptom Checklist-90-Revision, administered at all seven waves. It is not this instrument and the scoring is not convertible. See the report for a proposed schema row.",
+mh_dep_dass21_self,incompatible,,,"KCYPS measures depression with a ten-item self-report scale (YPSY4E01-E10, 1-4 agreement) adapted from the Symptom Checklist-90-Revision, administered at all seven waves. It is not this instrument and the scoring is not convertible. See the report for a proposed schema row.",
+mh_dep_scl_self,compatible,"YPSY4E01, YPSY4E02, YPSY4E03, YPSY4E04, YPSY4E05, YPSY4E06, YPSY4E07, YPSY4E08, YPSY4E09, YPSY4E10","(as.numeric(YPSY4E01) +
+  as.numeric(YPSY4E02) +
+  as.numeric(YPSY4E03) +
+  as.numeric(YPSY4E04) +
+  as.numeric(YPSY4E05) +
+  as.numeric(YPSY4E06) +
+  as.numeric(YPSY4E07) +
+  as.numeric(YPSY4E08) +
+  as.numeric(YPSY4E09) +
+  as.numeric(YPSY4E10))","KCYPS ten-item depression scale, the Korean short form adapted from the SCL-90-R depression subscale, each 1 = Strongly Disagree to 4 = Strongly Agree. No reverse-scored items, so the sum runs 10-40 with higher meaning more depressive symptoms. Note the non-standard item scoring: this is the 10-item 1-4 form, not the full SCL-90-R 13-item 0-4 subscale, so totals are not comparable with other versions without standardising within dataset. Self-report, all seven waves. Every item is answered by every respondent once the tidier drops non-participating panel records (43,409 complete cases in 43,409 rows), so the total is a plain sum with no partial-completion allowance.",
+mh_distress_k6_self,unavailable,,,KCYPS administers no anxiety or general psychological distress scale.,
+mh_distress_k10_self,unavailable,,,KCYPS administers no anxiety or general psychological distress scale.,
+mh_anx_masc_self,unavailable,,,KCYPS administers no anxiety or general psychological distress scale.,
+mh_anx_scas_self,unavailable,,,KCYPS administers no anxiety or general psychological distress scale.,
+mh_anx_scas_parent,in_progress,,,,
+mh_anx_scared_self,unavailable,,,KCYPS administers no anxiety or general psychological distress scale.,
+mh_anx_scared_parent,unavailable,,,KCYPS administers no anxiety or general psychological distress scale.,
+mh_anx_gad7_self,unavailable,,,KCYPS administers no anxiety or general psychological distress scale.,
+mh_anx_rcads_self,unavailable,,,KCYPS administers no anxiety or general psychological distress scale.,
+mh_anx_dass21_self,unavailable,,,KCYPS administers no anxiety or general psychological distress scale.,
+mh_anxdep_cbcl_parent,in_progress,,,,
+mh_int_cbcl_parent,in_progress,,,,
+mh_anx_self,in_progress,,,,
+mh_anx_measure,in_progress,,,,
+wb_emotsc_basc2,unavailable,,,Instrument not administered.,
+wb_mwb_wemwbs,incompatible,,,"KCYPS measures positive mental health with the four-item Subjective Happiness Scale (YPSY2A01-A04), which is neither the WEMWBS nor the WHO-5. See the report for a proposed schema row.",
+wb_lifesatisfaction_cantrilladder,incompatible,,,No Cantril ladder item. The Satisfaction With Life Scale total (YPSY1A01-A05) is a different metric and cannot be rescaled onto a 0-10 ladder.,
+wb_resil_basc2,unavailable,,,Instrument not administered.,
+wb_psychcomplaints_feellow,incompatible,,,"KCYPS has a related eight-item physical-symptoms scale (YPSY4C01-C08) plus single depression items, but they are 1-4 agreement items rather than the HBSC-SCL frequency items this row records, and the schema declares no value vocabulary to recode onto.",
+wb_psychcomplaints_irritable,incompatible,,,"KCYPS has a related eight-item physical-symptoms scale (YPSY4C01-C08) plus single depression items, but they are 1-4 agreement items rather than the HBSC-SCL frequency items this row records, and the schema declares no value vocabulary to recode onto.",
+wb_psychcomplaints_nervous,incompatible,,,"KCYPS has a related eight-item physical-symptoms scale (YPSY4C01-C08) plus single depression items, but they are 1-4 agreement items rather than the HBSC-SCL frequency items this row records, and the schema declares no value vocabulary to recode onto.",
+wb_psychcomplaints_diffsleep,incompatible,,,"KCYPS has a related eight-item physical-symptoms scale (YPSY4C01-C08) plus single depression items, but they are 1-4 agreement items rather than the HBSC-SCL frequency items this row records, and the schema declares no value vocabulary to recode onto.",
+wb_bodyimage,unavailable,,,"No body-image, weight-perception, or height/weight items.",
+wb_lifesat_slss_self,incompatible,,,"KCYPS uses the five-item Satisfaction With Life Scale (YPSY1A01-A05, 1-4 agreement) at all seven waves, not the seven-item SLSS on 1-6 scoring, so the totals are not interchangeable. See the report for a proposed schema row.",
+wb_lifesat_swls_self,partial,"YPSY1A01, YPSY1A02, YPSY1A03, YPSY1A04, YPSY1A05",(as.numeric(YPSY1A01) + as.numeric(YPSY1A02) + as.numeric(YPSY1A03) + as.numeric(YPSY1A04) + as.numeric(YPSY1A05)),"The full five-item Satisfaction With Life Scale, item wording matching the standard translation. Partial because KCYPS administers it on a four-point agreement scale rather than the standard seven-point one, so the total runs 5-20 rather than 5-35 and cannot be pooled as a raw score without standardising within dataset. No reverse-scored items. Self-report, all seven waves. Every item is answered by every respondent once the tidier drops non-participating panel records (43,409 complete cases in 43,409 rows), so the total is a plain sum with no partial-completion allowance.",
+wb_lifesat_singleitem_self,in_progress,,,,
+wb_qol_pedsql_self,unavailable,,,No health-related quality-of-life instrument.,
+wb_qol_pedsql_parent,unavailable,,,No health-related quality-of-life instrument.,
+wb_qol_kidscreen10_self,unavailable,,,No health-related quality-of-life instrument.,
+wb_qol_kidscreen10_parent,in_progress,,,,
+wb_selfesteem_rosenberg_self,compatible,"YPSY3A01, YPSY3A02, YPSY3A03, YPSY3A04, YPSY3A05, YPSY3A06, YPSY3A07, YPSY3A08, YPSY3A09, YPSY3A10","(as.numeric(YPSY3A01) +
+  (5 - as.numeric(YPSY3A02)) +
+  as.numeric(YPSY3A03) +
+  as.numeric(YPSY3A04) +
+  (5 - as.numeric(YPSY3A05)) +
+  (5 - as.numeric(YPSY3A06)) +
+  as.numeric(YPSY3A07) +
+  (5 - as.numeric(YPSY3A08)) +
+  (5 - as.numeric(YPSY3A09)) +
+  as.numeric(YPSY3A10))","The full ten-item Rosenberg Self-Esteem Scale on the schema's 1-4 item scoring, giving the 10-40 total; higher is higher self-esteem. Item order differs from the canonical numbering (YPSY3A04 is Rosenberg item 7 and YPSY3A07 is item 4), but the same five negatively worded items are reversed: YPSY3A02, A05, A06, A08 and A09. Items are stored raw, confirmed by their negative correlations with YPSY3A01. YPSY3A08 ('I wish I could have more respect for myself') correlates only 0.02 with YPSY3A01 after reversal, the well-documented anomaly for that item; it is still reversed per standard scoring. No partial-completion allowance: a missing item makes the total missing.",
+wb_selfesteem_self,in_progress,,,,
+wb_selfesteem_measure,in_progress,,,,
+wb_selfefficacy_gse_self,incompatible,,,"KCYPS has academic self-efficacy items (YINT2A09-A12, part of the academic enthusiasm scale) but no general self-efficacy scale; a domain-specific efficacy score cannot stand in for the GSE.",
+wb_mwb_who5_self,incompatible,,,"KCYPS measures positive mental health with the four-item Subjective Happiness Scale (YPSY2A01-A04), which is neither the WEMWBS nor the WHO-5. See the report for a proposed schema row.",
+wb_happiness_shs_self,partial,"YPSY2A01, YPSY2A02, YPSY2A03, YPSY2A04",(as.numeric(YPSY2A01) + as.numeric(YPSY2A02) + as.numeric(YPSY2A03) + (5 - as.numeric(YPSY2A04))),"The full four-item Subjective Happiness Scale. The fourth item (some people are generally very unhappy) is reverse-scored per standard scoring; it is stored raw, confirmed by its -0.30 correlation with the first item. Partial because KCYPS administers the scale on a four-point response scale rather than the standard seven-point one, so the total runs 4-16 rather than 4-28 and cannot be pooled as a raw score without standardising within dataset. Mapped as the sum, not the mean item score. Self-report, all seven waves. Every item is answered by every respondent once the tidier drops non-participating panel records (43,409 complete cases in 43,409 rows), so the total is a plain sum with no partial-completion allowance.",
