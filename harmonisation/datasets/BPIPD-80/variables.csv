@@ -269,6 +269,8 @@ mh_anx_rcads_self,unavailable,,,"Not measured in ISCOLE; the participant-level t
 mh_anx_dass21_self,unavailable,,,"Not measured in ISCOLE; the participant-level transfer covers anthropometry, demographics, diet and lifestyle, and the neighbourhood and home environment questionnaire only",
 mh_anxdep_cbcl_parent,in_progress,,,,
 mh_int_cbcl_parent,in_progress,,,,
+mh_dep_self,in_progress,,,,
+mh_dep_measure,in_progress,,,,
 mh_anx_self,in_progress,,,,
 mh_anx_measure,in_progress,,,,
 wb_emotsc_basc2,unavailable,,,"Not measured in ISCOLE; the participant-level transfer covers anthropometry, demographics, diet and lifestyle, and the neighbourhood and home environment questionnaire only",

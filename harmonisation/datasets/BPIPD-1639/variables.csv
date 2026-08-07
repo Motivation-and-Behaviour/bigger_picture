@@ -201,6 +201,8 @@ mh_anx_rcads_self,unavailable,,,Not administered; cohort aged 5 (no child self-r
 mh_anx_dass21_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
 mh_anxdep_cbcl_parent,in_progress,,,,
 mh_int_cbcl_parent,in_progress,,,,
+mh_dep_self,in_progress,,,,
+mh_dep_measure,in_progress,,,,
 mh_anx_self,in_progress,,,,
 mh_anx_measure,in_progress,,,,
 wb_emotsc_basc2,compatible,bemotsc_gqt,bemotsc_gqt,,

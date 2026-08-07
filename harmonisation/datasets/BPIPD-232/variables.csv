@@ -297,6 +297,8 @@ mh_anx_rcads_self,unavailable,,,RCADS not administered; NSCH collects no self-re
 mh_anx_dass21_self,unavailable,,,DASS-21 not administered; NSCH collects no self-report from the child,
 mh_anxdep_cbcl_parent,in_progress,,,,
 mh_int_cbcl_parent,in_progress,,,,
+mh_dep_self,in_progress,,,,
+mh_dep_measure,in_progress,,,,
 mh_anx_self,in_progress,,,,
 mh_anx_measure,in_progress,,,,
 wb_emotsc_basc2,unavailable,,,BASC-2 not administered,

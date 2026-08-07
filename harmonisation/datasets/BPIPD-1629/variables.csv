@@ -329,6 +329,8 @@ mh_anx_rcads_self,unavailable,,,Instrument not administered. The SDQ emotional s
 mh_anx_dass21_self,unavailable,,,Instrument not administered. The SDQ emotional symptoms subscale is the only internalising measure in the study.,
 mh_anxdep_cbcl_parent,unavailable,,,Instrument not administered. The SDQ emotional symptoms subscale is the only internalising measure in the study.,
 mh_int_cbcl_parent,unavailable,,,Instrument not administered. The SDQ emotional symptoms subscale is the only internalising measure in the study.,
+mh_dep_self,in_progress,,,,
+mh_dep_measure,in_progress,,,,
 mh_anx_self,unavailable,,,"No anxiety-specific scale. The SDQ emotional symptoms subscale mixes anxiety, somatic and low-mood items and is mapped to mh_emotsymp_sdq_self instead.",
 mh_anx_measure,unavailable,,,"No anxiety-specific scale. The SDQ emotional symptoms subscale mixes anxiety, somatic and low-mood items and is mapped to mh_emotsymp_sdq_self instead.",
 wb_emotsc_basc2,unavailable,,,"No life satisfaction, happiness, quality of life, self-esteem, body image or psychosomatic complaints measure in the survey.",
