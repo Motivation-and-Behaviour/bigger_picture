@@ -1,0 +1,373 @@
+target_variable,status,source_columns,expression,notes,lookup_table
+participant_id,compatible,IDNUM,as.character(participant_id),"Encrypted FFCWS family ID; one focal child per ID, unique across all 4,898 children and repeated across that child's waves.",
+wave,compatible,(wave key built by the tidier),as.character(wave),"Year 3, Year 5, Year 9 and Year 15. Baseline and Year 1 collect no screen use; Year 22 respondents are 22-year-old young adults, outside the schema's 0-19 age range, so neither is carried through.",
+data_year,compatible,"CH3MESYR, CH4INTYR, CP5INTYR, CK6INTYR",as.numeric(interview_year),"Year of the interview that asked the screen-use items: the in-home visit at Years 3 and 5, the primary caregiver interview at Year 9 and the teen survey at Year 15. Fieldwork spans 2001-2017.",
+rct_arm,unavailable,,,Observational birth cohort of children born in 20 US cities 1998-2000; no randomised allocation.,
+age_years,compatible,"CM3B_AGE, CM4B_AGE, CH5AGEM, CK6YAGEM, CH4AGEMOS, CM5B_AGE, CP6YAGEM","coalesce(age_months, age_months_alt) / 12","Child age in months at the wave, converted to years. The primary source is the interview closest to the screen-use items; the parallel wave component (in-home assessment at Year 5, mother core survey at Year 9, primary caregiver interview at Year 15) fills the gaps, which raises Year 9 coverage from 3,390 to 3,587 of 3,646 rows. Observed range 2.5 to 18.8 years.",
+sex,compatible,CM1BSEX,"recode_values(as.numeric(sex), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")",Focal child's sex recorded at baseline and carried to every wave; never missing. CM1BSEX also allows code 3 (multiple birth) but no child in the public file has it.,
+country,inferred,,"""USA""",FFCWS sampled births in 20 large US cities between 1998 and 2000 (doi:10.1016/S0190-7409(01)00141-4).,
+state,unavailable,,,Schema field records Australian states; FFCWS is a US study. The FFCWS city identifiers are restricted-use and not in this file.,
+ethnicity,proximate,"CK6ETHRACE, CM1ETHRACE","lookup_values(
+  coalesce(
+    recode_values(
+      as.numeric(ethnicity_youth),
+      1 ~ ""Youth: white only non-Hispanic"",
+      2 ~ ""Youth: black or African American only non-Hispanic"",
+      3 ~ ""Youth: Hispanic or Latino"",
+      4 ~ ""Youth: other only non-Hispanic"",
+      5 ~ ""Youth: multi-racial non-Hispanic"",
+      default = NA_character_
+    ),
+    recode_values(
+      as.numeric(ethnicity_mother),
+      1 ~ ""Mother: white non-Hispanic"",
+      2 ~ ""Mother: black non-Hispanic"",
+      3 ~ ""Mother: Hispanic"",
+      4 ~ ""Mother: other"",
+      default = ""Unknown""
+    )
+  ),
+  lookup_ethnicity,
+  dataset_id = spec$dataset_id,
+  target_variable = ""ethnicity"",
+  default = ""Unknown""
+)","FFCWS records no child race before Year 15, so the youth's own Year 15 description is used where it exists and the mother's baseline self-report otherwise; both are treated as time-invariant and applied to every wave for that child. Proximate because the mother's race is a stand-in for the child's for roughly a sixth of rows, and because FFCWS collapses American Indian/Alaska Native, Asian and Pacific Islander into a single 'other' code that cannot be split into schema groups. Shared mapping in harmonisation/lookups/ethnicity.csv.",ethnicity
+indigenous,incompatible,,,"The constructed race variables put American Indian and Alaska Native into an undifferentiated 'other' category at every wave, so no indigenous indicator can be recovered. Year 15 does code an open-ended youth mention of American Indian/Alaska Native (K6C00AC), but it exists at one wave only and is a coding flag on a free-text answer rather than an asked question.",
+minority,compatible,"CK6ETHRACE, CM1ETHRACE","recode_values(
+  coalesce(as.numeric(ethnicity_youth), as.numeric(ethnicity_mother)),
+  1 ~ ""Non-minority"",
+  c(2, 3, 4, 5) ~ ""Minority"",
+  default = ""Unknown""
+)","Non-Hispanic White is the US majority group; every other category (Black non-Hispanic, Hispanic, other non-Hispanic, multi-racial) is treated as minority, matching the approach used for BPIPD-232. Code 1 means non-Hispanic White in both the youth and the mother variable, so the two can be coalesced before recoding.",
+ses_area,unavailable,,,No area-level socioeconomic measure. City of residence is restricted-use and census tract data are not in the public file.,
+ses_household,proximate,"CM3POVCA, CM4POVCA, CM5POVCA, CP6POVCA","lookup_values(
+  recode_values(
+    as.numeric(poverty_category),
+    1 ~ ""Under 50% of the federal poverty line"",
+    2 ~ ""50-99% of the federal poverty line"",
+    3 ~ ""100-199% of the federal poverty line"",
+    4 ~ ""200-299% of the federal poverty line"",
+    5 ~ ""300% or more of the federal poverty line"",
+    default = ""Unknown""
+  ),
+  lookup_ses_household,
+  dataset_id = spec$dataset_id,
+  target_variable = ""ses_household"",
+  default = ""Unknown""
+)","Constructed household income relative to the federal poverty threshold, banded into five categories and measured fresh at each wave. Following the dataschema convention the bottom two bands become Low (37.7% of mapped rows), the middle band Medium (27.0%) and the top two High (35.3%). Proximate because the bands are fixed poverty cut-points rather than within-study quintiles, and because FFCWS over-sampled non-marital births so the sample skews poor relative to the US population. Shared mapping in harmonisation/lookups/ses_household.csv.",ses_household
+ses_household_measure,inferred,,"""Household income as a ratio of the federal poverty threshold (5 bands)""",Records the source measure behind ses_household. Income is imputed by FFCWS where components are missing.,
+maternal_education,compatible,"CM3EDU, CM4EDU, CM5EDU, CP6EDU, CP6PCGREL","lookup_values(
+  recode_values(
+    coalesce(
+      as.numeric(mother_education),
+      if_else(as.numeric(pcg_relationship) %in% 1, as.numeric(pcg_education), NA_real_)
+    ),
+    1 ~ ""Less than high school"",
+    2 ~ ""High school or equivalent"",
+    3 ~ ""Some college or technical school"",
+    4 ~ ""College degree or higher"",
+    default = ""Unknown""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education"",
+  default = ""Unknown""
+)","Mother's own constructed education at Years 3, 5 and 9. Year 15 has no mother-specific measure, so the primary caregiver's education is used there only when the primary caregiver is the biological mother (91% of Year 15 rows); other Year 15 caregivers become Unknown rather than being passed off as the mother. Shared mapping in harmonisation/lookups/maternal_education.csv.",maternal_education
+paternal_education,compatible,"CF3EDU, CF4EDU, CF5EDU, CP6EDU, CP6PCGREL","recode_values(
+  coalesce(
+    as.numeric(father_education),
+    if_else(as.numeric(pcg_relationship) %in% 2, as.numeric(pcg_education), NA_real_)
+  ),
+  1 ~ ""Secondary school or less"",
+  2 ~ ""Secondary school or less"",
+  3 ~ ""Post-secondary"",
+  4 ~ ""Bachelor degree or higher"",
+  default = ""Unknown""
+)","Father's constructed education at Years 3, 5 and 9, built by FFCWS from the father's own report and falling back to the mother's report about him. Year 15 has no father-specific measure, so the primary caregiver's education is used only where the caregiver is the biological father. Recoded inline rather than through the shared lookup, which currently holds maternal_education rows only, but using the identical category vocabulary. Coverage is much thinner than the mother's: 46% of rows are missing because non-resident fathers were often not interviewed.",
+parental_education,compatible,"CM3EDU, CM4EDU, CM5EDU, CF3EDU, CF4EDU, CF5EDU, CP6EDU, CP6PCGREL","recode_values(
+  pmax(
+    coalesce(
+      as.numeric(mother_education),
+      if_else(as.numeric(pcg_relationship) %in% 1, as.numeric(pcg_education), NA_real_)
+    ),
+    coalesce(
+      as.numeric(father_education),
+      if_else(as.numeric(pcg_relationship) %in% 2, as.numeric(pcg_education), NA_real_)
+    ),
+    na.rm = TRUE
+  ),
+  1 ~ ""Secondary school or less"",
+  2 ~ ""Secondary school or less"",
+  3 ~ ""Post-secondary"",
+  4 ~ ""Bachelor degree or higher"",
+  default = ""Unknown""
+)","Higher of the maternal and paternal codes, taken on the ordered 1-4 source scale before collapsing, so a mother with 'some college' and a father with 'less than high school' gives Post-secondary. Where only one parent has an education record the highest available is that parent's, which biases this variable downward for children whose absent father was never interviewed.",
+urbanicity,inferred,,"""Urban""","FFCWS sampled hospital births in 20 US cities with populations over 200,000, so every participant was recruited in a large urban area (doi:10.1016/S0190-7409(01)00141-4). Assigned from study design rather than measured, and it does not track families who later moved to a suburban or rural address.",
+family_structure,partial,"CK6LIVAR, CP3PCGREL, CH4PCGREL, CP5PCGREL, CP6PCGREL, CM3MARF, CM4MARF, CM5MARF, CP6PMARB, CM3COHF, CM4COHF, CM5COHF, CP6PCOHB, CM3MARP, CM4MARP, CM5MARP, CP6PMARP, CM3COHP, CM4COHP, CM5COHP, CP6PCOHP","case_when(
+  as.numeric(living_arrangement) %in% 1 ~ ""Two biological/adoptive parents"",
+  as.numeric(living_arrangement) %in% c(2, 4) ~ ""Step family"",
+  as.numeric(living_arrangement) %in% c(3, 5) ~ ""Single parent"",
+  as.numeric(living_arrangement) %in% 6 ~ ""Other"",
+  as.numeric(pcg_relationship) %in% 3 ~ ""Other"",
+  wave != ""Year 15"" & !(as.numeric(pcg_relationship) %in% 1) ~ ""Unknown"",
+  as.numeric(married_to_other_parent) %in%
+    1 |
+    as.numeric(cohabiting_with_other_parent) %in% 1 ~ ""Two biological/adoptive parents"",
+  as.numeric(married_to_new_partner) %in% 1 | as.numeric(cohabiting_with_new_partner) %in% 1 ~ ""Step family"",
+  !is.na(married_to_other_parent) ~ ""Single parent"",
+  .default = ""Unknown""
+)","Year 15 uses the youth's own report of who they live with, which maps one-to-one onto the schema categories. Years 3 to 9 have no household roster, so structure is inferred from whether the reporting parent is married to or living with the child's other biological parent (two parents), with someone else (step family), or with neither (single parent). Partial because at Years 3 to 9 those partnership flags come from the mother's survey and describe her household, so the branch is restricted to children whose primary caregiver is the biological mother; children with a biological-father caregiver at those waves fall to Unknown, and any caregiver who is not a biological parent is classed Other.",
+school_grade,partial,"P5L1, P6C3","if_else(as.numeric(school_grade) %in% 1:12, paste0(""Grade "", as.numeric(school_grade)), NA_character_)","Primary caregiver report of the grade the child is enrolled in, at Year 9 (codes 2-6, median grade 3) and Year 15 (codes 6-12, median grade 9). Partial because the source variables carry no value labels and the user guides do not document the coding; the codes are read as literal US grade numbers, which is the only reading consistent with the children's ages. Codes 0 and 77 (fewer than 10 rows, apparently not-enrolled or ungraded) become NA.",
+st_measure_type,inferred,,"""Continuous""","Every mapped item asks for hours per day as an open number. Year 9 also carries a banded child self-report of weekday screen use (K5D1D-K5D1G) which is categorical, but it is not the source used here.",
+st_measure_name,inferred,,"""Custom""","Bespoke FFCWS items; no named instrument. Years 3-9 use single primary caregiver questions about the child's TV, gaming and computer time; Year 15 uses the teen weekday time-use block (K6D36A-K6D36H).",
+st_responder,inferred,(wave key built by the tidier),"case_when(wave == ""Year 15"" ~ ""Self"", .default = ""Parent or carer"")","The respondent changes with age by design: the primary caregiver reports the child's screen use at the Year 3, 5 and 9 in-home interviews, and the young person reports their own at the Year 15 teen survey. The cut is therefore between ages 9 and 15, not at a value of age_years.",
+st_total_wd,incompatible,,,"A defensible total would mean something different at each wave: TV only at Year 3, TV plus gaming at Year 5, TV plus any computer use at Year 9, and four separate teen activities at Year 15 of which general internet use overlaps the others and must not be summed (DR-0002). Use the component st_watch/st_game/st_comp variables instead.",
+st_total_we,incompatible,,,See st_total_wd; in addition only Years 3-9 asked about weekend days at all.,
+st_total,incompatible,,,See st_total_wd.,
+st_watch_wd,compatible,"P3B1, P4B1, P5I3, K6D36G","coalesce(pcg_tv_hours_wd, youth_tv_hours_wd)","Hours per weekday watching TV or videos: caregiver-reported at Years 3, 5 and 9, youth-reported at Year 15 where the item reads 'watches tv/videos/movies'. Only one source is populated per wave, so the coalesce never has to choose. Observed medians 3, 2, 2 and 2 hours.",
+st_watch_we,compatible,"P3B1A, P4B2, P5I4",pcg_tv_hours_we,"Hours per weekend day watching TV or videos, caregiver-reported at Years 3, 5 and 9. The Year 15 teen time-use block asks about weekdays only, so this is NA there.",
+st_watch,compatible,"P3B1, P4B1, P5I3, K6D36G, P3B1A, P4B2, P5I4","((coalesce(pcg_tv_hours_wd, youth_tv_hours_wd) * 5) + (pcg_tv_hours_we * 2)) / 7",Project-convention 5:2 weighted mean of weekday and weekend hours. Year 15 has no weekend item so this is NA there by construction; Year 15 contributes through st_watch_wd instead.,
+st_game_wd,compatible,"P4B3, K6D36E","coalesce(pcg_game_hours_wd, youth_game_hours_wd)","Hours per weekday playing games: caregiver-reported 'video/computer games' at Year 5, youth-reported 'games on computer/tv/device' at Year 15. Not asked at Years 3 or 9. Both items span computer and console play without separating them, which is what this row asks for.",
+st_game_we,compatible,P4B4,pcg_game_hours_we,"Hours per weekend day playing video or computer games, caregiver-reported at Year 5 only.",
+st_game,compatible,"P4B3, K6D36E, P4B4","((coalesce(pcg_game_hours_wd, youth_game_hours_wd) * 5) + (pcg_game_hours_we * 2)) / 7","Project-convention 5:2 weighted mean; only Year 5 has both a weekday and a weekend gaming item, so this is populated at Year 5 alone.",
+st_game_comp_wd,unavailable,,,Gaming is asked as one combined computer-and-console item at Year 5 and one combined computer/TV/device item at Year 15; the device cannot be separated. Mapped to st_game_* instead.,
+st_game_comp_we,unavailable,,,See st_game_comp_wd.,
+st_game_comp,unavailable,,,See st_game_comp_wd.,
+st_game_console_wd,unavailable,,,See st_game_comp_wd; console play is never asked separately.,
+st_game_console_we,unavailable,,,See st_game_comp_wd.,
+st_game_console,unavailable,,,See st_game_comp_wd.,
+st_game_handheldconsole_wd,unavailable,,,Handheld consoles are never asked about.,
+st_game_handheldconsole_we,unavailable,,,Handheld consoles are never asked about.,
+st_game_handheldconsole,unavailable,,,Handheld consoles are never asked about.,
+st_game_active_wd,unavailable,,,Active or exergaming is never asked about.,
+st_game_active_we,unavailable,,,Active or exergaming is never asked about.,
+st_game_active,unavailable,,,Active or exergaming is never asked about.,
+st_game_phone_wd,unavailable,,,The Year 15 gaming item bundles phone play into 'computer/tv/device' and cannot be separated; earlier waves predate smartphone gaming.,
+st_game_phone_we,unavailable,,,See st_game_phone_wd.,
+st_game_phone,unavailable,,,See st_game_phone_wd.,
+st_game_tablet_wd,unavailable,,,See st_game_phone_wd; tablet gaming is not asked about separately.,
+st_game_tablet_we,unavailable,,,See st_game_phone_wd.,
+st_game_tablet,unavailable,,,See st_game_phone_wd.,
+st_comp_nongaming_wd,incompatible,,,"The only computer-time item (Year 9, P5I18B) asks about computer use for any purpose and so includes computer gaming. Mapped to st_comp instead.",
+st_comp_nongaming_we,incompatible,,,See st_comp_nongaming_wd.,
+st_comp_nongaming,incompatible,,,See st_comp_nongaming_wd.,
+st_comp_wd,unavailable,,,"The Year 9 computer item asks for hours per day without distinguishing weekdays from weekend days, so it can only populate the unsuffixed st_comp.",
+st_comp_we,unavailable,,,See st_comp_wd.,
+st_comp,compatible,"P5I18B, P5I17","case_when(as.numeric(pcg_has_computer) %in% 2 ~ 0, .default = pcg_computer_hours)","Caregiver-reported hours per day the child uses a computer, Year 9 only. Households answering 'no' to having a computer at home (P5I17, 826 children) are skipped past the hours question and are scored a structural zero rather than missing, since they cannot have used a home computer. This raises coverage from 2,787 to 3,613 of 3,646 Year 9 rows and pulls the median down; the alternative reading, that a skipped household is simply unmeasured, would drop them instead.",
+st_tablet_wd,unavailable,,,"No tablet item. Year 15 fieldwork (2014-2017) asked only whether the youth reaches the internet through a tablet (P6D10), not for how long.",
+st_tablet_we,unavailable,,,See st_tablet_wd.,
+st_tablet,unavailable,,,See st_tablet_wd.,
+st_phone_wd,unavailable,,,"No smartphone time item. Year 15 asks only whether the youth reaches the internet through a mobile phone (P6D11), not for how long.",
+st_phone_we,unavailable,,,See st_phone_wd.,
+st_phone,unavailable,,,See st_phone_wd.,
+st_socmedia_wd,proximate,K6D36D,youth_ecomm_hours_wd,"Year 15 teen item 'hours per day electronically communicates with friends on weekdays'. Proximate because the wording covers any electronic contact with friends: for 15-year-olds in 2014-2017 this is overwhelmingly social media and messaging, but it will also absorb voice calls, video chat and plain texting, which the schema would not all count as social media. Reviewed and accepted on that understanding. It is deliberately not derived from a device item, per the dataschema note.",
+st_socmedia_we,unavailable,,,The Year 15 teen time-use block asks about weekdays only.,
+st_socmedia,unavailable,,,"No weekend counterpart exists, so a usual-day estimate cannot be formed; Year 15 contributes through st_socmedia_wd.",
+st_educational_wd,unavailable,,,"No educational screen-use item at the waves and respondents used here. The Year 9 child self-report does include a banded weekday item for schoolwork on the computer (K5D1D), but this dataset's screen use at Year 9 is taken from the caregiver to keep one respondent per wave; see the tidied column child_band_schoolwork_wd if the project would rather switch Year 9 to the child's own report.",
+st_educational_we,unavailable,,,See st_educational_wd.,
+st_educational,unavailable,,,See st_educational_wd.,
+st_internet_wd,compatible,K6D36F,youth_internet_hours_wd,"Year 15 teen item 'hours per day visits websites/shop on internet on weekdays'. General, unspecified online time, which is what this row is for; it overlaps the other content categories and must never be summed with them (DR-0002).",
+st_internet_we,unavailable,,,The Year 15 teen time-use block asks about weekdays only.,
+st_internet,unavailable,,,"No weekend counterpart exists, so a usual-day estimate cannot be formed; Year 15 contributes through st_internet_wd.",
+st_videochat,unavailable,,,"No video-calling item at any wave. The Year 15 teen item mapped to st_socmedia_wd ('electronically communicates with friends') may absorb some video chat, which is one reason that mapping is proximate rather than compatible.",
+st_email,unavailable,,,"Emailing is never asked about separately. Year 9 asks only whether the household has a computer and how long the child uses it; Year 15 asks about websites, games, TV and electronic contact with friends.",
+st_shopping,incompatible,,,"The only Year 15 item that mentions shopping, K6D36F, asks for hours per day that the youth 'visits websites/shop on internet' as one number, so online shopping cannot be separated from general browsing. The combined item is mapped to st_internet_wd, where the schema expects that kind of unspecified online time.",
+st_total_school,unavailable,,,All screen-use items are about the child's day generally; none is placed at school.,
+st_educational_school,unavailable,,,See st_total_school.,
+st_comp_school,unavailable,,,"Whether the child's school has computers is asked of teachers at Year 5 and Year 9 (T4/T5), but the child's own time on them is not.",
+st_tablet_school,unavailable,,,See st_total_school.,
+st_internet_school,unavailable,,,See st_total_school.,
+st_phone_school,unavailable,,,See st_total_school.,
+acc_academachment_selfrated,unavailable,,,"No self-rating of overall school performance. Year 15 asks for subject-specific letter grades, which are carried in acc_academachment_numgrades.",
+acc_academachment_lettergrades,incompatible,,,"Year 15 records four subject-specific letter grades (English, math, history, science) rather than one overall letter grade, and no wave records a report-card summary. The four are combined into a numeric average in acc_academachment_numgrades instead.",
+acc_academachment_stdtest,incompatible,,,This row is character-typed and unstructured; the FFCWS standardised test scores are numeric and are mapped to acc_literacy_stdtest and acc_numeracy_stdtest.,
+acc_schoolengage_caresschool,unavailable,,,"Not asked. The nearest items are the school-connectedness scales (K5E1A-D at Year 9, K6B1A-D at Year 15), which measure belonging and safety rather than caring about doing well.",
+acc_schoolengage_homework,proximate,K6B21C,"recode_values(
+  na_if(as.numeric(homework_trouble), 7),
+  1 ~ ""Always"",
+  2 ~ ""Sometimes"",
+  3 ~ ""Never"",
+  default = NA_character_
+)","Year 15 'Trouble at School' item, how often the youth has had trouble getting their homework done since the start of the school year, reversed onto the schema's homework-completion wording. Proximate because it is a negatively worded three-point item mapped onto a positively worded four-point one, so no youth can score Usually. Code 7 (not applicable, home-schooled) becomes NA.",
+acc_academachment_numgrades,partial,"K6B20A, K6B20B, K6B20C, K6B20D","(20 -
+  (na_if(na_if(as.numeric(grade_english), 5), 7) +
+    na_if(na_if(as.numeric(grade_maths), 5), 7) +
+    na_if(na_if(as.numeric(grade_history), 5), 7) +
+    na_if(na_if(as.numeric(grade_science), 5), 7))) /
+  4","Mean of the youth's four self-reported subject grades at Year 15, reversed so that higher means better: source codes run 1=A to 4=D or lower, so the per-subject score is 5 minus the code and the result runs 1 (D or lower in every subject) to 4 (A in every subject). Codes 5 (no grade or pass/fail) and 7 (home-schooled) become NA, and a youth missing any of the four scores NA, following the scoring rule FFCWS applies to its own scales. Partial because it is a coarse four-band self-report averaged across subjects rather than a GPA from records; standardise within dataset at analysis.",
+acc_academachment_teacherrated,unavailable,,,Teacher surveys exist at Year 5 and Year 9 but contain no overall rating of the focal child's academic performance; their academic items are about the class as a whole.,
+acc_numeracy_stdtest,compatible,CH5WJ10SS,wj_maths_standard,"Woodcock-Johnson III Applied Problems (subtest 10) standard score, administered in the Year 9 in-home assessment (user guide section 12.2). Norm-referenced standard score, sample mean 97.9. No numeracy assessment at the other waves.",
+acc_literacy_stdtest,compatible,"CH4WJSS22, CH5WJ9SS",wj_reading_standard,"Woodcock-Johnson standard scores from the in-home assessments: Letter-Word Identification (WJ-R subtest 22) at Year 5 and Passage Comprehension (WJ-III subtest 9) at Year 9. Both are norm-referenced reading measures but they are different subtests measuring word reading and comprehension respectively, so standardise within dataset and wave at analysis rather than treating the two waves as one scale.",
+beh_hyper_basc2,unavailable,,,The BASC-2 was not administered. Child behaviour is measured with the Child Behavior Checklist at every wave.,
+beh_atten_basc2,unavailable,,,The BASC-2 was not administered.,
+beh_atten_self,unavailable,,,"No self-reported attention scale. The Year 9 child interview does carry three attention items inside Marsh's Self-Description Questionnaire externalising subscale (K5G2D, K5G2F, K5G2H), but that subscale also contains arguing and fighting items, and the three attention items are not a published subscale, so scoring them alone would invent a measure rather than map one.",
+beh_selfreg_htks,unavailable,,,The Head-Toes-Knees-Shoulders task was not administered.,
+beh_bullied,incompatible,,,"Bullying others is not self-reported. The Child Behavior Checklist item 'child is cruel, bullies, or shows meanness to others' is caregiver-reported on a three-point not-true/sometimes/often scale and cannot become a binary indicator of the child's own behaviour.",
+beh_beenbullied,partial,"K5E2A, K5E2B, K5E2C, K5E2D, K6B32A, K6B32B, K6B32E, K6B32F","if_else(
+  sum_nonmissing(
+    na_if(as.numeric(bullied_mean), 7),
+    na_if(as.numeric(bullied_hit), 7),
+    na_if(as.numeric(bullied_took), 7),
+    na_if(as.numeric(bullied_excluded), 7)
+  ) >
+    0,
+  ""TRUE"",
+  ""FALSE""
+)","TRUE where the child reports any of the four peer-victimisation behaviours (being picked on, hit or threatened, having things taken, being deliberately excluded) more than never; FALSE where all four are answered never; NA where none is answered. Partial because the reference window differs from the schema's 'past few months' and between waves: Year 9 asks about the past month and Year 15 about the school year. Year 15 code 7 (home-schooled) becomes NA. Available at Years 9 and 15 only.",
+beh_beenbullied_online,unavailable,,,"No cyberbullying item at any wave. The Year 15 peer bullying scale is deliberately restricted to school: FFCWS narrowed the PSID-CDS-III items, which asked about 'kids in their school or elsewhere', to school only (Year 15 user guide, section 12.2.2). Year 9 asks about school peers too.",
+beh_bullied_online,in_progress,,,,
+beh_fight,partial,"K5F1E, K6D61D","case_when(
+  as.numeric(fist_fight) %in% 1 ~ ""TRUE"",
+  as.numeric(fist_fight) %in% 2 ~ ""FALSE"",
+  as.numeric(serious_fight) %in% c(2, 3, 4) ~ ""TRUE"",
+  as.numeric(serious_fight) %in% 1 ~ ""FALSE"",
+  .default = NA_character_
+)","Self-reported fighting at Years 9 and 15. Partial because the two waves ask different questions over different windows: Year 9 asks whether the child has ever had a fist fight (yes/no), Year 15 how many times they have got into a serious physical fight, on the Add Health frequency scale, which is dichotomised at never versus one or more. The Year 9 lifetime frame will read higher than a bounded window would.",
+beh_conduct_sdq_parent,unavailable,,,"The Strengths and Difficulties Questionnaire was not administered. FFCWS uses the Child Behavior Checklist for caregiver-reported behaviour, which has no dataschema row. Note that the Year 9 user guide's 'SDQ' section is Marsh's Self-Description Questionnaire, a different instrument with the same acronym.",
+beh_hyper_sdq_parent,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+beh_peerprob_sdq_parent,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+beh_prosocial_sdq_parent,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+beh_aggphys_bpaq_self,unavailable,,,The Buss-Perry Aggression Questionnaire was not administered.,
+beh_aggverb_bpaq_self,unavailable,,,The Buss-Perry Aggression Questionnaire was not administered.,
+beh_agganger_bpaq_self,unavailable,,,The Buss-Perry Aggression Questionnaire was not administered.,
+beh_agghostility_bpaq_self,unavailable,,,The Buss-Perry Aggression Questionnaire was not administered.,
+beh_agg_self,unavailable,,,"No self-reported aggression scale. The Year 9 and Year 15 delinquency scales cover property crime, theft, substance use and school misconduct alongside fighting, so they measure delinquency rather than aggression.",
+beh_argues,incompatible,,,"The available items are intensity ratings, not frequency: Year 9 'I often argue with other kids' is scored not at all true to very true, and the Year 15 Child Behavior Checklist item 'child argues a lot' is caregiver-reported on a three-point not-true/sometimes/often scale. Neither maps onto the schema's Always/Usually/Sometimes/Never without inventing a frequency reading.",
+beh_persistence_finishwork,proximate,K5G1E,"recode_values(
+  as.numeric(follows_through),
+  0 ~ ""Never"",
+  1 ~ ""Sometimes"",
+  2 ~ ""Usually"",
+  3 ~ ""Always"",
+  default = NA_character_
+)","Year 9 child self-report 'I follow things through to the end', from the task-completion block, mapped rank for rank onto the schema's four ordered levels. Proximate because the source anchors are never/rarely/sometimes/always, so the two middle levels are matched by position rather than by wording. Year 9 only.",
+beh_emotreg_stayscalm,incompatible,,,"No item about staying calm when challenged at any wave. The nearest, 'I feel angry when I have trouble learning something' (Year 9), is about the reaction rather than the regulation of it.",
+beh_peerprob_makefriends,proximate,K6D1E,"recode_values(
+  as.numeric(makes_friends_easily),
+  3 ~ ""No difficulty"",
+  2 ~ ""A little difficulty"",
+  1 ~ ""A lot of difficulty"",
+  default = NA_character_
+)","Year 15 self-report 'I make friends easily', from the FFCWS adaptation of the Social Skills Rating System assertion scale, reversed onto the schema's difficulty wording. Proximate because the source asks about ease of making friends only, not about keeping them, and because the comparison with same-age peers that the schema description carries is not part of the item. Year 15 only.",
+beh_conduct_diagnosed,unavailable,,,Diagnosed behavioural or conduct problems are not asked about.,
+beh_conduct_diagnosed_severity,unavailable,,,Diagnosed behavioural or conduct problems are not asked about.,
+beh_conduct_sdq_self,unavailable,,,"The Strengths and Difficulties Questionnaire was not administered. The Year 9 child interview does include a scale FFCWS abbreviates as SDQ, but that is Marsh's Self-Description Questionnaire (internalising and externalising subscales, items K5G2A-K5G2N, scored 0-3), an unrelated instrument.",
+beh_hyper_sdq_self,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_self.,
+beh_peerprob_sdq_self,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_self.,
+beh_prosocial_sdq_self,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_self.,
+beh_conduct_sdq_teacher,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+beh_hyper_sdq_teacher,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+beh_peerprob_sdq_teacher,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+beh_prosocial_sdq_teacher,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+beh_ext_sdq_parent,unavailable,,,"The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent. The Year 15 Child Behavior Checklist does provide an externalising composite, but on a different instrument with no dataschema row.",
+beh_ext_sdq_self,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_self.,
+beh_ext_sdq_teacher,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+beh_agg_cbcl_parent,partial,"P3M2C, P3M5, P3M6, P3M6B, P3M7, P3M13, P3M14, P3M18, P3M21, P3M21A, P3M23, P3M26A, P3M28, P3M30, P3M33, P3M39, P3M41, P3M44, P3M48, P4L1, P4L2, P4L7, P4L9, P4L10, P4L12, P4L13, P4L16, P4L21, P4L33, P4L40, P4L45, P4L56, P4L57, P4L59, P4L62, M4B4B11, M4B4B12, M4B4B13, M4B4B16, P6B35, P6B37, P6B38, P6B39, P6B41, P6B42, P6B43, P6B44, P6B45, P6B57, P6B59",cbcl_aggressive,"CBCL Aggressive Behavior syndrome scale, caregiver report, scored in the tidier as the mean item score on 0-2 coding. Available at Years 3 (19 items), 5 (20 items) and 15 (11 items); see beh_cbcl_measure for the form used at each. Partial for three reasons: the item set changes with the age form at each wave, the Year 5 score combines items from the primary caregiver in-home survey with items from the mother core survey, and Year 9 is unscored because its user guide prints only example items. Standardise within dataset and wave at analysis.",
+beh_atten_cbcl_parent,partial,"P4L6, P4L8, P4L24, P4L27, P4L34, P4L35, P4L47, M4B4B1, M4B4B2, M4B4B9, M4B4B19, P6B46, P6B47, P6B48",cbcl_attention,"CBCL Attention Problems syndrome scale, caregiver report, mean item score on 0-2 coding. Years 5 (11 items) and 15 (3 items) only: the Year 3 preschool form has no attention problems syndrome scale, and Year 9 is unscored. Partial on the same grounds as beh_agg_cbcl_parent, and the three Year 15 items are a much thinner measure than the eleven at Year 5. Standardise within dataset and wave at analysis.",
+beh_rulebreak_cbcl_parent,partial,"P4L23, P4L26, P4L36, P4L39, P4L44, P4L49, P4L50, P4L54, P4L64, M4B4B7, P6B49, P6B50, P6B51, P6B60, P6B61, P6B62, P6B63, P6B64, P6B67",cbcl_rulebreak,"CBCL rule-breaking syndrome scale, caregiver report, mean item score on 0-2 coding. Called Delinquent Behavior on the Year 5 CBCL/4-18 form, where FFCWS administered 10 of its 13 items, and Rule-Breaking Behavior on the Year 15 CBCL/6-18 form (9 items). Not on the Year 3 preschool form, and Year 9 is unscored. Partial on the same grounds as beh_agg_cbcl_parent.",
+beh_ext_cbcl_parent,partial,"P4L1, P4L2, P4L7, P4L9, P4L10, P4L12, P4L13, P4L16, P4L21, P4L23, P4L26, P4L33, P4L36, P4L39, P4L40, P4L44, P4L45, P4L49, P4L50, P4L54, P4L56, P4L57, P4L59, P4L62, P4L64, M4B4B7, M4B4B11, M4B4B12, M4B4B13, M4B4B16, P6B35, P6B37, P6B38, P6B39, P6B41, P6B42, P6B43, P6B44, P6B45, P6B49, P6B50, P6B51, P6B57, P6B59, P6B60, P6B61, P6B62, P6B63, P6B64, P6B67",cbcl_externalising,"Mean item score across the union of the aggressive and rule-breaking item sets, so items the user guides list under both subscales are counted once. Years 5 (30 items) and 15 (20 items) only. Deliberately not scored at Year 3: that age form has no rule-breaking scale, so an externalising score there would be the aggressive subscale under another name. Partial on the same grounds as beh_agg_cbcl_parent.",
+beh_cbcl_measure,inferred,(wave key built by the tidier),"case_when(
+  wave ==
+    ""Year 3"" ~ ""CBCL/1.5-5 (2000 version), caregiver report, 0-2 item scoring; anxious/depressed 8 items, withdrawn 8, aggressive 19; the preschool form has no attention problems or rule-breaking scale"",
+  wave ==
+    ""Year 5"" ~ ""CBCL/4-18 (1991 version), primary caregiver in-home survey plus mother core survey, 0-2 item scoring; anxious/depressed 14 items, withdrawn 9, attention problems 11, aggressive 20, rule-breaking 10 of 13"",
+  wave ==
+    ""Year 15"" ~ ""CBCL/6-18, caregiver report, 1-3 item scoring recoded to 0-2; anxious/depressed 6 items, withdrawn 2, attention problems 3, aggressive 11, rule-breaking 9"",
+  .default = NA_character_
+)","Records the form and item counts behind the CBCL scores at each wave. NA at Year 9, where no CBCL score is produced. All subscales are scored as the mean of the answered items, requiring at least 80% of the subscale's items; the alternative, the complete-case rule FFCWS states for its own scales, would drop 475 children from the Year 3 anxious/depressed score alone, because two of its items were asked in only 18 of the 20 cities.",
+cog_execfunc_basc2,unavailable,,,The BASC-2 was not administered.,
+cog_langexec_nepsy,unavailable,,,The NEPSY was not administered.,
+cog_phono_nepsy,unavailable,,,The NEPSY was not administered.,
+cog_inhibcont_nepsy,unavailable,,,The NEPSY was not administered.,
+cog_vismotor_nepsy,unavailable,,,The NEPSY was not administered.,
+cog_verbalfluency_nepsy,unavailable,,,The NEPSY was not administered.,
+cog_inhib_nihtb_flanker,unavailable,,,The NIH Toolbox was not administered.,
+cog_flex_nihtb_dccs,unavailable,,,The NIH Toolbox was not administered.,
+cog_wm_nihtb_listsort,unavailable,,,The NIH Toolbox was not administered.,
+cog_speed_nihtb_pattern,unavailable,,,The NIH Toolbox was not administered.,
+cog_epimem_nihtb_picseq,unavailable,,,The NIH Toolbox was not administered.,
+cog_vocab_nihtb_picvocab,unavailable,,,The NIH Toolbox was not administered.,
+cog_fluidcomp_nihtb,unavailable,,,The NIH Toolbox was not administered.,
+cog_crystcomp_nihtb,unavailable,,,The NIH Toolbox was not administered.,
+cog_totalcomp_nihtb,unavailable,,,The NIH Toolbox was not administered.,
+cog_wm_digitspan,compatible,CH5DSSS,digit_span_scaled,"WISC-IV Digit Span scaled score (forward and backward combined) from the Year 9 in-home assessment, user guide section 12.5. Scaled score with a population mean of 10 and standard deviation of 3; the sample mean is 9.4. The raw and percentile forms (CH5DSRAW, CH5DSPR) are also available if a different score form is preferred.",
+cog_iq_fullscale,unavailable,,,No full-scale IQ was administered; the in-home battery is made up of individual achievement and memory subtests.,
+cog_vocab_bpvs,incompatible,,,"Receptive vocabulary is measured with the Peabody Picture Vocabulary Test (PPVT-III standard scores at Years 3, 5 and 9, plus the Spanish TVIP), not the British Picture Vocabulary Scale. The BPVS is a UK adaptation of the PPVT rather than the same test, so the scores are not interchangeable. The tidied column ppvt_standard is ready if a PPVT row is added to the dataschema.",
+cog_vocab_ppvt,compatible,"CH3PPVTSTD, CH4PPVTSTD, CH5PPVTSS",ppvt_standard,"PPVT-III standard score from the in-home assessment at Years 3, 5 and 9 (user guide section 12.1 at each wave). Norm-referenced, sample means 85.7, 92.9 and 92.7. The Spanish-language TVIP was administered instead to a small number of Spanish-speaking children (173 at Year 3, 67 at Year 5); those scores are held in separate variables, use separate norms, and are deliberately not merged in here. Raw scores are also available (CH3PPVTRAW, CH4PPVTRAW, CH5PPVTRAW) if a different score form is preferred.",
+cog_execfunc_brief_parent,unavailable,,,The BRIEF was not administered.,
+mh_anx_basc2,unavailable,,,The BASC-2 was not administered.,
+mh_dep_basc2,unavailable,,,The BASC-2 was not administered.,
+mh_emotsymp_sdq_parent,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+mh_totaldiff_sdq_parent,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+mh_anx_diagnosed,unavailable,,,"Diagnosed anxiety in the child is not asked about. The caregiver's own CIDI-SF anxiety caseness is recorded, but that is the parent, not the child.",
+mh_anx_diagnosed_severity,unavailable,,,Diagnosed anxiety in the child is not asked about.,
+mh_dep_diagnosed,unavailable,,,"Diagnosed depression in the child is not asked about. The caregiver's own CIDI-SF depression caseness is recorded, but that is the parent, not the child.",
+mh_dep_diagnosed_severity,unavailable,,,Diagnosed depression in the child is not asked about.,
+mh_emotsymp_sdq_self,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_self.,
+mh_emotsymp_sdq_teacher,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+mh_totaldiff_sdq_self,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_self.,
+mh_totaldiff_sdq_teacher,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+mh_int_sdq_parent,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+mh_int_sdq_self,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_self.,
+mh_int_sdq_teacher,unavailable,,,The Strengths and Difficulties Questionnaire was not administered; see beh_conduct_sdq_parent.,
+mh_dep_smfq_self,unavailable,,,The Short Mood and Feelings Questionnaire was not administered.,
+mh_dep_smfq_parent,unavailable,,,The Short Mood and Feelings Questionnaire was not administered.,
+mh_dep_cdi_self,unavailable,,,The Children's Depression Inventory was not administered.,
+mh_dep_cesd_self,partial,"K6D2C, K6D2N, K6D2S, K6D2X, K6D2AC","(4 - as.numeric(cesd_blues)) +
+  (4 - as.numeric(cesd_sad)) +
+  (as.numeric(cesd_happy) - 1) +
+  (4 - as.numeric(cesd_not_worth_living)) +
+  (4 - as.numeric(cesd_depressed))","Five-item CES-D short form used in the Year 15 teen survey, following the Add Health Wave I selection (user guide section 10.4.2 and Table 14). Scored exactly as FFCWS documents: strongly disagree=0 through strongly agree=3, with the positively worded 'I feel happy' reversed, giving a total of 0-15. A youth missing any of the five scores NA, per the study's own scoring rule. Partial on three counts: it is 5 of the 20 CES-D items, the response format is four-point agreement rather than four-point frequency, and the reference period is the past four weeks rather than the past week. Standardise within dataset before pooling with full-length CES-D scores. Year 15 only.",
+mh_dep_phq9_self,unavailable,,,The PHQ-9 was not administered.,
+mh_dep_rcads_self,unavailable,,,The RCADS was not administered.,
+mh_dep_dass21_self,unavailable,,,The DASS-21 was not administered.,
+mh_dep_scl_self,unavailable,,,"The SCL-90-R depression subscale was not administered. The Year 15 teen anxiety items come from the Brief Symptom Inventory-18, which is a different instrument and covers anxiety rather than depression.",
+mh_distress_k6_self,unavailable,,,The Kessler 6 was not administered to the young person.,
+mh_distress_k10_self,unavailable,,,The Kessler 10 was not administered.,
+mh_anx_masc_self,unavailable,,,The MASC was not administered.,
+mh_anx_scas_self,unavailable,,,The SCAS was not administered.,
+mh_anx_scas_parent,unavailable,,,The SCAS was not administered.,
+mh_anx_scared_self,unavailable,,,The SCARED was not administered.,
+mh_anx_scared_parent,unavailable,,,The SCARED was not administered.,
+mh_anx_gad7_self,unavailable,,,The GAD-7 was not administered.,
+mh_anx_rcads_self,unavailable,,,The RCADS was not administered.,
+mh_anx_dass21_self,unavailable,,,"The DASS-21 was not administered. Year 15 measures teen anxiety with the six-item Brief Symptom Inventory-18 anxiety subscale (K6D2D, K6D2J, K6D2T, K6D2AG, K6D2AI, K6D2AK), which has no dataschema row.",
+mh_anxdep_cbcl_parent,partial,"P3M3, P3M16, P3M19, P3M22, P3M25, P3M32, P3M42, P3M46, P4L5, P4L17, P4L18, P4L19, P4L20, P4L29, P4L43, P4L53, P4L65, M4B4B4, M4B4B9, M4B4B14, M4B4B15, M4B4B18, P6B36, P6B40, P6B52, P6B53, P6B54, P6B68",cbcl_anxdep,"CBCL Anxious/Depressed syndrome scale, caregiver report, mean item score on 0-2 coding. Available at Years 3 (8 items), 5 (14 items) and 15 (6 items). Partial on the same grounds as beh_agg_cbcl_parent; in addition the Year 3 item 'nervous/high strung' was replaced by 'nervous twitching' in two of the 20 cities, which the 80% completeness rule absorbs. Standardise within dataset and wave at analysis.",
+mh_int_cbcl_parent,partial,"P3M1, P3M2, P3M3, P3M9, P3M16, P3M19, P3M22, P3M25, P3M29, P3M31, P3M32, P3M35, P3M36, P3M42, P3M46, P3M50, P4L5, P4L17, P4L18, P4L19, P4L20, P4L25, P4L29, P4L38, P4L42, P4L43, P4L46, P4L47, P4L52, P4L53, P4L61, P4L65, M4B4B4, M4B4B9, M4B4B14, M4B4B15, M4B4B17, M4B4B18, P6B36, P6B40, P6B52, P6B53, P6B54, P6B65, P6B66, P6B68",cbcl_internalising,"Mean item score across the union of the anxious/depressed and withdrawn item sets, so an item the user guides list under both (Year 5's 'unhappy, sad or depressed') is counted once. Years 3 (16 items), 5 (22 items) and 15 (8 items). Somatic complaints are excluded at every wave: they are not on the Year 3 or Year 15 item sets, and the Year 5 user guide states that its internalising scale omits them. Partial on the same grounds as beh_agg_cbcl_parent.",
+mh_dep_self,in_progress,,,,
+mh_dep_measure,in_progress,,,,
+mh_anx_self,partial,"K6D2D, K6D2J, K6D2T, K6D2AG, K6D2AI, K6D2AK","(5 - as.numeric(bsi_terror)) +
+  (5 - as.numeric(bsi_tense)) +
+  (5 - as.numeric(bsi_scared)) +
+  (5 - as.numeric(bsi_nervous)) +
+  (5 - as.numeric(bsi_fearful)) +
+  (5 - as.numeric(bsi_restless))","Six-item Brief Symptom Inventory-18 anxiety subscale in the Year 15 teen survey (user guide section 10.5.2 and Table 15). Source coding runs 1 = strongly agree to 4 = strongly disagree, so each item is reversed to 4 = strongly agree before summing, giving a total of 6-24 where higher means more anxiety. A youth missing any of the six scores NA; FFCWS permits mean substitution for one or two missing items, which is not applied here. Partial because the response format is four-point agreement over the past four weeks rather than the instrument's five-point distress rating over the past seven days, so the totals are not on the published BSI-18 metric. Standardise within dataset at analysis. Year 15 only.",
+mh_anx_measure,inferred,(wave key built by the tidier),"if_else(
+  wave == ""Year 15"",
+  ""Brief Symptom Inventory-18 anxiety subscale, 6 of 6 items, reversed to 1-4 item scoring (range 6-24), teen self-report"",
+  NA_character_
+)","Records the source measure behind mh_anx_self. NA outside Year 15, because no anxiety scale was administered to the child at the other waves - carrying the string there would claim a measure that does not exist.",
+wb_emotsc_basc2,unavailable,,,The BASC-2 was not administered.,
+wb_mwb_wemwbs,unavailable,,,The Warwick-Edinburgh Mental Wellbeing Scale was not administered.,
+wb_lifesatisfaction_cantrilladder,unavailable,,,The Cantril ladder was not administered.,
+wb_resil_basc2,unavailable,,,The BASC-2 was not administered.,
+wb_psychcomplaints_feellow,unavailable,,,"The HBSC symptom checklist was not administered. Year 15 does carry single mood items, but inside the CES-D short form scored in mh_dep_cesd_self rather than as HBSC-SCL complaints.",
+wb_psychcomplaints_irritable,unavailable,,,The HBSC symptom checklist was not administered.,
+wb_psychcomplaints_nervous,unavailable,,,The HBSC symptom checklist was not administered.,
+wb_psychcomplaints_diffsleep,unavailable,,,"The HBSC symptom checklist was not administered. Year 15 asks about trouble falling and staying asleep (K6D22, K6D23) but on a nights-per-week count, not the HBSC-SCL format.",
+wb_bodyimage,unavailable,,,The HBSC body-image item was not administered.,
+wb_lifesat_slss_self,unavailable,,,The Students' Life Satisfaction Scale was not administered.,
+wb_lifesat_swls_self,unavailable,,,The Satisfaction With Life Scale was not administered.,
+wb_lifesat_singleitem_self,unavailable,,,"Life satisfaction is asked of the parents at Years 3, 5 and 9 and of the primary caregiver at Year 15 (P6H1), but never of the child or teen. The young adult is asked at Year 22 (K7I1), which is outside the age range this dataset contributes.",
+wb_qol_pedsql_self,unavailable,,,The PedsQL was not administered.,
+wb_qol_pedsql_parent,unavailable,,,The PedsQL was not administered.,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 was not administered.,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 was not administered.,
+wb_selfesteem_rosenberg_self,unavailable,,,The Rosenberg Self-Esteem Scale was not administered.,
+wb_selfesteem_self,unavailable,,,"No self-esteem measure for the young person at any in-scope wave. The Year 15 teen psychosocial block covers depression, anxiety, grit, optimism, social support, impulsivity and the EPOCH wellbeing scales but includes no self-esteem items, and the earlier waves have only caregiver-reported single items such as 'child tends to be proud of things he/she does' (P3M27, P4L60).",
+wb_selfesteem_measure,unavailable,,,No self-esteem score is mapped; see wb_selfesteem_self.,
+wb_selfefficacy_gse_self,unavailable,,,The General Self-Efficacy Scale was not administered.,
+wb_selfefficacy_self,in_progress,,,,
+wb_selfefficacy_measure,in_progress,,,,
+wb_mwb_who5_self,unavailable,,,The WHO-5 was not administered.,
+wb_happiness_shs_self,unavailable,,,"The Subjective Happiness Scale was not administered. Year 15 does measure positive adolescent functioning with the EPOCH measure (engagement, perseverance, optimism, connectedness, happiness), which is a different instrument with no dataschema row.",
