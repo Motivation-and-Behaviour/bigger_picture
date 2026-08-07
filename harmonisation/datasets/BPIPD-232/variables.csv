@@ -197,6 +197,7 @@ beh_beenbullied,partial,"bullied, bullied_r","case_when(
   as.numeric(bullied_r) == 1 ~ ""FALSE""
 )","Caregiver report, ages 6-17, and the schema's reference period (past few months) matches neither half. 2016-2017 (BULLIED) asked how well 'this child is bullied, picked on, or excluded by other children' describes the child: definitely or somewhat true becomes TRUE (22.9% in 2016), not true becomes FALSE. 2018-2023 (BULLIED_R) asked how often in the past 12 months: never becomes FALSE, any other frequency becomes TRUE (49.6% in 2018). Same threshold judgement as beh_bullied. Codes 90 and 99 fall through to NA",
 beh_beenbullied_online,in_progress,,,,
+beh_bullied_online,in_progress,,,,
 beh_fight,unavailable,,,No fighting item in any wave,
 beh_conduct_sdq_parent,unavailable,,,SDQ not administered,
 beh_hyper_sdq_parent,unavailable,,,SDQ not administered,
@@ -318,5 +319,7 @@ wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not admin
 wb_selfesteem_self,in_progress,,,,
 wb_selfesteem_measure,in_progress,,,,
 wb_selfefficacy_gse_self,unavailable,,,General Self-Efficacy Scale not administered; NSCH collects no self-report from the child,
+wb_selfefficacy_self,in_progress,,,,
+wb_selfefficacy_measure,in_progress,,,,
 wb_mwb_who5_self,unavailable,,,WHO-5 not administered; NSCH collects no self-report from the child,
 wb_happiness_shs_self,in_progress,,,,

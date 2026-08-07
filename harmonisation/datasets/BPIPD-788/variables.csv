@@ -163,6 +163,7 @@ beh_selfreg_htks,unavailable,,,Instrument not administered in KiGGS Wave 2.,
 beh_bullied,incompatible,,,No bullying items. SDQ items 12 ('often fights with or bullies other children') and 19 ('is often teased or bullied') touch on the construct but are single three-point SDQ symptom items scored inside the conduct and peer-problem subscales; dichotomising them would create a bullying prevalence the study never measured.,
 beh_beenbullied,incompatible,,,No bullying items. SDQ items 12 ('often fights with or bullies other children') and 19 ('is often teased or bullied') touch on the construct but are single three-point SDQ symptom items scored inside the conduct and peer-problem subscales; dichotomising them would create a bullying prevalence the study never measured.,
 beh_beenbullied_online,in_progress,,,,
+beh_bullied_online,in_progress,,,,
 beh_fight,incompatible,,,"No fighting item. UVfolge_m2 records whether an injury in the last 12 months was caused by violence, which measures victimisation severe enough to injure rather than fighting behaviour.",
 beh_conduct_sdq_parent,compatible,VAEverh,as.numeric(haven::zap_labels(VAEverh)),"RKI-derived SDQ conduct problems subscale score, parent-reported. Items are asked on a 1-3 scale and rescaled to the standard 0-2 scoring before summing, reverse-worded items are reversed, and the sum is prorated over valid answers and rounded; the score is set missing when more than three of the five items are missing (KiGGS2_Dateninfo_generierte_Variablen). Range 0-10 as the schema expects. Collected for ages 3-17, so 1,799 rows are missing by design.",
 beh_hyper_sdq_parent,compatible,VAEhyp,as.numeric(haven::zap_labels(VAEhyp)),"RKI-derived SDQ hyperactivity/inattention subscale score, parent-reported. Items are asked on a 1-3 scale and rescaled to the standard 0-2 scoring before summing, reverse-worded items are reversed, and the sum is prorated over valid answers and rounded; the score is set missing when more than three of the five items are missing (KiGGS2_Dateninfo_generierte_Variablen). Range 0-10 as the schema expects. Collected for ages 3-17, so 1,809 rows are missing by design.",
@@ -307,5 +308,7 @@ wb_selfefficacy_gse_self,compatible,"SFwirkall1, SFwirkall2, SFwirkall3, SFwirka
   as.numeric(haven::zap_labels(SFwirkall8)) +
   as.numeric(haven::zap_labels(SFwirkall9)) +
   as.numeric(haven::zap_labels(SFwirkall10))","Ten-item General Self-Efficacy Scale (Allgemeine Selbstwirksamkeitserwartung, Schwarzer & Jerusalem), self-reported by 11-17 year olds on the standard 1-4 scale ('stimmt nicht' to 'stimmt genau'). Summed to the schema's 10-40 raw total. All ten items must be present, giving 5,887 rows (observed range 10-40, median 30). The released SFwirkall score is the same sum rescaled to 0-100 with prorating for up to three missing items; ((sum - 10) / 30) * 100 reproduces it exactly, which confirms the scoring.",
+wb_selfefficacy_self,in_progress,,,,
+wb_selfefficacy_measure,in_progress,,,,
 wb_mwb_who5_self,unavailable,,,Instrument not administered in KiGGS Wave 2.,
 wb_happiness_shs_self,unavailable,,,Instrument not administered in KiGGS Wave 2.,
