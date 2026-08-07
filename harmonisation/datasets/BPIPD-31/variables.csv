@@ -215,6 +215,7 @@ beh_beenbullied,partial,"K5E2A, K5E2B, K5E2C, K5E2D, K6B32A, K6B32B, K6B32E, K6B
   ""FALSE""
 )","TRUE where the child reports any of the four peer-victimisation behaviours (being picked on, hit or threatened, having things taken, being deliberately excluded) more than never; FALSE where all four are answered never; NA where none is answered. Partial because the reference window differs from the schema's 'past few months' and between waves: Year 9 asks about the past month and Year 15 about the school year. Year 15 code 7 (home-schooled) becomes NA. Available at Years 9 and 15 only.",
 beh_beenbullied_online,unavailable,,,"No cyberbullying item at any wave. The Year 15 peer bullying scale is deliberately restricted to school: FFCWS narrowed the PSID-CDS-III items, which asked about 'kids in their school or elsewhere', to school only (Year 15 user guide, section 12.2.2). Year 9 asks about school peers too.",
+beh_bullied_online,in_progress,,,,
 beh_fight,partial,"K5F1E, K6D61D","case_when(
   as.numeric(fist_fight) %in% 1 ~ ""TRUE"",
   as.numeric(fist_fight) %in% 2 ~ ""FALSE"",
@@ -364,5 +365,7 @@ wb_selfesteem_rosenberg_self,unavailable,,,The Rosenberg Self-Esteem Scale was n
 wb_selfesteem_self,unavailable,,,"No self-esteem measure for the young person at any in-scope wave. The Year 15 teen psychosocial block covers depression, anxiety, grit, optimism, social support, impulsivity and the EPOCH wellbeing scales but includes no self-esteem items, and the earlier waves have only caregiver-reported single items such as 'child tends to be proud of things he/she does' (P3M27, P4L60).",
 wb_selfesteem_measure,unavailable,,,No self-esteem score is mapped; see wb_selfesteem_self.,
 wb_selfefficacy_gse_self,unavailable,,,The General Self-Efficacy Scale was not administered.,
+wb_selfefficacy_self,in_progress,,,,
+wb_selfefficacy_measure,in_progress,,,,
 wb_mwb_who5_self,unavailable,,,The WHO-5 was not administered.,
 wb_happiness_shs_self,unavailable,,,"The Subjective Happiness Scale was not administered. Year 15 does measure positive adolescent functioning with the EPOCH measure (engagement, perseverance, optimism, connectedness, happiness), which is a different instrument with no dataschema row.",
