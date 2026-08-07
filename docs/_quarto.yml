@@ -1,0 +1,64 @@
+project:
+  type: website
+  output-dir: _site
+  execute-dir: project
+  render:
+    - index.qmd
+    - guides/*.qmd
+    - reference/*.qmd
+    - decisions/*.md
+    - decisions/README.md
+    - "!prereg/"
+  resources:
+    - prereg/bigger_picture_preregistration.pdf
+
+website:
+  title: "Bigger Picture"
+  site-url: https://motivation-and-behaviour.github.io/bigger_picture/
+  repo-url: https://github.com/Motivation-and-Behaviour/bigger_picture
+  repo-actions: [edit, issue]
+  page-navigation: true
+  navbar:
+    left:
+      - text: Guides
+        href: guides/getting-started.qmd
+      - text: Reference
+        href: reference/dataschema.qmd
+      - text: Decisions
+        href: decisions/README.md
+    right:
+      - icon: github
+        href: https://github.com/Motivation-and-Behaviour/bigger_picture
+  sidebar:
+    style: docked
+    search: true
+    contents:
+      - index.qmd
+      - section: Guides
+        contents:
+          - guides/getting-started.qmd
+          - guides/adding-a-dataset.qmd
+          - guides/dataset-yaml.qmd
+          - guides/spec-cookbook.qmd
+          - guides/tidy-scripts.qmd
+          - guides/harmonisation.qmd
+      - section: Reference
+        contents:
+          - reference/dataschema.qmd
+          - reference/progress.qmd
+      - section: Decisions
+        contents:
+          - decisions/README.md
+          - auto: decisions/DR-*.md
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-copy: true
+    link-external-newwindow: true
+
+execute:
+  freeze: false
+  echo: false
+  warning: false

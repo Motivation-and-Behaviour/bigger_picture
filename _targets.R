@@ -65,18 +65,42 @@ if (nrow(.dataset_map_plan) == 0) {
         format = "file"
       ),
 
+      # Resolve every glob once, then reuse the result: file tracking, read
+      # batching, and assembly all read from this index instead of walking the
+      # study tree again per resource. The index mirrors filesystem state that
+      # targets cannot track, so rebuild it every run; downstream targets only
+      # invalidate when the index value actually changes.
+      tar_target(
+        resource_index,
+        build_resource_index(dataset_dir, spec),
+        cue = tar_cue(mode = "always")
+      ),
+      tar_target(
+        data_index,
+        assign_read_batches(resource_index),
+        iteration = "group"
+      ),
+
       # Track DATA files only
       tar_target(
         data_files,
-        list_data_files_from_spec(dataset_dir, spec),
+        unique(data_index$file),
         format = "file"
+      ),
+
+      # One branch per batch of data files, so `crew` spreads the reads.
+      tar_target(
+        raw_parts,
+        {
+          data_files
+          read_resource_files(data_index)
+        },
+        pattern = map(data_index),
+        iteration = "list"
       ),
       tar_target(
         raw,
-        {
-          data_files
-          read_dataset_from_spec(dataset_dir, spec)
-        }
+        assemble_raw_dataset(raw_parts, resource_index, spec, dataset_dir)
       ),
       tar_target(
         tidied,

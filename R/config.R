@@ -1,5 +1,12 @@
 bp_data_dir <- function() {
-  "/data"
+  dotenv::load_dot_env()
+  dataset_path <- Sys.getenv("DATASET_PATH", unset = NA)
+  if (is.na(dataset_path)) {
+    stop(
+      "DATASET_PATH environment variable is not set. Please set in .env file."
+    )
+  }
+  dataset_path
 }
 
 bp_dataset_dir_pattern <- function() {
@@ -13,6 +20,10 @@ bp_harmonisation_dir <- function() {
 
 bp_dataset_specs_dir <- function() {
   fs::path(bp_harmonisation_dir(), "datasets")
+}
+
+bp_dataset_template_dir <- function() {
+  fs::path(bp_harmonisation_dir(), "templates", "dataset")
 }
 
 bp_dataschema_path <- function() {
