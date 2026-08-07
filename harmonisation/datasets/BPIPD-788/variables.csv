@@ -251,6 +251,8 @@ mh_anx_rcads_self,unavailable,,,Instrument not administered. KiGGS Wave 2 measur
 mh_anx_dass21_self,unavailable,,,Instrument not administered. KiGGS Wave 2 measures emotional problems only through the SDQ emotional symptoms subscale.,
 mh_anxdep_cbcl_parent,in_progress,,,,
 mh_int_cbcl_parent,in_progress,,,,
+mh_dep_self,in_progress,,,,
+mh_dep_measure,in_progress,,,,
 mh_anx_self,in_progress,,,,
 mh_anx_measure,in_progress,,,,
 wb_emotsc_basc2,unavailable,,,Instrument not administered in KiGGS Wave 2.,

@@ -233,6 +233,8 @@ mh_anx_rcads_self,unavailable,,,Not collected; the only mental health measures a
 mh_anx_dass21_self,unavailable,,,Not collected; the only mental health measures are the parent-report SDQ and SCAS.,
 mh_anxdep_cbcl_parent,in_progress,,,,
 mh_int_cbcl_parent,in_progress,,,,
+mh_dep_self,in_progress,,,,
+mh_dep_measure,in_progress,,,,
 mh_anx_self,in_progress,,,,
 mh_anx_measure,in_progress,,,,
 wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,
