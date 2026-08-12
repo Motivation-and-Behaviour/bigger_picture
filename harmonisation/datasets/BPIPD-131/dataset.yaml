@@ -1,0 +1,32 @@
+dataset_id: "131"
+dataset_name: "NHES"
+status: "in_progress"
+
+waves:
+  - wave: "2007_PFI"
+    wave_dir: "2007"
+    resources:
+      - name: "nhes_2007_pfi_data"
+        role: "data"
+        reader: "csv" # Note: This file is actually fixed-width (FWF)
+        glob: "PFI07Asc.dat"
+      - name: "nhes_2007_pfi_codebook"
+        role: "codebook"
+        glob: "NHES_2007_PFI_Codebook.pdf"
+
+  - wave: "2007_SR"
+    wave_dir: "2007"
+    resources:
+      - name: "nhes_2007_sr_data"
+        role: "data"
+        reader: "csv" # Note: This file is actually fixed-width (FWF)
+        glob: "SR07Asc.dat"
+      - name: "nhes_2007_sr_codebook"
+        role: "codebook"
+        glob: "NHES_2007_SR_Codebook.pdf"
+
+notes: |
+  Contains two modules: Parent/Family Involvement (PFI) for grades K–12 and School Readiness (SR) for ages 3–6. 
+  The raw files (PFI07Asc.dat, SR07Asc.dat) are plain-text Fixed-Width Format (FWF) with no column delimiters. 
+  Accompanying PDF codebooks provide the exact character-column mappings required to parse the data fields. 
+  Because the schema lacks a native 'fwf' reader, these files must be converted to CSV or parsed via column widths before ingestion.
