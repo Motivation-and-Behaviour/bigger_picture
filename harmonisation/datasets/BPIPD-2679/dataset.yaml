@@ -1,0 +1,13 @@
+dataset_id: "2679"
+dataset_name: "Donthu"
+status: "planned"
+
+resources:
+  - name: "Screen Time Datasheet"
+    role: "data"
+    reader: "csv"
+    glob: "Screen time datasheet.csv"
+  - name: "Study Questionnaire"
+    role: "docs"
+    glob: "Study questionnaire.docx"
+    
