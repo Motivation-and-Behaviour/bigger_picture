@@ -1,0 +1,25 @@
+dataset_id: "86"
+dataset_name: "Cogni-Action Project"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "BiggerPicture_Chile.xlsx"
+    reader: "excel"
+    sheet: "Database"
+  - name: "codebook_codes_sheet"
+    role: "codebook"
+    glob: "BiggerPicture_Chile.xlsx"
+    reader: "excel"
+    sheet: "Codes"
+  - name: "codebook_prefix_sheet"
+    role: "codebook"
+    glob: "BiggerPicture_Chile.xlsx"
+    reader: "excel"
+    sheet: "Prefix"
+
+notes: |
+  Data and two codebooks all provided on different sheets in the same excel file.
+  For codebooks, "Prefix", maps each  variable-name prefix (e.g. ACS, MRI, BIA) to the questionnaire/measurement domain
+  it belongs to; and "Codes", gives the variable-level metadata. 
