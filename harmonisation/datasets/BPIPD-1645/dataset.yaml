@@ -1,0 +1,29 @@
+dataset_id: "1645"
+dataset_name: "Tandon"
+status: "in_progress"
+
+resources:
+  - name: "data-11-17 years"
+    role: "data"
+    glob: "SCRI0001_OUTPUT.sav"
+    reader: "spss"
+  - name: "data-6-10 years"
+    role: "data"
+    glob: "SCRI0002_OUTPUT.sav"
+    reader: "spss"
+  - name: "data-6-17 years stacked"
+    role: "data"
+    glob: "SCRI0001_02_OUTPUT_stacked.sav"
+    reader: "spss"
+  - name: "codebook-6-17 years stacked"
+    role: "codebook"
+    glob: "SCRI0001_02_codebook_stacked.pdf"
+    reader: "spss"
+
+notes: |
+  SCRI0001 contains child-parent dyads 11-17 years old.
+  SCRI0002 contains child-parent dyads 6-10 years old.
+  SCRI0001_02_OUTPUT_stacked contains combined 6-17 years old with re-weights.
+  Because the data were collected through complex survey, the descriptive statistics need
+  to be weighed with survey weights. Regression analysis doesn’t have to be weighed
+  since association is not affected by weights.
