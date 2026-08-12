@@ -1,0 +1,13 @@
+dataset_id: "938"
+dataset_name: "Kasap"
+status: "in_progress"
+
+resources:
+  - name: "IAT Prosocial Data"
+    role: "data"
+    glob: "IAT_Prosocial_Tolga_Kasap.sav"
+    reader: "spss"
+  - name: "Variable List"
+    role: "docs"
+    glob: "variable list.docx"
+    
