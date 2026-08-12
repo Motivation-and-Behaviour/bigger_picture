@@ -1,0 +1,18 @@
+dataset_id: "2342"
+dataset_name: "Samson"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "journal.pone.0257877.s002.xlsx"
+    reader: "excel"
+    sheet: "DATA"
+  - name: "codebook"
+    role: "codebook"
+    glob: "journal.pone.0257877.s002.xlsx"
+    reader: "excel"
+    sheet: "LEGEND"
+
+notes: |
+  data and codebook are on separate sheets in the same excel file.
