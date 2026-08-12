@@ -1,0 +1,39 @@
+dataset_id: "821"
+dataset_name: "Early Head Start Research and Evaluation Project"
+status: "in_progress"
+
+resources:
+  - name: "ehs_description_citation"
+    role: "docs"
+    glob: "ICPSR_03804/03804-descriptioncitation.html"
+  - name: "ehs_manifest"
+    role: "docs"
+    glob: "ICPSR_03804/03804-manifest.txt"
+  - name: "ehs_related_literature"
+    role: "docs"
+    glob: "ICPSR_03804/03804-related_literature.txt"
+  - name: "ehs_codebook"
+    role: "codebook"
+    glob: "ICPSR_03804/DS0001/03804-0001-Codebook.pdf"
+  - name: "ehs_data"
+    role: "data"
+    reader: "spss"
+    glob: "ICPSR_03804/DS0001/03804-0001-Data.sav"
+  - name: "ehs_user_guide_birth_to_three"
+    role: "docs"
+    glob: "ICPSR_03804/DS0001/03804-0001-User_guide-BirthtoThree.pdf"
+  - name: "ehs_user_guide_grade5"
+    role: "docs"
+    glob: "ICPSR_03804/DS0001/03804-0001-User_guide-Grade5.pdf"
+  - name: "ehs_user_guide_prek"
+    role: "docs"
+    glob: "ICPSR_03804/DS0001/03804-0001-User_guide-PreK.pdf"
+  - name: "ehs_terms_of_use"
+    role: "docs"
+    glob: "ICPSR_03804/TermsOfUse.html"
+
+notes: |
+  The dataset features an SPSS data file ("03804-0001-Data.sav"). 
+  The PDF codebook and multiple user guides (Birth to Three, PreK, and Grade 5) are included as codebook and docs resources.
+  Other docs include documentation, manifests, related literature, and terms of use. 
+  
