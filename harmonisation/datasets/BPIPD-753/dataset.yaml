@@ -1,0 +1,22 @@
+dataset_id: "753"
+dataset_name: "New Fathers and Mothers"
+status: "in_progress"
+
+resources:
+  - name: "newfams_children_data"
+    role: "data"
+    reader: "spss"
+    glob: "NewFAMS_Children_International.sav"
+  - name: "newfams_parents_data"
+    role: "data"
+    reader: "spss"
+    glob: "NewFams_Parents_International.sav"
+  - name: "newfams_manual"
+    role: "docs"
+    glob: "UKDataArchive-NewFAMS-Manual (1).docx"
+
+notes: |
+  The dataset contains two SPSS data files: one for children ("NewFAMS_Children_International.sav") and one for parents 
+  ("NewFams_Parents_International.sav"). 
+  The supporting user manual and archive documentation is included as a docs resource ("UKDataArchive-NewFAMS-Manual (1).docx").
+  
