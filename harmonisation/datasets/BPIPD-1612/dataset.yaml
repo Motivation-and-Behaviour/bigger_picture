@@ -1,0 +1,10 @@
+dataset_id: "1612"
+dataset_name: "Konok"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: 'Konok&Szőke_2022_data for Bigger Picture.xlsx'
+    reader: "excel"
+    sheet: 'longitudinal data (T1&T2)'
