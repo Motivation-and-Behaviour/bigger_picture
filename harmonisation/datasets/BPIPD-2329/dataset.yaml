@@ -1,0 +1,39 @@
+dataset_id: "2329" 
+dataset_name: "Koch"
+status: "in_progress"
+
+resources:
+  - name: "koch_data"
+    role: "data"
+    glob: "Data memory and media.Rdata"
+    reader: "rda"
+  - name: "koch_r_script_syntax"   # read/setup syntax
+    role: "docs"
+    glob: "Analyses Toddler Media and Memory 2nd revision.R"
+  - name: "koch_rproj_docs"
+    role: "docs"
+    glob: "Toddlers Memory and Media.Rproj"
+  - name: "koch_description_docs"
+    role: "docs"
+    glob: "Description.docx"
+  - name: "koch_survey_item_docs"
+    role: "docs"
+    glob: "Supplement material Survey Item.docx"
+  - name: "koch_rhistory_docs"
+    role: "docs"
+    glob: ".Rhistory"
+
+notes: |
+  Dataset: Koch, BPIPD-2329.
+
+  File contents:
+    - "Data memory and media.Rdata" = the actual R data object - contains only one object.
+    - "Analyses Toddler Media and Memory 2nd revision.R" = the R script that reads
+      and processes the .Rdata file -> captured as a "docs" resource and flagged
+      "read/setup syntax"
+    - "Toddlers Memory and Media.Rproj" = RStudio project file -> captured as "docs".
+    - "Description.docx" and "Supplement material Survey Item.docx" = reference/
+      supporting material -> captured as "docs".
+    - ".Rhistory" = R console session history file. This is typically an incidental
+      autosave artifact rather than a deliberate deliverable; it has been included
+      here as a "docs" resource for completeness
