@@ -1,0 +1,198 @@
+dataset_id: "625"
+dataset_name: "YRBSS"
+status: "in_progress"
+
+waves:
+  - wave: "1999"
+    wave_dir: "1999"
+    resources:
+      - name: "yrbs_1999_data"
+        role: "data"
+        glob: "YRBS_1999_Data.mdb"
+        reader: "mdb"
+
+      - name: "yrbs_1999_user_guide"
+        role: "docs"
+        glob: "YRBS_1999_National_User_Guide.pdf"
+
+  - wave: "2003"
+    wave_dir: "2003"
+    resources:
+      - name: "yrbs_2003_data"
+        role: "data"
+        glob: "YRBS_2003_Data.mdb"
+        reader: "mdb"
+
+      - name: "yrbs_2003_user_guide"
+        role: "docs"
+        glob: "YRBS_2003_National_User_Guide.pdf"
+
+  - wave: "2005"
+    wave_dir: "2005"
+    resources:
+      - name: "yrbs_2005_data"
+        role: "data"
+        glob: "YRBS_2005_Data.mdb"
+        reader: "mdb"
+
+      - name: "yrbs_2005_user_guide"
+        role: "docs"
+        glob: "YRBS_2005_National_User_Guide.pdf"
+
+  - wave: "2007"
+    wave_dir: "2007"
+    resources:
+      - name: "yrbs_2007_data"
+        role: "data"
+        glob: "YRBS_2007_Data.mdb"
+        reader: "mdb"
+
+      - name: "yrbs_2007_user_guide"
+        role: "docs"
+        glob: "YRBS_2007_National_User_Guide.pdf"
+
+  - wave: "2009"
+    wave_dir: "2009"
+    resources:
+      - name: "yrbs_2009_data"
+        role: "data"
+        glob: "YRBS_2009_Data.mdb"
+        reader: "mdb"
+
+      - name: "yrbs_2009_user_guide"
+        role: "docs"
+        glob: "YRBS_2009_National_User_Guide.pdf"
+
+  - wave: "2011"
+    wave_dir: "2011"
+    resources:
+      - name: "yrbs_2011_data"
+        role: "data"
+        glob: "YRBS_2011_Data.mdb"
+        reader: "mdb"
+
+      - name: "yrbs_2011_user_guide"
+        role: "docs"
+        glob: "YRBS_2011_National_User_Guide.pdf"
+
+  - wave: "2013"
+    wave_dir: "2013"
+    resources:
+      - name: "yrbs_2013_hq"
+        role: "data"
+        glob: "YRBS_2013_Data.mdb"
+        reader: "mdb"
+        table: "XXHq"
+
+      - name: "yrbs_2013_hqn"
+        role: "data"
+        glob: "YRBS_2013_Data.mdb"
+        reader: "mdb"
+        table: "XXHqn"
+
+      - name: "yrbs_2013_user_guide"
+        role: "docs"
+        glob: "YRBS_2013_National_User_Guide.pdf"
+
+  - wave: "2015"
+    wave_dir: "2015"
+    resources:
+      - name: "yrbs_2015_hq"
+        role: "data"
+        glob: "YRBS_2015_Data.mdb"
+        reader: "mdb"
+        table: "XXHq"
+
+      - name: "yrbs_2015_hqn"
+        role: "data"
+        glob: "YRBS_2015_Data.mdb"
+        reader: "mdb"
+        table: "XXHqn"
+
+      - name: "yrbs_2015_user_guide"
+        role: "docs"
+        glob: "YRBS_2015_National_User_Guide.pdf"
+
+  - wave: "2017"
+    wave_dir: "2017"
+    resources:
+      - name: "yrbs_2017_hq"
+        role: "data"
+        glob: "YRBS_2017_Data.mdb"
+        reader: "mdb"
+        table: "XXHq"
+
+      - name: "yrbs_2017_hqn"
+        role: "data"
+        glob: "YRBS_2017_Data.mdb"
+        reader: "mdb"
+        table: "XXHqn"
+
+      - name: "yrbs_2017_user_guide"
+        role: "docs"
+        glob: "YRBS_2017_National_User_Guide.pdf"
+
+  - wave: "2019"
+    wave_dir: "2019"
+    resources:
+      - name: "yrbs_2019_hq"
+        role: "data"
+        glob: "YRBS_2019_Data.mdb"
+        reader: "mdb"
+        table: "XXHq"
+
+      - name: "yrbs_2019_hqn"
+        role: "data"
+        glob: "YRBS_2019_Data.mdb"
+        reader: "mdb"
+        table: "XXHqn"
+
+      - name: "yrbs_2019_user_guide"
+        role: "docs"
+        glob: "YRBS_2019_National_User_Guide.pdf"
+
+  - wave: "2021"
+    wave_dir: "2021"
+    resources:
+      - name: "yrbs_2021_hq"
+        role: "data"
+        glob: "YRBS_2021_Data.mdb"
+        reader: "mdb"
+        table: "XXHq"
+
+      - name: "yrbs_2021_hqn"
+        role: "data"
+        glob: "YRBS_2021_Data.mdb"
+        reader: "mdb"
+        table: "XXHqn"
+
+      - name: "yrbs_2021_user_guide"
+        role: "docs"
+        glob: "YRBS_2021_National_User_Guide.pdf"
+
+  - wave: "2023"
+    wave_dir: "2023"
+    resources:
+      - name: "yrbs_2023_hq"
+        role: "data"
+        glob: "YRBS_2023_Data.mdb"
+        reader: "mdb"
+        table: "XXHq"
+
+      - name: "yrbs_2023_hqn"
+        role: "data"
+        glob: "YRBS_2023_Data.mdb"
+        reader: "mdb"
+        table: "XXHqn"
+
+      - name: "yrbs_2023_user_guide"
+        role: "docs"
+        glob: "YRBS_2023_National_User_Guide.pdf"
+
+notes: |
+  Youth Risk Behavior Surveillance System (YRBSS). 
+  Dataset consists of wave-specific Microsoft Access (.mdb) data files 
+  and accompanying National User Guide PDF documentation files. 
+  Waves 1999-2011 each contain a single Access database table.
+  Waves 2013, 2015, 2017, 2019, 2021 and 2023 contain two tables within each .mdb 
+  file (XXHq and XXHqn). 
