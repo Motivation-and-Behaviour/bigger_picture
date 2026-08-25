@@ -1,0 +1,59 @@
+dataset_id: "1294"
+dataset_name: "ELS"
+status: "in_progress"
+
+resources:
+  - name: "els_byf1sch"
+    role: "data"
+    glob: "els_02_12_byf1sch_v1_0.rdata"
+    reader: "rda"
+
+  - name: "els_byf3pststu"
+    role: "data"
+    glob: "els_02_12_byf3pststu_v1_0.rdata"
+    reader: "rda"
+
+  - name: "els_byf3stbrr"
+    role: "data"
+    glob: "els_02_12_byf3stbrr_v1_0.rdata"
+    reader: "rda"
+
+  - name: "els_f2inst"
+    role: "data"
+    glob: "els_02_12_f2inst_v1_0.rdata"
+    reader: "rda"
+
+  - name: "els_f3inst"
+    role: "data"
+    glob: "els_02_12_f3inst_v1_0.rdata"
+    reader: "rda"
+
+  - name: "els_codebook"
+    role: "codebook"
+    glob: "Codebook_ELS_02_12.txt"
+
+  - name: "els_record_layout_byf1sch"
+    role: "docs"
+    glob: "RecordFileLayout_ELS_02_12_BYF1SCH.txt"
+
+  - name: "els_record_layout_byf3brrpst"
+    role: "docs"
+    glob: "RecordFileLayout_ELS_02_12_BYF3BRRPST.PRI.txt"
+
+  - name: "els_record_layout_byf3pststu"
+    role: "docs"
+    glob: "RecordFileLayout_ELS_02_12_BYF3PSTSTU.PRI.txt"
+
+  - name: "els_record_layout_f2inst"
+    role: "docs"
+    glob: "RecordFileLayout_ELS_02_12_F2INST.txt"
+
+  - name: "els_record_layout_f3inst"
+    role: "docs"
+    glob: "RecordFileLayout_ELS_02_12_F3INST.txt"
+
+notes: |
+  Education Longitudinal Study (ELS). Dataset contains five R data files (.rdata), 
+  each containing a single R object.
+  Supporting documentation consists of one codebook text file and multiple 
+  record layout text files describing the structure of the corresponding datasets. 
