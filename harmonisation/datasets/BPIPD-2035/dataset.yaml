@@ -1,0 +1,72 @@
+dataset_id: "2035"
+dataset_name: "National Survey on Cyber Violence Among Adolescents"
+status: "in_progress"
+
+waves:
+  - wave: "2020"
+    wave_dir: "Korea Intelligent Information Society Agency_Cyber Violence Survey_20201231"
+    resources:
+      - name: "cyber_violence_2020_students"
+        role: "data"
+        glob: "1. 20년 사이버폭력 실태조사_raw data_학생 (2020 Students).xlsx"
+        reader: "excel"
+
+      - name: "cyber_violence_2020_adults"
+        role: "data"
+        glob: "2. 20년 사이버폭력 실태조사_raw data_성인 (2020 adults).xlsx"
+        reader: "excel"
+
+      - name: "cyber_violence_2020_teachers"
+        role: "data"
+        glob: "3. 20년 사이버폭력 실태조사_raw data_교사 (teachers).xlsx"
+        reader: "excel"
+
+      - name: "cyber_violence_2020_parents"
+        role: "data"
+        glob: "4. 20년 사이버폭력 실태조사_raw data_학부모 (2020 Parents).xlsx"
+        reader: "excel"
+
+  - wave: "2021"
+    wave_dir: "Korea Intelligent Information Society Agency_Cyber Violence Survey_20211231"
+    resources:
+      - name: "cyber_violence_2021_students"
+        role: "data"
+        glob: "1. DATA_2021 사이버폭력 실태조사(학생).xlsx"
+        reader: "excel"
+
+      - name: "cyber_violence_2021_adults"
+        role: "data"
+        glob: "2. DATA_2021 사이버폭력 실태조사(성인).xlsx"
+        reader: "excel"
+
+  - wave: "2023"
+    wave_dir: "Korea Intelligent Information Society Agency_Cyber Violence Survey_20231231"
+    resources:
+      - name: "cyber_violence_2023_adults"
+        role: "data"
+        glob: "데이터_23년사이버폭력실태조사(성인).xlsx"
+        reader: "excel"
+
+      - name: "cyber_violence_2023_adolescents"
+        role: "data"
+        glob: "데이터_23년사이버폭력실태조사(청소년).xlsx"
+        reader: "excel"
+
+      - name: "cyber_violence_2023_adults_codebook"
+        role: "codebook"
+        glob: "코드북_23년사이버폭력실태조사(성인).xlsx"
+
+      - name: "cyber_violence_2023_adolescents_codebook"
+        role: "codebook"
+        glob: "코드북_23년사이버폭력실태조사(청소년).xlsx"
+
+notes: |
+  National Survey on Cyber Violence Among Adolescents. 
+  Dataset is organised into year-specific directories (2020, 2021, and 2023). 
+  All data files are provided as Excel workbooks. 
+  The 2020 wave contains separate datasets for students, adults, 
+  teachers, and parents. The 2021 wave contains separate datasets for students 
+  and adults. The 2023 wave contains separate datasets for adolescents and 
+  adults, along with corresponding Excel codebooks for each population group. 
+  No additional documentation files were present in the supplied folder 
+  listings.
