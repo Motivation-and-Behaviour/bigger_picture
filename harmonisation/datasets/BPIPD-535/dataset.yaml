@@ -1,0 +1,12 @@
+dataset_id: "535"
+dataset_name: "SWITCH"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Switch 1234 - 5236 Merged - RECODED 5 Deidentified.sav"
+    reader: "spss"
+
+notes: |
+  One single .sav data file
