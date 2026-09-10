@@ -58,7 +58,7 @@ waves:
         role: "data"
         glob: "Sweep 2 - Age 3/spss/spss28/mcs2_proxy_partner_interview.sav"
         reader: "spss"
-      - name: "MCS Longitudinal Data Dictionary"
+      - name: "Sweep 2 Data Dictionary"
         role: "codebook"
         glob: "Sweep 2 - Age 3/mrdoc/excel/mcs_longitudinal_data_dictionary_2021-02-03.xlsx"
         reader: "excel"
@@ -163,7 +163,7 @@ waves:
         role: "data"
         glob: "Sweep 3 - Age 5/spss/spss28/mcs3_proxy_partner_interview.sav"
         reader: "spss"
-      - name: "MCS Longitudinal Data Dictionary"
+      - name: "Sweep 3 Data Dictionary"
         role: "codebook"
         glob: "Sweep 3 - Age 5/mrdoc/excel/mcs_longitudinal_data_dictionary_2021-02-03.xlsx"
         reader: "excel"
@@ -281,7 +281,7 @@ waves:
         role: "data"
         glob: "Sweep 4 - Age 7/spss/spss28/mcs4_proxy_partner_interview.sav"
         reader: "spss"
-      - name: "MCS Longitudinal Data Dictionary"
+      - name: "Sweep 4 Data Dictionary"
         role: "codebook"
         glob: "Sweep 4 - Age 7/mrdoc/excel/mcs_longitudinal_data_dictionary_2021-02-03.xlsx"
         reader: "excel"
@@ -411,7 +411,7 @@ waves:
         role: "data"
         glob: "Sweep 5 - Age 11/spss/spss28/mcs5_proxy_partner_interview.sav"
         reader: "spss"
-      - name: "MCS Longitudinal Data Dictionary"
+      - name: "Sweep 5 Data Dictionary"
         role: "codebook"
         glob: "Sweep 5 - Age 11/mrdoc/excel/mcs_longitudinal_data_dictionary_2021-02-03.xlsx"
         reader: "excel"
@@ -563,7 +563,7 @@ waves:
         role: "data"
         glob: "Sweep 6 - Age 14/spss/spss28/mcs6_tud_parsed_data_web_calendar_format.sav"
         reader: "spss"
-      - name: "MCS Longitudinal Data Dictionary"
+      - name: "Sweep 6 Data Dictionary"
         role: "codebook"
         glob: "Sweep 6 - Age 14/mrdoc/excel/mcs_longitudinal_data_dictionary_2021-02-03.xlsx"
         reader: "excel"
@@ -669,7 +669,7 @@ waves:
         role: "data"
         glob: "Sweep 7 - Age 17/spss/spss28/mcs7_parent_interview.sav"
         reader: "spss"
-      - name: "MCS Longitudinal Data Dictionary"
+      - name: "Sweep 7 Data Dictionary"
         role: "codebook"
         glob: "Sweep 7 - Age 17/mrdoc/excel/mcs_longitudinal_data_dictionary_2021-02-03.xlsx"
         reader: "excel"
@@ -701,7 +701,7 @@ waves:
 notes: |
   Contains 6 sweeps (sweep_2 through sweep_7), covering ages 3, 5, 7, 11, 14, and 17.
   Data files are SPSS .sav files, one resource per file, covering Child (cm_*), Parent/Proxy-partner, Family, Household grid (hhgrid), and (from sweep 6) Time-Use-Diary and accelerometer modules. Sweep 6 also includes four national Index of Multiple Deprivation (IMD) files.
-  Codebook is a single longitudinal Excel data dictionary (mcs_longitudinal_data_dictionary_2021-02-03.xlsx, sheet "Survey_Collection_DataDict") shared across all sweeps.
+  Each sweep ships its own copy of the longitudinal Excel data dictionary (mcs_longitudinal_data_dictionary_2021-02-03.xlsx, sheet "Survey_Collection_DataDict"). Despite the shared filename the six copies differ in content, so each is declared as a separate codebook resource named "Sweep N Data Dictionary" (resource names must be unique across the whole spec, including across waves).
   Documentation is PDF, one resource per file, and includes technical reports, user guides, questionnaires (parent/CAWI/self-completion/teacher), showcards, and coding/editing booklets. Sweeps 2-4 also include an Excel wave-correspondence file (mcs_1-4_new-long_old-wide_correspondence) mapping old/new variable naming across sweeps 1-4.
   Folder structure per sweep: {sweep folder}/spss/spss28/*.sav (data), {sweep folder}/mrdoc/excel/*.xlsx (codebook + correspondence file), {sweep folder}/mrdoc/pdf/*.pdf (documentation).
   Administrative files (.rtf, .htm, .zip - e.g. file_information.rtf, UKDA_Study_*_Information.htm, ukda_data_dictionaries.zip, read*.htm) are excluded to maintain repository focus.
