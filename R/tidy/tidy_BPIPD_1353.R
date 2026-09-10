@@ -1,22 +1,21 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-1353 (Korea Youth Risk Behavior Web-based Survey)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' KYRBS is a repeated cross-section, not a panel: each of the 21 annual waves
+#' (2005-2025) is an independent stratified cluster sample.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per respondent per year
 tidy_BPIPD_1353 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
+  df <- dplyr::bind_rows(raw_dataset$data)
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  dplyr::mutate(
+    df,
+    participant_id = paste0(.wave, "_", OBS),
+    cluster_id = paste0(.wave, "_", CLUSTER),
+    .before = 1
+  )
 }
