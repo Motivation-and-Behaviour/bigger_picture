@@ -1,0 +1,229 @@
+dataset_id: "873"
+dataset_name: "China Family Panel Studies"
+status: "in_progress"
+
+resources:
+  - name: "cfps2022_stata_archive"
+    role: "docs"
+    glob: "CFPS2022Stata_EN/CFPS2022Stata_unzip_password_in_the_instructions.rar"
+
+  - name: "cfps2022_english_instructions"
+    role: "docs"
+    glob: "CFPS2022Stata_EN/Instructions-English version.docx"
+
+  - name: "cfps2010_questionnaire"
+    role: "codebook"
+    glob: "Questionnaires/CFPS 2010_ Questionnaires (1).pdf"
+
+  - name: "cfps2012_questionnaire"
+    role: "codebook"
+    glob: "Questionnaires/CFPS 2012_ Questionnaires.pdf"
+
+  - name: "cfps2014_questionnaire"
+    role: "codebook"
+    glob: "Questionnaires/CFPS 2014_ Questionnaires.pdf"
+
+  - name: "cfps2016_questionnaire"
+    role: "codebook"
+    glob: "Questionnaires/CFPS 2016_ Questionnaires.pdf"
+
+  - name: "cfps2018_questionnaire"
+    role: "codebook"
+    glob: "Questionnaires/CFPS 2018_ Questionnaires.pdf"
+
+  - name: "cfps2020_questionnaire"
+    role: "codebook"
+    glob: "Questionnaires/CFPS 2020_Questionnaires.pdf"
+
+  - name: "cfps2022_questionnaire"
+    role: "codebook"
+    glob: "Questionnaires/CFPS2022 Full Questionnaires_250925 (1).pdf"
+
+waves:
+  - wave: "2010"
+    wave_dir: "2010 data"
+    resources:
+      - name: "cfps2010adult"
+        role: "data"
+        glob: "Stata14/[CFPS Public Data] CFPS2010 in STATA (English)/ecfps2010adult_202008.dta"
+        reader: "stata"
+
+      - name: "cfps2010child"
+        role: "data"
+        glob: "Stata14/[CFPS Public Data] CFPS2010 in STATA (English)/ecfps2010child_201906.dta"
+        reader: "stata"
+
+      - name: "cfps2010comm"
+        role: "data"
+        glob: "Stata14/[CFPS Public Data] CFPS2010 in STATA (English)/ecfps2010comm_201906.dta"
+        reader: "stata"
+
+      - name: "cfps2010famconf"
+        role: "data"
+        glob: "Stata14/[CFPS Public Data] CFPS2010 in STATA (English)/ecfps2010famconf_202008.dta"
+        reader: "stata"
+
+      - name: "cfps2010famecon"
+        role: "data"
+        glob: "Stata14/[CFPS Public Data] CFPS2010 in STATA (English)/ecfps2010famecon_202008.dta"
+        reader: "stata"
+
+  - wave: "2012"
+    wave_dir: "2012 data"
+    resources:
+      - name: "cfps2012adult"
+        role: "data"
+        glob: "Stata14/ecfps2012adult_202505.dta"
+        reader: "stata"
+
+      - name: "cfps2012child"
+        role: "data"
+        glob: "Stata14/ecfps2012child_201906.dta"
+        reader: "stata"
+
+      - name: "cfps2012crossyearid"
+        role: "data"
+        glob: "Stata14/ecfps2012crossyearid_032015.dta"
+        reader: "stata"
+
+      - name: "cfps2012famconf"
+        role: "data"
+        glob: "Stata14/ecfps2012famconf_092015.dta"
+        reader: "stata"
+
+      - name: "cfps2012famecon"
+        role: "data"
+        glob: "Stata14/ecfps2012famecon_201906.dta"
+        reader: "stata"
+
+  - wave: "2014"
+    wave_dir: "2014 data"
+    resources:
+      - name: "cfps2014adult"
+        role: "data"
+        glob: "Stata14/ecfps2014adult_201906.dta"
+        reader: "stata"
+
+      - name: "cfps2014child"
+        role: "data"
+        glob: "Stata14/ecfps2014child_201906.dta"
+        reader: "stata"
+
+      - name: "cfps2014comm"
+        role: "data"
+        glob: "Stata14/ecfps2014comm_201906.dta"
+        reader: "stata"
+
+      - name: "cfps2014famconf"
+        role: "data"
+        glob: "Stata14/ecfps2014famconf_170630.dta"
+        reader: "stata"
+
+      - name: "cfps2014famecon"
+        role: "data"
+        glob: "Stata14/ecfps2014famecon_201906.dta"
+        reader: "stata"
+
+  - wave: "2016"
+    wave_dir: "2016 data"
+    resources:
+      - name: "cfps2016adult"
+        role: "data"
+        glob: "Stata14/ecfps2016adult_201906.dta"
+        reader: "stata"
+
+      - name: "cfps2016child"
+        role: "data"
+        glob: "Stata14/ecfps2016child_201906.dta"
+        reader: "stata"
+
+      - name: "cfps2016famconf"
+        role: "data"
+        glob: "Stata14/ecfps2016famconf_201804.dta"
+        reader: "stata"
+
+      - name: "cfps2016famecon"
+        role: "data"
+        glob: "Stata14/ecfps2016famecon_201807.dta"
+        reader: "stata"
+
+  - wave: "2018"
+    wave_dir: "2018 data"
+    resources:
+      - name: "cfps2018childproxy"
+        role: "data"
+        glob: "Stata14/ecfps2018childproxy_202012.dta"
+        reader: "stata"
+
+      - name: "cfps2018famconf"
+        role: "data"
+        glob: "Stata14/ecfps2018famconf_202008.dta"
+        reader: "stata"
+
+      - name: "cfps2018famecon"
+        role: "data"
+        glob: "Stata14/ecfps2018famecon_202101.dta"
+        reader: "stata"
+
+      - name: "cfps2018person"
+        role: "data"
+        glob: "Stata14/ecfps2018person_202012.dta"
+        reader: "stata"
+
+  - wave: "2020"
+    wave_dir: "2020 data"
+    resources:
+      - name: "cfps2020child"
+        role: "data"
+        glob: "CFPS2020Stata/ecfps2020child_202306.dta"
+        reader: "stata"
+
+      - name: "cfps2020famconf"
+        role: "data"
+        glob: "CFPS2020Stata/ecfps2020famconf_202306.dta"
+        reader: "stata"
+
+      - name: "cfps2020famecon"
+        role: "data"
+        glob: "CFPS2020Stata/ecfps2020famecon_202306.dta"
+        reader: "stata"
+
+      - name: "cfps2020person"
+        role: "data"
+        glob: "CFPS2020Stata/ecfps2020person_202306.dta"
+        reader: "stata"
+
+  - wave: "2022"
+    wave_dir: "2022 data"
+    resources:
+      - name: "cfps2022child"
+        role: "data"
+        glob: "CFPS2022Stata_unzip_password_in_the_instructions/ecfps2022child_202410.dta"
+        reader: "stata"
+
+      - name: "cfps2022famconf"
+        role: "data"
+        glob: "CFPS2022Stata_unzip_password_in_the_instructions/ecfps2022famconf_202410.dta"
+        reader: "stata"
+
+      - name: "cfps2022famecon"
+        role: "data"
+        glob: "CFPS2022Stata_unzip_password_in_the_instructions/ecfps2022famecon_202410.dta"
+        reader: "stata"
+
+      - name: "cfps2022person"
+        role: "data"
+        glob: "CFPS2022Stata_unzip_password_in_the_instructions/ecfps2022person_202410.dta"
+        reader: "stata"
+
+notes: |
+  China Family Panel Studies (CFPS). The dataset is organised into survey waves 
+  (2010, 2012, 2014, 2016, 2018, 2020, and 2022). Most waves contain both SAS 
+  and Stata versions of the data; only the Stata (.dta) versions are included 
+  in this specification because they duplicate the SAS datasets. Wave-specific 
+  datasets include adult, child, family, community, household economy, 
+  person-level and linkage files depending on the survey year. Questionnaire 
+  PDFs are provided for each wave and are treated as codebooks because they 
+  document survey questions and variable content. Additional 2022 
+  English-language instructions and a compressed archive file are 
+  included as documentation resources.
