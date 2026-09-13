@@ -1,0 +1,13 @@
+dataset_id: "736"
+dataset_name: "Saving and Empowering Young Lives in Europe"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "data4biggerpicture.dta"
+    reader: "stata"
+  - name: "codebook"
+    role: "codebook"
+    glob: "codebook.pdf"
+    

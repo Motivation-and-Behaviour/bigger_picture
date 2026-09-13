@@ -42,3 +42,15 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 170,maternal_education,Completed college,Bachelor degree or higher,compatible,MTF code 5
 170,maternal_education,Graduate or professional school after college,Bachelor degree or higher,compatible,MTF code 6
 170,maternal_education,"Don't know, or does not apply",Unknown,compatible,"MTF code 7, plus the -9 missing code used up to 2011"
+1629,maternal_education,Not completed primary education,Secondary school or less,compatible,ISCED 0
+1629,maternal_education,Primary or first stage of basic,Secondary school or less,compatible,ISCED 1
+1629,maternal_education,Lower secondary or second stage of basic,Secondary school or less,compatible,ISCED 2
+1629,maternal_education,Upper secondary,Secondary school or less,compatible,ISCED 3
+1629,maternal_education,"Post secondary, non tertiary",Post-secondary,compatible,ISCED 4
+1629,maternal_education,First stage of tertiary,Bachelor degree or higher,compatible,ISCED 5
+1629,maternal_education,Second stage of tertiary,Bachelor degree or higher,compatible,ISCED 6
+1629,maternal_education,Unknown,Unknown,unavailable,"Dont know, no answer, single-parent household, or the interviewed carer is not a parent"
+1353,maternal_education,Middle school graduate or less,Secondary school or less,compatible,E_EDU_M code 1 (중학교 졸업 이하).
+1353,maternal_education,High school graduate,Secondary school or less,compatible,E_EDU_M code 2 (고등학교 졸업).
+1353,maternal_education,College or university graduate or above,Bachelor degree or higher,proximate,"E_EDU_M code 3 (대학교 졸업 이상), which explicitly includes junior-college graduates, so this band slightly overstates attainment."
+1353,maternal_education,Do not know,Unknown,compatible,E_EDU_M code 4 (잘 모름) plus the 9999 not-asked and 8888 block-not-administered codes.
