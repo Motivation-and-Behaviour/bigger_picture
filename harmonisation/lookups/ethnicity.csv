@@ -86,3 +86,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 170,ethnicity,White,White,compatible,Direct label match. MTF releases only a Black/White/Hispanic recode; every other group is set to missing in the source and reaches Unknown through the expression default
 170,ethnicity,Black,Black,compatible,Direct label match. MTF releases only a Black/White/Hispanic recode; every other group is set to missing in the source and reaches Unknown through the expression default
 170,ethnicity,Hispanic,Hispanic,compatible,Direct label match. MTF releases only a Black/White/Hispanic recode; every other group is set to missing in the source and reaches Unknown through the expression default
+27,ethnicity,White,White,compatible,"MCS six-category census classification code 1; includes White British, White Irish and Other White"
+27,ethnicity,Mixed,Mixed,compatible,Code 2
+27,ethnicity,Indian,Asian,compatible,Code 3
+27,ethnicity,Pakistani and Bangladeshi,Asian,compatible,Code 4; MCS collapses the two groups in the six-category classification
+27,ethnicity,Black or Black British,Black,compatible,"Code 5; covers Black Caribbean, Black African and Other Black"
+27,ethnicity,Other ethnic group (including Chinese),Other,compatible,"Code 6; Chinese is a separate group in the UK census but MCS folds it into the residual category at six-category level, so it cannot be recovered as Asian"

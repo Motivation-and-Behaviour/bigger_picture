@@ -1,0 +1,188 @@
+dataset_id: "1353"
+dataset_name: "2022 Korea Youth Risk Behavior Web-Based Survey"
+status: "in_progress"
+
+resources:
+  - name: "user_guidelines"
+    role: "docs"
+    glob: "Guidelines - 제1차(2005) 제21차(2025) 청소년건강행태조사 원시자료 이용지침서_260307.pdf"
+
+  - name: "variable_crosswalk"
+    role: "codebook"
+    glob: "제1차(2005)-제21차(2025) 청소년건강행태조사 연도별 설문지 및 변수 설명서 비교.xlsx"
+
+waves:
+  - wave: "2005"
+    wave_dir: "2005"
+    resources:
+      - name: "kyrbs_2005"
+        role: "data"
+        glob: "kyrbs2005.sav"
+        reader: "spss"
+
+  - wave: "2006"
+    wave_dir: "2006"
+    resources:
+      - name: "kyrbs_2006"
+        role: "data"
+        glob: "kyrbs2006.sav"
+        reader: "spss"
+
+  - wave: "2007"
+    wave_dir: "2007"
+    resources:
+      - name: "kyrbs_2007"
+        role: "data"
+        glob: "kyrbs2007.sav"
+        reader: "spss"
+
+  - wave: "2008"
+    wave_dir: "2008"
+    resources:
+      - name: "kyrbs_2008"
+        role: "data"
+        glob: "kyrbs2008.sav"
+        reader: "spss"
+
+  - wave: "2009"
+    wave_dir: "2009"
+    resources:
+      - name: "kyrbs_2009"
+        role: "data"
+        glob: "kyrbs2009.sav"
+        reader: "spss"
+
+  - wave: "2010"
+    wave_dir: "2010"
+    resources:
+      - name: "kyrbs_2010"
+        role: "data"
+        glob: "kyrbs2010.sav"
+        reader: "spss"
+
+  - wave: "2011"
+    wave_dir: "2011"
+    resources:
+      - name: "kyrbs_2011"
+        role: "data"
+        glob: "kyrbs2011.sav"
+        reader: "spss"
+
+  - wave: "2012"
+    wave_dir: "2012"
+    resources:
+      - name: "kyrbs_2012"
+        role: "data"
+        glob: "kyrbs2012.sav"
+        reader: "spss"
+
+  - wave: "2013"
+    wave_dir: "2013"
+    resources:
+      - name: "kyrbs_2013"
+        role: "data"
+        glob: "kyrbs2013.sav"
+        reader: "spss"
+
+  - wave: "2014"
+    wave_dir: "2014"
+    resources:
+      - name: "kyrbs_2014"
+        role: "data"
+        glob: "kyrbs2014.sav"
+        reader: "spss"
+
+  - wave: "2015"
+    wave_dir: "2015"
+    resources:
+      - name: "kyrbs_2015"
+        role: "data"
+        glob: "kyrbs2015.sav"
+        reader: "spss"
+
+  - wave: "2016"
+    wave_dir: "2016"
+    resources:
+      - name: "kyrbs_2016"
+        role: "data"
+        glob: "kyrbs2016.sav"
+        reader: "spss"
+
+  - wave: "2017"
+    wave_dir: "2017"
+    resources:
+      - name: "kyrbs_2017"
+        role: "data"
+        glob: "kyrbs2017.sav"
+        reader: "spss"
+
+  - wave: "2018"
+    wave_dir: "2018"
+    resources:
+      - name: "kyrbs_2018"
+        role: "data"
+        glob: "kyrbs2018.sav"
+        reader: "spss"
+
+  - wave: "2019"
+    wave_dir: "2019"
+    resources:
+      - name: "kyrbs_2019"
+        role: "data"
+        glob: "kyrbs2019.sav"
+        reader: "spss"
+
+  - wave: "2020"
+    wave_dir: "2020"
+    resources:
+      - name: "kyrbs_2020"
+        role: "data"
+        glob: "kyrbs2020.sav"
+        reader: "spss"
+
+  - wave: "2021"
+    wave_dir: "2021"
+    resources:
+      - name: "kyrbs_2021"
+        role: "data"
+        glob: "kyrbs2021.sav"
+        reader: "spss"
+
+  - wave: "2022"
+    wave_dir: "2022"
+    resources:
+      - name: "kyrbs_2022"
+        role: "data"
+        glob: "kyrbs2022.sav"
+        reader: "spss"
+
+  - wave: "2023"
+    wave_dir: "2023"
+    resources:
+      - name: "kyrbs_2023"
+        role: "data"
+        glob: "kyrbs2023.sav"
+        reader: "spss"
+
+  - wave: "2024"
+    wave_dir: "2024"
+    resources:
+      - name: "kyrbs_2024"
+        role: "data"
+        glob: "kyrbs2024.sav"
+        reader: "spss"
+
+  - wave: "2025"
+    wave_dir: "2025"
+    resources:
+      - name: "kyrbs_2025"
+        role: "data"
+        glob: "kyrbs2025.sav"
+        reader: "spss"
+
+notes: |
+  Dataset is organised into annual wave directories spanning 2005 through 2025. 
+  Each wave folder contains a single SPSS (.sav) data file. Dataset-level 
+  documentation includes a PDF raw data user guide covering all waves and an 
+  Excel workbook comparing questionnaires and variable definitions across 
+  survey years. No codebooks are provided separately for individual waves.
