@@ -147,6 +147,9 @@ st_socmedia,incompatible,"QC308b, QC309b",,"QC309b records how often the child v
 st_educational_wd,incompatible,"QC306a, QC307a",,"QC306a/QC307a record whether and how often the child used the internet for school work in the past month (five-point frequency, not duration).",
 st_educational_we,incompatible,"QC306a, QC307a",,"QC306a/QC307a record whether and how often the child used the internet for school work in the past month (five-point frequency, not duration).",
 st_educational,incompatible,"QC306a, QC307a",,"QC306a/QC307a record whether and how often the child used the internet for school work in the past month (five-point frequency, not duration).",
+st_work_wd,in_progress,,,,
+st_work_we,in_progress,,,,
+st_work,in_progress,,,,
 st_internet_wd,compatible,QC304,"recode_values(
   as.numeric(haven::zap_labels(QC304)),
   11 ~ 0,

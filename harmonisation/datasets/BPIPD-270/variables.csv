@@ -182,6 +182,9 @@ st_educational_we,partial,YTIM1F02,"recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2
 st_educational,partial,"YTIM1F01, YTIM1F02","((recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 5) +
   (recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 2)) /
   7","'Time spent watching internet and TV lectures' from the time-use grid. Partial because it captures recorded or broadcast lessons only, not the wider category of screen use for homework and study. Usual-day value is the project's 5:2 weekday:weekend weighted mean. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_work_wd,in_progress,,,,
+st_work_we,in_progress,,,,
+st_work,in_progress,,,,
 st_internet_wd,unavailable,,,No generic internet or online-time duration item; the time-use grid is organised by device and activity instead.,
 st_internet_we,unavailable,,,No generic internet or online-time duration item; the time-use grid is organised by device and activity instead.,
 st_internet,unavailable,,,No generic internet or online-time duration item; the time-use grid is organised by device and activity instead.,

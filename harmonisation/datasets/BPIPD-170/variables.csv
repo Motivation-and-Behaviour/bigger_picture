@@ -204,6 +204,9 @@ st_educational,partial,computer_hrs_week_school,"recode_values(
   9 ~ 44.5
 ) /
   7","'About how many hours a week do you spend using a computer ... A: doing schoolwork?' (2000-2017), converted to an average day. Partial because the schema asks for educational screen use on any device while MTF asks about computers only, so study on a tablet or phone is not counted. Closed bands scored at their midpoint; the open top band is scored as if it had the same width as the band below it.",
+st_work_wd,in_progress,,,,
+st_work_we,in_progress,,,,
+st_work,in_progress,,,,
 st_internet_wd,unavailable,,,,
 st_internet_we,unavailable,,,,
 st_internet,partial,internet_hrs_week_leisure,"recode_values(
