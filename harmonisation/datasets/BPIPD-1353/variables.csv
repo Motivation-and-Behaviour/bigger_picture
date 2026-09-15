@@ -162,6 +162,9 @@ st_educational,partial,"YEAR, INT_WD, INT_WK, INT_WD_MM1, INT_WK_MM1","((case_wh
   ) *
     2)) /
   7",Internet used for study purposes on a usual day. Weekday and weekend combined with the project's 5:2 weighted mean. See st_educational_wd.,
+st_work_wd,in_progress,,,,
+st_work_we,in_progress,,,,
+st_work,in_progress,,,,
 st_internet_wd,partial,"YEAR, INT_WD, INT_WD_MM, INT_WD_MM2","case_when(
   YEAR %in% c(2009, 2010, 2018, 2019) & as.numeric(INT_WD) == 1 ~ 0,
   YEAR %in% c(2009, 2010, 2018, 2019) ~ as.numeric(INT_WD_MM) / 60,
