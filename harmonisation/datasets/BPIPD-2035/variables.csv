@@ -31,6 +31,7 @@ ses_household_measure,partial,"students_2021_C, adolescents_2023_DM7","case_when
   !is.na(students_2021_C) ~ ""Self-rated family economic standing (7-point)"",
   !is.na(adolescents_2023_DM7) ~ ""Self-rated family economic standing (3-point)""
 )",Left NA where ses_household is Unknown rather than claiming a measure.,
+ses_hukou,in_progress,,,,
 maternal_education,unavailable,,,,
 paternal_education,unavailable,,,,
 parental_education,unavailable,,,"Not asked of the students; collected only in the parent survey, which is not combined here.",
