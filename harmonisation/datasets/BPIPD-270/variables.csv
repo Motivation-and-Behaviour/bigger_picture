@@ -21,6 +21,7 @@ ses_household,proximate,"PINCOME, wave","case_when(
   .default = ""High""
 )","Guardian-reported banded average monthly household income (12 bands). Cut so the bottom two and top two within-study quintiles become Low and High, per the schema note. Cut points are chosen per wave as the band whose cumulative share is closest to 40 and 60 percent, and hard-coded rather than computed at run time so the recode is auditable: Low is bands 1-5 at w1-w2, 1-6 at w3-w6 and 1-7 at w7, with Medium the next band up. The cut points shift over time because nominal incomes rose across 2018-2024. Proximate because the coarse bands and heavy ties make the splits approximate rather than exact quintiles (39/23/37 percent Low/Medium/High among respondents, but High ranges from 31 to 47 percent across waves). 9999 = No response and missing guardian records become Unknown.",
 ses_household_measure,inferred,,"""Banded average monthly household income (12 bands, guardian report)""",Records the source measure behind ses_household.,
+ses_hukou,in_progress,,,,
 maternal_education,compatible,PSCHOOL2,"lookup_values(
   recode_values(
     as.numeric(PSCHOOL2),
