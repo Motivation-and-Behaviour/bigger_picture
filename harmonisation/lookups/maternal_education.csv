@@ -61,3 +61,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 41,maternal_education,Incomplete higher education,Post-secondary,proximate,"Ensino superior incompleto: tertiary study begun but no qualification held. Placed at Post-secondary, which elsewhere in this lookup means a completed sub-degree qualification, so this slightly overstates attainment."
 41,maternal_education,Complete higher education,Bachelor degree or higher,compatible,"Ensino superior completo, a completed university degree."
 41,maternal_education,Don't know,Unknown,compatible,Explicit don't-know response by the adolescent.
+873,maternal_education,Illiterate/Semi-literate,Secondary school or less,compatible,CFPS family roster tb4 code 1
+873,maternal_education,Primary school,Secondary school or less,compatible,CFPS family roster tb4 code 2
+873,maternal_education,Junior high school,Secondary school or less,compatible,CFPS family roster tb4 code 3
+873,maternal_education,Senior high school,Secondary school or less,compatible,"CFPS family roster tb4 code 4; covers senior high, secondary, technical and vocational senior school"
+873,maternal_education,3-year college,Post-secondary,compatible,CFPS family roster tb4 code 5 (zhuanke)
+873,maternal_education,4-year college,Bachelor degree or higher,compatible,CFPS family roster tb4 code 6 (benke)
+873,maternal_education,Masters degree,Bachelor degree or higher,compatible,CFPS family roster tb4 code 7
+873,maternal_education,Doctoral degree,Bachelor degree or higher,compatible,CFPS family roster tb4 code 8
+873,maternal_education,Unknown,Unknown,compatible,"CFPS family roster tb4 codes 0 (No data) and 9 (No need to go to school), plus item non-response"

@@ -56,6 +56,7 @@ ses_household,proximate,"CM3POVCA, CM4POVCA, CM5POVCA, CP6POVCA","lookup_values(
   default = ""Unknown""
 )","Constructed household income relative to the federal poverty threshold, banded into five categories and measured fresh at each wave. Following the dataschema convention the bottom two bands become Low (37.7% of mapped rows), the middle band Medium (27.0%) and the top two High (35.3%). Proximate because the bands are fixed poverty cut-points rather than within-study quintiles, and because FFCWS over-sampled non-marital births so the sample skews poor relative to the US population. Shared mapping in harmonisation/lookups/ses_household.csv.",ses_household
 ses_household_measure,inferred,,"""Household income as a ratio of the federal poverty threshold (5 bands)""",Records the source measure behind ses_household. Income is imputed by FFCWS where components are missing.,
+ses_hukou,in_progress,,,,
 maternal_education,compatible,"CM3EDU, CM4EDU, CM5EDU, CP6EDU, CP6PCGREL","lookup_values(
   recode_values(
     coalesce(

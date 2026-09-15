@@ -120,6 +120,7 @@ ses_household,compatible,"BOECDUK0, COECDUK0, DOECDUK0, EOECDUK0, FOECDUK0","rec
   default = ""Unknown""
 )","OECD-equivalised net household income, already banded by MCS into UK-wide weighted quintiles, so no income-band-to-quintile judgement is needed and the recode is kept inline rather than in the shared ses_household lookup. Quintiles 1-2 Low, 3 Medium, 4-5 High. Sweep 7 released no income quintiles, so every sweep-7 row is Unknown",
 ses_household_measure,compatible,.wave,"if_else(.wave == ""sweep_7"", ""Unknown"", ""OECD equivalised net household income, UK-wide weighted quintiles"")",Names the measure behind ses_household; sweep 7 released no income variables,
+ses_hukou,in_progress,,,,
 maternal_education,partial,"BDDNVQ00, CDDNVQ00, DDDNVQ00, EDNVQ00, FDNVQ00 , BDDNVQ00_PARTNER, CDDNVQ00_PARTNER, DDDNVQ00_PARTNER, EDNVQ00_PARTNER, FDNVQ00_PARTNER , BDDREL00, CDDREL00, DDDREL00, EDREL00, FDREL00, BDDREL00_PARTNER, CDDREL00_PARTNER, DDDREL00_PARTNER, EDREL00_PARTNER, FDREL00_PARTNER, respondent_sex, respondent_sex_PARTNER, .wave","recode_values(
   local({
     nvq <- coalesce(

@@ -17,6 +17,7 @@ minority,proximate,race,"case_when(
 ses_area,unavailable,,,,
 ses_household,compatible,abep_score,"case_when(abep_score <= 36 ~ ""Low"", abep_score <= 41 ~ ""Medium"", abep_score > 41 ~ ""High"", .default = ""Unknown"")","ABEP Criterio Brasil score (https://abep.org/criterio-brasil/) cut at within-sample quintiles per the dataschema note, bottom two Low and top two High. Within-sample rather than the national ABEP classes because this sample is affluent relative to Brazil, which would leave the Low group almost empty.",
 ses_household_measure,inferred,abep_score,"""ABEP Criterio Brasil economic classification score (household assets, access to public services and education of the household head; 0-100 scale, 14-76 observed)""",Standardised national measure maintained by the Associacao Brasileira de Empresas de Pesquisa; higher scores indicate higher economic standing.,
+ses_hukou,in_progress,,,,
 maternal_education,proximate,mother_education,"coalesce(
   lookup_values(
     mother_education,

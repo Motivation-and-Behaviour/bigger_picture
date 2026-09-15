@@ -42,6 +42,7 @@ ses_household,proximate,povlev4_nschyr,"lookup_values(
   default = ""Unknown""
 )","Household income as a percent of the federal poverty level, in the four DRC bands (Census single-imputation FPL_I1). Quintiles are not recoverable from four bands, so the two lowest bands become Low (29.8%), the third Medium (30.5%) and the top High (39.7%); shared mapping in harmonisation/lookups/ses_household.csv",ses_household
 ses_household_measure,inferred,,"""Household income as a percent of the federal poverty level (4 bands)""",Census-imputed household income relative to the DHHS/Census federal poverty guidelines,
+ses_hukou,in_progress,,,,
 maternal_education,compatible,"a1_relation, a1_sex, a1_grade, a2_relation, a2_sex, a2_grade","lookup_values(
   recode_values(
     case_when(

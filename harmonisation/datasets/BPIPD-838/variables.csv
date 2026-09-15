@@ -18,6 +18,7 @@ ses_household,compatible,Household_income_gp,"lookup_values(
   target_variable = ""ses_household""
 )","Parent-reported banded monthly household income (HKD, 9 bands plus Refusal). Each band assigned to the within-sample quintile containing its cumulative midpoint, then Q1-2 Low, Q3 Medium, Q4-5 High per the schema note; among respondents that gives 41% Low, 21% Medium, 38% High. Refusal (19% of T1) becomes Unknown. Collected at T1 only.",ses_household
 ses_household_measure,inferred,Household_income_gp,"""Banded monthly household income (HKD, 9 bands, parent report)""",Records the source measure behind ses_household.,
+ses_hukou,in_progress,,,,
 maternal_education,proximate,Edu_mother,"if_else(
   wave == ""T1"",
   coalesce(
