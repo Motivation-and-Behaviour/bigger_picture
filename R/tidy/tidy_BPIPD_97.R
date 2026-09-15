@@ -1,22 +1,14 @@
-#' Template tidier for pre-harmonisation dataset shaping
-#'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' Tidier for BPIPD-97 (ESPAD)
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble
 tidy_BPIPD_97 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
+  espad <- tibble::as_tibble(raw_dataset$data[[1]])
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  # Screen use only from 2015 onwards
+  dplyr::filter(espad, ESPAD_Year >= 2015)
 }
