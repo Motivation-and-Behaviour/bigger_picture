@@ -13,6 +13,7 @@ minority,inferred,iethnic4,"if_else(iethnic4 == ""European"", ""Non-minority"", 
 ses_area,compatible,fnzdepcat3,"recode_values(fnzdepcat3, ""NZDep 1-3"" ~ ""High"", ""NZDep 4-7"" ~ ""Medium"", ""NZDep 8-10"" ~ ""Low"")",,
 ses_household,unavailable,,,,
 ses_household_measure,unavailable,,,,
+ses_hukou,in_progress,,,,
 maternal_education,proximate,meducat4,"lookup_values(meducat4, lookup_maternal_education, dataset_id = spec$dataset_id, target_variable = ""maternal_education"")",Shared mapping in harmonisation/lookups/maternal_education.csv,maternal_education
 paternal_education,unavailable,,,Not collected; only maternal education (see maternal_education),
 parental_education,unavailable,,,Only maternal education collected; highest-across-parents cannot be derived without paternal education (schema note: derive at analysis where both exist),

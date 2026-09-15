@@ -13,31 +13,31 @@ resources:
 
   - name: "cfps2010_questionnaire"
     role: "codebook"
-    glob: "Questionnaires/CFPS 2010_ Questionnaires (1).pdf"
+    glob: "Quesionnaires/CFPS 2010_ Questionnaires (1).pdf"
 
   - name: "cfps2012_questionnaire"
     role: "codebook"
-    glob: "Questionnaires/CFPS 2012_ Questionnaires.pdf"
+    glob: "Quesionnaires/CFPS 2012_ Questionnaires.pdf"
 
   - name: "cfps2014_questionnaire"
     role: "codebook"
-    glob: "Questionnaires/CFPS 2014_ Questionnaires.pdf"
+    glob: "Quesionnaires/CFPS 2014_ Questionnaires.pdf"
 
   - name: "cfps2016_questionnaire"
     role: "codebook"
-    glob: "Questionnaires/CFPS 2016_ Questionnaires.pdf"
+    glob: "Quesionnaires/CFPS 2016_ Questionnaires.pdf"
 
   - name: "cfps2018_questionnaire"
     role: "codebook"
-    glob: "Questionnaires/CFPS 2018_ Questionnaires.pdf"
+    glob: "Quesionnaires/CFPS 2018_ Questionnaires.pdf"
 
   - name: "cfps2020_questionnaire"
     role: "codebook"
-    glob: "Questionnaires/CFPS 2020_Questionnaires.pdf"
+    glob: "Quesionnaires/CFPS 2020_Questionnaires.pdf"
 
   - name: "cfps2022_questionnaire"
     role: "codebook"
-    glob: "Questionnaires/CFPS2022 Full Questionnaires_250925 (1).pdf"
+    glob: "Quesionnaires/CFPS2022 Full Questionnaires_250925 (1).pdf"
 
 waves:
   - wave: "2010"

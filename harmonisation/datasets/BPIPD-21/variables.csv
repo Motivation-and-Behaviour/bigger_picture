@@ -13,6 +13,7 @@ minority,compatible,minority,"recode_values(minority, 0 ~ ""Non-minority"", 1 ~ 
 ses_area,compatible,IMD3,"recode_values(IMD3, 1 ~ ""Low"", 2 ~ ""Medium"", 3 ~ ""High"")",,
 ses_household,unavailable,,,,
 ses_household_measure,unavailable,,,,
+ses_hukou,in_progress,,,,
 maternal_education,unavailable,,,,
 paternal_education,unavailable,,,,
 parental_education,unavailable,,,,

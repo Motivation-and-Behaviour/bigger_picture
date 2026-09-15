@@ -25,6 +25,7 @@ minority,proximate,"q8, q9a, q10a, q11a","case_when(
 ses_area,unavailable,,,"No area-level, neighbourhood or regional indicator; the only geography in the file is the country code.",
 ses_household,incompatible,"q4a, q4b, schooltype",,"No income, affluence, deprivation or parental-education item. The file carries free-text parental occupation (568 distinct father strings, 390 mother, plus 88/99 sentinels, uncoded and partly German-language) and the secondary school track (Hauptschule / Realschule / Gymnasium). School track is strongly SES-graded in Germany but is an educational-attainment pathway, not household socioeconomic status, and occupation would need coding to ISCO or a class schema before it could support a High/Medium/Low split.",
 ses_household_measure,unavailable,,,No household SES measure is derived; see ses_household.,
+ses_hukou,in_progress,,,,
 maternal_education,incompatible,"q4a, q4b",,"Parental education is never asked. Items 4a and 4b record the father's and mother's job as free text, which cannot be converted to an education level.",
 paternal_education,incompatible,"q4a, q4b",,"Parental education is never asked. Items 4a and 4b record the father's and mother's job as free text, which cannot be converted to an education level.",
 parental_education,incompatible,"q4a, q4b",,"Parental education is never asked. Items 4a and 4b record the father's and mother's job as free text, which cannot be converted to an education level.",

@@ -22,6 +22,7 @@ minority,proximate,race,"recode_values(race, ""White"" ~ ""Non-minority"", c(""B
 ses_area,unavailable,,,,
 ses_household,unavailable,,,"MTF has collected no household income, affluence or wealth item in these 25 years. Parental education is the only SES signal available and is reported on its own rows (maternal_education, paternal_education, parental_education) rather than being re-badged as household SES.",
 ses_household_measure,unavailable,,,No ses_household to describe.,
+ses_hukou,in_progress,,,,
 maternal_education,compatible,mother_education,"lookup_values(
   recode_values(
     mother_education,
