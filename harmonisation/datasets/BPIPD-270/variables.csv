@@ -21,6 +21,7 @@ ses_household,proximate,"PINCOME, wave","case_when(
   .default = ""High""
 )","Guardian-reported banded average monthly household income (12 bands). Cut so the bottom two and top two within-study quintiles become Low and High, per the schema note. Cut points are chosen per wave as the band whose cumulative share is closest to 40 and 60 percent, and hard-coded rather than computed at run time so the recode is auditable: Low is bands 1-5 at w1-w2, 1-6 at w3-w6 and 1-7 at w7, with Medium the next band up. The cut points shift over time because nominal incomes rose across 2018-2024. Proximate because the coarse bands and heavy ties make the splits approximate rather than exact quintiles (39/23/37 percent Low/Medium/High among respondents, but High ranges from 31 to 47 percent across waves). 9999 = No response and missing guardian records become Unknown.",
 ses_household_measure,inferred,,"""Banded average monthly household income (12 bands, guardian report)""",Records the source measure behind ses_household.,
+ses_hukou,in_progress,,,,
 maternal_education,compatible,PSCHOOL2,"lookup_values(
   recode_values(
     as.numeric(PSCHOOL2),
@@ -182,6 +183,9 @@ st_educational_we,partial,YTIM1F02,"recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2
 st_educational,partial,"YTIM1F01, YTIM1F02","((recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 5) +
   (recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 2)) /
   7","'Time spent watching internet and TV lectures' from the time-use grid. Partial because it captures recorded or broadcast lessons only, not the wider category of screen use for homework and study. Usual-day value is the project's 5:2 weekday:weekend weighted mean. Banded time-use item converted to hours at band midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5, 7 = 4.5); the open top band '4 hours or more' is scored 4.5. Reference period is 'last semester'.",
+st_work_wd,in_progress,,,,
+st_work_we,in_progress,,,,
+st_work,in_progress,,,,
 st_internet_wd,unavailable,,,No generic internet or online-time duration item; the time-use grid is organised by device and activity instead.,
 st_internet_we,unavailable,,,No generic internet or online-time duration item; the time-use grid is organised by device and activity instead.,
 st_internet,unavailable,,,No generic internet or online-time duration item; the time-use grid is organised by device and activity instead.,

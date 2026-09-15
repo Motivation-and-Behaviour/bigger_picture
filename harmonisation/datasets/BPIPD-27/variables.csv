@@ -120,6 +120,7 @@ ses_household,compatible,"BOECDUK0, COECDUK0, DOECDUK0, EOECDUK0, FOECDUK0","rec
   default = ""Unknown""
 )","OECD-equivalised net household income, already banded by MCS into UK-wide weighted quintiles, so no income-band-to-quintile judgement is needed and the recode is kept inline rather than in the shared ses_household lookup. Quintiles 1-2 Low, 3 Medium, 4-5 High. Sweep 7 released no income quintiles, so every sweep-7 row is Unknown",
 ses_household_measure,compatible,.wave,"if_else(.wave == ""sweep_7"", ""Unknown"", ""OECD equivalised net household income, UK-wide weighted quintiles"")",Names the measure behind ses_household; sweep 7 released no income variables,
+ses_hukou,in_progress,,,,
 maternal_education,partial,"BDDNVQ00, CDDNVQ00, DDDNVQ00, EDNVQ00, FDNVQ00 , BDDNVQ00_PARTNER, CDDNVQ00_PARTNER, DDDNVQ00_PARTNER, EDNVQ00_PARTNER, FDNVQ00_PARTNER , BDDREL00, CDDREL00, DDDREL00, EDREL00, FDREL00, BDDREL00_PARTNER, CDDREL00_PARTNER, DDDREL00_PARTNER, EDREL00_PARTNER, FDREL00_PARTNER, respondent_sex, respondent_sex_PARTNER, .wave","recode_values(
   local({
     nvq <- coalesce(
@@ -391,6 +392,9 @@ st_socmedia,unavailable,,,,
 st_educational_wd,unavailable,,,,
 st_educational_we,unavailable,,,,
 st_educational,unavailable,,,,
+st_work_wd,in_progress,,,,
+st_work_we,in_progress,,,,
+st_work,in_progress,,,,
 st_internet_wd,compatible,FCINTH00,"recode_values(as.numeric(FCINTH00), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 4, 7 ~ 6, 8 ~ 8)","Sweep 6 only. FCINTH00's MCS label says 'Does CM ever use the internet at home', which is wrong: the values are the eight-band hours set and the sweep-6 young person questionnaire asks 'On a normal week day during term time, how many hours do you spend using the internet?', including on tablets and smartphones and including homework time. Overlaps st_socmedia_wd by design, so per DR-0002 the two must never be summed. Bands are converted to the midpoint of their range; the open-ended top band takes a value just above its floor (8 hours where the band is '7 hours or more', 11 where it is '10 hours or more'). Negative MCS missing codes and the sweep-7 don't-know/refused codes are left unmatched and become NA.",
 st_internet_we,unavailable,,,,
 st_internet,unavailable,,,,

@@ -92,3 +92,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 27,ethnicity,Pakistani and Bangladeshi,Asian,compatible,Code 4; MCS collapses the two groups in the six-category classification
 27,ethnicity,Black or Black British,Black,compatible,"Code 5; covers Black Caribbean, Black African and Other Black"
 27,ethnicity,Other ethnic group (including Chinese),Other,compatible,"Code 6; Chinese is a separate group in the UK census but MCS folds it into the residual category at six-category level, so it cannot be recovered as Asian"
+41,ethnicity,White,White,compatible,"IBGE cor/raca category Branca, the largest Brazilian group."
+41,ethnicity,Black,Black,compatible,IBGE category Preta.
+41,ethnicity,Mixed (Pardo),Mixed,compatible,"IBGE category Parda, the Brazilian mixed-race category."
+41,ethnicity,Asian,Asian,compatible,"IBGE category Amarela, i.e. of East Asian descent."
+41,ethnicity,Indigenous,Other,proximate,"IBGE category Indigena. The dataschema has no Indigenous category so it collapses to Other, matching the Brazilian Indian row for BPIPD-80; indigenous status is kept in the indigenous variable."
+41,ethnicity,Other (specify),Other,compatible,Free-text other category; the specification was not supplied in the IPD extract.

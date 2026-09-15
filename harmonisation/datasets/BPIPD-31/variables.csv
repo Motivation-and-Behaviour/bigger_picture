@@ -56,6 +56,7 @@ ses_household,proximate,"CM3POVCA, CM4POVCA, CM5POVCA, CP6POVCA","lookup_values(
   default = ""Unknown""
 )","Constructed household income relative to the federal poverty threshold, banded into five categories and measured fresh at each wave. Following the dataschema convention the bottom two bands become Low (37.7% of mapped rows), the middle band Medium (27.0%) and the top two High (35.3%). Proximate because the bands are fixed poverty cut-points rather than within-study quintiles, and because FFCWS over-sampled non-marital births so the sample skews poor relative to the US population. Shared mapping in harmonisation/lookups/ses_household.csv.",ses_household
 ses_household_measure,inferred,,"""Household income as a ratio of the federal poverty threshold (5 bands)""",Records the source measure behind ses_household. Income is imputed by FFCWS where components are missing.,
+ses_hukou,in_progress,,,,
 maternal_education,compatible,"CM3EDU, CM4EDU, CM5EDU, CP6EDU, CP6PCGREL","lookup_values(
   recode_values(
     coalesce(
@@ -166,6 +167,9 @@ st_socmedia,unavailable,,,"No weekend counterpart exists, so a usual-day estimat
 st_educational_wd,unavailable,,,"No educational screen-use item at the waves and respondents used here. The Year 9 child self-report does include a banded weekday item for schoolwork on the computer (K5D1D), but this dataset's screen use at Year 9 is taken from the caregiver to keep one respondent per wave; see the tidied column child_band_schoolwork_wd if the project would rather switch Year 9 to the child's own report.",
 st_educational_we,unavailable,,,See st_educational_wd.,
 st_educational,unavailable,,,See st_educational_wd.,
+st_work_wd,in_progress,,,,
+st_work_we,in_progress,,,,
+st_work,in_progress,,,,
 st_internet_wd,compatible,K6D36F,youth_internet_hours_wd,"Year 15 teen item 'hours per day visits websites/shop on internet on weekdays'. General, unspecified online time, which is what this row is for; it overlaps the other content categories and must never be summed with them (DR-0002).",
 st_internet_we,unavailable,,,The Year 15 teen time-use block asks about weekdays only.,
 st_internet,unavailable,,,"No weekend counterpart exists, so a usual-day estimate cannot be formed; Year 15 contributes through st_internet_wd.",

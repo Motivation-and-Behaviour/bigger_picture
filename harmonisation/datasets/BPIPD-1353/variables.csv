@@ -19,6 +19,7 @@ ses_household,proximate,"E_SES, YEAR","case_when(
   .default = ""Unknown""
 )","Single self-reported item on the family's economic standing, collapsed from the 5-point scale (high / upper-middle / middle / lower-middle / low). 2005 used a 4-point version with no middle category, which would put 57% of that wave in High against 29% in 2006; it is set to Unknown rather than forced onto the 5-point collapse. Subjective standing, not income or assets.",
 ses_household_measure,inferred,"E_SES, YEAR","if_else(YEAR == 2005, ""Unknown"", ""Single-item self-reported household economic status (5-point, high to low)"")",2005 used an incomparable 4-point version and is not carried into ses_household.,
+ses_hukou,in_progress,,,,
 maternal_education,proximate,E_EDU_M,"lookup_values(
   recode_values(
     as.numeric(E_EDU_M),
@@ -162,6 +163,9 @@ st_educational,partial,"YEAR, INT_WD, INT_WK, INT_WD_MM1, INT_WK_MM1","((case_wh
   ) *
     2)) /
   7",Internet used for study purposes on a usual day. Weekday and weekend combined with the project's 5:2 weighted mean. See st_educational_wd.,
+st_work_wd,in_progress,,,,
+st_work_we,in_progress,,,,
+st_work,in_progress,,,,
 st_internet_wd,partial,"YEAR, INT_WD, INT_WD_MM, INT_WD_MM2","case_when(
   YEAR %in% c(2009, 2010, 2018, 2019) & as.numeric(INT_WD) == 1 ~ 0,
   YEAR %in% c(2009, 2010, 2018, 2019) ~ as.numeric(INT_WD_MM) / 60,

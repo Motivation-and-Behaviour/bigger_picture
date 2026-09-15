@@ -29,6 +29,7 @@ ses_household,compatible,d3,"lookup_values(
   target_variable = ""ses_household""
 )","Gross annual household income bands (carer-reported) mapped to within-sample quintiles, each band assigned to the quintile containing its cumulative midpoint; Q1-2 Low (41%), Q3 Medium (24%), Q4-5 High (35%); shared mapping in harmonisation/lookups/ses_household.csv",ses_household
 ses_household_measure,inferred,,"""Gross annual household income (13 bands)""",Carer-reported combined annual household income before tax,
+ses_hukou,in_progress,,,,
 maternal_education,unavailable,,,Respondent is the carer (58% mothers) but education not asked,
 paternal_education,unavailable,,,Carer education not collected (see maternal_education),
 parental_education,unavailable,,,Parental education not collected,
@@ -155,6 +156,9 @@ st_socmedia,unavailable,,,Not measured; screen time items cover video gaming onl
 st_educational_wd,unavailable,,,,
 st_educational_we,unavailable,,,,
 st_educational,unavailable,,,Not measured; screen time items cover video gaming only,
+st_work_wd,in_progress,,,,
+st_work_we,in_progress,,,,
+st_work,in_progress,,,,
 st_internet_wd,unavailable,,,,
 st_internet_we,unavailable,,,,
 st_internet,unavailable,,,Not measured; a5 records whether named games are played online (social play mode) but not time online,

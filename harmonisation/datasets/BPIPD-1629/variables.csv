@@ -50,6 +50,7 @@ minority,proximate,DPdiscriminateA (QP212),"recode_values(as.numeric(haven::zap_
 ses_area,unavailable,,,"Rurality, AreaSize and PopDensity describe the size and population density of the sampling point, not its socioeconomic status. No area-level deprivation or SES measure is released.",
 ses_household,compatible,"DPSESHH3 (SCR6orig, SCR7)","recode_values(as.numeric(haven::zap_labels(DPSESHH3)), 1 ~ ""High"", 2 ~ ""Medium"", 3 ~ ""Low"", default = ""Unknown"")","DPSESHH3 is the study's own household SES variable, derived from the head of household's education (SCR6orig) crossed with occupation (SCR7) to give the six-level European social grade A/B/C1/C2/D/E, then collapsed as A/B/C1 = High, C2 = Medium, D/E = Low. Distribution 34%/41%/20%, with 5% Unknown (education or occupation not stated).",
 ses_household_measure,inferred,"DPSESHH3 (SCR6orig, SCR7)","""Social grade of the head of household (A/B/C1/C2/D/E), derived by the study from head-of-household education and occupation, collapsed to High (A/B/C1), Medium (C2) and Low (D/E)""",Names the source measure behind ses_household; constant across the dataset.,
+ses_hukou,in_progress,,,,
 maternal_education,partial,"QP206, sexpt, QP209, QP210","lookup_values(
   recode_values(
     case_when(
@@ -147,6 +148,9 @@ st_socmedia,incompatible,"QC308b, QC309b",,"QC309b records how often the child v
 st_educational_wd,incompatible,"QC306a, QC307a",,"QC306a/QC307a record whether and how often the child used the internet for school work in the past month (five-point frequency, not duration).",
 st_educational_we,incompatible,"QC306a, QC307a",,"QC306a/QC307a record whether and how often the child used the internet for school work in the past month (five-point frequency, not duration).",
 st_educational,incompatible,"QC306a, QC307a",,"QC306a/QC307a record whether and how often the child used the internet for school work in the past month (five-point frequency, not duration).",
+st_work_wd,in_progress,,,,
+st_work_we,in_progress,,,,
+st_work,in_progress,,,,
 st_internet_wd,compatible,QC304,"recode_values(
   as.numeric(haven::zap_labels(QC304)),
   11 ~ 0,

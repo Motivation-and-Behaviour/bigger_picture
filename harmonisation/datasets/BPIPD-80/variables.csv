@@ -55,6 +55,7 @@ ses_household,proximate,inclevel,"coalesce(
   ""Unknown""
 )","IncLevel places each household in one of four income bands defined separately for each site from that site's own currency-specific income question (CountrySpecLevel), so the measure is already within-country relative. Proximate because the source has four bands rather than quintiles: the bottom band maps to Low, the top band to High and the two middle bands to Medium, which makes the extreme groups narrower than the dataschema's top-two/bottom-two quintile convention. 821 participants (11%) have no income band and become Unknown",ses_household
 ses_household_measure,inferred,,"""Site-specific gross annual household income band (4 levels)""",Records the source measure behind ses_household; each site asked household income in its own currency and bands,
+ses_hukou,in_progress,,,,
 maternal_education,compatible,"newmother_edu3, newmother_edu2","case_when(
   as.integer(newmother_edu3) == 1L ~ ""Secondary school or less"",
   as.integer(newmother_edu3) == 2L & as.integer(newmother_edu2) == 1L ~ ""Secondary school or less"",
@@ -146,6 +147,9 @@ st_socmedia,unavailable,,,"Not asked. ISCOLE's 2011-2013 questionnaire covered o
 st_educational_wd,unavailable,,,"Not asked. ISCOLE's 2011-2013 questionnaire covered only TV and computer/video games; there are no items on tablets, smartphones, social media, educational screen use or general internet use.",
 st_educational_we,unavailable,,,"Not asked. ISCOLE's 2011-2013 questionnaire covered only TV and computer/video games; there are no items on tablets, smartphones, social media, educational screen use or general internet use.",
 st_educational,unavailable,,,"Not asked. ISCOLE's 2011-2013 questionnaire covered only TV and computer/video games; there are no items on tablets, smartphones, social media, educational screen use or general internet use.",
+st_work_wd,in_progress,,,,
+st_work_we,in_progress,,,,
+st_work,in_progress,,,,
 st_internet_wd,unavailable,,,"Not asked. ISCOLE's 2011-2013 questionnaire covered only TV and computer/video games; there are no items on tablets, smartphones, social media, educational screen use or general internet use.",
 st_internet_we,unavailable,,,"Not asked. ISCOLE's 2011-2013 questionnaire covered only TV and computer/video games; there are no items on tablets, smartphones, social media, educational screen use or general internet use.",
 st_internet,unavailable,,,"Not asked. ISCOLE's 2011-2013 questionnaire covered only TV and computer/video games; there are no items on tablets, smartphones, social media, educational screen use or general internet use.",
