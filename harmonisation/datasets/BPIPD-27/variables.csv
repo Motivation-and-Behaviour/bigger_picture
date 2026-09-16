@@ -78,6 +78,7 @@ minority,compatible,"BDC06E00, CDC06E00, DDC06E00, FDCE0600","recode_values(
   c(2, 3, 4, 5, 6) ~ ""Minority"",
   default = ""Unknown""
 )","Derived from the same carried-forward cohort-member ethnic group as ethnicity. The MCS White category includes White Irish and Other White, all treated as non-minority in the UK, matching the convention used by the other UK datasets in this project",
+immigrant_background,in_progress,,,,
 ses_area,compatible,"BIMDSCOE, BIWIMDSC, BISIMDSC, BIMDSCON, CIMDSCOE, CIWIMDSC, CISIMDSC, CIMDSCON, DIMDSCOE, DIWIMDSC, DISIMDSC, DIMDSCON, EIMDSCOE, EIWIMDSC, EISIMDSC, EIMDSCON, FIMDSCOE, FIWIMDSC, FISIMDSC, FIMDSCON","recode_values(
   coalesce(
     as.numeric(BIMDSCOE),
@@ -551,6 +552,7 @@ cog_nonverbalreason_bas_picsim,compatible,CCPSABIL,as.numeric(CCPSABIL),"Sweep 3
 cog_spatial_bas_pattern,compatible,"CCPCABIL, DCPCAB00","coalesce(as.numeric(CCPCABIL), as.numeric(DCPCAB00))","Sweeps 3 and 4 (ages 5 and 7). BAS II Pattern Construction ability score. Ability scores are not age-normed and the two sweeps sit on different parts of the scale (observed 10-152 at age 5, 10-211 at age 7), so these must be standardised within dataset and wave and never pooled raw across the two ages. MCS releases the score forms the BAS II publishes: T-scores and standard scores are age-normed and comparable across ages, ability scores are not.",
 cog_verbalreason_bas_versim,compatible,EVSTSCO,as.numeric(EVSTSCO),"Sweep 5 only (age 11). BAS II Verbal Similarities standard score as MCS releases it, observed range 20-80 and age-normed. MCS releases the score forms the BAS II publishes: T-scores and standard scores are age-normed and comparable across ages, ability scores are not.",
 cog_schoolread_bracken,compatible,BDSRCS00,"ifelse(as.numeric(BDSRCS00) >= 0, as.numeric(BDSRCS00), NA_real_)","Sweep 2 only (age 3). Bracken School Readiness Composite standard score, observed range 56-149, covering the colours, letters, numbers, sizes, comparisons and shapes subtests. MCS also releases the raw composite, percentile and percent-mastery forms; the standard score is taken because it is the age-normed one. The negative not-carried-out, subtest-not- completed and age-unknown codes are excluded.",
+cog_creativethinking_stdtest,in_progress,,,,
 mh_anx_basc2,unavailable,,,Instrument not administered,
 mh_dep_basc2,unavailable,,,Instrument not administered,
 mh_emotsymp_sdq_parent,compatible,"BEMOTION, CEMOTION, DDEMOTION, EEMOTION, FEMOTION, GEMOTION","coalesce(
@@ -628,6 +630,8 @@ mh_stress_self,in_progress,,,,
 mh_lonely_self,in_progress,,,,
 mh_suicide_ideation_self,in_progress,,,,
 mh_suicide_attempt_self,in_progress,,,,
+mh_psychsom_hbscscl_self,in_progress,,,,
+mh_psychsom_measure,in_progress,,,,
 wb_emotsc_basc2,unavailable,,,Instrument not administered,
 wb_mwb_wemwbs,incompatible,,,"Sweep 7 administers the 7-item short form (SWEMWBS: GCWWOP00, GCWWUS00, GCWWRE00, GCWWDE00, GCWWTH00, GCWWCL00, GCWWMN00) and releases GDWEMWBS, the Rasch-transformed metric score on 7-35. That is neither the 14-item WEMWBS this row describes nor its 14-70 raw sum, and the two are not interchangeable, so it is left unmapped pending a SWEMWBS row",
 wb_lifesatisfaction_cantrilladder,unavailable,,,"MCS asks life satisfaction on a seven-point completely-happy to not-at-all-happy scale, not the 0-10 Cantril ladder; that item is mapped to wb_lifesat_singleitem_self",
@@ -669,3 +673,5 @@ wb_mwb_who5_self,unavailable,,,Instrument not administered,
 wb_happiness_shs_self,unavailable,,,Instrument not administered,
 wb_mwb_swemwbs_self,compatible,GDWEMWBS,as.numeric(GDWEMWBS),"Sweep 7 only (age 17), self-completed. MCS releases the Rasch-transformed metric score for the seven short-form items (GCWWOP00, GCWWUS00, GCWWRE00, GCWWDE00, GCWWTH00, GCWWCL00, GCWWMN00), which is the published SWEMWBS conversion of the 7-35 raw sum and is itself on 7-35; observed median 22.35. The metric score is mapped rather than the raw sum. The 14-item WEMWBS in wb_mwb_wemwbs was not administered",
 wb_selfratedhealth_self,in_progress,,,,
+wb_posaffect_self,in_progress,,,,
+wb_posaffect_measure,in_progress,,,,
