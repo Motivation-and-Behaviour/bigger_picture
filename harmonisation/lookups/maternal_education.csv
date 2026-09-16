@@ -70,3 +70,20 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 873,maternal_education,Masters degree,Bachelor degree or higher,compatible,CFPS family roster tb4 code 7
 873,maternal_education,Doctoral degree,Bachelor degree or higher,compatible,CFPS family roster tb4 code 8
 873,maternal_education,Unknown,Unknown,compatible,"CFPS family roster tb4 codes 0 (No data) and 9 (No need to go to school), plus item non-response"
+107,maternal_education,ISCED-97 none,Secondary school or less,compatible,No completed education
+107,maternal_education,ISCED-97 level 1,Secondary school or less,compatible,Primary
+107,maternal_education,ISCED-97 level 2,Secondary school or less,compatible,Lower secondary
+107,maternal_education,ISCED-97 level 3B or 3C,Secondary school or less,compatible,Upper secondary vocational
+107,maternal_education,ISCED-97 level 3A or 4,Secondary school or less,compatible,"Upper secondary general or post-secondary non-tertiary, one PISA code so kept at secondary"
+107,maternal_education,ISCED-97 level 5B,Post-secondary,compatible,Short-cycle vocational tertiary
+107,maternal_education,ISCED-97 level 5A or 6,Bachelor degree or higher,compatible,Theoretically oriented tertiary or doctoral
+107,maternal_education,ISCED-2011 below level 1,Secondary school or less,compatible,No completed primary
+107,maternal_education,ISCED-2011 level 1,Secondary school or less,compatible,Primary
+107,maternal_education,ISCED-2011 level 2,Secondary school or less,compatible,Lower secondary
+107,maternal_education,ISCED-2011 level 3.3,Secondary school or less,compatible,Upper secondary without tertiary access
+107,maternal_education,ISCED-2011 level 3.4,Secondary school or less,compatible,Upper secondary with tertiary access
+107,maternal_education,ISCED-2011 level 4,Post-secondary,compatible,Post-secondary non-tertiary
+107,maternal_education,ISCED-2011 level 5,Post-secondary,compatible,Short-cycle tertiary
+107,maternal_education,ISCED-2011 level 6,Bachelor degree or higher,compatible,Bachelor or equivalent
+107,maternal_education,ISCED-2011 level 7,Bachelor degree or higher,compatible,Master or equivalent
+107,maternal_education,ISCED-2011 level 8,Bachelor degree or higher,compatible,Doctoral or equivalent
