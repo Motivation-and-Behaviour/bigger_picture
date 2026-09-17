@@ -73,7 +73,8 @@
       "properties": {
         "name": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Key used to reach this resource from the tidier. Must be unique across the whole spec, including across waves and across roles; `read_dataset_from_spec()` errors on duplicates."
         },
         "role": {
           "type": "string",
