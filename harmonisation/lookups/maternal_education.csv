@@ -50,3 +50,40 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1629,maternal_education,First stage of tertiary,Bachelor degree or higher,compatible,ISCED 5
 1629,maternal_education,Second stage of tertiary,Bachelor degree or higher,compatible,ISCED 6
 1629,maternal_education,Unknown,Unknown,unavailable,"Dont know, no answer, single-parent household, or the interviewed carer is not a parent"
+1353,maternal_education,Middle school graduate or less,Secondary school or less,compatible,E_EDU_M code 1 (중학교 졸업 이하).
+1353,maternal_education,High school graduate,Secondary school or less,compatible,E_EDU_M code 2 (고등학교 졸업).
+1353,maternal_education,College or university graduate or above,Bachelor degree or higher,proximate,"E_EDU_M code 3 (대학교 졸업 이상), which explicitly includes junior-college graduates, so this band slightly overstates attainment."
+1353,maternal_education,Do not know,Unknown,compatible,E_EDU_M code 4 (잘 모름) plus the 9999 not-asked and 8888 block-not-administered codes.
+41,maternal_education,No formal education,Secondary school or less,compatible,Sem instrucao formal.
+41,maternal_education,Incomplete elementary school,Secondary school or less,compatible,"Ensino fundamental incompleto, Brazilian lower secondary not completed."
+41,maternal_education,Complete elementary school,Secondary school or less,compatible,"Ensino fundamental completo, Brazilian lower secondary (ISCED 2)."
+41,maternal_education,Complete high school,Secondary school or less,compatible,"Ensino medio completo, Brazilian upper secondary (ISCED 3)."
+41,maternal_education,Incomplete higher education,Post-secondary,proximate,"Ensino superior incompleto: tertiary study begun but no qualification held. Placed at Post-secondary, which elsewhere in this lookup means a completed sub-degree qualification, so this slightly overstates attainment."
+41,maternal_education,Complete higher education,Bachelor degree or higher,compatible,"Ensino superior completo, a completed university degree."
+41,maternal_education,Don't know,Unknown,compatible,Explicit don't-know response by the adolescent.
+873,maternal_education,Illiterate/Semi-literate,Secondary school or less,compatible,CFPS family roster tb4 code 1
+873,maternal_education,Primary school,Secondary school or less,compatible,CFPS family roster tb4 code 2
+873,maternal_education,Junior high school,Secondary school or less,compatible,CFPS family roster tb4 code 3
+873,maternal_education,Senior high school,Secondary school or less,compatible,"CFPS family roster tb4 code 4; covers senior high, secondary, technical and vocational senior school"
+873,maternal_education,3-year college,Post-secondary,compatible,CFPS family roster tb4 code 5 (zhuanke)
+873,maternal_education,4-year college,Bachelor degree or higher,compatible,CFPS family roster tb4 code 6 (benke)
+873,maternal_education,Masters degree,Bachelor degree or higher,compatible,CFPS family roster tb4 code 7
+873,maternal_education,Doctoral degree,Bachelor degree or higher,compatible,CFPS family roster tb4 code 8
+873,maternal_education,Unknown,Unknown,compatible,"CFPS family roster tb4 codes 0 (No data) and 9 (No need to go to school), plus item non-response"
+107,maternal_education,ISCED-97 none,Secondary school or less,compatible,No completed education
+107,maternal_education,ISCED-97 level 1,Secondary school or less,compatible,Primary
+107,maternal_education,ISCED-97 level 2,Secondary school or less,compatible,Lower secondary
+107,maternal_education,ISCED-97 level 3B or 3C,Secondary school or less,compatible,Upper secondary vocational
+107,maternal_education,ISCED-97 level 3A or 4,Secondary school or less,compatible,"Upper secondary general or post-secondary non-tertiary, one PISA code so kept at secondary"
+107,maternal_education,ISCED-97 level 5B,Post-secondary,compatible,Short-cycle vocational tertiary
+107,maternal_education,ISCED-97 level 5A or 6,Bachelor degree or higher,compatible,Theoretically oriented tertiary or doctoral
+107,maternal_education,ISCED-2011 below level 1,Secondary school or less,compatible,No completed primary
+107,maternal_education,ISCED-2011 level 1,Secondary school or less,compatible,Primary
+107,maternal_education,ISCED-2011 level 2,Secondary school or less,compatible,Lower secondary
+107,maternal_education,ISCED-2011 level 3.3,Secondary school or less,compatible,Upper secondary without tertiary access
+107,maternal_education,ISCED-2011 level 3.4,Secondary school or less,compatible,Upper secondary with tertiary access
+107,maternal_education,ISCED-2011 level 4,Post-secondary,compatible,Post-secondary non-tertiary
+107,maternal_education,ISCED-2011 level 5,Post-secondary,compatible,Short-cycle tertiary
+107,maternal_education,ISCED-2011 level 6,Bachelor degree or higher,compatible,Bachelor or equivalent
+107,maternal_education,ISCED-2011 level 7,Bachelor degree or higher,compatible,Master or equivalent
+107,maternal_education,ISCED-2011 level 8,Bachelor degree or higher,compatible,Doctoral or equivalent
