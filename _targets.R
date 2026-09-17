@@ -65,15 +65,9 @@ if (nrow(.dataset_map_plan) == 0) {
         format = "file"
       ),
 
-      # Resolve every glob once, then reuse the result: file tracking, read
-      # batching, and assembly all read from this index instead of walking the
-      # study tree again per resource. The index mirrors filesystem state that
-      # targets cannot track, so rebuild it every run; downstream targets only
-      # invalidate when the index value actually changes.
       tar_target(
         resource_index,
-        build_resource_index(dataset_dir, spec),
-        cue = tar_cue(mode = "always")
+        build_resource_index(dataset_dir, spec)
       ),
       tar_target(
         data_index,
