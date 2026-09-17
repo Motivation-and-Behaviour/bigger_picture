@@ -1,18 +1,36 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-1639 (Prevention of Overweight in Infancy (POI) study)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' Three release files, each one row per child, keyed on `personid`.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per trial child with any age-5 questionnaire or
+#'   assessment data (551 of the 802 randomised)
 tidy_BPIPD_1639 <- function(raw_dataset, spec) {
-  df <- raw_dataset$data$demographics |>
-    dplyr::full_join(raw_dataset$data$questionnaire, by = "personid") |>
-    dplyr::full_join(raw_dataset$data$self_control, by = "personid")
-  df
+  demographics <- tibble::as_tibble(raw_dataset$data$demographics)
+  questionnaire <- tibble::as_tibble(raw_dataset$data$questionnaire)
+  self_control <- tibble::as_tibble(raw_dataset$data$self_control)
+
+  # The 3.5-year files in the study folder are left out: that wave has no
+  # usable screen-time measure.
+  df <- demographics |>
+    dplyr::left_join(
+      questionnaire,
+      by = "personid",
+      relationship = "one-to-one"
+    ) |>
+    dplyr::left_join(
+      self_control,
+      by = "personid",
+      relationship = "one-to-one"
+    )
+
+  # Children not retained to the age-5 follow-up have a demographics row and
+  # nothing else, so they are dropped.
+  age5 <- setdiff(c(names(questionnaire), names(self_control)), "personid")
+  observed <- rowSums(!is.na(df[age5])) > 0L
+  df[observed, , drop = FALSE]
 }

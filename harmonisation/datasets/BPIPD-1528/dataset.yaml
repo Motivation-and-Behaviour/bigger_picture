@@ -1,6 +1,6 @@
 dataset_id: "1528"
 dataset_name: "HBSC"
-status: "in_progress"
+status: "harmonised"
 
 waves:
   - wave: "2001"
@@ -51,3 +51,4 @@ waves:
 notes: |
   Multiwave study with four root-level files/waves: 2001, 2006, 2010, and 2014. 
   Each wave has one CSV data file and one PDF codebook.
+  2018 not included because there is no screen use measure.
