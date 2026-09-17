@@ -1,6 +1,6 @@
 dataset_id: "1639"
 dataset_name: "Prevention of Overweight in Infancy (POI) study"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "demographics"
