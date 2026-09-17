@@ -1,4 +1,24 @@
-linters: linters_with_defaults( 
+linters: linters_with_defaults(
     object_usage_linter = NULL,
-    object_name_linter = NULL
+    object_name_linter = NULL,
+    # Layout is Air's job. Air runs first in CI and enforces these
+    # deterministically, so lintr can only duplicate it or conflict with it.
+    brace_linter = NULL,
+    commas_linter = NULL,
+    function_left_parentheses_linter = NULL,
+    indentation_linter = NULL,
+    infix_spaces_linter = NULL,
+    paren_body_linter = NULL,
+    pipe_continuation_linter = NULL,
+    quotes_linter = NULL,
+    semicolon_linter = NULL,
+    spaces_inside_linter = NULL,
+    spaces_left_parentheses_linter = NULL,
+    trailing_blank_lines_linter = NULL,
+    trailing_whitespace_linter = NULL,
+    whitespace_linter = NULL,
+    # Air rewraps any over-long line it can break, so the only lines left for
+    # this linter to flag are comments and string literals we don't want to
+    # shorten. Air's line-width is a soft target, not a hard limit.
+    line_length_linter = NULL
   )

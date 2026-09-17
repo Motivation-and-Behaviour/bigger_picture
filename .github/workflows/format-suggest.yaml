@@ -28,7 +28,9 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      # Pinned to v6: checkout v7+ blocks checking out fork PR heads under
+      # `pull_request_target`, which is this workflow's main use case (see above).
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 

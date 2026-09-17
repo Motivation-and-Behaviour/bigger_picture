@@ -1,0 +1,18 @@
+dataset_id: "41"
+dataset_name: "ELEVA"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "ELEVA_screen_time_data_for_IPD.xlsx"
+    reader: "excel"
+    sheet: "data"
+  - name: "codebook"
+    role: "codebook"
+    glob: "ELEVA_screen_time_data_for_IPD.xlsx"
+    reader: "excel"
+    sheet: "dictionary"
+
+notes: |
+  Data and codebook are on different sheets in the same excel file.
