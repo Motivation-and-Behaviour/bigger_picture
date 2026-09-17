@@ -5,11 +5,11 @@ status: "in_progress"
 resources:
   - name: "user_guidelines"
     role: "docs"
-    glob: "Guidelines - 제1차(2005) 제21차(2025) 청소년건강행태조사 원시자료 이용지침서_260307.pdf"
+    glob: "Guidelines - 제1차(2005)_제21차(2025) 청소년건강행태조사 원시자료 이용지침서_260307.pdf"
 
   - name: "variable_crosswalk"
     role: "codebook"
-    glob: "제1차(2005)-제21차(2025) 청소년건강행태조사 연도별 설문지 및 변수 설명서 비교.xlsx"
+    glob: "제1차(2005)-제21차(2025) 청소년건강행태조사 연도별 설문지 및 변수 설명서_배포.xlsx"
 
 waves:
   - wave: "2005"

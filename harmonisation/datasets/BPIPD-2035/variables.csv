@@ -13,9 +13,13 @@ age_years,partial,"students_2020_SQ3, students_2020_SQ3_1, students_2021_SQ6, ad
   2023 - as.numeric(adolescents_2023_DQ2_2)
 )","2021 and 2023 ask birth year. 2020 does not, so age is derived from school level and grade and is modal-for-grade rather than individual.",
 sex,compatible,"students_2020_SQ1, students_2021_SQ5, adolescents_2023_DQ2_1","coalesce(
-  recode_values(coalesce(students_2020_SQ1, students_2021_SQ5, adolescents_2023_DQ2_1), 1 ~ ""Male"", 2 ~ ""Female""),
+  recode_values(
+    coalesce(as.numeric(students_2020_SQ1), as.numeric(students_2021_SQ5), as.numeric(adolescents_2023_DQ2_1)),
+    1 ~ ""Male"",
+    2 ~ ""Female""
+  ),
   ""Unknown""
-)","1 = 남 (male), 2 = 여 (female) in all three codebooks.",
+)","1 = male, 2 = female in all three codebooks (worded 남/여 in 2020 and 2021, 남자/여자 in 2023). The columns are coerced to numeric before coalescing so their differing value-label wording is not carried.",
 country,inferred,,"""South Korea""",National survey of Korean school students; no country variable in the data.,
 state,unavailable,,,Schema allows Australian states only.,
 ethnicity,unavailable,,,Not collected; the sampling frame is Korean school students.,
