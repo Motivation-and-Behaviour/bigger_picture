@@ -1,6 +1,6 @@
 dataset_id: "677"
 dataset_name: "Przybylski"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data_vvg_rsos"
