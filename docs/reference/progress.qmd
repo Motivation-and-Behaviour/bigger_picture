@@ -1,0 +1,140 @@
+---
+title: "Harmonisation progress"
+---
+
+Generated from the specs and mapping files in the repository on every site build.
+A dataset appears here once its folder under `harmonisation/datasets/` contains a `dataset.yaml`.
+
+```{r}
+#| label: load-metadata
+#| include: false
+datasets_dir <- "../harmonisation/datasets"
+spec_files <- fs::dir_ls(datasets_dir, recurse = 1, glob = "*dataset.yaml")
+
+specs <- lapply(spec_files, yaml::read_yaml)
+dataset_dirs <- fs::path_dir(spec_files)
+
+inventory <- tibble::tibble(
+  dataset_id = vapply(specs, function(s) s$dataset_id, character(1)),
+  status = vapply(specs, function(s) s$status, character(1)),
+  waves = vapply(
+    specs,
+    function(s) if (is.null(s$waves)) 1L else length(s$waves),
+    integer(1)
+  ),
+  has_mappings = fs::file_exists(fs::path(dataset_dirs, "variables.csv"))
+)
+
+read_mappings <- function(dir, dataset_id) {
+  path <- fs::path(dir, "variables.csv")
+  if (!fs::file_exists(path)) {
+    return(NULL)
+  }
+  vars <- readr::read_csv(path, show_col_types = FALSE)
+  tibble::tibble(
+    dataset = paste0("BPIPD-", dataset_id),
+    target_variable = vars$target_variable,
+    status = vars$status
+  )
+}
+
+mappings <- dplyr::bind_rows(
+  mapply(
+    read_mappings,
+    dataset_dirs,
+    inventory$dataset_id,
+    SIMPLIFY = FALSE
+  )
+)
+```
+
+## Datasets
+
+```{r}
+#| label: dataset-inventory
+inventory |>
+  dplyr::transmute(
+    Dataset = paste0("BPIPD-", dataset_id),
+    Status = status,
+    Waves = waves,
+    `Variables mapped` = ifelse(has_mappings, "Yes", "Not yet")
+  ) |>
+  knitr::kable()
+```
+
+`planned` and `blocked` datasets are excluded from the pipeline; `in_progress` and `harmonised` datasets are tidied and (once mappings exist) harmonised into the combined analysis dataset.
+
+## Mapping status by dataset
+
+How each dataset's variable mappings break down across the [harmonisation statuses](../guides/harmonisation.qmd#statuses):
+
+```{r}
+#| label: status-summary
+status_order <- c(
+  "compatible", "partial", "proximate", "inferred",
+  "incompatible", "unavailable", "in_progress"
+)
+mappings |>
+  dplyr::count(dataset, status) |>
+  dplyr::mutate(status = factor(status, levels = status_order)) |>
+  tidyr::pivot_wider(
+    names_from = status,
+    values_from = n,
+    values_fill = 0L,
+    names_expand = TRUE
+  ) |>
+  dplyr::rename(Dataset = dataset) |>
+  knitr::kable()
+```
+
+## Variable-by-dataset matrix
+
+The full picture: one row per dataschema variable, one column per dataset, showing the mapping status.
+Use the filters to focus on a domain's variables or find gaps.
+
+```{r}
+#| label: status-matrix
+#| column: page
+dataschema <- readr::read_csv(
+  "../harmonisation/dataschema.csv",
+  show_col_types = FALSE
+)
+
+matrix_tbl <- mappings |>
+  tidyr::pivot_wider(
+    names_from = dataset,
+    values_from = status
+  )
+
+matrix_tbl <- dataschema |>
+  dplyr::transmute(target_variable = variable_name, domain) |>
+  dplyr::inner_join(matrix_tbl, by = "target_variable") |>
+  dplyr::rename(variable = target_variable)
+
+dataset_cols <- setdiff(names(matrix_tbl), c("variable", "domain"))
+
+status_colours <- c(
+  compatible = "#c7e9c0",
+  partial = "#fee391",
+  proximate = "#fee391",
+  inferred = "#c6dbef",
+  incompatible = "#fcbba1",
+  unavailable = "#f0f0f0",
+  in_progress = "#d9d9d9"
+)
+
+table <- DT::datatable(
+  matrix_tbl,
+  filter = "top",
+  rownames = FALSE,
+  options = list(pageLength = 25, scrollX = TRUE)
+)
+DT::formatStyle(
+  table,
+  columns = dataset_cols,
+  backgroundColor = DT::styleEqual(
+    names(status_colours),
+    unname(status_colours)
+  )
+)
+```

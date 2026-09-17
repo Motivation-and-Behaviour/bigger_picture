@@ -1,5 +1,12 @@
 bp_data_dir <- function() {
-  "/data"
+  dotenv::load_dot_env()
+  dataset_path <- Sys.getenv("DATASET_PATH", unset = NA)
+  if (is.na(dataset_path)) {
+    stop(
+      "DATASET_PATH environment variable is not set. Please set in .env file."
+    )
+  }
+  dataset_path
 }
 
 bp_dataset_dir_pattern <- function() {
@@ -13,6 +20,10 @@ bp_harmonisation_dir <- function() {
 
 bp_dataset_specs_dir <- function() {
   fs::path(bp_harmonisation_dir(), "datasets")
+}
+
+bp_dataset_template_dir <- function() {
+  fs::path(bp_harmonisation_dir(), "templates", "dataset")
 }
 
 bp_dataschema_path <- function() {
@@ -57,7 +68,28 @@ bp_harmonisation_status_values <- function() {
 }
 
 bp_system_schema_variables <- function() {
-  c("dataset_id", "dataset_name")
+  c("dataset_id", "dataset_name", "st_measure_id")
+}
+
+# The screen-time variables that describe a measure rather than quantify it.
+# A `measure` block in variables.csv must map all three so the extra rows say
+# what instrument and respondent they came from.
+bp_measure_metadata_variables <- function() {
+  c("st_measure_type", "st_measure_name", "st_responder")
+}
+
+# The variables a `measure` block in variables.csv may re-specify: everything
+# in the screen_time domain except the system-injected id. Every other schema
+# variable is copied from the dataset's primary rows.
+bp_measure_scoped_variables <- function(dataschema) {
+  if (!"domain" %in% names(dataschema)) {
+    return(character(0))
+  }
+  in_domain <- !is.na(dataschema$domain) & dataschema$domain == "screen_time"
+  setdiff(
+    as.character(dataschema$variable_name[in_domain]),
+    bp_system_schema_variables()
+  )
 }
 
 bp_schema <- function() {

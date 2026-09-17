@@ -5,27 +5,96 @@ harmonise_from_tables <- function(
   harmonisation_config
 ) {
   analysis_base <- tibble::as_tibble(analysis_base)
-  outputs <- vector("list", nrow(dataschema))
+  variables <- harmonisation_config$variables
+  measure <- harmonisation_measure_of(variables)
 
+  # The primary measure: every schema variable, from the untagged rows.
+  primary <- harmonise_measure_block(
+    analysis_base = analysis_base,
+    spec = spec,
+    dataschema = dataschema,
+    mapping_rows = variables[is.na(measure), , drop = FALSE],
+    lookups = harmonisation_config$lookups,
+    measure_id = "primary"
+  )
+
+  measures <- unique(measure[!is.na(measure)])
+  if (length(measures) == 0) {
+    return(primary)
+  }
+
+  # Each additional measure is a block of rows for the same participants:
+  # the screen-time variables come from that measure's rows (or are NA when
+  # the measure does not map them), everything else is copied from the
+  # primary block, and rows carrying no screen-time quantity are dropped.
+  scoped <- bp_measure_scoped_variables(dataschema)
+  quantities <- setdiff(scoped, bp_measure_metadata_variables())
+  blocks <- lapply(measures, function(tag) {
+    rows <- variables[!is.na(measure) & measure == tag, , drop = FALSE]
+    block <- primary
+    n_rows <- nrow(block)
+
+    for (variable_name in scoped) {
+      schema_row <- dataschema[
+        dataschema$variable_name == variable_name,
+        ,
+        drop = FALSE
+      ]
+      mapping_row <- get_mapping_row(rows, variable_name)
+      block[[variable_name]] <- if (is.null(mapping_row)) {
+        typed_na_vector(schema_row$data_type[[1]], n_rows)
+      } else {
+        derive_schema_variable(
+          schema_row = schema_row,
+          mapping_row = mapping_row,
+          analysis_base = analysis_base,
+          spec = spec,
+          lookups = harmonisation_config$lookups,
+          measure_id = tag
+        )
+      }
+    }
+    if ("st_measure_id" %in% names(block)) {
+      block$st_measure_id <- rep(tag, n_rows)
+    }
+
+    present <- intersect(quantities, names(block))
+    observed <- Reduce(
+      `|`,
+      lapply(present, function(nm) !is.na(block[[nm]])),
+      rep(FALSE, n_rows)
+    )
+    block[observed, , drop = FALSE]
+  })
+
+  dplyr::bind_rows(c(list(primary), blocks))
+}
+
+# Derive every dataschema variable from one set of mapping rows.
+harmonise_measure_block <- function(
+  analysis_base,
+  spec,
+  dataschema,
+  mapping_rows,
+  lookups,
+  measure_id
+) {
+  outputs <- vector("list", nrow(dataschema))
   names(outputs) <- dataschema$variable_name
 
   for (i in seq_len(nrow(dataschema))) {
     schema_row <- dataschema[i, , drop = FALSE]
     variable_name <- schema_row$variable_name[[1]]
-    mapping_row <- get_mapping_row(
-      harmonisation_config$variables,
-      variable_name
-    )
+    mapping_row <- get_mapping_row(mapping_rows, variable_name)
 
-    values <- derive_schema_variable(
+    outputs[[variable_name]] <- derive_schema_variable(
       schema_row = schema_row,
       mapping_row = mapping_row,
       analysis_base = analysis_base,
       spec = spec,
-      lookups = harmonisation_config$lookups
+      lookups = lookups,
+      measure_id = measure_id
     )
-
-    outputs[[variable_name]] <- values
   }
 
   tibble::as_tibble(outputs)
@@ -46,11 +115,19 @@ derive_schema_variable <- function(
   mapping_row,
   analysis_base,
   spec,
-  lookups
+  lookups,
+  measure_id = "primary"
 ) {
   variable_name <- schema_row$variable_name[[1]]
   data_type <- schema_row$data_type[[1]]
   n_rows <- nrow(analysis_base)
+
+  if (identical(variable_name, "st_measure_id")) {
+    return(cast_to_schema_type(
+      rep(as.character(measure_id), n_rows),
+      data_type
+    ))
+  }
 
   if (identical(variable_name, "dataset_id")) {
     return(
@@ -119,6 +196,14 @@ harmonisation_eval_env <- function(spec, analysis_base, lookups, tbl) {
     names(lookup_bindings) <- paste0("lookup_", names(lookups))
   }
 
+  # Sandbox: dataset bindings -> allowlisted functions -> base R. Expressions
+  # cannot reach the global environment or attached packages; see
+  # `bp_harmonisation_functions()` for the bare-name vocabulary.
+  functions_env <- rlang::new_environment(
+    bp_harmonisation_functions(),
+    parent = baseenv()
+  )
+
   list2env(
     c(
       list(
@@ -129,7 +214,7 @@ harmonisation_eval_env <- function(spec, analysis_base, lookups, tbl) {
       ),
       lookup_bindings
     ),
-    parent = globalenv()
+    parent = functions_env
   )
 }
 
