@@ -1,0 +1,90 @@
+---
+title: "Tidy scripts"
+---
+
+Once the spec reads a dataset's files, the **tidy script** (or *tidier*) reshapes them into one canonical table for harmonisation.
+Every dataset must have one, at `R/tidy/tidy_BPIPD_<id>.R`, defining a function with the same name — the pipeline finds it by this naming convention and errors if it is missing.
+
+Start by copying `R/tidy/tidy_BPIPD_TEMPLATE.R` and renaming both the file and the function.
+
+## The contract
+
+```r
+tidy_BPIPD_9999 <- function(raw_dataset, spec) {
+  # ... study-specific reshaping ...
+}
+```
+
+- **Input** `raw_dataset`: everything the spec read (see below).
+- **Input** `spec`: the parsed `dataset.yaml`, if you need metadata.
+- **Output**: one data frame / tibble with **one row per participant** (or per participant-wave for longitudinal data).
+  This is the table that harmonisation expressions run against.
+
+Do all study-specific assembly here — joining files, binding waves, renaming, filtering, constructing IDs.
+Harmonisation ([next step](harmonisation.qmd)) only sees this one table, so anything it needs must survive tidying.
+
+## What the tidier receives {#what-the-tidier-receives}
+
+`raw_dataset` is a list with:
+
+- `data`: a named list of tibbles, one per matched `role: data` file.
+  The names come from the spec's resource `name`; a resource whose glob matched several files appears as `<name>__1`, `<name>__2`, …
+  Resource names are unique across the whole spec — the pipeline refuses to read one where they are not — so `raw_dataset$data[["some_name"]]` always identifies a single file.
+- `codebook`: named list of codebook file paths (not read into R).
+- `docs`: character vector of documentation file paths.
+- `meta`: the spec, dataset directory, and a table of matched files — useful for debugging what the globs picked up.
+
+Data from wave resources additionally carries two columns added by the pipeline: `.wave` (the wave identifier) and `.wave_label`.
+Keep them — they are how the harmonised `wave` variable is usually derived.
+
+## Common shapes
+
+These mirror real tidiers in `R/tidy/`, with fictional dataset numbers and column names.
+
+**Single file, nothing to do**:
+
+```r
+tidy_BPIPD_9999 <- function(raw_dataset, spec) {
+  # No modifications needed
+  tibble::as_tibble(raw_dataset$data[[1]])
+}
+```
+
+**Several files joined on an ID**:
+
+```r
+tidy_BPIPD_9999 <- function(raw_dataset, spec) {
+  raw_dataset$data$demographics |>
+    dplyr::full_join(raw_dataset$data$questionnaire, by = "child_id") |>
+    dplyr::full_join(raw_dataset$data$motor_skills, by = "child_id")
+}
+```
+
+**Waves bound into a long table**.
+Waves often need per-wave fixes first — here, the later wave uses different column casing and a renamed column:
+
+```r
+tidy_BPIPD_9999 <- function(raw_dataset, spec) {
+  data_2010 <- raw_dataset$data$data_2010
+  data_2014 <- raw_dataset$data$data_2014 |>
+    dplyr::rename_with(tolower) |>
+    dplyr::rename(surveyyear = svyyear)
+
+  dplyr::bind_rows(data_2010, data_2014)
+}
+```
+
+Some multi-wave studies also need the tidier to construct a participant ID (for example from wave, site, and row number) because the source ID is not unique across waves — a good example of work that belongs in the tidier, not in harmonisation expressions.
+
+## Practical notes
+
+- `dplyr` is attached inside pipeline workers (via `tar_option_set()` in `_targets.R`), so bare `mutate()`/`if_else()` calls work in tidiers — but the repository convention is to namespace calls (`dplyr::full_join()`) wherever practical.
+- Return the tibble; don't write files or modify anything outside the function.
+- Test with:
+
+  ```r
+  targets::tar_make(names = tidied_BPIPD_9999)
+  targets::tar_read(tidied_BPIPD_9999)
+  ```
+
+  Check the row count matches your expectation (participants, or participants × waves) and that key columns (IDs, `.wave`) look right.
