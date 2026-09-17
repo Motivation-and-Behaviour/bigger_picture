@@ -21,12 +21,13 @@ The template copy starts with every variable set to `in_progress`; harmonising a
 
 | Column | Meaning |
 |--------|---------|
-| `target_variable` | The dataschema variable being derived. Every non-system schema variable must have a row (`dataset_id` and `dataset_name` are injected by the pipeline). |
+| `target_variable` | The dataschema variable being derived. Every non-system schema variable must have a row (`dataset_id`, `dataset_name` and `st_measure_id` are injected by the pipeline). |
 | `status` | How well the study supports this variable (table below). |
 | `source_columns` | Which tidied columns the mapping uses — documentation for reviewers, not executed. |
 | `expression` | R code that computes the value (required unless the status says the variable can't be derived). |
 | `notes` | Anything a reviewer needs: assumptions, DOIs, caveats. |
 | `lookup_table` | Basename of a lookup CSV this expression uses, if any (e.g. `ethnicity` for `harmonisation/lookups/ethnicity.csv`). |
+| `measure` | Optional; blank for the dataset's primary measure. A tag such as `diary` marks rows that map the screen-time variables again for an additional measure — see [Several screen-time measures](#several-screen-time-measures). |
 
 A few illustrative rows (the column names are fictional, but the shapes mirror real mappings in the project):
 
@@ -166,6 +167,30 @@ lookup_values(
 The `dataset_id`/`target_variable` arguments filter a shared lookup down to this dataset's rows; omit them for a dataset-specific lookup.
 A lookup name must exist in exactly one of the two locations — the validator errors if it is missing from both or present in both.
 
+## Several screen-time measures
+
+A study sometimes measures screen use more than once per occasion: a questionnaire and a time-use diary, or a parent report and a child report.
+The harmonised table keeps one row per participant per wave *per measure*, and the system variable `st_measure_id` says which measure a row carries.
+
+The untagged rows of `variables.csv` describe the dataset's primary measure, and every row they produce has `st_measure_id = "primary"`.
+An additional measure is a block of rows tagged in the `measure` column with a short lower-case token (`diary`, `parent`, `child`, `device`):
+
+```csv
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+st_measure_type,inferred,,"""Continuous""",Diary slots are 10 minutes,,diary
+st_measure_name,inferred,,"""Time use diary""",,,diary
+st_responder,inferred,,"""Self""",The child completes the diary,,diary
+st_watch_wd,compatible,tud_tv_mins_wd,tud_tv_mins_wd / 60,Minutes to hours,,diary
+```
+
+For each tag the harmoniser evaluates the tagged rows against the same tidied table and emits one extra row per participant-wave, with `st_measure_id` set to the tag.
+Only the screen-time variables can be tagged; every other variable in those rows is copied from the primary rows.
+Screen-time variables the measure does not map are `NA` in its rows rather than inherited, and a participant-wave with no screen-time quantity for the measure gets no row at all.
+Every measure block must map `st_measure_type`, `st_measure_name` and `st_responder`, so the rows say what instrument and respondent they came from.
+
+The tidier stays one row per participant-wave: the extra measure arrives as extra columns (`tud_tv_mins_wd`, `tv_hours_parent`), and the mapping decides which measure they belong to.
+Analyses that want the old one-row table filter on `st_measure_id == "primary"`; analyses that compare instruments use `st_measure_name` and `st_responder` as covariates.
+
 ## Keeping variables.csv in sync with the dataschema
 
 When the dataschema gains a variable, every dataset's `variables.csv` needs a matching row.
@@ -176,7 +201,7 @@ targets::tar_source()
 sync_harmonisation_vars() # all datasets, plus the new-dataset template
 ```
 
-This appends any missing variables as `in_progress` and reorders rows to dataschema order.
+This appends any missing variables as `in_progress` and reorders rows to dataschema order, keeping any measure-tagged rows after the primary rows.
 It covers the template under `harmonisation/templates/dataset/` as well, so a newly copied dataset spec starts with the full set of variables.
 The validator (and therefore CI) rejects a `variables.csv` with missing, duplicate, or unknown target variables.
 
@@ -189,7 +214,7 @@ targets::tar_source()
 check_harmonisation_exprs()
 ```
 
-It returns one row per problem — an empty tibble means everything is fine — with the columns `variables_file`, `target_variable`, `status`, `issue`, `message`, `suggestion`, and `fixed`.
+It returns one row per problem — an empty tibble means everything is fine — with the columns `variables_file`, `target_variable`, `measure`, `status`, `issue`, `message`, `suggestion`, and `fixed`.
 There are four kinds of `issue`:
 
 | Issue | Meaning |
