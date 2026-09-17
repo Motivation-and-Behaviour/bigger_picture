@@ -42,17 +42,12 @@ read_harmonisation_config <- function(dataset_id, dataschema) {
 read_harmonisation_variables <- function(path) {
   variables <- readr::read_csv(path, show_col_types = FALSE)
 
-  expected <- c(
-    "target_variable",
-    "status",
-    "source_columns",
-    "expression",
-    "notes",
-    "lookup_table"
+  ensure_required_columns(
+    variables,
+    harmonisation_required_columns(),
+    "variables.csv"
   )
-
-  ensure_required_columns(variables, expected, "variables.csv")
-  add_missing_columns(variables, expected)
+  add_missing_columns(variables, harmonisation_variable_columns())
 }
 
 read_lookup_tables <- function(lookup_files) {
@@ -284,14 +279,33 @@ validate_harmonisation_vars <- function(
     )
   }
 
-  duplicated_vars <-
-    variables$target_variable[duplicated(variables$target_variable)]
+  # Untagged rows are the primary measure and must be unique per target;
+  # rows tagged with a `measure` may repeat a target once per measure.
+  measure <- harmonisation_measure_of(variables)
+  is_primary <- is.na(measure)
+  primary_targets <- variables$target_variable[is_primary]
+  duplicated_vars <- primary_targets[duplicated(primary_targets)]
   duplicated_vars <-
     duplicated_vars[!is.na(duplicated_vars) & nzchar(duplicated_vars)]
   if (length(duplicated_vars) > 0) {
     stop(
       "Duplicate `target_variable` rows in variables.csv: ",
       paste(unique(duplicated_vars), collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  tagged_key <- paste0(
+    variables$target_variable[!is_primary],
+    " [",
+    measure[!is_primary],
+    "]"
+  )
+  duplicated_tagged <- unique(tagged_key[duplicated(tagged_key)])
+  if (length(duplicated_tagged) > 0) {
+    stop(
+      "Duplicate `target_variable` rows for one `measure` in variables.csv: ",
+      paste(duplicated_tagged, collapse = ", "),
       call. = FALSE
     )
   }
@@ -313,7 +327,7 @@ validate_harmonisation_vars <- function(
   }
 
   expected_targets <- setdiff(schema_vars, bp_system_schema_variables())
-  missing_targets <- setdiff(expected_targets, variables$target_variable)
+  missing_targets <- setdiff(expected_targets, primary_targets)
 
   if (length(missing_targets) > 0) {
     stop(
@@ -322,6 +336,8 @@ validate_harmonisation_vars <- function(
       call. = FALSE
     )
   }
+
+  validate_measure_rows(variables, measure, dataschema)
 
   active_rows <- !variables$status %in%
     c("incompatible", "unavailable", "in_progress")
@@ -345,6 +361,69 @@ validate_harmonisation_vars <- function(
       paste(missing_lookups, collapse = ", "),
       call. = FALSE
     )
+  }
+
+  invisible(variables)
+}
+
+# Rules for rows tagged with a `measure`: the tag is a plain token, `primary`
+# is reserved for untagged rows, tagged rows may only target screen-time
+# variables (everything else is copied from the primary rows), and every
+# measure must say what it is by mapping the measure-metadata variables.
+validate_measure_rows <- function(variables, measure, dataschema) {
+  tagged <- !is.na(measure)
+  if (!any(tagged)) {
+    return(invisible(variables))
+  }
+
+  tags <- unique(measure[tagged])
+  bad_tags <- tags[!grepl("^[a-z][a-z0-9_]*$", tags)]
+  if (length(bad_tags) > 0) {
+    stop(
+      "`measure` values in variables.csv must be lower-case tokens ",
+      "(letters, digits, underscores): ",
+      paste(bad_tags, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  if ("primary" %in% tags) {
+    stop(
+      "`measure` value `primary` is reserved for untagged rows in ",
+      "variables.csv.",
+      call. = FALSE
+    )
+  }
+
+  scoped <- bp_measure_scoped_variables(dataschema)
+  if (length(scoped) == 0) {
+    return(invisible(variables))
+  }
+
+  outside <- unique(
+    variables$target_variable[tagged & !variables$target_variable %in% scoped]
+  )
+  if (length(outside) > 0) {
+    stop(
+      "Rows tagged with a `measure` may only target screen_time variables; ",
+      "variables.csv tags: ",
+      paste(outside, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  for (tag in tags) {
+    targets <- variables$target_variable[tagged & measure == tag]
+    missing_meta <- setdiff(bp_measure_metadata_variables(), targets)
+    if (length(missing_meta) > 0) {
+      stop(
+        "measure `",
+        tag,
+        "` in variables.csv must map ",
+        paste(missing_meta, collapse = ", "),
+        " so the measure is described.",
+        call. = FALSE
+      )
+    }
   }
 
   invisible(variables)
