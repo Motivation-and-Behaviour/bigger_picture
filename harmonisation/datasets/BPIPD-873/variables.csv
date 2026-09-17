@@ -9,7 +9,10 @@ country,inferred,,"""China""",CFPS samples 25 mainland provinces and municipalit
 state,unavailable,,,Not an Australian dataset.,
 ethnicity,inferred,,"""Asian""",Constant from the study population. The schema's categories cannot express within-China ethnicity; see minority.,
 indigenous,unavailable,,,China operates no indigenous classification; ethnic nationality is a different construct and is mapped under minority.,
-minority,compatible,ethnicity_code,"case_when(is.na(ethnicity_code) ~ ""Unknown"", as.numeric(ethnicity_code) == 1 ~ ""Non-minority"", .default = ""Minority"")","Minzu (ethnic nationality), GB code 1 = Han. The other 55 recognised nationalities are China's official minorities.",
+minority,compatible,"ethnicity_code, pid","local({
+  code <- stats::ave(as.numeric(ethnicity_code), pid, FUN = function(x) if (all(is.na(x))) x else x[!is.na(x)][1])
+  case_when(is.na(code) ~ ""Unknown"", code == 1 ~ ""Non-minority"", .default = ""Minority"")
+})","Minzu (ethnic nationality), GB code 1 = Han. The other 55 recognised nationalities are China's official minorities. Ethnicity is asked each wave and is missing in some of them, so the earliest code observed for a person is carried forward.",
 immigrant_background,in_progress,,,,
 ses_area,unavailable,,,"No area-level deprivation measure. Province, county and the urban flag are carried but none is a socioeconomic index.",
 ses_household,partial,"household_income_pc, wave","recode_values(
@@ -72,8 +75,8 @@ family_structure,partial,"father_resident, mother_resident","case_when(
   as.numeric(father_resident) == 0 & as.numeric(mother_resident) == 0 ~ ""Other"",
   .default = ""Unknown""
 )","Co-residence of the roster's biological parents. CFPS does not flag step-parents, so step families are indistinguishable from two-parent households.",
-school_grade,partial,"school_stage, school_grade, wave","local({
-  stage <- ifelse(wave == ""2010"", as.numeric(school_stage) + 1, as.numeric(school_stage))
+school_grade,partial,"school_stage, school_stage_2010, school_grade","local({
+  stage <- coalesce(as.numeric(school_stage), as.numeric(school_stage_2010) + 1)
   grade <- as.numeric(school_grade)
   year <- case_when(
     stage == 3 & grade %in% 1:6 ~ grade,
@@ -82,7 +85,7 @@ school_grade,partial,"school_stage, school_grade, wave","local({
     .default = NA_real_
   )
   if_else(is.na(year), NA_character_, paste0(""Grade "", year))
-})","CFPS records grade within the current stage, so the stage is needed to place it on a single ladder. The 2010 stage codes omit nursery and are shifted by one against later waves. Pre-school stages have no year level and stay missing.",
+})","CFPS records grade within the current stage, so the stage is needed to place it on a single ladder. The 2010 stage codes omit nursery and are shifted by one against later waves, so the tidier keeps them in school_stage_2010 and they are lifted by one here. Pre-school stages have no year level and stay missing.",
 st_measure_type,inferred,,"""Continuous""","CFPS screen items ask for an open-ended duration, not bands.",
 st_measure_name,inferred,,"""Custom""",Bespoke CFPS time-use and media items; not a named instrument.,
 st_responder,partial,"tv_wd_hours_self, tv_week_hours_self, tv_week_hours_parent","case_when(

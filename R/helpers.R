@@ -1,6 +1,14 @@
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
 harmonisation_variable_columns <- function() {
+  c(harmonisation_required_columns(), "measure")
+}
+
+#' The columns a variables.csv must have
+#'
+#' `measure` (see `harmonisation_variable_columns()`) is optional: a file
+#' without it is read as if every row were blank, i.e. the primary measure.
+harmonisation_required_columns <- function() {
   c(
     "target_variable",
     "status",
@@ -9,6 +17,20 @@ harmonisation_variable_columns <- function() {
     "notes",
     "lookup_table"
   )
+}
+
+#' The `measure` tag of each variables.csv row, NA for the primary measure
+#'
+#' A blank or missing `measure` marks the dataset's primary rows. Any other
+#' value names an additional screen-time measure whose rows the harmoniser
+#' evaluates as a separate block (see `harmonise_from_tables()`).
+harmonisation_measure_of <- function(variables) {
+  if (!"measure" %in% names(variables)) {
+    return(rep(NA_character_, nrow(variables)))
+  }
+  measure <- trimws(as.character(variables$measure))
+  measure[is.na(measure) | !nzchar(measure)] <- NA_character_
+  measure
 }
 
 list_harmonisation_var_files <- function(
@@ -52,7 +74,11 @@ sync_harmonisation_vars_file <- function(
   variables <- readr::read_csv(path, show_col_types = FALSE)
   expected_cols <- harmonisation_variable_columns()
 
-  ensure_required_columns(variables, expected_cols, path)
+  ensure_required_columns(
+    variables,
+    harmonisation_required_columns(),
+    path
+  )
   variables <- add_missing_columns(variables, expected_cols)
 
   missing_target <- is.na(variables$target_variable) |
@@ -66,9 +92,15 @@ sync_harmonisation_vars_file <- function(
     )
   }
 
-  duplicated_targets <- unique(
-    variables$target_variable[duplicated(variables$target_variable)]
+  # Rows tagged with a `measure` repeat a target for another screen-time
+  # measure, so a target may recur across measures but not within one.
+  measure <- harmonisation_measure_of(variables)
+  row_key <- ifelse(
+    is.na(measure),
+    variables$target_variable,
+    paste0(variables$target_variable, " [", measure, "]")
   )
+  duplicated_targets <- unique(row_key[duplicated(row_key)])
   duplicated_targets <- duplicated_targets[
     !is.na(duplicated_targets) & nzchar(duplicated_targets)
   ]
@@ -109,7 +141,11 @@ sync_harmonisation_vars_file <- function(
     ]
   }
 
-  missing_targets <- setdiff(schema_targets, variables$target_variable)
+  measure <- harmonisation_measure_of(variables)
+  missing_targets <- setdiff(
+    schema_targets,
+    variables$target_variable[is.na(measure)]
+  )
 
   if (length(missing_targets) > 0) {
     missing_rows <- as.data.frame(
@@ -126,11 +162,26 @@ sync_harmonisation_vars_file <- function(
     variables <- dplyr::bind_rows(variables, tibble::as_tibble(missing_rows))
   }
 
-  synced <- variables[
-    match(schema_targets, variables$target_variable),
+  # Primary rows in dataschema order, then each measure's rows (measures in
+  # order of first appearance, targets in dataschema order).
+  measure <- harmonisation_measure_of(variables)
+  primary <- variables[is.na(measure), , drop = FALSE]
+  primary <- primary[
+    match(schema_targets, primary$target_variable),
     ,
     drop = FALSE
   ]
+  tagged <- variables[!is.na(measure), , drop = FALSE]
+  tagged_measure <- measure[!is.na(measure)]
+  tagged <- tagged[
+    order(
+      match(tagged_measure, unique(tagged_measure)),
+      match(tagged$target_variable, schema_targets)
+    ),
+    ,
+    drop = FALSE
+  ]
+  synced <- dplyr::bind_rows(primary, tagged)
 
   was_reordered <- !identical(
     as.character(variables$target_variable),

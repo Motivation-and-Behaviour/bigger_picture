@@ -1,5 +1,5 @@
 target_variable,status,source_columns,expression,notes,lookup_table
-participant_id,compatible,partid,partid,,
+participant_id,compatible,participant_id,participant_id,,
 wave,compatible,surveyyear,surveyyear,HBSC year - doesn't necessarily mean year data were collected,
 data_year,compatible,"yearcollect, surveyyear","if_else(!is.na(yearcollect), yearcollect, surveyyear)",,
 rct_arm,unavailable,,,Observational survey with no randomised allocation.,
@@ -12,8 +12,13 @@ indigenous,unavailable,,,,
 minority,unavailable,,,,
 immigrant_background,in_progress,,,,
 ses_area,unavailable,,,,
-ses_household,compatible,fas_ridit,"case_when(is.na(fas_ridit) ~ ""Unknown"", fas_ridit < 0.4 ~ ""Low"", fas_ridit <= 0.6 ~ ""Medium"", .default = ""High"")","FAS III composite ridit-scored within country and wave in the tidier (fas_ridit); quintile collapse with Q1-2 Low, Q3 Medium, Q4-5 High; FAS items only collected from the 2014 wave so earlier waves are Unknown; ridit method validated against IRFAS/IRRELFAS_LMH in the 2018 open-access file (96% agreement unweighted; OA files carry no weights for 2014)",
-ses_household_measure,inferred,,"""Family Affluence Scale (FAS III)""",Only collected from the 2014 wave onward,
+ses_household,compatible,"fas2_ridit, fas_ridit","case_when(
+  is.na(coalesce(fas2_ridit, fas_ridit)) ~ ""Unknown"",
+  coalesce(fas2_ridit, fas_ridit) < 0.4 ~ ""Low"",
+  coalesce(fas2_ridit, fas_ridit) <= 0.6 ~ ""Medium"",
+  .default = ""High""
+)","Family Affluence Scale composite ridit-scored within country and wave in the tidier; quintile collapse with Q1-2 Low, Q3 Medium, Q4-5 High.",
+ses_household_measure,inferred,surveyyear,"if_else(surveyyear == 2014, ""Family Affluence Scale (FAS III)"", ""Family Affluence Scale (FAS II)"")",Names the scale the wave carries: the four-item FAS II in 2001-2010 and the six-item FAS III in 2014 (the 2014 file has no FAS II items and the earlier files no FAS III items).,
 ses_hukou,in_progress,,,,
 maternal_education,unavailable,,,,
 paternal_education,unavailable,,,Not collected in any wave; HBSC OA files record parental occupation SES only (occupsesfa/employfa).,

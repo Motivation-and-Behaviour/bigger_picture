@@ -1,13 +1,18 @@
 #' Tidier for BPIPD-873 (China Family Panel Studies)
 #'
+#' Each wave joins the child questionnaire to the adult (2010-2016) or person
+#' (2018-2022) questionnaire on `pid`, then joins the family roster and the
+#' household economy file onto the result.
+#'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble
+#' - one tibble, one row per person per wave (`pid` x `wave`), aged 19 or under
 tidy_BPIPD_873 <- function(raw_dataset, spec) {
-  # 2012 asked nothing about screen use, so the whole wave is skipped.
+  # 2012 is absent from `bp873_waves()` because no screen-use duration item was
+  # fielded that year; this guards any wave map that likewise contributes none.
   asked <- Filter(
     function(wave) {
       canonical <- c(names(wave$child_vars), names(wave$individual_vars))
@@ -34,21 +39,11 @@ tidy_BPIPD_873 <- function(raw_dataset, spec) {
 
     # The child and self-report files overlap only from 2018
     bp873_merge(child, individual, "pid") |>
-      dplyr::left_join(
-        bp873_one_per_key(roster, "pid"),
-        by = "pid",
-        relationship = "many-to-one"
-      ) |>
+      bp873_add_roster(roster) |>
       dplyr::left_join(economy, by = "fid", relationship = "many-to-one")
   })
 
-  df <- dplyr::bind_rows(waves)
-
-  df$ethnicity_code <- stats::ave(
-    df$ethnicity_code,
-    df$pid,
-    FUN = function(x) if (all(is.na(x))) x else x[!is.na(x)][1]
-  )
+  df <- bp873_relabel(bp873_bind_waves(waves), raw_dataset)
 
   if (anyDuplicated(df[c("pid", "wave")]) > 0) {
     stop(
@@ -57,7 +52,9 @@ tidy_BPIPD_873 <- function(raw_dataset, spec) {
     )
   }
 
-  # Keep children and adolescents only
+  # Keep children and adolescents only: the dataschema caps `age_years` at 19,
+  # and CFPS routes 16-19s to the adult/person questionnaire rather than the
+  # child one. Rows with neither a reported age nor a birth year go too.
   age <- dplyr::coalesce(df$age_reported, as.numeric(df$wave) - df$birth_year)
   df[!is.na(age) & age <= 19, ]
 }
@@ -75,7 +72,10 @@ bp873_waves <- function() {
         urban = "urban",
         age_reported = "wa1age",
         school_grade = "wf302",
-        school_stage = "wf301",
+        # 2010 codes the stage one step lower than every later wave (1 =
+        # kindergarten here, 1 = nursery from 2014), so it keeps its own column
+        # rather than binding under labels that would misdescribe it.
+        school_stage_2010 = "wf301",
         ethnicity_code = "wa6code",
         internet_any = "ku2",
         media_wd_hours_self = "kt401_a_1",
@@ -110,6 +110,7 @@ bp873_waves <- function() {
       famconf = "cfps2010famconf",
       famconf_vars = c(
         pid = "pid",
+        fid = "fid",
         sex = "tb2_a_p",
         birth_year = "tb1y_a_p",
         birth_month = "tb1m_a_p",
@@ -168,6 +169,7 @@ bp873_waves <- function() {
       famconf = "cfps2014famconf",
       famconf_vars = c(
         pid = "pid",
+        fid = "fid14",
         sex = "tb2_a_p",
         birth_year = "tb1y_a_p",
         birth_month = "tb1m_a_p",
@@ -228,6 +230,7 @@ bp873_waves <- function() {
       famconf = "cfps2016famconf",
       famconf_vars = c(
         pid = "pid",
+        fid = "fid16",
         sex = "tb2_a_p",
         birth_year = "tb1y_a_p",
         birth_month = "tb1m_a_p",
@@ -287,6 +290,7 @@ bp873_waves <- function() {
       famconf = "cfps2018famconf",
       famconf_vars = c(
         pid = "pid",
+        fid = "fid18",
         sex = "tb2_a_p",
         birth_year = "tb1y_a_p",
         birth_month = "tb1m_a_p",
@@ -349,6 +353,7 @@ bp873_waves <- function() {
       famconf = "cfps2020famconf",
       famconf_vars = c(
         pid = "pid",
+        fid = "fid20",
         sex = "tb2_a_p",
         birth_year = "tb1y_a_p",
         birth_month = "tb1m_a_p",
@@ -415,6 +420,7 @@ bp873_waves <- function() {
       famconf = "cfps2022famconf",
       famconf_vars = c(
         pid = "pid",
+        fid = "fid22",
         sex = "tb2_a_p",
         birth_year = "tb1y_a_p",
         birth_month = "tb1m_a_p",
@@ -459,21 +465,126 @@ bp873_take <- function(raw_dataset, resource, vars, key) {
 
   tbl <- dplyr::select(tibble::as_tibble(tbl), dplyr::all_of(vars))
 
+  # CFPS reserves -1 to -10 as non-response codes in every file
   tbl[] <- lapply(tbl, function(x) {
     codes <- attr(x, "labels", exact = TRUE)
-    reserved <- if (is.numeric(codes)) codes[codes >= -10 & codes <= -1]
-    x <- haven::zap_labels(x)
-    x[x %in% reserved] <- NA
+    if (!is.numeric(codes)) {
+      return(x)
+    }
+    reserved <- codes[codes >= -10 & codes <= -1]
+    x[unclass(x) %in% reserved] <- NA
+    kept <- codes[!codes %in% reserved]
+    if (length(kept) == 0) {
+      return(haven::zap_labels(x))
+    }
+    attr(x, "labels") <- kept
     x
   })
 
+  # Rows without a key are empty shells
   tbl[!is.na(tbl[[key]]), ]
 }
 
 #' Reduce a lookup table to one row per key, keeping the fullest row
+#'
+#' `key` may name several columns, because a person's roster record is only
+#' well defined within one family.
 bp873_one_per_key <- function(tbl, key) {
-  tbl <- tbl[order(tbl[[key]], -rowSums(!is.na(tbl))), ]
-  tbl[!duplicated(tbl[[key]]), ]
+  ordering <- c(unname(as.list(tbl[key])), list(-rowSums(!is.na(tbl))))
+  tbl <- tbl[do.call(order, ordering), ]
+  tbl[!duplicated(tbl[key]), ]
+}
+
+#' Attach the family roster to the children of that family
+bp873_add_roster <- function(tbl, roster) {
+  columns <- setdiff(names(roster), c("pid", "fid"))
+
+  per_family <- bp873_one_per_key(roster, c("pid", "fid"))
+  per_family$.on_roster <- TRUE
+  joined <- dplyr::left_join(
+    tbl,
+    per_family,
+    by = c("pid", "fid"),
+    relationship = "many-to-one"
+  )
+
+  per_person <- bp873_one_per_key(roster, "pid")
+  missed <- is.na(joined$.on_roster)
+  joined[missed, columns] <- per_person[
+    match(joined$pid[missed], per_person$pid),
+    columns
+  ]
+
+  joined[setdiff(names(joined), ".on_roster")]
+}
+
+#' Restore one variable label per mapped column after binding
+bp873_label_wording_ok <- c(
+  "education_child",
+  "education_father",
+  "education_mother",
+  "father_resident",
+  "mother_resident",
+  "father_alive",
+  "mother_alive",
+  "internet_any",
+  "school_stage"
+)
+
+#' Bind the waves, allowing only the reviewed value-label wording differences
+bp873_bind_waves <- function(waves) {
+  conflicts <- character(0)
+  df <- withCallingHandlers(
+    dplyr::bind_rows(waves),
+    warning = function(w) {
+      message_text <- conditionMessage(w)
+      if (grepl("conflicting value\\s+labels", message_text)) {
+        conflicts <<- c(
+          conflicts,
+          sub("^.*\\$([A-Za-z0-9_.]+)`.*$", "\\1", message_text)
+        )
+        invokeRestart("muffleWarning")
+      }
+    }
+  )
+  unreviewed <- setdiff(unique(conflicts), bp873_label_wording_ok)
+  if (length(unreviewed) > 0) {
+    stop(
+      "BPIPD-873: value labels for the same code differ between waves in: ",
+      paste(unreviewed, collapse = ", "),
+      ". Give the coding its own column (as for `school_stage_2010`) or, if ",
+      "only the wording differs, add it to `bp873_label_wording_ok`.",
+      call. = FALSE
+    )
+  }
+  df
+}
+
+bp873_relabel <- function(df, raw_dataset) {
+  labels <- list()
+  for (wave in bp873_waves()) {
+    for (part in c("child", "individual", "famconf", "famecon")) {
+      tbl <- raw_dataset$data[[wave[[part]]]]
+      vars <- wave[[paste0(part, "_vars")]]
+      if (is.null(tbl)) {
+        next
+      }
+      for (i in seq_along(vars)) {
+        label <- attr(tbl[[vars[[i]]]], "label", exact = TRUE)
+        name <- names(vars)[[i]]
+        if (!is.null(label) && is.null(labels[[name]])) {
+          labels[[name]] <- label
+        }
+      }
+    }
+  }
+
+  for (name in intersect(names(labels), names(df))) {
+    if (is.null(attr(df[[name]], "label", exact = TRUE))) {
+      attr(df[[name]], "label") <- labels[[name]]
+    }
+  }
+  df
 }
 
 #' Join two tables that may both supply the same column
