@@ -1,0 +1,12 @@
+dataset_id: "677"
+dataset_name: "Przybylski"
+status: "harmonised"
+
+resources:
+  - name: "data_vvg_rsos"
+    role: "data"
+    glob: "data_vvg_rsos.sav"
+    reader: "spss"
+  - name: "code_vvg_rsos"
+    role: "codebook"
+    glob: "code_vvg_rsos.sps"
