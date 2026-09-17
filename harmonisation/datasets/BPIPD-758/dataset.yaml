@@ -1,0 +1,14 @@
+dataset_id: "758"
+dataset_name: "Vitta"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "dadosescolares.xlsx"
+    reader: "excel"
+    sheet: "dadosescolares"
+  - name: "codebook"
+    role: "codebook"
+    glob: "variables.docx"
+
