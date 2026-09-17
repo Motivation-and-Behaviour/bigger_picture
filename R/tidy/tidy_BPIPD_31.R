@@ -1,5 +1,8 @@
 #' Tidier for BPIPD-31 (FFCWS, ICPSR 31622 public use file)
 #'
+#' The release is a single wide file holding every wave side by side, so each
+#' wave is sliced out of it with the column map in `bp31_wave_columns()`, the
+#' slices are stacked long, and `bp31_apply_labels()` puts the labels back.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -8,6 +11,12 @@
 #' Output:
 #' - one tibble, one row per child per wave
 tidy_BPIPD_31 <- function(raw_dataset, spec) {
+  if (length(raw_dataset$data) != 1L) {
+    stop(
+      "BPIPD-31: expected one data resource, the ICPSR .rda release.",
+      call. = FALSE
+    )
+  }
   raw <- bp31_add_cbcl_scores(raw_dataset$data[[1]])
 
   constants <- bp31_constant_columns()
@@ -31,10 +40,20 @@ tidy_BPIPD_31 <- function(raw_dataset, spec) {
     stacked$pcg_relationship
   )
 
+  if (anyDuplicated(stacked[c("participant_id", "wave")]) > 0L) {
+    stop(
+      "BPIPD-31: `participant_id` and `wave` do not uniquely identify rows.",
+      call. = FALSE
+    )
+  }
+
   bp31_apply_labels(stacked, raw, constants, wave_map)
 }
 
 #' Waves carried into the harmonisation, in collection order
+#'
+#' Baseline and Year 1 ask no screen-use item and Year 22's respondents are
+#' young adults outside the 0-19 age range
 bp31_waves <- function() {
   c(
     y3 = "Year 3",
@@ -323,22 +342,22 @@ bp31_wave_columns <- function() {
     ),
     # --- peer victimisation and fighting ------------------------------------
     bullied_mean = bp31_entry(
-      "Self-report: how often other kids picked on you or said mean things (Year 9 asks about the past month, Year 15 about the school year)",
+      "Self-report: how often other kids picked on you or said mean things. Year 9 asks about the past month (0 not once, 1 1-2 times, 2 once a week, 3 several times per week, 4 every day); Year 15 asks about the school year (0 never, 1 less than once a week, 2 once a week, 3 several times a week, 4 about every day, 7 n/a homeschooled), so the column carries no value labels",
       y9 = "K5E2A",
       y15 = "K6B32A"
     ),
     bullied_hit = bp31_entry(
-      "Self-report: how often other kids hit you or threatened to hurt you (Year 9 asks about hitting only; Year 15 adds threats)",
+      "Self-report: how often other kids hit you or threatened to hurt you (Year 9 asks about hitting only; Year 15 adds threats). Year 9 asks about the past month (0 not once, 1 1-2 times, 2 once a week, 3 several times per week, 4 every day); Year 15 asks about the school year (0 never, 1 less than once a week, 2 once a week, 3 several times a week, 4 about every day, 7 n/a homeschooled), so the column carries no value labels",
       y9 = "K5E2B",
       y15 = "K6B32B"
     ),
     bullied_took = bp31_entry(
-      "Self-report: how often other kids took your things (Year 9 asks about the past month, Year 15 about the school year)",
+      "Self-report: how often other kids took your things. Year 9 asks about the past month (0 not once, 1 1-2 times, 2 once a week, 3 several times per week, 4 every day); Year 15 asks about the school year (0 never, 1 less than once a week, 2 once a week, 3 several times a week, 4 about every day, 7 n/a homeschooled), so the column carries no value labels",
       y9 = "K5E2C",
       y15 = "K6B32E"
     ),
     bullied_excluded = bp31_entry(
-      "Self-report: how often other kids purposely left you out of activities (Year 9 asks about the past month, Year 15 about the school year)",
+      "Self-report: how often other kids purposely left you out of activities. Year 9 asks about the past month (0 not once, 1 1-2 times, 2 once a week, 3 several times per week, 4 every day); Year 15 asks about the school year (0 never, 1 less than once a week, 2 once a week, 3 several times a week, 4 about every day, 7 n/a homeschooled), so the column carries no value labels",
       y9 = "K5E2D",
       y15 = "K6B32F"
     ),
@@ -411,17 +430,33 @@ bp31_entry <- function(
 ) {
   list(label = label, y3 = y3, y5 = y5, y9 = y9, y15 = y15)
 }
+
 #' Build one wave's slice of the tidied table
 bp31_wave_frame <- function(raw, fixed, wave, wave_map) {
   sources <- wave_map[[wave]]
   stems <- wave_map$stem
 
   present <- !is.na(sources)
+  absent <- setdiff(sources[present], names(raw))
+  if (length(absent) > 0L) {
+    stop(
+      paste0(
+        "BPIPD-31: column map names ",
+        paste(absent, collapse = ", "),
+        " at ",
+        wave,
+        ", not present in the release."
+      ),
+      call. = FALSE
+    )
+  }
   wave_data <- tibble::as_tibble(stats::setNames(
     lapply(sources[present], function(nm) bp31_decode(raw[[nm]])),
     stems[present]
   ))
 
+  # A participant-wave is kept only where the wave recorded an interview year
+  # or a reported quantity of screen use
   markers <- intersect(
     c("interview_year", bp31_screen_use_stems()),
     names(wave_data)
@@ -456,6 +491,9 @@ bp31_screen_use_stems <- function() {
 }
 
 #' Turn an ICPSR factor back into its original numeric code
+#'
+#' FFCWS codes missingness negatively throughout the release (-10 n/a for a
+#' specific reason through -1 refuse)
 bp31_decode <- function(x) {
   if (is.factor(x)) {
     x <- sub("^\\((-?)0*([0-9]+)\\).*$", "\\1\\2", as.character(x))
@@ -518,13 +556,7 @@ bp31_apply_labels <- function(tidied, raw, constants, wave_map) {
     sources <- unlist(wave_map[i, wave_ids], use.names = FALSE)
     sources <- sources[!is.na(sources)]
 
-    value_labels <- NULL
-    for (nm in rev(sources)) {
-      value_labels <- bp31_value_labels(raw[[nm]])
-      if (!is.null(value_labels)) {
-        break
-      }
-    }
+    value_labels <- bp31_agreed_value_labels(raw[sources])
     if (stem == "pcg_relationship") {
       value_labels <- c(
         "biological mother" = 1,
@@ -541,6 +573,29 @@ bp31_apply_labels <- function(tidied, raw, constants, wave_map) {
   }
 
   tidied
+}
+
+#' Value labels for a stem
+bp31_agreed_value_labels <- function(columns) {
+  labels <- Filter(Negate(is.null), lapply(columns, bp31_value_labels))
+  if (length(labels) == 0L) {
+    return(NULL)
+  }
+  if (length(labels) > 1L) {
+    shared <- Reduce(intersect, lapply(labels, unname))
+    wordings <- lapply(labels, function(codes) {
+      bp31_normalise_label(names(codes)[match(shared, unname(codes))])
+    })
+    if (length(shared) == 0L || length(unique(wordings)) > 1L) {
+      return(NULL)
+    }
+  }
+  labels[[length(labels)]]
+}
+
+#' Reduce a value label to the wording alone, for comparison across waves
+bp31_normalise_label <- function(x) {
+  trimws(gsub("[^a-z0-9]+", " ", tolower(x)))
 }
 
 bp31_label_column <- function(x, label, value_labels) {
@@ -717,19 +772,19 @@ bp31_cbcl_items <- function() {
 }
 
 #' Score the CBCL subscales and append them to the raw table
-#'
-#' Scoring lives here rather than in `variables.csv` because it is study
-#' structure, not a harmonisation choice: the item set changes with the age
-#' form at every wave, Year 5 draws its items from two different surveys with
-#' two different codings, and the composites are unions of subscales. Writing
-#' that as one wave-conditional expression per target variable would be
-#' unreadable and unreviewable.
-#'
-#' Internalising and externalising are scored from the union of their
-#' component subscales, so an item that the guides list under two subscales
-#' (Year 5 puts "unhappy, sad or depressed" in both anxious/depressed and
-#' withdrawn) is still counted once.
 bp31_add_cbcl_scores <- function(raw) {
+  absent <- setdiff(unique(unlist(bp31_cbcl_items())), names(raw))
+  if (length(absent) > 0L) {
+    stop(
+      paste0(
+        "BPIPD-31: CBCL items not present in the release: ",
+        paste(absent, collapse = ", "),
+        "."
+      ),
+      call. = FALSE
+    )
+  }
+
   for (wave in names(bp31_cbcl_items())) {
     subscales <- bp31_cbcl_items()[[wave]]
 
@@ -751,13 +806,6 @@ bp31_add_cbcl_scores <- function(raw) {
 }
 
 #' Mean item score for one CBCL subscale, on the standard 0-2 item scale
-#'
-#' A mean rather than a raw sum, because the number of items administered per
-#' subscale differs between waves and between studies, which makes sums
-#' incomparable. Requiring 80% of items keeps the mean from resting on a
-#' handful of answers while still retaining children who missed the items
-#' asked in only some cities; FFCWS itself allows mean substitution for up to
-#' two missing items on its shorter scales.
 bp31_cbcl_mean <- function(raw, item_names) {
   items <- do.call(
     cbind,
@@ -771,10 +819,6 @@ bp31_cbcl_mean <- function(raw, item_names) {
 }
 
 #' One CBCL item, rescaled to 0-2 and joined across the Year 5 survey versions
-#'
-#' The Year 5 mother survey asked its CBCL items in two mutually exclusive
-#' blocks, `m4b4b*` and `m4b29a*`, and the second block is coded 1-3 where the
-#' first is coded 0-2.
 bp31_cbcl_item <- function(raw, name) {
   values <- bp31_cbcl_rescale(raw[[name]])
 
