@@ -41,6 +41,18 @@ targets::tar_make(names = raw_BPIPD_9999) # use your dataset id
 
 If that errors, see the [validation checklist](dataset-yaml.qmd#validating-your-spec).
 
+::: {.callout-note}
+## Adding files to a study folder later
+
+The pipeline re-resolves the spec's globs whenever `dataset.yaml` changes, so spec edits pick up matching files automatically.
+If files are added to the raw data folder **without** a spec change (e.g. a new wave file that an existing glob already matches), force a re-scan and rebuild:
+
+```r
+targets::tar_invalidate(tidyselect::starts_with("resource_index")) # or a single study: resource_index_BPIPD_9999
+targets::tar_make()
+```
+:::
+
 ## 4. Tidy and harmonise
 
 For many datasets the spec file is the assigned task, and tidying and harmonisation happen later or by someone else — check the Asana task.

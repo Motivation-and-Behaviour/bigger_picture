@@ -61,9 +61,9 @@ and reproducible
 │       ├── list_datasets.R
 │       ├── read_dataset_specs.R
 │       ├── create_dataset_plan.R
-│       ├── list_data_files_from_spec.R
+│       ├── check_resource_names.R
+│       ├── build_resource_index.R
 │       ├── read_dataset_from_spec.R
-│       ├── read_resource_table.R
 │       ├── read_tabular_file.R
 │       └── resolve_glob_paths.R
 ├── harmonisation/
