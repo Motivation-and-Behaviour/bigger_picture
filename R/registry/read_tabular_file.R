@@ -1,3 +1,8 @@
+#' The largest `guess_max` readxl accepts without warning
+excel_guess_max <- function() {
+  .Machine$integer.max %/% 100
+}
+
 read_tabular_file <- function(
   path,
   reader,
@@ -19,7 +24,12 @@ read_tabular_file <- function(
     "rds" = readRDS(path),
     "parquet" = arrow::read_parquet(path),
     "excel" = {
-      args <- list(path = path)
+      # readxl types each column from the first 1000 rows by default, so a
+      # column that is blank early and populated later is typed `logical` and
+      # its values are silently read as NA. Guess from the whole sheet, as the
+      # delimited readers above already do. `Inf` would work but warns on every
+      # read; excel_guess_max() is the ceiling readxl clamps it to anyway.
+      args <- list(path = path, guess_max = excel_guess_max())
       if (!is.null(sheet)) {
         args$sheet <- sheet
       }
