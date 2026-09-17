@@ -62,6 +62,7 @@ test_that("check_harmonisation_exprs returns an empty tibble when clean", {
     c(
       "variables_file",
       "target_variable",
+      "measure",
       "status",
       "issue",
       "message",

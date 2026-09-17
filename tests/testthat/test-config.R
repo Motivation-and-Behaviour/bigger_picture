@@ -23,7 +23,7 @@ test_that("harmonisation status values are stable", {
   )
   expect_setequal(
     bp_system_schema_variables(),
-    c("dataset_id", "dataset_name")
+    c("dataset_id", "dataset_name", "st_measure_id")
   )
 })
 

@@ -1,0 +1,9 @@
+dataset_id: "97"
+dataset_name: "ESPAD"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Sanders_Taren_28_05_2026_ESPAD_DataSet.sav"
+    reader: "spss"
