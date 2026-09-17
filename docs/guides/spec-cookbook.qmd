@@ -1,0 +1,360 @@
+---
+title: "Spec cookbook"
+---
+
+Copy-paste starting points for the dataset layouts we actually encounter.
+Every pattern here comes from a real dataset in the project, but the study names and filenames are fictional.
+Each pattern shows the folder layout (expand the callout) and the `dataset.yaml` that reads it; field meanings are in [The dataset.yaml spec](dataset-yaml.qmd).
+
+## 1. One data file, nothing else
+
+The simplest possible spec.
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/
+└── data.sav
+```
+:::
+
+```yaml
+dataset_id: "9999"
+dataset_name: "Example Cohort Study"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "data.sav"
+    reader: "spss"
+```
+
+## 2. Several data files, joined later in the tidier
+
+One resource per file, each with its own name.
+The spec only *reads* the files — combining them (joins, binds) happens in the [tidy script](tidy-scripts.qmd).
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/
+├── demographics.xlsx
+├── questionnaire.xlsx
+└── motor_skills.xlsx
+```
+:::
+
+```yaml
+resources:
+  - name: "demographics"
+    role: "data"
+    glob: "demographics.xlsx"
+    reader: "excel"
+    sheet: "Data"
+  - name: "questionnaire"
+    role: "data"
+    glob: "questionnaire.xlsx"
+    reader: "excel"
+    sheet: "Data"
+  - name: "motor_skills"
+    role: "data"
+    glob: "motor_skills.xlsx"
+    reader: "excel"
+    sheet: "Data"
+```
+
+The tidier then accesses `raw_dataset$data$demographics`, `raw_dataset$data$questionnaire`, and so on.
+
+## 3. Waves in a flat folder (wave in the filename)
+
+All files sit at the dataset root; the wave is encoded in each filename.
+Use `wave_dir: "."` and wave-specific resource names.
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/
+├── survey_2010.csv
+├── survey_2010_codebook.pdf
+├── survey_2014.csv
+└── survey_2014_codebook.pdf
+```
+:::
+
+```yaml
+waves:
+  - wave: "2010"
+    label: "2010"
+    wave_dir: "."
+    resources:
+      - name: "data_2010"
+        role: "data"
+        glob: "survey_2010.csv"
+        reader: "csv"
+      - name: "codebook_2010"
+        role: "codebook"
+        glob: "survey_2010_codebook.pdf"
+  - wave: "2014"
+    label: "2014"
+    wave_dir: "."
+    resources:
+      - name: "data_2014"
+        role: "data"
+        glob: "survey_2014.csv"
+        reader: "csv"
+      - name: "codebook_2014"
+        role: "codebook"
+        glob: "survey_2014_codebook.pdf"
+```
+
+Every data table gets `.wave` and `.wave_label` columns, and the tidier typically `bind_rows()`s the waves together.
+
+## 4. Waves in per-wave subfolders
+
+Each wave has its own directory: point `wave_dir` at it, and globs become relative to that directory.
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/
+├── 2016 Survey Files/
+│   ├── survey_2016.csv
+│   └── codebook_2016.pdf
+└── 2017 Survey Files/
+    ├── survey_2017.csv
+    └── codebook_2017.pdf
+```
+:::
+
+```yaml
+waves:
+  - wave: "2016"
+    label: "2016"
+    wave_dir: "2016 Survey Files"
+    resources:
+      - name: "data_2016"
+        role: "data"
+        glob: "survey_2016.csv"
+        reader: "csv"
+  - wave: "2017"
+    label: "2017"
+    wave_dir: "2017 Survey Files"
+    resources:
+      - name: "data_2017"
+        role: "data"
+        glob: "survey_2017.csv"
+        reader: "csv"
+```
+
+An equally valid alternative is to keep `wave_dir: "."` and put the folder in the glob (`glob: "2016 Survey Files/survey_2016.csv"`).
+Pick one style per file and stay consistent.
+
+## 5. Two logical waves sharing one folder
+
+Waves do not have to map one-to-one onto folders.
+Here two instruments collected in the same year live in the same directory but are treated as separate waves:
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/
+└── 2007/
+    ├── parent_survey.dta
+    └── child_assessment.dta
+```
+:::
+
+```yaml
+waves:
+  - wave: "2007_parent"
+    label: "2007 Parent Survey"
+    wave_dir: "2007"
+    resources:
+      - name: "data_2007_parent"
+        role: "data"
+        glob: "parent_survey.dta"
+        reader: "stata"
+  - wave: "2007_child"
+    label: "2007 Child Assessment"
+    wave_dir: "2007"
+    resources:
+      - name: "data_2007_child"
+        role: "data"
+        glob: "child_assessment.dta"
+        reader: "stata"
+```
+
+## 6. Many similar files via a wildcard
+
+When a folder holds many files of the same kind, one resource with a wildcard reads them all.
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/
+└── stata/
+    └── annual/
+        ├── survey_1994.dta
+        ├── survey_1995.dta
+        ├── ...
+        └── survey_2008.dta
+```
+:::
+
+```yaml
+resources:
+  - name: "annual_surveys"
+    role: "data"
+    glob: "stata/annual/*.dta"
+    reader: "stata"
+```
+
+Each matched file becomes its own table named `annual_surveys__1`, `annual_surveys__2`, … in `raw_dataset$data` (in file-listing order).
+Prefer explicitly named resources when there are only a few files or when they play different roles in the tidier — `data$annual_surveys__3` is much less self-documenting than `data$youth_questionnaire`.
+
+## 7. Grouping a few files in one resource
+
+For a handful of files that share a role, either a YAML list or brace notation works.
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/
+├── sweep1/
+│   ├── child_interview.sav
+│   └── parent_interview.sav
+└── docs/
+    ├── technical_report.pdf
+    └── user_guide.pdf
+```
+:::
+
+```yaml
+resources:
+  - name: "interviews"
+    role: "data"
+    glob:
+      - "sweep1/child_interview.sav"
+      - "sweep1/parent_interview.sav"
+    reader: "spss"
+  - name: "documentation"
+    role: "docs"
+    glob: "docs/{technical_report.pdf,user_guide.pdf}"
+```
+
+As with wildcards, multiple matches become `interviews__1`, `interviews__2`, …
+
+## 8. Codebooks and documentation
+
+Codebooks and docs are recorded so we know they exist, but only `data` resources are read into R.
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/
+├── survey.xlsx
+├── survey_dictionary.xlsx
+└── docs/
+    ├── questionnaire.pdf
+    └── technical_report.pdf
+```
+:::
+
+```yaml
+resources:
+  - name: "data"
+    role: "data"
+    glob: "survey.xlsx"
+    reader: "excel"
+    sheet: "Data"
+  - name: "data_dictionary"
+    role: "codebook"
+    glob: "survey_dictionary.xlsx"
+  - name: "documentation"
+    role: "docs"
+    glob: "docs/{questionnaire.pdf,technical_report.pdf}"
+```
+
+A single workbook sometimes holds the data on one sheet and the codebook on another — declare the data sheet as the `data` resource and list the same file again as a `codebook` resource for the record.
+
+## 9. Readers with extra keys
+
+Most readers need nothing beyond `reader:`.
+Three take extra keys:
+
+```yaml
+resources:
+  # Excel: sheet (name or number), optionally a cell range
+  - name: "survey"
+    role: "data"
+    glob: "survey.xlsx"
+    reader: "excel"
+    sheet: "Data"
+    range: "A1:H200"
+
+  # Microsoft Access: which table to read
+  # (optional when the file has exactly one table — if you omit it and
+  # there are several, the error message lists the available tables)
+  - name: "assessments"
+    role: "data"
+    glob: "study_database.mdb"
+    reader: "mdb"
+    table: "Assessments"
+
+  # .rda: which object to extract
+  # (optional when the file holds exactly one object)
+  - name: "cohort"
+    role: "data"
+    glob: "cohort_2012.rda"
+    reader: "rda"
+    object: "cohort_data"
+```
+
+## 10. Dataset-wide files alongside waves
+
+When a codebook or metadata file covers the whole study, keep it in a top-level `resources` list next to the `waves`:
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/
+├── codebook_all_waves.pdf
+├── sweep1_data.sav
+└── sweep2_data.sav
+```
+:::
+
+```yaml
+resources:
+  - name: "study_codebook"
+    role: "codebook"
+    glob: "codebook_all_waves.pdf"
+
+waves:
+  - wave: "sweep_1"
+    label: "sweep_1"
+    wave_dir: "."
+    resources:
+      - name: "data_sweep_1"
+        role: "data"
+        glob: "sweep1_data.sav"
+        reader: "spss"
+  - wave: "sweep_2"
+    label: "sweep_2"
+    wave_dir: "."
+    resources:
+      - name: "data_sweep_2"
+        role: "data"
+        glob: "sweep2_data.sav"
+        reader: "spss"
+```
