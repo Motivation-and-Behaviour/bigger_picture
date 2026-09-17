@@ -5,10 +5,9 @@
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble
+#' - one tibble, one row per responding student per ESPAD wave (each wave is an
+#'   independent cross-section)
 tidy_BPIPD_97 <- function(raw_dataset, spec) {
   espad <- tibble::as_tibble(raw_dataset$data[[1]])
-
-  # Screen use only from 2015 onwards
   dplyr::filter(espad, ESPAD_Year >= 2015)
 }

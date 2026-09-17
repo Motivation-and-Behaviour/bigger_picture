@@ -44,6 +44,7 @@ minority,proximate,"SITE_ID, ALL_Ethnicity","lookup_values(
   lookup_minority,
   default = ""Unknown""
 )","Minority status is country-relative, so each site's ethnicity responses are classified against that country's national majority group in harmonisation/datasets/BPIPD-80/lookups/minority.csv (one row per observed site x ethnicity combination, with the majority reference stated per row). Combinations that cannot be read as majority or minority are set to Unknown: the Colombian 'Other'/'Don't know'/'Mixed' responses (Mestizo has no explicit option), Brazilian 'Mixed' (parda is 43% of the population), and 'Asian' in India. Yields Non-minority 4389, Minority 1712, Unknown 1271",minority
+immigrant_background,in_progress,,,,
 ses_area,unavailable,,,"No area-level socioeconomic measure was collected; the Neighborhood and Home Environment questionnaire records parent perceptions of walkability, safety and collective efficacy rather than area SES",
 ses_household,proximate,inclevel,"coalesce(
   lookup_values(
@@ -243,6 +244,7 @@ cog_nonverbalreason_bas_picsim,in_progress,,,,
 cog_spatial_bas_pattern,in_progress,,,,
 cog_verbalreason_bas_versim,in_progress,,,,
 cog_schoolread_bracken,in_progress,,,,
+cog_creativethinking_stdtest,in_progress,,,,
 mh_anx_basc2,unavailable,,,"Not measured in ISCOLE; the participant-level transfer covers anthropometry, demographics, diet and lifestyle, and the neighbourhood and home environment questionnaire only",
 mh_dep_basc2,unavailable,,,"Not measured in ISCOLE; the participant-level transfer covers anthropometry, demographics, diet and lifestyle, and the neighbourhood and home environment questionnaire only",
 mh_emotsymp_sdq_parent,unavailable,,,"Not measured in ISCOLE; the participant-level transfer covers anthropometry, demographics, diet and lifestyle, and the neighbourhood and home environment questionnaire only",
@@ -288,6 +290,8 @@ mh_stress_self,in_progress,,,,
 mh_lonely_self,in_progress,,,,
 mh_suicide_ideation_self,in_progress,,,,
 mh_suicide_attempt_self,in_progress,,,,
+mh_psychsom_hbscscl_self,in_progress,,,,
+mh_psychsom_measure,in_progress,,,,
 wb_emotsc_basc2,unavailable,,,"Not measured in ISCOLE; the participant-level transfer covers anthropometry, demographics, diet and lifestyle, and the neighbourhood and home environment questionnaire only",
 wb_mwb_wemwbs,unavailable,,,"Not measured in ISCOLE; the participant-level transfer covers anthropometry, demographics, diet and lifestyle, and the neighbourhood and home environment questionnaire only",
 wb_lifesatisfaction_cantrilladder,unavailable,,,"Not measured in ISCOLE; the participant-level transfer covers anthropometry, demographics, diet and lifestyle, and the neighbourhood and home environment questionnaire only",
@@ -323,3 +327,5 @@ wb_mwb_who5_self,unavailable,,,"Not measured in ISCOLE; the participant-level tr
 wb_happiness_shs_self,unavailable,,,"Not measured in ISCOLE; the participant-level transfer covers anthropometry, demographics, diet and lifestyle, and the neighbourhood and home environment questionnaire only",
 wb_mwb_swemwbs_self,in_progress,,,,
 wb_selfratedhealth_self,in_progress,,,,
+wb_posaffect_self,in_progress,,,,
+wb_posaffect_measure,in_progress,,,,

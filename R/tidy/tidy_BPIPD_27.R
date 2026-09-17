@@ -23,8 +23,14 @@
 #' Output:
 #' - one tibble, one row per cohort member per sweep
 tidy_BPIPD_27 <- function(raw_dataset, spec) {
-  sweeps <- lapply(spec$waves, function(wave) tidy_mcs_sweep(raw_dataset, wave))
-  df <- dplyr::bind_rows(mcs_prefix_shared_columns(sweeps))
+  sweeps <- lapply(spec$waves, function(wave) bp27_sweep(raw_dataset, wave))
+  df <- dplyr::bind_rows(bp27_prefix_shared_columns(sweeps))
+
+  attr(df$MCSID, "label") <-
+    "MCS Research ID - Anonymised Family/Household Identifier"
+  attr(df$mcs_cnum, "label") <- "Cohort Member number within an MCS family"
+  attr(df$participant_id, "label") <-
+    "MCSID and cohort member number, unique within a sweep"
 
   if (anyDuplicated(df[c("participant_id", ".wave")]) > 0) {
     stop(
@@ -37,10 +43,10 @@ tidy_BPIPD_27 <- function(raw_dataset, spec) {
 }
 
 #' Assemble one sweep into a cohort-member table
-tidy_mcs_sweep <- function(raw_dataset, wave) {
-  modules <- function(...) mcs_modules(raw_dataset, wave$wave, ...)
+bp27_sweep <- function(raw_dataset, wave) {
+  modules <- function(...) bp27_modules(raw_dataset, wave$wave, ...)
 
-  cm <- mcs_cognitive_scores(
+  cm <- bp27_cognitive_scores(
     modules(c(
       "cm_derived",
       "cm_interview",
@@ -61,18 +67,18 @@ tidy_mcs_sweep <- function(raw_dataset, wave) {
 
   base <- Reduce(
     function(base, tbl) {
-      mcs_add(base, tbl, mcs_cm_key(tbl), dplyr::full_join, "one-to-one")
+      bp27_add(base, tbl, bp27_cm_key(tbl), dplyr::full_join, "one-to-one")
     },
     cm
   )
-  key <- mcs_cm_key(base)
+  key <- bp27_cm_key(base)
 
   grid <- modules("hhgrid")
 
   for (tbl in grid) {
-    base <- mcs_add(
+    base <- bp27_add(
       base,
-      mcs_hhgrid_cohort_members(tbl),
+      bp27_hhgrid_cohort_members(tbl),
       key,
       dplyr::left_join,
       "one-to-one"
@@ -89,27 +95,51 @@ tidy_mcs_sweep <- function(raw_dataset, wave) {
     ),
     extra = "mcs_sweep[0-9]+_imd_[a-z]+_[0-9]+[.]sav$"
   )) {
-    base <- mcs_add(base, tbl, "MCSID")
+    base <- bp27_add(base, tbl, "MCSID")
   }
 
+  parent_cm <- modules("parent_cm_interview")
+  answering <- bp27_answering_parent(parent_cm)
+
   # `parent_derived` carries the parental education variables
-  roster_sex <- mcs_person_sex(grid)
+  roster_sex <- bp27_person_sex(grid)
   for (tbl in modules("parent_derived")) {
     if (!is.null(roster_sex)) {
-      tbl <- mcs_add(tbl, roster_sex, c("MCSID", mcs_person_key(tbl)))
+      tbl <- bp27_add(tbl, roster_sex, c("MCSID", bp27_person_key(tbl)))
     }
-    base <- mcs_add(base, mcs_respondent(tbl, 1L, "MCSID"), "MCSID")
-    base <- mcs_add(
+    base <- bp27_add(
       base,
-      mcs_respondent(tbl, 2L, "MCSID", suffix = "_PARTNER"),
+      bp27_respondent(tbl, 1L, "MCSID", answering = answering),
+      "MCSID"
+    )
+    base <- bp27_add(
+      base,
+      bp27_respondent(
+        tbl,
+        2L,
+        "MCSID",
+        suffix = "_PARTNER",
+        answering = answering
+      ),
       "MCSID"
     )
   }
 
-  for (tbl in modules("parent_cm_interview")) {
-    base <- mcs_add(
+  for (tbl in parent_cm) {
+    base <- bp27_add(
       base,
-      mcs_respondent(tbl, 1L, key),
+      bp27_respondent(tbl, 1L, key, answering = answering),
+      key,
+      dplyr::left_join,
+      "one-to-one"
+    )
+  }
+
+  # Sweep 6's time-use diary is one row per 10-minute slot per diary day
+  for (tbl in modules("cm_tud_harmonised")) {
+    base <- bp27_add(
+      base,
+      bp27_tud_minutes(tbl),
       key,
       dplyr::left_join,
       "one-to-one"
@@ -124,8 +154,112 @@ tidy_mcs_sweep <- function(raw_dataset, wave) {
   base
 }
 
+#' Screen-use minutes per diary day type from the sweep-6 time-use diary
+bp27_tud_minutes <- function(tbl) {
+  activities <- c(
+    tv = 38, # Watch TV, DVDs, downloaded videos
+    game = 37, # Playing electronic games and Apps
+    socmedia = 34, # Browsing and updating social networking sites
+    internet = 35, # General internet browsing, programming
+    messaging = 33, # Answering emails, instant messaging, texting
+    calls = 31 # Speaking on the phone (including Skype, video calls)
+  )
+  key <- bp27_cm_key(tbl)
+  needed <- c(key, "FCTUDAD", "FCTUDWEEKDAY", "FCTUDACT")
+  if (!all(needed %in% names(tbl))) {
+    stop(
+      "BPIPD-27: the time-use diary lacks ",
+      paste(setdiff(needed, names(tbl)), collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  slots <- tibble::tibble(
+    MCSID = tbl$MCSID,
+    cnum = bp27_plain(tbl[[key[2]]]),
+    day = bp27_plain(tbl$FCTUDAD),
+    # FCTUDWEEKDAY: 1 = Sunday ... 7 = Saturday
+    weekend = bp27_plain(tbl$FCTUDWEEKDAY) %in% c(1, 7),
+    activity = bp27_plain(tbl$FCTUDACT)
+  )
+
+  per_day <- dplyr::summarise(
+    slots,
+    weekend = weekend[[1]],
+    n_slots = dplyr::n(),
+    missing_slots = sum(is.na(activity)),
+    .by = c("MCSID", "cnum", "day")
+  )
+  if (any(per_day$n_slots != 144L)) {
+    stop("BPIPD-27: a diary day does not have 144 slots.", call. = FALSE)
+  }
+  slot_day <- paste(slots$MCSID, slots$cnum, slots$day)
+  child_day <- paste(per_day$MCSID, per_day$cnum, per_day$day)
+  for (nm in names(activities)) {
+    minutes <- 10 *
+      tapply(slots$activity == activities[[nm]], slot_day, sum, na.rm = TRUE)
+    per_day[[nm]] <- as.numeric(minutes[child_day])
+  }
+
+  # A child with two days of one type (not the case in this release) gets
+  # the mean of the two.
+  per_type <- dplyr::summarise(
+    per_day,
+    dplyr::across(
+      dplyr::all_of(c("missing_slots", names(activities))),
+      ~ mean(.x)
+    ),
+    .by = c("MCSID", "cnum", "weekend")
+  )
+  measures <- c(names(activities), "missing_slots")
+  suffix <- function(df, tag) {
+    df <- df[df$weekend == identical(tag, "we"), c("MCSID", "cnum", measures)]
+    names(df)[match(measures, names(df))] <- paste0(
+      "tud_",
+      measures,
+      "_",
+      ifelse(measures == "missing_slots", "", "mins_"),
+      tag
+    )
+    df
+  }
+  out <- dplyr::full_join(
+    suffix(per_type, "wd"),
+    suffix(per_type, "we"),
+    by = c("MCSID", "cnum"),
+    relationship = "one-to-one"
+  )
+  names(out)[names(out) == "cnum"] <- key[2]
+
+  labels <- c(
+    tv = "watching TV, DVDs or downloaded videos",
+    game = "playing electronic games and apps",
+    socmedia = "browsing and updating social networking sites",
+    internet = "general internet browsing (not social networking)",
+    messaging = "answering emails, instant messaging, texting",
+    calls = "speaking on the phone, including Skype and video calls",
+    missing_slots = "10-minute slots with no activity recorded"
+  )
+  for (nm in names(out)) {
+    m <- regmatches(nm, regexec("^tud_([a-z_]+?)(_mins)?_(wd|we)$", nm))[[1]]
+    if (length(m) == 0) {
+      next
+    }
+    day_type <- if (m[[4]] == "we") "weekend" else "weekday"
+    attr(out[[nm]], "label") <- paste0(
+      "Time-use diary (sweep 6): ",
+      if (m[[2]] == "missing_slots") "" else "minutes ",
+      labels[[m[[2]]]],
+      " on the ",
+      day_type,
+      " diary day"
+    )
+  }
+  out
+}
+
 #' Give sweep-specific names to columns MCS left unprefixed
-mcs_prefix_shared_columns <- function(sweeps) {
+bp27_prefix_shared_columns <- function(sweeps) {
   # Columns the tidier itself puts in every sweep are shared on purpose.
   constructed <- c(
     "MCSID",
@@ -145,7 +279,7 @@ mcs_prefix_shared_columns <- function(sweeps) {
       return(tbl)
     }
 
-    prefixed <- paste0(substr(mcs_cm_key(tbl)[2], 1, 1), rename)
+    prefixed <- paste0(substr(bp27_cm_key(tbl)[2], 1, 1), rename)
     if (any(prefixed %in% names(tbl))) {
       stop(
         "BPIPD-27: prefixing shared columns would overwrite ",
@@ -160,7 +294,7 @@ mcs_prefix_shared_columns <- function(sweeps) {
 }
 
 #' A wave's tables, selected by module name
-mcs_modules <- function(raw_dataset, wave, modules = NULL, extra = NULL) {
+bp27_modules <- function(raw_dataset, wave, modules = NULL, extra = NULL) {
   tables <- raw_dataset$data
   in_wave <- vapply(
     tables,
@@ -183,26 +317,27 @@ mcs_modules <- function(raw_dataset, wave, modules = NULL, extra = NULL) {
     names(tbl)[toupper(names(tbl)) == "MCSID"] <- "MCSID"
 
     ids <- grep("^MCSID$|^.CNUM00$|^.PNUM00$", names(tbl))
-    tbl[ids] <- lapply(tbl[ids], mcs_plain)
+    tbl[ids] <- lapply(tbl[ids], bp27_plain)
 
     tbl[, setdiff(names(tbl), c(".wave", ".wave_label"))]
   })
 }
 
 #' Keep the cohort members' own rows from a household grid
-mcs_hhgrid_cohort_members <- function(tbl) {
-  cnum <- tbl[[mcs_cm_key(tbl)[2]]]
-  tbl[!is.na(cnum) & cnum >= 1, ]
+bp27_hhgrid_cohort_members <- function(tbl) {
+  cnum <- tbl[[bp27_cm_key(tbl)[2]]]
+  roles <- grepl("^.(PNUM00|ELIG00|RESP00)$", names(tbl))
+  tbl[!is.na(cnum) & cnum >= 1, !roles]
 }
 
 #' Each household member's sex, from the rest of the household grid
-mcs_person_sex <- function(grids) {
+bp27_person_sex <- function(grids) {
   if (length(grids) == 0) {
     return(NULL)
   }
 
   tbl <- grids[[1]]
-  cnum <- tbl[[mcs_cm_key(tbl)[2]]]
+  cnum <- tbl[[bp27_cm_key(tbl)[2]]]
   sex <- grep("PSEX", names(tbl), value = TRUE)
   if (length(sex) != 1) {
     stop(
@@ -213,14 +348,18 @@ mcs_person_sex <- function(grids) {
     )
   }
 
-  roster <- tbl[is.na(cnum) | cnum < 1, c("MCSID", mcs_person_key(tbl), sex)]
-  roster[[sex]] <- mcs_plain(roster[[sex]])
+  roster <- tbl[is.na(cnum) | cnum < 1, c("MCSID", bp27_person_key(tbl), sex)]
+  roster[[sex]] <- haven::labelled(
+    bp27_plain(roster[[sex]]),
+    c(Male = 1L, Female = 2L),
+    label = "Sex of the responding parent, from the household grid"
+  )
   names(roster)[3] <- "respondent_sex"
   roster
 }
 
 #' The `*PNUM00` person-number column for a table, e.g. `"BPNUM00"`
-mcs_person_key <- function(tbl) {
+bp27_person_key <- function(tbl) {
   pnum <- grep("^.PNUM00$", names(tbl), value = TRUE)
   if (length(pnum) == 0) {
     stop("BPIPD-27: no `*PNUM00` column to key on.", call. = FALSE)
@@ -230,14 +369,14 @@ mcs_person_key <- function(tbl) {
 }
 
 #' Strip an identifier or flag column back to a plain vector
-mcs_plain <- function(x) {
+bp27_plain <- function(x) {
   x <- unclass(x)
   attributes(x) <- NULL
   if (is.character(x)) x else as.integer(x)
 }
 
 #' Drop item-level responses from the cognitive assessment
-mcs_cognitive_scores <- function(tables, wave) {
+bp27_cognitive_scores <- function(tables, wave) {
   keep <- list(
     # Bracken School Readiness and BAS Naming Vocabulary derived scores.
     sweep_2 = "^.D",
@@ -253,14 +392,14 @@ mcs_cognitive_scores <- function(tables, wave) {
 
   cognitive <- grepl("cm_cognitive_assessment", names(tables))
   tables[cognitive] <- lapply(tables[cognitive], function(tbl) {
-    tbl[, grepl(keep, names(tbl)) | names(tbl) %in% mcs_cm_key(tbl)]
+    tbl[, grepl(keep, names(tbl)) | names(tbl) %in% bp27_cm_key(tbl)]
   })
 
   tables
 }
 
 #' The family plus cohort-member key for a table, e.g. `c("MCSID", "FCNUM00")`
-mcs_cm_key <- function(tbl) {
+bp27_cm_key <- function(tbl) {
   cnum <- grep("^.CNUM00$", names(tbl), value = TRUE)
   if (length(cnum) == 0) {
     stop("BPIPD-27: no `*CNUM00` column to key on.", call. = FALSE)
@@ -269,16 +408,42 @@ mcs_cm_key <- function(tbl) {
   c("MCSID", cnum[1])
 }
 
+#' The parent who answered the questions about the child, as `MCSID` plus
+#' person-number keys
+bp27_answering_parent <- function(tables) {
+  flagged <- Filter(
+    function(tbl) any(grepl("_OUT_PARQUEST$", names(tbl))),
+    tables
+  )
+  if (length(flagged) != 1) {
+    return(character(0))
+  }
+
+  tbl <- flagged[[1]]
+  outcome <- grep("_OUT_PARQUEST$", names(tbl), value = TRUE)[1]
+  flag <- bp27_plain(tbl[[outcome]])
+  pnum <- bp27_plain(tbl[[bp27_person_key(tbl)]])
+  unique(paste(tbl$MCSID, pnum)[!is.na(flag) & flag %in% c(1L, 3L)])
+}
+
 #' Keep one respondent's rows from a parent-level table
-mcs_respondent <- function(tbl, code, by, suffix = NULL) {
+bp27_respondent <- function(
+  tbl,
+  code,
+  by,
+  suffix = NULL,
+  answering = character(0)
+) {
   resp <- grep("RESP00$", names(tbl), value = TRUE)
   pnum <- grep("^.PNUM00$", names(tbl), value = TRUE)
 
   tbl <- if (length(resp) > 0) {
-    flag <- mcs_plain(tbl[[resp[1]]])
+    flag <- bp27_plain(tbl[[resp[1]]])
     tbl[!is.na(flag) & flag == code, ]
   } else if (length(pnum) > 0) {
-    ordered <- tbl[order(mcs_plain(tbl[[pnum[1]]])), ]
+    person <- bp27_plain(tbl[[pnum[1]]])
+    answered <- paste(tbl$MCSID, person) %in% answering
+    ordered <- tbl[order(!answered, person), ]
     dplyr::slice(ordered, code, .by = dplyr::all_of(by))
   } else {
     stop(
@@ -296,7 +461,7 @@ mcs_respondent <- function(tbl, code, by, suffix = NULL) {
 }
 
 #' Add a module's new columns to the spine
-mcs_add <- function(
+bp27_add <- function(
   base,
   tbl,
   by,

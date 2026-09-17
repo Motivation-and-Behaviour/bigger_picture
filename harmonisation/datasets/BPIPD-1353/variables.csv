@@ -10,6 +10,7 @@ state,unavailable,,,Not an Australian dataset.,
 ethnicity,unavailable,,,"KYRBS collects no ethnicity, race or migration-background item in any wave.",
 indigenous,unavailable,,,No indigenous-status item; the concept is not used in the Korean context.,
 minority,unavailable,,,"No ethnicity item, so minority status cannot be derived.",
+immigrant_background,in_progress,,,,
 ses_area,unavailable,,,"The geographic variables (CITY, CTYPE, STRATA) identify province and settlement size for sampling, not area-level socioeconomic status.",
 ses_household,proximate,"E_SES, YEAR","case_when(
   YEAR == 2005 ~ ""Unknown"",
@@ -291,6 +292,7 @@ cog_nonverbalreason_bas_picsim,unavailable,,,KYRBS administers no cognitive test
 cog_spatial_bas_pattern,unavailable,,,KYRBS administers no cognitive tests of any kind; it is a self-completed health-behaviour questionnaire.,
 cog_verbalreason_bas_versim,unavailable,,,KYRBS administers no cognitive tests of any kind; it is a self-completed health-behaviour questionnaire.,
 cog_schoolread_bracken,unavailable,,,KYRBS administers no cognitive tests of any kind; it is a self-completed health-behaviour questionnaire.,
+cog_creativethinking_stdtest,in_progress,,,,
 mh_anx_basc2,unavailable,,,Not collected by KYRBS.,
 mh_dep_basc2,unavailable,,,Not collected by KYRBS.,
 mh_emotsymp_sdq_parent,unavailable,,,Not collected by KYRBS.,
@@ -375,6 +377,8 @@ mh_suicide_attempt_self,compatible,"M_SUI_ATT, M_SUI_CON","case_when(
   as.numeric(M_SUI_ATT) == 9999 & as.numeric(M_SUI_CON) == 1 ~ ""No"",
   .default = NA_character_
 )","In the past 12 months, have you attempted suicide? Asked in all 21 waves with a consistent 12-month recall. In 2007-2010 the item was branched on the ideation question and only put to respondents who reported ideation; everyone else carries code 9999. That is a structural skip, not missing data - by the questionnaire logic those respondents did not attempt - so 9999 is mapped to No wherever ideation was also No (verified to hold exactly in all four affected waves). Reading 9999 as missing would restrict the denominator to ideators and lift the attempt rate for those waves to about 25% against roughly 5% either side.",
+mh_psychsom_hbscscl_self,in_progress,,,,
+mh_psychsom_measure,in_progress,,,,
 wb_emotsc_basc2,unavailable,,,Not collected by KYRBS.,
 wb_mwb_wemwbs,unavailable,,,Not collected by KYRBS.,
 wb_lifesatisfaction_cantrilladder,unavailable,,,Not collected by KYRBS.,
@@ -417,3 +421,5 @@ wb_selfratedhealth_self,proximate,PR_HT,"recode_values(
   5 ~ ""Poor"",
   default = NA_character_
 )","Single item asked in all 21 waves: 'How do you think your usual health is?', with a symmetric five-point scale (very healthy / healthy / average / not healthy / very unhealthy) centred on average. Mapped in rank order onto the standard self-rated health anchors, so the middle category reads as Good here although the source wording is 'average'.",
+wb_posaffect_self,in_progress,,,,
+wb_posaffect_measure,in_progress,,,,
