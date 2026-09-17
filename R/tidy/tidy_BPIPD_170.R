@@ -145,8 +145,7 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
     }
 
     # Resolved here rather than in `variables.csv` because the codes change
-    # meaning in 2005: 0/1 is White/Black up to 2004, then 1/2/3 is
-    # Black/White/Hispanic.
+    # in 2005: 0/1 is White/Black up to 2004, then 1/2/3 is Black/White/Hispanic
     if ("race" %in% names(out)) {
       labels <- if (year <= 2004L) {
         c("0" = "White", "1" = "Black")
