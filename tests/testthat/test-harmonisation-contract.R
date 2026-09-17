@@ -101,6 +101,33 @@ test_that("every dataset.yaml is well-formed and has a tidier", {
   })
 })
 
+test_that("every dataset.yaml uses each resource name only once", {
+  withr::with_dir(repo_root, {
+    for (dataset_dir in dataset_dirs) {
+      spec_file <- fs::path(dataset_dir, "dataset.yaml")
+      if (!fs::file_exists(spec_file)) {
+        next
+      }
+
+      spec <- yaml::read_yaml(spec_file)
+      spec$.spec_file <- as.character(spec_file)
+
+      outcome <- tryCatch(
+        {
+          check_resource_names(spec)
+          NULL
+        },
+        error = identity
+      )
+      if (is.null(outcome)) {
+        succeed()
+      } else {
+        fail(conditionMessage(outcome))
+      }
+    }
+  })
+})
+
 test_that("the dataset template variables.csv has the expected columns", {
   withr::with_dir(repo_root, {
     template <- readr::read_csv(

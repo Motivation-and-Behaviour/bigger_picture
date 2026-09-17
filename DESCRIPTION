@@ -25,6 +25,7 @@ Imports:
     tarchetypes,
     targets,
     tibble,
+    tidyr,
     yaml
 Suggests:
     lintr,
