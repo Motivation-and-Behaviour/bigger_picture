@@ -39,7 +39,7 @@ Each item in `resources` describes one file — or one group of related files �
 
 | Field | Required? | Notes |
 |-------|-----------|-------|
-| `name` | Yes | A short label, e.g. `"data"`, `"codebook"`. Names must be unique across the whole file (including across waves) — this is the name the tidier uses to access the table. |
+| `name` | Yes | A short label, e.g. `"data"`, `"codebook"`. Names must be unique across the whole file (including across waves and across roles) — this is the name the tidier uses to access the table, and the pipeline errors on duplicates. |
 | `role` | Yes | One of `data`, `codebook`, `docs` (see below). |
 | `glob` | Yes | The filename, including the folder path if nested (see below). |
 | `reader` | **Only for `role: data`** | How to read the file (see the reader table). |
@@ -158,6 +158,24 @@ waves:
 Repeat the whole wave block for every wave, and give resources wave-specific names (`data_2010`, `data_2014`, …) so the tidier can tell them apart.
 See the [cookbook](spec-cookbook.qmd) for both wave layouts.
 
+::: {.callout-warning}
+## Wave resource names must differ
+
+Copying a wave block and changing only `wave`, `wave_dir` and `glob` leaves every wave declaring a resource called `data`.
+Resource names are the keys of `raw_dataset$data`, so `raw_dataset$data$data` would then return wave 1 and nothing else, and every later wave would be unreachable by name.
+
+The pipeline refuses to read a spec in that state, listing each repeated name and the waves it appears in:
+
+```
+Error in `check_resource_names()`:
+! Duplicate resource names in `harmonisation/datasets/BPIPD-9999/dataset.yaml`.
+✖ `data` is declared 3 times (wave 2010, wave 2014, wave 2018).
+ℹ Names must be unique across the whole spec, including across waves and across roles.
+```
+
+The fix is to work the wave into every name — including `codebook` and `docs` resources, which share the same namespace.
+:::
+
 ## Validating your spec {#validating-your-spec}
 
 Once `dataset.yaml` is filled in, check that it reads the real files:
@@ -176,5 +194,6 @@ If not:
 5. Do Excel resources name the correct `sheet`?
 6. If the same filename exists in two folders, is the glob specific enough to match only the authoritative one?
    (When in doubt about which copy is authoritative, ask the team lead.)
+7. Is every resource `name` unique across the whole file, including across waves?
 
-The repository's test suite additionally checks every committed spec's structure (ID matches the folder, valid `status`, tidier file exists) on every pull request — but only a local `tar_make()` proves the globs match the real files, because CI has no access to the data.
+The repository's test suite additionally checks every committed spec's structure (ID matches the folder, valid `status`, unique resource names, tidier file exists) on every pull request — but only a local `tar_make()` proves the globs match the real files, because CI has no access to the data.

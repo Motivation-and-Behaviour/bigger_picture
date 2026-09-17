@@ -8,7 +8,7 @@
     }
   },
   "mounts": [
-    "source=/mnt/c/Users/TaSandersAdmin/OneDrive - Australian Catholic University/Projects/Bigger Picture - DoE Grant/IPD Component/Datasets,target=/data,type=bind",
+    "source=/mnt/c/Users/TaSandersAdmin/OneDrive - Australian Catholic University/Projects/Bigger Picture - DoE Grant/IPD Component/Datasets,target=/data,type=bind,readonly",
     "source=claude-code-config-${devcontainerId},target=/home/rstudio/.claude,type=volume"
   ]
 }

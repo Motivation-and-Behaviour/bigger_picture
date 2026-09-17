@@ -51,9 +51,6 @@ renv/
 # Environment variables
 .env
 
-# Codex storage
-.codex/
-
 # Scratch files
 scratch.*
-.claude/settings.local.json
+.claude/*

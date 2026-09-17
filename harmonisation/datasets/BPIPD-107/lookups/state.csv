@@ -1,0 +1,123 @@
+source_value,harmonised_value,notes
+2015 AUS0210,NSW,"PISA 2015 stratum: AUS - stratum 10: NSW-Gov, No Y10"
+2015 AUS0420,QLD,"PISA 2015 stratum: AUS - stratum 20: QLD-Catholic, No Y10"
+2015 AUS0530,SA,"PISA 2015 stratum: AUS - stratum 30: SA-Ind, No Y10"
+2015 AUS0740,TAS,"PISA 2015 stratum: AUS - stratum 40: TAS-Gov, No Y10"
+2015 AUS0101,ACT,"PISA 2015 stratum: AUS - stratum 01: ACT-Catholic, Y10"
+2015 AUS0211,NSW,"PISA 2015 stratum: AUS - stratum 11: NSW-Ind, Y10"
+2015 AUS0421,QLD,"PISA 2015 stratum: AUS - stratum 21: QLD-Gov, Y10"
+2015 AUS0631,WA,"PISA 2015 stratum: AUS - stratum 31: WA-Catholic, Y10"
+2015 AUS0741,TAS,"PISA 2015 stratum: AUS - stratum 41: TAS-Ind, Y10"
+2015 AUS0102,ACT,"PISA 2015 stratum: AUS - stratum 02: ACT-Catholic, No Y10"
+2015 AUS0212,NSW,"PISA 2015 stratum: AUS - stratum 12: NSW-Ind, No Y10"
+2015 AUS0422,QLD,"PISA 2015 stratum: AUS - stratum 22: QLD-Gov, No Y10"
+2015 AUS0632,WA,"PISA 2015 stratum: AUS - stratum 32: WA-Catholic, No Y10"
+2015 AUS0742,TAS,"PISA 2015 stratum: AUS - stratum 42: TAS-Ind, No Y10"
+2015 AUS0103,ACT,"PISA 2015 stratum: AUS - stratum 03: ACT-Gov, Y10"
+2015 AUS0313,VIC,"PISA 2015 stratum: AUS - stratum 13: VIC-Catholic, Y10"
+2015 AUS0423,QLD,"PISA 2015 stratum: AUS - stratum 23: QLD-Ind, Y10"
+2015 AUS0633,WA,"PISA 2015 stratum: AUS - stratum 33: WA-Gov, Y10"
+2015 AUS0843,NT,"PISA 2015 stratum: AUS - stratum 43: NT-Catholic, Y10"
+2015 AUS0104,ACT,"PISA 2015 stratum: AUS - stratum 04: ACT-Gov, No Y10"
+2015 AUS0314,VIC,"PISA 2015 stratum: AUS - stratum 14: VIC-Catholic, No Y10"
+2015 AUS0424,QLD,"PISA 2015 stratum: AUS - stratum 24: QLD-Ind, No Y10"
+2015 AUS0634,WA,"PISA 2015 stratum: AUS - stratum 34: WA-Gov, No Y10"
+2015 AUS0844,NT,"PISA 2015 stratum: AUS - stratum 44: NT-Catholic, No Y10"
+2015 AUS0105,ACT,"PISA 2015 stratum: AUS - stratum 05: ACT-Ind, Y10"
+2015 AUS0315,VIC,"PISA 2015 stratum: AUS - stratum 15: VIC-Gov, Y10"
+2015 AUS0525,SA,"PISA 2015 stratum: AUS - stratum 25: SA-Catholic, Y10"
+2015 AUS0635,WA,"PISA 2015 stratum: AUS - stratum 35: WA-Ind, Y10"
+2015 AUS0845,NT,"PISA 2015 stratum: AUS - stratum 45: NT-Gov, Y10"
+2015 AUS0316,VIC,"PISA 2015 stratum: AUS - stratum 16: VIC-Gov, No Y10"
+2015 AUS0526,SA,"PISA 2015 stratum: AUS - stratum 26: SA-Catholic, NO Y10"
+2015 AUS0636,WA,"PISA 2015 stratum: AUS - stratum 36: WA-Ind, No Y10"
+2015 AUS0846,NT,"PISA 2015 stratum: AUS - stratum 46: NT-Gov, No Y10"
+2015 AUS0207,NSW,"PISA 2015 stratum: AUS - stratum 07: NSW-Catholic, Y10"
+2015 AUS0317,VIC,"PISA 2015 stratum: AUS - stratum 17: VIC-Ind, Y10"
+2015 AUS0527,SA,"PISA 2015 stratum: AUS - stratum 27: SA-Gov, Y10"
+2015 AUS0737,TAS,"PISA 2015 stratum: AUS - stratum 37: TAS-Catholic, Y10"
+2015 AUS0847,NT,"PISA 2015 stratum: AUS - stratum 47: NT-Ind, Y10"
+2015 AUS9797,Unknown,PISA 2015 stratum: Undisclosed STRATUM - Australia
+2015 AUS0208,NSW,"PISA 2015 stratum: AUS - stratum 08: NSW-Catholic, No Y10"
+2015 AUS0318,VIC,"PISA 2015 stratum: AUS - stratum 18: VIC-Ind, No Y10"
+2015 AUS0528,SA,"PISA 2015 stratum: AUS - stratum 28: SA-Gov, No Y10"
+2015 AUS0738,TAS,"PISA 2015 stratum: AUS - stratum 38: TAS-Catholic, No Y10"
+2015 AUS0848,NT,"PISA 2015 stratum: AUS - stratum 48: NT-Ind, No Y10"
+2015 AUS0209,NSW,"PISA 2015 stratum: AUS - stratum 09: NSW-Gov, Y10"
+2015 AUS0419,QLD,"PISA 2015 stratum: AUS - stratum 19: QLD-Catholic, Y10"
+2015 AUS0529,SA,"PISA 2015 stratum: AUS - stratum 29: SA-Ind, Y10"
+2015 AUS0739,TAS,"PISA 2015 stratum: AUS - stratum 39: TAS-Gov, Y10"
+2018 AUS0410,QLD,PISA 2018 stratum: AUS - stratum 10: QLD-Catholic
+2018 AUS0720,TAS,PISA 2018 stratum: AUS - stratum 20: TAS-Government
+2018 AUS0101,ACT,PISA 2018 stratum: AUS - stratum 01: ACT-Catholic
+2018 AUS0411,QLD,PISA 2018 stratum: AUS - stratum 11: QLD-Government
+2018 AUS0721,TAS,PISA 2018 stratum: AUS - stratum 21: TAS-Independent
+2018 AUS0102,ACT,PISA 2018 stratum: AUS - stratum 02: ACT-Government
+2018 AUS0412,QLD,PISA 2018 stratum: AUS - stratum 12: QLD-Independent
+2018 AUS0822,NT,PISA 2018 stratum: AUS - stratum 22: NT-Catholic
+2018 AUS0103,ACT,PISA 2018 stratum: AUS - stratum 03: ACT-Independent
+2018 AUS0513,SA,PISA 2018 stratum: AUS - stratum 13: SA-Catholic
+2018 AUS0823,NT,PISA 2018 stratum: AUS - stratum 23: NT-Government
+2018 AUS0204,NSW,PISA 2018 stratum: AUS - stratum 04: NSW-Catholic
+2018 AUS0514,SA,PISA 2018 stratum: AUS - stratum 14: SA-Government
+2018 AUS0824,NT,PISA 2018 stratum: AUS - stratum 24: NT-Independent
+2018 AUS0205,NSW,PISA 2018 stratum: AUS - stratum 05: NSW-Government
+2018 AUS0515,SA,PISA 2018 stratum: AUS - stratum 15: SA-Independent
+2018 AUS0206,NSW,PISA 2018 stratum: AUS - stratum 06: NSW-Independent
+2018 AUS0616,WA,PISA 2018 stratum: AUS - stratum 16: WA-Catholic
+2018 AUS0307,VIC,PISA 2018 stratum: AUS - stratum 07: VIC-Catholic
+2018 AUS0617,WA,PISA 2018 stratum: AUS - stratum 17: WA-Government
+2018 AUS9797,Unknown,PISA 2018 stratum: Undisclosed STRATUM - Australia
+2018 AUS0308,VIC,PISA 2018 stratum: AUS - stratum 08: VIC-Government
+2018 AUS0618,WA,PISA 2018 stratum: AUS - stratum 18: WA-Independent
+2018 AUS0309,VIC,PISA 2018 stratum: AUS - stratum 09: VIC-Independent
+2018 AUS0719,TAS,PISA 2018 stratum: AUS - stratum 19: TAS-Catholic
+2022 AUS10,QLD,PISA 2022 stratum: AUS - stratum 10: QLD-Catholic
+2022 AUS20,TAS,PISA 2022 stratum: AUS - stratum 20: TAS-Government
+2022 AUS01,ACT,PISA 2022 stratum: AUS - stratum 01: ACT-Catholic
+2022 AUS11,QLD,PISA 2022 stratum: AUS - stratum 11: QLD-Government
+2022 AUS21,TAS,PISA 2022 stratum: AUS - stratum 21: TAS-Independent
+2022 AUS02,ACT,PISA 2022 stratum: AUS - stratum 02: ACT-Government
+2022 AUS12,QLD,PISA 2022 stratum: AUS - stratum 12: QLD-Independent
+2022 AUS22,NT,PISA 2022 stratum: AUS - stratum 22: NT-Catholic
+2022 AUS03,ACT,PISA 2022 stratum: AUS - stratum 03: ACT-Independent
+2022 AUS13,SA,PISA 2022 stratum: AUS - stratum 13: SA-Catholic
+2022 AUS23,NT,PISA 2022 stratum: AUS - stratum 23: NT-Government
+2022 AUS04,NSW,PISA 2022 stratum: AUS - stratum 04: NSW-Catholic
+2022 AUS14,SA,PISA 2022 stratum: AUS - stratum 14: SA-Government
+2022 AUS24,NT,PISA 2022 stratum: AUS - stratum 24: NT-Independent
+2022 AUS05,NSW,PISA 2022 stratum: AUS - stratum 05: NSW-Government
+2022 AUS15,SA,PISA 2022 stratum: AUS - stratum 15: SA-Independent
+2022 AUS06,NSW,PISA 2022 stratum: AUS - stratum 06: NSW-Independent
+2022 AUS16,WA,PISA 2022 stratum: AUS - stratum 16: WA-Catholic
+2022 AUS07,VIC,PISA 2022 stratum: AUS - stratum 07: VIC-Catholic
+2022 AUS17,WA,PISA 2022 stratum: AUS - stratum 17: WA-Government
+2022 AUS97,Unknown,PISA 2022 stratum: Undisclosed STRATUM - Australia
+2022 AUS08,VIC,PISA 2022 stratum: AUS - stratum 08: VIC-Government
+2022 AUS18,WA,PISA 2022 stratum: AUS - stratum 18: WA-Independent
+2022 AUS09,VIC,PISA 2022 stratum: AUS - stratum 09: VIC-Independent
+2022 AUS19,TAS,PISA 2022 stratum: AUS - stratum 19: TAS-Catholic
+2025 AUS10,QLD,PISA 2025 stratum: QLD-Catholic
+2025 AUS20,TAS,PISA 2025 stratum: TAS-Government
+2025 AUS01,ACT,PISA 2025 stratum: ACT-Catholic
+2025 AUS11,QLD,PISA 2025 stratum: QLD-Government
+2025 AUS21,TAS,PISA 2025 stratum: TAS-Independent
+2025 AUS02,ACT,PISA 2025 stratum: ACT-Government
+2025 AUS12,QLD,PISA 2025 stratum: QLD-Independent
+2025 AUS22,NT,PISA 2025 stratum: NT-Catholic
+2025 AUS03,ACT,PISA 2025 stratum: ACT-Independent
+2025 AUS13,SA,PISA 2025 stratum: SA-Catholic
+2025 AUS23,NT,PISA 2025 stratum: NT-Government
+2025 AUS04,NSW,PISA 2025 stratum: NSW-Catholic
+2025 AUS14,SA,PISA 2025 stratum: SA-Government
+2025 AUS24,NT,PISA 2025 stratum: NT-Independent
+2025 AUS05,NSW,PISA 2025 stratum: NSW-Government
+2025 AUS15,SA,PISA 2025 stratum: SA-Independent
+2025 AUS06,NSW,PISA 2025 stratum: NSW-Independent
+2025 AUS16,WA,PISA 2025 stratum: WA-Catholic
+2025 AUS07,VIC,PISA 2025 stratum: VIC-Catholic
+2025 AUS17,WA,PISA 2025 stratum: WA-Government
+2025 AUS08,VIC,PISA 2025 stratum: VIC-Government
+2025 AUS18,WA,PISA 2025 stratum: WA-Independent
+2025 AUS09,VIC,PISA 2025 stratum: VIC-Independent
+2025 AUS19,TAS,PISA 2025 stratum: TAS-Catholic
