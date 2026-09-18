@@ -295,6 +295,8 @@ st_internet,partial,"IC006Q01TA, IC007Q01TA","((recode_values(as.numeric(IC006Q0
   (recode_values(as.numeric(IC007Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 7)) * 2) /
   7","5:2 weighted mean of weekday and weekend, outside school only.",
 st_videochat,unavailable,,,,
+st_messaging,in_progress,,,,
+st_creating,in_progress,,,,
 st_email,unavailable,,,,
 st_shopping,unavailable,,,,
 st_total_school,partial,"ST326Q01JA, ST326Q04JA","sum_nonmissing(
@@ -446,6 +448,8 @@ mh_anx_measure,unavailable,,,,
 mh_depanx_diagnosed,unavailable,,,,
 mh_stress_self,unavailable,,,,
 mh_lonely_self,incompatible,ST034Q06TA,,"'I feel lonely at school' is an agree/disagree item, not a frequency.",
+mh_lonely_scale_self,in_progress,,,,
+mh_lonely_measure,in_progress,,,,
 mh_suicide_ideation_self,unavailable,,,,
 mh_suicide_attempt_self,unavailable,,,,
 mh_psychsom_hbscscl_self,compatible,"WB154Q01HA, WB154Q02HA, WB154Q03HA, WB154Q04HA, WB154Q05HA, WB154Q06HA, WB154Q07HA, WB154Q08HA","as.numeric(WB154Q01HA) +

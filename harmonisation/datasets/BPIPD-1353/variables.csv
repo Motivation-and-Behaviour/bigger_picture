@@ -199,6 +199,8 @@ st_internet,partial,"YEAR, INT_WD, INT_WK, INT_WD_MM, INT_WK_MM, INT_WD_MM2, INT
     2)) /
   7",Non-study internet use on a usual day. Weekday and weekend combined with the project's 5:2 weighted mean. See st_internet_wd.,
 st_videochat,unavailable,,,Not collected by KYRBS.,
+st_messaging,in_progress,,,,
+st_creating,in_progress,,,,
 st_email,unavailable,,,Not collected by KYRBS.,
 st_shopping,unavailable,,,Not collected by KYRBS.,
 st_total_school,unavailable,,,Not collected by KYRBS.,
@@ -370,6 +372,8 @@ mh_lonely_self,compatible,M_LON,"recode_values(
   5 ~ ""Always"",
   default = NA_character_
 )","Single item on how often the respondent felt lonely in the past 12 months, fielded in 2020-2024 only. Five ordered options map one-to-one onto the dataschema categories. Not asked in 2025.",
+mh_lonely_scale_self,in_progress,,,,
+mh_lonely_measure,in_progress,,,,
 mh_suicide_ideation_self,compatible,M_SUI_CON,"recode_values(as.numeric(M_SUI_CON), 1 ~ ""No"", 2 ~ ""Yes"", default = NA_character_)","'In the past 12 months, have you seriously considered suicide?', asked in all 21 waves with a consistent 12-month recall and no sentinel codes.",
 mh_suicide_attempt_self,compatible,"M_SUI_ATT, M_SUI_CON","case_when(
   as.numeric(M_SUI_ATT) == 1 ~ ""No"",
