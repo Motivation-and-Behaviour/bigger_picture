@@ -229,6 +229,8 @@ st_videochat,compatible,"video_chat_hrs_day, video_chat_hrs_week","coalesce(
   recode_values(video_chat_hrs_week, 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 4, 5 ~ 7.5, 6 ~ 14.5, 7 ~ 24.5, 8 ~ 34.5, 9 ~ 44.5) /
     7
 )","'About how many hours a week do you spend ... video chatting (Skype, etc.)?' (2013-2017, weekly, divided by 7) and the same item asked per average day from 2018. Not asked before 2013. Closed bands scored at their midpoint; the open top band is scored as if it had the same width as the band below it. IMPORTANT: MTF switched this battery from 'hours a week' to 'hours on an average DAY' in 2018, and the per-day framing elicits far larger estimates. Mean harmonised hours roughly double at that boundary and the jump is present in the raw response distributions, not introduced by the conversion. Treat 2000-2017 and 2018-2024 as different instruments.",
+st_messaging,in_progress,,,,
+st_creating,in_progress,,,,
 st_email,compatible,email_hrs_day,"recode_values(email_hrs_day, 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 3.5, 5 ~ 5.5, 6 ~ 7.5, 7 ~ 9.5)","'About how many hours on an average DAY do you spend ... emailing?', 2018-2024 only. Before 2018 emailing was named inside the general internet item and cannot be separated from it, so earlier years are missing rather than zero. Closed bands scored at their midpoint; the open top band is scored as if it had the same width as the band below it.",
 st_shopping,compatible,shop_online_hrs_day,"recode_values(shop_online_hrs_day, 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 3.5, 5 ~ 5.5, 6 ~ 7.5, 7 ~ 9.5)","'About how many hours on an average DAY do you spend ... shopping online?', 2018-2024 only. Before 2018 shopping was named inside the general internet item and cannot be separated from it, so earlier years are missing rather than zero. Closed bands scored at their midpoint; the open top band is scored as if it had the same width as the band below it.",
 st_total_school,unavailable,,,,
@@ -355,6 +357,8 @@ mh_anx_measure,in_progress,,,,
 mh_depanx_diagnosed,in_progress,,,,
 mh_stress_self,in_progress,,,,
 mh_lonely_self,in_progress,,,,
+mh_lonely_scale_self,in_progress,,,,
+mh_lonely_measure,in_progress,,,,
 mh_suicide_ideation_self,in_progress,,,,
 mh_suicide_attempt_self,in_progress,,,,
 mh_psychsom_hbscscl_self,in_progress,,,,
