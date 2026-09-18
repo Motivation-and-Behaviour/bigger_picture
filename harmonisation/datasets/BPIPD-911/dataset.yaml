@@ -1,0 +1,12 @@
+dataset_id: "911"
+dataset_name: "Rojo-Wissar"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "ST_rr.sav"
+    reader: "spss"
+
+notes: |
+ Also includes docx questionnaires and measures - not read in
