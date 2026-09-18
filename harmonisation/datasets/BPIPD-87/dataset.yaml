@@ -1,0 +1,10 @@
+dataset_id: "87"
+dataset_name: "Mendeley"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "repositorio.xlsx"
+    reader: "excel"
+    sheet: "Hoja1"
