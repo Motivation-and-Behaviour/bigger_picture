@@ -1,22 +1,17 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-621 (Ellis)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One online survey run in April 2020 (Ellis, Dumas & Forbes, 2020, Can J
+#' Behav Sci 52:177-187): the "before COVID" items are retrospective recall
+#' collected on the same occasion as the "since COVID" items, not a second
+#' wave, so the file stays one row per adolescent. It carries no participant
+#' identifier, so none is constructed here.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per adolescent
 tidy_BPIPD_621 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
-
-  tibble::as_tibble(raw_dataset$data[[1]])
+  tibble::as_tibble(raw_dataset$data$data)
 }
