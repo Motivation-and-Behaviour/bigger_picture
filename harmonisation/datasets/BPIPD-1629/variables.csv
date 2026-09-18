@@ -212,6 +212,8 @@ st_internet,compatible,"QC304, QC305","(recode_values(
     2) /
   7","Project-convention 5:2 weighted mean of the mapped weekday and weekend values. Returns NA when either day is missing, so coverage matches the intersection of QC304 and QC305. Banded single item converted to hours at the band midpoint: 'None at all' = 0, 'Just a few minutes' = 0.25, then the named bands at face value (0.5-4), and the open top band 'More than four hours' = 4.5. The 0.25 and 4.5 values match the minute values EU Kids Online used for its own derived DCtimeuse variable (15 and 270 minutes); DCtimeuse is not used here because it scores 'None at all' as 5 minutes rather than 0. 'Don't know' (-98) and no answer (-99) become NA.",
 st_videochat,unavailable,,,No video-call item; QC309d covers text-based instant messaging.,
+st_messaging,in_progress,,,,
+st_creating,in_progress,,,,
 st_email,incompatible,"QC308a, QC309a",,"QC309a records how often the child sent or received email in the past month (five-point frequency, not duration).",
 st_shopping,unavailable,,,No online-shopping item in the 2010 activity list.,
 st_total_school,unavailable,,,"No school-context duration items; QC304 asks about a school day, not about use while at school.",
@@ -348,6 +350,8 @@ mh_anx_measure,unavailable,,,"No anxiety-specific scale. The SDQ emotional sympt
 mh_depanx_diagnosed,in_progress,,,,
 mh_stress_self,in_progress,,,,
 mh_lonely_self,in_progress,,,,
+mh_lonely_scale_self,in_progress,,,,
+mh_lonely_measure,in_progress,,,,
 mh_suicide_ideation_self,in_progress,,,,
 mh_suicide_attempt_self,in_progress,,,,
 mh_psychsom_hbscscl_self,in_progress,,,,
