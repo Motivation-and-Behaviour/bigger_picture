@@ -9,9 +9,13 @@
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble, one row per respondent
+#' - one tibble, one row per respondent, de-duplicated
 tidy_BPIPD_831 <- function(raw_dataset, spec) {
   df <- tibble::as_tibble(raw_dataset$data$data)
+
+  # 26 rows repeat an earlier row exactly across all 126 columns, so these are
+  # treated as repeated form submissions and only the first of each is kept.
+  df <- df[!duplicated(df), ]
 
   headers <- names(df)
   names(df) <- bp831_item_codes(headers)
@@ -20,7 +24,7 @@ tidy_BPIPD_831 <- function(raw_dataset, spec) {
     attr(df[[i]], "label") <- headers[[i]]
   }
 
-  # `EDAD` is the volatile worksheet formula `YEAR(TODAY()) - YEAR(birth date)`,
+  # `EDAD` is the worksheet formula `YEAR(TODAY()) - YEAR(birth date)`,
   # so its stored values are ages at the workbook's last save.
   attr(df$EDAD, "label") <- paste(
     "EDAD (worksheet formula YEAR(TODAY()) - YEAR(birth date)):",

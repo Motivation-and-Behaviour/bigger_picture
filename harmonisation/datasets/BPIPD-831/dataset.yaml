@@ -13,6 +13,8 @@ resources:
     glob: "data_set_PB.xlsx"
     reader: "excel"
     sheet: "Hoja1"
-notes: 
- Codebook is in same excel file as data
- 
+
+notes: |
+  Single-occasion cross-sectional school survey of adolescents in Madrid,
+  Spain, delivered as a Google Forms questionnaire during class time. The
+  codebook is sheet "Hoja1" of the same workbook as the data.

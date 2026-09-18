@@ -529,6 +529,8 @@ beh_atten_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_ext_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_cbcl_measure,unavailable,,,CBCL not administered; MCS uses the SDQ,,
+beh_prosocial_online_self,in_progress,,,,,
+beh_prosocial_online_measure,in_progress,,,,,
 cog_execfunc_basc2,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
 cog_langexec_nepsy,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
 cog_phono_nepsy,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
@@ -695,4 +697,8 @@ st_internet_wd,compatible,tud_internet_mins_wd,tud_internet_mins_wd / 60,"Diary 
 st_internet_we,compatible,tud_internet_mins_we,tud_internet_mins_we / 60,Diary activity 35 on the weekend diary day.,,diary
 st_internet,compatible,"tud_internet_mins_wd, tud_internet_mins_we",((tud_internet_mins_wd * 5) + (tud_internet_mins_we * 2)) / 7 / 60,5:2 weighted mean of the diary days; NA when only one day type was returned.,,diary
 st_videochat,incompatible,,,"Diary activity 31 'Speaking on the phone (including Skype, video calls)' pools voice calls with video calls, so it cannot defensibly become video-chat time (tud_calls_mins_wd/we are kept in the tidied table).",,diary
+st_messaging_wd,in_progress,,,,,
+st_messaging_we,in_progress,,,,,
 st_email,incompatible,,,"Diary activity 33 'Answering emails, instant messaging, texting' pools texting and messaging with email, so it cannot defensibly become email time (tud_messaging_mins_wd/we are kept in the tidied table).",,diary
+wb_eudaimonic_self,in_progress,,,,,
+wb_eudaimonic_measure,in_progress,,,,,
