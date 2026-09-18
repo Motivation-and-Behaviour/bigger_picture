@@ -1,0 +1,112 @@
+dataset_id: "1261"
+dataset_name: "JTUC Research Institute for Advancement of Living Standards"
+status: "in_progress"
+
+resources:
+  - name: "haha_csv"
+    role: "data"
+    glob: "0004/0004_haha.csv"
+    reader: "csv"
+
+  - name: "haha_stata"
+    role: "data"
+    glob: "0004/0004_haha.dta"
+    reader: "stata"
+
+  - name: "haha_spss"
+    role: "data"
+    glob: "0004/0004_haha.sav"
+    reader: "spss"
+
+  - name: "jikan9_csv"
+    role: "data"
+    glob: "0004/0004_jikan9.csv"
+    reader: "csv"
+
+  - name: "jikan9_stata"
+    role: "data"
+    glob: "0004/0004_jikan9.dta"
+    reader: "stata"
+
+  - name: "jikan9_spss"
+    role: "data"
+    glob: "0004/0004_jikan9.sav"
+    reader: "spss"
+
+  - name: "jikan10_csv"
+    role: "data"
+    glob: "0004/0004_jikan10.csv"
+    reader: "csv"
+
+  - name: "jikan10_stata"
+    role: "data"
+    glob: "0004/0004_jikan10.dta"
+    reader: "stata"
+
+  - name: "jikan10_spss"
+    role: "data"
+    glob: "0004/0004_jikan10.sav"
+    reader: "spss"
+
+  - name: "jikan13_csv"
+    role: "data"
+    glob: "0004/0004_jikan13.csv"
+    reader: "csv"
+
+  - name: "jikan13_stata"
+    role: "data"
+    glob: "0004/0004_jikan13.dta"
+    reader: "stata"
+
+  - name: "jikan13_spss"
+    role: "data"
+    glob: "0004/0004_jikan13.sav"
+    reader: "spss"
+
+  - name: "kodomo_csv"
+    role: "data"
+    glob: "0004/0004_kodomo.csv"
+    reader: "csv"
+
+  - name: "kodomo_stata"
+    role: "data"
+    glob: "0004/0004_kodomo.dta"
+    reader: "stata"
+
+  - name: "kodomo_spss"
+    role: "data"
+    glob: "0004/0004_kodomo.sav"
+    reader: "spss"
+
+  - name: "haha_labels"
+    role: "codebook"
+    glob: "0004/0004_haha label.txt"
+
+  - name: "jikan9_labels"
+    role: "codebook"
+    glob: "0004/0004_jikan9 label.txt"
+
+  - name: "jikan10_labels"
+    role: "codebook"
+    glob: "0004/0004_jikan10 label.txt"
+
+  - name: "jikan13_labels"
+    role: "codebook"
+    glob: "0004/0004_jikan13 label.txt"
+
+  - name: "kodomo_labels"
+    role: "codebook"
+    glob: "0004/0004_kodomo label.txt"
+
+  - name: "readme"
+    role: "docs"
+    glob: "0004/0004_readme.txt"
+
+notes: |
+  All dataset files are stored within the subdirectory '0004'. 
+  The dataset contains five study components (haha, jikan9, jikan10, jikan13, 
+  and kodomo). Each component is provided in CSV, Stata (.dta), and SPSS (.sav) 
+  formats representing equivalent versions of the same data. 
+  Associated label text files provide variable labels/codebook information for 
+  each component. A dataset-level README text file provides additional 
+  documentation."
