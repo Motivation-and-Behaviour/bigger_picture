@@ -1,0 +1,12 @@
+dataset_id: "1850"
+dataset_name: "Sanders"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Total TECH Sanders papers.sav"
+    reader: "spss"
+
+notes: |
+  File also includes questionnaire docs x2 (not read in)
