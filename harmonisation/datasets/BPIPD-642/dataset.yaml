@@ -1,0 +1,9 @@
+dataset_id: "642"
+dataset_name: "Rose"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Watching TV in a home environment Data share Bigger Picture.sav"
+    reader: "spss"
