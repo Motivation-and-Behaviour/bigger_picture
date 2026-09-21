@@ -47,6 +47,9 @@ Each item in `resources` describes one file — or one group of related files �
 | `range` | Excel only, optional | A cell range, e.g. `"A1:H200"`. |
 | `table` | Access (`mdb`) only | The table to read; may be omitted when the file contains exactly one table. |
 | `object` | `rda` only | The object to extract; may be omitted when the file contains exactly one object. |
+| `col_names` | `csv`/`csv2`/`tsv` only, optional | Whether the first row is a header. Default `true`; set `false` for a headerless file, whose columns are then named `X1`, `X2`, … for the tidier to rename (see [Headerless delimited files](#headerless-delimited-files)). |
+| `col_positions` | `fwf` only, **required** | Path to the fixed-width layout CSV, relative to the dataset's spec folder (see [Fixed-width files](#fixed-width-files)). |
+| `encoding` | Optional | Character encoding of the source file, e.g. `"latin1"`. Accepted by `csv`, `csv2`, `tsv`, `fwf`, `stata`, `spss` and `sas`; any other reader refuses it. |
 
 ### Roles
 
@@ -54,7 +57,7 @@ Each item in `resources` describes one file — or one group of related files �
 |------|---------|
 | `data` | The actual dataset file(s) — `.sav`, `.dta`, `.csv`, `.xlsx`, etc. **Requires a `reader`.** Read into R and passed to the tidier. |
 | `codebook` | Data dictionaries and variable documentation. The file path is recorded for reference, but the file is **not read into R**. |
-| `docs` | Anything else: technical reports, user guides, questionnaires, syntax files. Paths only — must not have a `reader`, `sheet`, or `range`. |
+| `docs` | Anything else: technical reports, user guides, questionnaires, syntax files. Paths only — must not have a `reader` or any reader option (`sheet`, `range`, `table`, `object`, `col_names`, `col_positions`, `encoding`). |
 
 ### Globs
 
@@ -80,18 +83,22 @@ Paths must match the real files exactly, including capitalisation and spacing �
 ## Readers
 
 `reader` is required whenever `role: data`.
-Pick it from the file extension:
+Pick it from the file *format*, which usually but not always follows from the extension: a `.dat` or `.txt` file can be comma-separated, tab-separated, headerless or fixed-width, so open it and look before choosing.
 
 ```{r}
 #| label: reader-table
 readers <- tibble::tribble(
   ~Reader, ~`File types`, ~`Extra keys`,
-  "csv", "`.csv` (comma-separated)", "",
-  "csv2", "`.csv` (semicolon-separated, comma decimal)", "",
-  "tsv", "`.tsv` (tab-separated)", "",
-  "stata", "`.dta` (Stata)", "",
-  "spss", "`.sav` (SPSS)", "",
-  "sas", "`.sas7bdat` (SAS)", "",
+  "csv", "`.csv` (comma-separated)", "`col_names`, `encoding` (both optional)",
+  "csv2", "`.csv` (semicolon-separated, comma decimal)",
+  "`col_names`, `encoding` (both optional)",
+  "tsv", "`.tsv` (tab-separated)", "`col_names`, `encoding` (both optional)",
+  "fwf", "`.dat` / `.txt` (fixed-width, no delimiter)",
+  "`col_positions` (required), `encoding` (optional)",
+  "stata", "`.dta` (Stata)", "`encoding` (optional)",
+  "spss", "`.sav` (SPSS)", "`encoding` (optional)",
+  "por", "`.por` (SPSS Portable)", "",
+  "sas", "`.sas7bdat` (SAS)", "`encoding` (optional)",
   "rds", "`.rds` (single R object)", "",
   "rda", "`.rda` / `.RData` (saved R workspace)",
   "`object` (optional if the file holds one object)",
@@ -131,6 +138,63 @@ For **Excel data files**, always set `sheet` — open the file in the original d
 `.rda` files use `reader: "rda"`, not `rds`.
 An `.rds` file stores exactly one object; an `.rda` file is a saved workspace that can hold several, which is why `rda` takes an optional `object` key.
 :::
+
+::: {.callout-warning}
+`.por` files are SPSS *Portable* files and use `reader: "por"`, not `spss`.
+`reader: "spss"` fails on them with "Invalid file, or file has unsupported features".
+The `por` reader has no `encoding` option; setting one is an error.
+:::
+
+### Headerless delimited files {#headerless-delimited-files}
+
+Some exported flat files, such as Mplus `.dat` files, have no header row.
+Read with the default `col_names: true`, the first participant's row becomes the column names and the table comes back one row short, and nothing errors.
+Set `col_names: false` so every row is data:
+
+```yaml
+- name: "analysis_file"
+  role: "data"
+  glob: "analysis_file.dat"
+  reader: "tsv"
+  col_names: false
+```
+
+The columns are then named `X1`, `X2`, … and the tidier renames them from the study's documentation.
+
+### Fixed-width files {#fixed-width-files}
+
+A fixed-width file has no delimiters: each variable occupies a fixed range of character positions on every line, and the codebook says which.
+Read with a delimited reader it comes back as a single character column, and nothing errors.
+
+Use `reader: "fwf"` and point `col_positions` at a *layout CSV* committed next to the spec, conventionally at `harmonisation/datasets/BPIPD-<id>/layouts/<name>.csv`:
+
+```yaml
+- name: "survey_2007"
+  role: "data"
+  glob: "survey07.dat"
+  reader: "fwf"
+  col_positions: "layouts/survey_2007.csv"
+```
+
+The layout CSV has one row per field:
+
+| Column | Required? | Meaning |
+|--------|-----------|---------|
+| `name` | Yes | Column name; must be unique. |
+| `start` | Yes | First character position, 1-based, inclusive. |
+| `end` | Yes | Last character position, inclusive. |
+| `type` | No | Single-letter `readr` column type (`c` character, `d` double, `i` integer, `l` logical); leave blank or omit the column to let `readr` guess. |
+
+Any other column is ignored by the reader, so keep the codebook's format string or decimal count alongside for provenance and for the tidier.
+Fields must be listed in ascending order and may not overlap; a gap between fields is fine and simply skips those characters.
+
+Derive the layout once from the study's codebook or data dictionary and commit it, with a `README.md` next to it recording how it was produced, so the layout is reviewable and reproducible.
+The pipeline validates the layout before reading and fails loudly on a bad one.
+It also warns when the layout runs past the end of the first record, because `read_fwf()` would otherwise return `NA` for the overhanging field without complaint.
+Layout files are tracked like data files: editing one rebuilds the read.
+
+Implied decimals (a codebook format such as `N8.3`) are **not** applied by the reader; carry the format in an extra layout column and divide in the tidier.
+There is a worked example in the [cookbook](spec-cookbook.qmd#fixed-width-file).
 
 ## Waves
 
@@ -188,12 +252,15 @@ If this completes without error, the spec is reading the data.
 If not:
 
 1. Do the paths in every `glob` match the real folder structure exactly (capitalisation, spaces, subfolders)?
-2. Does `reader` match the file extension (table above)?
+2. Does `reader` match the file *format* (table above)?
+   A `.dat` or `.txt` file may be delimited, headerless or fixed-width.
 3. Does every `role: data` resource have a `reader`?
-4. Is every `role: docs` resource free of `reader`/`sheet`/`range`?
+4. Is every `role: docs` resource free of `reader` and reader options?
 5. Do Excel resources name the correct `sheet`?
 6. If the same filename exists in two folders, is the glob specific enough to match only the authoritative one?
    (When in doubt about which copy is authoritative, ask the team lead.)
 7. Is every resource `name` unique across the whole file, including across waves?
+8. Does each table have the shape the codebook promises?
+   A wrong reader can return a structurally valid table — a single column, or one row short — without erroring, so check `dim(targets::tar_read(raw_BPIPD_9999)$data$<name>)` against the documented row and variable counts.
 
 The repository's test suite additionally checks every committed spec's structure (ID matches the folder, valid `status`, unique resource names, tidier file exists) on every pull request — but only a local `tar_make()` proves the globs match the real files, because CI has no access to the data.
