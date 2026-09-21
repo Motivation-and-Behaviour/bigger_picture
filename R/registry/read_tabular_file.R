@@ -186,6 +186,49 @@ check_fwf_record_width <- function(data_path, layout, layout_path) {
   invisible(NULL)
 }
 
+#' Refuse a read that left parse failures behind
+#'
+#' `readr` records every cell it could not parse as the column's type in a
+#' `problems` attribute, sets the cell to NA and moves on with a one-line
+#' warning. The attribute lives only on the `spec_tbl_df` readr returns: the
+#' `as_tibble()` below and the `.wave` mutate downstream both drop it, so by
+#' the time a raw table reaches the store the failures are indistinguishable
+#' from genuine missing values. This is the last place they are visible, so
+#' it is where a read with failures stops. `problems()` is empty for anything
+#' not read by readr, so the check is safe on every reader.
+report_parse_problems <- function(out, path) {
+  problems <- readr::problems(out)
+  if (nrow(problems) == 0) {
+    return(invisible(NULL))
+  }
+
+  col_names <- names(out)[problems$col]
+  col_names[is.na(col_names)] <- paste0(
+    "<column ",
+    problems$col[is.na(col_names)],
+    ">"
+  )
+  by_col <- table(col_names)
+
+  stop(
+    nrow(problems),
+    " cell(s) in ",
+    path,
+    " did not parse as their column type and would silently become NA. ",
+    "Columns affected: ",
+    paste0(names(by_col), " (", as.integer(by_col), ")", collapse = ", "),
+    ". First failure: row ",
+    problems$row[1],
+    ", expected ",
+    problems$expected[1],
+    ", got `",
+    problems$actual[1],
+    "`. Fix the layout or column type, or recode the value in the tidier ",
+    "once it is read as text.",
+    call. = FALSE
+  )
+}
+
 #' Read one data file as a tibble
 #'
 #' `opts` is the resource's `read_opts` from the resource index: the optional
@@ -319,5 +362,6 @@ read_tabular_file <- function(path, reader, opts = list()) {
     stop("Unsupported reader: ", reader, " (", path, ")", call. = FALSE)
   )
 
+  report_parse_problems(out, path)
   tibble::as_tibble(out)
 }
