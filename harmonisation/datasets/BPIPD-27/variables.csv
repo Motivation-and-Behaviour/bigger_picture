@@ -400,6 +400,8 @@ st_internet_wd,compatible,FCINTH00,"recode_values(as.numeric(FCINTH00), 1 ~ 0, 2
 st_internet_we,unavailable,,,,,
 st_internet,unavailable,,,,,
 st_videochat,unavailable,,,,,
+st_messaging,in_progress,,,,,
+st_creating,in_progress,,,,,
 st_email,unavailable,,,,,
 st_shopping,unavailable,,,,,
 st_total_school,unavailable,,,,,
@@ -527,6 +529,8 @@ beh_atten_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_ext_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_cbcl_measure,unavailable,,,CBCL not administered; MCS uses the SDQ,,
+beh_prosocial_online_self,in_progress,,,,,
+beh_prosocial_online_measure,in_progress,,,,,
 cog_execfunc_basc2,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
 cog_langexec_nepsy,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
 cog_phono_nepsy,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
@@ -628,6 +632,8 @@ mh_depanx_diagnosed,partial,"GCDEAN00, GCTRDE00","case_when(
 )","Sweep 7 only (age 17), self-reported: 'Has a doctor ever told you that you suffer from depression or serious anxiety?' (1,034 yes, 9,047 no), followed for those diagnosed by 'Are you currently being treated for depression or serious anxiety?' (439 yes, 593 no). Partial because current treatment is a proxy for currently having the condition: someone diagnosed but no longer in treatment is counted as previously diagnosed even though they may still have it, so this row understates current cases. The item names depression and anxiety together and cannot be split, which is why it maps here rather than to mh_dep_diagnosed or mh_anx_diagnosed",,
 mh_stress_self,in_progress,,,,,
 mh_lonely_self,in_progress,,,,,
+mh_lonely_scale_self,in_progress,,,,,
+mh_lonely_measure,in_progress,,,,,
 mh_suicide_ideation_self,in_progress,,,,,
 mh_suicide_attempt_self,in_progress,,,,,
 mh_psychsom_hbscscl_self,in_progress,,,,,
@@ -691,4 +697,8 @@ st_internet_wd,compatible,tud_internet_mins_wd,tud_internet_mins_wd / 60,"Diary 
 st_internet_we,compatible,tud_internet_mins_we,tud_internet_mins_we / 60,Diary activity 35 on the weekend diary day.,,diary
 st_internet,compatible,"tud_internet_mins_wd, tud_internet_mins_we",((tud_internet_mins_wd * 5) + (tud_internet_mins_we * 2)) / 7 / 60,5:2 weighted mean of the diary days; NA when only one day type was returned.,,diary
 st_videochat,incompatible,,,"Diary activity 31 'Speaking on the phone (including Skype, video calls)' pools voice calls with video calls, so it cannot defensibly become video-chat time (tud_calls_mins_wd/we are kept in the tidied table).",,diary
+st_messaging_wd,in_progress,,,,,
+st_messaging_we,in_progress,,,,,
 st_email,incompatible,,,"Diary activity 33 'Answering emails, instant messaging, texting' pools texting and messaging with email, so it cannot defensibly become email time (tud_messaging_mins_wd/we are kept in the tidied table).",,diary
+wb_eudaimonic_self,in_progress,,,,,
+wb_eudaimonic_measure,in_progress,,,,,
