@@ -16,7 +16,10 @@ flatten_spec_resources <- function(dataset_dir, spec) {
           sheet = res$sheet %||% NULL,
           range = res$range %||% NULL,
           table = res$table %||% NULL,
-          object = res$object %||% NULL
+          object = res$object %||% NULL,
+          col_names = res$col_names %||% NULL,
+          col_positions = resolve_col_positions(res$col_positions, spec),
+          encoding = res$encoding %||% NULL
         ),
         wave = wave,
         wave_label = wave_label
@@ -53,6 +56,49 @@ flatten_spec_resources <- function(dataset_dir, spec) {
   }
 
   rows
+}
+
+#' Resolve a resource's `col_positions` against the dataset's spec directory
+#'
+#' The spec is the last place that knows which dataset a resource belongs to,
+#' so the relative path in `dataset.yaml` becomes a real repo path here and
+#' the reader receives it ready to open.
+resolve_col_positions <- function(col_positions, spec) {
+  if (is.null(col_positions)) {
+    return(NULL)
+  }
+  if (is.null(spec$dataset_id)) {
+    stop(
+      "`col_positions` needs the spec's `dataset_id` to resolve against.",
+      call. = FALSE
+    )
+  }
+  if (fs::is_absolute_path(col_positions)) {
+    stop(
+      "`col_positions` must be relative to the dataset's spec directory, ",
+      "not an absolute path: ",
+      col_positions,
+      call. = FALSE
+    )
+  }
+  as.character(fs::path(
+    bp_harmonisation_dataset_dir(spec$dataset_id),
+    col_positions
+  ))
+}
+
+#' Repo-side files a resource's read options point at
+#'
+#' Layout CSVs live in the spec directory, not under the data mount, so the
+#' `format = "file"` target that tracks data files would not otherwise notice
+#' an edit to one. Returns the unique paths, dropping resources without any.
+read_opt_files <- function(index) {
+  paths <- vapply(
+    index$read_opts,
+    function(o) o$col_positions %||% NA_character_,
+    character(1)
+  )
+  unique(paths[!is.na(paths)])
 }
 
 #' Index every file a dataset spec resolves to, listing each directory once
@@ -148,13 +194,23 @@ empty_resource_index <- function() {
 #'
 #' Reading is CPU-bound in the file readers, so batches spread across `crew`
 #' workers. Batching rather than branching per file keeps the per-branch
-#' overhead small relative to the work; single-resource datasets get one batch
-#' and behave as they did before.
+#' overhead small relative to the work: most data files are tiny, and a branch
+#' costs a task dispatch, a store object and a metadata row whatever it reads.
+#'
+#' Batches are cut by size as well as by count. Files are taken in spec order
+#' and a batch closes when it holds `size` files or when the next file would
+#' push it past `max_bytes`; a file larger than `max_bytes` gets a batch of
+#' its own. Wall clock for a dataset is the time of its slowest batch, so a
+#' study delivered as a few multi-gigabyte files reads on several workers at
+#' once instead of one, while a study of hundreds of small files still travels
+#' in groups. The default budget is roughly forty seconds of parsing at the
+#' rate `haven` manages on wide survey files. A dataset whose files total under
+#' the budget gets one batch and behaves as it always did.
 #'
 #' An index with no data files is refused here: branching over an empty batch
 #' table fails anyway ("cannot branch over empty target"), with a message that
 #' points at targets internals instead of the missing data.
-assign_read_batches <- function(index, size = 10L) {
+assign_read_batches <- function(index, size = 10L, max_bytes = 500e6) {
   data_rows <- index[index$role == "data", , drop = FALSE]
 
   if (nrow(data_rows) == 0) {
@@ -166,6 +222,25 @@ assign_read_batches <- function(index, size = 10L) {
     )
   }
 
-  groups <- ceiling(seq_len(nrow(data_rows)) / size)
-  tibble::add_column(data_rows, tar_group = as.integer(groups))
+  bytes <- as.numeric(file.size(data_rows$file))
+  bytes[is.na(bytes)] <- 0
+
+  group <- integer(nrow(data_rows))
+  current <- 1L
+  n_in_batch <- 0L
+  bytes_in_batch <- 0
+  for (i in seq_len(nrow(data_rows))) {
+    batch_full <- n_in_batch > 0L &&
+      (n_in_batch >= size || bytes_in_batch + bytes[i] > max_bytes)
+    if (batch_full) {
+      current <- current + 1L
+      n_in_batch <- 0L
+      bytes_in_batch <- 0
+    }
+    group[i] <- current
+    n_in_batch <- n_in_batch + 1L
+    bytes_in_batch <- bytes_in_batch + bytes[i]
+  }
+
+  tibble::add_column(data_rows, tar_group = group)
 }
