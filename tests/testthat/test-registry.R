@@ -689,6 +689,49 @@ test_that("read options are refused on readers that cannot honour them", {
   )
 })
 
+test_that("a read with parse failures errors instead of returning NAs", {
+  path <- fs::path(withr::local_tempdir(), "data.csv")
+  writeLines(c("id,score,note", "1,12.5,a", "2,n/a,b", "3,.,c"), path)
+
+  # readr guesses `score` as character here, so the read is clean...
+  expect_no_error(read_tabular_file(path, "csv"))
+
+  # ...but a fixed-width layout that types it numeric is refused, naming the
+  # column, the count and the first offending value.
+  fwf_dir <- withr::local_tempdir()
+  fx <- write_fwf_fixture(
+    fwf_dir,
+    c("001 12.5", "002  n/a", "003    ."),
+    tibble::tibble(
+      name = c("id", "score"),
+      start = c(1L, 5L),
+      end = c(3L, 8L),
+      type = c("c", "d")
+    )
+  )
+  err <- expect_error(
+    suppressWarnings(
+      read_tabular_file(fx$data, "fwf", list(col_positions = fx$layout))
+    ),
+    "2 cell\\(s\\) in .* did not parse"
+  )
+  expect_match(
+    conditionMessage(err),
+    "Columns affected: score (2)",
+    fixed = TRUE
+  )
+  expect_match(
+    conditionMessage(err),
+    "expected a double, got `n/a`",
+    fixed = TRUE
+  )
+})
+
+test_that("report_parse_problems is a no-op for non-readr tables", {
+  expect_no_error(report_parse_problems(data.frame(a = 1), "x.por"))
+  expect_no_error(report_parse_problems(tibble::tibble(a = 1), "x.dta"))
+})
+
 test_that("an unsupported reader still errors", {
   expect_error(
     read_tabular_file("x.foo", "foo"),

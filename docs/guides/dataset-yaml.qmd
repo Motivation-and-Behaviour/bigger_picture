@@ -260,7 +260,10 @@ If not:
 6. If the same filename exists in two folders, is the glob specific enough to match only the authoritative one?
    (When in doubt about which copy is authoritative, ask the team lead.)
 7. Is every resource `name` unique across the whole file, including across waves?
-8. Does each table have the shape the codebook promises?
+8. Did every value parse?
+   A cell that cannot be read as its column's type would otherwise become `NA` without trace, so the pipeline refuses the file and names the column, the number of failures and the first offending value (for example `n/a` or `.` in a numeric column).
+   Fix the column `type` in a fixed-width layout, or leave the column as text and recode the value in the tidier.
+9. Does each table have the shape the codebook promises?
    A wrong reader can return a structurally valid table — a single column, or one row short — without erroring, so check `dim(targets::tar_read(raw_BPIPD_9999)$data$<name>)` against the documented row and variable counts.
 
 The repository's test suite additionally checks every committed spec's structure (ID matches the folder, valid `status`, unique resource names, tidier file exists) on every pull request — but only a local `tar_make()` proves the globs match the real files, because CI has no access to the data.
