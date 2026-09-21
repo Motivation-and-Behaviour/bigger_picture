@@ -33,7 +33,7 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 31,ethnicity,Mother: black non-Hispanic,Black,proximate,CM1ETHRACE code 2
 31,ethnicity,Mother: Hispanic,Hispanic,proximate,CM1ETHRACE code 3
 31,ethnicity,Mother: other,Other,proximate,"CM1ETHRACE code 4; residual category, not separable into schema groups"
-31,ethnicity,Unknown,Unknown,compatible,"Neither the youth self-description nor the mother's baseline race is recorded"
+31,ethnicity,Unknown,Unknown,compatible,Neither the youth self-description nor the mother's baseline race is recorded
 232,ethnicity,Hispanic,Hispanic,compatible,"SC_HISPANIC_R = 1, taken ahead of race as in the DRC race7 derivation"
 232,ethnicity,"White alone, non-Hispanic",White,compatible,SC_RACE_R race-alone category among non-Hispanic children
 232,ethnicity,"Black or African American alone, non-Hispanic",Black,compatible,SC_RACE_R race-alone category among non-Hispanic children
@@ -98,3 +98,11 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 41,ethnicity,Asian,Asian,compatible,"IBGE category Amarela, i.e. of East Asian descent."
 41,ethnicity,Indigenous,Other,proximate,"IBGE category Indigena. The dataschema has no Indigenous category so it collapses to Other, matching the Brazilian Indian row for BPIPD-80; indigenous status is kept in the indigenous variable."
 41,ethnicity,Other (specify),Other,compatible,Free-text other category; the specification was not supplied in the IPD extract.
+621,ethnicity,White/European,White,compatible,Direct label match
+621,ethnicity,Black North American/African,Black,compatible,Direct label match
+621,ethnicity,Asian,Asian,compatible,"Direct label match; the survey offers no finer Asian categories, but see East Indian below"
+621,ethnicity,Hispanic/Latino,Hispanic,compatible,Direct label match
+621,ethnicity,East Indian,Asian,compatible,"South Asian collapsed into Asian to match the schema, as for BPIPD-677 Indian/Pakistani/Bangladeshi"
+621,ethnicity,Aboriginal/North American Indian,Other,proximate,The schema has no Indigenous ethnicity category; Indigenous identity is carried by the indigenous variable instead
+621,ethnicity,Other (please specify),Other,compatible,Free text is resolved first via the dataset lookup ethnicity_other; this row catches anything unmatched there
+621,ethnicity,Prefer not to answer,Unknown,compatible,Explicit non-response
