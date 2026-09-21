@@ -16,7 +16,10 @@ flatten_spec_resources <- function(dataset_dir, spec) {
           sheet = res$sheet %||% NULL,
           range = res$range %||% NULL,
           table = res$table %||% NULL,
-          object = res$object %||% NULL
+          object = res$object %||% NULL,
+          col_names = res$col_names %||% NULL,
+          col_positions = resolve_col_positions(res$col_positions, spec),
+          encoding = res$encoding %||% NULL
         ),
         wave = wave,
         wave_label = wave_label
@@ -53,6 +56,49 @@ flatten_spec_resources <- function(dataset_dir, spec) {
   }
 
   rows
+}
+
+#' Resolve a resource's `col_positions` against the dataset's spec directory
+#'
+#' The spec is the last place that knows which dataset a resource belongs to,
+#' so the relative path in `dataset.yaml` becomes a real repo path here and
+#' the reader receives it ready to open.
+resolve_col_positions <- function(col_positions, spec) {
+  if (is.null(col_positions)) {
+    return(NULL)
+  }
+  if (is.null(spec$dataset_id)) {
+    stop(
+      "`col_positions` needs the spec's `dataset_id` to resolve against.",
+      call. = FALSE
+    )
+  }
+  if (fs::is_absolute_path(col_positions)) {
+    stop(
+      "`col_positions` must be relative to the dataset's spec directory, ",
+      "not an absolute path: ",
+      col_positions,
+      call. = FALSE
+    )
+  }
+  as.character(fs::path(
+    bp_harmonisation_dataset_dir(spec$dataset_id),
+    col_positions
+  ))
+}
+
+#' Repo-side files a resource's read options point at
+#'
+#' Layout CSVs live in the spec directory, not under the data mount, so the
+#' `format = "file"` target that tracks data files would not otherwise notice
+#' an edit to one. Returns the unique paths, dropping resources without any.
+read_opt_files <- function(index) {
+  paths <- vapply(
+    index$read_opts,
+    function(o) o$col_positions %||% NA_character_,
+    character(1)
+  )
+  unique(paths[!is.na(paths)])
 }
 
 #' Index every file a dataset spec resolves to, listing each directory once

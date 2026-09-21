@@ -479,3 +479,318 @@ test_that("read_dataset_from_spec matches a batched read", {
     read_dataset_from_spec(base_dir, spec)
   )
 })
+
+# --- read_tabular_file() -----------------------------------------------------
+
+write_fwf_fixture <- function(dir, lines, layout) {
+  data_path <- fs::path(dir, "data.dat")
+  writeLines(lines, data_path)
+  layout_path <- fs::path(dir, "layout.csv")
+  readr::write_csv(layout, layout_path, na = "")
+  list(data = data_path, layout = layout_path)
+}
+
+fwf_lines <- c("001ALICE 12.5", "002BOB   07.0", "003CAROL 99.9")
+
+fwf_layout <- function(...) {
+  tibble::tibble(
+    name = c("id", "name", "score"),
+    start = c(1L, 4L, 10L),
+    end = c(3L, 9L, 13L),
+    ...
+  )
+}
+
+test_that("reader fwf reads a fixed-width file through a layout CSV", {
+  fx <- write_fwf_fixture(
+    withr::local_tempdir(),
+    fwf_lines,
+    fwf_layout(type = c("c", "c", "d"), label = c("Id", "Name", "Score"))
+  )
+
+  tbl <- read_tabular_file(fx$data, "fwf", list(col_positions = fx$layout))
+
+  expect_s3_class(tbl, "tbl_df")
+  expect_identical(names(tbl), c("id", "name", "score"))
+  expect_identical(dim(tbl), c(3L, 3L))
+  # `type` is honoured: `c` keeps the leading zeros a guess would drop
+  expect_identical(tbl$id, c("001", "002", "003"))
+  expect_identical(tbl$name, c("ALICE", "BOB", "CAROL"))
+  expect_equal(tbl$score, c(12.5, 7, 99.9))
+})
+
+test_that("reader fwf lets readr guess types when the layout has none", {
+  # No leading zeros here: readr rightly guesses `001` as character.
+  fx <- write_fwf_fixture(
+    withr::local_tempdir(),
+    c("101ALICE 12.5", "102BOB   17.0", "103CAROL 99.9"),
+    fwf_layout()
+  )
+
+  tbl <- read_tabular_file(fx$data, "fwf", list(col_positions = fx$layout))
+
+  expect_type(tbl$id, "double")
+  expect_type(tbl$name, "character")
+  expect_type(tbl$score, "double")
+})
+
+test_that("reader fwf allows gaps between fields", {
+  fx <- write_fwf_fixture(
+    withr::local_tempdir(),
+    fwf_lines,
+    tibble::tibble(
+      name = c("id", "score"),
+      start = c(1L, 10L),
+      end = c(3L, 13L)
+    )
+  )
+
+  tbl <- read_tabular_file(fx$data, "fwf", list(col_positions = fx$layout))
+
+  expect_identical(names(tbl), c("id", "score"))
+  expect_identical(nrow(tbl), 3L)
+})
+
+test_that("reader fwf needs col_positions and an existing layout file", {
+  dir <- withr::local_tempdir()
+  fx <- write_fwf_fixture(dir, fwf_lines, fwf_layout())
+
+  expect_error(
+    read_tabular_file(fx$data, "fwf", list()),
+    "needs `col_positions`"
+  )
+  expect_error(
+    read_tabular_file(
+      fx$data,
+      "fwf",
+      list(col_positions = fs::path(dir, "missing.csv"))
+    ),
+    "layout file not found"
+  )
+})
+
+test_that("reader fwf rejects a malformed layout", {
+  dir <- withr::local_tempdir()
+  read_with <- function(layout) {
+    fx <- write_fwf_fixture(dir, fwf_lines, layout)
+    read_tabular_file(fx$data, "fwf", list(col_positions = fx$layout))
+  }
+  layout <- fwf_layout()
+
+  expect_error(
+    read_with(layout[, c("name", "start")]),
+    "missing required column\\(s\\) end"
+  )
+  expect_error(
+    read_with(dplyr::mutate(layout, name = c("id", "id", "score"))),
+    "duplicate field names: id"
+  )
+  expect_error(
+    read_with(dplyr::mutate(layout, end = c(4L, 9L, 13L))),
+    "overlapping fields: id/name"
+  )
+  expect_error(
+    read_with(dplyr::mutate(
+      layout,
+      start = c(1L, 9L, 10L),
+      end = c(3L, 4L, 13L)
+    )),
+    "`start` is after `end` for: name"
+  )
+  expect_error(
+    read_with(layout[c(2, 1, 3), ]),
+    "ascending `start` order"
+  )
+  expect_error(
+    read_with(dplyr::mutate(layout, start = c(0L, 4L, 10L))),
+    "1-based"
+  )
+  expect_error(
+    read_with(dplyr::mutate(layout, type = c("c", "x", "d"))),
+    "unknown `type` value\\(s\\) x"
+  )
+  expect_error(
+    read_with(dplyr::mutate(layout, start = c("1", "four", "10"))),
+    "whole numbers"
+  )
+})
+
+test_that("reader fwf warns when the layout is wider than the record", {
+  fx <- write_fwf_fixture(
+    withr::local_tempdir(),
+    fwf_lines,
+    dplyr::mutate(fwf_layout(), end = c(3L, 9L, 14L))
+  )
+
+  expect_warning(
+    tbl <- read_tabular_file(fx$data, "fwf", list(col_positions = fx$layout)),
+    "ends at position 14 but the first record .* is 13 bytes wide"
+  )
+  expect_identical(nrow(tbl), 3L)
+})
+
+test_that("col_names = FALSE keeps the first row of a headerless file", {
+  path <- fs::path(withr::local_tempdir(), "data.dat")
+  writeLines(c("1\t5\t9", "2\t6\t10"), path)
+
+  tbl <- read_tabular_file(path, "tsv", list(col_names = FALSE))
+
+  expect_identical(dim(tbl), c(2L, 3L))
+  expect_identical(names(tbl), c("X1", "X2", "X3"))
+  expect_identical(tbl$X1, c(1, 2))
+
+  # The regression this guards: assume a header and the first participant
+  # silently becomes the column names.
+  expect_identical(nrow(read_tabular_file(path, "tsv")), 1L)
+})
+
+test_that("encoding reaches the delimited readers", {
+  path <- fs::path(withr::local_tempdir(), "data.csv")
+  # "name\nJos\xe9\n" with the e-acute as a single latin1 byte
+  writeBin(
+    c(charToRaw("name\n"), as.raw(c(0x4a, 0x6f, 0x73, 0xe9)), charToRaw("\n")),
+    path
+  )
+
+  tbl <- read_tabular_file(path, "csv", list(encoding = "latin1"))
+
+  expect_identical(enc2utf8(tbl$name), "José")
+})
+
+test_that("reader por dispatches to haven::read_por", {
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    read_por = function(file, ...) {
+      seen <<- file
+      data.frame(CASEID = c(1, 2), T2E1 = c(3, 4))
+    },
+    .package = "haven"
+  )
+
+  tbl <- read_tabular_file("study.por", "por")
+
+  expect_identical(seen, "study.por")
+  expect_s3_class(tbl, "tbl_df")
+  expect_identical(tbl$T2E1, c(3, 4))
+})
+
+test_that("read options are refused on readers that cannot honour them", {
+  expect_error(
+    read_tabular_file("x.por", "por", list(encoding = "latin1")),
+    "`encoding` is not supported by reader `por`"
+  )
+  expect_error(
+    read_tabular_file("x.csv", "csv", list(col_positions = "layout.csv")),
+    "`col_positions` is not supported by reader `csv`"
+  )
+  expect_error(
+    read_tabular_file("x.dta", "stata", list(col_names = FALSE)),
+    "`col_names` is not supported by reader `stata`"
+  )
+})
+
+test_that("an unsupported reader still errors", {
+  expect_error(
+    read_tabular_file("x.foo", "foo"),
+    "Unsupported reader: foo"
+  )
+})
+
+# --- read options in the resource index --------------------------------------
+
+test_that("build_resource_index resolves col_positions against the spec dir", {
+  base_dir <- local_resource_dir("data.dat")
+  spec <- list(
+    dataset_id = "9999",
+    resources = list(
+      list(
+        name = "data",
+        role = "data",
+        glob = "data.dat",
+        reader = "fwf",
+        col_positions = "layouts/data.csv",
+        encoding = "latin1"
+      )
+    )
+  )
+
+  index <- build_resource_index(base_dir, spec)
+  opts <- index$read_opts[[1]]
+
+  expect_identical(
+    opts$col_positions,
+    as.character(fs::path("harmonisation/datasets/BPIPD-9999/layouts/data.csv"))
+  )
+  expect_identical(opts$encoding, "latin1")
+  expect_null(opts$col_names)
+  expect_identical(read_opt_files(index), opts$col_positions)
+})
+
+test_that("build_resource_index rejects an absolute col_positions", {
+  base_dir <- local_resource_dir("data.dat")
+  spec <- list(
+    dataset_id = "9999",
+    resources = list(
+      list(
+        name = "data",
+        role = "data",
+        glob = "data.dat",
+        reader = "fwf",
+        col_positions = "/etc/layout.csv"
+      )
+    )
+  )
+
+  expect_error(build_resource_index(base_dir, spec), "must be relative")
+})
+
+test_that("read_opt_files lists layout paths once and drops resources without", {
+  index <- tibble::tibble(
+    read_opts = list(
+      list(col_positions = "a.csv"),
+      list(sheet = "Data"),
+      list(col_positions = "a.csv"),
+      list(col_positions = "b.csv")
+    )
+  )
+
+  expect_identical(read_opt_files(index), c("a.csv", "b.csv"))
+  expect_identical(read_opt_files(empty_resource_index()), character(0))
+})
+
+test_that("read_dataset_from_spec reads a fixed-width resource end to end", {
+  # `col_positions` resolves against the repo-relative spec directory, so run
+  # from a scratch root that has one.
+  root <- withr::local_tempdir()
+  withr::local_dir(root)
+  layout_dir <- fs::path(bp_harmonisation_dataset_dir("9999"), "layouts")
+  fs::dir_create(layout_dir)
+  readr::write_csv(
+    fwf_layout(type = c("c", "c", "d")),
+    fs::path(layout_dir, "data.csv")
+  )
+  data_dir <- fs::path(root, "BPIPD-9999 - Example Cohort Study")
+  fs::dir_create(data_dir)
+  writeLines(fwf_lines, fs::path(data_dir, "data.dat"))
+
+  spec <- list(
+    dataset_id = "9999",
+    dataset_name = "Example Cohort Study",
+    status = "in_progress",
+    resources = list(
+      list(
+        name = "data",
+        role = "data",
+        glob = "data.dat",
+        reader = "fwf",
+        col_positions = "layouts/data.csv"
+      )
+    )
+  )
+
+  raw <- read_dataset_from_spec(data_dir, spec)
+
+  expect_identical(names(raw$data), "data")
+  expect_identical(dim(raw$data$data), c(3L, 3L))
+  expect_identical(raw$data$data$id, c("001", "002", "003"))
+})
