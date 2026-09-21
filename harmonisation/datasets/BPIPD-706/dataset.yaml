@@ -1,0 +1,15 @@
+dataset_id: "706"
+dataset_name: "Tremolada"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Dataset_Tremolada&Incardona.xlsx"
+    reader: "excel"
+    sheet: "Dataset"
+  - name: "codebook"
+    role: "codebook"
+    glob: "Dataset_Tremolada&Incardona.xlsx"
+    reader: "excel"
+    sheet: "Codebook"
