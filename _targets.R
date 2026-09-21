@@ -5,7 +5,7 @@ library(tarchetypes)
 tar_option_set(
   packages = c("dplyr"),
   controller = crew::crew_controller_local(
-    workers = max(1, min(parallel::detectCores() - 2, 20)),
+    workers = max(1, min(parallel::detectCores() - 2, 24)),
     seconds_idle = 15
   ),
   format = "qs"
@@ -75,10 +75,12 @@ if (nrow(.dataset_map_plan) == 0) {
         iteration = "group"
       ),
 
-      # Track DATA files only
+      # Track DATA files, plus any repo-side layout file a read depends on
+      # (`col_positions` for the `fwf` reader), so an edited layout rebuilds
+      # the read.
       tar_target(
         data_files,
-        unique(data_index$file),
+        unique(c(data_index$file, read_opt_files(data_index))),
         format = "file"
       ),
 
