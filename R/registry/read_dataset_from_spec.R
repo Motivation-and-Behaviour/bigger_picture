@@ -11,15 +11,11 @@
 read_resource_files <- function(index_rows) {
   lapply(seq_len(nrow(index_rows)), function(i) {
     row <- index_rows[i, , drop = FALSE]
-    opts <- row$read_opts[[1]]
 
     tbl <- read_tabular_file(
       row$file,
       reader = row$reader,
-      sheet = opts$sheet,
-      range = opts$range,
-      table = opts$table,
-      object = opts$object
+      opts = row$read_opts[[1]]
     )
 
     if (!is.na(row$wave)) {
