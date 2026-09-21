@@ -339,17 +339,66 @@ test_that("build_resource_index splits roles the way the reader expects", {
   expect_identical(assign_read_batches(index)$element_name, "d")
 })
 
-test_that("assign_read_batches batches data rows to the requested size", {
-  index <- tibble::tibble(
-    seq = 1:7,
-    element_name = paste0("r", 1:7),
-    role = c(rep("data", 5), "codebook", "docs")
+# An index of files with the given sizes in bytes, all `data` unless a role
+# is given, written to a temp dir so `assign_read_batches()` can stat them.
+sized_index <- function(sizes, roles = rep("data", length(sizes))) {
+  dir <- withr::local_tempdir(.local_envir = parent.frame())
+  files <- fs::path(dir, paste0("f", seq_along(sizes), ".dat"))
+  for (i in seq_along(files)) {
+    writeBin(raw(sizes[i]), files[i])
+  }
+  tibble::tibble(
+    seq = seq_along(sizes),
+    element_name = paste0("r", seq_along(sizes)),
+    role = roles,
+    file = as.character(files)
+  )
+}
+
+test_that("assign_read_batches batches data rows to the requested count", {
+  index <- sized_index(
+    rep(10L, 7),
+    roles = c(rep("data", 5), "codebook", "docs")
   )
 
   batched <- assign_read_batches(index, size = 2L)
 
   expect_identical(nrow(batched), 5L)
   expect_identical(batched$tar_group, c(1L, 1L, 2L, 2L, 3L))
+})
+
+test_that("assign_read_batches closes a batch before it exceeds the budget", {
+  # 40 + 40 fits in 100; adding 30 would not, so a new batch starts there.
+  index <- sized_index(c(40L, 40L, 30L, 30L, 30L))
+
+  batched <- assign_read_batches(index, size = 10L, max_bytes = 100)
+
+  expect_identical(batched$tar_group, c(1L, 1L, 2L, 2L, 2L))
+})
+
+test_that("assign_read_batches gives an oversized file its own batch", {
+  index <- sized_index(c(10L, 500L, 10L, 10L, 500L))
+
+  batched <- assign_read_batches(index, size = 10L, max_bytes = 100)
+
+  expect_identical(batched$tar_group, c(1L, 2L, 3L, 3L, 4L))
+})
+
+test_that("assign_read_batches keeps spec order and applies both limits", {
+  index <- sized_index(c(60L, 60L, 1L, 1L, 1L, 1L))
+
+  batched <- assign_read_batches(index, size = 3L, max_bytes = 100)
+
+  # 60 alone (60 + 60 > 100); then 60 + 1 + 1 hits the count limit; then 1 + 1.
+  expect_identical(batched$tar_group, c(1L, 2L, 2L, 2L, 3L, 3L))
+  expect_identical(batched$seq, 1:6)
+})
+
+test_that("assign_read_batches treats a missing file as empty", {
+  index <- sized_index(c(10L, 10L))
+  index$file[2] <- fs::path(fs::path_dir(index$file[1]), "gone.dat")
+
+  expect_identical(assign_read_batches(index)$tar_group, c(1L, 1L))
 })
 
 test_that("assign_read_batches refuses an index with no data files", {

@@ -194,13 +194,23 @@ empty_resource_index <- function() {
 #'
 #' Reading is CPU-bound in the file readers, so batches spread across `crew`
 #' workers. Batching rather than branching per file keeps the per-branch
-#' overhead small relative to the work; single-resource datasets get one batch
-#' and behave as they did before.
+#' overhead small relative to the work: most data files are tiny, and a branch
+#' costs a task dispatch, a store object and a metadata row whatever it reads.
+#'
+#' Batches are cut by size as well as by count. Files are taken in spec order
+#' and a batch closes when it holds `size` files or when the next file would
+#' push it past `max_bytes`; a file larger than `max_bytes` gets a batch of
+#' its own. Wall clock for a dataset is the time of its slowest batch, so a
+#' study delivered as a few multi-gigabyte files reads on several workers at
+#' once instead of one, while a study of hundreds of small files still travels
+#' in groups. The default budget is roughly forty seconds of parsing at the
+#' rate `haven` manages on wide survey files. A dataset whose files total under
+#' the budget gets one batch and behaves as it always did.
 #'
 #' An index with no data files is refused here: branching over an empty batch
 #' table fails anyway ("cannot branch over empty target"), with a message that
 #' points at targets internals instead of the missing data.
-assign_read_batches <- function(index, size = 10L) {
+assign_read_batches <- function(index, size = 10L, max_bytes = 500e6) {
   data_rows <- index[index$role == "data", , drop = FALSE]
 
   if (nrow(data_rows) == 0) {
@@ -212,6 +222,25 @@ assign_read_batches <- function(index, size = 10L) {
     )
   }
 
-  groups <- ceiling(seq_len(nrow(data_rows)) / size)
-  tibble::add_column(data_rows, tar_group = as.integer(groups))
+  bytes <- as.numeric(file.size(data_rows$file))
+  bytes[is.na(bytes)] <- 0
+
+  group <- integer(nrow(data_rows))
+  current <- 1L
+  n_in_batch <- 0L
+  bytes_in_batch <- 0
+  for (i in seq_len(nrow(data_rows))) {
+    batch_full <- n_in_batch > 0L &&
+      (n_in_batch >= size || bytes_in_batch + bytes[i] > max_bytes)
+    if (batch_full) {
+      current <- current + 1L
+      n_in_batch <- 0L
+      bytes_in_batch <- 0
+    }
+    group[i] <- current
+    n_in_batch <- n_in_batch + 1L
+    bytes_in_batch <- bytes_in_batch + bytes[i]
+  }
+
+  tibble::add_column(data_rows, tar_group = group)
 }
