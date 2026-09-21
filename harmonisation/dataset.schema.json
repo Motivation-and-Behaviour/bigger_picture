@@ -100,7 +100,9 @@
             "parquet",
             "excel",
             "mdb",
-            "rda"
+            "rda",
+            "fwf",
+            "por"
           ],
           "description": "How to read this resource when role is data."
         },
@@ -126,6 +128,18 @@
         "object": {
           "type": "string",
           "description": "R object name to extract (if reader is rda). Optional when the file contains exactly one object."
+        },
+        "col_names": {
+          "type": "boolean",
+          "description": "Whether the first row is a header (csv, csv2, tsv). Default true. Set false for headerless delimited files; columns are then named X1..Xn and the tidier renames them."
+        },
+        "col_positions": {
+          "type": "string",
+          "description": "Path to the fixed-width column layout CSV (required if reader is fwf), relative to this dataset's spec directory harmonisation/datasets/BPIPD-<id>/. The CSV has columns name, start, end and optionally type."
+        },
+        "encoding": {
+          "type": "string",
+          "description": "Character encoding of the source file, e.g. \"latin1\". Applies to csv, csv2, tsv, fwf (via readr's locale) and stata, spss, sas (via haven's encoding argument). Refused for other readers."
         },
         "wave_from": {
           "type": "string",
@@ -182,6 +196,21 @@
                 {
                   "required": [
                     "object"
+                  ]
+                },
+                {
+                  "required": [
+                    "col_names"
+                  ]
+                },
+                {
+                  "required": [
+                    "col_positions"
+                  ]
+                },
+                {
+                  "required": [
+                    "encoding"
                   ]
                 }
               ]
