@@ -289,7 +289,7 @@ A single workbook sometimes holds the data on one sheet and the codebook on anot
 ## 9. Readers with extra keys
 
 Most readers need nothing beyond `reader:`.
-Three take extra keys:
+Excel, Access and `.rda` files take a key naming what to read *inside* the file; the delimited and fixed-width readers take keys describing how the text is laid out (patterns 11 and 12).
 
 ```yaml
 resources:
@@ -317,6 +317,13 @@ resources:
     glob: "cohort_2012.rda"
     reader: "rda"
     object: "cohort_data"
+
+  # Any text, Stata, SPSS (.sav) or SAS file in a non-UTF-8 encoding
+  - name: "household"
+    role: "data"
+    glob: "household.dta"
+    reader: "stata"
+    encoding: "latin1"
 ```
 
 ## 10. Dataset-wide files alongside waves
@@ -358,3 +365,79 @@ waves:
         glob: "sweep2_data.sav"
         reader: "spss"
 ```
+
+## 11. Headerless delimited file
+
+A flat file exported for another program (here Mplus) with no header row.
+Read as a normal `csv`/`tsv`, the first participant becomes the column names and nothing errors, so set `col_names: false` and let the tidier name the columns from the program's syntax file.
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/
+├── analysis_file.dat        # tab-separated, no header
+└── analysis_model.inp       # names the 75 columns in its VARIABLE: section
+```
+:::
+
+```yaml
+resources:
+  - name: "analysis_file"
+    role: "data"
+    glob: "analysis_file.dat"
+    reader: "tsv"
+    col_names: false
+  - name: "analysis_model_syntax"
+    role: "docs"
+    glob: "analysis_model.inp"
+```
+
+The table arrives with columns `X1` … `X75`; the tidier sets `names()` from a constant copied out of the `.inp` file.
+
+## 12. Fixed-width file {#fixed-width-file}
+
+A `.dat` file with no delimiters, where the codebook gives each variable's character positions.
+The layout lives in a small CSV committed next to the spec, and `col_positions` points at it.
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/        # the data folder
+├── survey07.dat
+└── survey07_codebook.pdf
+
+harmonisation/datasets/BPIPD-9999/        # the spec folder, in this repository
+├── dataset.yaml
+├── variables.csv
+└── layouts/
+    ├── README.md                         # how the layout was derived
+    └── survey_2007.csv
+```
+:::
+
+`layouts/survey_2007.csv`:
+
+```text
+name,start,end,type,fmt
+BASEID,1,8,c,C8
+AGE,9,10,d,N2.
+WEIGHT,11,18,d,N8.3
+```
+
+```yaml
+resources:
+  - name: "survey_2007"
+    role: "data"
+    glob: "survey07.dat"
+    reader: "fwf"
+    col_positions: "layouts/survey_2007.csv"
+  - name: "survey_2007_codebook"
+    role: "codebook"
+    glob: "survey07_codebook.pdf"
+```
+
+`type` is optional; `fmt` is carried for provenance and ignored by the reader.
+`WEIGHT` above has an implied decimal (`N8.3`), which the reader does not apply: the tidier divides by 1000.
+See [Fixed-width files](dataset-yaml.qmd#fixed-width-files) for the full layout contract.
