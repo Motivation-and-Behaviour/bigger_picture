@@ -1,0 +1,27 @@
+dataset_id: "1470"
+dataset_name: "Fisch"
+status: "in_progress"
+
+resources:
+  - name: "fisch_prepost_data"
+    role: "data"
+    glob: "prepostdata1-20-23deidentified.xlsx"
+    reader: "excel"
+    sheet: "Board 1"
+
+  - name: "fisch_learning_curriculum_article"
+    role: "docs"
+    glob: "4I wonder what if let s try Sesame Street s playful learning curriculum impacts children s problem solving.pdf"
+
+  - name: "fisch_sesame_street_report"
+    role: "docs"
+    glob: "sesames51-52fullreportrev.pdf"
+
+notes: |
+  Dataset consists of a deidentified Excel workbook and two PDF documents. 
+  The Excel workbook contains at least two sheets: 'Board1' and 'Sheet 1'. 
+  'Board1' appears to contain the analytical dataset and is therefore 
+  included as the data resource. 'Sheet 1' appears to contain participant 
+  names or identifiers matched to codes and is not included as a separate 
+  data resource. The PDF files provide supporting documentation and research 
+  reports related to the study and are classified as documentation resources.
