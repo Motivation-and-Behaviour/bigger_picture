@@ -1,5 +1,5 @@
 dataset_id: "1928"
-dataset_name: "Brazilian National Health Survey"
+dataset_name: "PeNSE (Pesquisa Nacional de Saude do Escolar)"
 status: "in_progress"
 
 waves:
@@ -10,7 +10,8 @@ waves:
       - name: "PeNSE 2009 Data"
         role: "data"
         glob: "PeNSE_2009/Dados/Base_Pense Completa_2009.txt"
-        reader: "csv2" # PLACEHOLDER - this is a fixed-width or whitespace-delimited flat text data file
+        reader: "fwf"
+        col_positions: "layouts/pense_2009.csv"
       - name: "PeNSE 2009 Dictionary"
         role: "codebook"
         glob: "PeNSE_2009/Documentaç╞o/Dicionario_Base Pense_Completa.xls"
@@ -256,6 +257,11 @@ notes: |
   box-drawing characters into the filename. The glob values above use the literal corrupted characters as confirmed, 
   since that is what must match on disk. If the files are ever renamed/re-extracted with correct encoding, these globs 
   will need to be updated to match.
-  Note: the dataset is named "Brazilian National Health Survey", though the underlying files are all prefixed "PeNSE", 
-  which specifically refers to the National **School** Health Survey (student-focused), distinct from the general 
-  Brazilian National Health Survey (PNS). Flagging in case the dataset_name should instead reference PeNSE/School Health Survey.
+  The 2009 release is the one edition that ships only a fixed-width flat file (311 data columns per record,
+  CRLF line endings, "." as the missing marker). It is read with reader: "fwf" and the layout in
+  layouts/pense_2009.csv, which was derived from the DICIONARIO sheet of "Dicionario_Base Pense_Completa.xls"
+  (187 fields; CAMPO/INICIO/TERMINO/DECIMAIS/DESCRICAO). The file is pure ASCII, so no encoding is set.
+  dataset_name was corrected from "Brazilian National Health Survey" to PeNSE: the study folder is named after the
+  general Brazilian National Health Survey (PNS), but every file here belongs to the National **School** Health
+  Survey (student-focused), which is a different IBGE survey. The folder name is matched on dataset_id only,
+  so the correction does not affect discovery.

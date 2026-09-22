@@ -106,3 +106,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 621,ethnicity,Aboriginal/North American Indian,Other,proximate,The schema has no Indigenous ethnicity category; Indigenous identity is carried by the indigenous variable instead
 621,ethnicity,Other (please specify),Other,compatible,Free text is resolved first via the dataset lookup ethnicity_other; this row catches anything unmatched there
 621,ethnicity,Prefer not to answer,Unknown,compatible,Explicit non-response
+1928,ethnicity,Branca,White,compatible,IBGE cor ou raca: branca (white)
+1928,ethnicity,Preta,Black,compatible,IBGE cor ou raca: preta (black)
+1928,ethnicity,Parda,Mixed,proximate,"IBGE cor ou raca: parda (brown), the census category for mixed ancestry and the largest group; colour-based rather than ancestry-based"
+1928,ethnicity,Amarela,Asian,compatible,"IBGE cor ou raca: amarela (yellow), i.e. East Asian descent"
+1928,ethnicity,Indigena,Other,proximate,IBGE cor ou raca: indigena (indigenous); the schema has no indigenous ethnicity level (see the indigenous variable)
+1928,ethnicity,Sem resposta,Unknown,compatible,"No answer, abandoned questionnaire or item left blank (codes 9, 99, -2, -9)"
