@@ -1,0 +1,36 @@
+dataset_id: "64"
+dataset_name: "MoMo"
+status: "in_progress"
+
+resources:
+  - name: "momo_dataset"
+    role: "data"
+    glob: "P140_MoMo2_TarenSanders.rds"
+    reader: "rds"
+
+  - name: "momo_codebook_html"
+    role: "codebook"
+    glob: "2026-03-30_MoMo2_Codebook_V4.html"
+
+  - name: "momo_codebook_xlsx"
+    role: "codebook"
+    glob: "2026-03-30_MoMo2_Codebook_V4.xlsx"
+
+  - name: "momo_codebook_english_xlsx"
+    role: "codebook"
+    glob: "2026-03-30_MoMo2_Codebook_V4_EN.xlsx"
+
+  - name: "momo_subset_documentation"
+    role: "docs"
+    glob: "MoMo Subset.xlsx"
+
+  - name: "momo_data_application"
+    role: "docs"
+    glob: "MoMo_Datenantrag_Publikationen_2025-04-28.docx"
+
+notes: |
+  MoMo dataset package contains a single R dataset stored as an RDS file. 
+  Variable documentation is provided through an HTML codebook and two 
+  Excel-format codebooks (including an English-language version). 
+  Additional documentation includes a subset description workbook
+  and a publication/data application document. 
