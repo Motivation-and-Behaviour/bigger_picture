@@ -115,3 +115,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 625,ethnicity,Native Hawaiian or Other Pacific Islander,Other,proximate,US Census race group with no schema equivalent; collapsed into Other
 625,ethnicity,Multiple - Non-Hispanic,Mixed,compatible,Code 8 in both codings: two or more races selected and not Hispanic
 625,ethnicity,Unknown,Unknown,compatible,CDC race/ethnicity missing (no race selected or Hispanic item blank)
+1928,ethnicity,Branca,White,compatible,IBGE cor ou raca: branca (white)
+1928,ethnicity,Preta,Black,compatible,IBGE cor ou raca: preta (black)
+1928,ethnicity,Parda,Mixed,proximate,"IBGE cor ou raca: parda (brown), the census category for mixed ancestry and the largest group; colour-based rather than ancestry-based"
+1928,ethnicity,Amarela,Asian,compatible,"IBGE cor ou raca: amarela (yellow), i.e. East Asian descent"
+1928,ethnicity,Indigena,Other,proximate,IBGE cor ou raca: indigena (indigenous); the schema has no indigenous ethnicity level (see the indigenous variable)
+1928,ethnicity,Sem resposta,Unknown,compatible,"No answer, abandoned questionnaire or item left blank (codes 9, 99, -2, -9)"

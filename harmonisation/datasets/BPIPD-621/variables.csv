@@ -288,6 +288,11 @@ mh_lonely_scale_self,compatible,"Lonely_1, Lonely_2, Lonely_3, Lonely_4, Lonely_
   as.numeric(haven::zap_labels(Lonely_7)) +
   as.numeric(haven::zap_labels(Lonely_8))","Eight-item UCLA-style loneliness short form, 'Using the scale, please indicate how often each of the statements below is descriptive of you', each item 1 Never to 4 Often (range 8-32). Lonely_3 'I am an outgoing person' and Lonely_6 'I can find companionship when I want it' are the positively worded items and are reverse-scored as 5 - x. Unweighted sum, NA if any item is missing (72-75 missing per item, 82 missing on the total). No total-score column exists in the file. mh_lonely_self carries the single-item frequency from Lonely_5, so the two rows are not independent.",,
 mh_lonely_measure,compatible,,"""UCLA-style loneliness short form, 8 of 8 items, 1-4 item scoring (range 8-32), items 3 and 6 reverse-scored""",Describes mh_lonely_scale_self. The source carries no instrument name; the item set and 1-4 Never-to-Often scale match the eight-item UCLA short form.,,
+mh_sad_self,in_progress,,,,,
+mh_worry_self,in_progress,,,,,
+mh_irritable_self,in_progress,,,,,
+mh_nobodycares_self,in_progress,,,,,
+mh_lifenotworth_self,in_progress,,,,,
 mh_suicide_ideation_self,proximate,DA_5,"case_when(
   as.numeric(haven::zap_labels(DA_5)) > 0 ~ ""Yes"",
   as.numeric(haven::zap_labels(DA_5)) == 0 ~ ""No"",

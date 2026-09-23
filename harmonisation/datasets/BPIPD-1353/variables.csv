@@ -378,6 +378,11 @@ mh_lonely_self,compatible,M_LON,"recode_values(
 )","Single item on how often the respondent felt lonely in the past 12 months, fielded in 2020-2024 only. Five ordered options map one-to-one onto the dataschema categories. Not asked in 2025.",
 mh_lonely_scale_self,in_progress,,,,
 mh_lonely_measure,in_progress,,,,
+mh_sad_self,in_progress,,,,
+mh_worry_self,in_progress,,,,
+mh_irritable_self,in_progress,,,,
+mh_nobodycares_self,in_progress,,,,
+mh_lifenotworth_self,in_progress,,,,
 mh_suicide_ideation_self,compatible,M_SUI_CON,"recode_values(as.numeric(M_SUI_CON), 1 ~ ""No"", 2 ~ ""Yes"", default = NA_character_)","'In the past 12 months, have you seriously considered suicide?', asked in all 21 waves with a consistent 12-month recall and no sentinel codes.",
 mh_suicide_attempt_self,compatible,"M_SUI_ATT, M_SUI_CON","case_when(
   as.numeric(M_SUI_ATT) == 1 ~ ""No"",
