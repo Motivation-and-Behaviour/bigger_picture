@@ -1,0 +1,481 @@
+target_variable,status,source_columns,expression,notes,lookup_table
+participant_id,compatible,participant_id,as.character(participant_id),"Built by the tidier as <edition>-<key>. 2015 uses the study's `aluno`; 2019 and 2024 use stratum + school + class + student, because those codes are nested rather than global. 2009 and 2012 release no student identifier, so the key is the row's position in the release file (arbitrary but deterministic). PeNSE is a repeated cross-section, so no student appears in more than one edition.",
+wave,compatible,.wave,as.character(.wave),"PeNSE edition. The editions are independent school-based samples (a repeated cross-section), so wave identifies the survey round, not a repeated measure on the same students. 2015 fielded two separate samples with different target populations, kept as 2015_sample_1 (9th grade) and 2015_sample_2 (grades 6 to 12, which IBGE reports only at regional level).",
+data_year,inferred,.wave,"as.numeric(substr(as.character(.wave), 1, 4))","Collection year of each edition. IBGE Notas tecnicas: 2015, 2019 and 2024 were collected from April to September of that year; 2009 and 2012 within their named year (IBGE, PeNSE 2015 Notas tecnicas, https://biblioteca.ibge.gov.br/visualizacao/livros/liv97870.pdf).",
+rct_arm,unavailable,,,Not a trial: a national school health survey.,
+age_years,partial,"B01P03, B01003_2012, VB01003, B01003_2019, B01004, B01005, IDADE_AGREG, .wave","local({
+  wave <- as.character(.wave)
+  mid_band <- c(11.5, 14, 16.5, 18.5)
+  band_2019 <- if_else(wave == ""2019"", na_if(as.numeric(B01003_2019), 9), NA_real_)
+  born <- if_else(wave == ""2019"", as.numeric(B01005), NA_real_)
+  born[!born %in% 2000:2008] <- NA
+  month <- if_else(wave == ""2019"", as.numeric(B01004), NA_real_)
+  month[!month %in% 1:12] <- NA
+  derived <- 2019 - born - if_else(is.na(month), 0.5, as.numeric(month >= 7))
+  lower <- recode_values(band_2019, 1 ~ -Inf, 2 ~ 13, 3 ~ 16, 4 ~ 18, default = -Inf)
+  upper <- recode_values(band_2019, 1 ~ 12, 2 ~ 15, 3 ~ 17, 4 ~ Inf, default = Inf)
+  age_2019 <- coalesce(pmin(pmax(derived, lower), upper), mid_band[band_2019])
+  age <- case_when(
+    wave == ""2009"" ~ as.numeric(B01P03) + 10,
+    wave == ""2012"" ~ as.numeric(B01003_2012) + 10,
+    wave %in% c(""2015_sample_1"", ""2015_sample_2"") ~ as.numeric(VB01003),
+    wave == ""2019"" ~ age_2019,
+    wave == ""2024"" ~ mid_band[match(as.numeric(IDADE_AGREG), 1:4)]
+  )
+  pmin(age, 19)
+})","Self-reported age, harmonised differently by edition. 2009, 2012 and 2015 ask age in single years (2009/2012 as codes 1-9 for 11 to 19; 2015 stores the age itself), with 11 meaning 11 or younger and 19 meaning 19 or older. 2019 releases only age bands (<13, 13-15, 16-17, 18+) but also birth year and month, so age is taken at 1 July 2019 (the middle of the April-September fieldwork) and clamped into the reported band; students with a birthday between April and September can be one year out, and a missing birth month counts as half a year. 2024 releases only the same four bands (IDADE_AGREG), so its ages are band midpoints over completed years (11.5, 14, 16.5, 18.5) and carry no within-band information. Partial because of 2019 and 2024; the other editions are exact. Capped at 19 (the schema maximum).",
+sex,compatible,"B01P01, B01001, VB01001, B01001A","recode_values(
+  coalesce(as.numeric(B01P01), as.numeric(B01001), as.numeric(VB01001), as.numeric(B01001A)),
+  1 ~ ""Male"",
+  2 ~ ""Female"",
+  default = ""Unknown""
+)","Self-reported: 'Qual e o seu sexo?' 1 masculino/homem, 2 feminino/mulher in every edition. The 2019 no-answer code (9) and unanswered 2009 items become Unknown.",
+country,inferred,,"""Brazil""","National survey of Brazilian school students run by IBGE with the Ministry of Health. The 2015 files carry PAIS = 76, the IBGE code for Brazil.",
+state,unavailable,,,Not an Australian dataset.,
+ethnicity,proximate,"B01P02, B01002, VB01002, .wave","lookup_values(
+  if_else(
+    as.character(.wave) == ""2009"",
+    recode_values(
+      as.numeric(B01P02),
+      1 ~ ""Branca"",
+      2 ~ ""Preta"",
+      3 ~ ""Parda"",
+      4 ~ ""Amarela"",
+      5 ~ ""Indigena"",
+      default = ""Sem resposta""
+    ),
+    recode_values(
+      coalesce(as.numeric(B01002), as.numeric(VB01002)),
+      1 ~ ""Branca"",
+      2 ~ ""Preta"",
+      3 ~ ""Amarela"",
+      4 ~ ""Parda"",
+      5 ~ ""Indigena"",
+      default = ""Sem resposta""
+    )
+  ),
+  lookup_ethnicity,
+  dataset_id = spec$dataset_id,
+  target_variable = ""ethnicity"",
+  default = ""Unknown""
+)","Self-reported IBGE cor ou raca (colour or race). 2009 orders the codes differently from every later edition (2009: 3 parda, 4 amarela; 2012 onwards: 3 amarela, 4 parda), so the codes are relabelled per edition before the shared lookup. Proximate because the Brazilian census categories are colour-based rather than ancestry-based: parda (brown, the largest group) becomes Mixed and indigena becomes Other (see indigenous). No-answer codes (9, 99, -2, -9) become Unknown.",ethnicity
+indigenous,compatible,"B01P02, B01002, VB01002, .wave","case_when(
+  as.character(.wave) == ""2009"" & as.numeric(B01P02) == 5 ~ ""Indigenous"",
+  as.character(.wave) == ""2009"" & as.numeric(B01P02) %in% 1:4 ~ ""Non-Indigenous"",
+  coalesce(as.numeric(B01002), as.numeric(VB01002)) == 5 ~ ""Indigenous"",
+  coalesce(as.numeric(B01002), as.numeric(VB01002)) %in% 1:4 ~ ""Non-Indigenous"",
+  .default = ""Unknown""
+)",From the same cor ou raca item as ethnicity: indigena (code 5 in every edition) is Indigenous and the other four categories Non-Indigenous. IBGE's own classification of indigenous self-identification; no-answer codes become Unknown.,
+minority,incompatible,"B01P02, B01002, VB01002",,"Brazil has no majority colour/race group to be a minority against: in these data branca (white) and parda (brown) each hold 35-45% of students, and preta plus parda together are a majority. Assigning Minority would need a definition of disadvantage rather than of numbers, which the schema does not give.",
+immigrant_background,unavailable,,,"No birthplace, nationality or migration item in any edition.",
+ses_area,incompatible,"DEP2, PUBPRIV, V0007, DEP_ADMIN, E01P01_2012, E01P01_2019, E01P01_2024",,"No area-level deprivation measure is released. The strong SES proxies PeNSE does carry (public versus private school, and the private school's monthly fee band) describe the school rather than the area the student lives in. Municipality codes exist for 2009 and 2012 only and would need an external index.",
+ses_household,proximate,"B01P20, B01P21, B01P22, B01P25, B01P26, B01015, B01016, B01017, B01019, B01020, VB01015A, VB01016, VB01017, VB01019, VB01020A, B01015B, B01019A, B01020A, .wave","local({
+  car <- coalesce(as.numeric(B01P22), as.numeric(B01017), as.numeric(VB01017))
+  computer <- coalesce(as.numeric(B01P20), as.numeric(B01015), as.numeric(VB01015A), as.numeric(B01015B))
+  internet <- coalesce(as.numeric(B01P21), as.numeric(B01016), as.numeric(VB01016))
+  maid <- coalesce(as.numeric(B01P26), as.numeric(B01020), as.numeric(VB01020A), as.numeric(B01020A))
+  car <- if_else(car %in% 1:2, as.numeric(car == 1), NA_real_)
+  computer <- if_else(computer %in% 1:2, as.numeric(computer == 1), NA_real_)
+  internet <- if_else(internet %in% 1:2, as.numeric(internet == 1), NA_real_)
+  maid <- if_else(maid %in% 1:2, as.numeric(maid == 1), NA_real_)
+  bathrooms <- coalesce(as.numeric(B01P25), as.numeric(B01019), as.numeric(VB01019), as.numeric(B01019A))
+  bathrooms <- if_else(bathrooms %in% 1:5, as.numeric(bathrooms >= 3), NA_real_)
+  assets <- car + computer + internet + maid + bathrooms
+  ridit <- stats::ave(assets, as.character(.wave), FUN = function(x) {
+    (rank(x, na.last = ""keep"") - 0.5) / sum(!is.na(x))
+  })
+  case_when(is.na(ridit) ~ ""Unknown"", ridit < 0.4 ~ ""Low"", ridit <= 0.6 ~ ""Medium"", .default = ""High"")
+})","PeNSE has no income or occupation item, so household SES is a count of five possessions asked in every edition in Criterio Brasil style: a car in the household, a computer at home, internet at home (2009: a home computer connected to the internet), a paid domestic worker (five or more days a week in 2009 and 2012, three or more from 2015), and two or more bathrooms with a shower. The 0-5 count is ridit-scored within each edition, as BPIPD-1528 does for the FAS, so the drift in ownership over 15 years (home computers and internet) does not move whole editions between levels; ridit < 0.4 Low, 0.4-0.6 Medium, above 0.6 High. The count has only six levels, so the bands are lumpy rather than exact quintiles. Proximate because it is a study-built asset index rather than a validated scale; any unanswered item makes the student Unknown.",
+ses_household_measure,inferred,,"""Household asset count (car, computer, home internet, paid domestic worker, 2+ bathrooms), ridit within edition""",Names the index built in ses_household.,
+ses_hukou,unavailable,,,Not a Chinese dataset.,
+maternal_education,compatible,"B01P08, B01008, VB01008A, B01008B","lookup_values(
+  recode_values(
+    coalesce(as.numeric(B01P08), as.numeric(B01008), as.numeric(VB01008A), as.numeric(B01008B)),
+    1 ~ ""Did not study"",
+    2 ~ ""Started ensino fundamental, did not finish"",
+    3 ~ ""Completed ensino fundamental"",
+    4 ~ ""Started ensino medio, did not finish"",
+    5 ~ ""Completed ensino medio"",
+    6 ~ ""Started higher education, did not finish"",
+    7 ~ ""Completed higher education"",
+    8 ~ ""Does not know"",
+    default = ""No answer""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education"",
+  default = ""Unknown""
+)","Student-reported: 'Ate que nivel de ensino sua mae estudou ou estuda?', with the same eight codes in every edition (only the wording changes). Codes are expanded to their labels so the shared lookup stays readable. Completed secondary (ensino medio) or less is Secondary school or less, started but unfinished higher education is Post-secondary, completed higher education is Bachelor degree or higher. 'Nao sei' (18-25% of students) and no-answer codes become Unknown.",maternal_education
+paternal_education,compatible,"B01009, .wave","if_else(
+  as.character(.wave) == ""2012"",
+  recode_values(
+    as.numeric(B01009),
+    c(1, 2, 3, 4, 5) ~ ""Secondary school or less"",
+    6 ~ ""Post-secondary"",
+    7 ~ ""Bachelor degree or higher"",
+    default = ""Unknown""
+  ),
+  ""Unknown""
+)","Asked in 2012 only ('Ate que nivel de ensino seu pai estudou?'), on the same eight codes as maternal_education and collapsed the same way; 'nao sei' (22%) and no answer become Unknown. Every other edition asks about the mother only, so those rows are Unknown.",
+parental_education,partial,"B01008, B01009, .wave","if_else(
+  as.character(.wave) == ""2012"",
+  recode_values(
+    pmax(
+      if_else(as.numeric(B01008) %in% 1:7, as.numeric(B01008), NA_real_),
+      if_else(as.numeric(B01009) %in% 1:7, as.numeric(B01009), NA_real_),
+      na.rm = TRUE
+    ),
+    c(1, 2, 3, 4, 5) ~ ""Secondary school or less"",
+    6 ~ ""Post-secondary"",
+    7 ~ ""Bachelor degree or higher"",
+    default = ""Unknown""
+  ),
+  ""Unknown""
+)","Higher of the mother's and father's level, available only in 2012, the one edition that asks about both parents. The source codes 1-7 are ordered by level, so the maximum is the higher qualification; 'nao sei' (8) and no answer are dropped first so a single known parent still contributes. Other editions are Unknown rather than mother-only, so this row does not mix a two-parent maximum with a one-parent value; maternal_education covers every edition. Partial for that reason.",
+urbanicity,proximate,"V0006, SITUACAO, .wave","case_when(
+  as.character(.wave) == ""2009"" ~ ""Urban"",
+  coalesce(as.numeric(V0006), as.numeric(SITUACAO)) == 1 ~ ""Urban"",
+  coalesce(as.numeric(V0006), as.numeric(SITUACAO)) == 2 ~ ""Rural"",
+  .default = ""Unknown""
+)","IBGE's urban/rural classification of the school's location (situacao da escola), released for 2015 (V0006) and 2019 (SITUACAO); there is no suburban level. 2009 sampled schools in the state capitals only and is set to Urban from that design (in 2015 and 2019, 1-2.5% of students in capital-city schools attend a rural school). 2012 and 2024 release no urban/rural variable and are Unknown. Proximate because it describes the school's location rather than the student's home.",
+family_structure,proximate,"B01P06, B01P07, B01006, B01007, VB01006, VB01007","local({
+  mother <- coalesce(as.numeric(B01P06), as.numeric(B01006), as.numeric(VB01006))
+  father <- coalesce(as.numeric(B01P07), as.numeric(B01007), as.numeric(VB01007))
+  case_when(
+    mother == 1 & father == 1 ~ ""Two biological/adoptive parents"",
+    (mother == 1 & father == 2) | (mother == 2 & father == 1) ~ ""Single parent"",
+    mother == 2 & father == 2 ~ ""Other"",
+    .default = ""Unknown""
+  )
+})","Derived from two yes/no items asked in every edition: 'Voce mora com sua mae?' and 'Voce mora com seu pai?'. Both parents resident is Two biological/adoptive parents, one is Single parent, neither is Other. Proximate because no item asks about step-parents or a parent's partner, so a step family (for example mother plus stepfather) is classed as Single parent, and students may count a step-parent as mae/pai.",
+school_grade,compatible,"VB01021, ANO_TURMA, .wave","local({
+  grade <- c(
+    ""6th year, ensino fundamental"",
+    ""7th year, ensino fundamental"",
+    ""8th year, ensino fundamental"",
+    ""9th year, ensino fundamental"",
+    ""1st year, ensino medio"",
+    ""2nd year, ensino medio"",
+    ""3rd year, ensino medio""
+  )
+  wave <- as.character(.wave)
+  case_when(
+    wave %in% c(""2009"", ""2012"", ""2015_sample_1"") ~ grade[4],
+    wave == ""2015_sample_2"" ~ grade[match(as.numeric(VB01021), 1:7)],
+    wave %in% c(""2019"", ""2024"") ~ recode_values(
+      as.numeric(ANO_TURMA),
+      1 ~ grade[2],
+      2 ~ grade[3],
+      3 ~ grade[4],
+      4 ~ grade[5],
+      5 ~ grade[6],
+      6 ~ grade[7],
+      7 ~ ""1st year, ensino medio (integrated technical course)"",
+      8 ~ ""2nd year, ensino medio (integrated technical course)"",
+      9 ~ ""3rd year, ensino medio (integrated technical course)"",
+      10 ~ ""1st year, ensino medio (teacher training)"",
+      11 ~ ""2nd year, ensino medio (teacher training)"",
+      12 ~ ""3rd year, ensino medio (teacher training)""
+    )
+  )
+})","Brazilian school years, translated from the source labels: ensino fundamental years 6-9 and ensino medio years 1-3 (the equivalent of grades 6-12). The grade of the sampled class is used wherever the design fixes it: 2009, 2012 and 2015 sample 1 sampled 9th-year classes only, and 2019 and 2024 release the class's year (ANO_TURMA, never missing), including integrated technical and teacher-training secondary courses. 2015 sample 2 has no class-level year, so the student's own report (VB01021) is used and its no-answer code is NA.",
+st_measure_type,inferred,,"""Categorical""",Banded hours-per-day responses in every edition.,
+st_measure_name,inferred,,"""Custom""","Bespoke PeNSE questionnaire items (self-completed on a handheld device from 2012), not a named instrument.",
+st_responder,inferred,,"""Self""",The student answers the Questionario do Aluno; no proxy report.,
+st_total_wd,partial,"B03P11, B03P12, B03P13, .wave","if_else(
+  as.character(.wave) == ""2009"",
+  sum_nonmissing(
+    recode_values(as.numeric(B03P11), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
+    recode_values(as.numeric(B03P12), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
+    recode_values(as.numeric(B03P13), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7)
+  ),
+  NA_real_
+)","2009 only: sum of the weekday TV, videogame and computer items, each converted as in st_watch_wd (about N hours = N, less than 1 hour = 0.5, the open 'about 7 or more' band = 7). Partial because mobile phones are not asked about and concurrent use can be double-counted. From 2012 the only broader item (B03010, B03010A-C) asks how long the student sits watching TV, using a computer, gaming, phone or tablet, 'chatting with friends or doing other seated activities', so it measures sedentary time rather than screen time and is deliberately not mapped; those editions contribute st_watch_wd only.",
+st_total_we,unavailable,,,"PeNSE asks screen time for an ordinary weekday only (excluding Saturday, Sunday and holidays); no edition has a weekend item, so a weekend or usual-day value cannot be formed.",
+st_total,unavailable,,,"PeNSE asks screen time for an ordinary weekday only (excluding Saturday, Sunday and holidays); no edition has a weekend item, so a weekend or usual-day value cannot be formed.",
+st_watch_wd,partial,"B03P11, B03009, VB03009A, B03009B, B03009C, .wave","if_else(
+  as.character(.wave) %in% c(""2009"", ""2012""),
+  recode_values(
+    coalesce(as.numeric(B03P11), as.numeric(B03009)),
+    1 ~ 0,
+    2 ~ 0.5,
+    3 ~ 1,
+    4 ~ 2,
+    5 ~ 3,
+    6 ~ 4,
+    7 ~ 5,
+    8 ~ 6,
+    9 ~ 7
+  ),
+  recode_values(
+    coalesce(as.numeric(VB03009A), as.numeric(B03009B), as.numeric(B03009C)),
+    1 ~ 0,
+    2 ~ 0.5,
+    3 ~ 1.5,
+    4 ~ 2.5,
+    5 ~ 3.5,
+    6 ~ 4.5,
+    7 ~ 5.5,
+    8 ~ 6.5,
+    9 ~ 7.5,
+    10 ~ 9
+  )
+)","Hours of TV on an ordinary weekday, in every edition. The response set changes in 2015: 2009 and 2012 use nine 'about N hours' categories (no TV = 0, less than 1 hour = 0.5, about N hours = N, 'about 7 or more' = 7, as BPIPD-1528 converts the same HBSC-style set), while 2015-2024 use ten upper-bounded bands (no TV = 0, up to 1 hour = 0.5, then midpoints 1.5 to 7.5, and 'more than 8 hours' = 9, one hour above its floor as in BPIPD-27 and BPIPD-621). Partial because every edition asks about the TV set only, so streaming on a phone, tablet or computer is excluded, and the 2024 item (B03009C) narrows further to 'films, series, soap operas and other programmes from digital video platforms on the TV'. 2024's 'don't know / don't remember' (11, 9% of students) and every no-answer or abandonment code (99, -2, -9) are NA, not a band.",
+st_watch_we,unavailable,,,"PeNSE asks screen time for an ordinary weekday only (excluding Saturday, Sunday and holidays); no edition has a weekend item, so a weekend or usual-day value cannot be formed.",
+st_watch,unavailable,,,"PeNSE asks screen time for an ordinary weekday only (excluding Saturday, Sunday and holidays); no edition has a weekend item, so a weekend or usual-day value cannot be formed.",
+st_game_wd,partial,"B03P12, .wave","if_else(
+  as.character(.wave) == ""2009"",
+  recode_values(as.numeric(B03P12), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
+  NA_real_
+)","2009 only: 'Num dia de semana comum, quantas horas por dia voce joga videogame?', converted like st_watch_wd. Partial because 'videogame' reads mainly as console gaming: games played on the computer may have been reported under computer time (st_comp_wd) instead, and phone gaming is not asked. 61% report none.",
+st_game_we,unavailable,,,"PeNSE asks screen time for an ordinary weekday only (excluding Saturday, Sunday and holidays); no edition has a weekend item, so a weekend or usual-day value cannot be formed.",
+st_game,unavailable,,,"PeNSE asks screen time for an ordinary weekday only (excluding Saturday, Sunday and holidays); no edition has a weekend item, so a weekend or usual-day value cannot be formed.",
+st_game_comp_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_comp_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_comp,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_console_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_console_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_console,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_handheldconsole_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_handheldconsole_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_handheldconsole,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_active_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_active_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_active,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_phone_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_phone_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_phone,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_tablet_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_tablet_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_game_tablet,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_comp_nongaming_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_comp_nongaming_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_comp_nongaming,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_comp_wd,compatible,"B03P13, .wave","if_else(
+  as.character(.wave) == ""2009"",
+  recode_values(as.numeric(B03P13), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
+  NA_real_
+)","2009 only: 'Num dia de semana comum, quantas horas por dia voce fica no computador?' (time at the computer, any purpose), converted like st_watch_wd. Later editions ask only whether the household has a computer.",
+st_comp_we,unavailable,,,"PeNSE asks screen time for an ordinary weekday only (excluding Saturday, Sunday and holidays); no edition has a weekend item, so a weekend or usual-day value cannot be formed.",
+st_comp,unavailable,,,"PeNSE asks screen time for an ordinary weekday only (excluding Saturday, Sunday and holidays); no edition has a weekend item, so a weekend or usual-day value cannot be formed.",
+st_tablet_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_tablet_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_tablet,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_phone_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_phone_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_phone,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_socmedia_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_socmedia_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_socmedia,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_educational_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_educational_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_educational,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_work_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_work_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_work,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_internet_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_internet_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_internet,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_videochat,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_messaging_wd,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_messaging_we,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_messaging,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_creating,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_email,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_shopping,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_total_school,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_educational_school,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_comp_school,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_tablet_school,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_internet_school,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+st_phone_school,unavailable,,,"Not asked in any edition. PeNSE's screen items are weekday TV (every edition) and, in 2009 only, weekday videogame and computer time; later editions ask only about owning a phone or computer and having internet at home.",
+acc_academachment_selfrated,unavailable,,,"No achievement, grades or test scores in any edition, and no school-engagement scale.",
+acc_academachment_lettergrades,unavailable,,,"No achievement, grades or test scores in any edition, and no school-engagement scale.",
+acc_academachment_stdtest,unavailable,,,"No achievement, grades or test scores in any edition, and no school-engagement scale.",
+acc_schoolengage_caresschool,incompatible,"B06P01, B07001, VB07001",,"The only school-engagement item is days missed without the parents' permission in the past 30 days (truancy), which is behaviour rather than this rating of how often the student cares about school or completes homework.",
+acc_schoolengage_homework,incompatible,"B06P01, B07001, VB07001",,"The only school-engagement item is days missed without the parents' permission in the past 30 days (truancy), which is behaviour rather than this rating of how often the student cares about school or completes homework.",
+acc_academachment_numgrades,unavailable,,,"No achievement, grades or test scores in any edition, and no school-engagement scale.",
+acc_academachment_teacherrated,unavailable,,,"No achievement, grades or test scores in any edition, and no school-engagement scale.",
+acc_numeracy_stdtest,unavailable,,,"No achievement, grades or test scores in any edition, and no school-engagement scale.",
+acc_literacy_stdtest,unavailable,,,"No achievement, grades or test scores in any edition, and no school-engagement scale.",
+beh_hyper_basc2,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_atten_basc2,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_atten_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_selfreg_htks,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_bullied,partial,"B07009, VB07009","recode_values(coalesce(as.numeric(B07009), as.numeric(VB07009)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","'NOS ULTIMOS 30 DIAS, voce esculachou, zombou, mangou, intimidou ou cacoou algum de seus colegas da escola tanto que ele ficou magoado...?' (yes/no), 2012 onwards; 2009 has no perpetration item. Asked about the past 30 days rather than the schema's past few months, and about being mocked, intimidated or humiliated rather than a defined repeated bullying pattern, hence partial. No-answer codes are NA.",
+beh_beenbullied,partial,"B06P04, B07007, VB07007, B07007A, B07007B, .wave","local({
+  frequency <- coalesce(as.numeric(B06P04), as.numeric(B07007), as.numeric(VB07007))
+  count <- coalesce(as.numeric(B07007A), as.numeric(B07007B))
+  case_when(frequency == 1 ~ ""FALSE"", frequency %in% 2:5 ~ ""TRUE"", count == 1 ~ ""FALSE"", count %in% 2:4 ~ ""TRUE"")
+})","How often schoolmates mocked, teased, intimidated or humiliated the student so much that they were hurt or upset, in every edition. 2009-2015 ask a frequency (never, rarely, sometimes, most of the time, always) and 2019-2024 a count (none, once, 2+ in 2019; none, once, twice, 3+ in 2024). TRUE for any occurrence, the threshold BPIPD-1528 and BPIPD-170 use. Asked about the past 30 days rather than the schema's past few months, and about being mocked, intimidated or humiliated rather than a defined repeated bullying pattern, hence partial.",
+beh_beenbullied_online,partial,B07013,"recode_values(as.numeric(B07013), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","2019 and 2024 only: 'NOS ULTIMOS 30 DIAS, voce se sentiu ameacado(a), ofendido(a) ou humilhado(a) nas redes sociais ou aplicativos de celular?' (yes/no). Partial because a single threatening or humiliating experience in 30 days counts, which is broader than being bullied. No-answer codes are NA.",
+beh_bullied_online,partial,B07016,"recode_values(as.numeric(B07016), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","2024 only: 'NOS ULTIMOS 30 DIAS, voce ameacou, ofendeu ou humilhou outras pessoas nas redes sociais ou aplicativos de celular?' (yes/no). Partial for the same 30-day, single-occurrence reasons as beh_beenbullied_online.",
+beh_fight,partial,"B08P04, B09011, VB09011, B09011A, .wave","local({
+  count_12m <- coalesce(as.numeric(B09011), as.numeric(VB09011))
+  any_30d <- coalesce(as.numeric(B08P04), as.numeric(B09011A))
+  case_when(count_12m == 1 ~ ""FALSE"", count_12m %in% 2:8 ~ ""TRUE"", any_30d == 1 ~ ""TRUE"", any_30d == 2 ~ ""FALSE"")
+})","Involvement in a physical fight, TRUE for any. The reference period changes by edition: 2012 and 2015 count fights in the past 12 months (B09011, VB09011, as HBSC does); 2009 asks about a fight in the past 30 days in which someone was physically hurt (B08P04), and 2019-2024 about a fight with physical struggle in the past 30 days (B09011A). Partial because the 30-day editions will read lower than the 12-month ones. No-answer codes are NA.",
+beh_conduct_sdq_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_hyper_sdq_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_peerprob_sdq_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_prosocial_sdq_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_aggphys_bpaq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_aggverb_bpaq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_agganger_bpaq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_agghostility_bpaq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_agg_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_argues,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_persistence_finishwork,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_emotreg_stayscalm,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_peerprob_makefriends,incompatible,"B12003, VB12003",,"PeNSE asks how many close friends the student has (none, 1, 2, 3 or more), a count rather than a rating of difficulty making or keeping friends.",
+beh_conduct_diagnosed,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_conduct_diagnosed_severity,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_conduct_sdq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_hyper_sdq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_peerprob_sdq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_prosocial_sdq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_conduct_sdq_teacher,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_hyper_sdq_teacher,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_peerprob_sdq_teacher,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_prosocial_sdq_teacher,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_ext_sdq_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_ext_sdq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_ext_sdq_teacher,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_agg_cbcl_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_atten_cbcl_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_rulebreak_cbcl_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_ext_cbcl_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_cbcl_measure,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_prosocial_online_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+beh_prosocial_online_measure,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+cog_execfunc_basc2,unavailable,,,No cognitive assessment in any edition.,
+cog_langexec_nepsy,unavailable,,,No cognitive assessment in any edition.,
+cog_phono_nepsy,unavailable,,,No cognitive assessment in any edition.,
+cog_inhibcont_nepsy,unavailable,,,No cognitive assessment in any edition.,
+cog_vismotor_nepsy,unavailable,,,No cognitive assessment in any edition.,
+cog_verbalfluency_nepsy,unavailable,,,No cognitive assessment in any edition.,
+cog_inhib_nihtb_flanker,unavailable,,,No cognitive assessment in any edition.,
+cog_flex_nihtb_dccs,unavailable,,,No cognitive assessment in any edition.,
+cog_wm_nihtb_listsort,unavailable,,,No cognitive assessment in any edition.,
+cog_speed_nihtb_pattern,unavailable,,,No cognitive assessment in any edition.,
+cog_epimem_nihtb_picseq,unavailable,,,No cognitive assessment in any edition.,
+cog_vocab_nihtb_picvocab,unavailable,,,No cognitive assessment in any edition.,
+cog_fluidcomp_nihtb,unavailable,,,No cognitive assessment in any edition.,
+cog_crystcomp_nihtb,unavailable,,,No cognitive assessment in any edition.,
+cog_totalcomp_nihtb,unavailable,,,No cognitive assessment in any edition.,
+cog_wm_digitspan,unavailable,,,No cognitive assessment in any edition.,
+cog_iq_fullscale,unavailable,,,No cognitive assessment in any edition.,
+cog_vocab_bpvs,unavailable,,,No cognitive assessment in any edition.,
+cog_vocab_ppvt,unavailable,,,No cognitive assessment in any edition.,
+cog_execfunc_brief_parent,unavailable,,,No cognitive assessment in any edition.,
+cog_vocab_bas_naming,unavailable,,,No cognitive assessment in any edition.,
+cog_nonverbalreason_bas_picsim,unavailable,,,No cognitive assessment in any edition.,
+cog_spatial_bas_pattern,unavailable,,,No cognitive assessment in any edition.,
+cog_verbalreason_bas_versim,unavailable,,,No cognitive assessment in any edition.,
+cog_schoolread_bracken,unavailable,,,No cognitive assessment in any edition.,
+cog_creativethinking_stdtest,unavailable,,,No cognitive assessment in any edition.,
+mh_anx_basc2,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_basc2,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_emotsymp_sdq_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_totaldiff_sdq_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_diagnosed,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_diagnosed_severity,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_diagnosed,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_diagnosed_severity,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_emotsymp_sdq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_emotsymp_sdq_teacher,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_totaldiff_sdq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_totaldiff_sdq_teacher,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_int_sdq_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_int_sdq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_int_sdq_teacher,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_smfq_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_smfq_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_cdi_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_cesd_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_phq9_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_rcads_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_dass21_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_scl_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_distress_k6_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_distress_k10_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_masc_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_scas_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_scas_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_scared_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_scared_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_gad7_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_rcads_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_dass21_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anxdep_cbcl_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_int_cbcl_parent,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_binary_self,incompatible,B12005,,"2019 and 2024 ask how often the student felt sad in the past 30 days (never to always), a mood frequency rather than a screen for a depressive episode such as the YRBS two-week sadness item. The item is mapped to mh_sad_self.",
+mh_dep_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_dep_measure,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_anx_measure,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_depanx_diagnosed,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_stress_self,incompatible,B12004,,"2019 and 2024 ask how often the student felt very worried about everyday things in the past 30 days (never to always), a worry frequency rather than perceived stress. The item is mapped to mh_worry_self.",
+mh_lonely_self,compatible,"B12001, VB12001","recode_values(
+  coalesce(as.numeric(B12001), as.numeric(VB12001)),
+  1 ~ ""Never"",
+  2 ~ ""Rarely"",
+  3 ~ ""Sometimes"",
+  4 ~ ""Often"",
+  5 ~ ""Always""
+)","2012 and 2015 only: 'NOS ULTIMOS 12 MESES com que frequencia tem se sentido sozinho(a)?' (past 12 months). The five options (nunca, raramente, as vezes, na maioria das vezes, sempre) map one-to-one, with 'most of the time' as Often. 2009, 2019 and 2024 have no loneliness item. No-answer codes are NA.",
+mh_lonely_scale_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_lonely_measure,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_sad_self,compatible,B12005,"recode_values(as.numeric(B12005), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")","'NOS ULTIMOS 30 DIAS, com que frequencia voce se sentiu triste?' (past 30 days). The five options (nunca, raramente, as vezes, na maioria das vezes, sempre) map one-to-one, with 'most of the time' as Often, as for mh_lonely_self. Asked in 2019 and 2024 only, in the mental-health block IBGE rewrote after 2015; earlier editions are NA. No-answer and abandonment codes (9, -9, -2) are NA.",
+mh_worry_self,compatible,B12004,"recode_values(as.numeric(B12004), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")","'NOS ULTIMOS 30 DIAS, com que frequencia voce se sentiu muito preocupado com as coisas comuns do seu dia a dia como atividades da escola, competicoes esportivas, tarefas de casa, etc.?' (past 30 days; worry about ordinary everyday things such as schoolwork, sports competitions and chores). The five options (nunca, raramente, as vezes, na maioria das vezes, sempre) map one-to-one, with 'most of the time' as Often, as for mh_lonely_self. Asked in 2019 and 2024 only, in the mental-health block IBGE rewrote after 2015; earlier editions are NA. No-answer and abandonment codes (9, -9, -2) are NA. It correlates only weakly with the other four 30-day items (Spearman 0.19-0.32), so it reads more as everyday stress than low mood.",
+mh_irritable_self,partial,B12007,"recode_values(as.numeric(B12007), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")","'NOS ULTIMOS 30 DIAS, com que frequencia voce se sentiu irritado(a), nervoso(a) ou mal-humorado(a) por qualquer coisa?' (past 30 days). Partial because the item pools irritability and bad temper with nervousness. The five options (nunca, raramente, as vezes, na maioria das vezes, sempre) map one-to-one, with 'most of the time' as Often, as for mh_lonely_self. Asked in 2019 and 2024 only, in the mental-health block IBGE rewrote after 2015; earlier editions are NA. No-answer and abandonment codes (9, -9, -2) are NA.",
+mh_nobodycares_self,compatible,B12006,"recode_values(as.numeric(B12006), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")","'NOS ULTIMOS 30 DIAS, com que frequencia voce sentiu que ninguem se preocupa com voce?' (past 30 days). The five options (nunca, raramente, as vezes, na maioria das vezes, sempre) map one-to-one, with 'most of the time' as Often, as for mh_lonely_self. Asked in 2019 and 2024 only, in the mental-health block IBGE rewrote after 2015; earlier editions are NA. No-answer and abandonment codes (9, -9, -2) are NA.",
+mh_lifenotworth_self,compatible,B12008,"recode_values(as.numeric(B12008), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")","'NOS ULTIMOS 30 DIAS, com que frequencia voce sentiu que a vida nao vale a pena ser vivida?' (past 30 days). The five options (nunca, raramente, as vezes, na maioria das vezes, sempre) map one-to-one, with 'most of the time' as Often, as for mh_lonely_self. Asked in 2019 and 2024 only, in the mental-health block IBGE rewrote after 2015; earlier editions are NA. No-answer and abandonment codes (9, -9, -2) are NA. IBGE's 2019 report combines this item with the other four 30-day items into a 'negative self-assessment of mental health' (most of the time or always on at least four of five).",
+mh_suicide_ideation_self,incompatible,"B12008, B12009",,"The nearest items are how often the student felt life was not worth living in the past 30 days (2019, 2024), a passive death wish rather than suicidal ideation, and in 2024 whether they ever felt like hurting themselves on purpose in the past 12 months, which is self-harm ideation. B12008 is mapped to mh_lifenotworth_self.",
+mh_suicide_attempt_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_psychsom_hbscscl_self,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+mh_psychsom_measure,unavailable,,,"Not collected in any edition: PeNSE carries no validated behaviour or mental-health instrument, and its mental-health module (B12) has single frequency items only.",
+wb_emotsc_basc2,unavailable,,,Not collected in any edition.,
+wb_mwb_wemwbs,unavailable,,,Not collected in any edition.,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Not collected in any edition.,
+wb_resil_basc2,unavailable,,,Not collected in any edition.,
+wb_psychcomplaints_feellow,incompatible,B12005,,"B12005 (felt sad, past 30 days) uses a never-to-always scale that cannot be put onto the HBSC-SCL frequency levels (about every day to rarely or never). The item is mapped to mh_sad_self.",
+wb_psychcomplaints_irritable,incompatible,B12007,,"B12007 (felt irritable, nervous or bad-tempered, past 30 days) uses a never-to-always scale that cannot be put onto the HBSC-SCL frequency levels, and pools irritability with nervousness. The item is mapped to mh_irritable_self.",
+wb_psychcomplaints_nervous,incompatible,B12007,,"B12007 (felt irritable, nervous or bad-tempered, past 30 days) uses a never-to-always scale that cannot be put onto the HBSC-SCL frequency levels, and pools nervousness with irritability. The item is mapped to mh_irritable_self.",
+wb_psychcomplaints_diffsleep,incompatible,"B12002, VB12002",,2012 and 2015 ask how often worry kept the student awake at night in the past 12 months (never to always); the cause is specified and the scale cannot be put onto the HBSC-SCL frequency levels.,
+wb_bodyimage,compatible,"B10P01, B11001, VB11001, B11001A","recode_values(
+  coalesce(as.numeric(B10P01), as.numeric(B11001), as.numeric(VB11001), as.numeric(B11001A)),
+  1 ~ ""Much too thin"",
+  2 ~ ""A bit too thin"",
+  3 ~ ""About right"",
+  4 ~ ""A bit too fat"",
+  5 ~ ""Much too fat""
+)","'Quanto ao seu corpo, voce se considera:' in every edition, five options (muito magro, magro, normal, gordo, muito gordo; 2024 words the middle one 'nem magro nem gordo') mapped one-to-one, as BPIPD-1353 maps the same very-thin-to-very-fat set. No-answer codes are NA.",
+wb_lifesat_slss_self,unavailable,,,Not collected in any edition.,
+wb_lifesat_swls_self,unavailable,,,Not collected in any edition.,
+wb_lifesat_singleitem_self,unavailable,,,Not collected in any edition.,
+wb_qol_pedsql_self,unavailable,,,Not collected in any edition.,
+wb_qol_pedsql_parent,unavailable,,,Not collected in any edition.,
+wb_qol_kidscreen10_self,unavailable,,,Not collected in any edition.,
+wb_qol_kidscreen10_parent,unavailable,,,Not collected in any edition.,
+wb_selfesteem_rosenberg_self,unavailable,,,Not collected in any edition.,
+wb_selfesteem_self,unavailable,,,Not collected in any edition.,
+wb_selfesteem_measure,unavailable,,,Not collected in any edition.,
+wb_selfefficacy_gse_self,unavailable,,,Not collected in any edition.,
+wb_selfefficacy_self,unavailable,,,Not collected in any edition.,
+wb_selfefficacy_measure,unavailable,,,Not collected in any edition.,
+wb_mwb_who5_self,unavailable,,,Not collected in any edition.,
+wb_happiness_shs_self,unavailable,,,Not collected in any edition.,
+wb_mwb_swemwbs_self,unavailable,,,Not collected in any edition.,
+wb_selfratedhealth_self,proximate,"VB13005, B13005","recode_values(
+  coalesce(as.numeric(VB13005), as.numeric(B13005)),
+  1 ~ ""Excellent"",
+  2 ~ ""Very good"",
+  3 ~ ""Good"",
+  4 ~ ""Fair"",
+  5 ~ ""Poor""
+)","2015, 2019 and 2024: 'Como voce classificaria seu estado de saude?' on a symmetric five-point scale centred on 'regular' (muito bom, bom, regular, ruim, muito ruim). Mapped in rank order, as the schema asks for this kind of scale and as BPIPD-1353 does, so 'muito bom' (very good) reads as Excellent and 'regular' as Good. No-answer codes are NA.",
+wb_posaffect_self,unavailable,,,Not collected in any edition.,
+wb_posaffect_measure,unavailable,,,Not collected in any edition.,
+wb_eudaimonic_self,unavailable,,,Not collected in any edition.,
+wb_eudaimonic_measure,unavailable,,,Not collected in any edition.,
