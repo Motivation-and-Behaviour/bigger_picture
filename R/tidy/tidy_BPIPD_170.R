@@ -351,6 +351,11 @@ bp170_item_vars <- function() {
   outcome_vars <- c(
     grade_average = "R HS GRADE/D ?= ?1",
     fight_gang = "FRQ GANG FIGHT",
+    steal_under50 = "FRQ STEAL <\\$50",
+    steal_over50 = "FRQ STEAL >\\$50",
+    damage_school_property = "FRQ DMG SCH PPTY",
+    skip_days_4wk = "#DA/4W SC MS CUT",
+    skip_class_4wk = "#DA/4W SKP CLASS",
     bullied_school = "BULLIED@SCHL",
     bullied_online = "BULLIED ONLINE",
     esteem_pos_attitude = "ATT TWD SELF",
@@ -361,8 +366,21 @@ bp170_item_vars <- function() {
     dep_meaningless = "LIFE MEANINGLESS",
     dep_good_alive = "GOOD TO BE ALIVE",
     dep_hopeless = "FUTURE HOPELESS",
+    dep_cant_do_right = "I DO WRONG THING",
+    dep_life_not_useful = "MY LIFE NT USEFL",
     dep_lonely = "OFTN FEEL LONELY",
-    life_satisfaction = "LIFE AS WHL"
+    lonely_left_out = "OFTN FL LEFT OUT",
+    lonely_wish_friends = "OFT WSH MOR FRND",
+    lonely_turn_to = "ALWYS SM1 HELP R",
+    lonely_talk_to = "USLY SM1 TALK TO",
+    lonely_friends_around = "USLY FRDS BE WTH",
+    anxious = "OFTEN FEEL ANXIOUS",
+    life_satisfaction = "LIFE AS WHL",
+    sat_education = "SAT EDUC EXPRNC",
+    sat_friends = "SAT OWN FRIENDS",
+    sat_parents = "SAT GT ALNG PRN",
+    enjoy_school = "LSTYR/ENJOY SCHL",
+    happy_school = "LSTYR/HAPPY IN SCH"
   )
   c(
     design_vars,

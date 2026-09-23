@@ -84,6 +84,12 @@ bp873_waves <- function() {
         tv_we_hours_self = "kt402_a_2",
         internet_wd_hours_self = "kt403_a_1",
         internet_we_hours_self = "kt403_a_2",
+        # 2010 and 2014 ask about leave of absence and cutting class in one
+        # four-option item; from 2016 cutting class is a yes/no item of its own
+        # (`class_cut`), so the two codings keep separate columns.
+        class_absence = "kr430",
+        school_satisfaction = "ks701",
+        schoolwork_satisfaction = "ks501",
         word_test = "wordtest",
         math_test = "mathtest"
       ),
@@ -104,6 +110,9 @@ bp873_waves <- function() {
         internet_wd_hours_self = "kt403_a_1",
         internet_we_hours_self = "kt403_a_2",
         internet_day_hours_self = "ku250",
+        class_absence = "kr430",
+        school_satisfaction = "ks701",
+        schoolwork_satisfaction = "ks501",
         word_test = "wordtest",
         math_test = "mathtest"
       ),
@@ -147,6 +156,9 @@ bp873_waves <- function() {
         internet_any = "ku2",
         tv_week_hours_parent = "wb9",
         internet_week_hours_self = "ku250m",
+        class_absence = "kr430",
+        school_satisfaction = "ks701",
+        schoolwork_satisfaction = "ks501",
         word_test = "wordtest14",
         math_test = "mathtest14"
       ),
@@ -163,6 +175,9 @@ bp873_waves <- function() {
         self_rated_health = "qp201",
         tv_week_hours_self = "qq1001",
         internet_week_hours_self = "ku250m",
+        class_absence = "kr430",
+        school_satisfaction = "ks701",
+        schoolwork_satisfaction = "ks501",
         word_test = "wordtest14",
         math_test = "mathtest14"
       ),
@@ -207,7 +222,11 @@ bp873_waves <- function() {
         internet_pc_user = "ku202",
         tv_week_hours_parent = "wb9",
         internet_week_hours_self = "ku250m",
+        class_cut = "kr4302",
+        school_satisfaction = "ks701",
+        schoolwork_satisfaction = "ks501",
         cesd20 = "cesd20sc",
+        sad = "pn418",
         happiness = "qm2014"
       ),
       individual = "cfps2016adult",
@@ -224,7 +243,11 @@ bp873_waves <- function() {
         self_rated_health = "qp201",
         tv_week_hours_self = "qq1001",
         internet_week_hours_self = "ku250m",
+        class_cut = "kr4302",
+        school_satisfaction = "ks701",
+        schoolwork_satisfaction = "ks501",
         cesd20 = "cesd20sc",
+        sad = "pn418",
         happiness = "qm2014"
       ),
       famconf = "cfps2016famconf",
@@ -280,10 +303,14 @@ bp873_waves <- function() {
         self_rated_health = "qp201",
         tv_week_hours_self = "qq1001",
         internet_week_hours_self = "qu250m",
+        class_cut = "kr4302",
+        school_satisfaction = "qs701_b_2",
+        schoolwork_satisfaction = "qs501_b_2",
         cesd20 = "cesd20sc",
         cesd8 = "cesd8",
         happiness = "qm2016",
         lonely = "qn414",
+        sad = "qn418",
         word_test = "wordtest18",
         math_test = "mathtest18"
       ),
@@ -345,10 +372,14 @@ bp873_waves <- function() {
         tv_week_hours_self = "qq1001",
         internet_mobile_day_mins_self = "qu201a",
         internet_pc_day_mins_self = "qu202a",
+        class_cut = "kr4302",
+        school_satisfaction = "qs701_b_2",
+        schoolwork_satisfaction = "qs501_b_2",
         cesd20 = "cesd20sc",
         cesd8 = "cesd8",
         happiness = "qm2016",
-        lonely = "qn414"
+        lonely = "qn414",
+        sad = "qn418"
       ),
       famconf = "cfps2020famconf",
       famconf_vars = c(
@@ -410,10 +441,14 @@ bp873_waves <- function() {
         internet_mobile_day_mins_self = "qu201a",
         internet_pc_day_mins_self = "qu202a",
         learning_online_day_mins_self = "qu501",
+        class_cut = "kr4302",
+        school_satisfaction = "qs701",
+        schoolwork_satisfaction = "qs501_b_2",
         cesd20 = "cesd20sc",
         cesd8 = "cesd8",
         happiness = "qm2016",
         lonely = "qn414",
+        sad = "qn418",
         word_test = "wordtest22",
         math_test = "mathtest22"
       ),

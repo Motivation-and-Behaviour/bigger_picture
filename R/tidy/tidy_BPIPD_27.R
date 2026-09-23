@@ -11,7 +11,9 @@
 #'   cohort member in the family (MCS families can hold twins or triplets);
 #' - parent modules hold one row per responding parent, so they are reduced to
 #'   one row per family before joining. At the earlier sweeps the main
-#'   respondent is also the person who reports the child's screen use.
+#'   respondent is also the person who reports the child's screen use;
+#' - `parent_interview` supplies only whether each respondent was born in the
+#'   UK, looked up across sweeps by person number.
 #'
 #' Variables keep their original MCS spelling. Every column has a one-letter
 #' sweep prefix (`B` = sweep 2 ... `G` = sweep 7)
@@ -23,7 +25,11 @@
 #' Output:
 #' - one tibble, one row per cohort member per sweep
 tidy_BPIPD_27 <- function(raw_dataset, spec) {
-  sweeps <- lapply(spec$waves, function(wave) bp27_sweep(raw_dataset, wave))
+  born_uk <- bp27_born_uk(raw_dataset)
+  sweeps <- lapply(
+    spec$waves,
+    function(wave) bp27_sweep(raw_dataset, wave, born_uk)
+  )
   df <- dplyr::bind_rows(bp27_prefix_shared_columns(sweeps))
 
   attr(df$MCSID, "label") <-
@@ -43,7 +49,7 @@ tidy_BPIPD_27 <- function(raw_dataset, spec) {
 }
 
 #' Assemble one sweep into a cohort-member table
-bp27_sweep <- function(raw_dataset, wave) {
+bp27_sweep <- function(raw_dataset, wave, born_uk) {
   modules <- function(...) bp27_modules(raw_dataset, wave$wave, ...)
 
   cm <- bp27_cognitive_scores(
@@ -104,9 +110,12 @@ bp27_sweep <- function(raw_dataset, wave) {
   # `parent_derived` carries the parental education variables
   roster_sex <- bp27_person_sex(grid)
   for (tbl in modules("parent_derived")) {
+    person <- c("MCSID", bp27_person_key(tbl))
     if (!is.null(roster_sex)) {
-      tbl <- bp27_add(tbl, roster_sex, c("MCSID", bp27_person_key(tbl)))
+      tbl <- bp27_add(tbl, roster_sex, person)
     }
+    names(born_uk)[2] <- person[2]
+    tbl <- bp27_add(tbl, born_uk, person)
     base <- bp27_add(
       base,
       bp27_respondent(tbl, 1L, "MCSID", answering = answering),
@@ -267,6 +276,8 @@ bp27_prefix_shared_columns <- function(sweeps) {
     "mcs_cnum",
     "respondent_sex",
     "respondent_sex_PARTNER",
+    "respondent_born_uk",
+    "respondent_born_uk_PARTNER",
     ".wave",
     ".wave_label"
   )
@@ -356,6 +367,41 @@ bp27_person_sex <- function(grids) {
   )
   names(roster)[3] <- "respondent_sex"
   roster
+}
+
+#' Whether each parent respondent was born in the UK, keyed on person number
+bp27_born_uk <- function(raw_dataset) {
+  # Asked of every respondent at sweep 2, later only of new respondents, and
+  # not at sweep 7.
+  items <- c(
+    sweep_2 = "BPREBO00",
+    sweep_3 = "CPREBO00",
+    sweep_4 = "DPREBO00",
+    sweep_5 = "EPREBO00",
+    sweep_6 = "FPREBO00"
+  )
+  answers <- lapply(names(items), function(wave) {
+    tbl <- bp27_modules(raw_dataset, wave, "parent_interview")[[1]]
+    cols <- c(
+      MCSID = "MCSID",
+      pnum = bp27_person_key(tbl),
+      born = items[[wave]]
+    )
+    tbl <- dplyr::select(tbl, dplyr::all_of(cols))
+    tbl$born <- bp27_plain(tbl$born)
+    tbl
+  })
+  born <- dplyr::bind_rows(answers)
+
+  # Three people answered at two sweeps and disagree; the first answer is kept
+  born <- born[born$born %in% c(1L, 2L), ]
+  born <- born[!duplicated(born[c("MCSID", "pnum")]), ]
+  born$respondent_born_uk <- haven::labelled(
+    born$born,
+    c(Yes = 1L, No = 2L),
+    label = "Whether the respondent was born in the UK (parent interview, sweeps 2-6)"
+  )
+  born[c("MCSID", "pnum", "respondent_born_uk")]
 }
 
 #' The `*PNUM00` person-number column for a table, e.g. `"BPNUM00"`

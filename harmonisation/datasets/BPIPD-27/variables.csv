@@ -78,7 +78,14 @@ minority,compatible,"BDC06E00, CDC06E00, DDC06E00, FDCE0600","recode_values(
   c(2, 3, 4, 5, 6) ~ ""Minority"",
   default = ""Unknown""
 )","Derived from the same carried-forward cohort-member ethnic group as ethnicity. The MCS White category includes White Irish and Other White, all treated as non-minority in the UK, matching the convention used by the other UK datasets in this project",,
-immigrant_background,in_progress,,,,,
+immigrant_background,partial,"respondent_born_uk, respondent_born_uk_PARTNER","local({
+  uk <- cbind(as.numeric(respondent_born_uk), as.numeric(respondent_born_uk_PARTNER))
+  case_when(
+    rowSums(uk == 1, na.rm = TRUE) > 0 ~ ""Native"",
+    rowSums(uk == 2, na.rm = TRUE) > 0 ~ ""Second-generation"",
+    .default = ""Unknown""
+  )
+})","'Were you born in the UK?' for the main and partner respondents (asked of all at sweep 2, of new respondents at sweeps 3-6), matched by person number. Native if either was, else Second-generation. Partial: the cohort member's birthplace is not released and is assumed UK-born; respondents are resident carers; a single known respondent decides alone.",,
 ses_area,compatible,"BIMDSCOE, BIWIMDSC, BISIMDSC, BIMDSCON, CIMDSCOE, CIWIMDSC, CISIMDSC, CIMDSCON, DIMDSCOE, DIWIMDSC, DISIMDSC, DIMDSCON, EIMDSCOE, EIWIMDSC, EISIMDSC, EIMDSCON, FIMDSCOE, FIWIMDSC, FISIMDSC, FIMDSCON","recode_values(
   coalesce(
     as.numeric(BIMDSCOE),
@@ -121,7 +128,7 @@ ses_household,compatible,"BOECDUK0, COECDUK0, DOECDUK0, EOECDUK0, FOECDUK0","rec
   default = ""Unknown""
 )","OECD-equivalised net household income, already banded by MCS into UK-wide weighted quintiles, so no income-band-to-quintile judgement is needed and the recode is kept inline rather than in the shared ses_household lookup. Quintiles 1-2 Low, 3 Medium, 4-5 High. Sweep 7 released no income quintiles, so every sweep-7 row is Unknown",,
 ses_household_measure,compatible,.wave,"if_else(.wave == ""sweep_7"", ""Unknown"", ""OECD equivalised net household income, UK-wide weighted quintiles"")",Names the measure behind ses_household; sweep 7 released no income variables,,
-ses_hukou,in_progress,,,,,
+ses_hukou,unavailable,,,Not a Chinese study.,,
 maternal_education,partial,"BDDNVQ00, CDDNVQ00, DDDNVQ00, EDNVQ00, FDNVQ00 , BDDNVQ00_PARTNER, CDDNVQ00_PARTNER, DDDNVQ00_PARTNER, EDNVQ00_PARTNER, FDNVQ00_PARTNER , BDDREL00, CDDREL00, DDDREL00, EDREL00, FDREL00, BDDREL00_PARTNER, CDDREL00_PARTNER, DDDREL00_PARTNER, EDREL00_PARTNER, FDREL00_PARTNER, respondent_sex, respondent_sex_PARTNER, .wave","recode_values(
   local({
     nvq <- coalesce(
@@ -393,17 +400,17 @@ st_socmedia,unavailable,,,,,
 st_educational_wd,unavailable,,,,,
 st_educational_we,unavailable,,,,,
 st_educational,unavailable,,,,,
-st_work_wd,in_progress,,,,,
-st_work_we,in_progress,,,,,
-st_work,in_progress,,,,,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
 st_internet_wd,compatible,FCINTH00,"recode_values(as.numeric(FCINTH00), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 4, 7 ~ 6, 8 ~ 8)","Sweep 6 only. FCINTH00's MCS label says 'Does CM ever use the internet at home', which is wrong: the values are the eight-band hours set and the sweep-6 young person questionnaire asks 'On a normal week day during term time, how many hours do you spend using the internet?', including on tablets and smartphones and including homework time. Overlaps st_socmedia_wd by design, so per DR-0002 the two must never be summed. Bands are converted to the midpoint of their range; the open-ended top band takes a value just above its floor (8 hours where the band is '7 hours or more', 11 where it is '10 hours or more'). Negative MCS missing codes and the sweep-7 don't-know/refused codes are left unmatched and become NA.",,
 st_internet_we,unavailable,,,,,
 st_internet,unavailable,,,,,
 st_videochat,unavailable,,,,,
-st_messaging_wd,in_progress,,,,,
-st_messaging_we,in_progress,,,,,
-st_messaging,in_progress,,,,,
-st_creating,in_progress,,,,,
+st_messaging_wd,incompatible,,,Messaging is bundled with social media in FCSOME00/GCSOME00 (on st_socmedia_wd); sweep 5 ECQ08X00 is frequency only.,,
+st_messaging_we,unavailable,,,No weekend item.,,
+st_messaging,incompatible,,,"Weekday items only, and messaging is bundled with social media.",,
+st_creating,unavailable,,,Not collected.,,
 st_email,unavailable,,,,,
 st_shopping,unavailable,,,,,
 st_total_school,unavailable,,,,,
@@ -472,9 +479,20 @@ beh_beenbullied,partial,"BPSDPB00, CPSDPB00, DPSDPB00, EPSDPB00, FPSDPB00, GPSDP
 beh_beenbullied_online,partial,FCCYBU00,"recode_values(as.numeric(FCCYBU00), 6 ~ ""FALSE"", c(1, 2, 3, 4, 5) ~ ""TRUE"")","Sweep 6 only, self-reported: 'How often have other children bullied you online?' on a six-level most-days-to-never scale. Dichotomised as TRUE for any occurrence and FALSE for 'never'. Partial because the threshold is any-versus-never, which includes the large 'less often' group",,
 beh_bullied_online,partial,FCCYBO00,"recode_values(as.numeric(FCCYBO00), 6 ~ ""FALSE"", c(1, 2, 3, 4, 5) ~ ""TRUE"")","Sweep 6 only, self-reported: 'How often have you bullied other children online?', same scale and same any-versus-never threshold as beh_beenbullied_online",,
 beh_fight,partial,"FCHITT00, GCHITT00","recode_values(coalesce(as.numeric(FCHITT00), as.numeric(GCHITT00)), 2 ~ ""FALSE"", 1 ~ ""TRUE"")","Sweeps 6 and 7, self-reported: 'In the last 12 months have you pushed or shoved, hit, slapped or punched someone?'. Partial because the item is broader than fighting, covering a single push or shove, and its 12-month window is longer than the schema's implied recent period",,
-beh_truancy,in_progress,,,,,
-beh_stealing,in_progress,,,,,
-beh_vandalism,in_progress,,,,,
+beh_truancy,partial,"ECQ45X00, FCTRUA00","recode_values(coalesce(as.numeric(ECQ45X00), as.numeric(FCTRUA00)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","'Missed school without your parents' permission even if only for half a day or a single lesson', yes/no: ever at sweep 5, last 12 months at sweep 6. Partial for the lifetime recall at sweep 5.",,
+beh_stealing,partial,"ECQ26X00, FCSTOL00, GCSTOL00, FCSTLN00, GCSTLN00, GCJYRD00","local({
+  items <- cbind(
+    coalesce(as.numeric(ECQ26X00), as.numeric(FCSTOL00), as.numeric(GCSTOL00)),
+    coalesce(as.numeric(FCSTLN00), as.numeric(GCSTLN00)),
+    as.numeric(GCJYRD00)
+  )
+  case_when(rowSums(items == 1, na.rm = TRUE) > 0 ~ ""TRUE"", items[, 1] == 2 ~ ""FALSE"", .default = NA_character_)
+})","Taken something from a shop without paying (sweeps 5-7), stolen something from someone (sweeps 6-7) or stolen a vehicle (sweep 7), yes/no; TRUE if any. Partial: sweep 5 asks only about shoplifting, ever; sweeps 6-7 ask about the last 12 months.",,
+beh_vandalism,partial,"ECQ27X00, FCSPRY00, GCSPRY00, ECQ28X00, FCDAMG00, GCDAMG00","local({
+  graffiti <- coalesce(as.numeric(ECQ27X00), as.numeric(FCSPRY00), as.numeric(GCSPRY00))
+  damage <- coalesce(as.numeric(ECQ28X00), as.numeric(FCDAMG00), as.numeric(GCDAMG00))
+  case_when(graffiti == 1 | damage == 1 ~ ""TRUE"", graffiti == 2 & damage == 2 ~ ""FALSE"", .default = NA_character_)
+})","Written or spray painted on a building, fence or train, or deliberately damaged something in a public place, yes/no; TRUE if either. Partial for the lifetime recall at sweep 5; sweeps 6-7 ask about the last 12 months.",,
 beh_conduct_sdq_parent,compatible,"BCONDUCT, CCONDUCT, DDCONDUCT, ECONDUCT, FCONDUCT, GCONDUCT","coalesce(
   as.numeric(BCONDUCT),
   as.numeric(CCONDUCT),
@@ -534,8 +552,8 @@ beh_atten_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_ext_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_cbcl_measure,unavailable,,,CBCL not administered; MCS uses the SDQ,,
-beh_prosocial_online_self,in_progress,,,,,
-beh_prosocial_online_measure,in_progress,,,,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,Not collected.,,
 cog_execfunc_basc2,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
 cog_langexec_nepsy,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
 cog_phono_nepsy,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
@@ -561,7 +579,7 @@ cog_nonverbalreason_bas_picsim,compatible,CCPSABIL,as.numeric(CCPSABIL),"Sweep 3
 cog_spatial_bas_pattern,compatible,"CCPCABIL, DCPCAB00","coalesce(as.numeric(CCPCABIL), as.numeric(DCPCAB00))","Sweeps 3 and 4 (ages 5 and 7). BAS II Pattern Construction ability score. Ability scores are not age-normed and the two sweeps sit on different parts of the scale (observed 10-152 at age 5, 10-211 at age 7), so these must be standardised within dataset and wave and never pooled raw across the two ages. MCS releases the score forms the BAS II publishes: T-scores and standard scores are age-normed and comparable across ages, ability scores are not.",,
 cog_verbalreason_bas_versim,compatible,EVSTSCO,as.numeric(EVSTSCO),"Sweep 5 only (age 11). BAS II Verbal Similarities standard score as MCS releases it, observed range 20-80 and age-normed. MCS releases the score forms the BAS II publishes: T-scores and standard scores are age-normed and comparable across ages, ability scores are not.",,
 cog_schoolread_bracken,compatible,BDSRCS00,"ifelse(as.numeric(BDSRCS00) >= 0, as.numeric(BDSRCS00), NA_real_)","Sweep 2 only (age 3). Bracken School Readiness Composite standard score, observed range 56-149, covering the colours, letters, numbers, sizes, comparisons and shapes subtests. MCS also releases the raw composite, percentile and percent-mastery forms; the standard score is taken because it is the age-normed one. The negative not-carried-out, subtest-not- completed and age-unknown codes are excluded.",,
-cog_creativethinking_stdtest,in_progress,,,,,
+cog_creativethinking_stdtest,unavailable,,,Not collected.,,
 mh_anx_basc2,unavailable,,,Instrument not administered,,
 mh_dep_basc2,unavailable,,,Instrument not administered,,
 mh_emotsymp_sdq_parent,compatible,"BEMOTION, CEMOTION, DDEMOTION, EEMOTION, FEMOTION, GEMOTION","coalesce(
@@ -624,7 +642,23 @@ mh_anx_rcads_self,unavailable,,,Instrument not administered,,
 mh_anx_dass21_self,unavailable,,,Instrument not administered,,
 mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 mh_int_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
-mh_dep_binary_self,in_progress,,,,,
+mh_dep_binary_self,compatible,"FCMDSA00, FCMDSB00, FCMDSC00, FCMDSD00, FCMDSE00, FCMDSF00, FCMDSG00, FCMDSH00, FCMDSI00, FCMDSJ00, FCMDSK00, FCMDSL00, FCMDSM00","local({
+  smfq <- (as.numeric(FCMDSA00) +
+    as.numeric(FCMDSB00) +
+    as.numeric(FCMDSC00) +
+    as.numeric(FCMDSD00) +
+    as.numeric(FCMDSE00) +
+    as.numeric(FCMDSF00) +
+    as.numeric(FCMDSG00) +
+    as.numeric(FCMDSH00) +
+    as.numeric(FCMDSI00) +
+    as.numeric(FCMDSJ00) +
+    as.numeric(FCMDSK00) +
+    as.numeric(FCMDSL00) +
+    as.numeric(FCMDSM00)) -
+    13
+  if_else(smfq >= 12, ""Yes"", ""No"")
+})","Sweep 6: SMFQ total (13 items, 0-26, past two weeks) of 12 or more, the cut-point used in MCS age-14 studies. Complete-case, as for mh_dep_smfq_self.",,
 mh_dep_self,unavailable,,,"The only self-reported depression scale is the full 13-item SMFQ, which is mapped to its own row (mh_dep_smfq_self)",,
 mh_dep_measure,unavailable,,,"The only self-reported depression scale is the full 13-item SMFQ, which is mapped to its own row (mh_dep_smfq_self)",,
 mh_anx_self,unavailable,,,No self-reported anxiety scale; the only anxiety content is the SDQ emotional symptoms subscale and the combined depression-or-anxiety diagnosis item at sweep 7,,
@@ -635,19 +669,28 @@ mh_depanx_diagnosed,partial,"GCDEAN00, GCTRDE00","case_when(
   as.numeric(GCDEAN00) == 1 & as.numeric(GCTRDE00) == 2 ~ ""Previously diagnosed"",
   .default = NA_character_
 )","Sweep 7 only (age 17), self-reported: 'Has a doctor ever told you that you suffer from depression or serious anxiety?' (1,034 yes, 9,047 no), followed for those diagnosed by 'Are you currently being treated for depression or serious anxiety?' (439 yes, 593 no). Partial because current treatment is a proxy for currently having the condition: someone diagnosed but no longer in treatment is counted as previously diagnosed even though they may still have it, so this row understates current cases. The item names depression and anxiety together and cannot be split, which is why it maps here rather than to mh_dep_diagnosed or mh_anx_diagnosed",,
-mh_stress_self,in_progress,,,,,
-mh_lonely_self,in_progress,,,,,
-mh_lonely_scale_self,in_progress,,,,,
-mh_lonely_measure,in_progress,,,,,
-mh_sad_self,in_progress,,,,,
-mh_worry_self,in_progress,,,,,
-mh_irritable_self,in_progress,,,,,
-mh_nobodycares_self,in_progress,,,,,
-mh_lifenotworth_self,in_progress,,,,,
-mh_suicide_ideation_self,in_progress,,,,,
-mh_suicide_attempt_self,in_progress,,,,,
-mh_psychsom_hbscscl_self,in_progress,,,,,
-mh_psychsom_measure,in_progress,,,,,
+mh_stress_self,unavailable,,,Not collected.,,
+mh_lonely_self,incompatible,,,"SMFQ 'I felt lonely' (sweep 6) is a not true/sometimes/true rating, not a frequency; sweep 4 'feel left out of things by other children' is peer exclusion.",,
+mh_lonely_scale_self,unavailable,,,No loneliness scale.,,
+mh_lonely_measure,unavailable,,,No loneliness scale.,,
+mh_sad_self,proximate,"DCSC0013, ECQ76X00","coalesce(
+  recode_values(as.numeric(DCSC0013), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Never""),
+  recode_values(as.numeric(ECQ76X00), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")
+)","Sweep 4 'How often do you feel sad?' (all of the time, some of the time, never; no recall period) and sweep 5 'In the last four weeks, how often did you feel sad?' (never to almost always), in rank order. Proximate: three levels at sweep 4.",,
+mh_worry_self,partial,"DCSC0012, ECQ75X00","coalesce(
+  recode_values(as.numeric(DCSC0012), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Never""),
+  recode_values(as.numeric(ECQ75X00), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")
+)","Sweep 4 'How often do you get worried?' (all of the time, some of the time, never; no recall period) and sweep 5 'how often did you get worried about what would happen to you?' (past four weeks, never to almost always), in rank order. Partial: getting worried rather than very worried; three levels at sweep 4.",,
+mh_irritable_self,partial,"DCSC0017, ECQ79X00","coalesce(
+  recode_values(as.numeric(DCSC0017), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Never""),
+  recode_values(as.numeric(ECQ79X00), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")
+)","Sweep 4 'How often do you lose your temper?' (all of the time, some of the time, never; no recall period) and sweep 5 'how often did you get angry?' (past four weeks, never to almost always), in rank order. Partial: anger rather than irritability at sweep 5; three levels at sweep 4.",,
+mh_nobodycares_self,incompatible,,,"Only the SMFQ item 'I thought nobody really loved me' (not true, sometimes, true; sweep 6), a truth rating rather than a frequency.",,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected; only self-harm (sweeps 6-7) and attempt (sweep 7) items.,,
+mh_suicide_attempt_self,partial,GCSUIC00,"recode_values(as.numeric(GCSUIC00), 1 ~ ""Yes"", 2 ~ ""No"")",Sweep 7: 'Have you ever hurt yourself on purpose in an attempt to end your life?' Partial: lifetime recall.,,
+mh_psychsom_hbscscl_self,unavailable,,,Not collected.,,
+mh_psychsom_measure,unavailable,,,Not collected.,,
 wb_emotsc_basc2,unavailable,,,Instrument not administered,,
 wb_mwb_wemwbs,incompatible,,,"Sweep 7 administers the 7-item short form (SWEMWBS: GCWWOP00, GCWWUS00, GCWWRE00, GCWWDE00, GCWWTH00, GCWWCL00, GCWWMN00) and releases GDWEMWBS, the Rasch-transformed metric score on 7-35. That is neither the 14-item WEMWBS this row describes nor its 14-70 raw sum, and the two are not interchangeable, so it is left unmapped pending a SWEMWBS row",,
 wb_lifesatisfaction_cantrilladder,unavailable,,,"MCS asks life satisfaction on a seven-point completely-happy to not-at-all-happy scale, not the 0-10 Cantril ladder; that item is mapped to wb_lifesat_singleitem_self",,
@@ -660,11 +703,11 @@ wb_bodyimage,unavailable,,,"No too-thin/too-fat body image item. MCS asks how ha
 wb_lifesat_slss_self,unavailable,,,Instrument not administered,,
 wb_lifesat_swls_self,unavailable,,,Instrument not administered,,
 wb_lifesat_singleitem_self,compatible,"ECQ10F00, FCLIFE00","8 - coalesce(as.numeric(ECQ10F00), as.numeric(FCLIFE00))","Sweeps 5 and 6 (ages 11 and 14), self-completed: 'How happy are you with your life as a whole?' answered on a seven-point scale of faces, 1 = completely happy to 7 = not at all happy. Reversed so that higher means greater satisfaction, giving a 1-7 range. Sweep 7 replaced this item with the SWEMWBS, so no sweep-7 row is populated",,
-wb_domainsat_schoolwork_self,in_progress,,,,,
-wb_domainsat_appearance_self,in_progress,,,,,
-wb_domainsat_family_self,in_progress,,,,,
-wb_domainsat_friends_self,in_progress,,,,,
-wb_domainsat_school_self,in_progress,,,,,
+wb_domainsat_schoolwork_self,compatible,"ECQ10A00, FCSCWK00","8 - coalesce(as.numeric(ECQ10A00), as.numeric(FCSCWK00))","Sweeps 5-6: 'How do you feel about your school work?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
+wb_domainsat_appearance_self,compatible,"ECQ10B00, FCWYLK00","8 - coalesce(as.numeric(ECQ10B00), as.numeric(FCWYLK00))","Sweeps 5-6: 'How do you feel about the way you look?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
+wb_domainsat_family_self,compatible,"ECQ10C00, FCFMLY00","8 - coalesce(as.numeric(ECQ10C00), as.numeric(FCFMLY00))","Sweeps 5-6: 'How do you feel about your family?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
+wb_domainsat_friends_self,compatible,"ECQ10D00, FCFRNS00","8 - coalesce(as.numeric(ECQ10D00), as.numeric(FCFRNS00))","Sweeps 5-6: 'How do you feel about your friends?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
+wb_domainsat_school_self,compatible,"ECQ10E00, FCSCHL00","8 - coalesce(as.numeric(ECQ10E00), as.numeric(FCSCHL00))","Sweeps 5-6: 'How do you feel about the school you go to?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
 wb_qol_pedsql_self,unavailable,,,Instrument not administered,,
 wb_qol_pedsql_parent,unavailable,,,Instrument not administered,,
 wb_qol_kidscreen10_self,unavailable,,,Instrument not administered,,
@@ -693,11 +736,18 @@ wb_selfefficacy_measure,unavailable,,,Instrument not administered,,
 wb_mwb_who5_self,unavailable,,,Instrument not administered,,
 wb_happiness_shs_self,unavailable,,,Instrument not administered,,
 wb_mwb_swemwbs_self,compatible,GDWEMWBS,as.numeric(GDWEMWBS),"Sweep 7 only (age 17), self-completed. MCS releases the Rasch-transformed metric score for the seven short-form items (GCWWOP00, GCWWUS00, GCWWRE00, GCWWDE00, GCWWTH00, GCWWCL00, GCWWMN00), which is the published SWEMWBS conversion of the 7-35 raw sum and is itself on 7-35; observed median 22.35. The metric score is mapped rather than the raw sum. The 14-item WEMWBS in wb_mwb_wemwbs was not administered",,
-wb_selfratedhealth_self,in_progress,,,,,
-wb_posaffect_self,in_progress,,,,,
-wb_posaffect_measure,in_progress,,,,,
-wb_eudaimonic_self,in_progress,,,,,
-wb_eudaimonic_measure,in_progress,,,,,
+wb_selfratedhealth_self,compatible,"FCCGHE00, GCCGHE00","recode_values(
+  coalesce(as.numeric(FCCGHE00), as.numeric(GCCGHE00)),
+  1 ~ ""Excellent"",
+  2 ~ ""Very good"",
+  3 ~ ""Good"",
+  4 ~ ""Fair"",
+  5 ~ ""Poor""
+)","Sweeps 6-7: 'How would you describe your health generally?', excellent to poor.",,
+wb_posaffect_self,incompatible,,,Only single 'happy' and 'laugh' frequency items (sweeps 4-5); no positive-affect scale.,,
+wb_posaffect_measure,unavailable,,,No positive-affect scale.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,Not collected.,,
 st_measure_type,inferred,,"""Continuous""","Time-use diary: activities recorded in 10-minute slots over a full day, summed to minutes per diary day in the tidier (bp27_tud_minutes()).",,diary
 st_measure_name,inferred,,"""MCS time use diary""","Sweep-6 time-use diary (app, web or paper), one weekday and one weekend day per cohort member; harmonised activity codes from mcs6_cm_tud_harmonised.",,diary
 st_responder,inferred,,"""Self""","The cohort member completes the diary; 4,639 of the 11,852 sweep-6 cohort members returned at least one diary day.",,diary

@@ -68,7 +68,9 @@ bp31_constant_columns <- function() {
   c(
     sex = "CM1BSEX",
     ethnicity_mother = "CM1ETHRACE",
-    ethnicity_youth = "CK6ETHRACE"
+    ethnicity_youth = "CK6ETHRACE",
+    mother_born_us = "M1H2",
+    father_born_us = "F1H2"
   )
 }
 
@@ -381,6 +383,91 @@ bp31_wave_columns <- function() {
       "Youth self-report: I make friends easily (Year 15 only)",
       y15 = "K6D1E"
     ),
+    # --- delinquency: Year 9 yes/no with no time frame; Year 15 past 12 months
+    skipped_school = bp31_entry(
+      "Self-report: skipped school without an excuse (Year 9 yes/no, no time frame; Year 15 a full day, this or last school year)",
+      y9 = "K5F1I",
+      y15 = "K6B27"
+    ),
+    ever_stole = bp31_entry(
+      "Child self-report: taken or stolen something from another person or a store (Year 9 only)",
+      y9 = "K5F1B"
+    ),
+    ever_took_money_home = bp31_entry(
+      "Child self-report: taken money at home (Year 9 only)",
+      y9 = "K5F1C"
+    ),
+    ever_damaged_property = bp31_entry(
+      "Child self-report: purposely damaged or destroyed property that wasn't yours (Year 9 only)",
+      y9 = "K5F1A"
+    ),
+    ever_graffiti = bp31_entry(
+      "Child self-report: written things or sprayed paint on walls, sidewalks or cars (Year 9 only)",
+      y9 = "K5F1N"
+    ),
+    graffiti = bp31_entry(
+      "Youth self-report: times painted graffiti on someone else's property or in a public place (Year 15 only)",
+      y15 = "K6D61A"
+    ),
+    damaged_property = bp31_entry(
+      "Youth self-report: times deliberately damaged property that didn't belong to you (Year 15 only)",
+      y15 = "K6D61B"
+    ),
+    shoplifted = bp31_entry(
+      "Youth self-report: times taken something from a store without paying (Year 15 only)",
+      y15 = "K6D61C"
+    ),
+    stole_over_50 = bp31_entry(
+      "Youth self-report: times stolen something worth more than $50 (Year 15 only)",
+      y15 = "K6D61G"
+    ),
+    stole_under_50 = bp31_entry(
+      "Youth self-report: times stolen something worth less than $50 (Year 15 only)",
+      y15 = "K6D61K"
+    ),
+    burgled = bp31_entry(
+      "Youth self-report: times gone into a house or building to steal something (Year 15 only)",
+      y15 = "K6D61H"
+    ),
+    # --- health and wellbeing -----------------------------------------------
+    self_rated_health = bp31_entry(
+      "Self-report: in general, how is your health",
+      y9 = "K5H1",
+      y15 = "K6D3"
+    ),
+    school_happy_freq = bp31_entry(
+      "Child self-report: how often felt happy to be at your school, past month (Year 9 only)",
+      y9 = "K5E1C"
+    ),
+    school_happy_agree = bp31_entry(
+      "Youth self-report: I am happy to be at my school (Year 15 only)",
+      y15 = "K6B1C"
+    ),
+    pcg_dx_depanx = bp31_entry(
+      "PCG report: a doctor or health professional has ever said the youth has depression or anxiety (Year 15 only)",
+      y15 = "P6B5"
+    ),
+    pcg_rx_any = bp31_entry(
+      "PCG report: youth regularly takes prescription medicine (Year 15 only; gates pcg_rx_depanx)",
+      y15 = "P6B26"
+    ),
+    pcg_rx_depanx = bp31_entry(
+      "PCG report: youth regularly takes prescription medicine for depression or anxiety (Year 15 only)",
+      y15 = "P6B27_5"
+    ),
+    # --- Year 15 teen EPOCH happiness items (the fourth, I feel happy, is cesd_happy)
+    epoch_love_life = bp31_entry(
+      "EPOCH happiness: I love life",
+      y15 = "K6D2B"
+    ),
+    epoch_cheerful = bp31_entry(
+      "EPOCH happiness: I am a cheerful person",
+      y15 = "K6D2F"
+    ),
+    epoch_fun = bp31_entry(
+      "EPOCH happiness: I have a lot of fun",
+      y15 = "K6D2AA"
+    ),
     # --- Year 15 teen CES-D short form (5 items, 1 strongly agree - 4 strongly disagree)
     cesd_blues = bp31_entry(
       "CES-D: I feel I cannot shake off the blues, even with help",
@@ -540,7 +627,9 @@ bp31_apply_labels <- function(tidied, raw, constants, wave_map) {
   constant_labels <- c(
     sex = "Focal child's sex, recorded at baseline",
     ethnicity_mother = "Mother's race/ethnicity, own report at baseline",
-    ethnicity_youth = "Youth's self-described race/ethnicity at Year 15"
+    ethnicity_youth = "Youth's self-described race/ethnicity at Year 15",
+    mother_born_us = "Mother born in the US, own report at baseline",
+    father_born_us = "Father born in the US, own report at baseline (missing where the father was not interviewed)"
   )
   for (stem in names(constants)) {
     tidied[[stem]] <- bp31_label_column(

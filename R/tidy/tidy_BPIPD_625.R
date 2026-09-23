@@ -275,6 +275,10 @@ bp625_items <- function() {
       "2017" = "q17",
       "2019" = "q17"
     ),
+    truancy = bp625_entry(
+      "During the past 30 days, on how many days did you miss classes or school without permission? (1 = 0 days ... 5 = 10 or more days)",
+      "2005" = "q97"
+    ),
     # --- school, health and sleep ------------------------------------------
     grades_school = bp625_entry(
       "How would you describe your grades in school, past 12 months (1 = mostly A's ... 5 = mostly F's, 6 = none of these, 7 = not sure)",
