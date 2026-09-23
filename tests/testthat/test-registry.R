@@ -723,7 +723,49 @@ test_that("reader por dispatches to haven::read_por", {
   expect_identical(tbl$T2E1, c(3, 4))
 })
 
+test_that("columns keeps only the matching columns of a haven read", {
+  path <- fs::path(withr::local_tempdir(), "a_indresp.dta")
+  haven::write_dta(
+    tibble::tibble(
+      pidp = c(1, 2),
+      a_hidp = c(10, 20),
+      a_pno = c(1, 2),
+      a_hiqual_dv = c(3, 4),
+      a_other = c(5, 6)
+    ),
+    path
+  )
+
+  tbl <- read_tabular_file(
+    path,
+    "stata",
+    list(columns = c("pidp", "[a-o]_(hidp|pno)", "[a-o]_hiqual_dv"))
+  )
+
+  # Order follows the file, not the pattern list.
+  expect_identical(names(tbl), c("pidp", "a_hidp", "a_pno", "a_hiqual_dv"))
+  expect_identical(as.numeric(tbl$a_hiqual_dv), c(3, 4))
+})
+
+test_that("columns patterns match whole names and must each match", {
+  path <- fs::path(withr::local_tempdir(), "data.dta")
+  haven::write_dta(tibble::tibble(pidp = 1, pidp_old = 2, age = 3), path)
+
+  # Anchored: "pidp" does not also pick up "pidp_old".
+  tbl <- read_tabular_file(path, "stata", list(columns = "pidp"))
+  expect_identical(names(tbl), "pidp")
+
+  expect_error(
+    read_tabular_file(path, "stata", list(columns = c("pidp", "agee"))),
+    "`columns` pattern\\(s\\) matched no column in .*: `agee`"
+  )
+})
+
 test_that("read options are refused on readers that cannot honour them", {
+  expect_error(
+    read_tabular_file("x.csv", "csv", list(columns = "id")),
+    "`columns` is not supported by reader `csv`"
+  )
   expect_error(
     read_tabular_file("x.por", "por", list(encoding = "latin1")),
     "`encoding` is not supported by reader `por`"
@@ -808,6 +850,7 @@ test_that("build_resource_index resolves col_positions against the spec dir", {
 
   index <- build_resource_index(base_dir, spec)
   opts <- index$read_opts[[1]]
+  expect_null(opts$columns)
 
   expect_identical(
     opts$col_positions,
@@ -816,6 +859,26 @@ test_that("build_resource_index resolves col_positions against the spec dir", {
   expect_identical(opts$encoding, "latin1")
   expect_null(opts$col_names)
   expect_identical(read_opt_files(index), opts$col_positions)
+})
+
+test_that("build_resource_index carries columns into read_opts", {
+  base_dir <- local_resource_dir("data.dta")
+  spec <- list(
+    dataset_id = "9999",
+    resources = list(
+      list(
+        name = "data",
+        role = "data",
+        glob = "data.dta",
+        reader = "stata",
+        columns = c("pidp", "[a-o]_hidp")
+      )
+    )
+  )
+
+  opts <- build_resource_index(base_dir, spec)$read_opts[[1]]
+
+  expect_identical(opts$columns, c("pidp", "[a-o]_hidp"))
 })
 
 test_that("build_resource_index rejects an absolute col_positions", {
