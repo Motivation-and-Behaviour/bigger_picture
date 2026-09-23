@@ -60,8 +60,9 @@ resources:
       - "[a-o]_jbnssec8_dv"
   # Household questionnaires: household income and composition, joined on hidp.
   # fihhmngrs_dv (gross monthly household income) is the income measure both
-  # surveys share. BHPS youth files carry no interview date, so the BHPS
-  # household's interview year and month (intdatey/intdatem) come from here.
+  # surveys share. BHPS youth files carry no interview date or region, so the
+  # BHPS household's interview year and month (intdatey/intdatem) and
+  # Government Office Region (gor_dv) come from here.
   - name: "bhps_hhresp"
     role: "data"
     glob: "stata/stata14_se/bhps/b{d,e,f,g,h,i,j,k,l,m,n,o,p,q,r}_hhresp.dta"
@@ -74,6 +75,7 @@ resources:
       - "b[d-r]_nkids_dv"
       - "b[d-r]_intdatey"
       - "b[d-r]_intdatem"
+      - "b[d-r]_gor_dv"
   - name: "ukhls_hhresp"
     role: "data"
     glob: "stata/stata14_se/ukhls/?_hhresp.dta"
@@ -86,6 +88,17 @@ resources:
       - "[a-o]_tenure_dv"
       - "[a-o]_hhsize"
       - "[a-o]_nkids_dv"
+  # Cross-wave person file, one row per person in either survey: ethnic group
+  # (which the BHPS youth files lack) and whether born in the UK, joined on
+  # pidp to each youth and to each resident parent.
+  - name: "xwavedat"
+    role: "data"
+    glob: "stata/stata14_se/ukhls/xwavedat.dta"
+    reader: "stata"
+    columns:
+      - "pidp"
+      - "ethn_dv"
+      - "bornuk_dv"
 
   - name: "Technical and Survey Documentation"
     role: "docs"
@@ -103,7 +116,7 @@ notes: |
   included, featuring technical reports, questionnaires, and fieldwork
   materials provided in PDF, RTF, and HTM formats.
   Only the youth self-completion files are read whole; the individual,
-  household and enumeration files are read for join keys and context
-  variables only (see `columns`). The full release is described by the
-  per-file data dictionaries in mrdoc/ukda_data_dictionaries/.
+  household, enumeration and cross-wave person files are read for join keys
+  and context variables only (see `columns`). The full release is described
+  by the per-file data dictionaries in mrdoc/ukda_data_dictionaries/.
   BPIPD-631 - UK Understanding Society

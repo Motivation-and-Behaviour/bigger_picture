@@ -112,3 +112,21 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1928,ethnicity,Amarela,Asian,compatible,"IBGE cor ou raca: amarela (yellow), i.e. East Asian descent"
 1928,ethnicity,Indigena,Other,proximate,IBGE cor ou raca: indigena (indigenous); the schema has no indigenous ethnicity level (see the indigenous variable)
 1928,ethnicity,Sem resposta,Unknown,compatible,"No answer, abandoned questionnaire or item left blank (codes 9, 99, -2, -9)"
+631,ethnicity,british/english/scottish/welsh/northern irish,White,compatible,ethn_dv code 1 (White British); UK census categories derived by the study
+631,ethnicity,irish,White,compatible,ethn_dv code 2 (White Irish)
+631,ethnicity,gypsy or irish traveller,Other,proximate,ethn_dv code 3. Dataschema has no traveller/Roma category; as BPIPD-80
+631,ethnicity,any other white background,White,compatible,ethn_dv code 4
+631,ethnicity,white and black caribbean,Mixed,compatible,ethn_dv code 5
+631,ethnicity,white and black african,Mixed,compatible,ethn_dv code 6
+631,ethnicity,white and asian,Mixed,compatible,ethn_dv code 7
+631,ethnicity,any other mixed background,Mixed,compatible,ethn_dv code 8
+631,ethnicity,indian,Asian,compatible,ethn_dv code 9
+631,ethnicity,pakistani,Asian,compatible,ethn_dv code 10
+631,ethnicity,bangladeshi,Asian,compatible,ethn_dv code 11
+631,ethnicity,chinese,Asian,compatible,"ethn_dv code 12; Chinese is a separate UK census group, collapsed into Asian"
+631,ethnicity,any other asian background,Asian,compatible,ethn_dv code 13
+631,ethnicity,caribbean,Black,compatible,ethn_dv code 14 (Black Caribbean)
+631,ethnicity,african,Black,compatible,ethn_dv code 15 (Black African)
+631,ethnicity,any other black background,Black,compatible,ethn_dv code 16
+631,ethnicity,arab,Other,proximate,ethn_dv code 17. Dataschema has no Middle Eastern/North African category; as BPIPD-80
+631,ethnicity,any other ethnic group,Other,compatible,ethn_dv code 97

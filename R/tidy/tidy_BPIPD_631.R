@@ -3,7 +3,8 @@
 #' Stacks the youth self-completion files of BHPS waves 4-18 and UKHLS waves
 #' 1-15, and joins each youth, within the same wave, to their household's
 #' interview, their resident mother's and father's adult interviews and, for
-#' BHPS, their own age from the household roster.
+#' BHPS, their own age from the household roster; the cross-wave person file
+#' adds ethnicity and birthplace for the youth and each parent.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -12,10 +13,12 @@
 #' Output:
 #' - one tibble, one row per youth per wave (`pidp` x `wave`)
 tidy_BPIPD_631 <- function(raw_dataset, spec) {
-  tables <- lapply(raw_dataset$data, function(tbl) {
+  waves <- setdiff(names(raw_dataset$data), "xwavedat")
+  tables <- lapply(raw_dataset$data[waves], function(tbl) {
     bp631_zap_missing(bp631_unprefix(tbl))
   })
   indresp <- bp631_stack(tables, "indresp")
+  xwave <- bp631_zap_missing(raw_dataset$data$xwavedat)
 
   # `mnspno`/`fnspno` are the person numbers of the natural, step or adoptive
   # mother and father in the household; 0 (none) matches no `pno`.
@@ -31,13 +34,29 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
       "many-to-one"
     ) |>
     dplyr::left_join(
-      bp631_parent(indresp, "mother"),
+      bp631_parent(indresp, "mother", c("survey", "wave", "hidp", "pno")),
       by = dplyr::join_by("survey", "wave", "hidp", "mnspno" == "pno"),
       relationship = "many-to-one"
     ) |>
     dplyr::left_join(
-      bp631_parent(indresp, "father"),
+      bp631_parent(indresp, "father", c("survey", "wave", "hidp", "pno")),
       by = dplyr::join_by("survey", "wave", "hidp", "fnspno" == "pno"),
+      relationship = "many-to-one"
+    ) |>
+    bp631_add(xwave, "pidp", "many-to-one") |>
+    # UKHLS youth files also name parents who gave no interview this wave
+    dplyr::mutate(
+      mother_pidp = dplyr::coalesce(mother_pidp, mnspid),
+      father_pidp = dplyr::coalesce(father_pidp, fnspid)
+    ) |>
+    dplyr::left_join(
+      bp631_parent(xwave, "mother", "pidp"),
+      by = c("mother_pidp" = "pidp"),
+      relationship = "many-to-one"
+    ) |>
+    dplyr::left_join(
+      bp631_parent(xwave, "father", "pidp"),
+      by = c("father_pidp" = "pidp"),
       relationship = "many-to-one"
     ) |>
     dplyr::relocate("pidp", "survey", "wave")
@@ -178,17 +197,29 @@ bp631_latest_labels <- function(tables) {
   list(label = label, labels = labels)
 }
 
-#' Join the columns of `tbl` that `base` does not already have
+#' Join `tbl` onto `base`, filling gaps in the columns both carry
 bp631_add <- function(base, tbl, by, relationship) {
-  tbl <- tbl[c(by, setdiff(names(tbl), names(base)))]
-  dplyr::left_join(base, tbl, by = by, relationship = relationship)
+  # Only UKHLS youth files carry region and ethnicity; BHPS rows take them
+  # from the household and cross-wave person files.
+  shared <- setdiff(intersect(names(base), names(tbl)), by)
+  out <- dplyr::left_join(
+    base,
+    tbl,
+    by = by,
+    relationship = relationship,
+    suffix = c("", ".fill")
+  )
+  for (col in shared) {
+    gap <- is.na(out[[col]])
+    out[[col]][gap] <- out[[paste0(col, ".fill")]][gap]
+  }
+  out[setdiff(names(out), paste0(shared, ".fill"))]
 }
 
-#' Adult interviews keyed on person number, with columns named for the parent
-bp631_parent <- function(indresp, parent) {
-  keys <- c("survey", "wave", "hidp", "pno")
-  cols <- setdiff(names(indresp), keys)
-  out <- indresp[c(keys, cols)]
+#' A person table keyed for joining as a parent, its columns named for them
+bp631_parent <- function(tbl, parent, keys) {
+  cols <- setdiff(names(tbl), keys)
+  out <- tbl[c(keys, cols)]
   for (col in cols) {
     attr(out[[col]], "label") <- paste0(
       tools::toTitleCase(parent),

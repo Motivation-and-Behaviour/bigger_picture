@@ -103,3 +103,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1928,maternal_education,Completed higher education,Bachelor degree or higher,compatible,"PeNSE code 7: completed higher education, including postgraduate study"
 1928,maternal_education,Does not know,Unknown,compatible,PeNSE code 8: the student does not know
 1928,maternal_education,No answer,Unknown,compatible,"No answer or abandoned questionnaire (codes 9, 99, -2, -9)"
+631,maternal_education,Degree,Bachelor degree or higher,compatible,hiqual_dv code 1: first or higher degree
+631,maternal_education,Other higher degree,Post-secondary,compatible,"hiqual_dv code 2: higher education below degree, such as diplomas in higher education and teaching or nursing qualifications"
+631,maternal_education,A-level etc,Secondary school or less,compatible,"hiqual_dv code 3: A-level or equivalent, upper secondary (ISCED 3)"
+631,maternal_education,GCSE etc,Secondary school or less,compatible,hiqual_dv code 4: GCSE or equivalent
+631,maternal_education,Other qualification,Secondary school or less,compatible,hiqual_dv code 5: other qualifications the study does not place higher
+631,maternal_education,No qualification,Secondary school or less,compatible,hiqual_dv code 9: no qualification
