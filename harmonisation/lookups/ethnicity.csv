@@ -106,3 +106,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 621,ethnicity,Aboriginal/North American Indian,Other,proximate,The schema has no Indigenous ethnicity category; Indigenous identity is carried by the indigenous variable instead
 621,ethnicity,Other (please specify),Other,compatible,Free text is resolved first via the dataset lookup ethnicity_other; this row catches anything unmatched there
 621,ethnicity,Prefer not to answer,Unknown,compatible,Explicit non-response
+625,ethnicity,Hispanic or Latino,Hispanic,compatible,"CDC race/ethnicity code 4 (1999-2005) or raceeth code 6 (2007-2019): Hispanic, no other race selected"
+625,ethnicity,Multiple - Hispanic,Hispanic,compatible,"Code 7 in both codings; Hispanic origin taken ahead of race, as for BPIPD-232"
+625,ethnicity,White,White,compatible,"Code 6 (1999-2005) or raceeth 5 (2007-2019): White alone, non-Hispanic"
+625,ethnicity,Black or African American,Black,compatible,"Code 3 in both codings: Black alone, non-Hispanic"
+625,ethnicity,Asian,Asian,compatible,"Code 2 in both codings: Asian alone, non-Hispanic"
+625,ethnicity,American Indian or Alaska Native,Other,proximate,US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous
+625,ethnicity,Native Hawaiian or Other Pacific Islander,Other,proximate,US Census race group with no schema equivalent; collapsed into Other
+625,ethnicity,Multiple - Non-Hispanic,Mixed,compatible,Code 8 in both codings: two or more races selected and not Hispanic
+625,ethnicity,Unknown,Unknown,compatible,CDC race/ethnicity missing (no race selected or Hispanic item blank)
