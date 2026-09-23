@@ -1,0 +1,9 @@
+dataset_id: "849"
+dataset_name: "Argiles"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Data.sav"
+    reader: "spss"
