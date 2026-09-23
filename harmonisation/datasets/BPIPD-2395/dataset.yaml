@@ -1,0 +1,9 @@
+dataset_id: "2395"
+dataset_name: "Tardif-Grenier"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Data LCA 3step raw-prep-imput.sav"
+    reader: "spss"
