@@ -400,6 +400,8 @@ st_internet_wd,compatible,FCINTH00,"recode_values(as.numeric(FCINTH00), 1 ~ 0, 2
 st_internet_we,unavailable,,,,,
 st_internet,unavailable,,,,,
 st_videochat,unavailable,,,,,
+st_messaging_wd,in_progress,,,,,
+st_messaging_we,in_progress,,,,,
 st_messaging,in_progress,,,,,
 st_creating,in_progress,,,,,
 st_email,unavailable,,,,,
@@ -634,6 +636,11 @@ mh_stress_self,in_progress,,,,,
 mh_lonely_self,in_progress,,,,,
 mh_lonely_scale_self,in_progress,,,,,
 mh_lonely_measure,in_progress,,,,,
+mh_sad_self,in_progress,,,,,
+mh_worry_self,in_progress,,,,,
+mh_irritable_self,in_progress,,,,,
+mh_nobodycares_self,in_progress,,,,,
+mh_lifenotworth_self,in_progress,,,,,
 mh_suicide_ideation_self,in_progress,,,,,
 mh_suicide_attempt_self,in_progress,,,,,
 mh_psychsom_hbscscl_self,in_progress,,,,,
@@ -681,6 +688,8 @@ wb_mwb_swemwbs_self,compatible,GDWEMWBS,as.numeric(GDWEMWBS),"Sweep 7 only (age 
 wb_selfratedhealth_self,in_progress,,,,,
 wb_posaffect_self,in_progress,,,,,
 wb_posaffect_measure,in_progress,,,,,
+wb_eudaimonic_self,in_progress,,,,,
+wb_eudaimonic_measure,in_progress,,,,,
 st_measure_type,inferred,,"""Continuous""","Time-use diary: activities recorded in 10-minute slots over a full day, summed to minutes per diary day in the tidier (bp27_tud_minutes()).",,diary
 st_measure_name,inferred,,"""MCS time use diary""","Sweep-6 time-use diary (app, web or paper), one weekday and one weekend day per cohort member; harmonised activity codes from mcs6_cm_tud_harmonised.",,diary
 st_responder,inferred,,"""Self""","The cohort member completes the diary; 4,639 of the 11,852 sweep-6 cohort members returned at least one diary day.",,diary
@@ -697,8 +706,4 @@ st_internet_wd,compatible,tud_internet_mins_wd,tud_internet_mins_wd / 60,"Diary 
 st_internet_we,compatible,tud_internet_mins_we,tud_internet_mins_we / 60,Diary activity 35 on the weekend diary day.,,diary
 st_internet,compatible,"tud_internet_mins_wd, tud_internet_mins_we",((tud_internet_mins_wd * 5) + (tud_internet_mins_we * 2)) / 7 / 60,5:2 weighted mean of the diary days; NA when only one day type was returned.,,diary
 st_videochat,incompatible,,,"Diary activity 31 'Speaking on the phone (including Skype, video calls)' pools voice calls with video calls, so it cannot defensibly become video-chat time (tud_calls_mins_wd/we are kept in the tidied table).",,diary
-st_messaging_wd,in_progress,,,,,
-st_messaging_we,in_progress,,,,,
 st_email,incompatible,,,"Diary activity 33 'Answering emails, instant messaging, texting' pools texting and messaging with email, so it cannot defensibly become email time (tud_messaging_mins_wd/we are kept in the tidied table).",,diary
-wb_eudaimonic_self,in_progress,,,,,
-wb_eudaimonic_measure,in_progress,,,,,

@@ -94,3 +94,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 696,maternal_education,5,Post-secondary,proximate,Kuppuswamy education scale level 5 = intermediate or post-high-school diploma; codes are unlabelled in the source and their order is read off the trial report (doi:10.3389/fpubh.2024.1367776)
 696,maternal_education,6,Bachelor degree or higher,proximate,Kuppuswamy education scale level 6 = graduate; codes are unlabelled in the source and their order is read off the trial report (doi:10.3389/fpubh.2024.1367776)
 696,maternal_education,7,Bachelor degree or higher,proximate,Kuppuswamy education scale level 7 = profession or honours; codes are unlabelled in the source and their order is read off the trial report (doi:10.3389/fpubh.2024.1367776)
+1928,maternal_education,Did not study,Secondary school or less,compatible,PeNSE code 1: minha mae nao estudou
+1928,maternal_education,"Started ensino fundamental, did not finish",Secondary school or less,compatible,PeNSE code 2: incomplete primary and lower secondary (ensino fundamental)
+1928,maternal_education,Completed ensino fundamental,Secondary school or less,compatible,PeNSE code 3: completed ensino fundamental
+1928,maternal_education,"Started ensino medio, did not finish",Secondary school or less,compatible,PeNSE code 4: incomplete upper secondary (ensino medio)
+1928,maternal_education,Completed ensino medio,Secondary school or less,compatible,PeNSE code 5: completed upper secondary
+1928,maternal_education,"Started higher education, did not finish",Post-secondary,compatible,PeNSE code 6: started higher education (faculdade) without completing it
+1928,maternal_education,Completed higher education,Bachelor degree or higher,compatible,"PeNSE code 7: completed higher education, including postgraduate study"
+1928,maternal_education,Does not know,Unknown,compatible,PeNSE code 8: the student does not know
+1928,maternal_education,No answer,Unknown,compatible,"No answer or abandoned questionnaire (codes 9, 99, -2, -9)"

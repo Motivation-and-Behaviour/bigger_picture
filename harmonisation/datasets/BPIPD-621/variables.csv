@@ -288,6 +288,11 @@ mh_lonely_scale_self,compatible,"Lonely_1, Lonely_2, Lonely_3, Lonely_4, Lonely_
   as.numeric(haven::zap_labels(Lonely_7)) +
   as.numeric(haven::zap_labels(Lonely_8))","Eight-item UCLA-style loneliness short form, 'Using the scale, please indicate how often each of the statements below is descriptive of you', each item 1 Never to 4 Often (range 8-32). Lonely_3 'I am an outgoing person' and Lonely_6 'I can find companionship when I want it' are the positively worded items and are reverse-scored as 5 - x. Unweighted sum, NA if any item is missing (72-75 missing per item, 82 missing on the total). No total-score column exists in the file. mh_lonely_self carries the single-item frequency from Lonely_5, so the two rows are not independent.",,
 mh_lonely_measure,compatible,,"""UCLA-style loneliness short form, 8 of 8 items, 1-4 item scoring (range 8-32), items 3 and 6 reverse-scored""",Describes mh_lonely_scale_self. The source carries no instrument name; the item set and 1-4 Never-to-Often scale match the eight-item UCLA short form.,,
+mh_sad_self,in_progress,,,,,
+mh_worry_self,in_progress,,,,,
+mh_irritable_self,in_progress,,,,,
+mh_nobodycares_self,in_progress,,,,,
+mh_lifenotworth_self,in_progress,,,,,
 mh_suicide_ideation_self,proximate,DA_5,"case_when(
   as.numeric(haven::zap_labels(DA_5)) > 0 ~ ""Yes"",
   as.numeric(haven::zap_labels(DA_5)) == 0 ~ ""No"",
@@ -328,6 +333,8 @@ wb_mwb_swemwbs_self,unavailable,,,"Not measured. The survey covers demographics,
 wb_selfratedhealth_self,unavailable,,,"Not measured. The survey covers demographics, screen and social-media use, social distancing attitudes, substance use, the SWLS, an 8-item UCLA-style loneliness scale, the BSI depression and anxiety subscales, and three-item friend and parent support scales; nothing else in the schema is collected.",,
 wb_posaffect_self,unavailable,,,"Not measured. The survey covers demographics, screen and social-media use, social distancing attitudes, substance use, the SWLS, an 8-item UCLA-style loneliness scale, the BSI depression and anxiety subscales, and three-item friend and parent support scales; nothing else in the schema is collected.",,
 wb_posaffect_measure,unavailable,,,"Not measured. The survey covers demographics, screen and social-media use, social distancing attitudes, substance use, the SWLS, an 8-item UCLA-style loneliness scale, the BSI depression and anxiety subscales, and three-item friend and parent support scales; nothing else in the schema is collected.",,
+wb_eudaimonic_self,in_progress,,,,,
+wb_eudaimonic_measure,in_progress,,,,,
 st_measure_type,inferred,,"""Categorical""","Banded response, the same eight bands as the primary social-media item.",,recall
 st_measure_name,inferred,,"""Custom retrospective pre-COVID recall""","The same bespoke item as the primary measure, asked about the six months before the pandemic rather than the present: 'In the last 6 months how much time, on average, did you spend on social media (e.g., Instagram, Snapchat, TikTok, Facebook) in a day? Think about before the COVID-19 crisis'. Collected on the same occasion as the primary measure, in April 2020.",,recall
 st_responder,inferred,,"""Self""","Adolescent self-report, the same respondent on the same occasion as the primary measure.",,recall
@@ -342,5 +349,3 @@ st_socmedia,partial,SMTIME,"recode_values(
   7 ~ 7.5,
   8 ~ 11
 )","SMTIME, retrospective recall of pre-pandemic social-media time. Partial because it is recalled, not measured at the time: respondents reported in April 2020 on the six months before the lockdown, so it carries recall bias and a 6-month rather than 3-week reference window. Held as a separate measure rather than a separate wave because it was answered in the same sitting; kept out of the primary measure on the same grounds. 2 missing. Band midpoints in hours: <10 min ~ 0.08, 10-30 min ~ 0.33, 31-60 min ~ 0.75, 1-2 h ~ 1.5, 2-3 h ~ 2.5, 3-5 h ~ 4, 5-10 h ~ 7.5, more than 10 h ~ 11 (open top band taken as one hour above its floor, the convention used for MCS in BPIPD-27). The distributions differ sharply - the modal band is 2-3 hours before and 5-10 hours since - so which one is primary materially changes the exposure.",,recall
-wb_eudaimonic_self,in_progress,,,,,
-wb_eudaimonic_measure,in_progress,,,,,
