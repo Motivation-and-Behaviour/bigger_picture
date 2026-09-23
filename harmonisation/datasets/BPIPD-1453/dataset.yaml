@@ -1,0 +1,18 @@
+dataset_id: "1453"
+dataset_name: "Bouzid"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Data_Contribution_VideoGamesScreenTime_Physics_Morocco_[Tariq_BOUZID].xlsx"
+    reader: "csv"
+    sheet: "Data"
+  - name: "codebook"
+    role: "codebook"
+    glob: "Data_Contribution_VideoGamesScreenTime_Physics_Morocco_[Tariq_BOUZID].xlsx"
+    reader: "csv"
+    sheet: "Codebook"
+
+notes: |
+  Data and codebook are on different sheets in the same excel file.
