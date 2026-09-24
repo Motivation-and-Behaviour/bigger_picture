@@ -159,6 +159,12 @@ bp625_items <- function() {
       "2017" = "raceeth",
       "2019" = "raceeth"
     ),
+    english_proficiency = bp625_entry(
+      "How well do you speak English? (1 = Very well, 2 = Well, 3 = Not well, 4 = Not at all)",
+      "2015" = "q99",
+      "2017" = "q99",
+      "2019" = "q99"
+    ),
     # --- screen use --------------------------------------------------------
     tv_hours = bp625_entry(
       "On an average school day, how many hours do you watch TV? (1 = none ... 7 = 5 or more)",
@@ -275,6 +281,78 @@ bp625_items <- function() {
     truancy = bp625_entry(
       "During the past 30 days, on how many days did you miss classes or school without permission? (1 = 0 days ... 5 = 10 or more days)",
       "2005" = "q97"
+    ),
+    # One cigarette-source stem per option set: 1999 has seven options, and
+    # 2015 swaps option 3 for the Internet.
+    cig_source_1999 = bp625_entry(
+      "During the past 30 days, how did you usually get your own cigarettes? (1 = Did not smoke cigarettes, 2 = Store, 3 = Vending machine, 4 = Someone else bought them, 5 = Borrowed them, 6 = Stole them, 7 = Some other way)",
+      "1999" = "q31"
+    ),
+    cig_source = bp625_entry(
+      "During the past 30 days, how did you usually get your own cigarettes? (1 = Did not smoke cigarettes, 2 = Bought them in a store, 3 = Bought them from a vending machine, 4 = Gave someone else money to buy them, 5 = Borrowed them, 6 = A person 18 or older gave them to me, 7 = Took them from a store or family member, 8 = Some other way)",
+      "2003" = "q32",
+      "2005" = "q32",
+      "2007" = "q32",
+      "2009" = "q32",
+      "2011" = "q33",
+      "2013" = "q35"
+    ),
+    cig_source_2015 = bp625_entry(
+      "During the past 30 days, how did you usually get your own cigarettes? (1 = Did not smoke cigarettes, 2 = Bought them in a store, 3 = Got them on the Internet, 4 = Gave someone else money to buy them, 5 = Borrowed them, 6 = A person 18 or older gave them to me, 7 = Took them from a store or family member, 8 = Some other way)",
+      "2015" = "q35"
+    ),
+    # --- substance use (past 30 days) --------------------------------------
+    cig_30d = bp625_entry(
+      "During the past 30 days, on how many days did you smoke cigarettes? (1 = 0 days, 2 = 1 or 2 days, 3 = 3 to 5 days, 4 = 6 to 9 days, 5 = 10 to 19 days, 6 = 20 to 29 days, 7 = All 30 days)",
+      "1999" = "q29",
+      "2003" = "q30",
+      "2005" = "q30",
+      "2007" = "q30",
+      "2009" = "q30",
+      "2011" = "q31",
+      "2013" = "q33",
+      "2015" = "q33",
+      "2017" = "q32",
+      "2019" = "q32"
+    ),
+    cigar_30d = bp625_entry(
+      "During the past 30 days, on how many days did you smoke cigars, cigarillos, or little cigars? (1 = 0 days, 2 = 1 or 2 days, 3 = 3 to 5 days, 4 = 6 to 9 days, 5 = 10 to 19 days, 6 = 20 to 29 days, 7 = All 30 days)",
+      "1999" = "q38",
+      "2003" = "q38",
+      "2005" = "q38",
+      "2007" = "q38",
+      "2009" = "q38",
+      "2011" = "q39",
+      "2013" = "q40",
+      "2015" = "q38",
+      "2017" = "q38",
+      "2019" = "q38"
+    ),
+    alcohol_30d = bp625_entry(
+      "During the past 30 days, on how many days did you have at least one drink of alcohol? (1 = 0 days, 2 = 1 or 2 days, 3 = 3 to 5 days, 4 = 6 to 9 days, 5 = 10 to 19 days, 6 = 20 to 29 days, 7 = All 30 days)",
+      "1999" = "q41",
+      "2003" = "q41",
+      "2005" = "q41",
+      "2007" = "q41",
+      "2009" = "q41",
+      "2011" = "q42",
+      "2013" = "q43",
+      "2015" = "q43",
+      "2017" = "q42",
+      "2019" = "q41"
+    ),
+    marijuana_30d = bp625_entry(
+      "During the past 30 days, how many times did you use marijuana? (1 = 0 times, 2 = 1 or 2 times, 3 = 3 to 9 times, 4 = 10 to 19 times, 5 = 20 to 39 times, 6 = 40 or more times)",
+      "1999" = "q46",
+      "2003" = "q46",
+      "2005" = "q46",
+      "2007" = "q47",
+      "2009" = "q47",
+      "2011" = "q48",
+      "2013" = "q49",
+      "2015" = "q49",
+      "2017" = "q48",
+      "2019" = "q47"
     ),
     # --- school, health and sleep ------------------------------------------
     grades_school = bp625_entry(

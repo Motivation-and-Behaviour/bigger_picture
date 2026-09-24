@@ -1,8 +1,9 @@
 #' Tidier for BPIPD-31 (FFCWS, ICPSR 31622 public use file)
 #'
 #' Slices each wave out of the single wide release using the column map in
-#' `bp31_wave_columns()`, stacks the slices long, then `bp31_apply_labels()`
-#' re-attaches labels.
+#' `bp31_wave_columns()`, stacks the slices long, fills parent education and
+#' clears Woodcock-Johnson floor scores, then `bp31_apply_labels()` re-attaches
+#' labels.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -39,6 +40,8 @@ tidy_BPIPD_31 <- function(raw_dataset, spec) {
     3,
     stacked$pcg_relationship
   )
+  stacked <- bp31_fill_parent_education(stacked)
+  stacked <- bp31_drop_wj_floor(stacked)
 
   if (anyDuplicated(stacked[c("participant_id", "wave")]) > 0L) {
     stop(
@@ -125,13 +128,13 @@ bp31_wave_columns <- function() {
       y15 = "CP6POVCO"
     ),
     mother_education = bp31_entry(
-      "Mother's education (Years 3-9; Year 15 has no mother-specific measure)",
+      "Mother's education (Years 3-9; Year 15 from the PCG's education where the PCG is the biological mother; missing waves carry the latest earlier value)",
       y3 = "CM3EDU",
       y5 = "CM4EDU",
       y9 = "CM5EDU"
     ),
     father_education = bp31_entry(
-      "Father's education (Years 3-9; Year 15 has no father-specific measure)",
+      "Father's education (Years 3-9; Year 15 from the PCG's education where the PCG is the biological father; missing waves carry the latest earlier value)",
       y3 = "CF3EDU",
       y5 = "CF4EDU",
       y9 = "CF5EDU"
@@ -256,6 +259,7 @@ bp31_wave_columns <- function() {
     ),
     cbcl_attention = bp31_entry(
       "CBCL Attention Problems syndrome scale, caregiver report, mean item score",
+      y3 = "BP31CBCL_Y3_ATTENTION",
       y5 = "BP31CBCL_Y5_ATTENTION",
       y15 = "BP31CBCL_Y15_ATTENTION"
     ),
@@ -277,7 +281,8 @@ bp31_wave_columns <- function() {
       y15 = "BP31CBCL_Y15_INTERNALISING"
     ),
     cbcl_externalising = bp31_entry(
-      "CBCL externalising score, caregiver report, mean item score across the aggressive and rule-breaking items",
+      "CBCL externalising score, caregiver report, mean item score across the aggressive and rule-breaking items (Year 3: aggressive and attention items)",
+      y3 = "BP31CBCL_Y3_EXTERNALISING",
       y5 = "BP31CBCL_Y5_EXTERNALISING",
       y15 = "BP31CBCL_Y15_EXTERNALISING"
     ),
@@ -313,14 +318,41 @@ bp31_wave_columns <- function() {
       y5 = "CH4PPVTSTD",
       y9 = "CH5PPVTSS"
     ),
+    tvip_standard = bp31_entry(
+      "TVIP (Spanish) receptive vocabulary standard score, child",
+      y3 = "CH3TVIPSTD"
+    ),
     wj_reading_standard = bp31_entry(
-      "Woodcock-Johnson reading standard score (Letter-Word Y5, Passage Comprehension Y9)",
+      "Woodcock-Johnson reading standard score (Letter-Word Y5, Passage Comprehension Y9); NA where the Y9 raw score is 0",
       y5 = "CH4WJSS22",
       y9 = "CH5WJ9SS"
     ),
+    wj_reading_raw = bp31_entry(
+      "Woodcock-Johnson III Passage Comprehension raw score (Year 9 only)",
+      y9 = "CH5WJ9RAW"
+    ),
     wj_maths_standard = bp31_entry(
-      "Woodcock-Johnson Applied Problems standard score",
+      "Woodcock-Johnson Applied Problems standard score; NA where the raw score is 0",
       y9 = "CH5WJ10SS"
+    ),
+    wj_maths_raw = bp31_entry(
+      "Woodcock-Johnson III Applied Problems raw score (Year 9 only)",
+      y9 = "CH5WJ10RAW"
+    ),
+    teacher_rating_literacy = bp31_entry(
+      "Teacher report: child's language and literacy skills against peers (1 far below to 5 far above average)",
+      y5 = "T4A5",
+      y9 = "T5C13A"
+    ),
+    teacher_rating_science = bp31_entry(
+      "Teacher report: child's science and social studies against peers (1 far below to 5 far above average)",
+      y5 = "T4A6",
+      y9 = "T5C13B"
+    ),
+    teacher_rating_maths = bp31_entry(
+      "Teacher report: child's mathematical skills against peers (1 far below to 5 far above average)",
+      y5 = "T4A7",
+      y9 = "T5C13C"
     ),
     digit_span_scaled = bp31_entry(
       "WISC-IV Digit Span scaled score",
@@ -405,6 +437,10 @@ bp31_wave_columns <- function() {
       "Child self-report: written things or sprayed paint on walls, sidewalks or cars (Year 9 only)",
       y9 = "K5F1N"
     ),
+    ever_set_fire = bp31_entry(
+      "Child self-report: purposely set fire to a building, car or other property, or tried to (Year 9 only)",
+      y9 = "K5F1O"
+    ),
     graffiti = bp31_entry(
       "Youth self-report: times painted graffiti on someone else's property or in a public place (Year 15 only)",
       y15 = "K6D61A"
@@ -455,6 +491,148 @@ bp31_wave_columns <- function() {
       "PCG report: youth regularly takes prescription medicine for depression or anxiety (Year 15 only)",
       y15 = "P6B27_5"
     ),
+    # --- survey weight, parenting stress, school connectedness, health, ------
+    # --- substance use (dataschema consistency-check rows) -------------------
+    nat_weight = bp31_entry(
+      "Primary caregiver/family national weight for the wave",
+      y3 = "P3NATWT",
+      y5 = "P4NATWT",
+      y9 = "P5NATWT",
+      y15 = "P6NATWT"
+    ),
+    pcg_rated_health = bp31_entry(
+      "PCG report: in general, would you say child's/youth's health is excellent to poor",
+      y3 = "P3A1",
+      y5 = "P4A1",
+      y9 = "P5H1",
+      y15 = "P6B1"
+    ),
+    pcg_tv_decides = bp31_entry(
+      "PCG report: who decides what kinds of TV shows and movies the youth can watch (respondent, youth, or jointly; Year 15 only)",
+      y15 = "P6D19"
+    ),
+    pcg_tv_in_bedroom = bp31_entry(
+      "PCG report: child/youth has a television in the bedroom (1 yes, 2 no; Years 9 and 15 only)",
+      y9 = "P5I14",
+      y15 = "P6D7"
+    ),
+    # --- sleep duration: PCG hours (Years 5, 9); youth clock times (Year 15:
+    # --- hour 1-12, minutes 0-59, 1 am / 2 pm) -------------------------------
+    pcg_sleep_hours_usual = bp31_entry(
+      "PCG report: hours of sleep the child usually gets (Year 5 only)",
+      y5 = "P4B23"
+    ),
+    pcg_sleep_hours_weeknight = bp31_entry(
+      "PCG report: hours the child sleeps on weeknights (Year 9 only)",
+      y9 = "P5I12"
+    ),
+    youth_wake_school_hour = bp31_entry(
+      "Youth self-report: time usually wake up on school-day mornings, hour 1-12 (Year 15 only)",
+      y15 = "K6D12"
+    ),
+    youth_wake_school_min = bp31_entry(
+      "Youth self-report: time usually wake up on school-day mornings, minutes (Year 15 only)",
+      y15 = "K6D13"
+    ),
+    youth_wake_school_ampm = bp31_entry(
+      "Youth self-report: time usually wake up on school-day mornings, am/pm (Year 15 only)",
+      y15 = "K6D13A"
+    ),
+    youth_bed_school_hour = bp31_entry(
+      "Youth self-report: time usually go to bed on school nights, hour 1-12 (Year 15 only)",
+      y15 = "K6D14"
+    ),
+    youth_bed_school_min = bp31_entry(
+      "Youth self-report: time usually go to bed on school nights, minutes (Year 15 only)",
+      y15 = "K6D15"
+    ),
+    youth_bed_school_ampm = bp31_entry(
+      "Youth self-report: time usually go to bed on school nights, am/pm (Year 15 only)",
+      y15 = "K6D15A"
+    ),
+    youth_wake_weekend_hour = bp31_entry(
+      "Youth self-report: time usually wake up on weekend mornings, hour 1-12 (Year 15 only)",
+      y15 = "K6D17"
+    ),
+    youth_wake_weekend_min = bp31_entry(
+      "Youth self-report: time usually wake up on weekend mornings, minutes (Year 15 only)",
+      y15 = "K6D18"
+    ),
+    youth_wake_weekend_ampm = bp31_entry(
+      "Youth self-report: time usually wake up on weekend mornings, am/pm (Year 15 only)",
+      y15 = "K6D18A"
+    ),
+    youth_bed_weekend_hour = bp31_entry(
+      "Youth self-report: time usually go to bed on weekend nights, hour 1-12 (Year 15 only)",
+      y15 = "K6D19"
+    ),
+    youth_bed_weekend_min = bp31_entry(
+      "Youth self-report: time usually go to bed on weekend nights, minutes (Year 15 only)",
+      y15 = "K6D20"
+    ),
+    youth_bed_weekend_ampm = bp31_entry(
+      "Youth self-report: time usually go to bed on weekend nights, am/pm (Year 15 only)",
+      y15 = "K6D20A"
+    ),
+    parentstress_a = bp31_entry(
+      "Aggravation in Parenting scale item a, PCG report, 1 strongly agree - 4 strongly disagree (Years 9 and 15 only)",
+      y9 = "P5K1A",
+      y15 = "P6D32"
+    ),
+    parentstress_b = bp31_entry(
+      "Aggravation in Parenting scale item b, PCG report, 1 strongly agree - 4 strongly disagree (Years 9 and 15 only)",
+      y9 = "P5K1B",
+      y15 = "P6D33"
+    ),
+    parentstress_c = bp31_entry(
+      "Aggravation in Parenting scale item c, PCG report, 1 strongly agree - 4 strongly disagree (Years 9 and 15 only)",
+      y9 = "P5K1C",
+      y15 = "P6D34"
+    ),
+    parentstress_d = bp31_entry(
+      "Aggravation in Parenting scale item d, PCG report, 1 strongly agree - 4 strongly disagree (Years 9 and 15 only)",
+      y9 = "P5K1D",
+      y15 = "P6D35"
+    ),
+    school_connect_a = bp31_entry(
+      "Connectedness at School scale item a (Year 9 'part of school', 0-4 past-month frequency; Year 15 'close to people at school', 1-4 agreement, code 7 = homeschooled)",
+      y9 = "K5E1A",
+      y15 = "K6B1A"
+    ),
+    school_connect_b = bp31_entry(
+      "Connectedness at School scale item b (Year 9 'close to people at school', 0-4 past-month frequency; Year 15 'part of school', 1-4 agreement, code 7 = homeschooled)",
+      y9 = "K5E1B",
+      y15 = "K6B1B"
+    ),
+    school_connect_d = bp31_entry(
+      "Connectedness at School scale item d: feel safe at school (Year 9 0-4 past-month frequency; Year 15 1-4 agreement, code 7 = homeschooled)",
+      y9 = "K5E1D",
+      y15 = "K6B1D"
+    ),
+    teen_tobacco_ever = bp31_entry(
+      "Youth self-report: ever smoked a whole cigarette (1 yes, 2 no; Year 15 only)",
+      y15 = "K6D40"
+    ),
+    teen_tobacco_freq30d = bp31_entry(
+      "Youth self-report: frequency of smoking in the past 30 days, gated on teen_tobacco_ever (1 never - 4 6-7 days a week; Year 15 only)",
+      y15 = "K6D42"
+    ),
+    teen_alcohol_ever = bp31_entry(
+      "Youth self-report: ever had an alcoholic drink more than two or three times without a parent present (1 yes, 2 no; Year 15 only)",
+      y15 = "K6D48"
+    ),
+    teen_alcohol_freq30d = bp31_entry(
+      "Youth self-report: frequency of drinking in the past 30 days, gated on teen_alcohol_ever (1 never - 5 every day or nearly every day; Year 15 only)",
+      y15 = "K6D50"
+    ),
+    teen_cannabis_ever = bp31_entry(
+      "Youth self-report: ever tried marijuana (1 yes, 2 no; Year 15 only)",
+      y15 = "K6F63"
+    ),
+    teen_cannabis_freqmonth = bp31_entry(
+      "Youth self-report: frequency of marijuana use in the past month, gated on teen_cannabis_ever (1 never - 4 3+ days a week; Year 15 only)",
+      y15 = "K6F66"
+    ),
     # --- Year 15 teen EPOCH happiness items (the fourth, I feel happy, is cesd_happy)
     epoch_love_life = bp31_entry(
       "EPOCH happiness: I love life",
@@ -488,6 +666,181 @@ bp31_wave_columns <- function() {
     cesd_depressed = bp31_entry(
       "CES-D: I feel depressed",
       y15 = "K6D2AC"
+    ),
+    # --- items reviewed for rows they cannot fill, kept so notes can name them
+    cbcl_item_bullies = bp31_entry(
+      "CBCL item, caregiver report: cruel, bullies, or shows meanness to others (0 not true, 1 sometimes, 2 often; Years 9 and 15 recoded from 1-3)",
+      y5 = "BP31CBCLITEM_Y5_BULLIES",
+      y9 = "BP31CBCLITEM_Y9_BULLIES",
+      y15 = "BP31CBCLITEM_Y15_BULLIES"
+    ),
+    cbcl_item_argues = bp31_entry(
+      "CBCL item, caregiver report: argues a lot (0 not true, 1 sometimes, 2 often; Years 9 and 15 recoded from 1-3)",
+      y5 = "BP31CBCLITEM_Y5_ARGUES",
+      y9 = "BP31CBCLITEM_Y9_ARGUES",
+      y15 = "BP31CBCLITEM_Y15_ARGUES"
+    ),
+    cbcl_item_proud = bp31_entry(
+      "CBCL-block item, caregiver report: child tends to be proud of things he/she does (0 not true, 1 sometimes, 2 often; Year 3 18 cities only)",
+      y3 = "BP31CBCLITEM_Y3_PROUD",
+      y5 = "BP31CBCLITEM_Y5_PROUD"
+    ),
+    selfdesc_angry_learning = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I feel angry when I have trouble learning something (Year 9 only)",
+      y9 = "K5G2A"
+    ),
+    selfdesc_argue = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I often argue with other kids (Year 9 only)",
+      y9 = "K5G2B"
+    ),
+    selfdesc_worry_tests = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I worry about taking tests (Year 9 only)",
+      y9 = "K5G2C"
+    ),
+    selfdesc_hard_attention = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): it's hard for me to pay attention (Year 9 only)",
+      y9 = "K5G2D"
+    ),
+    selfdesc_lonely = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I often feel lonely (Year 9 only)",
+      y9 = "K5G2E"
+    ),
+    selfdesc_distracted = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I get distracted easily (Year 9 only)",
+      y9 = "K5G2F"
+    ),
+    selfdesc_sad = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I feel sad a lot of the time (Year 9 only)",
+      y9 = "K5G2G"
+    ),
+    selfdesc_hard_finish_schoolwork = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): it's hard for me to finish my schoolwork (Year 9 only)",
+      y9 = "K5G2H"
+    ),
+    selfdesc_worry_doing_well = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I worry about doing well in school (Year 9 only)",
+      y9 = "K5G2I"
+    ),
+    selfdesc_worry_finishing = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I worry about finishing my work (Year 9 only)",
+      y9 = "K5G2J"
+    ),
+    selfdesc_worry_playmate = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I worry about having someone to play with (Year 9 only)",
+      y9 = "K5G2K"
+    ),
+    selfdesc_ashamed_mistakes = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I feel ashamed when I make mistakes at school (Year 9 only)",
+      y9 = "K5G2L"
+    ),
+    selfdesc_trouble_talking = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I get in trouble for talking and disturbing others (Year 9 only)",
+      y9 = "K5G2M"
+    ),
+    selfdesc_trouble_fighting = bp31_entry(
+      "Child self-description (0 not at all true - 3 very true): I get in trouble for fighting with other kids (Year 9 only)",
+      y9 = "K5G2N"
+    ),
+    try_best_work = bp31_entry(
+      "Child self-report: I try to do my best on all my work (0 never - 3 always; Year 9 only)",
+      y9 = "K5G1D"
+    ),
+    teacher_works_best = bp31_entry(
+      "Teacher report: how often the child works to the best of his/her ability (1 never - 4 always)",
+      y5 = "T4A8",
+      y9 = "T5C16"
+    ),
+    teacher_not_finish_homework = bp31_entry(
+      "Teacher report: child does not follow through on instructions and fails to finish homework (0 not true - 3 very much true; Year 9 only)",
+      y9 = "T5B4Z"
+    ),
+    epoch_involved = bp31_entry(
+      "EPOCH engagement: I get so involved in activities that I forget about everything else",
+      y15 = "K6D2E"
+    ),
+    epoch_absorbed = bp31_entry(
+      "EPOCH engagement: I get completely absorbed in what I am doing",
+      y15 = "K6D2H"
+    ),
+    epoch_lose_track_activity = bp31_entry(
+      "EPOCH engagement: when I do an activity, I enjoy it so much that I lose track of time",
+      y15 = "K6D2U"
+    ),
+    epoch_lose_track_learning = bp31_entry(
+      "EPOCH engagement: when I am learning something new, I lose track of time",
+      y15 = "K6D2AD"
+    ),
+    epoch_keep_at_schoolwork = bp31_entry(
+      "EPOCH perseverance: I keep at my schoolwork until I am done with it",
+      y15 = "K6D2I"
+    ),
+    epoch_stick_to_plan = bp31_entry(
+      "EPOCH perseverance: once I make a plan to get something done, I stick to it",
+      y15 = "K6D2K"
+    ),
+    epoch_finish_begin = bp31_entry(
+      "EPOCH perseverance: I finish whatever I begin",
+      y15 = "K6D2M"
+    ),
+    epoch_hard_worker = bp31_entry(
+      "EPOCH perseverance: I am a hard worker",
+      y15 = "K6D2V"
+    ),
+    epoch_good_things = bp31_entry(
+      "EPOCH optimism: I think good things are going to happen to me",
+      y15 = "K6D2O"
+    ),
+    epoch_work_out = bp31_entry(
+      "EPOCH optimism: I believe that things will work out, no matter how difficult",
+      y15 = "K6D2W"
+    ),
+    epoch_expect_best = bp31_entry(
+      "EPOCH optimism: in uncertain times, I expect the best",
+      y15 = "K6D2AE"
+    ),
+    epoch_optimistic_future = bp31_entry(
+      "EPOCH optimism: I am optimistic about my future",
+      y15 = "K6D2AH"
+    ),
+    epoch_friends_care = bp31_entry(
+      "EPOCH connectedness: I have friends that I really care about",
+      y15 = "K6D2G"
+    ),
+    epoch_people_care = bp31_entry(
+      "EPOCH connectedness: there are people in my life who really care about me",
+      y15 = "K6D2L"
+    ),
+    epoch_someone_there = bp31_entry(
+      "EPOCH connectedness: when I have a problem, I have someone who will be there for me",
+      y15 = "K6D2Y"
+    ),
+    epoch_share_news = bp31_entry(
+      "EPOCH connectedness: when something good happens to me, I have people to share news with",
+      y15 = "K6D2AF"
+    ),
+    pcg_youth_internet_phone = bp31_entry(
+      "PCG report: youth accesses the internet through a mobile phone (1 yes, 2 no; Year 15 only)",
+      y15 = "P6D11"
+    ),
+    pcg_youth_internet_tablet = bp31_entry(
+      "PCG report: youth accesses the internet through an iPad or tablet (1 yes, 2 no; Year 15 only)",
+      y15 = "P6D10"
+    ),
+    cbcl_item_selfharm = bp31_entry(
+      "CBCL item, caregiver report: deliberately harms self or attempts suicide (1 not true - 3 very true or often true; Year 9 only)",
+      y9 = "P5Q3Q"
+    ),
+    sleep_trouble_falling_nights = bp31_entry(
+      "Youth self-report: nights during the week with problems falling asleep (0-7; Year 15 only)",
+      y15 = "K6D22"
+    ),
+    sleep_trouble_staying_nights = bp31_entry(
+      "Youth self-report: nights during the week with problems staying asleep (0-7; Year 15 only)",
+      y15 = "K6D23"
+    ),
+    youth_aian_specified = bp31_entry(
+      "Youth specified American Indian or Alaska Native in the race item (1 yes; Year 15 coding flag)",
+      y15 = "K6C00AC"
     )
   )
 
@@ -575,6 +928,41 @@ bp31_screen_use_stems <- function() {
     "youth_internet_hours_wd",
     "youth_ecomm_hours_wd"
   )
+}
+
+#' Parent education at every wave
+#'
+#' Year 15 asks only the PCG's own education, which counts for the parent who
+#' is the PCG. Any wave still missing a parent's education takes the child's
+#' latest earlier value.
+bp31_fill_parent_education <- function(tidied) {
+  at_y15 <- tidied$wave == bp31_waves()[["y15"]]
+  parent_codes <- c(mother_education = 1, father_education = 2)
+  sorted <- order(tidied$participant_id, match(tidied$wave, bp31_waves()))
+
+  for (stem in names(parent_codes)) {
+    is_pcg <- at_y15 & tidied$pcg_relationship %in% parent_codes[[stem]]
+    tidied[[stem]][is_pcg] <- tidied$pcg_education[is_pcg]
+
+    carried <- tibble::tibble(
+      id = tidied$participant_id[sorted],
+      value = tidied[[stem]][sorted]
+    ) |>
+      dplyr::group_by(id) |>
+      tidyr::fill(value, .direction = "down") |>
+      dplyr::ungroup()
+    tidied[[stem]][sorted] <- carried$value
+  }
+
+  tidied
+}
+
+#' Woodcock-Johnson III standard scores are not interpretable at a raw score
+#' of 0, so those are cleared
+bp31_drop_wj_floor <- function(tidied) {
+  tidied$wj_reading_standard[tidied$wj_reading_raw %in% 0] <- NA_real_
+  tidied$wj_maths_standard[tidied$wj_maths_raw %in% 0] <- NA_real_
+  tidied
 }
 
 #' Turn an ICPSR factor back into its original numeric code
@@ -704,11 +1092,12 @@ bp31_label_column <- function(x, label, value_labels) {
 #' rather than guessed at.
 #'
 #' Subscales available differ by age form: the Year 3 preschool form has no
-#' attention problems or rule-breaking scale, so externalising can't be
-#' formed there.
+#' rule-breaking scale, and FFCWS asked 3 of its 5 attention problems items
+#' (18 cities only; the user guide files them under 'ADHD').
 bp31_cbcl_items <- function() {
   list(
     y3 = list(
+      attention = c("P3M2A", "P3M2B", "P3M28A"),
       anxdep = c(
         "P3M3",
         "P3M16",
@@ -859,9 +1248,38 @@ bp31_cbcl_items <- function() {
   )
 }
 
-#' Score the CBCL subscales and append them to the raw table
+#' Single CBCL items carried on their own, by wave
+bp31_cbcl_single_items <- function() {
+  list(
+    bullies = c(y5 = "P4L7", y9 = "P5Q3O", y15 = "P6B35"),
+    argues = c(y5 = "P4L1", y9 = "P5Q3C", y15 = "P6B59"),
+    proud = c(y3 = "P3M27", y5 = "P4L60")
+  )
+}
+
+#' Subscales making up each CBCL composite on a form
+#'
+#' Externalising follows the form's grouping: aggressive with rule-breaking,
+#' or with attention problems on the preschool form, which has no
+#' rule-breaking scale.
+bp31_cbcl_composites <- function(subscales) {
+  externalising <- if (is.null(subscales$rulebreak)) {
+    c("aggressive", "attention")
+  } else {
+    c("aggressive", "rulebreak")
+  }
+  list(
+    internalising = c("anxdep", "withdrawn"),
+    externalising = externalising
+  )
+}
+
+#' Score the CBCL subscales and composites and append them to the raw table
 bp31_add_cbcl_scores <- function(raw) {
-  absent <- setdiff(unique(unlist(bp31_cbcl_items())), names(raw))
+  absent <- setdiff(
+    unique(c(unlist(bp31_cbcl_items()), unlist(bp31_cbcl_single_items()))),
+    names(raw)
+  )
   if (length(absent) > 0L) {
     stop(
       paste0(
@@ -876,33 +1294,60 @@ bp31_add_cbcl_scores <- function(raw) {
   for (wave in names(bp31_cbcl_items())) {
     subscales <- bp31_cbcl_items()[[wave]]
 
-    subscales$internalising <- unique(c(subscales$anxdep, subscales$withdrawn))
-    if (!is.null(subscales$rulebreak)) {
-      subscales$externalising <- unique(c(
-        subscales$aggressive,
-        subscales$rulebreak
-      ))
-    }
-
     for (subscale in names(subscales)) {
       column <- paste("BP31CBCL", toupper(wave), toupper(subscale), sep = "_")
       raw[[column]] <- bp31_cbcl_mean(raw, subscales[[subscale]])
+    }
+
+    composites <- bp31_cbcl_composites(subscales)
+    for (composite in names(composites)) {
+      column <- paste("BP31CBCL", toupper(wave), toupper(composite), sep = "_")
+      raw[[column]] <- bp31_cbcl_composite(
+        raw,
+        subscales[composites[[composite]]]
+      )
+    }
+  }
+
+  single <- bp31_cbcl_single_items()
+  for (item in names(single)) {
+    for (wave in names(single[[item]])) {
+      column <- paste("BP31CBCLITEM", toupper(wave), toupper(item), sep = "_")
+      raw[[column]] <- bp31_cbcl_item(raw, single[[item]][[wave]])
     }
   }
 
   raw
 }
 
-#' Mean item score for one CBCL subscale, on the standard 0-2 item scale
-bp31_cbcl_mean <- function(raw, item_names) {
-  items <- do.call(
+#' CBCL items on the standard 0-2 item scale, one column per item
+bp31_cbcl_matrix <- function(raw, item_names) {
+  do.call(
     cbind,
     lapply(item_names, function(name) bp31_cbcl_item(raw, name))
   )
+}
+
+#' Mean item score for one CBCL subscale, on the standard 0-2 item scale
+bp31_cbcl_mean <- function(raw, item_names) {
+  items <- bp31_cbcl_matrix(raw, item_names)
 
   scores <- rowMeans(items, na.rm = TRUE)
   answered <- rowSums(!is.na(items))
   scores[answered < ceiling(0.8 * length(item_names))] <- NA_real_
+  scores
+}
+
+#' Mean over the union of the component subscales' items, NA unless every
+#' component meets its own 80% threshold
+bp31_cbcl_composite <- function(raw, components) {
+  scores <- rowMeans(
+    bp31_cbcl_matrix(raw, unique(unlist(components))),
+    na.rm = TRUE
+  )
+  for (items in components) {
+    scores[is.na(bp31_cbcl_mean(raw, items))] <- NA_real_
+  }
   scores
 }
 

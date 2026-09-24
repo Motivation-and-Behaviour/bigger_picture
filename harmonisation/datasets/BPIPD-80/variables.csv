@@ -3,9 +3,9 @@ participant_id,compatible,PID,as.character(PID),Five-digit numeric ID; unique an
 wave,unavailable,,,Cross-sectional (2011-2013); no repeated-wave structure.,,
 data_year,compatible,"DietDate, AnthroDate","as.numeric(format(coalesce(DietDate, AnthroDate), ""%Y""))",Year of the Diet and Lifestyle questionnaire (screen-time items); anthropometry date if missing.,,
 rct_arm,unavailable,,,"Observational, not a trial.",,
-survey_weight,in_progress,,,,,
-survey_strata,in_progress,,,,,
-survey_cluster,in_progress,,,,,
+survey_weight,unavailable,,,Not released.,,
+survey_strata,partial,SITE_ID,as.character(as.integer(SITE_ID)),"Study site code (1-13); each site drew its own school sample, so sites are design strata. Partial: the within-site school strata (by SES indicator) are not released.",,
+survey_cluster,compatible,school_ID,as.character(as.integer(school_ID)),"School ID (256 schools, unique across sites); schools were the primary sampling unit within each site.",,
 age_years,compatible,Age_Year,as.numeric(Age_Year),Age at the anthropometric visit (= AgeAtAnthroMos / 12). Sample restricted to 9.0-11.99 years by design; complete.,,
 sex,compatible,Gender,"recode_values(as.integer(Gender), 1L ~ ""Male"", 2L ~ ""Female"", default = ""Unknown"")",Parent-reported child gender.,,
 country,compatible,SITE_ID,"recode_values(
@@ -25,42 +25,96 @@ country,compatible,SITE_ID,"recode_values(
   default = ""Unknown""
 )","Each site is one metropolitan area; site 2 (Bath) maps to England. Added Australia, Brazil, China, Colombia, India, Kenya, South Africa to allowed_values.",,
 state,inferred,SITE_ID,"if_else(as.integer(SITE_ID) == 3L, ""SA"", NA_character_)","Australian site was Adelaide, SA (from the study protocol, not a data variable). Other sites NA.",,
-ethnicity,proximate,"ALL_Ethnicity, Hispanic","case_when(
-  as.integer(Hispanic) == 1L ~ ""Hispanic"",
-  .default = coalesce(
-    lookup_values(
-      haven::as_factor(ALL_Ethnicity),
-      lookup_ethnicity,
-      dataset_id = spec$dataset_id,
-      target_variable = ""ethnicity""
-    ),
-    ""Unknown""
+ethnicity,proximate,"ALL_Ethnicity, ALL_Ethnicity_OtherInput, Hispanic, SITE_ID","local({
+  other_text <- if_else(as.integer(ALL_Ethnicity) == 38L, toupper(trimws(ALL_Ethnicity_OtherInput)), NA_character_)
+  case_when(
+    as.integer(Hispanic) == 1L & as.integer(SITE_ID) %in% c(1L, 10L) ~ ""Hispanic"",
+    .default = coalesce(
+      lookup_values(other_text, lookup_ethnicity_other),
+      lookup_values(
+        haven::as_factor(ALL_Ethnicity),
+        lookup_ethnicity,
+        dataset_id = spec$dataset_id,
+        target_variable = ""ethnicity""
+      ),
+      ""Unknown""
+    )
   )
-)","Parent-reported ALLETH (pan-study plus site-specific options, 12 countries) via lookups/ethnicity.csv. Hispanic-origin item (US, UK, South Africa, Colombia, Brazil, Canada) takes precedence when Yes. Proximate: US/UK census categories fit several sites poorly (India recorded religion, Colombia has no Mestizo option, South Africa uses its own population groups).",ethnicity,
-indigenous,partial,ALL_Ethnicity,"case_when(
-  as.integer(ALL_Ethnicity) %in% c(18L, 21L, 25L, 32L, 45L) ~ ""Indigenous"",
-  is.na(ALL_Ethnicity) | as.integer(ALL_Ethnicity) == 37L ~ ""Unknown"",
-  .default = ""Non-Indigenous""
-)","Indigenous = codes 18 (Aboriginal/Torres Strait Islander), 21 (American Indian/Aleutian/Alaskan native), 25 (Indigenous, Colombia), 32 (Brazilian Indian), 45 (First Nations); Don't Know (37) and missing → Unknown. Partial: these options existed only at settler-colonial sites; at Kenya, India, China, Portugal and Finland Non-Indigenous just means none was offered.",,
-minority,proximate,"SITE_ID, ALL_Ethnicity","lookup_values(
-  paste(haven::as_factor(SITE_ID), haven::as_factor(ALL_Ethnicity), sep = "" | ""),
-  lookup_minority,
-  default = ""Unknown""
-)","Country-relative: each site's ethnicity classified against that country's national majority in lookups/minority.csv (one row per site x ethnicity). Unclear combinations → Unknown: Colombian Other/Don't know/Mixed (no Mestizo option), Brazilian Mixed (parda is 43% of the population), Indian Asian.",minority,
+})","Parent-reported single choice (ALLETH, pan-study plus site-specific options) via the shared lookup; 'Other' free text is resolved first through lookups/ethnicity_other.csv (declared on indigenous), unmatched text stays Other and a bare nationality or religion is Unknown. The Hispanic-origin item sets Hispanic at the US and Canada sites only. Proximate: the lists fit several sites poorly (India recorded religion, Colombia has no Mestizo option) and Arab, Indigenous and Pacific groups fold into Other.",ethnicity,
+indigenous,partial,"ALL_Ethnicity, ALL_Ethnicity_OtherInput, SITE_ID","local({
+  other_text <- if_else(as.integer(ALL_Ethnicity) == 38L, toupper(trimws(ALL_Ethnicity_OtherInput)), NA_character_)
+  other_indigenous <- lookup_values(other_text, lookup_ethnicity_other, value_col = ""indigenous"")
+  case_when(
+    as.integer(ALL_Ethnicity) %in% c(18L, 21L, 25L, 32L, 45L) ~ ""Indigenous"",
+    other_indigenous %in% ""Indigenous"" ~ ""Indigenous"",
+    is.na(ALL_Ethnicity) | as.integer(ALL_Ethnicity) == 37L ~ ""Unknown"",
+    !as.integer(SITE_ID) %in% c(1L, 3L, 8L, 9L, 10L) ~ ""Unknown"",
+    other_indigenous %in% ""Unknown"" ~ ""Unknown"",
+    .default = ""Non-Indigenous""
+  )
+})","Indigenous: ALLETH Aboriginal or Torres Strait Islander, American Indian/Alaska Native, Indigenous (Colombia), Brazilian Indian or First Nations, or Aboriginal, First Nations, Inuit or Native Canadian in the 'Other' text (ethnicity_other, declared here; bindings are file-wide). Don't Know, missing, and the UK, Portugal, South Africa, Kenya, China, India and Finland sites, whose lists offered no Indigenous option, are Unknown. Partial: the single choice pushes multi-heritage children outside Indigenous.",ethnicity_other,
+minority,proximate,"SITE_ID, ALL_Ethnicity, ALL_Ethnicity_OtherInput, Hispanic","local({
+  site <- as.integer(SITE_ID)
+  other_group <- lookup_values(
+    if_else(as.integer(ALL_Ethnicity) == 38L, toupper(trimws(ALL_Ethnicity_OtherInput)), NA_character_),
+    lookup_ethnicity_other
+  )
+  case_when(
+    as.integer(Hispanic) == 1L & site %in% c(1L, 10L) ~ ""Minority"",
+    !is.na(other_group) & site %in% c(1L, 2L, 3L, 4L, 10L, 13L) ~ recode_values(
+      other_group,
+      ""White"" ~ ""Non-minority"",
+      ""Unknown"" ~ ""Unknown"",
+      default = ""Minority""
+    ),
+    !is.na(other_group) & site %in% c(5L, 6L) ~ recode_values(
+      other_group,
+      ""Black"" ~ ""Non-minority"",
+      ""Unknown"" ~ ""Unknown"",
+      default = ""Minority""
+    ),
+    .default = lookup_values(
+      paste(haven::as_factor(SITE_ID), haven::as_factor(ALL_Ethnicity), sep = "" | ""),
+      lookup_minority,
+      default = ""Unknown""
+    )
+  )
+})","Same item and free-text resolution as ethnicity, judged against each site's national majority (lookups/minority.csv): White at the US, UK, Australia, Portugal, Canada and Finland sites, Black in South Africa and Kenya, Han in China. Hispanic at the US and Canada sites is Minority; Brazil (no majority group), India (religion only) and Colombian Other, Don't Know and Mixed (no Mestizo option) are Unknown. Proximate: single choice from site lists that fit several countries poorly.",minority,
 immigrant_background,incompatible,Birth_country,,Child's birth country only; parents' birthplace not collected.,,
-born_in_country,in_progress,,,,,
+born_in_country,compatible,"Birth_country, SITE_ID","local({
+  b <- toupper(trimws(Birth_country))
+  home <- recode_values(
+    as.integer(SITE_ID),
+    1L ~ ""UNITED STATES|^USA$"",
+    2L ~ ""ENGLAND|ENGALND|ENGLAQND|^UK|^U\\.K\\.$|^GB$|BRITAIN|BRITIAN|UNITED KINGDOM|WALES|SCOTLAND|NORTHERN IRELAND"",
+    3L ~ ""AUSTRALIA"",
+    4L ~ ""PORTUGAL"",
+    5L ~ ""SOUTH +AFRICA|^RSA$"",
+    6L ~ ""KENY"",
+    8L ~ ""COLOMBIA|COOMBIA"",
+    9L ~ ""BRASIL|BRAZIL"",
+    10L ~ ""CANADA"",
+    11L ~ ""CHINA"",
+    12L ~ ""INDIA|BANGALORE|KERALA|TAMILNADU|CHENNAI|MUMBAI|KOLKATA|AGARA"",
+    13L ~ ""SUOMI|SUOMESSA|FINLAND"",
+    default = NA_character_
+  )
+  is_home <- mapply(function(pattern, text) grepl(pattern, text), home, b)
+  case_when(is.na(b) | b %in% c("""", ""1"", ""NORTH AMERICA"") ~ ""Unknown"", is_home ~ ""Yes"", .default = ""No"")
+})","Parent-reported free-text country of birth, matched to the site country (spelling variants, cities and UK nations count as Yes). Blank, '1' and 'North America' are Unknown (6.1%).",,
 ses_area,unavailable,,,"Not collected; neighbourhood questionnaire covers perceived walkability, safety and collective efficacy only.",,
-ses_household,proximate,inclevel,"coalesce(
-  lookup_values(
-    as.character(as.integer(inclevel)),
-    lookup_ses_household,
-    dataset_id = spec$dataset_id,
-    target_variable = ""ses_household""
-  ),
-  ""Unknown""
-)","IncLevel bands household income within each site's own currency (CountrySpecLevel); already country-relative. Proximate: 4 bands, not quintiles; bottom → Low, top → High, middle two → Medium, narrower extremes than the quintile convention. Missing → Unknown.",ses_household,
-ses_household_measure,inferred,,"""Site-specific gross annual household income band (4 levels)""",Site-specific household income bands; see ses_household.,,
-ses_hukou,unavailable,,,Not collected at the China site or elsewhere.,,
+ses_household,proximate,"inclevel, SITE_ID","local({
+  ridit <- stats::ave(as.numeric(inclevel), as.integer(SITE_ID), FUN = function(x) {
+    r <- (rank(x, na.last = ""keep"") - 0.5) / sum(!is.na(x))
+    if (!any(r >= 0.4 & r <= 0.6, na.rm = TRUE)) {
+      r[r %in% r[which.min(abs(r - 0.5))]] <- 0.5
+    }
+    r
+  })
+  case_when(is.na(ridit) ~ ""Unknown"", ridit < 0.4 ~ ""Low"", ridit <= 0.6 ~ ""Medium"", .default = ""High"")
+})","Four site-specific household income bands (inclevel) cut by within-site ridit: below 0.4 Low, 0.4-0.6 Medium, above 0.6 High; at the US, Australia and Portugal sites no band falls in 0.4-0.6, so band 2 (nearest 0.5) is Medium. Missing is Unknown (11%). Proximate: the within-site split misses 40/20/40 by more than 10 points at the US, UK, Australia and Portugal sites (Low 20-27%).",,
+ses_household_measure,inferred,,"""Income: site-specific annual household income (4 bands)""",Parent-reported; band limits differ by site (CountrySpecLevel). See ses_household.,,
+ses_hukou,unavailable,,,Hukou not asked at the China site.,,
 maternal_education,compatible,"newmother_edu3, newmother_edu2","case_when(
   as.integer(newmother_edu3) == 1L ~ ""Secondary school or less"",
   as.integer(newmother_edu3) == 2L & as.integer(newmother_edu2) == 1L ~ ""Secondary school or less"",
@@ -85,6 +139,11 @@ parental_education,compatible,"High_edu_3cat, High_edu_2cat","case_when(
 urbanicity,unavailable,,,"Not collected. Every site sampled within one metropolitan area, so urban/suburban but not distinguishable.",,
 family_structure,compatible,"live_in_houseBioMother, live_in_houseBioFather, live_in_houseAdopMother, live_in_houseAdopFather, live_in_houseStepMother, live_in_houseStepFather","case_when(
   is.na(live_in_houseBioMother) ~ ""Unknown"",
+  (coalesce(live_in_houseBioMother, 0) +
+    coalesce(live_in_houseBioFather, 0) +
+    coalesce(live_in_houseAdopMother, 0) +
+    coalesce(live_in_houseAdopFather, 0)) >=
+    2 ~ ""Two biological/adoptive parents"",
   (coalesce(live_in_houseStepMother, 0) + coalesce(live_in_houseStepFather, 0)) >= 1 &
     (coalesce(live_in_houseBioMother, 0) +
       coalesce(live_in_houseBioFather, 0) +
@@ -94,38 +153,37 @@ family_structure,compatible,"live_in_houseBioMother, live_in_houseBioFather, liv
   (coalesce(live_in_houseBioMother, 0) +
     coalesce(live_in_houseBioFather, 0) +
     coalesce(live_in_houseAdopMother, 0) +
-    coalesce(live_in_houseAdopFather, 0)) >=
-    2 ~ ""Two biological/adoptive parents"",
-  (coalesce(live_in_houseBioMother, 0) +
-    coalesce(live_in_houseBioFather, 0) +
-    coalesce(live_in_houseAdopMother, 0) +
     coalesce(live_in_houseAdopFather, 0)) ==
     1 ~ ""Single parent"",
   .default = ""Other""
-)","Derived from twelve parent-reported household-membership checkboxes (answered/missing as a block; none checked → Unknown). Step-parent + at least one biological/adoptive parent → Step family; 2+ biological/adoptive parents → Two biological/adoptive parents; exactly 1 → Single parent; none → Other (grandparent, relative, guardian, friend).",,
-fam_screenrules,in_progress,,,,,
-fam_bedroomscreen,in_progress,,,,,
-fam_parentstress,in_progress,,,,,
-fam_parentstress_measure,in_progress,,,,,
+)","Twelve parent-reported household-membership checkboxes; a missing block is Unknown. Two or more biological/adoptive parents: Two biological/adoptive parents, whatever the step ticks; one plus a step-parent: Step family; exactly one: Single parent; none: Other (grandparent, relative, guardian or step-parent only).",,
+fam_screenrules,unavailable,,,Not collected.,,
+fam_bedroomscreen,compatible,"NHEQ_ElecTv, NHEQ_ElecComp, NHEQ_ElecVideoSys","case_when(
+  as.integer(NHEQ_ElecTv) %in% 1L | as.integer(NHEQ_ElecComp) %in% 1L | as.integer(NHEQ_ElecVideoSys) %in% 1L ~ TRUE,
+  as.integer(NHEQ_ElecTv) %in% 2L | as.integer(NHEQ_ElecComp) %in% 2L | as.integer(NHEQ_ElecVideoSys) %in% 2L ~ FALSE,
+  .default = NA
+)","Parent report: 'My child has a TV / computer / video game system (non-hand held) in his/her bedroom' (yes/no); TRUE if any is yes, FALSE if every answered item is no. Devices covered: TV, computer, non-handheld games console. The child's TV-only item (DIET_TvBedroom) is not used.",,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
 school_grade,unavailable,,,"Not recorded; each site sampled the grade with the most 10-year-olds, which differs by country.",,
 st_measure_type,inferred,,"""Categorical""","Hours/day in ordered bands (0 / <1 / 1 / 2 / 3 / 4 / 5+), converted to ISCOLE's published band scores.",,
 st_measure_name,inferred,,"""Custom""",Bespoke items in the Diet and Lifestyle Questionnaire; not a named instrument.,,
 st_responder,inferred,,"""Self""",Child-completed (item wording: 'how many hours did you watch TV'); demographic/neighbourhood forms are parent-completed.,,
-st_total_wd,partial,"SchoolTV, SchoolComp",as.numeric(SchoolTV + SchoolComp),"Sum of school-day TV + computer/gaming band scores (see st_watch_wd for scoring). Partial: only TV and computer/gaming measured; phone, tablet and social media weren't asked, so this understates total screen time.",,
-st_total_we,partial,"WkendTV, WkendComp",as.numeric(WkendTV + WkendComp),Sum of weekend-day TV + computer/gaming band scores. Partial: see st_total_wd.,,
-st_total,partial,ScreenScore,as.numeric(ScreenScore),"ISCOLE's ScreenScore: (weekday * 5 + weekend * 2) / 7 summed over TV and computer, already the project's 5:2 convention. Partial: see st_total_wd.",,
-st_watch_wd,compatible,SchoolTV,as.numeric(SchoolTV),"'On a school day, how many hours did you watch TV?' ISCOLE band score in hours: 0 (did not watch), 0.5 (<1 h), 1, 2, 3, 4, 5 ('5 or more', right-censored; see ISCOLE Data Analysis Notes).",,
-st_watch_we,compatible,WkendTV,as.numeric(WkendTV),"'On a weekend day, how many hours did you watch TV?' See st_watch_wd for band scoring.",,
-st_watch,compatible,TVscore,as.numeric(TVscore),"TVscore = (SchoolTV * 5 + WkendTV * 2) / 7, already the project's 5:2 weekday:weekend convention. See st_watch_wd for band scoring.",,
+st_total_wd,incompatible,"SchoolTV, SchoolComp",,"TV and computer/video-game items (SchoolTV, SchoolComp; mapped to st_watch_wd and st_game_wd) not summed (DR-0002).",,
+st_total_we,incompatible,"WkendTV, WkendComp",,"TV and computer/video-game items (WkendTV, WkendComp; mapped to st_watch_we and st_game_we) not summed (DR-0002).",,
+st_total,incompatible,ScreenScore,,ScreenScore is the study's sum of the TV and computer/game items (mapped to st_watch and st_game); not used (DR-0002).,,
+st_watch_wd,partial,SchoolTV,as.numeric(SchoolTV),"'On a school day, how many hours did you watch TV?' (child report). Television only; viewing on other devices not asked (2011-2013). ISCOLE band score: did not watch 0, less than 1 hour 0.5, 1-4 hours as stated, top band '5 or more hours' = 5.",,
+st_watch_we,partial,WkendTV,as.numeric(WkendTV),"'On a weekend day, how many hours did you watch TV?' (child report). Television only; viewing on other devices not asked (2011-2013). Bands as st_watch_wd; top band '5 or more hours' = 5.",,
+st_watch,partial,TVscore,as.numeric(TVscore),TVscore = (5 x SchoolTV + 2 x WkendTV) / 7. Television only; viewing on other devices not asked (2011-2013). Bands as st_watch_wd; top band '5 or more hours' = 5.,,
 st_game_wd,partial,SchoolComp,as.numeric(SchoolComp),"'On a school/weekend day, how many hours do you play video/computer games or use a computer for things other than school work?' Partial: bundles gaming on any device with other non-school computer use; excludes schoolwork. Mapped here, not to st_comp, as gaming dominates at 9-11 years; st_comp* incompatible to avoid double-counting. See st_watch_wd for band scoring.",,
 st_game_we,partial,WkendComp,as.numeric(WkendComp),"Weekend-day item; see st_game_wd for wording, partial reasoning and scoring.",,
 st_game,partial,CompScore,as.numeric(CompScore),"CompScore = (SchoolComp * 5 + WkendComp * 2) / 7, already the project's 5:2 convention. See st_game_wd for the item wording and partial reasoning.",,
-st_game_comp_wd,incompatible,"SchoolComp, WkendComp, CompScore",,Single gaming item doesn't identify the device (computer/console/handheld/active); mapped in aggregate to st_game.,,
-st_game_comp_we,incompatible,"SchoolComp, WkendComp, CompScore",,Single gaming item doesn't identify the device (computer/console/handheld/active); mapped in aggregate to st_game.,,
-st_game_comp,incompatible,"SchoolComp, WkendComp, CompScore",,Single gaming item doesn't identify the device (computer/console/handheld/active); mapped in aggregate to st_game.,,
-st_game_console_wd,incompatible,"SchoolComp, WkendComp, CompScore",,Single gaming item doesn't identify the device (computer/console/handheld/active); mapped in aggregate to st_game.,,
-st_game_console_we,incompatible,"SchoolComp, WkendComp, CompScore",,Single gaming item doesn't identify the device (computer/console/handheld/active); mapped in aggregate to st_game.,,
-st_game_console,incompatible,"SchoolComp, WkendComp, CompScore",,Single gaming item doesn't identify the device (computer/console/handheld/active); mapped in aggregate to st_game.,,
+st_game_comp_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_comp_we,unavailable,,,No device split; see st_game_we.,,
+st_game_comp,unavailable,,,No device split; see st_game.,,
+st_game_console_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_console_we,unavailable,,,No device split; see st_game_we.,,
+st_game_console,unavailable,,,No device split; see st_game.,,
 st_game_handheldconsole_wd,unavailable,,,Not asked; only TV and computer/game items.,,
 st_game_handheldconsole_we,unavailable,,,Not asked; only TV and computer/game items.,,
 st_game_handheldconsole,unavailable,,,Not asked; only TV and computer/game items.,,
@@ -175,21 +233,14 @@ st_comp_school,unavailable,,,Not asked about time at school; ISCOLE's school-lev
 st_tablet_school,unavailable,,,Not asked about time at school; ISCOLE's school-level files aren't part of this transfer.,,
 st_internet_school,unavailable,,,Not asked about time at school; ISCOLE's school-level files aren't part of this transfer.,,
 st_phone_school,unavailable,,,Not asked about time at school; ISCOLE's school-level files aren't part of this transfer.,,
-acc_academachment_selfrated,proximate,DIET_LastWkFeelWellAtSch,"recode_values(
-  as.integer(DIET_LastWkFeelWellAtSch),
-  5L ~ ""Very good"",
-  4L ~ ""Good"",
-  3L ~ ""Average"",
-  c(1L, 2L) ~ ""Below average"",
-  default = NA_character_
-)","'Thinking about the last week, did you do well in school?' KIDSCREEN 5-point scale (1 No, not at all to 5 Extremely). Proximate: 5 points collapsed to 4 dataschema levels; asks the child's own sense of doing well, not the teacher's view. KIDSCREEN item 9; overlaps wb_qol_kidscreen10_self.",,
+acc_academachment_selfrated,incompatible,DIET_LastWkFeelWellAtSch,,"KIDSCREEN-10 item 9 (DIET_LastWkFeelWellAtSch) is a past-week school quality-of-life item on an intensity scale, counted in wb_qol_kidscreen10_self; not a rating of performance against peers.",,
 acc_academachment_lettergrades,unavailable,,,Not measured.,,
 acc_academachment_stdtest,unavailable,,,Not measured.,,
 acc_schoolengage_caresschool,unavailable,,,Not measured.,,
 acc_schoolengage_homework,unavailable,,,Not measured.,,
-acc_schoolpressure_self,in_progress,,,,,
-acc_schoolbelonging_self,in_progress,,,,,
-acc_schoolbelonging_measure,in_progress,,,,,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
 acc_academachment_numgrades,unavailable,,,Not measured.,,
 acc_academachment_teacherrated,unavailable,,,Not measured.,,
 acc_numeracy_stdtest,unavailable,,,Not measured.,,
@@ -197,7 +248,7 @@ acc_literacy_stdtest,unavailable,,,Not measured.,,
 beh_hyper_basc2,unavailable,,,Not measured.,,
 beh_atten_basc2,unavailable,,,Not measured.,,
 beh_atten_self,incompatible,DIET_LastWkFeelPayAttention,,Single KIDSCREEN item 'Have you been able to pay attention?' (higher = better); schema needs a multi-item total with higher = more problems.,,
-beh_atten_measure,in_progress,,,,,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
 beh_selfreg_htks,unavailable,,,Not measured.,,
 beh_bullied,unavailable,,,Not measured.,,
 beh_beenbullied,unavailable,,,Not measured.,,
@@ -207,9 +258,9 @@ beh_fight,unavailable,,,Not measured.,,
 beh_truancy,unavailable,,,"Not collected; the NHEQ skipping-school item asks about neighbours, not the child.",,
 beh_stealing,unavailable,,,Not collected.,,
 beh_vandalism,unavailable,,,"Not collected; the NHEQ graffiti item asks about neighbours, not the child.",,
-beh_alcohol_self,in_progress,,,,,
-beh_tobacco_self,in_progress,,,,,
-beh_cannabis_self,in_progress,,,,,
+beh_alcohol_self,unavailable,,,Not collected.,,
+beh_tobacco_self,unavailable,,,Not collected.,,
+beh_cannabis_self,unavailable,,,Not collected.,,
 beh_conduct_sdq_parent,unavailable,,,Not measured.,,
 beh_hyper_sdq_parent,unavailable,,,Not measured.,,
 beh_peerprob_sdq_parent,unavailable,,,Not measured.,,
@@ -219,7 +270,7 @@ beh_aggverb_bpaq_self,unavailable,,,Not measured.,,
 beh_agganger_bpaq_self,unavailable,,,Not measured.,,
 beh_agghostility_bpaq_self,unavailable,,,Not measured.,,
 beh_agg_self,unavailable,,,Not measured.,,
-beh_agg_measure,in_progress,,,,,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
 beh_argues,unavailable,,,Not measured.,,
 beh_persistence_finishwork,unavailable,,,Not measured.,,
 beh_emotreg_stayscalm,unavailable,,,Not measured.,,
@@ -244,8 +295,8 @@ beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
 beh_cbcl_measure,unavailable,,,CBCL not administered.,,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,Not collected.,,
-beh_problematicuse_self,in_progress,,,,,
-beh_problematicuse_measure,in_progress,,,,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
 cog_execfunc_basc2,unavailable,,,Not measured.,,
 cog_langexec_nepsy,unavailable,,,Not measured.,,
 cog_phono_nepsy,unavailable,,,Not measured.,,
@@ -324,16 +375,16 @@ mh_nobodycares_self,unavailable,,,Not collected.,,
 mh_lifenotworth_self,unavailable,,,Not collected.,,
 mh_suicide_ideation_self,unavailable,,,Not collected.,,
 mh_suicide_attempt_self,unavailable,,,Not collected.,,
-mh_selfharm_self,in_progress,,,,,
+mh_selfharm_self,unavailable,,,Not collected.,,
 mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
 mh_psychsom_measure,unavailable,,,HBSC-SCL not administered.,,
-mh_somatic_self,in_progress,,,,,
-mh_somatic_measure,in_progress,,,,,
+mh_somatic_self,unavailable,,,Not collected.,,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
 wb_emotsc_basc2,unavailable,,,Not measured.,,
 wb_mwb_wemwbs,unavailable,,,Not measured.,,
 wb_lifesatisfaction_cantrilladder,unavailable,,,Not measured.,,
 wb_resil_basc2,unavailable,,,Not measured.,,
-wb_psychcomplaints_feellow,incompatible,DIET_LastWkFeelSad,,"Nearest item is KIDSCREEN 'Did you feel sad?' (5-point intensity); schema row is the HBSC checklist item (different wording, frequency scale).",,
+wb_psychcomplaints_feellow,incompatible,DIET_LastWkFeelSad,,"KIDSCREEN-10 'Did you feel sad?' (past week, intensity scale) is not the HBSC-SCL item; scored in wb_qol_kidscreen10_self.",,
 wb_psychcomplaints_irritable,unavailable,,,Not measured.,,
 wb_psychcomplaints_nervous,unavailable,,,Not measured.,,
 wb_psychcomplaints_diffsleep,unavailable,,,Not measured.,,
@@ -341,15 +392,15 @@ wb_bodyimage,unavailable,,,Not measured.,,
 wb_lifesat_slss_self,unavailable,,,Not measured.,,
 wb_lifesat_swls_self,unavailable,,,Not measured.,,
 wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
-wb_happiness_singleitem_self,in_progress,,,,,
-wb_domainsat_schoolwork_self,incompatible,DIET_LastWkFeelWellAtSch,,"KIDSCREEN 'Did you do well in school?' rates performance, not satisfaction.",,
+wb_happiness_singleitem_self,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,incompatible,DIET_LastWkFeelWellAtSch,,"KIDSCREEN-10 item 9 (did you do well in school, past week) is a school quality-of-life item, not satisfaction with school work; scored in wb_qol_kidscreen10_self.",,
 wb_domainsat_appearance_self,unavailable,,,Not collected.,,
-wb_domainsat_family_self,incompatible,DIET_LastWkFeelParentTreatFairly,,KIDSCREEN 'Have your parent(s) treated you fairly?' is not satisfaction with family.,,
-wb_domainsat_friends_self,incompatible,DIET_LastWkFeelFunWithFriends,,KIDSCREEN 'Did you have fun with your friends?' is not satisfaction with friends.,,
+wb_domainsat_family_self,incompatible,DIET_LastWkFeelParentTreatFairly,,"KIDSCREEN-10 'Have your parent(s) treated you fairly?' (past week) is a fair-treatment item, not satisfaction with family; scored in wb_qol_kidscreen10_self.",,
+wb_domainsat_friends_self,incompatible,DIET_LastWkFeelFunWithFriends,,KIDSCREEN-10 'Did you have fun with your friends?' (past week) is not satisfaction with friends; scored in wb_qol_kidscreen10_self.,,
 wb_domainsat_school_self,unavailable,,,Not collected.,,
 wb_qol_pedsql_self,unavailable,,,Not measured.,,
 wb_qol_pedsql_parent,unavailable,,,Not measured.,,
-wb_qol_kidscreen10_self,compatible,"DIET_LastWkFeelFit, DIET_LastWkFeelFullEnergy, DIET_LastWkFeelSad, DIET_LastWkFeelLonely, DIET_LastWkFeelTimeForSelf, DIET_LastWkFeelWantToDoFreetime, DIET_LastWkFeelParentTreatFairly, DIET_LastWkFeelFunWithFriends, DIET_LastWkFeelWellAtSch, DIET_LastWkFeelPayAttention","DIET_LastWkFeelFit +
+wb_qol_kidscreen10_self,partial,"DIET_LastWkFeelFit, DIET_LastWkFeelFullEnergy, DIET_LastWkFeelSad, DIET_LastWkFeelLonely, DIET_LastWkFeelTimeForSelf, DIET_LastWkFeelWantToDoFreetime, DIET_LastWkFeelParentTreatFairly, DIET_LastWkFeelFunWithFriends, DIET_LastWkFeelWellAtSch, DIET_LastWkFeelPayAttention","DIET_LastWkFeelFit +
   DIET_LastWkFeelFullEnergy +
   (6 - DIET_LastWkFeelSad) +
   (6 - DIET_LastWkFeelLonely) +
@@ -358,13 +409,13 @@ wb_qol_kidscreen10_self,compatible,"DIET_LastWkFeelFit, DIET_LastWkFeelFullEnerg
   DIET_LastWkFeelParentTreatFairly +
   DIET_LastWkFeelFunWithFriends +
   DIET_LastWkFeelWellAtSch +
-  DIET_LastWkFeelPayAttention","Ten KIDSCREEN-10 items (1-5 scale) summed, sad and lonely reverse-scored so higher = better QoL; any item missing → NA. ISCOLE's own KidScreen is the Rasch T-value, outside the 10-50 raw-sum range; raw sum is monotone with it.",,
+  DIET_LastWkFeelPayAttention","ISCOLE asks all ten items on the 1-5 intensity scale (not at all-extremely); the standard form uses frequency anchors for eight items. Raw sum 10-50 with sad and lonely reversed (6 - x), complete-case; child report, past week. The study's KidScreen Rasch T-value is not used.",,
 wb_qol_kidscreen10_parent,unavailable,,,Not measured.,,
 wb_selfesteem_rosenberg_self,unavailable,,,Not measured.,,
 wb_selfesteem_self,unavailable,,,No self-esteem measure.,,
 wb_selfesteem_measure,unavailable,,,No self-esteem measure.,,
 wb_selfefficacy_gse_self,unavailable,,,Not measured.,,
-wb_selfefficacy_self,incompatible,"DIET_PhysicallyActive, DIET_ParentActiveWithMe, DIET_PhysActiveFreeTimeTVComp, DIET_PhysActiveFreeTimeHotCold, DIET_BestFriendActveWithMe, DIET_PhysicalActiveEvenStayHome, DIET_HaveCoordPhysicalAciveFree, DIET_PhysActiveFreeNoMatterBusy",,Eight physical-activity self-efficacy items; not general self-efficacy.,,
+wb_selfefficacy_self,incompatible,"DIET_PhysicallyActive, DIET_ParentActiveWithMe, DIET_PhysActiveFreeTimeTVComp, DIET_PhysActiveFreeTimeHotCold, DIET_BestFriendActveWithMe, DIET_PhysicalActiveEvenStayHome, DIET_HaveCoordPhysicalAciveFree, DIET_PhysActiveFreeNoMatterBusy",,Eight physical-activity self-efficacy items only; domain-specific efficacy is not general self-efficacy and maps to no row.,,
 wb_selfefficacy_measure,unavailable,,,No general self-efficacy measure.,,
 wb_mwb_who5_self,unavailable,,,Not measured.,,
 wb_happiness_shs_self,unavailable,,,Not measured.,,
@@ -378,16 +429,19 @@ wb_selfratedhealth_self,compatible,DIET_LastWkFeelHealthIs,"recode_values(
   5 ~ ""Poor"",
   default = NA_character_
 )","KIDSCREEN-10 general health item, 'In general, how would you describe your health?', standard five levels.",,
-wb_generalhealth_parent,in_progress,,,,,
+wb_generalhealth_parent,incompatible,DIET_LastWkFeelHealthIs,,"Only the child's self-rated KIDSCREEN-10 general health item (DIET_LastWkFeelHealthIs), mapped to wb_selfratedhealth_self; no parent rating.",,
 wb_posaffect_self,unavailable,,,No positive affect scale.,,
 wb_posaffect_measure,unavailable,,,No positive affect scale.,,
 wb_eudaimonic_self,unavailable,,,No eudaimonic wellbeing scale.,,
 wb_eudaimonic_measure,unavailable,,,No eudaimonic wellbeing scale.,,
-wb_socsupport_family_self,in_progress,,,,,
-wb_socsupport_friends_self,in_progress,,,,,
-wb_socsupport_measure,in_progress,,,,,
-hlth_sleep_wd,in_progress,,,,,
-hlth_sleep_we,in_progress,,,,,
-hlth_sleep,in_progress,,,,,
-hlth_sleepprob,in_progress,,,,,
-hlth_sleepprob_measure,in_progress,,,,,
+wb_socsupport_family_self,incompatible,DIET_LastWkFeelParentTreatFairly,,"KIDSCREEN-10 'Have your parent(s) treated you fairly?' (past week) is a single item, not a support scale; scored in wb_qol_kidscreen10_self.",,
+wb_socsupport_friends_self,incompatible,DIET_LastWkFeelFunWithFriends,,"KIDSCREEN-10 'Did you have fun with your friends?' (past week) is a single item, not a support scale; scored in wb_qol_kidscreen10_self.",,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,partial,"SchoolDayLightsOut, SchoolDayWokenUp",((as.numeric(SchoolDayWokenUp) - as.numeric(SchoolDayLightsOut)) %% 86400) / 3600,"Child report, past week: wake time minus 'what time did you turn out the light and go to sleep on school days' (clock times, across midnight). Partial: lights-out and wake times, not hours asleep. Implausible spans (under 4 or over 16 hours, 0.2%) kept as reported.",,
+hlth_sleep_we,partial,"WeekendLightsOut, WeekendWokenUp",((as.numeric(WeekendWokenUp) - as.numeric(WeekendLightsOut)) %% 86400) / 3600,"Child report, past weekend: wake time minus lights-out time, as hlth_sleep_wd. Partial: lights-out and wake times, not hours asleep. Implausible spans (under 4 or over 16 hours, 0.8%) kept as reported.",,
+hlth_sleep,partial,"SchoolDayLightsOut, SchoolDayWokenUp, WeekendLightsOut, WeekendWokenUp","(5 *
+  (((as.numeric(SchoolDayWokenUp) - as.numeric(SchoolDayLightsOut)) %% 86400) / 3600) +
+  2 * (((as.numeric(WeekendWokenUp) - as.numeric(WeekendLightsOut)) %% 86400) / 3600)) /
+  7","(5 x hlth_sleep_wd + 2 x hlth_sleep_we) / 7. Partial: lights-out and wake times, not hours asleep.",,
+hlth_sleepprob,incompatible,"DIET_WkRateSleep, DIET_WkHowMuchSleep",,"Two single past-week ratings of sleep quality and sleep quantity (4 points, very good to very poor), not a sleep-problems scale; no row holds them.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,

@@ -9,6 +9,9 @@
 #' few items); `bp696_deduplicate()` collapses these to one row per child per
 #' wave.
 #'
+#' Adds `dob_conflict` (dob blanked where the sheets disagree) and CBCL/1.5-5
+#' mean item scores (`cbcl_*_mean`) computed from the items.
+#'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
@@ -58,7 +61,137 @@ tidy_BPIPD_696 <- function(raw_dataset, spec) {
     )
   }
 
+  df <- bp696_blank_conflicting_dob(df)
+
+  # Parent education is carried within child from the earliest wave that
+  # records it (two children lack father's education at midline/endline).
+  wave_order <- match(df$.wave, c("Baseline", "Midline", "Endline"))
+  for (column in c("Q12_father_education", "12.1_mother_education")) {
+    df[[column]] <- carry_within(df[[column]], df$participant_id, wave_order)
+  }
+
+  bp696_add_cbcl_scores(df)
+}
+
+#' Blank the date of birth of children recorded with two different dates
+#'
+#' 33 intervention children have one dob in the baseline sheet and another in
+#' the midline/endline sheets (baseline later by whole years in 22 of them).
+#' Which sheet is right is unconfirmed, so their `dob` is NA at every wave and
+#' `dob_conflict` flags them; the parsed original stays in the Q4 column.
+bp696_blank_conflicting_dob <- function(df) {
+  distinct <- stats::ave(
+    as.numeric(df$dob),
+    df$participant_id,
+    FUN = function(x) length(unique(x[!is.na(x)]))
+  )
+  conflict <- distinct > 1
+
+  df$dob[conflict] <- NA
+  tibble::add_column(df, dob_conflict = conflict, .after = "dob")
+}
+
+#' Add CBCL/1.5-5 mean item scores computed from the item columns
+#'
+#' The study's scale totals are not used: they count a missing item as 0, keep
+#' off-scale codes (items 30, 98 and 99 hold 4, 5 and 3 once each), and the
+#' baseline control WITHDRAWN total sums item 63 in place of item 62. Codes
+#' outside 0-2 are set to NA here, before scoring; the item columns keep the
+#' delivered values.
+#'
+#' Syndrome score: mean of the answered items, NA when fewer than 80% are
+#' answered. Composite: mean over the union of its syndromes' items, NA unless
+#' every syndrome meets its own 80% threshold.
+bp696_add_cbcl_scores <- function(df) {
+  items <- bp696_cbcl_item_matrix(df)
+  syndromes <- bp696_cbcl_syndromes()
+
+  syndrome_mean <- function(numbers) {
+    block <- items[, numbers, drop = FALSE]
+    scores <- rowMeans(block, na.rm = TRUE)
+    scores[rowSums(!is.na(block)) < ceiling(0.8 * length(numbers))] <-
+      NA_real_
+    scores
+  }
+
+  composite_mean <- function(components) {
+    numbers <- sort(unique(unlist(syndromes[components])))
+    scores <- rowMeans(items[, numbers, drop = FALSE], na.rm = TRUE)
+    for (component in components) {
+      scores[is.na(syndrome_mean(syndromes[[component]]))] <- NA_real_
+    }
+    scores
+  }
+
+  for (syndrome in names(syndromes)) {
+    df[[paste0("cbcl_", syndrome, "_mean")]] <-
+      syndrome_mean(syndromes[[syndrome]])
+  }
+  df$cbcl_externalising_mean <- composite_mean(c("aggressive", "attention"))
+  df$cbcl_internalising_mean <- composite_mean(
+    c("emoreactive", "anxdep", "somatic", "withdrawn")
+  )
+
   df
+}
+
+#' CBCL/1.5-5 items 1-99 as a numeric matrix, codes outside 0-2 set to NA
+#'
+#' Column k is item k. The items sit in one block starting at item 1; the
+#' check guards against a sheet change moving them.
+bp696_cbcl_item_matrix <- function(df) {
+  first <- match(
+    "Q1_Aches_or_pains__without_medical_cause;_do_2t_include_stomach_or_headaches",
+    names(df)
+  )
+  block <- names(df)[first + 0:98]
+  if (
+    is.na(first) ||
+      !identical(sub("^Q([0-9]+)_.*$", "\\1", block), as.character(1:99))
+  ) {
+    stop("BPIPD-696: CBCL items 1-99 are not one ordered block.", call. = FALSE)
+  }
+
+  items <- vapply(
+    block,
+    function(name) suppressWarnings(as.numeric(df[[name]])),
+    numeric(nrow(df))
+  )
+  items <- matrix(items, nrow = nrow(df))
+  items[!items %in% c(0, 1, 2)] <- NA_real_
+  items
+}
+
+#' Published CBCL/1.5-5 syndrome scales used by the dataschema, by item number
+bp696_cbcl_syndromes <- function() {
+  list(
+    emoreactive = c(21, 46, 51, 79, 82, 83, 92, 97, 99),
+    anxdep = c(10, 33, 37, 43, 47, 68, 87, 90),
+    somatic = c(1, 7, 12, 19, 24, 39, 45, 52, 78, 86, 93),
+    withdrawn = c(2, 4, 23, 62, 67, 70, 71, 98),
+    attention = c(5, 6, 56, 59, 95),
+    aggressive = c(
+      8,
+      15,
+      16,
+      18,
+      20,
+      27,
+      29,
+      35,
+      40,
+      42,
+      44,
+      53,
+      58,
+      66,
+      69,
+      81,
+      85,
+      88,
+      96
+    )
+  )
 }
 
 #' Collapse duplicate records and build the participant identifier

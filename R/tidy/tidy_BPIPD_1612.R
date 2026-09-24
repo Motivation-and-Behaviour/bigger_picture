@@ -32,7 +32,7 @@ tidy_BPIPD_1612 <- function(raw_dataset, spec) {
     .before = 1L
   )
 
-  long <- bp1612_resolve_sex(dplyr::bind_rows(t1, t2))
+  long <- dplyr::bind_rows(t1, t2)
   long <- bp1612_label_columns(long, raw_dataset$codebook$codebook, maps$T2)
 
   if (anyDuplicated(long[c("participant_id", "wave")]) > 0) {
@@ -179,22 +179,6 @@ bp1612_link <- function(block, roster) {
 #' A row's T1 answers as one string
 bp1612_key <- function(df) {
   do.call(paste, c(lapply(df, function(x) sprintf("%.6f", x)), list(sep = "|")))
-}
-
-#' Blank a child's sex where the two waves disagree
-#'
-#' Two children are a boy at one wave, a girl at the other; nothing says
-#' which is right, so neither value is kept.
-bp1612_resolve_sex <- function(df) {
-  dplyr::mutate(
-    df,
-    Child_sex = if (dplyr::n_distinct(Child_sex, na.rm = TRUE) > 1L) {
-      NA_real_
-    } else {
-      Child_sex
-    },
-    .by = "participant_id"
-  )
 }
 
 #' Label the tidied columns from the workbook's `variables_longit` sheet

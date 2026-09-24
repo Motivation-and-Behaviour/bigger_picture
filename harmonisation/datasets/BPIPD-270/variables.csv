@@ -3,19 +3,19 @@ participant_id,compatible,ID,as.character(ID),Numeric panel ID; unique across bo
 wave,compatible,wave,as.character(wave),"Wave label from the tidier (w1-w7), 2018-2024 annual collections.",,
 data_year,inferred,wave,"recode_values(wave, ""w1"" ~ 2018, ""w2"" ~ 2019, ""w3"" ~ 2020, ""w4"" ~ 2021, ""w5"" ~ 2022, ""w6"" ~ 2023, ""w7"" ~ 2024)","One collection per year, w1 = 2018 to w7 = 2024; from the spec.",,
 rct_arm,unavailable,,,Observational panel survey with no randomised allocation.,,
-survey_weight,in_progress,,,,,
-survey_strata,in_progress,,,,,
-survey_cluster,in_progress,,,,,
-age_years,partial,"YBRT1A, wave","recode_values(wave, ""w1"" ~ 2018, ""w2"" ~ 2019, ""w3"" ~ 2020, ""w4"" ~ 2021, ""w5"" ~ 2022, ""w6"" ~ 2023, ""w7"" ~ 2024) -
-  as.numeric(YBRT1A)","Collection year minus self-reported birth year; no interview date, so accurate to +/- 1 year. Some w7 ages (m1 cohort, older siblings) exceed the schema max of 19.",,
+survey_weight,compatible,WEIGHTA1,as.numeric(WEIGHTA1),"Main panel only; siblings are outside the weighted sample (NA). Cross-sectional original weight (WEIGHTA1), not rescaled.",,
+survey_strata,unavailable,,,Not released.,,
+survey_cluster,incompatible,SCLID,,"Only the current school code (SCLID), which changes when participants move school; the sampled school and design are not documented in the supplied files.",,
+age_years,compatible,"YBRT1A, wave","recode_values(wave, ""w1"" ~ 2018, ""w2"" ~ 2019, ""w3"" ~ 2020, ""w4"" ~ 2021, ""w5"" ~ 2022, ""w6"" ~ 2023, ""w7"" ~ 2024) -
+  as.numeric(YBRT1A)","Collection year minus birth year (YBRT1A); no interview date or documented fieldwork window, so no midpoint adjustment and no +0.5. w7 ages above 19 (m1 cohort, older siblings) are kept.",,
 sex,compatible,YGENDER,"recode_values(as.numeric(YGENDER), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")",No 'other'/'prefer not to say' option; the Unknown default is only a guard.,,
-country,inferred,,"""South Korea""",Fieldwork in the Republic of Korea. 'South Korea' is not yet in the schema's allowed_values; needs adding.,,
+country,inferred,,"""South Korea""",No country variable; fieldwork in the Republic of Korea.,,
 state,unavailable,,,Australian states only. ARA1A/ARA1B record Korean city/province.,,
-ethnicity,unavailable,,,No ethnicity/race item; PBRP1 (guardian's birthplace) does not describe the child.,,
+ethnicity,incompatible,PBRP1,,No ethnicity or race item; PBRP1 (guardian's birthplace) does not describe the child.,,
 indigenous,unavailable,,,No indigenous-status item; the concept is not used in the Korean context.,,
-minority,unavailable,,,No child ethnicity or migrant-background item; PBRP1 (guardian born abroad) too indirect.,,
-immigrant_background,partial,"PARENT, PBRP1","case_when(as.numeric(PARENT) %in% c(1, 2) & as.numeric(PBRP1) == 1 ~ ""Native"", .default = ""Unknown"")","Native when the responding parent (PARENT) was born in Korea (PBRP1); other parent's birthplace not asked, so else Unknown.",,
-born_in_country,in_progress,,,,,
+minority,incompatible,PBRP1,,Guardian birthplace only (PBRP1); cannot identify minority children.,,
+immigrant_background,incompatible,"PARENT, PBRP1",,Responding guardian's birthplace only (PBRP1); the other parent's is not asked.,,
+born_in_country,compatible,PYBRP1,"recode_values(as.numeric(PYBRP1), 1 ~ ""Yes"", 2 ~ ""No"", default = ""Unknown"")","Guardian report of the child's birthplace (PYBRP1: in Korea / abroad), every wave; missing = Unknown.",,
 ses_area,unavailable,,,"No area-level deprivation measure. ARA2A is settlement size, mapped to urbanicity instead.",,
 ses_household,proximate,"PINCOME, wave","case_when(
   is.na(na_if(as.numeric(PINCOME), 9999)) ~ ""Unknown"",
@@ -24,8 +24,8 @@ ses_household,proximate,"PINCOME, wave","case_when(
   na_if(as.numeric(PINCOME), 9999) <=
     recode_values(wave, c(""w1"", ""w2"") ~ 6, c(""w3"", ""w4"", ""w5"") ~ 7, c(""w6"", ""w7"") ~ 8) ~ ""Medium"",
   .default = ""High""
-)","Guardian-reported banded monthly household income (12 bands). Cut per wave at the band whose cumulative share is nearest 40% and 60% (nominal incomes rose 2018-2024): Low = bands 1-5 (w1-w2), 1-6 (w3-w6), 1-7 (w7); Medium up to band 6 (w1-w2), 7 (w3-w5), 8 (w6-w7). Proximate: coarse bands give only approximate quintiles. 9999 (No response) and missing guardian record = Unknown.",,
-ses_household_measure,inferred,,"""Banded average monthly household income (12 bands, guardian report)""",Records the source measure behind ses_household.,,
+)","Guardian-reported average monthly household income (PINCOME, 12 bands), cut by within-wave band ridit (the hard-coded cuts equal the ridit in all 7 waves): Low = bands 1-5 (w1-w2), 1-6 (w3-w6), 1-7 (w7); Medium = band 6 (w1-w2), 7 (w3-w5), 7-8 (w6), 8 (w7). Proximate: w6 splits 29/38/33 (two bands have ridits in 0.4-0.6); w1-w5 and w7 lie within 10 points of 40/20/40. 9999 (No response) and missing guardian record = Unknown.",,
+ses_household_measure,inferred,,"""Income: monthly household income (12 bands)""",Guardian report (PINCOME); see ses_household.,,
 ses_hukou,unavailable,,,Not a Chinese dataset.,,
 maternal_education,compatible,PSCHOOL2,"lookup_values(
   recode_values(
@@ -44,37 +44,58 @@ maternal_education,compatible,PSCHOOL2,"lookup_values(
   dataset_id = spec$dataset_id,
   target_variable = ""maternal_education""
 )","Guardian-reported mother's highest education. Codes 8 (Not sure), 9 (undocumented, concentrated in father-absent households) and 10 (N/A) map to Unknown.",maternal_education,
-paternal_education,compatible,PSCHOOL1,"recode_values(
-  as.numeric(PSCHOOL1),
-  c(1, 2, 3, 4) ~ ""Secondary school or less"",
-  5 ~ ""Post-secondary"",
-  c(6, 7) ~ ""Bachelor degree or higher"",
-  default = ""Unknown""
-)","Guardian-reported father's highest education, recoded inline to the maternal_education lookup's categories. Codes 8/9/10 and missing = Unknown.",,
-parental_education,compatible,"PSCHOOL1, PSCHOOL2","recode_values(
-  pmax(
-    ifelse(as.numeric(PSCHOOL1) %in% 1:7, as.numeric(PSCHOOL1), NA),
-    ifelse(as.numeric(PSCHOOL2) %in% 1:7, as.numeric(PSCHOOL2), NA),
-    na.rm = TRUE
+paternal_education,compatible,PSCHOOL1,"lookup_values(
+  recode_values(
+    as.numeric(PSCHOOL1),
+    1 ~ ""Did not go to school"",
+    2 ~ ""Graduated elementary school"",
+    3 ~ ""Graduated middle school"",
+    4 ~ ""Graduated high school"",
+    5 ~ ""Graduated 2-3 year college"",
+    6 ~ ""Graduated 4 year college"",
+    7 ~ ""Graduated graduate school"",
+    c(8, 9, 10) ~ ""Not reported or not applicable"",
+    default = ""Not reported or not applicable""
   ),
-  c(1, 2, 3, 4) ~ ""Secondary school or less"",
-  5 ~ ""Post-secondary"",
-  c(6, 7) ~ ""Bachelor degree or higher"",
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education"",
   default = ""Unknown""
-)",Higher of father's and mother's education (codes 1-7 ordered by level); codes 8/9/10 dropped first so one reported parent still counts.,,
+)","Guardian-reported father's highest completed education (PSCHOOL1) through the maternal_education lookup. Codes 8 (Not sure), 9 (undocumented) and 10 (Not applicable) and missing = Unknown.",maternal_education,
+parental_education,compatible,"PSCHOOL1, PSCHOOL2","lookup_values(
+  recode_values(
+    pmax(
+      ifelse(as.numeric(PSCHOOL1) %in% 1:7, as.numeric(PSCHOOL1), NA),
+      ifelse(as.numeric(PSCHOOL2) %in% 1:7, as.numeric(PSCHOOL2), NA),
+      na.rm = TRUE
+    ),
+    1 ~ ""Did not go to school"",
+    2 ~ ""Graduated elementary school"",
+    3 ~ ""Graduated middle school"",
+    4 ~ ""Graduated high school"",
+    5 ~ ""Graduated 2-3 year college"",
+    6 ~ ""Graduated 4 year college"",
+    7 ~ ""Graduated graduate school"",
+    default = ""Not reported or not applicable""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education"",
+  default = ""Unknown""
+)","Higher of father's and mother's education (PSCHOOL1, PSCHOOL2; codes 1-7 ordered by level) through the maternal_education lookup; codes 8/9/10 dropped first, so one reported parent suffices.",maternal_education,
 urbanicity,proximate,ARA2A,"recode_values(as.numeric(ARA2A), 1 ~ ""Urban"", 2 ~ ""Suburban"", 3 ~ ""Rural"", default = ""Unknown"")","Settlement size of school location. Proximate: middle category is small/medium cities, not suburbs; three-level order preserved.",,
-family_structure,partial,PFAM1A00,"recode_values(
+family_structure,proximate,PFAM1A00,"recode_values(
   as.numeric(PFAM1A00),
   c(1, 4) ~ ""Two biological/adoptive parents"",
   c(2, 5) ~ ""Single parent"",
   c(3, 6) ~ ""Other"",
   default = ""Unknown""
-)","Guardian-reported household composition. Codes 4/5 (with co-resident grandparents) classified on the parents present. Partial: no step-parent category, so step families fall into 'Two biological/adoptive parents'.",,
-fam_screenrules,in_progress,,,,,
-fam_bedroomscreen,in_progress,,,,,
-fam_parentstress,in_progress,,,,,
-fam_parentstress_measure,in_progress,,,,,
-school_grade,partial,"SGRADE, cohort, wave, respondent","case_when(
+)","Guardian-reported household composition (PFAM1A00); codes 4/5 (with co-resident grandparents) classified on the parents present. Proximate: no step-parent category, so step families fall into 'Two biological/adoptive parents'.",,
+fam_screenrules,unavailable,,,Not collected.,,
+fam_bedroomscreen,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+school_grade,inferred,"SGRADE, cohort, wave, respondent","case_when(
   as.numeric(SGRADE) %in% 1:12 ~ recode_values(
     as.numeric(SGRADE),
     1 ~ ""Elementary School 1st Grade"",
@@ -111,45 +132,21 @@ school_grade,partial,"SGRADE, cohort, wave, respondent","case_when(
     ""w7"" ~ NA_character_
   ),
   .default = NA_character_
-)","Siblings report grade (SGRADE). Main panel has no grade item; inferred from cohort design (e4 = elementary grade 4, m1 = middle grade 1 at w1, +1 per wave; repetition rare in Korea). Missing for m1 at w7 (left school) and SGRADE code 13 (undocumented; out of school).",,
+)","Main panel has no grade item: inferred from cohort design (the codebook's Elementary 4 and Middle 1 cohorts at w1, +1 grade per wave; repetition rare). Siblings report grade (SGRADE). m1 main panel NA at w7: 2,033 answered the adult form (left school) and 40 the school form (SCLTYP) with no grade item. SGRADE code 13 (undocumented) NA.",,
 st_measure_type,inferred,,"""Categorical""",Time-use items use seven ordered duration bands.,,
 st_measure_name,inferred,,"""Custom""","Bespoke KCYPS time-use grid (Q1), not a named instrument.",,
 st_responder,inferred,,"""Self""",Youth self-report time-use grid.,,
-st_total_wd,partial,"YTIM1K01, YTIM1L01, YTIM1M01, YTIM1F01","sum_nonmissing(
-  recode_values(as.numeric(YTIM1K01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-  recode_values(as.numeric(YTIM1L01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-  recode_values(as.numeric(YTIM1M01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-  recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)
-)","Sum of four weekday items: leisure smartphone, leisure computer, leisure TV, internet/TV lectures. Band midpoints in hours (1=0, 2=0.25, 3=0.75, 4=1.5, 5=2.5, 6=3.5, 7=4.5); open top band '4 hours or more' = 4.5. Recall: last semester. Partial: school/homework screen use not separable from other study time; top band caps heavy users.",,
-st_total_we,partial,"YTIM1K02, YTIM1L02, YTIM1M02, YTIM1F02","sum_nonmissing(
-  recode_values(as.numeric(YTIM1K02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-  recode_values(as.numeric(YTIM1L02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-  recode_values(as.numeric(YTIM1M02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-  recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)
-)",Weekend counterpart of st_total_wd.,,
-st_total,partial,"YTIM1K01, YTIM1K02, YTIM1L01, YTIM1L02, YTIM1M01, YTIM1M02, YTIM1F01, YTIM1F02","((sum_nonmissing(
-  recode_values(as.numeric(YTIM1K01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-  recode_values(as.numeric(YTIM1L01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-  recode_values(as.numeric(YTIM1M01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-  recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)
-) *
-  5) +
-  (sum_nonmissing(
-    recode_values(as.numeric(YTIM1K02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-    recode_values(as.numeric(YTIM1L02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-    recode_values(as.numeric(YTIM1M02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5),
-    recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)
-  ) *
-    2)) /
-  7",5:2 weekday:weekend weighted mean. See st_total_wd.,,
-st_watch_wd,compatible,YTIM1M01,"recode_values(as.numeric(YTIM1M01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","Leisure TV, weekday. Bands and recall as st_total_wd.",,
-st_watch_we,compatible,YTIM1M02,"recode_values(as.numeric(YTIM1M02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","Leisure TV, weekend day. Bands and recall as st_total_wd.",,
-st_watch,compatible,"YTIM1M01, YTIM1M02","((recode_values(as.numeric(YTIM1M01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 5) +
-  (recode_values(as.numeric(YTIM1M02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 2)) /
-  7",5:2 weighted mean. Bands and recall as st_total_wd.,,
-st_game_wd,incompatible,,,"Only smartphone gaming frequency (YMDA1B06: Never/Rarely/Occasionally/Frequently); not a duration, one device.",,
-st_game_we,incompatible,,,See st_game_wd.,,
-st_game,incompatible,,,See st_game_wd.,,
+st_total_wd,incompatible,"YTIM1K01, YTIM1L01, YTIM1M01, YTIM1F01",,"Separate weekday smartphone, computer, TV and lecture items (YTIM1K01, YTIM1L01, YTIM1M01, YTIM1F01), mapped to st_phone_wd, st_comp_wd, st_watch_wd and st_educational_wd; not summed (DR-0002).",,
+st_total_we,incompatible,"YTIM1K02, YTIM1L02, YTIM1M02, YTIM1F02",,"Separate weekend smartphone, computer, TV and lecture items (YTIM1K02, YTIM1L02, YTIM1M02, YTIM1F02), mapped to st_phone_we, st_comp_we, st_watch_we and st_educational_we; not summed (DR-0002).",,
+st_total,incompatible,"YTIM1K01, YTIM1K02, YTIM1L01, YTIM1L02, YTIM1M01, YTIM1M02, YTIM1F01, YTIM1F02",,"Separate smartphone, computer, TV and lecture items (YTIM1K/L/M/F), mapped to st_phone, st_comp, st_watch and st_educational; not summed (DR-0002).",,
+st_watch_wd,partial,YTIM1M01,"recode_values(as.numeric(YTIM1M01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4)","'Leisure time watching TV', weekday, last semester. Partial: leisure TV only; viewing on other devices not asked. Bands at midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5); top band '4 hours or more' = 4.",,
+st_watch_we,partial,YTIM1M02,"recode_values(as.numeric(YTIM1M02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4)",Weekend counterpart of st_watch_wd; leisure TV only. Top band '4 hours or more' = 4.,,
+st_watch,partial,"YTIM1M01, YTIM1M02","((recode_values(as.numeric(YTIM1M01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4) * 5) +
+  (recode_values(as.numeric(YTIM1M02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4) * 2)) /
+  7",(5 x wd + 2 x we) / 7 of st_watch_wd and st_watch_we; leisure TV only. Top band '4 hours or more' = 4.,,
+st_game_wd,unavailable,,,No weekday/weekend split.,,
+st_game_we,unavailable,,,No weekday/weekend split.,,
+st_game,incompatible,YMDA1B06,,"Only smartphone gaming frequency (YMDA1B06: Never/Rarely/Occasionally/Frequently); not a duration, one device.",,
 st_game_comp_wd,unavailable,,,No device-specific gaming duration item.,,
 st_game_comp_we,unavailable,,,No device-specific gaming duration item.,,
 st_game_comp,unavailable,,,No device-specific gaming duration item.,,
@@ -168,63 +165,66 @@ st_game_phone,unavailable,,,No device-specific gaming duration item.,,
 st_game_tablet_wd,unavailable,,,No device-specific gaming duration item.,,
 st_game_tablet_we,unavailable,,,No device-specific gaming duration item.,,
 st_game_tablet,unavailable,,,No device-specific gaming duration item.,,
-st_comp_nongaming_wd,unavailable,,,Leisure computer time (YTIM1L) not split by activity; mapped to st_comp.,,
-st_comp_nongaming_we,unavailable,,,Leisure computer time (YTIM1L) not split by activity; mapped to st_comp.,,
-st_comp_nongaming,unavailable,,,Leisure computer time (YTIM1L) not split by activity; mapped to st_comp.,,
-st_comp_wd,partial,YTIM1L01,"recode_values(as.numeric(YTIM1L01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","'Leisure time using a computer', weekday. Partial: leisure only; schoolwork use falls in the non-screen 'studying on your own' item. Bands and recall as st_total_wd.",,
-st_comp_we,partial,YTIM1L02,"recode_values(as.numeric(YTIM1L02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)",Weekend counterpart of st_comp_wd.,,
-st_comp,partial,"YTIM1L01, YTIM1L02","((recode_values(as.numeric(YTIM1L01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 5) +
-  (recode_values(as.numeric(YTIM1L02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 2)) /
-  7",5:2 weighted mean. See st_comp_wd.,,
+st_comp_nongaming_wd,incompatible,YTIM1L01,,"Only 'Leisure time using a computer' (YTIM1L01), which can include games; mapped to st_comp_wd.",,
+st_comp_nongaming_we,incompatible,YTIM1L02,,"Only 'Leisure time using a computer' (YTIM1L02), which can include games; mapped to st_comp_we.",,
+st_comp_nongaming,incompatible,"YTIM1L01, YTIM1L02",,"Only 'Leisure time using a computer' (YTIM1L01, YTIM1L02), which can include games; mapped to st_comp.",,
+st_comp_wd,partial,YTIM1L01,"recode_values(as.numeric(YTIM1L01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4)","'Leisure time using a computer', weekday, last semester. Partial: leisure only; schoolwork use falls in the non-screen 'studying on your own' item. Bands at midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5); top band '4 hours or more' = 4.",,
+st_comp_we,partial,YTIM1L02,"recode_values(as.numeric(YTIM1L02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4)",Weekend counterpart of st_comp_wd. Top band '4 hours or more' = 4.,,
+st_comp,partial,"YTIM1L01, YTIM1L02","((recode_values(as.numeric(YTIM1L01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4) * 5) +
+  (recode_values(as.numeric(YTIM1L02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4) * 2)) /
+  7",(5 x wd + 2 x we) / 7 of st_comp_wd and st_comp_we; leisure only. Top band '4 hours or more' = 4.,,
 st_tablet_wd,unavailable,,,Tablets are not asked about separately.,,
 st_tablet_we,unavailable,,,Tablets are not asked about separately.,,
 st_tablet,unavailable,,,Tablets are not asked about separately.,,
-st_phone_wd,partial,YTIM1K01,"recode_values(as.numeric(YTIM1K01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","'Leisure time using a smartphone', weekday. Partial: leisure only; excludes schoolwork and information seeking. Bands and recall as st_total_wd.",,
-st_phone_we,partial,YTIM1K02,"recode_values(as.numeric(YTIM1K02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)",Weekend counterpart of st_phone_wd.,,
-st_phone,partial,"YTIM1K01, YTIM1K02","((recode_values(as.numeric(YTIM1K01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 5) +
-  (recode_values(as.numeric(YTIM1K02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 2)) /
-  7",5:2 weighted mean. See st_phone_wd.,,
-st_socmedia_wd,incompatible,,,"Only smartphone social-media frequency (YMDA1B05: Never/Rarely/Occasionally/Frequently), not a duration; the schema forbids deriving it from device items such as st_phone.",,
-st_socmedia_we,incompatible,,,See st_socmedia_wd.,,
-st_socmedia,incompatible,,,See st_socmedia_wd.,,
-st_educational_wd,partial,YTIM1F01,"recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)","'Time spent watching internet and TV lectures', weekday. Partial: recorded/broadcast lessons only, not all study screen use. Bands and recall as st_total_wd.",,
-st_educational_we,partial,YTIM1F02,"recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5)",Weekend counterpart of st_educational_wd.,,
-st_educational,partial,"YTIM1F01, YTIM1F02","((recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 5) +
-  (recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4.5) * 2)) /
-  7",5:2 weighted mean. See st_educational_wd.,,
-st_work_wd,incompatible,,,"Only a frequency item for academic or work-related smartphone use (YMDA1B12), not a duration.",,
-st_work_we,incompatible,,,"Only a frequency item for academic or work-related smartphone use (YMDA1B12), not a duration.",,
-st_work,incompatible,,,"Only a frequency item for academic or work-related smartphone use (YMDA1B12), not a duration.",,
+st_phone_wd,partial,YTIM1K01,"recode_values(as.numeric(YTIM1K01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4)","'Leisure time using a smartphone', weekday, last semester. Partial: leisure only; excludes schoolwork and information seeking. Bands at midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5); top band '4 hours or more' = 4.",,
+st_phone_we,partial,YTIM1K02,"recode_values(as.numeric(YTIM1K02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4)",Weekend counterpart of st_phone_wd. Top band '4 hours or more' = 4.,,
+st_phone,partial,"YTIM1K01, YTIM1K02","((recode_values(as.numeric(YTIM1K01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4) * 5) +
+  (recode_values(as.numeric(YTIM1K02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4) * 2)) /
+  7",(5 x wd + 2 x we) / 7 of st_phone_wd and st_phone_we; leisure only. Top band '4 hours or more' = 4.,,
+st_socmedia_wd,unavailable,,,No weekday/weekend split.,,
+st_socmedia_we,unavailable,,,No weekday/weekend split.,,
+st_socmedia,incompatible,YMDA1B05,,"Only smartphone social-media frequency (YMDA1B05: Never/Rarely/Occasionally/Frequently), not a duration; never derived from device items such as st_phone.",,
+st_educational_wd,partial,YTIM1F01,"recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4)","'Time spent watching internet and TV lectures', weekday, last semester. Partial: recorded or broadcast lessons only, not all study screen use. Bands at midpoints (1 = 0, 2 = 0.25, 3 = 0.75, 4 = 1.5, 5 = 2.5, 6 = 3.5); top band '4 hours or more' = 4.",,
+st_educational_we,partial,YTIM1F02,"recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4)",Weekend counterpart of st_educational_wd. Top band '4 hours or more' = 4.,,
+st_educational,partial,"YTIM1F01, YTIM1F02","((recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4) * 5) +
+  (recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4) * 2)) /
+  7",(5 x wd + 2 x we) / 7 of st_educational_wd and st_educational_we; lectures only. Top band '4 hours or more' = 4.,,
+st_work_wd,unavailable,,,No weekday/weekend split.,,
+st_work_we,unavailable,,,No weekday/weekend split.,,
+st_work,incompatible,YMDA1B12,,"Only a frequency item for academic or work-related smartphone use (YMDA1B12: Never/Rarely/Occasionally/Frequently), not a duration.",,
 st_internet_wd,unavailable,,,No generic internet-time item; the grid is by device and activity.,,
 st_internet_we,unavailable,,,No generic internet-time item; the grid is by device and activity.,,
 st_internet,unavailable,,,No generic internet-time item; the grid is by device and activity.,,
 st_videochat,unavailable,,,No video-call item.,,
-st_messaging_wd,incompatible,,,"Only smartphone texting frequencies with family and friends (YMDA1B02, YMDA1B04), not durations.",,
-st_messaging_we,incompatible,,,"Only smartphone texting frequencies with family and friends (YMDA1B02, YMDA1B04), not durations.",,
-st_messaging,incompatible,,,"Only smartphone texting frequencies with family and friends (YMDA1B02, YMDA1B04), not durations.",,
-st_creating,incompatible,,,Only a smartphone frequency for taking photos/videos (YMDA1B07); no item on posting content or its duration.,,
+st_messaging_wd,unavailable,,,No weekday/weekend split.,,
+st_messaging_we,unavailable,,,No weekday/weekend split.,,
+st_messaging,incompatible,"YMDA1B02, YMDA1B04",,"Only smartphone texting frequencies with family and friends (YMDA1B02, YMDA1B04: Never/Rarely/Occasionally/Frequently), not durations.",,
+st_creating,incompatible,YMDA1B07,,Only a smartphone frequency for taking photos/videos (YMDA1B07); no item on posting content or its duration.,,
 st_email,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
-st_total_school,unavailable,,,No school-context screen-use item; the grid records time at school without separating screen use.,,
-st_educational_school,unavailable,,,No school-context screen-use item; the grid records time at school without separating screen use.,,
-st_comp_school,unavailable,,,No school-context screen-use item; the grid records time at school without separating screen use.,,
-st_tablet_school,unavailable,,,No school-context screen-use item; the grid records time at school without separating screen use.,,
-st_internet_school,unavailable,,,No school-context screen-use item; the grid records time at school without separating screen use.,,
-st_phone_school,unavailable,,,No school-context screen-use item; the grid records time at school without separating screen use.,,
-acc_academachment_selfrated,proximate,YINT1A00,"recode_values(as.numeric(YINT1A00), 5 ~ ""Very good"", 4 ~ ""Good"", 3 ~ ""Average"", c(1, 2) ~ ""Below average"")","Self-rated overall grades last semester, 5 points. Proximate: 'Very bad' and 'Not good' both map to 'Below average'. Code 6 (Don't know) left missing.",,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,proximate,"YINT1A00, YALL1C04","case_when(
+  !is.na(YALL1C04) ~ NA_character_,
+  .default = recode_values(as.numeric(YINT1A00), 5 ~ ""Very good"", 4 ~ ""Good"", 3 ~ ""Average"", c(1, 2) ~ ""Below average"")
+)","Self-rated overall grades last semester, 5 points. Proximate: 'Very bad' and 'Not good' both map to 'Below average'. Code 6 (Don't know) left missing. NA on the w7 adult form (YALL1C04 answered), where it asks about university, as in wb_domainsat_schoolwork_self.",,
 acc_academachment_lettergrades,unavailable,,,"No standardised tests, recorded grades or teacher report; achievement is self- and guardian-rated only.",,
 acc_academachment_stdtest,unavailable,,,"No standardised tests, recorded grades or teacher report; achievement is self- and guardian-rated only.",,
-acc_schoolengage_caresschool,unavailable,,,"No equivalent frequency item; academic motivation only as agreement scales (YINT2A, YINT2B).",,
-acc_schoolengage_homework,unavailable,,,No homework-completion item.,,
-acc_schoolpressure_self,in_progress,,,,,
-acc_schoolbelonging_self,in_progress,,,,,
-acc_schoolbelonging_measure,in_progress,,,,,
+acc_schoolengage_caresschool,incompatible,"YINT2B05, YINT2B06, YINT2B07, YINT2B08, YINT2A01, YINT2A02, YINT2A03, YINT2A04, YINT2A05, YINT2A06, YINT2A07, YINT2A08, YINT2A09, YINT2A10, YINT2A11, YINT2A12, YINT2A13, YINT2A14, YINT2A15, YINT2A16",,"Only agreement-rated items: amotivation (YINT2B05-B08, e.g. 'I do not care about the reasons for studying') and the academic enthusiasm scale (YINT2A01-A16); no frequency rating.",,
+acc_schoolengage_homework,incompatible,"YTIM1H01, YTIM1H02",,"Only self-study time (YTIM1H01/02), not homework completion.",,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_self,incompatible,"YINT2B11, YEDU1A00",,"No belonging or connectedness scale; only 'I do not feel happy while spending time at school' (YINT2B11), a single agreement item of the amotivation scale, mapped nowhere; satisfaction with the overall school experience (YEDU1A00) is on wb_domainsat_school_self.",,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
 acc_academachment_numgrades,unavailable,,,"No standardised tests, recorded grades or teacher report; achievement is self- and guardian-rated only.",,
-acc_academachment_teacherrated,unavailable,,,"No teacher report. The guardian rates overall grades on the same 5-point scale (PFAM3A00), but the schema has no parent-report row.",,
+acc_academachment_teacherrated,incompatible,PFAM3A00,,Only the guardian's rating of the child's overall grades (PFAM3A00); no teacher report.,,
 acc_numeracy_stdtest,unavailable,,,"No standardised tests, recorded grades or teacher report; achievement is self- and guardian-rated only.",,
 acc_literacy_stdtest,unavailable,,,"No standardised tests, recorded grades or teacher report; achievement is self- and guardian-rated only.",,
 beh_hyper_basc2,unavailable,,,Instrument not administered.,,
-beh_atten_basc2,incompatible,,,Not administered; KCYPS uses its own seven-item concentration scale (YPSY4A01-A07). See beh_atten_self.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_atten_self.,,
 beh_atten_self,compatible,"YPSY4A01, YPSY4A02, YPSY4A03, YPSY4A04, YPSY4A05, YPSY4A06, YPSY4A07","(as.numeric(YPSY4A01) +
   as.numeric(YPSY4A02) +
   as.numeric(YPSY4A03) +
@@ -232,12 +232,25 @@ beh_atten_self,compatible,"YPSY4A01, YPSY4A02, YPSY4A03, YPSY4A04, YPSY4A05, YPS
   as.numeric(YPSY4A05) +
   as.numeric(YPSY4A06) +
   as.numeric(YPSY4A07))","KCYPS seven-item concentration scale (YPSY4A01-A07), 1 = Strongly Disagree to 4 = Strongly Agree; all worded as problems, none reversed. Sum 7-28, higher = more attention problems. Self-report, all waves; no partial-completion allowance.",,
-beh_atten_measure,in_progress,,,,,
+beh_atten_measure,inferred,,"""KCYPS concentration scale, 7 of 7 items, 1-4 item scoring from strongly disagree to strongly agree (range 7-28), sum, no reverse-scored items""",Describes beh_atten_self; all waves.,,
 beh_selfreg_htks,unavailable,,,Instrument not administered.,,
 beh_bullied,compatible,YDLQ1A06,"if_else(as.numeric(YDLQ1A06) > 1, ""TRUE"", ""FALSE"")","'Bullying others (harassment)', past-year delinquency checklist; TRUE for any occurrence. Asked from middle school on: e4 cohort from w4, older siblings from w2.",,
-beh_beenbullied,partial,"YSVL1C01, YSVL1C02, YSVL1C03, YSVL1C04, YSVL1C05, YSVL1C06, YSVL1C07","if_else(pmax(YSVL1C01, YSVL1C02, YSVL1C03, YSVL1C04, YSVL1C05, YSVL1C06, YSVL1C07, na.rm = TRUE) > 1, ""TRUE"", ""FALSE"")","w6 school-violence module: TRUE if any of seven types (severe teasing, ostracism, physical violence, threats, extortion, verbal abuse, online harassment) occurred in the past year. Partial: w6 only; broader than the schema's single recent-months item.",,
-beh_beenbullied_online,partial,YSVL1C07,"if_else(as.numeric(YSVL1C07) > 1, ""TRUE"", ""FALSE"")","'Bullying or harassment online' by friends, juniors or seniors, past year; w6 module only. TRUE for any occurrence. Partial: perpetrators limited to peers.",,
-beh_bullied_online,partial,YDLQ2A01-YDLQ2A15,"if_else(do.call(pmax, c(lapply(tbl[sprintf(""YDLQ2A%02d"", 1:15)], as.numeric), na.rm = TRUE)) > 1, ""TRUE"", ""FALSE"")","Any of 15 online aggression acts in the past year (e.g. abusive messages, rumours, excluding someone from a chat); TRUE for any occurrence. Partial: a single hostile act counts, not only bullying. Not on the elementary form.",,
+beh_beenbullied,compatible,"YSVL1C01, YSVL1C02, YSVL1C03, YSVL1C04, YSVL1C05, YSVL1C06","if_else(
+  pmax(
+    as.numeric(YSVL1C01),
+    as.numeric(YSVL1C02),
+    as.numeric(YSVL1C03),
+    as.numeric(YSVL1C04),
+    as.numeric(YSVL1C05),
+    as.numeric(YSVL1C06),
+    na.rm = TRUE
+  ) >
+    1,
+  ""TRUE"",
+  ""FALSE""
+)","w6 (2023) only. Past-year victimisation by friends, juniors or seniors: TRUE if any of six offline types (severe teasing or mocking, ostracism, severe hitting, threats, extortion, harsh verbal abuse) occurred, FALSE if every answered type is None. Online harassment (YSVL1C07) is on beh_beenbullied_online.",,
+beh_beenbullied_online,compatible,YSVL1C07,"if_else(as.numeric(YSVL1C07) > 1, ""TRUE"", ""FALSE"")","w6 (2023) only. 'Bullying or harassment (insults, threats, sexual harassment, or revealing personal information) online' by friends, juniors or seniors, past year; TRUE for any occurrence.",,
+beh_bullied_online,compatible,"YDLQ2A01, YDLQ2A02, YDLQ2A03, YDLQ2A04, YDLQ2A05, YDLQ2A06, YDLQ2A07, YDLQ2A08, YDLQ2A09, YDLQ2A10, YDLQ2A11, YDLQ2A12, YDLQ2A13, YDLQ2A14, YDLQ2A15","if_else(do.call(pmax, c(lapply(tbl[sprintf(""YDLQ2A%02d"", 1:15)], as.numeric), na.rm = TRUE)) > 1, ""TRUE"", ""FALSE"")","Middle/high-school form only (m1 cohort all waves, e4 cohort from w4, siblings on that form). TRUE if any of 15 online aggression acts (e.g. abusive messages, rumours, stalking messages, exposing personal information, excluding someone from a chat) occurred in the past year, FALSE if all were None.",,
 beh_fight,compatible,YDLQ1A07,"if_else(as.numeric(YDLQ1A07) > 1, ""TRUE"", ""FALSE"")","'Fighting or engaging in a brawl', past-year delinquency checklist; TRUE for any occurrence. Coverage as beh_bullied.",,
 beh_truancy,compatible,"YDLQ1A03, YALL1C04","case_when(
   !is.na(YALL1C04) ~ NA_character_,
@@ -247,28 +260,28 @@ beh_truancy,compatible,"YDLQ1A03, YALL1C04","case_when(
 )","'Truancy (not going to school without notifying a guardian or teacher)', past year; TRUE for any occurrence. Not on the elementary form; NA on the w7 adult form (YALL1C04 answered; left school).",,
 beh_stealing,compatible,YDLQ1A11,"if_else(as.numeric(YDLQ1A11) > 1, ""TRUE"", ""FALSE"")","'Stealing money or property', past year; TRUE for any occurrence. Not on the elementary form.",,
 beh_vandalism,unavailable,,,Not collected.,,
-beh_alcohol_self,in_progress,,,,,
-beh_tobacco_self,in_progress,,,,,
-beh_cannabis_self,in_progress,,,,,
+beh_alcohol_self,compatible,YDLQ1A02,"if_else(as.numeric(YDLQ1A02) > 1, ""TRUE"", ""FALSE"")","Middle/high-school form only (m1 cohort all waves, e4 cohort from w4, siblings on that form). 'Drinking alcohol (except sips during rituals, communion, etc.)' (YDLQ1A02), past year, 6 levels from None to several times a week; TRUE for any occurrence.",,
+beh_tobacco_self,compatible,YDLQ1A01,"if_else(as.numeric(YDLQ1A01) > 1, ""TRUE"", ""FALSE"")","Middle/high-school form only (m1 cohort all waves, e4 cohort from w4, siblings on that form). 'Smoking' (YDLQ1A01, product not specified), past year, 6 levels from None to several times a week; TRUE for any occurrence.",,
+beh_cannabis_self,unavailable,,,Not collected.,,
 beh_conduct_sdq_parent,unavailable,,,SDQ not administered.,,
 beh_hyper_sdq_parent,unavailable,,,SDQ not administered.,,
 beh_peerprob_sdq_parent,unavailable,,,SDQ not administered.,,
 beh_prosocial_sdq_parent,unavailable,,,SDQ not administered.,,
-beh_aggphys_bpaq_self,incompatible,,,"KCYPS's six-item aggression scale (YPSY4B01-B06) has no physical, verbal, anger or hostility subscales. See beh_agg_self.",,
-beh_aggverb_bpaq_self,incompatible,,,"KCYPS's six-item aggression scale (YPSY4B01-B06) has no physical, verbal, anger or hostility subscales. See beh_agg_self.",,
-beh_agganger_bpaq_self,incompatible,,,"KCYPS's six-item aggression scale (YPSY4B01-B06) has no physical, verbal, anger or hostility subscales. See beh_agg_self.",,
-beh_agghostility_bpaq_self,incompatible,,,"KCYPS's six-item aggression scale (YPSY4B01-B06) has no physical, verbal, anger or hostility subscales. See beh_agg_self.",,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
 beh_agg_self,compatible,"YPSY4B01, YPSY4B02, YPSY4B03, YPSY4B04, YPSY4B05, YPSY4B06","(as.numeric(YPSY4B01) +
   as.numeric(YPSY4B02) +
   as.numeric(YPSY4B03) +
   as.numeric(YPSY4B04) +
   as.numeric(YPSY4B05) +
   as.numeric(YPSY4B06))","KCYPS six-item aggression scale (YPSY4B01-B06), 1 = Strongly Disagree to 4 = Strongly Agree; unidimensional, none reversed. Sum 6-24, higher = more aggression. Self-report, all waves; no partial-completion allowance.",,
-beh_agg_measure,in_progress,,,,,
-beh_argues,unavailable,,,No equivalent single item on an Always/Usually/Sometimes/Never frequency scale.,,
-beh_persistence_finishwork,unavailable,,,No equivalent single item on an Always/Usually/Sometimes/Never frequency scale.,,
-beh_emotreg_stayscalm,unavailable,,,No equivalent single item on an Always/Usually/Sometimes/Never frequency scale.,,
-beh_peerprob_makefriends,unavailable,,,No equivalent single item on an Always/Usually/Sometimes/Never frequency scale.,,
+beh_agg_measure,inferred,,"""KCYPS aggression scale, 6 of 6 items, 1-4 item scoring from strongly disagree to strongly agree (range 6-24), sum, no reverse-scored items""",Describes beh_agg_self; all waves.,,
+beh_argues,incompatible,YPSY4B03,,"Only 'argue or fight back when I do not get what I want' (YPSY4B03), agreement-rated and on a triggered behaviour; scored in beh_agg_self.",,
+beh_persistence_finishwork,incompatible,YPSY7A07,,"Only the Short Grit Scale item 'I finish whatever I begin' (YPSY7A07), 1-4 agreement, not a frequency rating.",,
+beh_emotreg_stayscalm,incompatible,"YPSY4B01, YPSY4B05",,"Only problem-worded agreement items ('sometimes get upset over small things', YPSY4B01; 'stay angry all day long', YPSY4B05), scored in beh_agg_self.",,
+beh_peerprob_makefriends,unavailable,,,Not collected.,,
 beh_conduct_diagnosed,unavailable,,,No diagnosis or health-professional items.,,
 beh_conduct_diagnosed_severity,unavailable,,,No diagnosis or health-professional items.,,
 beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
@@ -289,8 +302,22 @@ beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
 beh_cbcl_measure,unavailable,,,CBCL not administered.,,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,Not collected.,,
-beh_problematicuse_self,in_progress,,,,,
-beh_problematicuse_measure,in_progress,,,,,
+beh_problematicuse_self,compatible,"YMDA1C01, YMDA1C02, YMDA1C03, YMDA1C04, YMDA1C05, YMDA1C06, YMDA1C07, YMDA1C08, YMDA1C09, YMDA1C10, YMDA1C11, YMDA1C12, YMDA1C13, YMDA1C14, YMDA1C15","(as.numeric(YMDA1C01) +
+  as.numeric(YMDA1C02) +
+  as.numeric(YMDA1C03) +
+  as.numeric(YMDA1C04) +
+  (5 - as.numeric(YMDA1C05)) +
+  as.numeric(YMDA1C06) +
+  as.numeric(YMDA1C07) +
+  as.numeric(YMDA1C08) +
+  as.numeric(YMDA1C09) +
+  (5 - as.numeric(YMDA1C10)) +
+  as.numeric(YMDA1C11) +
+  as.numeric(YMDA1C12) +
+  as.numeric(YMDA1C13) +
+  as.numeric(YMDA1C14) +
+  (5 - as.numeric(YMDA1C15)))","KCYPS 15-item smartphone dependence scale (YMDA1C01-C15), 1 = strongly disagree to 4 = strongly agree; items 5, 10 and 15 are released unreversed and reversed as 5 - x. Sum 15-60, higher = more dependence. Self-report, all waves; non-users (YMDA1A00 = 3) skip the scale (NA); no partial-completion allowance.",,
+beh_problematicuse_measure,inferred,,"""KCYPS smartphone dependence scale (smartphone), 15 of 15 items, 1-4 item scoring from strongly disagree to strongly agree (range 15-60), sum, items 5, 10 and 15 reverse-scored""",Describes beh_problematicuse_self; all waves.,,
 cog_execfunc_basc2,unavailable,,,No cognitive tasks or cognition rating scales.,,
 cog_langexec_nepsy,unavailable,,,No cognitive tasks or cognition rating scales.,,
 cog_phono_nepsy,unavailable,,,No cognitive tasks or cognition rating scales.,,
@@ -316,9 +343,9 @@ cog_nonverbalreason_bas_picsim,unavailable,,,Not administered.,,
 cog_spatial_bas_pattern,unavailable,,,Not administered.,,
 cog_verbalreason_bas_versim,unavailable,,,Not administered.,,
 cog_schoolread_bracken,unavailable,,,Not administered.,,
-cog_creativethinking_stdtest,incompatible,,,"Only the Creative Personality Scale (YPSY6Asc), a self-rated adjective checklist rather than a performance test.",,
+cog_creativethinking_stdtest,incompatible,YPSY6Asc,,"Only the Creative Personality Scale (YPSY6Asc), a self-rated adjective checklist rather than a performance test.",,
 mh_anx_basc2,unavailable,,,No anxiety or general distress scale.,,
-mh_dep_basc2,incompatible,,,Not administered; KCYPS's 10-item SCL-90-R depression short form (YPSY4E01-E10) is not convertible. See mh_dep_scl_self.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered; see mh_dep_scl_self.,,
 mh_emotsymp_sdq_parent,unavailable,,,SDQ not administered.,,
 mh_totaldiff_sdq_parent,unavailable,,,SDQ not administered.,,
 mh_anx_diagnosed,unavailable,,,No diagnosis or health-professional items.,,
@@ -332,13 +359,13 @@ mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered; no teacher report.,
 mh_int_sdq_parent,unavailable,,,SDQ not administered.,,
 mh_int_sdq_self,unavailable,,,SDQ not administered.,,
 mh_int_sdq_teacher,unavailable,,,SDQ not administered; no teacher report.,,
-mh_dep_smfq_self,incompatible,,,Not administered; KCYPS's 10-item SCL-90-R depression short form (YPSY4E01-E10) is not convertible. See mh_dep_scl_self.,,
-mh_dep_smfq_parent,incompatible,,,Not administered; KCYPS's 10-item SCL-90-R depression short form (YPSY4E01-E10) is not convertible. See mh_dep_scl_self.,,
-mh_dep_cdi_self,incompatible,,,Not administered; KCYPS's 10-item SCL-90-R depression short form (YPSY4E01-E10) is not convertible. See mh_dep_scl_self.,,
-mh_dep_cesd_self,incompatible,,,Not administered; KCYPS's 10-item SCL-90-R depression short form (YPSY4E01-E10) is not convertible. See mh_dep_scl_self.,,
-mh_dep_phq9_self,incompatible,,,Not administered; KCYPS's 10-item SCL-90-R depression short form (YPSY4E01-E10) is not convertible. See mh_dep_scl_self.,,
-mh_dep_rcads_self,incompatible,,,Not administered; KCYPS's 10-item SCL-90-R depression short form (YPSY4E01-E10) is not convertible. See mh_dep_scl_self.,,
-mh_dep_dass21_self,incompatible,,,Not administered; KCYPS's 10-item SCL-90-R depression short form (YPSY4E01-E10) is not convertible. See mh_dep_scl_self.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered; see mh_dep_scl_self.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered; no parent report of depression.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered; see mh_dep_scl_self.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered; see mh_dep_scl_self.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered; see mh_dep_scl_self.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered; see mh_dep_scl_self.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered; see mh_dep_scl_self.,,
 mh_dep_scl_self,compatible,"YPSY4E01, YPSY4E02, YPSY4E03, YPSY4E04, YPSY4E05, YPSY4E06, YPSY4E07, YPSY4E08, YPSY4E09, YPSY4E10","(as.numeric(YPSY4E01) +
   as.numeric(YPSY4E02) +
   as.numeric(YPSY4E03) +
@@ -361,7 +388,7 @@ mh_anx_rcads_self,unavailable,,,No anxiety or general distress scale.,,
 mh_anx_dass21_self,unavailable,,,No anxiety or general distress scale.,,
 mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
 mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
-mh_dep_binary_self,incompatible,,,No screening item; the 10-item depression scale (YPSY4E01-E10) has no published cut-point.,,
+mh_dep_binary_self,incompatible,"YPSY4E01, YPSY4E02, YPSY4E03, YPSY4E04, YPSY4E05, YPSY4E06, YPSY4E07, YPSY4E08, YPSY4E09, YPSY4E10",,"No screening item; the SCL-90-R depression short-form total (YPSY4E01-E10) is in mh_dep_scl_self, and scale totals are not dichotomised here.",,
 mh_dep_self,compatible,"YPSY4E01, YPSY4E02, YPSY4E03, YPSY4E04, YPSY4E05, YPSY4E06, YPSY4E07, YPSY4E08, YPSY4E09, YPSY4E10","(as.numeric(YPSY4E01) +
   as.numeric(YPSY4E02) +
   as.numeric(YPSY4E03) +
@@ -377,38 +404,45 @@ mh_anx_self,unavailable,,,No anxiety scale.,,
 mh_anx_measure,unavailable,,,No anxiety scale.,,
 mh_depanx_diagnosed,unavailable,,,No diagnosis items.,,
 mh_stress_self,unavailable,,,Not collected.,,
-mh_lonely_self,incompatible,,,"Only the depression-scale item 'feel lonely' (YPSY4E07), rated by agreement, not frequency.",,
+mh_lonely_self,incompatible,YPSY4E07,,"Only 'feel lonely' (YPSY4E07), rated by agreement, not frequency; scored in mh_dep_scl_self.",,
 mh_lonely_scale_self,unavailable,,,No loneliness scale.,,
 mh_lonely_measure,unavailable,,,No loneliness scale.,,
-mh_sad_self,incompatible,,,"Only the depression-scale item 'feel unhappy, sad, or depressed' (YPSY4E02), rated by agreement, not frequency.",,
-mh_worry_self,incompatible,,,"Only the depression-scale item 'worry a lot' (YPSY4E03), rated by agreement, not frequency.",,
-mh_irritable_self,incompatible,,,"Only the aggression-scale item 'sometimes get upset over small things' (YPSY4B01), rated by agreement, not frequency.",,
-mh_nobodycares_self,incompatible,,,"Only 'My friends do not care about my struggles or difficulties' (YEDU2A13), a peer-relationship agreement item.",,
-mh_lifenotworth_self,incompatible,,,"Only the depression-scale item 'sometimes feel like dying' (YPSY4E04), rated by agreement, not frequency.",,
-mh_suicide_ideation_self,incompatible,,,"Only 'sometimes feel like dying' (YPSY4E04), a passive death wish rated by agreement.",,
+mh_sad_self,incompatible,YPSY4E02,,"Only 'feel unhappy, sad, or depressed' (YPSY4E02), rated by agreement, not frequency; scored in mh_dep_scl_self.",,
+mh_worry_self,incompatible,YPSY4E03,,"Only 'worry a lot' (YPSY4E03), rated by agreement, not frequency; scored in mh_dep_scl_self.",,
+mh_irritable_self,incompatible,YPSY4B01,,"Only 'sometimes get upset over small things' (YPSY4B01), rated by agreement, not frequency; scored in beh_agg_self.",,
+mh_nobodycares_self,incompatible,YEDU2A13,,"Only 'My friends do not care about my struggles or difficulties' (YEDU2A13), a peer-relationship agreement item.",,
+mh_lifenotworth_self,incompatible,YPSY4E04,,"Only 'sometimes feel like dying' (YPSY4E04), rated by agreement, not frequency; scored in mh_dep_scl_self.",,
+mh_suicide_ideation_self,incompatible,YPSY4E04,,"Only 'sometimes feel like dying' (YPSY4E04), a passive death wish rated by agreement; scored in mh_dep_scl_self.",,
 mh_suicide_attempt_self,unavailable,,,Not collected.,,
-mh_selfharm_self,in_progress,,,,,
-mh_psychsom_hbscscl_self,incompatible,,,"Somatic-symptom scale (YPSY4C01-C08) uses 1-4 agreement items, not the HBSC-SCL frequency items.",,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered; see mh_somatic_self.,,
 mh_psychsom_measure,unavailable,,,HBSC-SCL not administered.,,
-mh_somatic_self,in_progress,,,,,
-mh_somatic_measure,in_progress,,,,,
+mh_somatic_self,compatible,"YPSY4C01, YPSY4C02, YPSY4C03, YPSY4C04, YPSY4C05, YPSY4C06, YPSY4C07, YPSY4C08","(as.numeric(YPSY4C01) +
+  as.numeric(YPSY4C02) +
+  as.numeric(YPSY4C03) +
+  as.numeric(YPSY4C04) +
+  as.numeric(YPSY4C05) +
+  as.numeric(YPSY4C06) +
+  as.numeric(YPSY4C07) +
+  as.numeric(YPSY4C08))","KCYPS eight-item somatic symptom scale (YPSY4C01-C08: sleep, headache, nausea, stomach ache, appetite, tiredness, breathing, fever), 1 = strongly disagree to 4 = strongly agree, none reversed. Sum 8-32, higher = more complaints. Self-report, all waves; no recall period; no partial-completion allowance.",,
+mh_somatic_measure,inferred,,"""KCYPS somatic symptom scale, 8 of 8 items, 1-4 item scoring from strongly disagree to strongly agree (range 8-32), no recall period, sum, no reverse-scored items""",Describes mh_somatic_self; all waves.,,
 wb_emotsc_basc2,unavailable,,,Instrument not administered.,,
-wb_mwb_wemwbs,incompatible,,,KCYPS uses the four-item Subjective Happiness Scale (YPSY2A01-A04). See wb_happiness_shs_self.,,
-wb_lifesatisfaction_cantrilladder,incompatible,,,"No Cantril ladder. The SWLS total (YPSY1A01-A05) is a different metric, not rescalable to 0-10.",,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered; see wb_happiness_shs_self.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered; see wb_lifesat_swls_self.,,
 wb_resil_basc2,unavailable,,,Instrument not administered.,,
-wb_psychcomplaints_feellow,incompatible,,,"Only the eight-item physical-symptoms scale (YPSY4C01-C08) and single depression items, all 1-4 agreement, not HBSC-SCL frequencies; no schema vocabulary to recode onto.",,
-wb_psychcomplaints_irritable,incompatible,,,See wb_psychcomplaints_feellow.,,
-wb_psychcomplaints_nervous,incompatible,,,See wb_psychcomplaints_feellow.,,
-wb_psychcomplaints_diffsleep,incompatible,,,See wb_psychcomplaints_feellow.,,
+wb_psychcomplaints_feellow,incompatible,YPSY4E02,,"Only 'feel unhappy, sad, or depressed' (YPSY4E02), 1-4 agreement, not an HBSC-SCL frequency; scored in mh_dep_scl_self.",,
+wb_psychcomplaints_irritable,incompatible,YPSY4B01,,"Only 'sometimes get upset over small things' (YPSY4B01), 1-4 agreement, not an HBSC-SCL frequency; scored in beh_agg_self.",,
+wb_psychcomplaints_nervous,incompatible,YPSY4E03,,"Only 'worry a lot' (YPSY4E03), 1-4 agreement, not an HBSC-SCL frequency; scored in mh_dep_scl_self.",,
+wb_psychcomplaints_diffsleep,incompatible,YPSY4C01,,"Only 'have trouble sleeping deeply and wake up in the middle of the night' (YPSY4C01), 1-4 agreement, not an HBSC-SCL frequency; scored in mh_somatic_self.",,
 wb_bodyimage,unavailable,,,"No body-image, weight-perception, or height/weight items.",,
-wb_lifesat_slss_self,incompatible,,,"KCYPS uses the five-item SWLS (YPSY1A01-A05, 1-4 agreement), not the seven-item SLSS. See wb_lifesat_swls_self.",,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_swls_self.,,
 wb_lifesat_swls_self,partial,"YPSY1A01, YPSY1A02, YPSY1A03, YPSY1A04, YPSY1A05",(as.numeric(YPSY1A01) + as.numeric(YPSY1A02) + as.numeric(YPSY1A03) + as.numeric(YPSY1A04) + as.numeric(YPSY1A05)),"Full five-item SWLS, standard translation, none reversed. Partial: items scored 1-4 (standard 1-7), total 5-20; standardise within dataset. Self-report, all waves; no partial-completion allowance.",,
-wb_lifesat_singleitem_self,incompatible,,,"Only 'I am satisfied with my life' (YPSY1A03), an item of the SWLS.",,
-wb_happiness_singleitem_self,in_progress,,,,,
+wb_lifesat_singleitem_self,incompatible,YPSY1A03,,"Only 'I am satisfied with my life' (YPSY1A03), an SWLS item scored in wb_lifesat_swls_self.",,
+wb_happiness_singleitem_self,incompatible,YPSY2A01,,"Only Subjective Happiness Scale item 1 ('Overall, I am...', YPSY2A01), scored in wb_happiness_shs_self.",,
 wb_domainsat_schoolwork_self,partial,"YINT1B00, YALL1C04","case_when(!is.na(YALL1C04) ~ NA_real_, as.numeric(YINT1B00) %in% 1:5 ~ as.numeric(YINT1B00), .default = NA_real_)","'How satisfied were you with your academic performance last semester?', 5 points, very dissatisfied to very satisfied; Don't know = NA. Partial: rates performance, not school work. NA on the w7 adult form (YALL1C04 answered; asks about university).",,
 wb_domainsat_appearance_self,unavailable,,,Not collected.,,
-wb_domainsat_family_self,incompatible,,,Only parenting-style agreement items (YFAM2A01-F04); no satisfaction rating.,,
-wb_domainsat_friends_self,incompatible,,,Only peer-relationship agreement items (YEDU2A01-A13); no satisfaction rating.,,
+wb_domainsat_family_self,incompatible,"YFAM2A01, YFAM2A02, YFAM2A03, YFAM2A04, YFAM2B01, YFAM2B02, YFAM2B03, YFAM2B04, YFAM2C01, YFAM2C02, YFAM2C03, YFAM2C04, YFAM2D01, YFAM2D02, YFAM2D03, YFAM2D04, YFAM2E01, YFAM2E02, YFAM2E03, YFAM2E04, YFAM2F01, YFAM2F02, YFAM2F03, YFAM2F04",,Only parenting-style agreement items (YFAM2A01-F04); no satisfaction rating.,,
+wb_domainsat_friends_self,incompatible,"YEDU2A01, YEDU2A02, YEDU2A03, YEDU2A04, YEDU2A05, YEDU2A06, YEDU2A07, YEDU2A08, YEDU2A09, YEDU2A10, YEDU2A11, YEDU2A12, YEDU2A13",,Only peer-relationship agreement items (YEDU2A01-A13); no satisfaction rating.,,
 wb_domainsat_school_self,compatible,"YEDU1A00, YALL1C04","case_when(!is.na(YALL1C04) ~ NA_real_, as.numeric(YEDU1A00) %in% 1:5 ~ as.numeric(YEDU1A00), .default = NA_real_)","'How satisfied were you with your overall school experience last semester?', 5 points, very dissatisfied to very satisfied; Don't know = NA. NA on the w7 adult form (YALL1C04 answered; asks about university).",,
 wb_qol_pedsql_self,unavailable,,,No health-related quality-of-life instrument.,,
 wb_qol_pedsql_parent,unavailable,,,No health-related quality-of-life instrument.,,
@@ -435,23 +469,26 @@ wb_selfesteem_self,compatible,"YPSY3A01, YPSY3A02, YPSY3A03, YPSY3A04, YPSY3A05,
   (5 - as.numeric(YPSY3A09)) +
   as.numeric(YPSY3A10))",Same total as wb_selfesteem_rosenberg_self.,,
 wb_selfesteem_measure,inferred,,"""Rosenberg Self-Esteem Scale, 10 of 10 items, 1-4 item scoring (range 10-40), items 2, 5, 6, 8 and 9 reverse-scored""",Describes wb_selfesteem_self.,,
-wb_selfefficacy_gse_self,incompatible,,,"Only academic self-efficacy items (YINT2A09-A12, academic enthusiasm scale); no general self-efficacy scale.",,
-wb_selfefficacy_self,incompatible,,,Only the academic self-efficacy items of the academic enthusiasm scale (YINT2A09-A12); no general self-efficacy measure.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered; see wb_selfefficacy_self.,,
+wb_selfefficacy_self,incompatible,"YINT2A09, YINT2A10, YINT2A11, YINT2A12",,"Only the academic self-efficacy items of the academic enthusiasm scale (YINT2A09-A12); domain-specific efficacy is not mapped, and there is no general self-efficacy measure.",,
 wb_selfefficacy_measure,unavailable,,,No general self-efficacy measure.,,
-wb_mwb_who5_self,incompatible,,,KCYPS uses the four-item Subjective Happiness Scale (YPSY2A01-A04). See wb_happiness_shs_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered; see wb_happiness_shs_self.,,
 wb_happiness_shs_self,partial,"YPSY2A01, YPSY2A02, YPSY2A03, YPSY2A04",(as.numeric(YPSY2A01) + as.numeric(YPSY2A02) + as.numeric(YPSY2A03) + (5 - as.numeric(YPSY2A04))),"Full four-item SHS; item 4 ('some people are generally very unhappy') is stored raw and reversed. Partial: items scored 1-4 (standard 1-7), total 4-16; standardise within dataset. Mapped as the sum. Self-report, all waves; no partial-completion allowance.",,
 wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
-wb_selfratedhealth_self,incompatible,,,"Only health compared with peers (YPHY1A00, 4 levels), not general self-rated health.",,
-wb_generalhealth_parent,in_progress,,,,,
-wb_posaffect_self,incompatible,,,"Only the Subjective Happiness Scale (YPSY2A01-A04), mapped to wb_happiness_shs_self; no affect-frequency items.",,
+wb_selfratedhealth_self,incompatible,YPHY1A00,,"Only health compared with peers (YPHY1A00, 4 levels), not general self-rated health.",,
+wb_generalhealth_parent,unavailable,,,Not collected.,,
+wb_posaffect_self,incompatible,"YPSY2A01, YPSY2A02, YPSY2A03, YPSY2A04",,"Only the Subjective Happiness Scale (YPSY2A01-A04), scored in wb_happiness_shs_self; no positive-affect scale.",,
 wb_posaffect_measure,unavailable,,,No positive-affect scale.,,
-wb_eudaimonic_self,incompatible,,,"Only the Short Grit Scale (YPSY7A01-A08), which is not a eudaimonic wellbeing scale.",,
+wb_eudaimonic_self,incompatible,"YPSY7A01, YPSY7A02, YPSY7A03, YPSY7A04, YPSY7A05, YPSY7A06, YPSY7A07, YPSY7A08",,Only the Short Grit Scale (YPSY7A01-A08); grit is excluded from this row.,,
 wb_eudaimonic_measure,unavailable,,,No eudaimonic wellbeing scale.,,
-wb_socsupport_family_self,in_progress,,,,,
-wb_socsupport_friends_self,in_progress,,,,,
-wb_socsupport_measure,in_progress,,,,,
-hlth_sleep_wd,in_progress,,,,,
-hlth_sleep_we,in_progress,,,,,
-hlth_sleep,in_progress,,,,,
-hlth_sleepprob,in_progress,,,,,
-hlth_sleepprob_measure,in_progress,,,,,
+wb_socsupport_family_self,incompatible,"YFAM2A01, YFAM2A02, YFAM2A03, YFAM2A04, YFAM2B01, YFAM2B02, YFAM2B03, YFAM2B04, YFAM2C01, YFAM2C02, YFAM2C03, YFAM2C04, YFAM2D01, YFAM2D02, YFAM2D03, YFAM2D04, YFAM2E01, YFAM2E02, YFAM2E03, YFAM2E04, YFAM2F01, YFAM2F02, YFAM2F03, YFAM2F04",,"Only the parenting-style scale (YFAM2A01-F04: warmth, rejection, autonomy support, coercion, structure, chaos); parenting-style items are excluded from this row.",,
+wb_socsupport_friends_self,incompatible,"YEDU2A01, YEDU2A02, YEDU2A03, YEDU2A04, YEDU2A05, YEDU2A06, YEDU2A07, YEDU2A08, YEDU2A09, YEDU2A10, YEDU2A11, YEDU2A12, YEDU2A13",,"Only the peer-relationship scale (YEDU2A01-A13), which mixes companionship, disclosure, popularity and conflict items; not a perceived-support scale.",,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,partial,"YTIM1A01, YTIM1A02, YTIM1B01, YTIM1B02",(24 + as.numeric(YTIM1A01) + as.numeric(YTIM1A02) / 60 - as.numeric(YTIM1B01) - as.numeric(YTIM1B02) / 60),"Weekday average bed and wake times last semester (hour and minute; bedtime hours 24-30 = after midnight), self-report, all waves: 24 + wake - bed. Partial: time in bed, not hours asleep.",,
+hlth_sleep_we,partial,"YTIM1A03, YTIM1A04, YTIM1B03, YTIM1B04",(24 + as.numeric(YTIM1A03) + as.numeric(YTIM1A04) / 60 - as.numeric(YTIM1B03) - as.numeric(YTIM1B04) / 60),"Weekend counterpart of hlth_sleep_wd. Partial: time in bed, not hours asleep.",,
+hlth_sleep,partial,"YTIM1A01, YTIM1A02, YTIM1B01, YTIM1B02, YTIM1A03, YTIM1A04, YTIM1B03, YTIM1B04","(5 *
+  (24 + as.numeric(YTIM1A01) + as.numeric(YTIM1A02) / 60 - as.numeric(YTIM1B01) - as.numeric(YTIM1B02) / 60) +
+  2 * (24 + as.numeric(YTIM1A03) + as.numeric(YTIM1A04) / 60 - as.numeric(YTIM1B03) - as.numeric(YTIM1B04) / 60)) /
+  7","(5 x wd + 2 x we) / 7 of hlth_sleep_wd and hlth_sleep_we. Partial: time in bed, not hours asleep.",,
+hlth_sleepprob,incompatible,"YTIM1C01, YTIM1C02, YPSY4C01",,"Only single items: 'Do you usually sleep well?' on weekdays and weekends (YTIM1C01, YTIM1C02) and a sleep item scored in mh_somatic_self (YPSY4C01).",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,

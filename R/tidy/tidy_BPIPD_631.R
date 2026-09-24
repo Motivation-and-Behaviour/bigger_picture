@@ -32,6 +32,11 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
       c("survey", "wave", "hidp"),
       "many-to-one"
     ) |>
+    bp631_add(
+      bp631_stack(tables, "hhsamp"),
+      c("survey", "wave", "hidp"),
+      "many-to-one"
+    ) |>
     dplyr::left_join(
       bp631_parent(indresp, "mother", c("survey", "wave", "hidp", "pno")),
       by = dplyr::join_by("survey", "wave", "hidp", "mnspno" == "pno"),

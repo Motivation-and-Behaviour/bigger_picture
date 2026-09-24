@@ -1,7 +1,8 @@
 #' Tidier for BPIPD-1353 (Korea Youth Risk Behavior Web-based Survey)
 #'
-#' Repeated cross-section, not a panel: 21 independent annual stratified
-#' cluster samples (2005-2025).
+#' Repeated cross-section, not a panel: independent annual stratified cluster
+#' samples. The spec reads 2005-2025; 2005-2007 are dropped here because they
+#' field no screen-time item, leaving 2008-2025.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -11,6 +12,10 @@
 #' - one tibble, one row per respondent per year
 tidy_BPIPD_1353 <- function(raw_dataset, spec) {
   df <- dplyr::bind_rows(raw_dataset$data)
+
+  # Drop-wave rule: waves with no screen-time item cannot enter a screen-time
+  # model. The first internet-time items are fielded in 2008.
+  df <- dplyr::filter(df, as.integer(.wave) >= 2008L)
 
   # Grain and `participant_id` use the reader's `.wave`; the mapping derives
   # `wave` and `data_year` from `YEAR`, so the two must agree.

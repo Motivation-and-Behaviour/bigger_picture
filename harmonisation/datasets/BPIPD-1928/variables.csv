@@ -1,32 +1,41 @@
 target_variable,status,source_columns,expression,notes,lookup_table,measure
-participant_id,compatible,participant_id,as.character(participant_id),"Key is <edition>-<key>: `aluno` (2015); stratum+school+class+student (2019/2024, nested not global); row position (2009/2012, no student ID). Repeated cross-section, so no student repeats across editions.",,
+participant_id,inferred,participant_id,as.character(participant_id),"Key is <edition>-<key>: `aluno` (2015); stratum+school+class+student (2019/2024, nested not global); row position (2009/2012, no student ID). Repeated cross-section, so no student repeats across editions.",,
 wave,compatible,.wave,as.character(.wave),"PeNSE edition (repeated cross-section, not repeated measures). 2015 had two independent samples: 2015_sample_1 (9th grade) and 2015_sample_2 (grades 6-12, regional-level only).",,
-data_year,inferred,.wave,"as.numeric(substr(as.character(.wave), 1, 4))","Collection year. 2015/2019/2024 fielded April-September of that year; 2009/2012 within their named year (IBGE, PeNSE 2015 Notas tecnicas, https://biblioteca.ibge.gov.br/visualizacao/livros/liv97870.pdf).",,
+data_year,compatible,.wave,"as.numeric(substr(as.character(.wave), 1, 4))","The edition's own survey year (both 2015 samples 2015). Fieldwork April-September in 2015/2019/2024 and within the named year in 2009/2012 (IBGE, PeNSE 2015 Notas tecnicas, https://biblioteca.ibge.gov.br/visualizacao/livros/liv97870.pdf).",,
 rct_arm,unavailable,,,Not a trial: a national school health survey.,,
-survey_weight,in_progress,,,,,
-survey_strata,in_progress,,,,,
-survey_cluster,in_progress,,,,,
+survey_weight,compatible,"PESO_AJU_FREQ, PESO, PESO_ALUNO_FREQ","coalesce(PESO_AJU_FREQ, PESO, PESO_ALUNO_FREQ)","PeNSE's per-student sampling weight for the edition: PESO_AJU_FREQ (2009), PESO (2012, both 2015 samples), PESO_ALUNO_FREQ (2019, 2024).",,
+survey_strata,compatible,"ESTALOCA, ESTRATOGEO, ESTRATO_EXP, ESTRATO, .wave","paste0(
+  .wave,
+  ""-"",
+  coalesce(as.character(ESTALOCA), as.character(ESTRATOGEO), as.character(ESTRATO_EXP), as.character(ESTRATO))
+)","Sampling stratum for the edition, prefixed with wave since codes repeat: ESTALOCA (2009), ESTRATOGEO (2012), ESTRATO_EXP (2015, both samples, and 2024), ESTRATO (2019).",,
+survey_cluster,compatible,"ID, UPA, escola, ESTRATO, ESTRATO_EXP, ESCOLA, .wave","case_when(
+  .wave == ""2009"" ~ paste0(.wave, ""-"", ID),
+  .wave == ""2012"" ~ paste0(.wave, ""-"", UPA),
+  .wave %in% c(""2015_sample_1"", ""2015_sample_2"") ~ paste0(.wave, ""-"", escola),
+  .wave == ""2019"" ~ paste0(.wave, ""-"", ESTRATO, ""-"", ESCOLA),
+  .wave == ""2024"" ~ paste0(.wave, ""-"", ESTRATO_EXP, ""-"", ESCOLA)
+)","Primary sampling unit for the edition, prefixed with wave: school ID (2009), UPA (2012), escola (2015, both samples; the released UPA), and stratum plus ESCOLA in 2019 (ESTRATO) and 2024 (ESTRATO_EXP), since ESCOLA is numbered 1-69 within stratum.",,
 age_years,partial,"B01P03, B01003_2012, VB01003, B01003_2019, B01004, B01005, IDADE_AGREG, .wave","local({
   wave <- as.character(.wave)
-  mid_band <- c(11.5, 14, 16.5, 18.5)
+  mid_band <- c(12.5, 14.5, 17, 18.5)
   band_2019 <- if_else(wave == ""2019"", na_if(as.numeric(B01003_2019), 9), NA_real_)
   born <- if_else(wave == ""2019"", as.numeric(B01005), NA_real_)
   born[!born %in% 2000:2008] <- NA
   month <- if_else(wave == ""2019"", as.numeric(B01004), NA_real_)
   month[!month %in% 1:12] <- NA
-  derived <- 2019 - born - if_else(is.na(month), 0.5, as.numeric(month >= 7))
+  derived <- if_else(is.na(month), 2019 - born, 2019.5 - born - (month - 0.5) / 12)
   lower <- recode_values(band_2019, 1 ~ -Inf, 2 ~ 13, 3 ~ 16, 4 ~ 18, default = -Inf)
-  upper <- recode_values(band_2019, 1 ~ 12, 2 ~ 15, 3 ~ 17, 4 ~ Inf, default = Inf)
+  upper <- recode_values(band_2019, 1 ~ 13, 2 ~ 16, 3 ~ 18, 4 ~ Inf, default = Inf)
   age_2019 <- coalesce(pmin(pmax(derived, lower), upper), mid_band[band_2019])
-  age <- case_when(
-    wave == ""2009"" ~ as.numeric(B01P03) + 10,
-    wave == ""2012"" ~ as.numeric(B01003_2012) + 10,
-    wave %in% c(""2015_sample_1"", ""2015_sample_2"") ~ as.numeric(VB01003),
+  case_when(
+    wave == ""2009"" ~ as.numeric(B01P03) + 10.5,
+    wave == ""2012"" ~ as.numeric(B01003_2012) + 10.5,
+    wave %in% c(""2015_sample_1"", ""2015_sample_2"") ~ as.numeric(VB01003) + 0.5,
     wave == ""2019"" ~ age_2019,
     wave == ""2024"" ~ mid_band[match(as.numeric(IDADE_AGREG), 1:4)]
   )
-  pmin(age, 19)
-})","Self-reported age. 2009/2012 (codes 1-9 for 11-19) and 2015 give single years (11 = 11 or younger, 19 = 19 or older), exact. 2019 gives only age bands (<13, 13-15, 16-17, 18+); age computed from birth year/month at 1 July 2019 (mid-fieldwork) and clamped into the band (missing month = half year; April-September birthdays can be a year out). 2024 gives only the same four bands (IDADE_AGREG), so age is the band midpoint (11.5, 14, 16.5, 18.5). Partial for 2019/2024. Capped at 19.",,
+})","Self-reported age. 2009/2012 (codes 1-9 for 11-19) and 2015 record single completed years (+0.5; '11 or younger' 11.5, '19 or older' 19.5). 2019 records only bands (<13, 13-15, 16-17, 18+): decimal age at 1 July 2019 (fieldwork midpoint) from birth year and month (missing month: 2019 - birth year; 'before 2001' and '2008 or later' taken as 2000 and 2008), clamped into the reported completed-year band; band value where birth year is missing. 2024 records only the same bands (IDADE_AGREG): 12.5, 14.5, 17, 18.5. Partial for 2019 (assumed reference date) and 2024 (bands). Values above 19 kept.",,
 sex,compatible,"B01P01, B01001, VB01001, B01001A","recode_values(
   coalesce(as.numeric(B01P01), as.numeric(B01001), as.numeric(VB01001), as.numeric(B01001A)),
   1 ~ ""Male"",
@@ -71,7 +80,7 @@ indigenous,compatible,"B01P02, B01002, VB01002, .wave","case_when(
 )","From cor ou raca (see ethnicity): indigena (code 5, every edition) = Indigenous, other categories = Non-Indigenous. No-answer -> Unknown.",,
 minority,incompatible,"B01P02, B01002, VB01002",,"No majority colour/race group in Brazil to be a minority against (branca and parda each ~35-45%; preta+parda are a majority). Would need a disadvantage-based definition, not just numbers.",,
 immigrant_background,unavailable,,,"No birthplace, nationality or migration item.",,
-born_in_country,in_progress,,,,,
+born_in_country,unavailable,,,Not collected.,,
 ses_area,incompatible,"DEP2, PUBPRIV, V0007, DEP_ADMIN, E01P01_2012, E01P01_2019, E01P01_2024",,"No area-level deprivation measure. PeNSE's SES proxies (public/private school, fee band) describe the school, not the student's area. Municipality codes (2009/2012 only) would need an external index.",,
 ses_household,proximate,"B01P20, B01P21, B01P22, B01P25, B01P26, B01015, B01016, B01017, B01019, B01020, VB01015A, VB01016, VB01017, VB01019, VB01020A, B01015B, B01019A, B01020A, .wave","local({
   car <- coalesce(as.numeric(B01P22), as.numeric(B01017), as.numeric(VB01017))
@@ -90,7 +99,7 @@ ses_household,proximate,"B01P20, B01P21, B01P22, B01P25, B01P26, B01015, B01016,
   })
   case_when(is.na(ridit) ~ ""Unknown"", ridit < 0.4 ~ ""Low"", ridit <= 0.6 ~ ""Medium"", .default = ""High"")
 })","No income/occupation item. SES = 0-5 possession count (Criterio Brasil style, every edition): car, home computer, home internet (2009: computer w/ internet), paid domestic worker (>=5 days/wk 2009-2012, >=3 from 2015), >=2 bathrooms with shower. Ridit-scored within edition (absorbs ownership drift): <0.4 Low, 0.4-0.6 Medium, >0.6 High. Proximate: study-built index, not validated. Any unanswered item -> Unknown.",,
-ses_household_measure,inferred,,"""Household asset count (car, computer, home internet, paid domestic worker, 2+ bathrooms), ridit within edition""",Names the index built in ses_household.,,
+ses_household_measure,inferred,,"""Affluence/assets: household asset count (5 items)""",Names the index built in ses_household.,,
 ses_hukou,unavailable,,,Not a Chinese dataset.,,
 maternal_education,compatible,"B01P08, B01008, VB01008A, B01008B","lookup_values(
   recode_values(
@@ -110,38 +119,50 @@ maternal_education,compatible,"B01P08, B01008, VB01008A, B01008B","lookup_values
   target_variable = ""maternal_education"",
   default = ""Unknown""
 )","'Ate que nivel de ensino sua mae estudou ou estuda?', 8 codes, every edition. Completed secondary or less -> Secondary school or less; unfinished higher ed -> Post-secondary; completed higher ed -> Bachelor degree or higher. 'Nao sei' and no-answer -> Unknown.",maternal_education,
-paternal_education,compatible,"B01009, .wave","if_else(
-  as.character(.wave) == ""2012"",
+paternal_education,compatible,B01009,"lookup_values(
   recode_values(
     as.numeric(B01009),
-    c(1, 2, 3, 4, 5) ~ ""Secondary school or less"",
-    6 ~ ""Post-secondary"",
-    7 ~ ""Bachelor degree or higher"",
-    default = ""Unknown""
+    1 ~ ""Did not study"",
+    2 ~ ""Started ensino fundamental, did not finish"",
+    3 ~ ""Completed ensino fundamental"",
+    4 ~ ""Started ensino medio, did not finish"",
+    5 ~ ""Completed ensino medio"",
+    6 ~ ""Started higher education, did not finish"",
+    7 ~ ""Completed higher education"",
+    8 ~ ""Does not know"",
+    default = ""No answer""
   ),
-  ""Unknown""
-)","2012 only ('Ate que nivel de ensino seu pai estudou?'), same 8 codes as maternal_education, collapsed the same way. 'Nao sei'/no-answer -> Unknown. Other editions ask about the mother only, so Unknown.",,
-parental_education,partial,"B01008, B01009, .wave","if_else(
-  as.character(.wave) == ""2012"",
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education"",
+  default = ""Unknown""
+)","2012 only ('Ate que nivel de ensino seu pai estudou?'), same 8 codes as the mother item, through the shared education lookup. 'Nao sei' and no-answer -> Unknown; other editions ask about the mother only, so Unknown.",maternal_education,
+parental_education,compatible,"B01008, B01009","lookup_values(
   recode_values(
     pmax(
       if_else(as.numeric(B01008) %in% 1:7, as.numeric(B01008), NA_real_),
       if_else(as.numeric(B01009) %in% 1:7, as.numeric(B01009), NA_real_),
       na.rm = TRUE
     ),
-    c(1, 2, 3, 4, 5) ~ ""Secondary school or less"",
-    6 ~ ""Post-secondary"",
-    7 ~ ""Bachelor degree or higher"",
-    default = ""Unknown""
+    1 ~ ""Did not study"",
+    2 ~ ""Started ensino fundamental, did not finish"",
+    3 ~ ""Completed ensino fundamental"",
+    4 ~ ""Started ensino medio, did not finish"",
+    5 ~ ""Completed ensino medio"",
+    6 ~ ""Started higher education, did not finish"",
+    7 ~ ""Completed higher education"",
+    default = ""No answer""
   ),
-  ""Unknown""
-)","Higher of mother's/father's level, 2012 only (the one edition asking both). Max of codes 1-7 after dropping 'nao sei'/no-answer. Other editions Unknown rather than mother-only (see maternal_education), so one- and two-parent values never mix.",,
-urbanicity,proximate,"V0006, SITUACAO, .wave","case_when(
-  as.character(.wave) == ""2009"" ~ ""Urban"",
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education"",
+  default = ""Unknown""
+)","Asked in 2012 only (the one edition asking about both parents). Higher of the mother's and father's codes 1-7 after dropping 'nao sei' and no-answer, so one known parent suffices, through the shared education lookup. Other editions Unknown (mother only; see maternal_education).",maternal_education,
+urbanicity,proximate,"V0006, SITUACAO","case_when(
   coalesce(as.numeric(V0006), as.numeric(SITUACAO)) == 1 ~ ""Urban"",
   coalesce(as.numeric(V0006), as.numeric(SITUACAO)) == 2 ~ ""Rural"",
   .default = ""Unknown""
-)","IBGE urban/rural classification of the school (situacao da escola), 2015 (V0006) and 2019 (SITUACAO); no suburban level. 2009 sampled capital-city schools only -> Urban by design (1-2.5% of capital-city students attend a rural school in 2015/2019). 2012/2024 have no urban/rural variable -> Unknown. Proximate: describes the school, not the student's home.",,
+)","2015 and 2019 only. IBGE urban/rural classification of the school (situacao da escola: V0006 2015, SITUACAO 2019); binary, no suburban level. 2009, 2012 and 2024 have no urban/rural variable -> Unknown. Proximate: school location stands in for the student's home.",,
 family_structure,proximate,"B01P06, B01P07, B01006, B01007, VB01006, VB01007","local({
   mother <- coalesce(as.numeric(B01P06), as.numeric(B01006), as.numeric(VB01006))
   father <- coalesce(as.numeric(B01P07), as.numeric(B01007), as.numeric(VB01007))
@@ -152,10 +173,10 @@ family_structure,proximate,"B01P06, B01P07, B01006, B01007, VB01006, VB01007","l
     .default = ""Unknown""
   )
 })","From 'Voce mora com sua mae?'/'Voce mora com seu pai?' (every edition): both -> Two biological/adoptive parents; one -> Single parent; neither -> Other. Proximate: no step-parent item, so e.g. mother+stepfather reads as Single parent, and students may count a step-parent as mae/pai.",,
-fam_screenrules,in_progress,,,,,
-fam_bedroomscreen,in_progress,,,,,
-fam_parentstress,in_progress,,,,,
-fam_parentstress_measure,in_progress,,,,,
+fam_screenrules,unavailable,,,Not collected.,,
+fam_bedroomscreen,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
 school_grade,compatible,"VB01021, ANO_TURMA, .wave","local({
   grade <- c(
     ""6th year, ensino fundamental"",
@@ -190,17 +211,9 @@ school_grade,compatible,"VB01021, ANO_TURMA, .wave","local({
 st_measure_type,inferred,,"""Categorical""",Banded hours-per-day responses in every edition.,,
 st_measure_name,inferred,,"""Custom""","Bespoke items, self-completed on a handheld device from 2012; not a named instrument.",,
 st_responder,inferred,,"""Self""",The student answers the Questionario do Aluno; no proxy report.,,
-st_total_wd,partial,"B03P11, B03P12, B03P13, .wave","if_else(
-  as.character(.wave) == ""2009"",
-  sum_nonmissing(
-    recode_values(as.numeric(B03P11), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
-    recode_values(as.numeric(B03P12), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
-    recode_values(as.numeric(B03P13), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7)
-  ),
-  NA_real_
-)","2009 only: sum of weekday TV, videogame and computer items, converted as in st_watch_wd (about N hours = N, <1h = 0.5, 'about 7+' = 7). Partial: no phone item, and concurrent use can double-count. From 2012 the only broader item (B03010/B03010A-C) covers sedentary time (TV, computer, gaming, phone, tablet, chatting), not screen time, so not mapped; those editions contribute st_watch_wd only.",,
+st_total_wd,incompatible,"B03P11, B03P12, B03P13, B03010, VB03010A, B03010B, B03010C",,"Separate TV, videogame and computer items (B03P11 + B03P12 + B03P13, 2009); not summed (DR-0002). The 2012-2024 sitting-time item (B03010, VB03010A, B03010B, B03010C) also counts non-screen sitting.",,
 st_total_we,unavailable,,,Weekday only; no weekend item.,,
-st_total,unavailable,,,Weekday only; no weekend item.,,
+st_total,incompatible,"B03P11, B03P12, B03P13",,"Weekday items only; no usual-day value, and the separate TV, videogame and computer items are not summed (DR-0002).",,
 st_watch_wd,partial,"B03P11, B03009, VB03009A, B03009B, B03009C, .wave","if_else(
   as.character(.wave) %in% c(""2009"", ""2012""),
   recode_values(
@@ -226,18 +239,18 @@ st_watch_wd,partial,"B03P11, B03009, VB03009A, B03009B, B03009C, .wave","if_else
     7 ~ 5.5,
     8 ~ 6.5,
     9 ~ 7.5,
-    10 ~ 9
+    10 ~ 8
   )
-)","Hours of TV, ordinary weekday, every edition. 2009/2012: 9 'about N hours' bands (no TV=0, <1h=0.5, about N=N, 'about 7+'=7, HBSC-style). 2015-2024: 10 upper-bounded bands (no TV=0, up to 1h=0.5, midpoints 1.5-7.5, 'more than 8h'=9, floor+1). Partial: TV set only, so phone/tablet/computer streaming is excluded, and the 2024 item (B03009C) narrows to digital-platform programmes on the TV. 2024 'don't know' (11) and no-answer/abandonment codes are NA, not a band.",,
+)","Hours of TV on an ordinary weekday, every edition. 2009/2012: 9 bands (no TV 0, <1h 0.5, 'about N hours' N, top band 'about 7 or more' 7). 2015-2024: 10 bands (no TV 0, up to 1h 0.5, hourly bands at midpoints 1.5-7.5, top band 'more than 8 hours' 8). Partial: the TV set only, and the 2024 item (B03009C) narrows to digital-platform programmes on the TV. 2024 'don't know' (11) and no-answer/abandonment codes NA.",,
 st_watch_we,unavailable,,,Weekday only; no weekend item.,,
-st_watch,unavailable,,,Weekday only; no weekend item.,,
+st_watch,incompatible,"B03P11, B03009, VB03009A, B03009B, B03009C",,Weekday items only; no usual-day value. Mapped to st_watch_wd.,,
 st_game_wd,partial,"B03P12, .wave","if_else(
   as.character(.wave) == ""2009"",
   recode_values(as.numeric(B03P12), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
   NA_real_
 )","2009 only: 'Num dia de semana comum, quantas horas por dia voce joga videogame?', converted as st_watch_wd. Partial: reads as console gaming; computer gaming may be reported under st_comp_wd instead, and phone gaming isn't asked.",,
 st_game_we,unavailable,,,Weekday only; no weekend item.,,
-st_game,unavailable,,,Weekday only; no weekend item.,,
+st_game,incompatible,B03P12,,Weekday items only; no usual-day value. Mapped to st_game_wd.,,
 st_game_comp_wd,unavailable,,,Not asked.,,
 st_game_comp_we,unavailable,,,Not asked.,,
 st_game_comp,unavailable,,,Not asked.,,
@@ -265,13 +278,13 @@ st_comp_wd,compatible,"B03P13, .wave","if_else(
   NA_real_
 )","2009 only: 'Num dia de semana comum, quantas horas por dia voce fica no computador?' (any purpose), converted as st_watch_wd. Later editions ask only whether the household has a computer.",,
 st_comp_we,unavailable,,,Weekday only; no weekend item.,,
-st_comp,unavailable,,,Weekday only; no weekend item.,,
+st_comp,incompatible,B03P13,,Weekday items only; no usual-day value. Mapped to st_comp_wd.,,
 st_tablet_wd,unavailable,,,Not asked.,,
 st_tablet_we,unavailable,,,Not asked.,,
 st_tablet,unavailable,,,Not asked.,,
 st_phone_wd,unavailable,,,Not asked.,,
 st_phone_we,unavailable,,,Not asked.,,
-st_phone,unavailable,,,Not asked.,,
+st_phone,incompatible,"B01P18, B01014, VB01014",,"'Voce tem celular?', every edition: phone ownership only; no duration.",,
 st_socmedia_wd,unavailable,,,Not asked.,,
 st_socmedia_we,unavailable,,,Not asked.,,
 st_socmedia,unavailable,,,Not asked.,,
@@ -300,11 +313,11 @@ st_phone_school,unavailable,,,Not asked.,,
 acc_academachment_selfrated,unavailable,,,No achievement/test scores; no school-engagement scale.,,
 acc_academachment_lettergrades,unavailable,,,No achievement/test scores; no school-engagement scale.,,
 acc_academachment_stdtest,unavailable,,,No achievement/test scores; no school-engagement scale.,,
-acc_schoolengage_caresschool,incompatible,"B06P01, B07001, VB07001",,"Only school-engagement item is truancy (days missed w/o parental permission, past 30 days); behaviour, not a rating of caring about school or doing homework.",,
-acc_schoolengage_homework,incompatible,"B06P01, B07001, VB07001",,"Only school-engagement item is truancy (days missed w/o parental permission, past 30 days); behaviour, not a rating of caring about school or doing homework.",,
-acc_schoolpressure_self,in_progress,,,,,
-acc_schoolbelonging_self,in_progress,,,,,
-acc_schoolbelonging_measure,in_progress,,,,,
+acc_schoolengage_caresschool,unavailable,,,Not collected.,,
+acc_schoolengage_homework,incompatible,"B07003, VB07003",,"2012, 2015 and 2024 ask only how often parents checked that homework was done (past 30 days), which the schema excludes; no completion item.",,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_self,incompatible,"B06P03, B07006, VB07006",,"Single item, every edition: how often schoolmates treated the student well or were helpful, past 30 days; not a multi-item belonging or connectedness scale. Mapped nowhere.",,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
 acc_academachment_numgrades,unavailable,,,No achievement/test scores; no school-engagement scale.,,
 acc_academachment_teacherrated,unavailable,,,No achievement/test scores; no school-engagement scale.,,
 acc_numeracy_stdtest,unavailable,,,No achievement/test scores; no school-engagement scale.,,
@@ -312,27 +325,55 @@ acc_literacy_stdtest,unavailable,,,No achievement/test scores; no school-engagem
 beh_hyper_basc2,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 beh_atten_basc2,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 beh_atten_self,unavailable,,,No validated instrument; B12 has single frequency items only.,,
-beh_atten_measure,in_progress,,,,,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
 beh_selfreg_htks,unavailable,,,No validated instrument; B12 has single frequency items only.,,
-beh_bullied,partial,"B07009, VB07009","recode_values(coalesce(as.numeric(B07009), as.numeric(VB07009)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","'...voce esculachou, zombou, mangou, intimidou ou cacoou algum de seus colegas...?' (yes/no), 2012 onward; no 2009 item. Partial: past 30 days (not schema's few months), and any mocking/intimidation rather than a defined repeated-bullying pattern. No-answer -> NA.",,
-beh_beenbullied,partial,"B06P04, B07007, VB07007, B07007A, B07007B, .wave","local({
+beh_bullied,compatible,"B07009, VB07009","recode_values(coalesce(as.numeric(B07009), as.numeric(VB07009)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","2012-2024 only. '...voce esculachou, zombou, mangou, intimidou ou cacoou algum de seus colegas da escola tanto que ele ficou magoado...?' (yes/no, past 30 days), PeNSE's bullying perpetration item. No-answer -> NA.",,
+beh_beenbullied,compatible,"B06P04, B07007, VB07007, B07007A, B07007B","local({
   frequency <- coalesce(as.numeric(B06P04), as.numeric(B07007), as.numeric(VB07007))
   count <- coalesce(as.numeric(B07007A), as.numeric(B07007B))
   case_when(frequency == 1 ~ ""FALSE"", frequency %in% 2:5 ~ ""TRUE"", count == 1 ~ ""FALSE"", count %in% 2:4 ~ ""TRUE"")
-})","How often mocked/teased/intimidated/humiliated by schoolmates, every edition. 2009-2015: frequency (never-always); 2019-2024: count (none/once/2+ in 2019; none/once/twice/3+ in 2024). TRUE for any occurrence. Partial: past 30 days (not schema's few months), and mocking/intimidation rather than a defined repeated-bullying pattern.",,
-beh_beenbullied_online,partial,B07013,"recode_values(as.numeric(B07013), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","2019/2024 only: '...voce se sentiu ameacado(a), ofendido(a) ou humilhado(a) nas redes sociais...?' (yes/no). Partial: a single threatening/humiliating experience counts, broader than bullying. No-answer -> NA.",,
-beh_bullied_online,partial,B07016,"recode_values(as.numeric(B07016), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","2024 only: '...voce ameacou, ofendeu ou humilhou outras pessoas nas redes sociais...?' (yes/no). Partial for the same reasons as beh_beenbullied_online.",,
-beh_fight,partial,"B08P04, B09011, VB09011, B09011A, .wave","local({
+})","How often schoolmates mocked, teased, intimidated or humiliated the student until hurt, past 30 days, every edition (PeNSE's bullying item). 2009-2015 frequency (never-always); 2019 count (none/once/2+); 2024 count (none/once/twice/3+). TRUE for any occurrence; no-answer -> NA.",,
+beh_beenbullied_online,partial,B07013,"recode_values(as.numeric(B07013), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","2019/2024 only. '...voce se sentiu ameacado(a), ofendido(a) ou humilhado(a) nas redes sociais ou aplicativos de celular?' (yes/no, past 30 days). Partial: single threatening, offending or humiliating experience with no bullying framing. No-answer -> NA.",,
+beh_bullied_online,partial,B07016,"recode_values(as.numeric(B07016), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","2024 only. '...voce ameacou, ofendeu ou humilhou outras pessoas nas redes sociais ou aplicativos de celular?' (yes/no, past 30 days). Partial: single threatening, offending or humiliating experience with no bullying framing. No-answer -> NA.",,
+beh_fight,compatible,"B08P04, B09011, VB09011, B09011A","local({
   count_12m <- coalesce(as.numeric(B09011), as.numeric(VB09011))
   any_30d <- coalesce(as.numeric(B08P04), as.numeric(B09011A))
   case_when(count_12m == 1 ~ ""FALSE"", count_12m %in% 2:8 ~ ""TRUE"", any_30d == 1 ~ ""TRUE"", any_30d == 2 ~ ""FALSE"")
-})","Physical fight involvement, TRUE for any. Reference period varies: 2012/2015 past 12 months (B09011/VB09011, HBSC-style); 2009 past 30 days with physical hurt (B08P04); 2019-2024 past 30 days with physical struggle (B09011A). Partial: 30-day editions read lower than the 12-month ones. No-answer -> NA.",,
+})","Physical fight, TRUE for any. 2009: past 30 days, a fight in which someone was physically hurt (B08P04, yes/no). 2012/2015: past 12 months, number of physical fights (B09011/VB09011). 2019/2024: past 30 days, a fight with physical struggle (B09011A, yes/no). No-answer -> NA.",,
 beh_truancy,compatible,"B06P01, B07001, VB07001","recode_values(coalesce(as.numeric(B06P01), as.numeric(B07001), as.numeric(VB07001)), 1 ~ ""FALSE"", 2:5 ~ ""TRUE"")","Days missed w/o parental permission, past 30 days (none to 10+), every edition. TRUE for any day; no-answer -> NA.",,
 beh_stealing,unavailable,,,Not collected.,,
 beh_vandalism,unavailable,,,Not collected.,,
-beh_alcohol_self,in_progress,,,,,
-beh_tobacco_self,in_progress,,,,,
-beh_cannabis_self,in_progress,,,,,
+beh_alcohol_self,compatible,"B05P03, B05004, VB05004, B05004A","case_when(
+  B05P03 == 1 ~ ""FALSE"",
+  B05P03 %in% 2:7 ~ ""TRUE"",
+  B05004 == 1 ~ ""FALSE"",
+  B05004 %in% 2:7 ~ ""TRUE"",
+  VB05004 %in% c(-1, 1) ~ ""FALSE"",
+  VB05004 %in% 2:7 ~ ""TRUE"",
+  B05004A %in% c(-1, 1) ~ ""FALSE"",
+  B05004A %in% 2:7 ~ ""TRUE""
+)","Days drank at least one drink in the past 30 days, self-report, every edition: B05P03 (2009), B05004 (2012), VB05004 (2015), B05004A (2019, 2024). 'No days' (code 1) and the skip for never-drinkers (-1, from 2015) -> FALSE; 1 or more days -> TRUE; no-answer codes NA.",,
+beh_tobacco_self,compatible,"B04P03, B04003_2012, VB04003, B04003_2019, B04003_2024","case_when(
+  B04P03 %in% 1:2 ~ ""FALSE"",
+  B04P03 %in% 3:8 ~ ""TRUE"",
+  B04003_2012 %in% 1:2 ~ ""FALSE"",
+  B04003_2012 %in% 3:8 ~ ""TRUE"",
+  VB04003 %in% c(-1, 1) ~ ""FALSE"",
+  VB04003 %in% 2:7 ~ ""TRUE"",
+  B04003_2019 %in% c(-1, 1) ~ ""FALSE"",
+  B04003_2019 %in% 2:7 ~ ""TRUE"",
+  B04003_2024 %in% c(-1, 1) ~ ""FALSE"",
+  B04003_2024 %in% 2:7 ~ ""TRUE""
+)","Days smoked cigarettes in the past 30 days, self-report, every edition. 'Never smoked' and 'no days' (codes 1-2 in 2009/2012; skip -1 and code 1 from 2015) -> FALSE; 1 or more days -> TRUE; no-answer codes NA.",,
+beh_cannabis_self,compatible,"B06003, B06004, VB06004A, B06004A","case_when(
+  B06004 == 1 ~ ""FALSE"",
+  B06004 %in% 2:4 ~ ""TRUE"",
+  B06003 == 1 ~ ""FALSE"",
+  VB06004A %in% c(-1, 1) ~ ""FALSE"",
+  VB06004A %in% 2:4 ~ ""TRUE"",
+  B06004A %in% c(-1, 1) ~ ""FALSE"",
+  B06004A %in% 2:4 ~ ""TRUE""
+)","2012-2024 only. Marijuana use in the past 30 days, self-report: B06004 (2012, times), VB06004A (2015) and B06004A (2019, 2024) (days). 'None' and the skip for never-users (2012 B06003 'never used drugs'; -1 from 2015) -> FALSE; any use -> TRUE; no-answer codes NA. 2009 asks only a pooled illicit-drug item; not used.",,
 beh_conduct_sdq_parent,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 beh_hyper_sdq_parent,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 beh_peerprob_sdq_parent,unavailable,,,No validated instrument; B12 has single frequency items only.,,
@@ -342,7 +383,7 @@ beh_aggverb_bpaq_self,unavailable,,,No validated instrument; B12 has single freq
 beh_agganger_bpaq_self,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 beh_agghostility_bpaq_self,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 beh_agg_self,unavailable,,,No validated instrument; B12 has single frequency items only.,,
-beh_agg_measure,in_progress,,,,,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
 beh_argues,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 beh_persistence_finishwork,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 beh_emotreg_stayscalm,unavailable,,,No validated instrument; B12 has single frequency items only.,,
@@ -367,8 +408,8 @@ beh_ext_cbcl_parent,unavailable,,,No validated instrument; B12 has single freque
 beh_cbcl_measure,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 beh_prosocial_online_self,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 beh_prosocial_online_measure,unavailable,,,No validated instrument; B12 has single frequency items only.,,
-beh_problematicuse_self,in_progress,,,,,
-beh_problematicuse_measure,in_progress,,,,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
 cog_execfunc_basc2,unavailable,,,No cognitive assessment.,,
 cog_langexec_nepsy,unavailable,,,No cognitive assessment.,,
 cog_phono_nepsy,unavailable,,,No cognitive assessment.,,
@@ -448,25 +489,25 @@ mh_lonely_self,compatible,"B12001, VB12001","recode_values(
 mh_lonely_scale_self,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 mh_lonely_measure,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 mh_sad_self,compatible,B12005,"recode_values(as.numeric(B12005), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")",'...com que frequencia voce se sentiu triste?' (past 30 days). Options map 1:1; see mh_lonely_self. 2019/2024 only (IBGE's post-2015 mental-health block); earlier editions NA. No-answer/abandonment codes NA.,,
-mh_worry_self,compatible,B12004,"recode_values(as.numeric(B12004), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")","'...muito preocupado com as coisas comuns do seu dia a dia...?' (past 30 days; e.g. school, sports, chores). Options map 1:1; see mh_lonely_self. 2019/2024 only (IBGE's post-2015 block); earlier editions NA. No-answer/abandonment codes NA.",,
+mh_worry_self,compatible,B12004,"recode_values(as.numeric(B12004), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")","2019/2024 only. '...muito preocupado com as coisas comuns do seu dia a dia...?' (past 30 days; e.g. school activities, sports competitions, chores), nunca to sempre mapped 1:1 ('na maioria das vezes' = Often). No-answer/abandonment codes NA. 2012 and 2015 B12002/VB12002 (sleep lost through worry, 12 months) not used: sleep loss, not worry frequency.",,
 mh_irritable_self,partial,B12007,"recode_values(as.numeric(B12007), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")","'...irritado(a), nervoso(a) ou mal-humorado(a)...?' (past 30 days). Partial: pools irritability/bad temper with nervousness. Options map 1:1; see mh_lonely_self. 2019/2024 only; earlier editions NA. No-answer/abandonment codes NA.",,
 mh_nobodycares_self,compatible,B12006,"recode_values(as.numeric(B12006), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")",'...ninguem se preocupa com voce?' (past 30 days). Options map 1:1; see mh_lonely_self. 2019/2024 only; earlier editions NA. No-answer/abandonment codes NA.,,
 mh_lifenotworth_self,compatible,B12008,"recode_values(as.numeric(B12008), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")",'...a vida nao vale a pena ser vivida?' (past 30 days). Options map 1:1; see mh_lonely_self. 2019/2024 only; earlier editions NA. No-answer/abandonment codes NA. IBGE's 2019 'negative self-assessment of mental health' = most of the time/always on 4+ of this and the other four 30-day items.,,
 mh_suicide_ideation_self,incompatible,"B12008, B12009",,"Nearest items: life not worth living, past 30 days (2019/2024), a passive death wish rather than suicidal ideation; and 2024's self-harm urge, past 12 months, which is self-harm rather than suicide ideation. B12008 mapped to mh_lifenotworth_self.",,
 mh_suicide_attempt_self,unavailable,,,No validated instrument; B12 has single frequency items only.,,
-mh_selfharm_self,in_progress,,,,,
+mh_selfharm_self,incompatible,B12009,,"2024 only: B12009 asks whether the student felt the urge to hurt themselves on purpose (past 12 months), an urge rather than self-injury. Mapped nowhere.",,
 mh_psychsom_hbscscl_self,unavailable,,,No validated instrument; B12 has single frequency items only.,,
 mh_psychsom_measure,unavailable,,,No validated instrument; B12 has single frequency items only.,,
-mh_somatic_self,in_progress,,,,,
-mh_somatic_measure,in_progress,,,,,
+mh_somatic_self,unavailable,,,Not collected.,,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
 wb_emotsc_basc2,unavailable,,,Not collected.,,
 wb_mwb_wemwbs,unavailable,,,Not collected.,,
 wb_lifesatisfaction_cantrilladder,unavailable,,,Not collected.,,
 wb_resil_basc2,unavailable,,,Not collected.,,
-wb_psychcomplaints_feellow,incompatible,B12005,,"B12005 (felt sad, past 30 days) uses a never-always scale, not translatable to HBSC-SCL frequency levels. Mapped to mh_sad_self.",,
-wb_psychcomplaints_irritable,incompatible,B12007,,"B12007 (felt irritable/nervous/bad-tempered, past 30 days) uses a never-always scale, not translatable to HBSC-SCL levels, and pools irritability with nervousness. Mapped to mh_irritable_self.",,
-wb_psychcomplaints_nervous,incompatible,B12007,,"B12007 (felt irritable/nervous/bad-tempered, past 30 days) uses a never-always scale, not translatable to HBSC-SCL levels, and pools nervousness with irritability. Mapped to mh_irritable_self.",,
-wb_psychcomplaints_diffsleep,incompatible,"B12002, VB12002",,"2012/2015 ask how often worry kept the student awake, past 12 months (never-always); cause is specified, and the scale isn't translatable to HBSC-SCL levels.",,
+wb_psychcomplaints_feellow,incompatible,B12005,,"B12005 (felt sad, past 30 days, 2019/2024) uses a never-always scale, not the HBSC-SCL frequency levels. Mapped to mh_sad_self.",,
+wb_psychcomplaints_irritable,incompatible,B12007,,"B12007 (irritable, nervous or bad-tempered, past 30 days, 2019/2024) uses a never-always scale, not the HBSC-SCL frequency levels, and pools irritability with nervousness. Mapped to mh_irritable_self.",,
+wb_psychcomplaints_nervous,incompatible,B12007,,"B12007 (irritable, nervous or bad-tempered, past 30 days, 2019/2024) uses a never-always scale, not the HBSC-SCL frequency levels, and pools nervousness with irritability. Mapped to mh_irritable_self.",,
+wb_psychcomplaints_diffsleep,incompatible,"B12002, VB12002",,"B12002/VB12002 (2012/2015): how often worry kept the student awake at night, past 12 months, never-always; the cause is specified and the scale is not the HBSC-SCL frequency levels. Mapped nowhere.",,
 wb_bodyimage,compatible,"B10P01, B11001, VB11001, B11001A","recode_values(
   coalesce(as.numeric(B10P01), as.numeric(B11001), as.numeric(VB11001), as.numeric(B11001A)),
   1 ~ ""Much too thin"",
@@ -478,7 +519,7 @@ wb_bodyimage,compatible,"B10P01, B11001, VB11001, B11001A","recode_values(
 wb_lifesat_slss_self,unavailable,,,Not collected.,,
 wb_lifesat_swls_self,unavailable,,,Not collected.,,
 wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
-wb_happiness_singleitem_self,in_progress,,,,,
+wb_happiness_singleitem_self,unavailable,,,Not collected.,,
 wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
 wb_domainsat_appearance_self,partial,"VB11007, B11007","recode_values(coalesce(as.numeric(VB11007), as.numeric(B11007)), 1 ~ 5, 2 ~ 4, 3 ~ 3, 4 ~ 2, 5 ~ 1)","'How do you feel about your body?', 5-point very satisfied to very dissatisfied (midpoint indifferent), 2015-2024; reversed so 5 = very satisfied. Partial: the body, not appearance overall.",,
 wb_domainsat_family_self,unavailable,,,Not collected.,,
@@ -505,16 +546,16 @@ wb_selfratedhealth_self,proximate,"VB13005, B13005","recode_values(
   4 ~ ""Fair"",
   5 ~ ""Poor""
 )","2015/2019/2024: 'Como voce classificaria seu estado de saude?', 5-point scale centred on 'regular' (muito bom...muito ruim). Mapped in rank order, as the schema asks: 'muito bom' -> Excellent, 'regular' -> Good. No-answer -> NA.",,
-wb_generalhealth_parent,in_progress,,,,,
+wb_generalhealth_parent,incompatible,"VB13005, B13005",,"Student-rated health only (VB13005/B13005, 2015-2024); no parent respondent. Mapped to wb_selfratedhealth_self.",,
 wb_posaffect_self,unavailable,,,Not collected.,,
 wb_posaffect_measure,unavailable,,,Not collected.,,
 wb_eudaimonic_self,unavailable,,,Not collected.,,
 wb_eudaimonic_measure,unavailable,,,Not collected.,,
-wb_socsupport_family_self,in_progress,,,,,
-wb_socsupport_friends_self,in_progress,,,,,
-wb_socsupport_measure,in_progress,,,,,
-hlth_sleep_wd,in_progress,,,,,
-hlth_sleep_we,in_progress,,,,,
-hlth_sleep,in_progress,,,,,
-hlth_sleepprob,in_progress,,,,,
-hlth_sleepprob_measure,in_progress,,,,,
+wb_socsupport_family_self,incompatible,"B07004, VB07004",,"Single item, 2012-2024: how often parents or guardians understood the student's problems and worries (past 30 days); not a family-support scale. Mapped nowhere.",,
+wb_socsupport_friends_self,incompatible,"B12003, VB12003",,B12003/VB12003 (2012-2024) count close friends; friend counts are excluded. Mapped nowhere.,,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,unavailable,,,Not collected.,,
+hlth_sleep_we,unavailable,,,Not collected.,,
+hlth_sleep,unavailable,,,Not collected.,,
+hlth_sleepprob,incompatible,"B12002, VB12002",,"Single item B12002/VB12002 (2012/2015): how often worry kept the student awake at night, past 12 months; not a multi-item sleep-problems scale. Mapped nowhere.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,

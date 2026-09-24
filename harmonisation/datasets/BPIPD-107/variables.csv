@@ -1,21 +1,40 @@
 target_variable,status,source_columns,expression,notes,lookup_table,measure
 participant_id,compatible,participant_id,as.character(participant_id),Cycle year prefixed to CNTSTUID; ids repeat across cycles.,,
 wave,compatible,.wave,as.character(.wave),PISA cycle year.,,
-data_year,inferred,.wave,as.numeric(.wave),Fielded within the cycle year in every country (2022 despite the pandemic delay).,,
-rct_arm,unavailable,,,,,
-survey_weight,in_progress,,,,,
-survey_strata,in_progress,,,,,
-survey_cluster,in_progress,,,,,
+data_year,compatible,.wave,as.numeric(.wave),"PISA cycle year, the survey's own year label; fieldwork fell in that year in every country (2022 after the pandemic delay).",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,compatible,W_FSTUWT,as.numeric(W_FSTUWT),"Final trimmed nonresponse-adjusted student weight (W_FSTUWT), every cycle, not rescaled (sums to each country's 15-year-old population). The 80 BRR replicate weights PISA uses for variance are not harmonised.",,
+survey_strata,compatible,".wave, STRATUM","if_else(is.na(STRATUM), NA_character_, paste(.wave, STRATUM))","Explicit sampling stratum (STRATUM, country-prefixed code), prefixed with the cycle because codes recur across cycles. Undisclosed strata (codes ending 97 or 99) pool a country's schools into one stratum; 2025 leaves STRATUM blank in 12 countries (NA).",,
+survey_cluster,compatible,".wave, CNTSCHID","local({
+  id <- as.numeric(CNTSCHID)
+  if_else(is.na(id) | id %% 100000 == 0, NA_character_, paste(.wave, sprintf(""%.0f"", id)))
+})",International school id (CNTSCHID); schools are PISA's first-stage sampling units. Prefixed with the cycle because ids recur across cycles. Placeholder ids ending 00000 (three 2015 US-state samples) and 2025 ids withheld in five countries are NA.,,
 age_years,compatible,AGE,as.numeric(AGE),OECD-derived age at testing in years with months as decimals.,,
-sex,compatible,ST004D01T,"recode_values(as.numeric(ST004D01T), 1 ~ ""Female"", 2 ~ ""Male"", default = ""Unknown"")",From sampling and questionnaire data; only female/male collected.,,
-country,compatible,CNT,"lookup_values(as.character(haven::zap_labels(CNT)), lookup_country, default = ""Unknown"")","Sub-national economies map to their country (Baku, Moscow City/Region, Tatarstan, Chinese provinces, US states, Buenos Aires, Spanish/Ukrainian regions, Kurdistan, Dushanbe). 43 participants not yet in allowed_values keep their usual English name. See lookups/country.csv.",country,
+sex,proximate,"ST004D01T, MALE","coalesce(
+  recode_values(as.numeric(ST004D01T), 1 ~ ""Female"", 2 ~ ""Male""),
+  recode_values(as.numeric(MALE), 1 ~ ""Male"", 0 ~ ""Female""),
+  ""Unknown""
+)","Sampling-frame gender (ST004D01T; female, male). 2025 withholds it in Argentina, Australia, Belgium, Canada, Chile, Colombia, Denmark, Germany, Iceland, Ireland, Netherlands, New Zealand, Spain and Uruguay, which release MALE instead; its Female/Other code is taken as Female (proximate).",,
+country,compatible,"CNT, STRATUM, .wave","local({
+  cnt <- as.character(haven::zap_labels(CNT))
+  nation <- lookup_values(
+    if_else(cnt == ""GBR"", paste(.wave, STRATUM), NA_character_),
+    lookup_country,
+    default = NA_character_
+  )
+  coalesce(nation, lookup_values(cnt, lookup_country, default = ""Unknown""))
+})","CNT through lookups/country.csv. UK rows take their nation (England, Scotland, Wales, Northern Ireland) from the cycle's sampling stratum; undisclosed UK strata stay United Kingdom. Sub-national samples map to their country (Baku, Moscow City/Region, Tatarstan, Chinese provinces, US states, Buenos Aires, Spanish/Ukrainian regions, Kurdistan, Dushanbe).",country,
 state,compatible,"STRATUM, .wave","lookup_values(paste(.wave, STRATUM), lookup_state, default = NA_character_)",Australian strata encode state and sector; undisclosed stratum = Unknown; non-AU rows NA.,state,
-ethnicity,unavailable,,,Not collected. IMMIG and country of birth are the only related items.,,
+ethnicity,incompatible,"IMMIG, ST019AQ01T, ST022Q01TA",,"No ethnic-group item; birthplace (ST019AQ01T, 2015-2022; IMMIG, mapped to immigrant_background) and home language (ST022Q01TA) only.",,
 indigenous,unavailable,,,Not in the international file; the AU national file carries it.,,
 minority,proximate,IMMIG,"recode_values(as.numeric(IMMIG), 1 ~ ""Non-minority"", c(2, 3) ~ ""Minority"", default = ""Unknown"")","Immigrant background as proxy: first/second-generation (student or both parents born abroad) = Minority, native = Non-minority. Ethnicity not collected.",,
 immigrant_background,compatible,IMMIG,"recode_values(as.numeric(IMMIG), 1 ~ ""Native"", 2 ~ ""Second-generation"", 3 ~ ""First-generation"", default = ""Unknown"")",OECD immigrant-background index from the birthplace of the student and both parents.,,
-born_in_country,in_progress,,,,,
-ses_area,unavailable,,,,,
+born_in_country,compatible,"ST019AQ01T, BICT_S","coalesce(
+  recode_values(as.numeric(ST019AQ01T), 1 ~ ""Yes"", 2 ~ ""No""),
+  recode_values(as.numeric(BICT_S), 1 ~ ""Yes"", 0 ~ ""No""),
+  ""Unknown""
+)","Student's own birthplace, country of test or other country (ST019AQ01T, 2015-2022; 2022 'I don't know' is Unknown); 2025 releases only the OECD flag derived from it (BICT_S). The UK samples' country of test is the UK.",,
+ses_area,unavailable,,,Not collected.,,
 ses_household,compatible,"ESCS, CNT, .wave","case_when(
   is.na(ESCS) ~ ""Unknown"",
   as.numeric(ESCS) <=
@@ -28,9 +47,9 @@ ses_household,compatible,"ESCS, CNT, .wave","case_when(
     }) ~ ""Medium"",
   .default = ""High""
 )","ESCS quintiles cut within country and cycle (OECD reports national quartiles): Q1-2 Low, Q3 Medium, Q4-5 High. Pooled quintiles would mostly sort by national wealth.",,
-ses_household_measure,inferred,,"""PISA index of economic, social and cultural status (ESCS)""","Composite of parental education, parental occupation and home possessions.",,
-ses_hukou,unavailable,,,,,
-maternal_education,compatible,"MISCED_isced97, MISCED_isced11","coalesce(
+ses_household_measure,inferred,,"""Composite SES index: PISA ESCS""","PISA index of economic, social and cultural status: parental education, parental occupation and home possessions; every cycle.",,
+ses_hukou,unavailable,,,Hukou not asked; the mainland-China samples cannot be classified.,,
+maternal_education,proximate,"MISCED_isced97, MISCED_isced11","coalesce(
   lookup_values(
     coalesce(
       recode_values(
@@ -63,43 +82,93 @@ maternal_education,compatible,"MISCED_isced97, MISCED_isced11","coalesce(
     default = ""Unknown""
   ),
   ""Unknown""
-)","ISCED-97 in 2015/2018, ISCED-2011 in 2022; 2025 releases only combined HISCED (Unknown). Mapping in lookups/maternal_education.csv.",maternal_education,
-paternal_education,compatible,"FISCED_isced97, FISCED_isced11","coalesce(
-  recode_values(
-    as.numeric(FISCED_isced97),
-    c(0, 1, 2, 3, 4) ~ ""Secondary school or less"",
-    5 ~ ""Post-secondary"",
-    6 ~ ""Bachelor degree or higher""
-  ),
-  recode_values(
-    as.numeric(FISCED_isced11),
-    c(1, 2, 3, 4, 5) ~ ""Secondary school or less"",
-    c(6, 7) ~ ""Post-secondary"",
-    c(8, 9, 10) ~ ""Bachelor degree or higher""
+)","OECD index of the mother's education from the student's report: ISCED-97 in 2015/2018, ISCED-2011 in 2022; 2025 releases only the highest-parent index (Unknown here). ISCED 4 sits in Secondary for 2015/2018 (one ISCED-97 code, '3A or 4', mostly 3A; proximate) but in Post-secondary for 2022 (ISCED-2011 level 4). Shared education lookup.",maternal_education,
+paternal_education,proximate,"FISCED_isced97, FISCED_isced11","coalesce(
+  lookup_values(
+    coalesce(
+      recode_values(
+        as.numeric(FISCED_isced97),
+        0 ~ ""ISCED-97 none"",
+        1 ~ ""ISCED-97 level 1"",
+        2 ~ ""ISCED-97 level 2"",
+        3 ~ ""ISCED-97 level 3B or 3C"",
+        4 ~ ""ISCED-97 level 3A or 4"",
+        5 ~ ""ISCED-97 level 5B"",
+        6 ~ ""ISCED-97 level 5A or 6""
+      ),
+      recode_values(
+        as.numeric(FISCED_isced11),
+        1 ~ ""ISCED-2011 below level 1"",
+        2 ~ ""ISCED-2011 level 1"",
+        3 ~ ""ISCED-2011 level 2"",
+        4 ~ ""ISCED-2011 level 3.3"",
+        5 ~ ""ISCED-2011 level 3.4"",
+        6 ~ ""ISCED-2011 level 4"",
+        7 ~ ""ISCED-2011 level 5"",
+        8 ~ ""ISCED-2011 level 6"",
+        9 ~ ""ISCED-2011 level 7"",
+        10 ~ ""ISCED-2011 level 8""
+      )
+    ),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education"",
+    default = ""Unknown""
   ),
   ""Unknown""
-)","ISCED-97 in 2015/2018 (5B=Post-secondary, 3A/4 in Secondary or less); ISCED-2011 in 2022 (levels 4-5=Post-secondary). 2025 only releases HISCED.",,
-parental_education,compatible,"HISCED_isced97, HISCED_isced11","coalesce(
-  recode_values(
-    as.numeric(HISCED_isced97),
-    c(0, 1, 2, 3, 4) ~ ""Secondary school or less"",
-    5 ~ ""Post-secondary"",
-    6 ~ ""Bachelor degree or higher""
-  ),
-  recode_values(
-    as.numeric(HISCED_isced11),
-    c(1, 2, 3, 4, 5) ~ ""Secondary school or less"",
-    c(6, 7) ~ ""Post-secondary"",
-    c(8, 9, 10) ~ ""Bachelor degree or higher""
+)","OECD index of the father's education from the student's report, mapped as maternal_education through the shared education lookup (ISCED 4 in Secondary for 2015/2018, Post-secondary for 2022; proximate). 2025 releases only the highest-parent index (Unknown here).",maternal_education,
+parental_education,proximate,"HISCED_isced97, HISCED_isced11, HISCED_2025","coalesce(
+  lookup_values(
+    coalesce(
+      recode_values(
+        as.numeric(HISCED_isced97),
+        0 ~ ""ISCED-97 none"",
+        1 ~ ""ISCED-97 level 1"",
+        2 ~ ""ISCED-97 level 2"",
+        3 ~ ""ISCED-97 level 3B or 3C"",
+        4 ~ ""ISCED-97 level 3A or 4"",
+        5 ~ ""ISCED-97 level 5B"",
+        6 ~ ""ISCED-97 level 5A or 6""
+      ),
+      recode_values(
+        as.numeric(HISCED_isced11),
+        1 ~ ""ISCED-2011 below level 1"",
+        2 ~ ""ISCED-2011 level 1"",
+        3 ~ ""ISCED-2011 level 2"",
+        4 ~ ""ISCED-2011 level 3.3"",
+        5 ~ ""ISCED-2011 level 3.4"",
+        6 ~ ""ISCED-2011 level 4"",
+        7 ~ ""ISCED-2011 level 5"",
+        8 ~ ""ISCED-2011 level 6"",
+        9 ~ ""ISCED-2011 level 7"",
+        10 ~ ""ISCED-2011 level 8""
+      ),
+      recode_values(
+        as.numeric(HISCED_2025),
+        1 ~ ""ISCED-2011 below level 2"",
+        2 ~ ""ISCED-2011 level 2"",
+        3 ~ ""ISCED-2011 level 3.3"",
+        4 ~ ""ISCED-2011 level 3.4"",
+        5 ~ ""ISCED-2011 level 4"",
+        6 ~ ""ISCED-2011 level 5"",
+        7 ~ ""ISCED-2011 level 6"",
+        8 ~ ""ISCED-2011 level 7"",
+        9 ~ ""ISCED-2011 level 8""
+      )
+    ),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education"",
+    default = ""Unknown""
   ),
   ""Unknown""
-)","Highest of both parents, OECD-derived; ISCED-97 in 2015/2018, ISCED-2011 from 2022. Collapsing: see paternal_education.",,
-urbanicity,proximate,SC001Q01TA,"recode_values(as.numeric(SC001Q01TA), c(1, 2) ~ ""Rural"", 3 ~ ""Suburban"", c(4, 5, 6) ~ ""Urban"", default = ""Unknown"")","Principal's description of school community size (village <3 000 or small town = Rural, town 15 000-100 000 = Suburban, city+ = Urban). School location, not home; size band, not a true urban typology.",,
-family_structure,unavailable,,,,,
-fam_screenrules,in_progress,,,,,
-fam_bedroomscreen,in_progress,,,,,
-fam_parentstress,in_progress,,,,,
-fam_parentstress_measure,in_progress,,,,,
+)","OECD highest-parent index HISCED, the study's own highest-parent variable, through the shared education lookup: ISCED-97 in 2015/2018, ISCED-2011 in 2022 and 2025 (2025 renumbers the codes; recoded per cycle). ISCED 4 sits in Secondary for 2015/2018 (ISCED-97 '3A or 4') but in Post-secondary from 2022; proximate.",maternal_education,
+urbanicity,proximate,SC001Q01TA,"recode_values(as.numeric(SC001Q01TA), 1 ~ ""Rural"", c(2, 3) ~ ""Suburban"", c(4, 5, 6) ~ ""Urban"", default = ""Unknown"")","Principal's report of the school community's size: village (under 3,000) Rural; small town (3,000-15,000) and town (15,000-100,000) Suburban; city (100,000+), large city and, from 2022, megacity Urban. School location and size bands stand in for residence (proximate).",,
+family_structure,incompatible,ST403Q01DA,,"Only a 2025 count of parents or guardians (ST403Q01DA); it cannot separate biological, step and other parents.",,
+fam_screenrules,compatible,PA202Q01DA,"case_when(as.numeric(PA202Q01DA) == 1 ~ TRUE, as.numeric(PA202Q01DA) == 2 ~ FALSE, .default = NA)","2025 only, optional parent questionnaire, parent report: 'I define rules about how long or when my child is allowed to use <digital resources>' (PA202Q01DA), yes/no; all digital devices.",,
+fam_bedroomscreen,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
 school_grade,compatible,ST001D01T,"recode_values(
   as.numeric(ST001D01T),
   7 ~ ""Grade 7"",
@@ -113,233 +182,138 @@ school_grade,compatible,ST001D01T,"recode_values(
   default = NA_character_
 )",International grade; invalid and missing codes become NA.,,
 st_measure_type,inferred,,"""Categorical""",Duration bands in every cycle.,,
-st_measure_name,inferred,.wave,"case_when(
-  .wave %in% c(""2015"", ""2018"") ~ ""PISA ICT familiarity questionnaire internet-time items (IC005-IC007)"",
-  .default = ""PISA student questionnaire digital-resource items (ST326) and ICT questionnaire leisure items (IC177-IC178)""
-)","Bespoke PISA items, not a named instrument; the ICT questionnaire is a country option.",,
-st_responder,inferred,,"""Self""",,,
-st_total_wd,partial,"ST326Q01JA, ST326Q02JA, ST326Q04JA, ST326Q05JA","local({
-  x <- sum_nonmissing(
-    recode_values(
-      as.numeric(ST326Q01JA),
-      1 ~ 0,
-      2 ~ 0.5,
-      3 ~ 1.5,
-      4 ~ 2.5,
-      5 ~ 3.5,
-      6 ~ 4.5,
-      7 ~ 5.5,
-      8 ~ 6.5,
-      9 ~ 7.5
-    ),
-    recode_values(
-      as.numeric(ST326Q02JA),
-      1 ~ 0,
-      2 ~ 0.5,
-      3 ~ 1.5,
-      4 ~ 2.5,
-      5 ~ 3.5,
-      6 ~ 4.5,
-      7 ~ 5.5,
-      8 ~ 6.5,
-      9 ~ 7.5
-    ),
-    recode_values(
-      as.numeric(ST326Q04JA),
-      1 ~ 0,
-      2 ~ 0.5,
-      3 ~ 1.5,
-      4 ~ 2.5,
-      5 ~ 3.5,
-      6 ~ 4.5,
-      7 ~ 5.5,
-      8 ~ 6.5,
-      9 ~ 7.5
-    ),
-    recode_values(as.numeric(ST326Q05JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5)
-  )
-  if_else(x > 24, NA_real_, x)
-})","2022/2025: digital resources for learning and leisure, at school and outside, on school days. Band midpoints per OECD (top band 7.5); 4 exclusive contexts summed, unanswered = 0 as OECD does; sums >24h set to NA. Digital devices only, no TV.",,
+st_measure_name,inferred,,"""Custom""",Items written for PISA: ICT familiarity questionnaire internet-time items IC005-IC007 (2015/2018); ST326 digital-resource hours and ICT questionnaire leisure items IC177/IC178 (2022/2025).,,
+st_responder,inferred,,"""Self""",The student self-completes the student and ICT familiarity questionnaires.,,
+st_total_wd,partial,"ST326Q01JA, ST326Q02JA, ST326Q04JA, ST326Q05JA","sum_nonmissing(
+  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
+  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
+  recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
+  recode_values(as.numeric(ST326Q05JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
+)","2022/2025: ST326 hours on digital resources on a school day, the OECD's split of one digital-device item by purpose (learning, leisure) and place (at school, before or after school); sum of the 4 parts, unanswered parts 0 as the OECD scores them. Band midpoints; top band 'more than 7 hours' = 7 (OECD uses 7.5, so published PISA figures differ). Digital devices only, TV excluded (partial). Sums above 24 h kept for the preregistered implausible-value exclusion.",,
 st_total_we,partial,"ST326Q03JA, ST326Q06JA","sum_nonmissing(
-  recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5),
-  recode_values(as.numeric(ST326Q06JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5)
-)",2022/2025: weekend learning plus leisure digital-resource use; see st_total_wd.,,
-st_total,partial,"ST326Q01JA, ST326Q02JA, ST326Q03JA, ST326Q04JA, ST326Q05JA, ST326Q06JA","((local({
-  x <- sum_nonmissing(
-    recode_values(
-      as.numeric(ST326Q01JA),
-      1 ~ 0,
-      2 ~ 0.5,
-      3 ~ 1.5,
-      4 ~ 2.5,
-      5 ~ 3.5,
-      6 ~ 4.5,
-      7 ~ 5.5,
-      8 ~ 6.5,
-      9 ~ 7.5
-    ),
-    recode_values(
-      as.numeric(ST326Q02JA),
-      1 ~ 0,
-      2 ~ 0.5,
-      3 ~ 1.5,
-      4 ~ 2.5,
-      5 ~ 3.5,
-      6 ~ 4.5,
-      7 ~ 5.5,
-      8 ~ 6.5,
-      9 ~ 7.5
-    ),
-    recode_values(
-      as.numeric(ST326Q04JA),
-      1 ~ 0,
-      2 ~ 0.5,
-      3 ~ 1.5,
-      4 ~ 2.5,
-      5 ~ 3.5,
-      6 ~ 4.5,
-      7 ~ 5.5,
-      8 ~ 6.5,
-      9 ~ 7.5
-    ),
-    recode_values(as.numeric(ST326Q05JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5)
-  )
-  if_else(x > 24, NA_real_, x)
-})) *
-  5 +
-  (sum_nonmissing(
-    recode_values(
-      as.numeric(ST326Q03JA),
-      1 ~ 0,
-      2 ~ 0.5,
-      3 ~ 1.5,
-      4 ~ 2.5,
-      5 ~ 3.5,
-      6 ~ 4.5,
-      7 ~ 5.5,
-      8 ~ 6.5,
-      9 ~ 7.5
-    ),
-    recode_values(as.numeric(ST326Q06JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5)
-  )) *
-    2) /
-  7",5:2 weighted mean of the school-day and weekend totals.,,
-st_watch_wd,unavailable,,,,,
-st_watch_we,unavailable,,,,,
-st_watch,unavailable,,,"No TV/video item; IC177Q03JA mixes videos with podcasts, music, news.",,
-st_game_wd,compatible,IC177Q01JA,"recode_values(as.numeric(IC177Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7.5)","2022/2025 ICT questionnaire: video games on phone/console/online, typical weekday. Band midpoints; 1-3h=2, >7h=7.5.",,
-st_game_we,compatible,IC178Q01JA,"recode_values(as.numeric(IC178Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7.5)",Same item for a typical weekend day.,,
-st_game,compatible,"IC177Q01JA, IC178Q01JA","((recode_values(as.numeric(IC177Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7.5)) *
-  5 +
-  (recode_values(as.numeric(IC178Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7.5)) * 2) /
-  7",5:2 weighted mean of weekday and weekend.,,
-st_game_comp_wd,unavailable,,,,,
-st_game_comp_we,unavailable,,,,,
-st_game_comp,unavailable,,,,,
-st_game_console_wd,unavailable,,,,,
-st_game_console_we,unavailable,,,,,
-st_game_console,unavailable,,,,,
-st_game_handheldconsole_wd,unavailable,,,,,
-st_game_handheldconsole_we,unavailable,,,,,
-st_game_handheldconsole,unavailable,,,,,
-st_game_active_wd,unavailable,,,,,
-st_game_active_we,unavailable,,,,,
-st_game_active,unavailable,,,,,
-st_game_phone_wd,unavailable,,,,,
-st_game_phone_we,unavailable,,,,,
-st_game_phone,unavailable,,,,,
-st_game_tablet_wd,unavailable,,,,,
-st_game_tablet_we,unavailable,,,,,
-st_game_tablet,unavailable,,,,,
-st_comp_nongaming_wd,unavailable,,,,,
-st_comp_nongaming_we,unavailable,,,,,
-st_comp_nongaming,unavailable,,,,,
-st_comp_wd,unavailable,,,,,
-st_comp_we,unavailable,,,,,
-st_comp,unavailable,,,"Only frequency of use by device is asked, not time.",,
-st_tablet_wd,unavailable,,,,,
-st_tablet_we,unavailable,,,,,
-st_tablet,unavailable,,,,,
-st_phone_wd,unavailable,,,,,
-st_phone_we,unavailable,,,,,
-st_phone,unavailable,,,"Only frequency of use by device is asked, not time.",,
-st_socmedia_wd,partial,IC177Q02JA,"recode_values(as.numeric(IC177Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7.5)","2022/2025: browsing social networks, typical weekday. IC177Q05JA (sharing/messaging) not added: also covers email and chat.",,
-st_socmedia_we,partial,IC178Q02JA,"recode_values(as.numeric(IC178Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7.5)",Same item for a typical weekend day.,,
-st_socmedia,partial,"IC177Q02JA, IC178Q02JA","((recode_values(as.numeric(IC177Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7.5)) *
-  5 +
-  (recode_values(as.numeric(IC178Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7.5)) * 2) /
-  7",5:2 weighted mean of weekday and weekend.,,
-st_educational_wd,compatible,"ST326Q01JA, ST326Q02JA","sum_nonmissing(
-  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5),
-  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5)
-)","2022/2025: digital resources for learning, at school and before/after school. Band midpoints per OECD.",,
-st_educational_we,compatible,ST326Q03JA,"recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5)",2022/2025: learning activities on weekends.,,
-st_educational,compatible,"ST326Q01JA, ST326Q02JA, ST326Q03JA","((sum_nonmissing(
-  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5),
-  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5)
+  recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
+  recode_values(as.numeric(ST326Q06JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
+)",2022/2025: ST326 learning plus leisure hours on a weekend day (2 parts); rules and top band (7) as st_total_wd.,,
+st_total,partial,"ST326Q01JA, ST326Q02JA, ST326Q03JA, ST326Q04JA, ST326Q05JA, ST326Q06JA","((sum_nonmissing(
+  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
+  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
+  recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
+  recode_values(as.numeric(ST326Q05JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
 )) *
   5 +
-  (recode_values(
-    as.numeric(ST326Q03JA),
-    1 ~ 0,
-    2 ~ 0.5,
-    3 ~ 1.5,
-    4 ~ 2.5,
-    5 ~ 3.5,
-    6 ~ 4.5,
-    7 ~ 5.5,
-    8 ~ 6.5,
-    9 ~ 7.5
+  (sum_nonmissing(
+    recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
+    recode_values(as.numeric(ST326Q06JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
   )) *
     2) /
-  7",5:2 weighted mean of school-day and weekend learning use.,,
-st_work_wd,unavailable,,,,,
-st_work_we,unavailable,,,,,
-st_work,unavailable,,,,,
-st_internet_wd,partial,IC006Q01TA,"recode_values(as.numeric(IC006Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 7)","2015/2018 ICT questionnaire: internet use outside school, typical weekday (school use in st_internet_school). Band midpoints; >6h=7.",,
-st_internet_we,partial,IC007Q01TA,"recode_values(as.numeric(IC007Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 7)","2015/2018: internet use outside school, typical weekend day.",,
-st_internet,partial,"IC006Q01TA, IC007Q01TA","((recode_values(as.numeric(IC006Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 7)) *
+  7","5:2 mean of st_total_wd and st_total_we; rules and top band (7) as st_total_wd, no cap.",,
+st_watch_wd,incompatible,IC177Q03JA,,"Videos bundled with news, podcasts and music in browsing the Internet for fun (IC177Q03JA, 2022/2025); mapped nowhere.",,
+st_watch_we,incompatible,IC178Q03JA,,"Videos bundled with news, podcasts and music in browsing the Internet for fun (IC178Q03JA, 2022/2025); mapped nowhere.",,
+st_watch,incompatible,"IC177Q03JA, IC178Q03JA",,"Videos bundled with news, podcasts and music in browsing the Internet for fun (IC177Q03JA, IC178Q03JA, 2022/2025); mapped nowhere.",,
+st_game_wd,compatible,IC177Q01JA,"recode_values(as.numeric(IC177Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)","2022/2025 ICT questionnaire: video games on a smartphone, console or online platform, typical weekday (IC177Q01JA). Band midpoints; 'between 1 and 3 hours' = 2; top band 'more than 7 hours' = 7.",,
+st_game_we,compatible,IC178Q01JA,"recode_values(as.numeric(IC178Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)",Same item for a typical weekend day (IC178Q01JA); bands as st_game_wd (top band 7).,,
+st_game,compatible,"IC177Q01JA, IC178Q01JA","((recode_values(as.numeric(IC177Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) *
   5 +
-  (recode_values(as.numeric(IC007Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 7)) * 2) /
-  7","5:2 weighted mean of weekday and weekend, outside school only.",,
-st_videochat,unavailable,,,,,
+  (recode_values(as.numeric(IC178Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) * 2) /
+  7",5:2 mean of st_game_wd and st_game_we.,,
+st_game_comp_wd,unavailable,,,No device split; see st_game.,,
+st_game_comp_we,unavailable,,,No device split; see st_game.,,
+st_game_comp,unavailable,,,No device split; see st_game.,,
+st_game_console_wd,unavailable,,,No device split; see st_game.,,
+st_game_console_we,unavailable,,,No device split; see st_game.,,
+st_game_console,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_wd,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_we,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole,unavailable,,,No device split; see st_game.,,
+st_game_active_wd,unavailable,,,No device split; see st_game.,,
+st_game_active_we,unavailable,,,No device split; see st_game.,,
+st_game_active,unavailable,,,No device split; see st_game.,,
+st_game_phone_wd,unavailable,,,No device split; see st_game.,,
+st_game_phone_we,unavailable,,,No device split; see st_game.,,
+st_game_phone,unavailable,,,No device split; see st_game.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_game.,,
+st_game_tablet_we,unavailable,,,No device split; see st_game.,,
+st_game_tablet,unavailable,,,No device split; see st_game.,,
+st_comp_nongaming_wd,unavailable,,,Not collected.,,
+st_comp_nongaming_we,unavailable,,,Not collected.,,
+st_comp_nongaming,unavailable,,,Not collected.,,
+st_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_we,unavailable,,,No weekday/weekend split.,,
+st_comp,incompatible,"IC170Q01JA, IC171Q01JA",,"Frequency of use by device only: desktop or laptop at and outside school (IC170Q01JA, IC171Q01JA, 2022/2025); no duration.",,
+st_tablet_wd,unavailable,,,No weekday/weekend split.,,
+st_tablet_we,unavailable,,,No weekday/weekend split.,,
+st_tablet,incompatible,"IC170Q03JA, IC171Q03JA",,"Frequency of use by device only: tablet or e-book reader at and outside school (IC170Q03JA, IC171Q03JA, 2022/2025); no duration.",,
+st_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_phone_we,unavailable,,,No weekday/weekend split.,,
+st_phone,incompatible,"IC170Q02JA, IC171Q02JA",,"Frequency of use by device only: smartphone at and outside school (IC170Q02JA, IC171Q02JA, 2022/2025); no duration.",,
+st_socmedia_wd,partial,IC177Q02JA,"recode_values(as.numeric(IC177Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)","2022/2025: browsing social networks only, typical weekday (IC177Q02JA); bands as st_game_wd (top band 7). IC177Q05JA (communicating and sharing on any platform) not added: it also covers email and chat.",,
+st_socmedia_we,partial,IC178Q02JA,"recode_values(as.numeric(IC178Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)",Same item for a typical weekend day (IC178Q02JA); bands as st_game_wd (top band 7).,,
+st_socmedia,partial,"IC177Q02JA, IC178Q02JA","((recode_values(as.numeric(IC177Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) *
+  5 +
+  (recode_values(as.numeric(IC178Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) * 2) /
+  7",5:2 mean of st_socmedia_wd and st_socmedia_we.,,
+st_educational_wd,compatible,"ST326Q01JA, ST326Q02JA","sum_nonmissing(
+  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
+  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
+)","2022/2025: sum of ST326Q01JA, ST326Q02JA (DR-0002), learning hours at school and before or after school on a school day. Band midpoints; top band 'more than 7 hours' = 7 (OECD uses 7.5).",,
+st_educational_we,compatible,ST326Q03JA,"recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)",2022/2025: ST326 learning hours on a weekend day; bands as st_educational_wd (top band 7).,,
+st_educational,compatible,"ST326Q01JA, ST326Q02JA, ST326Q03JA","((sum_nonmissing(
+  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
+  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
+)) *
+  5 +
+  (recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)) *
+    2) /
+  7",5:2 mean of st_educational_wd and st_educational_we.,,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,compatible,"IC005Q01TA, IC006Q01TA","recode_values(as.numeric(IC005Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6) +
+  recode_values(as.numeric(IC006Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)","2015/2018 ICT questionnaire: sum of IC005Q01TA, IC006Q01TA (DR-0002), internet use at school and outside school on a typical weekday. Band midpoints; top band 'more than 6 hours' = 6.",,
+st_internet_we,compatible,IC007Q01TA,"recode_values(as.numeric(IC007Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)","2015/2018: internet use outside school on a typical weekend day (IC007Q01TA), the whole day as there is no school; bands as st_internet_wd (top band 6).",,
+st_internet,compatible,"IC005Q01TA, IC006Q01TA, IC007Q01TA","((recode_values(as.numeric(IC005Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6) +
+  recode_values(as.numeric(IC006Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)) *
+  5 +
+  (recode_values(as.numeric(IC007Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)) * 2) /
+  7",5:2 mean of st_internet_wd and st_internet_we.,,
+st_videochat,incompatible,"IC177Q05JA, IC178Q05JA",,"Calls not separable from messaging and sharing on any communication platform (IC177Q05JA, IC178Q05JA, 2022/2025; see st_messaging).",,
 st_messaging_wd,incompatible,IC177Q05JA,,Bundles messaging with social-network sharing; excluded per schema.,,
 st_messaging_we,incompatible,IC178Q05JA,,Bundles messaging with social-network sharing; excluded per schema.,,
 st_messaging,incompatible,"IC177Q05JA, IC178Q05JA, WB160Q01HA",,"Duration items bundle messaging with social networks; WB160 (contact with friends by phone, text or social media) is a frequency.",,
-st_creating,partial,"IC177Q07JA, IC178Q07JA","((recode_values(as.numeric(IC177Q07JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7.5)) *
+st_creating,partial,"IC177Q07JA, IC178Q07JA","((recode_values(as.numeric(IC177Q07JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) *
   5 +
-  (recode_values(as.numeric(IC178Q07JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7.5)) * 2) /
-  7","2022/2025 ICT questionnaire: creating/editing own digital content (pictures, video, music, programs), weekday and weekend. 5:2 weighted mean; bands: see st_game_wd. Partial: no posting; includes programming.",,
-st_email,unavailable,,,,,
-st_shopping,unavailable,,,,,
+  (recode_values(as.numeric(IC178Q07JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) * 2) /
+  7","2022/2025: creating or editing own digital content (pictures, videos, music, computer programs), weekday and weekend (IC177Q07JA, IC178Q07JA), 5:2 mean; bands as st_game_wd (top band 7). No posting; includes programming (partial).",,
+st_email,incompatible,IC008Q03TA,,2015/2018 frequency of email use outside school (IC008Q03TA) only; no duration.,,
+st_shopping,incompatible,"IC177Q04JA, IC178Q04JA",,"Buying bundled with finding places and booking tickets in looking for practical information online (IC177Q04JA, IC178Q04JA, 2022/2025); mapped nowhere.",,
 st_total_school,partial,"ST326Q01JA, ST326Q04JA","sum_nonmissing(
-  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5),
-  recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5)
-)",2022/2025: learning plus leisure digital-resource use at school on a school day. Digital devices only.,,
-st_educational_school,compatible,ST326Q01JA,"recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7.5)",2022/2025: digital resources for learning at school on a school day.,,
-st_comp_school,unavailable,,,,,
-st_tablet_school,unavailable,,,,,
-st_internet_school,compatible,IC005Q01TA,"recode_values(as.numeric(IC005Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 7)","2015/2018: internet use at school, typical weekday. Band midpoints; >6h=7.",,
-st_phone_school,unavailable,,,,,
-acc_academachment_selfrated,unavailable,,,,,
-acc_academachment_lettergrades,unavailable,,,,,
-acc_academachment_stdtest,unavailable,,,,,
-acc_schoolengage_caresschool,unavailable,,,,,
-acc_schoolengage_homework,unavailable,,,,,
-acc_schoolpressure_self,in_progress,,,,,
-acc_schoolbelonging_self,in_progress,,,,,
-acc_schoolbelonging_measure,in_progress,,,,,
-acc_academachment_numgrades,unavailable,,,,,
-acc_academachment_teacherrated,unavailable,,,,,
+  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
+  recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
+)",2022/2025: ST326 learning plus leisure hours at school on a school day (2 parts); rules and top band (7) as st_total_wd.,,
+st_educational_school,compatible,ST326Q01JA,"recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)",2022/2025: ST326 learning hours at school on a school day; bands as st_educational_wd (top band 7).,,
+st_comp_school,incompatible,IC170Q01JA,,"Frequency of desktop or laptop use at school only (IC170Q01JA, 2022/2025); no duration.",,
+st_tablet_school,incompatible,IC170Q03JA,,"Frequency of tablet or e-book reader use at school only (IC170Q03JA, 2022/2025); no duration.",,
+st_internet_school,compatible,IC005Q01TA,"recode_values(as.numeric(IC005Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)",2015/2018: internet use at school on a typical weekday (IC005Q01TA). Band midpoints; top band 'more than 6 hours' = 6.,,
+st_phone_school,incompatible,IC170Q02JA,,"Frequency of smartphone use at school only (IC170Q02JA, 2022/2025); no duration.",,
+acc_academachment_selfrated,unavailable,,,Not collected.,,
+acc_academachment_lettergrades,unavailable,,,Not collected.,,
+acc_academachment_stdtest,compatible,PV1SCIE,as.numeric(PV1SCIE),"First plausible value on the PISA science scale (OECD mean 500, SD 100 at scale setting), every cycle; missing for the separate 2018 and 2022 financial-literacy samples. Financial literacy is not mapped; creative thinking is on cog_creativethinking_stdtest.",,
+acc_schoolengage_caresschool,incompatible,"ST268Q07JA, ST268Q08JA, ST268Q09JA",,"2022 agreement ratings of wanting to do well in mathematics, test-language and science classes (ST268Q07JA, ST268Q08JA, ST268Q09JA); not a frequency.",,
+acc_schoolengage_homework,incompatible,ST296Q04JA,,"Only total daily homework time (ST296Q04JA, 2022 and 2025), not how often all homework is completed.",,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_self,compatible,BELONG,as.numeric(BELONG),"OECD sense-of-belonging index BELONG, a WLE of the 6 ST034 agreement items keyed so higher = stronger belonging, as released (computed for students answering at least 3 items); every cycle. OECD rescales per cycle, so standardise within wave.",,
+acc_schoolbelonging_measure,inferred,,"""PISA sense of belonging to school (ST034), 6 of 6 items, 1-4 item scoring (strongly agree to strongly disagree; no fixed range), OECD WLE index; reversed by the OECD: I make friends easily at school, I feel like I belong at school, other students seem to like me""",Describes acc_schoolbelonging_self; the scale is in every cycle's core student questionnaire.,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
 acc_numeracy_stdtest,compatible,PV1MATH,as.numeric(PV1MATH),"First of ten plausible values, PISA mathematics scale (OECD mean 500, SD 100 at scale setting). One PV gives unbiased point estimates; all ten kept in the tidied table.",,
 acc_literacy_stdtest,compatible,PV1READ,as.numeric(PV1READ),First of ten plausible values on the PISA reading scale; see acc_numeracy_stdtest.,,
-beh_hyper_basc2,unavailable,,,,,
-beh_atten_basc2,unavailable,,,,,
-beh_atten_self,unavailable,,,,,
-beh_atten_measure,in_progress,,,,,
-beh_selfreg_htks,unavailable,,,,,
-beh_bullied,unavailable,,,,,
-beh_beenbullied,compatible,"ST038Q03NA, ST038Q04NA, ST038Q05NA, ST038Q06NA, ST038Q07NA, ST038Q08NA","case_when(
+beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_self,incompatible,ST309Q02JA,,Only the 2022 agreement item 'I get easily distracted' (ST309Q02JA); no attention scale.,,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_bullied,unavailable,,,Not collected.,,
+beh_beenbullied,compatible,"ST038Q03NA, ST038Q04NA, ST038Q05NA, ST038Q06NA, ST038Q07NA, ST038Q08NA, ST038Q11JA","case_when(
   pmax(
     as.numeric(ST038Q03NA),
     as.numeric(ST038Q04NA),
@@ -347,6 +321,7 @@ beh_beenbullied,compatible,"ST038Q03NA, ST038Q04NA, ST038Q05NA, ST038Q06NA, ST03
     as.numeric(ST038Q06NA),
     as.numeric(ST038Q07NA),
     as.numeric(ST038Q08NA),
+    as.numeric(ST038Q11JA),
     na.rm = TRUE
   ) >=
     2 ~ TRUE,
@@ -357,14 +332,15 @@ beh_beenbullied,compatible,"ST038Q03NA, ST038Q04NA, ST038Q05NA, ST038Q06NA, ST03
     as.numeric(ST038Q06NA),
     as.numeric(ST038Q07NA),
     as.numeric(ST038Q08NA),
+    as.numeric(ST038Q11JA),
     na.rm = TRUE
   ) ==
     1 ~ FALSE,
   .default = NA
-)","TRUE if any of 6 peer-victimisation items (left out, made fun of, threatened, things taken/destroyed, hit/pushed, rumours) occurred a few times a year+ in past 12 months; FALSE if all answered items were never/almost never. 2025 asks 4 of 6; OECD suppressed the 2015 called-names/picked-on items.",,
-beh_beenbullied_online,compatible,ST038Q12DA,"case_when(as.numeric(ST038Q12DA) >= 2 ~ TRUE, as.numeric(ST038Q12DA) == 1 ~ FALSE, .default = NA)","2025 only: upsetting information about me published online without my consent, a few times a year or more in the past 12 months.",,
-beh_bullied_online,unavailable,,,,,
-beh_fight,compatible,ST038Q09JA,"case_when(as.numeric(ST038Q09JA) >= 2 ~ TRUE, as.numeric(ST038Q09JA) == 1 ~ FALSE, .default = NA)",2022 only: was in a physical fight on school property a few times a year or more in the past 12 months.,,
+)","Past 12 months, in school: TRUE if any peer-victimisation item (left out, made fun of, threatened, things taken or destroyed, hit or pushed, nasty rumours; 2022 adds giving money under threat, ST038Q11JA) happened a few times a year or more; FALSE if every answered item is never or almost never. 2025 asks 4 of the 6 core items; OECD suppressed the 2015 called-names and picked-on items.",,
+beh_beenbullied_online,partial,ST038Q12DA,"case_when(as.numeric(ST038Q12DA) >= 2 ~ TRUE, as.numeric(ST038Q12DA) == 1 ~ FALSE, .default = NA)","2025 only: upsetting information about me published online without my consent, a few times a year or more in the past 12 months (ST038Q12DA). One act type (partial).",,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,partial,ST038Q09JA,"case_when(as.numeric(ST038Q09JA) >= 2 ~ TRUE, as.numeric(ST038Q09JA) == 1 ~ FALSE, .default = NA)",2022 only: in a physical fight on school property a few times a year or more in the past 12 months (ST038Q09JA). School property only (partial).,,
 beh_truancy,compatible,"ST062Q01TA, ST062Q02TA","case_when(
   pmax(as.numeric(ST062Q01TA), as.numeric(ST062Q02TA), na.rm = TRUE) >= 2 ~ ""TRUE"",
   pmax(as.numeric(ST062Q01TA), as.numeric(ST062Q02TA), na.rm = TRUE) == 1 ~ ""FALSE"",
@@ -372,124 +348,124 @@ beh_truancy,compatible,"ST062Q01TA, ST062Q02TA","case_when(
 )","Skipped a whole day or some classes in the last two full school weeks (never to 5+ times); TRUE for any occurrence of either. Recall is 2 weeks, not a year.",,
 beh_stealing,unavailable,,,Not collected.,,
 beh_vandalism,unavailable,,,Not collected.,,
-beh_alcohol_self,in_progress,,,,,
-beh_tobacco_self,in_progress,,,,,
-beh_cannabis_self,in_progress,,,,,
-beh_conduct_sdq_parent,unavailable,,,,,
-beh_hyper_sdq_parent,unavailable,,,,,
-beh_peerprob_sdq_parent,unavailable,,,,,
-beh_prosocial_sdq_parent,unavailable,,,,,
-beh_aggphys_bpaq_self,unavailable,,,,,
-beh_aggverb_bpaq_self,unavailable,,,,,
-beh_agganger_bpaq_self,unavailable,,,,,
-beh_agghostility_bpaq_self,unavailable,,,,,
-beh_agg_self,unavailable,,,,,
-beh_agg_measure,in_progress,,,,,
-beh_argues,unavailable,,,,,
-beh_persistence_finishwork,unavailable,,,,,
-beh_emotreg_stayscalm,unavailable,,,,,
-beh_peerprob_makefriends,unavailable,,,,,
-beh_conduct_diagnosed,unavailable,,,,,
-beh_conduct_diagnosed_severity,unavailable,,,,,
-beh_conduct_sdq_self,unavailable,,,,,
-beh_hyper_sdq_self,unavailable,,,,,
-beh_peerprob_sdq_self,unavailable,,,,,
-beh_prosocial_sdq_self,unavailable,,,,,
-beh_conduct_sdq_teacher,unavailable,,,,,
-beh_hyper_sdq_teacher,unavailable,,,,,
-beh_peerprob_sdq_teacher,unavailable,,,,,
-beh_prosocial_sdq_teacher,unavailable,,,,,
-beh_ext_sdq_parent,unavailable,,,,,
-beh_ext_sdq_self,unavailable,,,,,
-beh_ext_sdq_teacher,unavailable,,,,,
-beh_agg_cbcl_parent,unavailable,,,,,
-beh_atten_cbcl_parent,unavailable,,,,,
-beh_rulebreak_cbcl_parent,unavailable,,,,,
-beh_ext_cbcl_parent,unavailable,,,,,
-beh_cbcl_measure,unavailable,,,,,
+beh_alcohol_self,unavailable,,,Not collected.,,
+beh_tobacco_self,unavailable,,,Not collected.,,
+beh_cannabis_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_agg_self,incompatible,ST038Q09JA,,"Only a physical-fight item (ST038Q09JA), mapped to beh_fight; no aggression scale.",,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_argues,incompatible,ST343Q10JA,,2022 agreement item 'I argue a lot' (ST343Q10JA); not a frequency.,,
+beh_persistence_finishwork,incompatible,ST307Q09JA,,"Agreement item 'I finish what I start' (ST307Q09JA, 2022/2025); not a frequency.",,
+beh_emotreg_stayscalm,incompatible,ST313Q05JA,,2022 agreement item 'I stay calm even in tense situations' (ST313Q05JA); not a frequency.,,
+beh_peerprob_makefriends,incompatible,"ST034Q02TA, WB156Q01HA",,"Agreement item 'I make friends easily at school' (ST034Q02TA), school only, and a count of close friends (WB156Q01HA, 2018/2022); no difficulty rating.",,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ not administered.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_self,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,Not collected.,,
-beh_problematicuse_self,in_progress,,,,,
-beh_problematicuse_measure,in_progress,,,,,
-cog_execfunc_basc2,unavailable,,,,,
-cog_langexec_nepsy,unavailable,,,,,
-cog_phono_nepsy,unavailable,,,,,
-cog_inhibcont_nepsy,unavailable,,,,,
-cog_vismotor_nepsy,unavailable,,,,,
-cog_verbalfluency_nepsy,unavailable,,,,,
-cog_inhib_nihtb_flanker,unavailable,,,,,
-cog_flex_nihtb_dccs,unavailable,,,,,
-cog_wm_nihtb_listsort,unavailable,,,,,
-cog_speed_nihtb_pattern,unavailable,,,,,
-cog_epimem_nihtb_picseq,unavailable,,,,,
-cog_vocab_nihtb_picvocab,unavailable,,,,,
-cog_fluidcomp_nihtb,unavailable,,,,,
-cog_crystcomp_nihtb,unavailable,,,,,
-cog_totalcomp_nihtb,unavailable,,,,,
-cog_wm_digitspan,unavailable,,,,,
-cog_iq_fullscale,unavailable,,,,,
-cog_vocab_bpvs,unavailable,,,,,
-cog_vocab_ppvt,unavailable,,,,,
-cog_execfunc_brief_parent,unavailable,,,,,
-cog_vocab_bas_naming,unavailable,,,,,
-cog_nonverbalreason_bas_picsim,unavailable,,,,,
-cog_spatial_bas_pattern,unavailable,,,,,
-cog_verbalreason_bas_versim,unavailable,,,,,
-cog_schoolread_bracken,unavailable,,,,,
+beh_problematicuse_self,incompatible,"ST322Q06JA, ST322Q07JA",,"Only single digital-habit items, 'I feel pressured to be online and answer messages when I am in class' and 'I feel nervous/anxious when I don't have my <digital device> near me' (ST322Q06JA, ST322Q07JA, 2022/2025); no problematic-use scale.",,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,NEPSY not administered.,,
+cog_phono_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhibcont_nepsy,unavailable,,,NEPSY not administered.,,
+cog_vismotor_nepsy,unavailable,,,NEPSY not administered.,,
+cog_verbalfluency_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhib_nihtb_flanker,unavailable,,,NIH Toolbox not administered.,,
+cog_flex_nihtb_dccs,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox not administered.,,
+cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox not administered.,,
+cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox not administered.,,
+cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox not administered.,,
+cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_digitspan,unavailable,,,Digit span not administered.,,
+cog_iq_fullscale,unavailable,,,Not collected.,,
+cog_vocab_bpvs,unavailable,,,BPVS not administered.,,
+cog_vocab_ppvt,unavailable,,,PPVT not administered.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_vocab_bas_naming,unavailable,,,BAS II not administered.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,BAS II not administered.,,
+cog_spatial_bas_pattern,unavailable,,,BAS II not administered.,,
+cog_verbalreason_bas_versim,unavailable,,,BAS II not administered.,,
+cog_schoolread_bracken,unavailable,,,Bracken School Readiness Assessment not administered.,,
 cog_creativethinking_stdtest,compatible,PV1CRTH_NC,as.numeric(PV1CRTH_NC),"2022 main sample only: first of ten PVs, creative-thinking scale (number-correct). All ten in tidied table.",,
-mh_anx_basc2,unavailable,,,,,
-mh_dep_basc2,unavailable,,,,,
-mh_emotsymp_sdq_parent,unavailable,,,,,
-mh_totaldiff_sdq_parent,unavailable,,,,,
-mh_anx_diagnosed,unavailable,,,,,
-mh_anx_diagnosed_severity,unavailable,,,,,
-mh_dep_diagnosed,unavailable,,,,,
-mh_dep_diagnosed_severity,unavailable,,,,,
-mh_emotsymp_sdq_self,unavailable,,,,,
-mh_emotsymp_sdq_teacher,unavailable,,,,,
-mh_totaldiff_sdq_self,unavailable,,,,,
-mh_totaldiff_sdq_teacher,unavailable,,,,,
-mh_int_sdq_parent,unavailable,,,,,
-mh_int_sdq_self,unavailable,,,,,
-mh_int_sdq_teacher,unavailable,,,,,
-mh_dep_smfq_self,unavailable,,,,,
-mh_dep_smfq_parent,unavailable,,,,,
-mh_dep_cdi_self,unavailable,,,,,
-mh_dep_cesd_self,unavailable,,,,,
-mh_dep_phq9_self,unavailable,,,,,
-mh_dep_rcads_self,unavailable,,,,,
-mh_dep_dass21_self,unavailable,,,,,
-mh_dep_scl_self,unavailable,,,,,
-mh_distress_k6_self,unavailable,,,,,
-mh_distress_k10_self,unavailable,,,,,
-mh_anx_masc_self,unavailable,,,,,
-mh_anx_scas_self,unavailable,,,,,
-mh_anx_scas_parent,unavailable,,,,,
-mh_anx_scared_self,unavailable,,,,,
-mh_anx_scared_parent,unavailable,,,,,
-mh_anx_gad7_self,unavailable,,,,,
-mh_anx_rcads_self,unavailable,,,,,
-mh_anx_dass21_self,unavailable,,,,,
-mh_anxdep_cbcl_parent,unavailable,,,,,
-mh_int_cbcl_parent,unavailable,,,,,
-mh_dep_binary_self,unavailable,,,,,
-mh_dep_self,unavailable,,,,,
-mh_dep_measure,unavailable,,,,,
-mh_anx_self,unavailable,,,,,
-mh_anx_measure,unavailable,,,,,
-mh_depanx_diagnosed,unavailable,,,,,
-mh_stress_self,unavailable,,,,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ not administered.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_int_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_int_sdq_self,unavailable,,,SDQ not administered.,,
+mh_int_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered.,,
+mh_distress_k6_self,unavailable,,,K6 not administered.,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_anx_masc_self,unavailable,,,MASC not administered.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,incompatible,"ST186Q08HA, WB154Q04HA",,"Sad frequency (ST186Q08HA, 2018; mapped to mh_sad_self) and HBSC-SCL feeling low (WB154Q04HA; wb_psychcomplaints_feellow) only; not a depression screen.",,
+mh_dep_self,incompatible,"ST186Q08HA, ST186Q10HA, WB154Q04HA",,"Single mood items only: sad and miserable frequency (ST186Q08HA, ST186Q10HA, 2018; sad on mh_sad_self) and HBSC-SCL feeling low (WB154Q04HA; wb_psychcomplaints_feellow); no depression scale.",,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,incompatible,"WB154Q09HA, ANXMAT",,"Only the single item feeling anxious (WB154Q09HA, 2018/2022) and the 2022 mathematics-anxiety index (ANXMAT, one subject); no general anxiety scale.",,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,unavailable,,,Not collected.,,
 mh_lonely_self,incompatible,ST034Q06TA,,"'I feel lonely at school' is an agree/disagree item, not a frequency.",,
-mh_lonely_scale_self,unavailable,,,No scale; only the single item 'I feel lonely at school'.,,
+mh_lonely_scale_self,incompatible,ST034Q06TA,,"Only the agreement item 'I feel lonely at school' (ST034Q06TA), scored in acc_schoolbelonging_self; no loneliness scale.",,
 mh_lonely_measure,unavailable,,,No loneliness scale.,,
 mh_sad_self,proximate,ST186Q08HA,"recode_values(as.numeric(ST186Q08HA), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Always"")","2018 only: how often normally feels sad (never/rarely/sometimes/always). 4 points, no 'Often'; no recall period.",,
-mh_worry_self,incompatible,"WB164Q01HA, ST345Q03JA",,WB164 asks only how often the student worries about the family's money; the 2022 'I worry about many things' item is agree/disagree.,,
-mh_irritable_self,incompatible,WB154Q05HA,,"Irritability is an HBSC-SCL item, mapped to wb_psychcomplaints_irritable.",,
+mh_worry_self,incompatible,"WB164Q01HA, ST345Q03JA, WB154Q09HA",,"The 2018/2022 past-six-month feeling anxious item (WB154Q09HA) is anxiety, not worry; WB164 is worry about the family's money only; 'I worry about many things' (ST345Q03JA, 2022) is agree/disagree.",,
+mh_irritable_self,incompatible,WB154Q05HA,,"HBSC-SCL irritability or bad temper (WB154Q05HA, 2018/2022) is mapped to wb_psychcomplaints_irritable.",,
 mh_nobodycares_self,unavailable,,,Not collected.,,
 mh_lifenotworth_self,unavailable,,,Not collected.,,
-mh_suicide_ideation_self,unavailable,,,,,
-mh_suicide_attempt_self,unavailable,,,,,
-mh_selfharm_self,in_progress,,,,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
 mh_psychsom_hbscscl_self,compatible,"WB154Q01HA, WB154Q02HA, WB154Q03HA, WB154Q04HA, WB154Q05HA, WB154Q06HA, WB154Q07HA, WB154Q08HA","as.numeric(WB154Q01HA) +
   as.numeric(WB154Q02HA) +
   as.numeric(WB154Q03HA) +
@@ -498,17 +474,17 @@ mh_psychsom_hbscscl_self,compatible,"WB154Q01HA, WB154Q02HA, WB154Q03HA, WB154Q0
   as.numeric(WB154Q06HA) +
   as.numeric(WB154Q07HA) +
   as.numeric(WB154Q08HA)","Sum of 8 HBSC-SCL items (headache, stomach pain, back pain, depressed, irritable, nervous, sleep difficulty, dizzy), past 6 months; PISA's 9th item (anxious) excluded to match the checklist. NA if any item unanswered. Well-being option, 2018/2022.",,
-mh_psychsom_measure,inferred,.wave,"if_else(
-  .wave %in% c(""2018"", ""2022""),
-  ""HBSC symptom checklist as asked in the PISA well-being questionnaire, 8 of 9 items (feeling anxious excluded), 1-5 item scoring from rarely or never to about every day, sum (range 8-40)"",
+mh_psychsom_measure,inferred,".wave, CNT, WB154Q01HA","if_else(
+  .wave %in% c(""2018"", ""2022"") & stats::ave(!is.na(WB154Q01HA), .wave, as.character(haven::zap_labels(CNT)), FUN = any),
+  ""HBSC symptom checklist, 8 of 8 items, 1-5 item scoring from rarely or never to about every day (range 8-40), sum, past six months; PISA's added ninth item (feeling anxious) excluded"",
   NA_character_
-)",,,
-mh_somatic_self,in_progress,,,,,
-mh_somatic_measure,in_progress,,,,,
-wb_emotsc_basc2,unavailable,,,,,
-wb_mwb_wemwbs,unavailable,,,,,
-wb_lifesatisfaction_cantrilladder,unavailable,,,The 0-10 life-satisfaction item is not the ladder; mapped to wb_lifesat_singleitem_self.,,
-wb_resil_basc2,unavailable,,,,,
+)",Describes mh_psychsom_hbscscl_self; filled only in the 2018 and 2022 country-cycles that fielded the optional well-being questionnaire.,,
+mh_somatic_self,incompatible,"WB154Q01HA, WB154Q02HA, WB154Q03HA, WB154Q08HA",,"Only the HBSC-SCL somatic items (headache, stomach pain, back pain, dizziness; 2018/2022), which map to mh_psychsom_hbscscl_self; no other symptom scale.",,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered; see wb_lifesat_singleitem_self.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered; see wb_selfefficacy_self.,,
 wb_psychcomplaints_feellow,compatible,WB154Q04HA,"recode_values(
   as.numeric(WB154Q04HA),
   1 ~ ""Rarely or never"",
@@ -541,56 +517,71 @@ wb_psychcomplaints_diffsleep,compatible,WB154Q07HA,"recode_values(
   4 ~ ""More than once a week"",
   5 ~ ""About every day""
 )","Well-being option (2018/2022), past 6 months: difficulties getting to sleep.",,
-wb_bodyimage,incompatible,"WB153Q01HA, WB153Q02HA, WB153Q03HA, WB153Q04HA, WB153Q05HA",,"Agreement statements about looks, weight and body rather than the too-thin/too-fat item.",,
-wb_lifesat_slss_self,unavailable,,,,,
-wb_lifesat_swls_self,unavailable,,,,,
+wb_bodyimage,incompatible,"WB153Q01HA, WB153Q02HA, WB153Q03HA, WB153Q04HA, WB153Q05HA",,"Agreement statements about looks, weight and body (WB153, 2018/2022), not the too-thin/too-fat item; mapped nowhere.",,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_singleitem_self.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered; see wb_lifesat_singleitem_self.,,
 wb_lifesat_singleitem_self,compatible,ST016Q01NA,as.numeric(ST016Q01NA),"11 points, 0 (not at all satisfied) to 10 (completely satisfied); asked every cycle. 2015 values from the separately released second student file.",,
-wb_happiness_singleitem_self,in_progress,,,,,
+wb_happiness_singleitem_self,incompatible,ST186Q05HA,,"Only 'how often do you feel happy' (ST186Q05HA, 2018), an item of the positive-affect scale on wb_posaffect_self.",,
 wb_domainsat_schoolwork_self,compatible,WB155Q03HA,as.numeric(WB155Q03HA),"Well-being option (2018/2022): satisfaction with what you learn at school. 4 points, 1 (not at all) to 4 (totally satisfied).",,
 wb_domainsat_appearance_self,compatible,WB155Q02HA,as.numeric(WB155Q02HA),"Well-being option (2018/2022): satisfaction with the way you look. 4 points, 1 (not at all) to 4 (totally satisfied).",,
 wb_domainsat_family_self,partial,WB155Q08HA,as.numeric(WB155Q08HA),"Well-being option (2018/2022): satisfaction with relationship with parents/guardians. 4 points, 1 (not at all) to 4 (totally satisfied). Partial: parents only, not the whole family.",,
 wb_domainsat_friends_self,compatible,WB155Q04HA,as.numeric(WB155Q04HA),"Well-being option (2018/2022): satisfaction with the friends you have. 4 points, 1 (not at all) to 4 (totally satisfied).",,
 wb_domainsat_school_self,compatible,WB155Q10HA,as.numeric(WB155Q10HA),"Well-being option (2018/2022): satisfaction with your life at school. 4 points, 1 (not at all) to 4 (totally satisfied).",,
-wb_qol_pedsql_self,unavailable,,,,,
-wb_qol_pedsql_parent,unavailable,,,,,
-wb_qol_kidscreen10_self,unavailable,,,,,
-wb_qol_kidscreen10_parent,unavailable,,,,,
-wb_selfesteem_rosenberg_self,unavailable,,,,,
-wb_selfesteem_self,unavailable,,,,,
-wb_selfesteem_measure,unavailable,,,,,
-wb_selfefficacy_gse_self,unavailable,,,,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered.,,
+wb_selfesteem_self,unavailable,,,Not collected.,,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered; see wb_selfefficacy_self.,,
 wb_selfefficacy_self,compatible,"ST188Q01HA, ST188Q02HA, ST188Q03HA, ST188Q06HA, ST188Q07HA","as.numeric(ST188Q01HA) +
   as.numeric(ST188Q02HA) +
   as.numeric(ST188Q03HA) +
   as.numeric(ST188Q06HA) +
-  as.numeric(ST188Q07HA)","2018 only: the 5 agree/disagree items behind the OECD resilience index (manage one way or another, proud of accomplishments, handle many things at once, self-belief gets me through hard times, find my way out of difficult situations); general self-efficacy items. NA if any unanswered.",,
+  as.numeric(ST188Q07HA)","2018 only: the 5 agree/disagree ST188 items (manage one way or another, proud of accomplishments, handle many things at once, self-belief gets me through hard times, find my way out of difficult situations), a resilience scale the OECD reports as general self-efficacy; 1-4 sum, NA if any unanswered.",,
 wb_selfefficacy_measure,inferred,.wave,"if_else(
   .wave == ""2018"",
   ""PISA 2018 resilience items (ST188), 5 of 5 items, 1-4 item scoring from strongly disagree to strongly agree, sum (range 5-20)"",
   NA_character_
-)",,,
-wb_mwb_who5_self,unavailable,,,,,
-wb_happiness_shs_self,unavailable,,,,,
-wb_mwb_swemwbs_self,unavailable,,,,,
+)",Describes wb_selfefficacy_self; 2018 only (every 2018 country-cycle fielded it).,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,Subjective Happiness Scale not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
 wb_selfratedhealth_self,compatible,WB150Q01HA,"recode_values(as.numeric(WB150Q01HA), 1 ~ ""Excellent"", 2 ~ ""Good"", 3 ~ ""Fair"", 4 ~ ""Poor"")","Well-being option (2018/2022); 4-level wording, so 'Very good' is unused.",,
-wb_generalhealth_parent,in_progress,,,,,
+wb_generalhealth_parent,incompatible,WB150Q01HA,,"Only the student's self-rated health (WB150Q01HA, 2018/2022 well-being option), mapped to wb_selfratedhealth_self; no parent rating.",,
 wb_posaffect_self,compatible,"ST186Q05HA, ST186Q01HA, ST186Q03HA, ST186Q07HA",as.numeric(ST186Q05HA) + as.numeric(ST186Q01HA) + as.numeric(ST186Q03HA) + as.numeric(ST186Q07HA),"2018 only: how often normally feels happy, joyful, cheerful, lively (OECD positive-affect index items); NA if any unanswered.",,
-wb_posaffect_measure,inferred,.wave,"if_else(
-  .wave == ""2018"",
+wb_posaffect_measure,inferred,".wave, CNT, ST186Q05HA","if_else(
+  .wave == ""2018"" & stats::ave(!is.na(ST186Q05HA), .wave, as.character(haven::zap_labels(CNT)), FUN = any),
   ""PISA 2018 positive affect items (happy, joyful, cheerful, lively), 4 of 4 items, 1-4 item scoring from never to always, sum (range 4-16)"",
   NA_character_
-)",,,
+)",Describes wb_posaffect_self; 2018 country-cycles that fielded the items only.,,
 wb_eudaimonic_self,partial,"ST185Q01HA, ST185Q02HA, ST185Q03HA",as.numeric(ST185Q01HA) + as.numeric(ST185Q02HA) + as.numeric(ST185Q03HA),"2018 only: the 3 meaning-in-life items behind the OECD eudaemonia index (EUDMO); NA if any unanswered. Partial: meaning/purpose only, not self-discovery or effortful engagement.",,
-wb_eudaimonic_measure,inferred,.wave,"if_else(
-  .wave == ""2018"",
+wb_eudaimonic_measure,inferred,".wave, CNT, ST185Q01HA","if_else(
+  .wave == ""2018"" & stats::ave(!is.na(ST185Q01HA), .wave, as.character(haven::zap_labels(CNT)), FUN = any),
   ""PISA 2018 meaning in life items, 3 of 3 items, 1-4 item scoring from strongly disagree to strongly agree, sum (range 3-12)"",
   NA_character_
-)",,,
-wb_socsupport_family_self,in_progress,,,,,
-wb_socsupport_friends_self,in_progress,,,,,
-wb_socsupport_measure,in_progress,,,,,
-hlth_sleep_wd,in_progress,,,,,
-hlth_sleep_we,in_progress,,,,,
-hlth_sleep,in_progress,,,,,
-hlth_sleepprob,in_progress,,,,,
-hlth_sleepprob_measure,in_progress,,,,,
+)",Describes wb_eudaimonic_self; 2018 country-cycles that fielded the items only.,,
+wb_socsupport_family_self,partial,"EMOSUPS, FAMSUP","coalesce(as.numeric(EMOSUPS), as.numeric(FAMSUP))","Parents' support around schooling, not general family support (partial): OECD WLE indices as released (missing-item rule not documented), EMOSUPS from ST123 agreement items, e.g. 'My parents support me when I am facing difficulties at school' (2015/2018), and FAMSUP from ST300 frequency of family talk and involvement, e.g. 'Spend time just talking with you' (2022/2025). Different scales; standardise within wave.",,
+wb_socsupport_friends_self,incompatible,WB162Q07HA,,"Only the single item 'How easy is it for you to talk to your close friend(s) about things that really bother you?' (WB162Q07HA, 2018/2022 well-being option); no friend-support scale.",,
+wb_socsupport_measure,inferred,".wave, CNT, EMOSUPS, FAMSUP","if_else(
+  stats::ave(
+    !is.na(coalesce(as.numeric(EMOSUPS), as.numeric(FAMSUP))),
+    .wave,
+    as.character(haven::zap_labels(CNT)),
+    FUN = any
+  ),
+  recode_values(
+    .wave,
+    ""2015"" ~ ""PISA parents' emotional support (ST123); family: 4 items, 1-4 agreement scoring, OECD WLE index (no fixed range); friends: none"",
+    ""2018"" ~ ""PISA parents' emotional support (ST123); family: 3 items, 1-4 agreement scoring, OECD WLE index (no fixed range); friends: none"",
+    ""2022"" ~ ""PISA family support (ST300); family: 10 items, 1-5 frequency scoring, OECD WLE index (no fixed range); friends: none"",
+    ""2025"" ~ ""PISA family support (ST300); family: 5 items, 1-5 frequency scoring, OECD WLE index (no fixed range); friends: none""
+  ),
+  NA_character_
+)",Describes wb_socsupport_family_self; filled in the country-cycles with a family-support score.,,
+hlth_sleep_wd,unavailable,,,Not collected.,,
+hlth_sleep_we,unavailable,,,Not collected.,,
+hlth_sleep,unavailable,,,Not collected.,,
+hlth_sleepprob,incompatible,WB154Q07HA,,"Only the HBSC-SCL item 'difficulties in getting to sleep' (WB154Q07HA, 2018/2022), which stays on wb_psychcomplaints_diffsleep; no sleep-problems scale.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,

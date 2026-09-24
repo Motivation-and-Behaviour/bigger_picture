@@ -75,6 +75,18 @@ resources:
       - "b[d-r]_intdatey"
       - "b[d-r]_intdatem"
       - "b[d-r]_gor_dv"
+  # Sample-design file: PSU and strata, already coded on the pooled UKHLS
+  # numbering scheme (`bd_psu` etc. are labelled "UKHLS Primary Sampling
+  # Unit", distinct from the BHPS-only `_bh` variables). Fills the gaps in
+  # the `psu`/`strata` columns the UKHLS youth files carry directly.
+  - name: "bhps_hhsamp"
+    role: "data"
+    glob: "stata/stata14_se/bhps/b{d,e,f,g,h,i,j,k,l,m,n,o,p,q,r}_hhsamp.dta"
+    reader: "stata"
+    columns:
+      - "b[d-r]_hidp"
+      - "b[d-r]_psu"
+      - "b[d-r]_strata"
   - name: "ukhls_hhresp"
     role: "data"
     glob: "stata/stata14_se/ukhls/?_hhresp.dta"

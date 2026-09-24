@@ -1,7 +1,8 @@
 #' Tidier for BPIPD-838 (Lo)
 #'
 #' One wide SPSS file holds all five parent-report waves, wave in a column
-#' suffix (`_T1`-`_T5`); this normalises the suffixes and pivots to long.
+#' suffix (`_T1`-`_T5`); this normalises the suffixes, pivots to long and
+#' carries the T1-only background items to the later waves.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -75,7 +76,27 @@ tidy_BPIPD_838 <- function(raw_dataset, spec) {
   # reproduces the participation flags exactly; T5 rows with no flag are
   # kept because they still record class and age.
   observed <- rowSums(!is.na(long[measured])) > 0L
-  long[observed, , drop = FALSE]
+  long <- long[observed, , drop = FALSE]
+
+  # Carry T1-only items forward: parent education always; income and partner
+  # status as T5 is 12 months on. The study's T5 age is T1 + 1, so age fills T2-T4.
+  bp838_carry_from_t1(
+    long,
+    c("Edu_mother", "Edu_father", "Household_income_gp", "S1", "Age_child")
+  )
+}
+
+#' Fill each participant's missing values in `cols` with their T1 value
+bp838_carry_from_t1 <- function(long, cols) {
+  t1 <- long[long$wave == "T1", , drop = FALSE]
+  t1_row <- match(long$SC, t1$SC)
+
+  for (col in cols) {
+    from_t1 <- t1[[col]][t1_row]
+    long[[col]] <- dplyr::if_else(is.na(long[[col]]), from_t1, long[[col]])
+  }
+
+  long
 }
 
 #' Give every wave of a variable the same SPSS value labels

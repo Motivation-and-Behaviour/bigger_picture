@@ -7,7 +7,8 @@
 #' columns in `bp107_column_map()`, binds cycles, and builds a participant id
 #' unique across cycles. Columns keep their original PISA names, except the
 #' ISCED parental-education indices, which differ in coding by cycle;
-#' recoding is harmonisation's job.
+#' recoding is harmonisation's job. Country-cycles that fielded no
+#' screen-time item are dropped (`bp107_drop_screenless()`).
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -28,6 +29,8 @@ tidy_BPIPD_107 <- function(raw_dataset, spec) {
   ordered <- intersect(bp107_column_map()$column, names(df))
   df <- df[c(ordered, "pisa_source", ".wave", ".wave_label")]
 
+  df <- bp107_drop_screenless(df)
+
   df <- dplyr::mutate(
     df,
     participant_id = paste0(.wave, "_", sprintf("%.0f", as.numeric(CNTSTUID))),
@@ -41,6 +44,42 @@ tidy_BPIPD_107 <- function(raw_dataset, spec) {
   }
 
   df
+}
+
+#' Screen-time duration items: a country-cycle in which none was answered did
+#' not field them
+bp107_screen_items <- c(
+  paste0("ST326Q0", 1:6, "JA"),
+  "IC005Q01TA",
+  "IC006Q01TA",
+  "IC007Q01TA",
+  paste0("IC177Q0", 1:7, "JA"),
+  paste0("IC178Q0", 1:7, "JA")
+)
+
+#' Drop country-cycles that fielded no screen-time item
+#'
+#' The ICT familiarity questionnaire was a national option in 2015 and 2018,
+#' and a few 2022 countries fielded neither it nor ST326, so their students
+#' carry no exposure. A country-cycle is a cycle x `CNT` x `SUBNATIO` group,
+#' so an adjudicated region that skipped the items (Scotland in 2015) is
+#' dropped even where the rest of its country fielded them.
+bp107_drop_screenless <- function(df) {
+  items <- intersect(bp107_screen_items, names(df))
+  if (length(items) == 0) {
+    stop(
+      "BPIPD-107: no screen-time item in the tidied table; check ",
+      "`bp107_screen_items` against `bp107_column_map()`.",
+      call. = FALSE
+    )
+  }
+  answered <- Reduce(`|`, lapply(df[items], function(x) !is.na(x)))
+  group <- paste(
+    df$.wave,
+    haven::zap_labels(df$CNT),
+    haven::zap_labels(df$SUBNATIO)
+  )
+  df[group %in% unique(group[answered]), , drop = FALSE]
 }
 
 #' How each cycle's files assemble into one student table
@@ -303,6 +342,10 @@ bp107_column_map <- function() {
       ST003D02T = bp107_entry("Birth month"),
       ST003D03T = bp107_entry("Birth year"),
       ST004D01T = bp107_entry("Gender (1 = female, 2 = male)"),
+      MALE = bp107_entry(
+        "Gender from sampling data (0 = female or other, 1 = male)",
+        "2025"
+      ),
       AGE = bp107_entry("Age in years at testing (derived)"),
       GRADE = bp107_entry("Grade relative to the country's modal grade"),
       IMMIG = bp107_entry("Immigrant background index"),
@@ -310,9 +353,17 @@ bp107_column_map <- function() {
         "Born in the country of test",
         c("2015", "2018", "2022")
       ),
+      BICT_S = bp107_entry(
+        "Student born in the country of test (derived; 1 = yes, 0 = no)",
+        "2025"
+      ),
       ST022Q01TA = bp107_entry(
         "Language spoken at home is the language of the test",
         c("2015", "2018", "2022", "2025")
+      ),
+      ST403Q01DA = bp107_entry(
+        "Number of parents and/or guardians (none to four or more)",
+        "2025"
       ),
       ESCS = bp107_entry("Index of economic, social and cultural status"),
       HISEI = bp107_entry(
@@ -336,7 +387,13 @@ bp107_column_map <- function() {
       ),
       HISCED_isced11 = bp107_entry(
         "Highest parental education, ISCED-2011 levels",
-        source = c("2022" = "HISCED", "2025" = "HISCED")
+        source = c("2022" = "HISCED")
+      ),
+      # 2025 renumbers HISCED: 1 = none of the listed qualifications (below
+      # ISCED 2), 2 = ISCED 2, 3 = 3.3, 4 = 3.4, 5 = 4, 6 = 5, ..., 9 = 8.
+      HISCED_2025 = bp107_entry(
+        "Highest parental education, 2025 codes (1 = below ISCED 2 to 9 = ISCED 8)",
+        source = c("2025" = "HISCED")
       ),
       MISCED_isced97 = bp107_entry(
         "Mother's education, ISCED-97 levels 0-6",
@@ -543,6 +600,30 @@ bp107_column_map <- function() {
         "Typical weekend day, time: creating or editing own digital content",
         c("2022", "2025")
       ),
+      IC170Q01JA = bp107_entry(
+        "At school, frequency of use: desktop or laptop computer",
+        c("2022", "2025")
+      ),
+      IC170Q02JA = bp107_entry(
+        "At school, frequency of use: smartphone",
+        c("2022", "2025")
+      ),
+      IC170Q03JA = bp107_entry(
+        "At school, frequency of use: tablet or e-book reader",
+        c("2022", "2025")
+      ),
+      IC171Q01JA = bp107_entry(
+        "Outside school, frequency of use: desktop or laptop computer",
+        c("2022", "2025")
+      ),
+      IC171Q02JA = bp107_entry(
+        "Outside school, frequency of use: smartphone",
+        c("2022", "2025")
+      ),
+      IC171Q03JA = bp107_entry(
+        "Outside school, frequency of use: tablet or e-book reader",
+        c("2022", "2025")
+      ),
       ICTWKDY = bp107_entry(
         "Time on digital devices on weekdays index",
         c("2022", "2025")
@@ -638,6 +719,19 @@ bp107_column_map <- function() {
         c("2015", "2018", "2022", "2025")
       ),
       ST034Q06TA = bp107_entry("Belonging: I feel lonely at school"),
+      EMOSUPS = bp107_entry(
+        "Parents' emotional support perceived by student index (ST123)",
+        c("2015", "2018")
+      ),
+      FAMSUP = bp107_entry("Family support index (ST300)", c("2022", "2025")),
+      WB162Q07HA = bp107_entry(
+        "How easy to talk to close friend(s) about things that bother you",
+        c("2018", "2022")
+      ),
+      PA202Q01DA = bp107_entry(
+        "Parent sets rules on how long or when child uses digital devices",
+        "2025"
+      ),
       ST038Q01NA = bp107_entry(
         "Bullied in past 12 months: called names by other students",
         "2015"
@@ -849,6 +943,29 @@ bp107_column_map <- function() {
         c("2018", "2022")
       ),
       ANXMAT = bp107_entry("Mathematics anxiety index", "2022"),
+      ST345Q03JA = bp107_entry("Agree: I worry about many things", "2022"),
+      ST343Q10JA = bp107_entry("Agree: I argue a lot", "2022"),
+      ST307Q09JA = bp107_entry(
+        "Agree: I finish what I start",
+        c("2022", "2025")
+      ),
+      ST313Q05JA = bp107_entry(
+        "Agree: I stay calm even in tense situations",
+        "2022"
+      ),
+      ST309Q02JA = bp107_entry("Agree: I get easily distracted", "2022"),
+      ST268Q07JA = bp107_entry(
+        "Agree: I want to do well in my mathematics class",
+        "2022"
+      ),
+      ST268Q08JA = bp107_entry(
+        "Agree: I want to do well in my test-language class",
+        "2022"
+      ),
+      ST268Q09JA = bp107_entry(
+        "Agree: I want to do well in my science class",
+        "2022"
+      ),
       ST062Q01TA = bp107_entry(
         "Last two weeks: skipped a whole school day",
         c("2015", "2018", "2022", "2025")

@@ -12,6 +12,7 @@
 #' - one tibble, one row per respondent per year, all years stacked
 tidy_BPIPD_170 <- function(raw_dataset, spec) {
   item_vars <- bp170_item_vars()
+  core_only_vars <- c("alcohol_30d", "cigarettes_30d", "cannabis_30d")
   serial_pattern <- "ARCHIVE ID|R'?S +ID ?- ?SERIAL"
 
   var_labels <- function(df) {
@@ -136,6 +137,11 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
 
     # MTF renumbers its variables.
     for (nm in names(item_vars)) {
+      # 12th grade form files repeat some core items, at times twice; the
+      # core file (DS0001) supplies them.
+      if (identical(stream, "12") && ds > 1L && nm %in% core_only_vars) {
+        next
+      }
       col <- find_var(df, item_vars[[nm]], file)
       if (!is.null(col)) {
         out[[nm]] <- as_code(df[[col]], col, file)
@@ -350,9 +356,13 @@ bp170_item_vars <- function() {
   outcome_vars <- c(
     grade_average = "R HS GRADE/D ?= ?1",
     fight_gang = "FRQ GANG FIGHT",
+    serious_fight = "FRQ FGT WRK/SCHL",
     steal_under50 = "FRQ STEAL <\\$50",
     steal_over50 = "FRQ STEAL >\\$50",
     damage_school_property = "FRQ DMG SCH PPTY",
+    # 12th grade only.
+    damage_work_property = "FRQ DMG WK PRPTY",
+    arson = "FRQ ARSON",
     skip_days_4wk = "#DA/4W SC MS CUT",
     skip_class_4wk = "#DA/4W SKP CLASS",
     bullied_school = "BULLIED@SCHL",
@@ -361,6 +371,8 @@ bp170_item_vars <- function() {
     esteem_person_worth = "PRSN OF WORTH",
     esteem_satisfied = "SATISFD W MYSELF",
     esteem_proud = "MUCH TO B PROUD",
+    esteem_do_well = "DO WELL AS OTHRS",
+    esteem_no_good = "I AM NO GOOD",
     dep_enjoy_life = "I ENJOY LIFE",
     dep_meaningless = "LIFE MEANINGLESS",
     dep_good_alive = "GOOD TO BE ALIVE",
@@ -375,11 +387,22 @@ bp170_item_vars <- function() {
     lonely_friends_around = "USLY FRDS BE WTH",
     anxious = "OFTEN FEEL ANXIOUS",
     life_satisfaction = "LIFE AS WHL",
+    # Also matches the 12th grade "VRY HPY THS DAYS" label.
+    happiness = "VRY HPY THS DAY",
     sat_education = "SAT EDUC EXPRNC",
     sat_friends = "SAT OWN FRIENDS",
     sat_parents = "SAT GT ALNG PRN",
     enjoy_school = "LSTYR/ENJOY SCHL",
-    happy_school = "LSTYR/HAPPY IN SCH"
+    happy_school = "LSTYR/HAPPY IN SCH",
+    # Past-30-day use; 12th grade from the core file only.
+    alcohol_30d = "#X (DRNK/LAST30DA|ALC/30D SIPS)Y?( F[0-9]+)?$",
+    cigarettes_30d = "#CIGS SMKD/30DA(Y)?( ?\\(CORE\\))?( F[0-9]+)?$",
+    cannabis_30d = "#X ?MJ\\+HS/LAST30DA?Y?( F[0-9]+)?$",
+    # TV to 2020, all screens from 2021.
+    parent_limit_tv = "#X PRNT LIMIT TV",
+    parent_limit_screen = "#X PRNT LIMIT SCRN TIME",
+    sleep_7hrs = "OFTN 7HRS SLEEP",
+    sleep_less = "OFTN SLEEP ?<SHLD"
   )
   c(
     design_vars,

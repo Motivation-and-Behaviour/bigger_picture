@@ -5,12 +5,16 @@ wave,compatible,"survey, wave","if_else(
   paste0(""BHPS wave "", match(substring(wave, 2), letters)),
   paste0(""UKHLS wave "", match(wave, letters))
 )","File prefix: bd-br = BHPS waves 4-18 (1994-2008), a-o = UKHLS waves 1-15 (2009-2025). Survey included so BHPS/UKHLS wave 4 don't collide.",,
-data_year,compatible,"intdaty_dv, intdatey","coalesce(as.numeric(intdaty_dv), as.numeric(intdatey))","UKHLS: youth interview year (intdaty_dv). BHPS: household interview year (hhresp intdatey), joined in tidier. UKHLS fieldwork spans ~2 years per wave, so data_year varies within a wave.",,
+data_year,compatible,"intdaty_dv, intdatey, survey, wave","coalesce(
+  as.numeric(intdaty_dv),
+  as.numeric(intdatey),
+  if_else(survey == ""BHPS"", 1990 + match(substring(wave, 2), letters), NA_real_)
+)","UKHLS: youth interview year (intdaty_dv). BHPS: household interview year (hhresp intdatey), joined in the tidier; 3 BHPS rows without one take the wave's modal fieldwork year (1990 + wave number). UKHLS fieldwork spans about two years per wave, so data_year varies within a wave.",,
 rct_arm,unavailable,,,Not a trial.,,
-survey_weight,in_progress,,,,,
-survey_strata,in_progress,,,,,
-survey_cluster,in_progress,,,,,
-age_years,compatible,"dvage, age_dv, age","coalesce(as.numeric(dvage), as.numeric(age_dv), as.numeric(age))","Whole years at interview. UKHLS: dvage, falling back to age_dv. BHPS: age from the household roster (indall), joined in tidier. Birth year only, so no fractional age; BHPS eligibility was 11-15 but interview age runs 10-16.",,
+survey_weight,compatible,"ythscus_xw, ythscub_xw, ythscui_xw, ythscg2_xw, ypwght","coalesce(ythscus_xw, ythscub_xw, ythscui_xw, ythscg2_xw, ypwght)","UKHLS cross-sectional youth interview weight for the wave's sample component (ythscus_xw GPS+EMB, ythscub_xw combined general population, ythscui_xw BHPS+UKHLS+IEMB, ythscg2_xw GPS2) or the BHPS youth weight (ypwght). Exactly one is non-missing per row (0 missing overall).",,
+survey_strata,compatible,strata,"if_else(as.numeric(strata) > 0, as.character(strata), NA_character_)","UKHLS youth files carry strata directly; BHPS rows take it from the household sample-design file (b*_hhsamp), coded on the same UKHLS scheme. Unlabelled -9 (no stratum assigned; 731 BHPS rows, waves 8-11) is NA. Codes are stable across waves in this panel, so not wave-prefixed.",,
+survey_cluster,compatible,psu,"if_else(as.numeric(psu) > 0, as.character(psu), NA_character_)","UKHLS youth files carry psu directly; BHPS rows take it from the household sample-design file (b*_hhsamp), coded on the same UKHLS scheme. Unlabelled -9 (no PSU assigned; 731 BHPS rows, waves 8-11) is NA. Codes are stable across waves in this panel, so not wave-prefixed.",,
+age_years,compatible,"dvage, age_dv, age","coalesce(as.numeric(dvage), as.numeric(age_dv), as.numeric(age)) + 0.5","Completed years at interview + 0.5 (no birth month in the release). UKHLS: dvage, falling back to age_dv. BHPS: age at interview from the household roster (indall), joined in the tidier. Ages 10-16.",,
 sex,compatible,"sex_dv, ypsex","recode_values(coalesce(na_if(as.numeric(sex_dv), 0), as.numeric(ypsex)), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")",UKHLS: sex_dv; its inconsistent cases (code 0) fall back to the youth's own report. BHPS: youth's own report (ypsex).,,
 country,compatible,"country, gor_dv","coalesce(
   recode_values(as.numeric(country), 1 ~ ""England"", 2 ~ ""Wales"", 3 ~ ""Scotland"", 4 ~ ""Northern Ireland""),
@@ -39,19 +43,21 @@ minority,compatible,ethn_dv,"case_when(
   as.numeric(ethn_dv) %in% c(3, 5:17, 97) ~ ""Minority"",
   .default = ""Unknown""
 )",From ethn_dv. British/Irish/other White = non-minority; Gypsy/Irish Traveller and all other groups = minority.,,
-immigrant_background,partial,"bornuk_dv, mother_bornuk_dv, father_bornuk_dv","local({
+immigrant_background,partial,"bornuk_dv, mother_bornuk_dv, father_bornuk_dv, pidp, survey, wave","local({
   youth <- as.numeric(bornuk_dv)
   parents <- cbind(as.numeric(mother_bornuk_dv), as.numeric(father_bornuk_dv))
   uk_parent <- rowSums(parents == 1, na.rm = TRUE) > 0
   known <- rowSums(!is.na(parents)) > 0
-  case_when(
+  observed <- case_when(
     uk_parent ~ ""Native"",
     known & youth == 1 ~ ""Second-generation"",
     known & youth == 2 ~ ""First-generation"",
-    .default = ""Unknown""
+    .default = NA_character_
   )
-})","Born-in-UK (bornuk_dv) for youth and resident parents, from xwavedat. Native if either parent UK-born; else generation by youth's birthplace. Partial: resident parent figures only (step-parents count, absent ones don't); one known parent decides; youth birthplace (asked from age 16) missing for a third.",,
-born_in_country,in_progress,,,,,
+  wave_order <- if_else(survey == ""BHPS"", match(substring(wave, 2), letters), 100 + match(wave, letters))
+  coalesce(carry_within(observed, pidp, wave_order), ""Unknown"")
+})","Born in the UK (bornuk_dv, xwavedat) for the youth and the resident mother and father figures (natural, step or adoptive). Native if either parent was born in the UK; otherwise generation by the youth's birthplace. Waves where it cannot be determined take the participant's earliest determined value (carry-forward), else Unknown. Partial: resident parent figures only; youth birthplace (asked from age 16) missing for a third of rows.",,
+born_in_country,compatible,bornuk_dv,"case_when(bornuk_dv == 1 ~ ""Yes"", bornuk_dv == 2 ~ ""No"", .default = ""Unknown"")","Born in the UK (bornuk_dv, cross-wave person file), constant within participant. Unknown for about a third of rows (birthplace asked from age 16). UK is the sovereign state.",,
 ses_area,unavailable,,,No area deprivation index in the EUL release.,,
 ses_household,compatible,"fihhmngrs_dv, ieqmoecd_dv, hhsize, nkids_dv, wave","local({
   scale <- coalesce(
@@ -59,10 +65,11 @@ ses_household,compatible,"fihhmngrs_dv, ieqmoecd_dv, hhsize, nkids_dv, wave","lo
     1 + 0.5 * pmax(as.numeric(hhsize) - as.numeric(nkids_dv) - 1, 0) + 0.3 * as.numeric(nkids_dv)
   )
   income <- as.numeric(fihhmngrs_dv) / scale
-  quintile <- stats::ave(income, wave, FUN = function(x) dplyr::ntile(x, 5))
-  recode_values(quintile, c(1, 2) ~ ""Low"", 3 ~ ""Medium"", c(4, 5) ~ ""High"", default = ""Unknown"")
-})","Gross monthly household income (fihhmngrs_dv), modified-OECD equivalised, quintiled within wave (so 30 years of income growth doesn't rank later waves higher). UKHLS uses ieqmoecd_dv; BHPS approximates it (1 first adult, 0.5 each other adult, 0.3 per child under 16). Quintiles 1-2 Low, 3 Medium, 4-5 High; a few negative-income UKHLS households (self-employment losses) fall in the bottom quintile.",,
-ses_household_measure,inferred,,"""Equivalised gross monthly household income (modified OECD scale), within-wave quintiles""",Names the measure behind ses_household.,,
+  low <- stats::ave(income, wave, FUN = function(x) stats::quantile(x, 0.4, na.rm = TRUE, names = FALSE))
+  high <- stats::ave(income, wave, FUN = function(x) stats::quantile(x, 0.6, na.rm = TRUE, names = FALSE))
+  case_when(income <= low ~ ""Low"", income <= high ~ ""Medium"", income > high ~ ""High"", .default = ""Unknown"")
+})","Gross monthly household income (fihhmngrs_dv), modified-OECD equivalised: UKHLS ieqmoecd_dv; BHPS approximated (1 first adult, 0.5 each other adult, 0.3 per child under 16). Cut 40/20/40 within wave: at or below the 40th percentile Low, above the 60th High. Negative incomes (UKHLS self-employment losses) are Low.",,
+ses_household_measure,inferred,,"""Income: OECD-equivalised gross monthly household income""",Names the measure behind ses_household.,,
 ses_hukou,unavailable,,,Not a Chinese dataset.,,
 maternal_education,compatible,mother_hiqual_dv,"coalesce(
   lookup_values(
@@ -73,189 +80,197 @@ maternal_education,compatible,mother_hiqual_dv,"coalesce(
   ),
   ""Unknown""
 )","Highest qualification (hiqual_dv) from the mother's own adult interview, joined via mnspno. Degree = bachelor+; other higher degree (sub-degree HE) = post-secondary; A-level (ISCED 3)/GCSE/other/none = secondary or less. Unknown if mother not resident or not interviewed.",maternal_education,
-paternal_education,compatible,father_hiqual_dv,"recode_values(
-  as.numeric(father_hiqual_dv),
-  1 ~ ""Bachelor degree or higher"",
-  2 ~ ""Post-secondary"",
-  c(3, 4, 5, 9) ~ ""Secondary school or less"",
-  default = ""Unknown""
-)","Highest qualification (hiqual_dv) from the father's own adult interview, joined via fnspno. Same categories as maternal_education. Unknown if father not resident or not interviewed.",,
-parental_education,compatible,"mother_hiqual_dv, father_hiqual_dv","recode_values(
-  pmin(as.numeric(mother_hiqual_dv), as.numeric(father_hiqual_dv), na.rm = TRUE),
-  1 ~ ""Bachelor degree or higher"",
-  2 ~ ""Post-secondary"",
-  c(3, 4, 5, 9) ~ ""Secondary school or less"",
-  default = ""Unknown""
-)","Higher qualification of resident mother and father, or whichever is available (hiqual_dv: 1 degree to 9 none, lower code = higher qualification). Categories as maternal_education.",,
-urbanicity,compatible,urban_dv,"recode_values(as.numeric(urban_dv), 1 ~ ""Urban"", 2 ~ ""Rural"", default = ""Unknown"")",UKHLS urban/rural classification of the address; no suburban category. BHPS rows Unknown (no BHPS urban/rural column read).,,
-family_structure,partial,"survey, mnspno, fnspno, mnpno, fnpno","local({
+paternal_education,compatible,father_hiqual_dv,"coalesce(
+  lookup_values(
+    haven::as_factor(father_hiqual_dv),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","Highest qualification (hiqual_dv) from the resident father figure's own adult interview, joined via fnspno; mapped through the shared education lookup as maternal_education. Unknown if no resident father or not interviewed.",maternal_education,
+parental_education,compatible,"mother_hiqual_dv, father_hiqual_dv","local({
+  code <- pmin(as.numeric(mother_hiqual_dv), as.numeric(father_hiqual_dv), na.rm = TRUE)
+  labels <- attr(mother_hiqual_dv, ""labels"")
+  coalesce(
+    lookup_values(
+      names(labels)[match(code, labels)],
+      lookup_maternal_education,
+      dataset_id = spec$dataset_id,
+      target_variable = ""maternal_education""
+    ),
+    ""Unknown""
+  )
+})","Higher of the resident mother's and father's highest qualification (hiqual_dv, 1 degree to 9 none, so the lower code), or whichever is known; mapped through the shared education lookup as maternal_education.",maternal_education,
+urbanicity,proximate,urban_dv,"recode_values(as.numeric(urban_dv), 1 ~ ""Urban"", 2 ~ ""Rural"", default = ""Unknown"")","UKHLS only. Urban or rural classification of the address (urban_dv); binary, so Suburban is never emitted. BHPS rows Unknown (no BHPS urban/rural column read).",,
+family_structure,proximate,"survey, mnspno, fnspno, mnpno, fnpno","local({
   mother <- as.numeric(mnspno) > 0
   father <- as.numeric(fnspno) > 0
   natural <- as.numeric(mnpno) == as.numeric(mnspno) & as.numeric(fnpno) == as.numeric(fnspno)
   case_when(
-    mother & father & survey == ""BHPS"" ~ ""Unknown"",
+    mother & father & survey == ""BHPS"" ~ ""Two biological/adoptive parents"",
     mother & father & natural ~ ""Two biological/adoptive parents"",
     mother & father ~ ""Step family"",
     mother | father ~ ""Single parent"",
     !mother & !father ~ ""Other"",
     .default = ""Unknown""
   )
-})","From resident-parent person numbers (mnspno/fnspno, 0 = none) and, UKHLS only, natural-parent numbers (mnpno/fnpno). Both natural = two biological/adoptive; other two-parent = step family; one = single parent; none = other. Partial: adoptive parents count as step-parents; BHPS lacks natural-parent links, so its two-parent households are Unknown.",,
-fam_screenrules,in_progress,,,,,
-fam_bedroomscreen,in_progress,,,,,
-fam_parentstress,in_progress,,,,,
-fam_parentstress_measure,in_progress,,,,,
+})","From resident parent-figure person numbers (mnspno/fnspno; 0 = none) and, UKHLS only, natural-parent numbers (mnpno/fnpno). Two natural = two biological/adoptive; other two-parent = step family; one = single parent; none = other. Proximate: UKHLS adoptive parents count as step-parents, and BHPS cannot separate step or adoptive from natural parents, so its step families count as two-parent.",,
+fam_screenrules,partial,ytvlmt,"case_when(ytvlmt == 1 ~ TRUE, ytvlmt == 2 ~ FALSE, .default = NA)","BHPS waves 4-6 only. Youth self-report (BHPS youth questionnaire): 'Parents set limits on amount of TV?' (ytvlmt), yes/no. Partial: TV only; no other device or timing rule asked. 'Don't own a TV' left NA.",,
+fam_bedroomscreen,partial,yptvbr,"case_when(yptvbr == 1 ~ TRUE, yptvbr == 2 ~ FALSE, .default = NA)","BHPS waves 5, 6 and 17 only. Youth self-report (BHPS youth questionnaire): 'TV in bedroom' (yptvbr), yes/no. Partial: TV only.",,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
 school_grade,unavailable,,,No school year or grade in the youth files.,,
-st_measure_type,compatible,,"""Categorical""",Every screen-time item is a banded hours question.,,
+st_measure_type,inferred,,"""Categorical""",Every screen-time item is a banded hours question.,,
 st_measure_name,inferred,,"""Custom""","Bespoke BHPS/UKHLS items, not a named instrument.",,
-st_responder,compatible,,"""Self""",Youth self-completion questionnaire.,,
+st_responder,inferred,,"""Self""",Youth self-completion questionnaire.,,
 st_total_wd,compatible,"yptvvidhrs, wave","if_else(
   wave %in% c(""l"", ""m"", ""n"", ""o""),
-  recode_values(as.numeric(yptvvidhrs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8),
+  recode_values(as.numeric(yptvvidhrs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7),
   NA_real_
-)","UKHLS waves 12-15 only. From wave 12 the ex-TV item asks 'On a normal school day, how many hours do you spend using a tablet, TV, smartphone, games console or computer?' (wave 12/15 questionnaires; .dta label still says watching TV); waves 1-11 go to st_watch_wd. Band midpoints: None 0, <1h 0.5, 1-3h 2, 4-6h 5, 7h+ 8.",,
+)","UKHLS waves 12-15: 'On a normal school day, how many hours do you spend using a tablet, TV, smartphone, games console or computer?' (yptvvidhrs; the .dta label still says watching TV). Waves 1-11 go to st_watch_wd. Bands: none 0, less than an hour 0.5, 1-3 hours 2, 4-6 hours 5, 7 or more hours 7.",,
 st_total_we,compatible,"yptvvidhrw, wave","if_else(
   wave %in% c(""l"", ""m"", ""n"", ""o""),
-  recode_values(as.numeric(yptvvidhrw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8),
+  recode_values(as.numeric(yptvvidhrw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7),
   NA_real_
-)","Weekend (Saturday or Sunday) counterpart of st_total_wd, UKHLS waves 12-15. Band midpoints as st_total_wd.",,
+)",UKHLS waves 12-15: weekend (Saturday or Sunday) counterpart of st_total_wd (yptvvidhrw). Bands as st_total_wd (7 or more hours = 7).,,
 st_total,compatible,"yptvvidhrs, yptvvidhrw, wave","if_else(
   wave %in% c(""l"", ""m"", ""n"", ""o""),
-  (recode_values(as.numeric(yptvvidhrs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8) *
+  (recode_values(as.numeric(yptvvidhrs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7) *
     5 +
-    recode_values(as.numeric(yptvvidhrw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8) * 2) /
+    recode_values(as.numeric(yptvvidhrw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7) * 2) /
     7,
   NA_real_
-)","5:2 weighted mean of st_total_wd and st_total_we, UKHLS waves 12-15.",,
-st_watch_wd,compatible,"survey, ytvhrs, yptvvidhrs, wave","case_when(
-  survey == ""BHPS"" ~ recode_values(as.numeric(ytvhrs), 1 ~ 0.5, 2 ~ 2, 3 ~ 5, 4 ~ 8),
-  !wave %in% c(""l"", ""m"", ""n"", ""o"") ~ recode_values(as.numeric(yptvvidhrs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8),
+)",UKHLS waves 12-15: (5 x st_total_wd + 2 x st_total_we) / 7. Top band 7 or more hours = 7.,,
+st_watch_wd,partial,"survey, ytvhrs, yptvvidhrs, wave","case_when(
+  survey == ""BHPS"" ~ recode_values(as.numeric(ytvhrs), 1 ~ 0.5, 2 ~ 2, 3 ~ 5, 4 ~ 7),
+  !wave %in% c(""l"", ""m"", ""n"", ""o"") ~ recode_values(as.numeric(yptvvidhrs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7),
   .default = NA_real_
-)","BHPS waves 4-18: 'hours spent watching TV on a school day' (ytvhrs); lowest band 'none or less than an hour' = 0.5, others as UKHLS. UKHLS waves 1-11 (yptvvidhrs): TV, video and DVDs on a normal school day, by wave 11 programmes or films on any device; waves 12-15 go to st_total_wd. Band midpoints as st_total_wd.",,
-st_watch_we,compatible,"yptvvidhrw, wave","if_else(
+)","BHPS waves 4-18: hours watching TV on a school day (ytvhrs). UKHLS waves 1-11 (yptvvidhrs), on a normal school day: TV including video and DVDs (waves 1-8); programmes or films on any device (waves 9-11). Waves 12-15 go to st_total_wd. Partial: BHPS and UKHLS waves 1-8 ask about the TV set only. Bands: none 0, less than an hour 0.5 (BHPS 'none/less than an hour' 0.5), 1-3 hours 2, 4-6 hours 5, 7 or more hours 7.",,
+st_watch_we,partial,"yptvvidhrw, wave","if_else(
   wave %in% c(""b"", ""d"", ""f"", ""h"", ""j""),
-  recode_values(as.numeric(yptvvidhrw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8),
+  recode_values(as.numeric(yptvvidhrw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7),
   NA_real_
-)","UKHLS waves 2, 4, 6, 8, 10: hours watching TV on a weekend day. BHPS asked school days only; UKHLS waves 12-15 go to st_total_we. Band midpoints as st_total_wd.",,
-st_watch,compatible,"yptvvidhrs, yptvvidhrw, wave","if_else(
+)","UKHLS waves 2, 4, 6, 8, 10: hours watching on a weekend day (yptvvidhrw), TV including video and DVDs (waves 2-8) or programmes and films on any device (wave 10). BHPS asked school days only; waves 12-15 go to st_total_we. Partial: waves 2-8 ask about the TV set only. Bands as st_watch_wd (7 or more hours = 7).",,
+st_watch,partial,"yptvvidhrs, yptvvidhrw, wave","if_else(
   wave %in% c(""b"", ""d"", ""f"", ""h"", ""j""),
-  (recode_values(as.numeric(yptvvidhrs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8) *
+  (recode_values(as.numeric(yptvvidhrs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7) *
     5 +
-    recode_values(as.numeric(yptvvidhrw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8) * 2) /
+    recode_values(as.numeric(yptvvidhrw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7) * 2) /
     7,
   NA_real_
-)","5:2 weighted mean of st_watch_wd/we, UKHLS waves 2, 4, 6, 8, 10 only (both asked).",,
+)","UKHLS waves 2, 4, 6, 8, 10: (5 x st_watch_wd + 2 x st_watch_we) / 7. Partial: waves 2-8 ask about the TV set only. Top band 7 or more hours = 7.",,
 st_game_wd,partial,"ypcpgs, ypcomp, ypconstm, ypconsol, wave","local({
   asked <- wave %in% c(""a"", ""c"", ""e"", ""g"", ""j"")
   computer <- case_when(
     as.numeric(ypcomp) %in% c(2, 3) ~ 0,
-    .default = recode_values(as.numeric(ypcpgs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8)
+    .default = recode_values(as.numeric(ypcpgs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7)
   )
   console <- case_when(
     as.numeric(ypconsol) == 2 ~ 0,
-    .default = recode_values(as.numeric(ypconstm), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8)
+    .default = recode_values(as.numeric(ypconstm), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7)
   )
   if_else(asked, computer + console, NA_real_)
-})","Sum of st_game_comp_wd and st_game_console_wd (missing unless both known). Partial: no phone/tablet/handheld gaming asked, and computer gaming is home computers only.",,
+})","UKHLS waves 1, 3, 5, 7, 10: sum of ypcpgs, ypconstm (DR-0002), non-users 0 as in st_game_comp_wd and st_game_console_wd. NA when computer or console hours are unanswered (193 rows); left for imputation. Partial: no phone, tablet or handheld gaming asked, and computer gaming is on the home computer only. Bands as st_game_comp_wd (7 or more hours = 7).",,
 st_game_we,unavailable,,,"Gaming hours asked school day only (UKHLS waves 1, 3, 5, 7, 10); no weekend item.",,
-st_game,unavailable,,,See st_game_we.,,
+st_game,incompatible,"ypcpgs, ypconstm",,Weekday items only; no usual-day value.,,
 st_game_comp_wd,compatible,"ypcpgs, ypcomp, wave","case_when(
   !wave %in% c(""a"", ""c"", ""e"", ""g"", ""j"") ~ NA_real_,
   as.numeric(ypcomp) %in% c(2, 3) ~ 0,
-  .default = recode_values(as.numeric(ypcpgs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8)
-)","Hours using the home computer for games on a normal school day, UKHLS waves 1, 3, 5, 7, 10. Non-users or no home computer (ypcomp 2/3) routed past, set to 0. Band midpoints as st_total_wd. BHPS asks frequency only, not hours.",,
+  .default = recode_values(as.numeric(ypcpgs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7)
+)","UKHLS waves 1, 3, 5, 7, 10: hours using the home computer for games on a normal school day (ypcpgs). No home computer or not using one (ypcomp 2, 3) is routed past the item: 0. Bands: none 0, less than an hour 0.5, 1-3 hours 2, 4-6 hours 5, 7 or more hours 7. BHPS asks frequency only.",,
 st_game_comp_we,unavailable,,,See st_game_we.,,
-st_game_comp,unavailable,,,See st_game_we.,,
+st_game_comp,incompatible,ypcpgs,,Weekday items only; no usual-day value.,,
 st_game_console_wd,compatible,"ypconstm, ypconsol, wave","case_when(
   !wave %in% c(""a"", ""c"", ""e"", ""g"", ""j"") ~ NA_real_,
   as.numeric(ypconsol) == 2 ~ 0,
-  .default = recode_values(as.numeric(ypconstm), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8)
-)","Hours playing games on a games console (PlayStation, X-Box, Wii etc.) on a normal school day, UKHLS waves 1, 3, 5, 7, 10. No console (ypconsol 2) routed past, set to 0. Band midpoints as st_total_wd.",,
+  .default = recode_values(as.numeric(ypconstm), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7)
+)","UKHLS waves 1, 3, 5, 7, 10: hours playing games on a games console (PlayStation, X-Box, Wii etc.) on a normal school day (ypconstm). No console in the household (ypconsol 2) is routed past the item: 0. Bands: none 0, less than an hour 0.5, 1-3 hours 2, 4-6 hours 5, 7 or more hours 7.",,
 st_game_console_we,unavailable,,,See st_game_we.,,
-st_game_console,unavailable,,,See st_game_we.,,
-st_game_handheldconsole_wd,unavailable,,,,,
-st_game_handheldconsole_we,unavailable,,,,,
-st_game_handheldconsole,unavailable,,,,,
-st_game_active_wd,unavailable,,,,,
-st_game_active_we,unavailable,,,,,
-st_game_active,unavailable,,,,,
-st_game_phone_wd,unavailable,,,,,
-st_game_phone_we,unavailable,,,,,
-st_game_phone,unavailable,,,,,
-st_game_tablet_wd,unavailable,,,,,
-st_game_tablet_we,unavailable,,,,,
-st_game_tablet,unavailable,,,,,
-st_comp_nongaming_wd,unavailable,,,,,
-st_comp_nongaming_we,unavailable,,,,,
-st_comp_nongaming,unavailable,,,,,
-st_comp_wd,unavailable,,,,,
-st_comp_we,unavailable,,,,,
+st_game_console,incompatible,ypconstm,,Weekday items only; no usual-day value.,,
+st_game_handheldconsole_wd,unavailable,,,Not collected.,,
+st_game_handheldconsole_we,unavailable,,,Not collected.,,
+st_game_handheldconsole,unavailable,,,Not collected.,,
+st_game_active_wd,unavailable,,,Not collected.,,
+st_game_active_we,unavailable,,,Not collected.,,
+st_game_active,unavailable,,,Not collected.,,
+st_game_phone_wd,unavailable,,,Not collected.,,
+st_game_phone_we,unavailable,,,Not collected.,,
+st_game_phone,unavailable,,,Not collected.,,
+st_game_tablet_wd,unavailable,,,Not collected.,,
+st_game_tablet_we,unavailable,,,Not collected.,,
+st_game_tablet,unavailable,,,Not collected.,,
+st_comp_nongaming_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming_we,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming,incompatible,"yppchw, yppcnt",,"Frequency of computer use for homework (yppchw, UKHLS) or for the internet and email (yppcnt, BHPS) only; not a duration.",,
+st_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_we,unavailable,,,No weekday/weekend split.,,
 st_comp,incompatible,"ypcomp, yppchw, ypfpc",,UKHLS asks home computer use (ypcomp) and schoolwork frequency (yppchw); BHPS asks frequency (ypfpc). Neither is a duration.,,
-st_tablet_wd,unavailable,,,,,
-st_tablet_we,unavailable,,,,,
+st_tablet_wd,unavailable,,,No weekday/weekend split.,,
+st_tablet_we,unavailable,,,No weekday/weekend split.,,
 st_tablet,incompatible,ypdevice3,,"Only tablet ownership asked (ypdevice3, UKHLS waves 12-15), not time.",,
-st_phone_wd,unavailable,,,,,
-st_phone_we,unavailable,,,,,
+st_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_phone_we,unavailable,,,No weekday/weekend split.,,
 st_phone,incompatible,"ypmobu, ypsmartph",,"Only phone and smartphone ownership asked, not time.",,
 st_socmedia_wd,partial,"ypnetcht, ypsocweb","case_when(
   as.numeric(ypsocweb) == 2 ~ 0,
-  .default = recode_values(as.numeric(ypnetcht), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8)
-)","UKHLS waves 1-15: hours chatting or interacting with friends through a social website or app on a normal week day (ypnetcht), asked of members (ypsocweb); wave 15 adds gaming sites. Non-members (ypsocweb 2) = 0; 5 wave-7 answers coded 9 (unlabelled) = missing. Partial: only chatting with friends, not other use such as browsing. Band midpoints as st_total_wd.",,
+  .default = recode_values(as.numeric(ypnetcht), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7)
+)","UKHLS waves 1-15: hours chatting or interacting with friends through a social web-site or app on a normal school day or weekday (ypnetcht), asked of account holders (ypsocweb); wave 15 adds gaming websites. No account (ypsocweb 2) = 0; 3 wave-7 answers coded 9 (unlabelled) = missing. Partial: chatting with friends only. Bands: none 0, less than an hour 0.5, 1-3 hours 2, 4-6 hours 5, 7 or more hours 7.",,
 st_socmedia_we,partial,"ypnetchtw, ypsocweb, wave","case_when(
   !wave %in% c(""l"", ""m"", ""n"", ""o"") ~ NA_real_,
   as.numeric(ypsocweb) == 2 ~ 0,
-  .default = recode_values(as.numeric(ypnetchtw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8)
-)","UKHLS waves 12-15, weekend counterpart of st_socmedia_wd (same routing and zeroing). Garbled .dta value labels replaced in the tidier with the weekday item's, per the printed questionnaire. Band midpoints as st_total_wd.",,
+  .default = recode_values(as.numeric(ypnetchtw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7)
+)","UKHLS waves 12-15: weekend counterpart of st_socmedia_wd (ypnetchtw), same routing and zeroing; its garbled .dta value labels are replaced in the tidier with the weekday item's, per the printed questionnaire. Partial as st_socmedia_wd. Bands as st_socmedia_wd (7 or more hours = 7).",,
 st_socmedia,partial,"ypnetcht, ypnetchtw, ypsocweb, wave","local({
   wd <- case_when(
     as.numeric(ypsocweb) == 2 ~ 0,
-    .default = recode_values(as.numeric(ypnetcht), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8)
+    .default = recode_values(as.numeric(ypnetcht), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7)
   )
   we <- case_when(
     as.numeric(ypsocweb) == 2 ~ 0,
-    .default = recode_values(as.numeric(ypnetchtw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8)
+    .default = recode_values(as.numeric(ypnetchtw), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7)
   )
   if_else(wave %in% c(""l"", ""m"", ""n"", ""o""), (wd * 5 + we * 2) / 7, NA_real_)
-})","5:2 weighted mean of st_socmedia_wd and st_socmedia_we, UKHLS waves 12-15.",,
-st_educational_wd,unavailable,,,,,
-st_educational_we,unavailable,,,,,
+})",UKHLS waves 12-15: (5 x st_socmedia_wd + 2 x st_socmedia_we) / 7. Partial as st_socmedia_wd. Top band 7 or more hours = 7.,,
+st_educational_wd,unavailable,,,No weekday/weekend split.,,
+st_educational_we,unavailable,,,No weekday/weekend split.,,
 st_educational,incompatible,"yppchw, ypdvhm",,"Frequency of computer/device use for schoolwork (UKHLS waves 1-10, 12, 14), every day to never; not a duration.",,
-st_work_wd,unavailable,,,,,
-st_work_we,unavailable,,,,,
-st_work,unavailable,,,,,
-st_internet_wd,unavailable,,,,,
-st_internet_we,unavailable,,,,,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,unavailable,,,No weekday/weekend split.,,
+st_internet_we,unavailable,,,No weekday/weekend split.,,
 st_internet,incompatible,"ypcintnt, yppcnt",,"Frequency of home internet use (UKHLS waves 1-10) or PC internet/email use (BHPS), every day to never; not a duration.",,
 st_videochat,incompatible,ypdvvc,,"Frequency of video-calling device use (UKHLS waves 12, 14), every day to never; not a duration.",,
-st_messaging_wd,unavailable,,,,,
-st_messaging_we,unavailable,,,,,
-st_messaging,unavailable,,,,,
+st_messaging_wd,unavailable,,,Not collected.,,
+st_messaging_we,unavailable,,,Not collected.,,
+st_messaging,unavailable,,,Not collected.,,
 st_creating,incompatible,ypdvcrt,,"Frequency of posting pictures/videos (UKHLS waves 12, 14), every day to never; not a duration.",,
 st_email,incompatible,yppcnt,,"BHPS asks frequency of PC internet/email use (yppcnt), not duration.",,
-st_shopping,unavailable,,,,,
-st_total_school,unavailable,,,,,
-st_educational_school,unavailable,,,,,
-st_comp_school,unavailable,,,,,
-st_tablet_school,unavailable,,,,,
-st_internet_school,unavailable,,,,,
-st_phone_school,unavailable,,,,,
-acc_academachment_selfrated,unavailable,,,,,
-acc_academachment_lettergrades,unavailable,,,,,
-acc_academachment_stdtest,unavailable,,,,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,unavailable,,,Not collected.,,
+acc_academachment_lettergrades,unavailable,,,Not collected.,,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
 acc_schoolengage_caresschool,incompatible,"ypopsc, ypacvs, ypacvwell",,"Degree not frequency: 'how much it means to do well at school' (BHPS); importance of doing well in GCSEs (BHPS, UKHLS).",,
 acc_schoolengage_homework,incompatible,"yphmwrk, ypfhmwrk, yphmwkhrs",,"UKHLS asks whether/how often homework is set and hours spent, not completion.",,
-acc_schoolpressure_self,in_progress,,,,,
-acc_schoolbelonging_self,in_progress,,,,,
-acc_schoolbelonging_measure,in_progress,,,,,
-acc_academachment_numgrades,unavailable,,,,,
-acc_academachment_teacherrated,unavailable,,,,,
-acc_numeracy_stdtest,unavailable,,,,,
-acc_literacy_stdtest,unavailable,,,,,
-beh_hyper_basc2,unavailable,,,,,
-beh_atten_basc2,unavailable,,,,,
-beh_atten_self,unavailable,,,,,
-beh_atten_measure,in_progress,,,,,
-beh_selfreg_htks,unavailable,,,,,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_self,incompatible,yphsc,,"No belonging or connectedness scale; only 'How do you feel about ... the school you go to?' (yphsc), a satisfaction item mapped to wb_domainsat_school_self.",,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,unavailable,,,Not collected.,,
+acc_literacy_stdtest,unavailable,,,Not collected.,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_self.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_self.,,
+beh_atten_self,incompatible,ypsdqha_dv,,SDQ hyperactivity/inattention subscale only; mapped to beh_hyper_sdq_self.,,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
 beh_bullied,compatible,"ypfrpbully, ypfrobully","local({
   worst <- pmax(as.numeric(ypfrpbully), as.numeric(ypfrobully), na.rm = TRUE)
   case_when(worst >= 2 ~ ""TRUE"", worst == 1 ~ ""FALSE"", .default = NA_character_)
@@ -273,138 +288,153 @@ beh_truancy,partial,"yptruant, yptrun","coalesce(
 )","UKHLS every wave: played truant in the last 12 months, even a half day or single lesson (yes/no). BHPS waves 7-18: 'played truant from school' (never/once or twice/several times/often), TRUE for any occurrence. Partial: BHPS recall period undocumented (likely past year, asked beside the past-year vandalism item).",,
 beh_stealing,partial,ypshop,"recode_values(as.numeric(ypshop), 1 ~ ""FALSE"", c(2, 3, 4) ~ ""TRUE"")","UKHLS waves 3, 5, 7, 10, 12, 14: taken something from a shop without paying, past year (never/once or twice/several times/often); TRUE for any occurrence. Partial: shoplifting only. BHPS has no stealing item.",,
 beh_vandalism,compatible,ypvand,"recode_values(as.numeric(ypvand), 1 ~ ""FALSE"", c(2, 3, 4) ~ ""TRUE"")","UKHLS waves 3, 5, 7, 10, 12, 14: deliberately broken or damaged property not yours, past year. BHPS waves 7-11, 17: 'vandalised property in past year'. Both never/once or twice/several times/often; TRUE for any occurrence.",,
-beh_alcohol_self,in_progress,,,,,
-beh_tobacco_self,in_progress,,,,,
-beh_cannabis_self,in_progress,,,,,
+beh_alcohol_self,compatible,"ypdklm, ypevralc, ypdklm_bh","case_when(
+  ypdklm %in% 1:4 ~ TRUE,
+  ypdklm %in% 5:6 ~ FALSE,
+  ypevralc == 2 ~ FALSE,
+  ypdklm_bh == 1 ~ FALSE,
+  ypdklm_bh %in% 2:3 ~ TRUE,
+  .default = NA
+)","UKHLS: times had an alcoholic drink in the last 4 weeks (ypdklm); never-drinkers (ypevralc 2) routed past it are FALSE. BHPS waves 5-8, 15, 17-18: alcoholic drinks in the past month (ypdklm_bh). TRUE for any occurrence. Recall 4 weeks / 1 month.",,
+beh_tobacco_self,partial,"ypevrsmo, ypsmofrq, ypsmof, ypsmev","case_when(
+  ypevrsmo == 2 ~ FALSE,
+  ypsmofrq %in% 1:2 ~ FALSE,
+  ypsmofrq %in% 3:5 ~ TRUE,
+  ypsmof %in% 1:3 ~ FALSE,
+  ypsmof %in% 4:5 ~ TRUE,
+  ypsmev == 2 ~ FALSE,
+  .default = NA
+)","Current cigarette smoking. UKHLS: ever smoked (ypevrsmo) then smoking frequency (ypsmofrq); BHPS: how often do you smoke (ypsmof), never-tried (ypsmev 2) FALSE. Sometimes or regularly TRUE; never, once or twice, or used to FALSE. Current status with no stated recall, so partial.",,
+beh_cannabis_self,partial,ypdrgmj,"case_when(ypdrgmj == 1 ~ TRUE, ypdrgmj == 2 ~ FALSE, .default = NA)","UKHLS waves 2, 4, ..., 14: 'Have you ever tried any of the following? Cannabis' (ypdrgmj), yes/no. Lifetime, so partial.",,
 beh_conduct_sdq_parent,unavailable,,,UKHLS asks parents the SDQ only about children aged 5 and 8 (w_child); none of this dataset's youths (10-15) qualify.,,
 beh_hyper_sdq_parent,unavailable,,,See beh_conduct_sdq_parent.,,
 beh_peerprob_sdq_parent,unavailable,,,See beh_conduct_sdq_parent.,,
 beh_prosocial_sdq_parent,unavailable,,,See beh_conduct_sdq_parent.,,
-beh_aggphys_bpaq_self,unavailable,,,,,
-beh_aggverb_bpaq_self,unavailable,,,,,
-beh_agganger_bpaq_self,unavailable,,,,,
-beh_agghostility_bpaq_self,unavailable,,,,,
-beh_agg_self,unavailable,,,,,
-beh_agg_measure,in_progress,,,,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_agg_self,incompatible,"ypfght, ypsdqcp_dv",,Only a fight count (beh_fight) and the SDQ conduct subscale (beh_conduct_sdq_self); no aggression scale.,,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
 beh_argues,incompatible,"ypargm, ypargf",,"Quarrel frequency with mother and with father (most days to hardly ever); conflict with one parent, not an 'argues too much' rating.",,
 beh_persistence_finishwork,incompatible,ypsdqy,,"'I finish the work I'm doing', SDQ self-report item (ypsdqy), 3-point truth scale, already scored in the hyperactivity subscale; not a frequency.",,
-beh_emotreg_stayscalm,unavailable,,,,,
+beh_emotreg_stayscalm,incompatible,ypsdqe,,"Only SDQ item 5, 'I get very angry and often lose my temper': problem-worded and truth-rated; scored in beh_conduct_sdq_self.",,
 beh_peerprob_makefriends,proximate,ypmkfrn,"recode_values(as.numeric(ypmkfrn), c(1, 2) ~ ""No difficulty"", 3 ~ ""A little difficulty"", 4 ~ ""A lot of difficulty"")","BHPS waves 7-11, 18: 'how easy to make friends' (very/quite easy, quite/very hard). Easy = no difficulty, quite hard = a little, very hard = a lot. Proximate: asks ease, not difficulty relative to peers.",,
-beh_conduct_diagnosed,unavailable,,,,,
-beh_conduct_diagnosed_severity,unavailable,,,,,
-beh_conduct_sdq_self,compatible,ypsdqcp_dv,as.numeric(ypsdqcp_dv),"Study-derived self-report SDQ subscale, UKHLS odd waves (1, 3, ..., 15). Ages 10-15, so 10-year-olds are below the form's validated 11+. Standard 0-2 scoring; study also scores some youths with a missing item.",,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,compatible,ypsdqcp_dv,as.numeric(ypsdqcp_dv),"UKHLS odd waves (1, 3, ..., 15): study-derived self-report SDQ subscale (ypsdq*_dv), standard 0-2 scoring, scored when at least 3 of 5 items are answered, prorated and rounded half up (checked against ypsdqa-ypsdqy). Ages 10-16; 16% of scored respondents are 10, below the form's validated 11-17.",,
 beh_hyper_sdq_self,compatible,ypsdqha_dv,as.numeric(ypsdqha_dv),See beh_conduct_sdq_self.,,
 beh_peerprob_sdq_self,compatible,ypsdqpp_dv,as.numeric(ypsdqpp_dv),See beh_conduct_sdq_self.,,
 beh_prosocial_sdq_self,compatible,ypsdqps_dv,as.numeric(ypsdqps_dv),See beh_conduct_sdq_self.,,
-beh_conduct_sdq_teacher,unavailable,,,,,
-beh_hyper_sdq_teacher,unavailable,,,,,
-beh_peerprob_sdq_teacher,unavailable,,,,,
-beh_prosocial_sdq_teacher,unavailable,,,,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_conduct_sdq_self.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_hyper_sdq_self.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_peerprob_sdq_self.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_prosocial_sdq_self.,,
 beh_ext_sdq_parent,unavailable,,,See beh_conduct_sdq_parent.,,
 beh_ext_sdq_self,unavailable,,,"Study releases component subscales only; composite derived at analysis, not mapped here.",,
-beh_ext_sdq_teacher,unavailable,,,,,
-beh_agg_cbcl_parent,unavailable,,,,,
-beh_atten_cbcl_parent,unavailable,,,,,
-beh_rulebreak_cbcl_parent,unavailable,,,,,
-beh_ext_cbcl_parent,unavailable,,,,,
-beh_cbcl_measure,unavailable,,,,,
-beh_prosocial_online_self,unavailable,,,,,
-beh_prosocial_online_measure,unavailable,,,,,
-beh_problematicuse_self,in_progress,,,,,
-beh_problematicuse_measure,in_progress,,,,,
-cog_execfunc_basc2,unavailable,,,,,
-cog_langexec_nepsy,unavailable,,,,,
-cog_phono_nepsy,unavailable,,,,,
-cog_inhibcont_nepsy,unavailable,,,,,
-cog_vismotor_nepsy,unavailable,,,,,
-cog_verbalfluency_nepsy,unavailable,,,,,
-cog_inhib_nihtb_flanker,unavailable,,,,,
-cog_flex_nihtb_dccs,unavailable,,,,,
-cog_wm_nihtb_listsort,unavailable,,,,,
-cog_speed_nihtb_pattern,unavailable,,,,,
-cog_epimem_nihtb_picseq,unavailable,,,,,
-cog_vocab_nihtb_picvocab,unavailable,,,,,
-cog_fluidcomp_nihtb,unavailable,,,,,
-cog_crystcomp_nihtb,unavailable,,,,,
-cog_totalcomp_nihtb,unavailable,,,,,
-cog_wm_digitspan,unavailable,,,,,
-cog_iq_fullscale,unavailable,,,,,
-cog_vocab_bpvs,unavailable,,,,,
-cog_vocab_ppvt,unavailable,,,,,
-cog_execfunc_brief_parent,unavailable,,,,,
-cog_vocab_bas_naming,unavailable,,,,,
-cog_nonverbalreason_bas_picsim,unavailable,,,Not the BAS. UKHLS wave 10 has nine Raven's Progressive Matrices items (ypraven*); no dataschema row covers them.,,
-cog_spatial_bas_pattern,unavailable,,,,,
-cog_verbalreason_bas_versim,unavailable,,,,,
-cog_schoolread_bracken,unavailable,,,,,
-cog_creativethinking_stdtest,unavailable,,,,,
-mh_anx_basc2,unavailable,,,,,
-mh_dep_basc2,unavailable,,,,,
+beh_ext_sdq_teacher,unavailable,,,SDQ teacher form not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,NEPSY not administered.,,
+cog_phono_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhibcont_nepsy,unavailable,,,NEPSY not administered.,,
+cog_vismotor_nepsy,unavailable,,,NEPSY not administered.,,
+cog_verbalfluency_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhib_nihtb_flanker,unavailable,,,NIH Toolbox not administered.,,
+cog_flex_nihtb_dccs,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox not administered.,,
+cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox not administered.,,
+cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox not administered.,,
+cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox not administered.,,
+cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_digitspan,unavailable,,,Digit Span not administered.,,
+cog_iq_fullscale,incompatible,"ypravena11, ypravenb12, ypravenc4, ypravenc12, ypravend7, ypravend12, ypravene1, ypravene5, ypravene7",,"Only nine Raven's Progressive Matrices items (UKHLS wave 10); a short item set is not a full-scale IQ, and no schema row covers it.",,
+cog_vocab_bpvs,unavailable,,,BPVS not administered.,,
+cog_vocab_ppvt,unavailable,,,PPVT not administered.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_vocab_bas_naming,unavailable,,,BAS II not administered.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,BAS II not administered; see cog_iq_fullscale.,,
+cog_spatial_bas_pattern,unavailable,,,BAS II not administered.,,
+cog_verbalreason_bas_versim,unavailable,,,BAS II not administered.,,
+cog_schoolread_bracken,unavailable,,,Bracken not administered.,,
+cog_creativethinking_stdtest,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
 mh_emotsymp_sdq_parent,unavailable,,,See beh_conduct_sdq_parent.,,
 mh_totaldiff_sdq_parent,unavailable,,,See beh_conduct_sdq_parent.,,
-mh_anx_diagnosed,unavailable,,,,,
-mh_anx_diagnosed_severity,unavailable,,,,,
-mh_dep_diagnosed,unavailable,,,,,
-mh_dep_diagnosed_severity,unavailable,,,,,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
 mh_emotsymp_sdq_self,compatible,ypsdqes_dv,as.numeric(ypsdqes_dv),See beh_conduct_sdq_self.,,
-mh_emotsymp_sdq_teacher,unavailable,,,,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ teacher form not administered; see mh_emotsymp_sdq_self.,,
 mh_totaldiff_sdq_self,compatible,ypsdqtd_dv,as.numeric(ypsdqtd_dv),See beh_conduct_sdq_self. Sum of the four difficulty subscales.,,
-mh_totaldiff_sdq_teacher,unavailable,,,,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ teacher form not administered; see mh_totaldiff_sdq_self.,,
 mh_int_sdq_parent,unavailable,,,See beh_conduct_sdq_parent.,,
 mh_int_sdq_self,unavailable,,,See beh_ext_sdq_self.,,
-mh_int_sdq_teacher,unavailable,,,,,
-mh_dep_smfq_self,unavailable,,,,,
-mh_dep_smfq_parent,unavailable,,,,,
-mh_dep_cdi_self,unavailable,,,,,
-mh_dep_cesd_self,unavailable,,,,,
-mh_dep_phq9_self,unavailable,,,,,
-mh_dep_rcads_self,unavailable,,,,,
-mh_dep_dass21_self,unavailable,,,,,
-mh_dep_scl_self,unavailable,,,,,
-mh_distress_k6_self,unavailable,,,,,
-mh_distress_k10_self,unavailable,,,,,
-mh_anx_masc_self,unavailable,,,,,
-mh_anx_scas_self,unavailable,,,,,
-mh_anx_scas_parent,unavailable,,,,,
-mh_anx_scared_self,unavailable,,,,,
-mh_anx_scared_parent,unavailable,,,,,
-mh_anx_gad7_self,unavailable,,,,,
-mh_anx_rcads_self,unavailable,,,,,
-mh_anx_dass21_self,unavailable,,,,,
-mh_anxdep_cbcl_parent,unavailable,,,,,
-mh_int_cbcl_parent,unavailable,,,,,
-mh_dep_binary_self,unavailable,,,,,
-mh_dep_self,unavailable,,,,,
-mh_dep_measure,unavailable,,,,,
-mh_anx_self,unavailable,,,,,
-mh_anx_measure,unavailable,,,,,
-mh_depanx_diagnosed,unavailable,,,,,
-mh_stress_self,unavailable,,,,,
+mh_int_sdq_teacher,unavailable,,,SDQ teacher form not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered; see mh_dep_self.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered; see mh_dep_self.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered; see mh_dep_self.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered; see mh_dep_self.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered; see mh_dep_self.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered; see mh_dep_self.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered; see mh_dep_self.,,
+mh_distress_k6_self,unavailable,,,K6 not administered.,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_anx_masc_self,unavailable,,,MASC not administered; see mh_anx_self.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered; see mh_anx_self.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered; see mh_anx_self.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered; see mh_anx_self.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered; see mh_anx_self.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered; see mh_anx_self.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,incompatible,"ypsad_bd, ypsdqm",,Days felt unhappy (mh_sad_self) and SDQ item 13 only; not a depression screen.,,
+mh_dep_self,incompatible,"ypsdqes_dv, ypsad_bd",,"SDQ emotional symptoms subscale only (mixed content; mapped to mh_emotsymp_sdq_self), plus a single unhappy-days item (mh_sad_self).",,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,incompatible,ypsdqes_dv,,SDQ emotional symptoms subscale only (mixed content); mapped to mh_emotsymp_sdq_self.,,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,unavailable,,,Not collected.,,
 mh_lonely_self,proximate,"yplonely, yplone","coalesce(
   recode_values(as.numeric(yplonely), 1 ~ ""Rarely"", 2 ~ ""Sometimes"", 3 ~ ""Always""),
   recode_values(as.numeric(yplone), 1 ~ ""Always"", 2 ~ ""Often"", 3 ~ ""Sometimes"", 4 ~ ""Rarely"")
 )","UKHLS waves 12-15: 'How often do you feel lonely?' (hardly ever or never, some of the time, all of the time). BHPS waves 5-11: very often, quite often, occasionally, hardly ever. No recall period. Proximate: neither scale has five levels; hardly ever or never = Rarely, Never unused.",,
-mh_lonely_scale_self,unavailable,,,,,
-mh_lonely_measure,unavailable,,,,,
-mh_sad_self,proximate,ypsad_bd,"recode_values(as.numeric(ypsad_bd), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"")","BHPS waves 4-11, 16: 'how many days have you felt unhappy?' (none, 1-3, 4-10, 11+); recall period undocumented. Bands map to Never/Rarely/Sometimes/Often; Always never emitted.",,
+mh_lonely_scale_self,incompatible,"yplonely, yplone",,Single loneliness items only; mapped to mh_lonely_self.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,proximate,ypsad_bd,"recode_values(as.numeric(ypsad_bd), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"")","BHPS waves 4-11, 16: 'how many days have you felt unhappy?' (none, 1-3, 4-10, 11+); recall period undocumented. Bands map to Never/Rarely/Sometimes/Often; Always never emitted. BHPS wave 18 ypsad (days felt depressed) not used: different wording, one wave.",,
 mh_worry_self,incompatible,ypwor,,"BHPS asks nights lost to worry in the past week: sleep loss, not worry frequency.",,
-mh_irritable_self,unavailable,,,,,
-mh_nobodycares_self,unavailable,,,,,
-mh_lifenotworth_self,unavailable,,,,,
-mh_suicide_ideation_self,unavailable,,,,,
-mh_suicide_attempt_self,unavailable,,,,,
-mh_selfharm_self,in_progress,,,,,
-mh_psychsom_hbscscl_self,unavailable,,,,,
-mh_psychsom_measure,unavailable,,,,,
-mh_somatic_self,in_progress,,,,,
-mh_somatic_measure,in_progress,,,,,
-wb_emotsc_basc2,unavailable,,,,,
-wb_mwb_wemwbs,unavailable,,,,,
-wb_lifesatisfaction_cantrilladder,unavailable,,,,,
-wb_resil_basc2,unavailable,,,,,
-wb_psychcomplaints_feellow,unavailable,,,,,
-wb_psychcomplaints_irritable,unavailable,,,,,
-wb_psychcomplaints_nervous,unavailable,,,,,
+mh_irritable_self,incompatible,ypsdqe,,"Only SDQ item 5 (very angry, loses temper), truth-rated; scored in beh_conduct_sdq_self.",,
+mh_nobodycares_self,incompatible,ypfamsup,,"Only feeling supported by family (UKHLS odd waves), a support-availability item.",,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,incompatible,"ypsdqc, yplgcvsymp4, yplgcvsymp5, yplgcvsymp8, yplgcvsymp11, yplgcvsymp12, yplgcvsymp13",,"Only SDQ item 3 (headaches, stomach-aches or sickness; truth-rated, scored in mh_emotsymp_sdq_self) and a wave-13 long-COVID symptom checklist (n = 90); no somatic-complaints scale.",,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered; see wb_lifesat_singleitem_self.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered.,,
 wb_psychcomplaints_diffsleep,incompatible,"ypsleep5, ypsleep6",,"UKHLS waves 12-13 ask time to fall asleep and trouble getting back to sleep, past 4 weeks (ypsleep5/6); not HBSC frequency of difficulty sleeping.",,
 wb_bodyimage,proximate,"yphlwtr, ypwghr","recode_values(
   coalesce(as.numeric(yphlwtr), as.numeric(ypwghr)),
@@ -413,39 +443,113 @@ wb_bodyimage,proximate,"yphlwtr, ypwghr","recode_values(
   3 ~ ""A bit too fat"",
   4 ~ ""Much too fat""
 )","Perceived weight: about right, underweight, slightly or very overweight (UKHLS yphlwtr waves 2, 4, 6, 8, 9, 11, 13, 15; BHPS ypwghr waves 14, 16, 18). Underweight has no degree, so = 'A bit too thin'; 'Much too thin' never emitted. Proximate: asks weight, not body size.",,
-wb_lifesat_slss_self,unavailable,,,,,
-wb_lifesat_swls_self,unavailable,,,,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_singleitem_self.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered; see wb_lifesat_singleitem_self.,,
 wb_lifesat_singleitem_self,compatible,yphlf,8 - as.numeric(yphlf),"'Which best describes how you feel about your life as a whole?' 7-point faces scale, 1 completely happy to 7 not at all happy; every wave. Reversed so higher = more satisfied.",,
-wb_happiness_singleitem_self,in_progress,,,,,
+wb_happiness_singleitem_self,incompatible,yphlf,,"'Happiness: life overall' (7-point faces scale, every wave) maps to wb_lifesat_singleitem_self as life satisfaction; no separate general happiness item.",,
 wb_domainsat_schoolwork_self,compatible,yphsw,8 - as.numeric(yphsw),"'How do you feel about ... your school work?' Faces scale and reversal as wb_lifesat_singleitem_self (BHPS labels only 1, 4, 7). Every wave.",,
 wb_domainsat_appearance_self,compatible,yphap,8 - as.numeric(yphap),"'How do you feel about ... your appearance?' Faces scale and reversal as wb_lifesat_singleitem_self (BHPS labels only 1, 4, 7). Every wave.",,
 wb_domainsat_family_self,compatible,yphfm,8 - as.numeric(yphfm),"'How do you feel about ... your family?' Faces scale and reversal as wb_lifesat_singleitem_self (BHPS labels only 1, 4, 7). Every wave.",,
 wb_domainsat_friends_self,compatible,yphfr,8 - as.numeric(yphfr),"'How do you feel about ... your friends?' Faces scale and reversal as wb_lifesat_singleitem_self (BHPS labels only 1, 4, 7). Every wave.",,
 wb_domainsat_school_self,compatible,yphsc,8 - as.numeric(yphsc),"'How do you feel about ... the school you go to?' Faces scale and reversal as wb_lifesat_singleitem_self (BHPS labels only 1, 4, 7). Every UKHLS wave, BHPS waves 12-18.",,
-wb_qol_pedsql_self,unavailable,,,,,
-wb_qol_pedsql_parent,unavailable,,,,,
-wb_qol_kidscreen10_self,unavailable,,,,,
-wb_qol_kidscreen10_parent,unavailable,,,,,
-wb_selfesteem_rosenberg_self,incompatible,"ypesta, ypestb, ypeste, ypestf, ypesti, ypestj",,Only 6 of 10 Rosenberg items asked (4 every wave); full scale can't be scored. Common items mapped to wb_selfesteem_self.,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN not administered.,,
+wb_selfesteem_rosenberg_self,incompatible,"ypesta, ypestb, ypeste, ypestf, ypesti, ypestj",,Only 6 of 10 Rosenberg items asked; subset mapped to wb_selfesteem_self.,,
 wb_selfesteem_self,compatible,"ypesta, ypestb, ypestc, ypeste, ypestf",(5 - as.numeric(ypesta)) + as.numeric(ypestb) + (5 - as.numeric(ypestc)) + as.numeric(ypeste) + as.numeric(ypestf),"Sum of 5 items in every wave with the battery (all BHPS, UKHLS even waves 2-14): good qualities, feel useless, likeable, feel a failure, no good at all. 1 strongly agree to 4 strongly disagree; positive items reversed so higher = higher self-esteem (range 5-20); missing if any item missing. Waves with 3 extra items (ypesti/j/k) use the same 5.",,
 wb_selfesteem_measure,inferred,,"""Youth self-esteem items: 5 items (4 from the Rosenberg Self-Esteem Scale plus 'I am a likeable person'), 1-4 item scoring, positive items reversed (range 5-20)""",Describes wb_selfesteem_self.,,
-wb_selfefficacy_gse_self,unavailable,,,,,
-wb_selfefficacy_self,unavailable,,,,,
-wb_selfefficacy_measure,unavailable,,,,,
-wb_mwb_who5_self,unavailable,,,,,
-wb_happiness_shs_self,unavailable,,,,,
-wb_mwb_swemwbs_self,unavailable,,,,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered; see wb_selfefficacy_self.,,
+wb_selfefficacy_self,incompatible,ypestk,,"Only one item, 'can usually solve own problems' (ypestk; BHPS waves 9-18, UKHLS even waves 2-14, in the self-esteem battery); not a scale.",,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,SHS not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
 wb_selfratedhealth_self,compatible,ypsrhlth,"recode_values(as.numeric(ypsrhlth), 1 ~ ""Excellent"", 2 ~ ""Very good"", 3 ~ ""Good"", 4 ~ ""Fair"", 5 ~ ""Poor"")","UKHLS waves 2, 4, 6, 8-15: 'In general, would you say your health is...'. BHPS asks health vs peers (yphstat), a different question; BHPS rows missing.",,
-wb_generalhealth_parent,in_progress,,,,,
-wb_posaffect_self,unavailable,,,,,
-wb_posaffect_measure,unavailable,,,,,
-wb_eudaimonic_self,unavailable,,,,,
-wb_eudaimonic_measure,unavailable,,,,,
-wb_socsupport_family_self,in_progress,,,,,
-wb_socsupport_friends_self,in_progress,,,,,
-wb_socsupport_measure,in_progress,,,,,
-hlth_sleep_wd,in_progress,,,,,
-hlth_sleep_we,in_progress,,,,,
-hlth_sleep,in_progress,,,,,
-hlth_sleepprob,in_progress,,,,,
-hlth_sleepprob_measure,in_progress,,,,,
+wb_generalhealth_parent,incompatible,ypsrhlth,,"Only the youth's self-rated health (ypsrhlth), mapped to wb_selfratedhealth_self; no parent rating of the child's health.",,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,incompatible,ypfamsup,,"Only one item, 'Feel supported by family' (ypfamsup, 3 levels, UKHLS odd waves); not a scale.",,
+wb_socsupport_friends_self,incompatible,ypnpal,,"Only a count of close friends (ypnpal), which the schema excludes; no perceived friend-support item.",,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,partial,"ypsleep1, ypsleep2","local({
+  bed <- case_when(
+    ypsleep1 == 1 ~ 21,
+    ypsleep1 == 2 ~ 21.5,
+    ypsleep1 == 3 ~ 22.5,
+    ypsleep1 == 4 ~ 23.5,
+    ypsleep1 == 5 ~ 0,
+    .default = NA_real_
+  )
+  wake <- case_when(
+    ypsleep2 == 1 ~ 6,
+    ypsleep2 == 2 ~ 6.5,
+    ypsleep2 == 3 ~ 7.5,
+    ypsleep2 == 4 ~ 8.5,
+    ypsleep2 == 5 ~ 9,
+    .default = NA_real_
+  )
+  (wake - bed) %% 24
+})","UKHLS waves 12-13, youth self-completion: usual time of going to sleep on a school night and waking on a school day (ypsleep1, ypsleep2); hourly bands at their midpoints, open bands at their stated bound (before 9 pm 21:00, after midnight 00:00, before 6 am 06:00, after 9 am 09:00). Wake minus sleep time, across midnight. Partial: banded clock times, not hours asleep.",,
+hlth_sleep_we,partial,"ypsleep3, ypsleep4","local({
+  bed <- case_when(
+    ypsleep3 == 1 ~ 21,
+    ypsleep3 == 2 ~ 21.5,
+    ypsleep3 == 3 ~ 22.5,
+    ypsleep3 == 4 ~ 23.5,
+    ypsleep3 == 5 ~ 0,
+    .default = NA_real_
+  )
+  wake <- case_when(
+    ypsleep4 == 1 ~ 8,
+    ypsleep4 == 2 ~ 8.5,
+    ypsleep4 == 3 ~ 9.5,
+    ypsleep4 == 4 ~ 10.5,
+    ypsleep4 == 5 ~ 11.5,
+    ypsleep4 == 6 ~ 12,
+    .default = NA_real_
+  )
+  (wake - bed) %% 24
+})","UKHLS waves 12-13, youth self-completion: as hlth_sleep_wd, for nights before and mornings of a non-school day (ypsleep3, ypsleep4); open wake bands at their stated bound (before 8 am 08:00, after midday 12:00). Partial: banded clock times, not hours asleep.",,
+hlth_sleep,partial,"ypsleep1, ypsleep2, ypsleep3, ypsleep4","local({
+  bed_wd <- case_when(
+    ypsleep1 == 1 ~ 21,
+    ypsleep1 == 2 ~ 21.5,
+    ypsleep1 == 3 ~ 22.5,
+    ypsleep1 == 4 ~ 23.5,
+    ypsleep1 == 5 ~ 0,
+    .default = NA_real_
+  )
+  wake_wd <- case_when(
+    ypsleep2 == 1 ~ 6,
+    ypsleep2 == 2 ~ 6.5,
+    ypsleep2 == 3 ~ 7.5,
+    ypsleep2 == 4 ~ 8.5,
+    ypsleep2 == 5 ~ 9,
+    .default = NA_real_
+  )
+  wd <- (wake_wd - bed_wd) %% 24
+  bed_we <- case_when(
+    ypsleep3 == 1 ~ 21,
+    ypsleep3 == 2 ~ 21.5,
+    ypsleep3 == 3 ~ 22.5,
+    ypsleep3 == 4 ~ 23.5,
+    ypsleep3 == 5 ~ 0,
+    .default = NA_real_
+  )
+  wake_we <- case_when(
+    ypsleep4 == 1 ~ 8,
+    ypsleep4 == 2 ~ 8.5,
+    ypsleep4 == 3 ~ 9.5,
+    ypsleep4 == 4 ~ 10.5,
+    ypsleep4 == 5 ~ 11.5,
+    ypsleep4 == 6 ~ 12,
+    .default = NA_real_
+  )
+  we <- (wake_we - bed_we) %% 24
+  (5 * wd + 2 * we) / 7
+})","UKHLS waves 12-13, youth self-completion: 5:2 weighted mean of hlth_sleep_wd and hlth_sleep_we, recomputed from the same sleep/wake bands. Partial as those rows.",,
+hlth_sleepprob,incompatible,"ypsleep5, ypsleep6",,"Only two single items, time to fall asleep and trouble getting back to sleep in the last 4 weeks (ypsleep5, ypsleep6; UKHLS waves 12-13); not a scale.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
