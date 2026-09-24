@@ -48,6 +48,7 @@ The numeric prefix preserves chronological ordering.
 | DR-0001 | [Experimental designs](DR-0001-experimental-designs.md) | Accepted | 2026-03-16 |
 | DR-0002 | [Screen-time summation](DR-0002-screen-time-summation.md) | Proposed | 2026-03-19 |
 | DR-0003 | [One harmonised row per participant, wave and screen-time measure](DR-0003-multiple-screen-time-measures.md) | Accepted | 2026-09-17 |
+| DR-0004 | [Total screen time comes only from a dedicated item](DR-0004-total-screen-time.md) | Accepted | 2026-09-24 |
 
 When adding a new decision:
 

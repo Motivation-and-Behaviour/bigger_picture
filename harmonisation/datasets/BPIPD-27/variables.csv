@@ -10,6 +10,9 @@ data_year,compatible,"BHINTY00, CHINTY00, DHINTY00, EINTY0000, FHINTY00, GHINTY0
   as.numeric(GHINTY00)
 )","Household interview year, from the household grid. Fieldwork spans two calendar years (three at sweep 2), so the recorded year is used.",,
 rct_arm,unavailable,,,Observational birth cohort with no randomised allocation,,
+survey_weight,in_progress,,,,,
+survey_strata,in_progress,,,,,
+survey_cluster,in_progress,,,,,
 age_years,compatible,"BHCAGE00, CHCAGE00, DCMCS4AGE, EMCS5AGE, FCMCS6AG, GCMCS7AG","coalesce(
   as.numeric(BHCAGE00) / 365.25,
   as.numeric(CHCAGE00) / 365.25,
@@ -86,6 +89,7 @@ immigrant_background,partial,"respondent_born_uk, respondent_born_uk_PARTNER","l
     .default = ""Unknown""
   )
 })","'Were you born in the UK?' for main and partner respondents (all at sweep 2, new respondents at sweeps 3-6). Native if either was, else Second-generation. Partial: cohort member's birthplace not released (assumed UK); respondents may be carers, not parents; one known respondent decides alone.",,
+born_in_country,in_progress,,,,,
 ses_area,compatible,"BIMDSCOE, BIWIMDSC, BISIMDSC, BIMDSCON, CIMDSCOE, CIWIMDSC, CISIMDSC, CIMDSCON, DIMDSCOE, DIWIMDSC, DISIMDSC, DIMDSCON, EIMDSCOE, EIWIMDSC, EISIMDSC, EIMDSCON, FIMDSCOE, FIWIMDSC, FISIMDSC, FIMDSCON","recode_values(
   coalesce(
     as.numeric(BIMDSCOE),
@@ -305,6 +309,10 @@ family_structure,compatible,"BDHTYP00, CDHTYP00, DDHTYP00, EHTYP00, FDHTYP00, GD
   c(10, 11, 12, 13, 14, 19, 20, 21, 22, 24, 26) ~ ""Other"",
   default = ""Unknown""
 )","MCS family type (26 parent-figure combinations). Two natural/adoptive parents -> Two biological/adoptive parents; natural/adoptive parent plus step-parent or other partner -> Step family; lone natural/adoptive parent -> Single parent; grandparent, foster, step-parent-only or other-carer households -> Other. Code 23 (unknown parent types) -> Unknown.",,
+fam_screenrules,in_progress,,,,,
+fam_bedroomscreen,in_progress,,,,,
+fam_parentstress,in_progress,,,,,
+fam_parentstress_measure,in_progress,,,,,
 school_grade,partial,"DPSTSC00, DPDIFY00, EPSTSC00, EPDIFY00, FPSTSC00, FPDIFY00, GCDIFY00","case_when(
   as.numeric(DPSTSC00) == 1 ~ ""Year 2/Primary 3"",
   as.numeric(DPSTSC00) == 2 ~ recode_values(
@@ -424,6 +432,9 @@ acc_academachment_lettergrades,unavailable,,,MCS collects no pupil-reported or s
 acc_academachment_stdtest,unavailable,,,MCS collects no pupil-reported or school-record attainment grades in this release,,
 acc_schoolengage_caresschool,unavailable,,,"Nearest items (tries their best, finds school interesting) use frequency scales that do not match Always/Usually/Sometimes/Never.",,
 acc_schoolengage_homework,unavailable,,,Not asked; MCS records only whether someone helps with homework and how often,,
+acc_schoolpressure_self,in_progress,,,,,
+acc_schoolbelonging_self,in_progress,,,,,
+acc_schoolbelonging_measure,in_progress,,,,,
 acc_academachment_numgrades,unavailable,,,MCS collects no pupil-reported or school-record attainment grades in this release,,
 acc_academachment_teacherrated,partial,"DQ2162, DQ2164, DQ2166, DQ2167, EQ2A, EQ2C, EQ2D","recode_values(
   local({
@@ -451,6 +462,7 @@ acc_literacy_stdtest,compatible,DCWRSD00,as.numeric(DCWRSD00),"Sweep 4 only (age
 beh_hyper_basc2,unavailable,,,Instrument not administered,,
 beh_atten_basc2,unavailable,,,Instrument not administered,,
 beh_atten_self,unavailable,,,MCS measures attention only via the SDQ hyperactivity/inattention subscales; see beh_hyper_sdq_*.,,
+beh_atten_measure,in_progress,,,,,
 beh_selfreg_htks,unavailable,,,Instrument not administered,,
 beh_bullied,partial,"BPSDFB00, CPSDFB00, DPSDFB00, EPSDFB00, FPSDFB00, GPSDFB00","recode_values(
   coalesce(
@@ -493,6 +505,9 @@ beh_vandalism,partial,"ECQ27X00, FCSPRY00, GCSPRY00, ECQ28X00, FCDAMG00, GCDAMG0
   damage <- coalesce(as.numeric(ECQ28X00), as.numeric(FCDAMG00), as.numeric(GCDAMG00))
   case_when(graffiti == 1 | damage == 1 ~ ""TRUE"", graffiti == 2 & damage == 2 ~ ""FALSE"", .default = NA_character_)
 })","Written or spray painted on a building, fence or train, or deliberately damaged something in a public place, yes/no; TRUE if either. Partial for the lifetime recall at sweep 5; sweeps 6-7 ask about the last 12 months.",,
+beh_alcohol_self,in_progress,,,,,
+beh_tobacco_self,in_progress,,,,,
+beh_cannabis_self,in_progress,,,,,
 beh_conduct_sdq_parent,compatible,"BCONDUCT, CCONDUCT, DDCONDUCT, ECONDUCT, FCONDUCT, GCONDUCT","coalesce(
   as.numeric(BCONDUCT),
   as.numeric(CCONDUCT),
@@ -530,6 +545,7 @@ beh_aggverb_bpaq_self,unavailable,,,As beh_aggphys_bpaq_self.,,
 beh_agganger_bpaq_self,unavailable,,,As beh_aggphys_bpaq_self.,,
 beh_agghostility_bpaq_self,unavailable,,,As beh_aggphys_bpaq_self.,,
 beh_agg_self,unavailable,,,As beh_aggphys_bpaq_self.,,
+beh_agg_measure,in_progress,,,,,
 beh_argues,unavailable,,,Not asked; nearest SDQ items use a not true/somewhat true/certainly true scale that does not match this row's levels.,,
 beh_persistence_finishwork,unavailable,,,As beh_argues.,,
 beh_emotreg_stayscalm,unavailable,,,As beh_argues.,,
@@ -554,6 +570,8 @@ beh_ext_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_cbcl_measure,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,Not collected.,,
+beh_problematicuse_self,in_progress,,,,,
+beh_problematicuse_measure,in_progress,,,,,
 cog_execfunc_basc2,unavailable,,,"MCS uses BAS II and the Bracken School Readiness Assessment, not this battery.",,
 cog_langexec_nepsy,unavailable,,,As cog_execfunc_basc2.,,
 cog_phono_nepsy,unavailable,,,As cog_execfunc_basc2.,,
@@ -689,8 +707,11 @@ mh_nobodycares_self,incompatible,,,"Only the SMFQ item 'I thought nobody really 
 mh_lifenotworth_self,unavailable,,,Not collected.,,
 mh_suicide_ideation_self,unavailable,,,Not collected; only self-harm (sweeps 6-7) and attempt (sweep 7) items.,,
 mh_suicide_attempt_self,partial,GCSUIC00,"recode_values(as.numeric(GCSUIC00), 1 ~ ""Yes"", 2 ~ ""No"")",Sweep 7: 'Have you ever hurt yourself on purpose in an attempt to end your life?' Partial: lifetime recall.,,
+mh_selfharm_self,in_progress,,,,,
 mh_psychsom_hbscscl_self,unavailable,,,Not collected.,,
 mh_psychsom_measure,unavailable,,,Not collected.,,
+mh_somatic_self,in_progress,,,,,
+mh_somatic_measure,in_progress,,,,,
 wb_emotsc_basc2,unavailable,,,Instrument not administered,,
 wb_mwb_wemwbs,incompatible,,,Sweep 7 has only the 7-item SWEMWBS (see wb_mwb_swemwbs_self); its 7-35 metric score is not the 14-item WEMWBS or its 14-70 sum.,,
 wb_lifesatisfaction_cantrilladder,unavailable,,,"MCS asks life satisfaction on a seven-point completely-happy to not-at-all-happy scale, not the 0-10 Cantril ladder; that item is mapped to wb_lifesat_singleitem_self",,
@@ -703,6 +724,7 @@ wb_bodyimage,unavailable,,,No too-thin/too-fat item; MCS asks how happy the chil
 wb_lifesat_slss_self,unavailable,,,Instrument not administered,,
 wb_lifesat_swls_self,unavailable,,,Instrument not administered,,
 wb_lifesat_singleitem_self,compatible,"ECQ10F00, FCLIFE00","8 - coalesce(as.numeric(ECQ10F00), as.numeric(FCLIFE00))","Sweeps 5-6 (ages 11, 14), self-completed: 'How happy are you with your life as a whole?', 7-point faces scale (1 completely happy to 7 not at all happy). Reversed so higher = more satisfied (1-7). Sweep 7 replaced the item with the SWEMWBS.",,
+wb_happiness_singleitem_self,in_progress,,,,,
 wb_domainsat_schoolwork_self,compatible,"ECQ10A00, FCSCWK00","8 - coalesce(as.numeric(ECQ10A00), as.numeric(FCSCWK00))","Sweeps 5-6: 'How do you feel about your school work?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
 wb_domainsat_appearance_self,compatible,"ECQ10B00, FCWYLK00","8 - coalesce(as.numeric(ECQ10B00), as.numeric(FCWYLK00))","Sweeps 5-6: 'How do you feel about the way you look?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
 wb_domainsat_family_self,compatible,"ECQ10C00, FCFMLY00","8 - coalesce(as.numeric(ECQ10C00), as.numeric(FCFMLY00))","Sweeps 5-6: 'How do you feel about your family?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
@@ -744,10 +766,19 @@ wb_selfratedhealth_self,compatible,"FCCGHE00, GCCGHE00","recode_values(
   4 ~ ""Fair"",
   5 ~ ""Poor""
 )","Sweeps 6-7: 'How would you describe your health generally?', excellent to poor.",,
+wb_generalhealth_parent,in_progress,,,,,
 wb_posaffect_self,incompatible,,,Only single 'happy' and 'laugh' frequency items (sweeps 4-5); no positive-affect scale.,,
 wb_posaffect_measure,unavailable,,,No positive-affect scale.,,
 wb_eudaimonic_self,unavailable,,,Not collected.,,
 wb_eudaimonic_measure,unavailable,,,Not collected.,,
+wb_socsupport_family_self,in_progress,,,,,
+wb_socsupport_friends_self,in_progress,,,,,
+wb_socsupport_measure,in_progress,,,,,
+hlth_sleep_wd,in_progress,,,,,
+hlth_sleep_we,in_progress,,,,,
+hlth_sleep,in_progress,,,,,
+hlth_sleepprob,in_progress,,,,,
+hlth_sleepprob_measure,in_progress,,,,,
 st_measure_type,inferred,,"""Continuous""","Time-use diary: activities recorded in 10-minute slots over a full day, summed to minutes per diary day in the tidier (bp27_tud_minutes()).",,diary
 st_measure_name,inferred,,"""MCS time use diary""","Sweep-6 time-use diary (app, web or paper), one weekday and one weekend day per cohort member; harmonised activity codes from mcs6_cm_tud_harmonised.",,diary
 st_responder,inferred,,"""Self""",Completed by the cohort member.,,diary

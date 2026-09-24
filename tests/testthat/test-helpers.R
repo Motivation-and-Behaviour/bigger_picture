@@ -70,6 +70,40 @@ test_that("sum_nonmissing sums observed values and keeps all-NA as NA", {
   expect_error(sum_nonmissing(), "requires at least one input")
 })
 
+test_that("carry_within fills gaps from the earliest observed value", {
+  expect_identical(
+    carry_within(
+      c(NA, "Male", NA, "Female", NA),
+      id = c(1, 1, 1, 2, 2),
+      order = c(1, 2, 3, 2, 1)
+    ),
+    c("Male", "Male", "Male", "Female", "Female")
+  )
+  # Earliest by `order`, not by table position; observed values stay
+  expect_identical(
+    carry_within(c("A", NA, "B"), id = c(1, 1, 1), order = c(3, 1, 2)),
+    c("A", "B", "B")
+  )
+  expect_identical(carry_within(c(NA, NA), id = c(1, 2)), c(NA, NA))
+  expect_error(carry_within(1:2, id = 1), "same length")
+})
+
+test_that("modal_within gives each participant's most common value", {
+  expect_identical(
+    modal_within(
+      c("Male", "Male", "Female", "Female", "Male", NA, NA),
+      id = c(1, 1, 1, 2, 2, 3, 2)
+    ),
+    c("Male", "Male", "Male", NA, NA, NA, NA)
+  )
+  # Ties give NA
+  expect_identical(
+    modal_within(c("A", "B", "B", "A", "C"), id = c(1, 1, 1, 2, 2)),
+    c("B", "B", "B", NA, NA)
+  )
+  expect_identical(modal_within(c(1, 2, 2), id = c(1, 1, 1)), c(2, 2, 2))
+})
+
 test_that("list_harmonisation_var_files includes the dataset template", {
   dataset_specs_dir <- withr::local_tempdir()
   template_dir <- withr::local_tempdir()
