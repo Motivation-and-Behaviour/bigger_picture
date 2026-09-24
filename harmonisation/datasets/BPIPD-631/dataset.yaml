@@ -4,8 +4,8 @@ status: "in_progress"
 
 resources:
   # Youth self-completion questionnaires, read whole: the child's own report,
-  # including the screen-use items. BHPS waves 4-18 (ages 11-15) and UKHLS
-  # waves 1-15 (ages 10-15).
+  # incl. screen-use items. BHPS waves 4-18 (ages 11-15), UKHLS waves 1-15
+  # (ages 10-15).
   - name: "bhps_youth"
     role: "data"
     glob: "stata/stata14_se/bhps/b?_youth.dta"
@@ -15,12 +15,12 @@ resources:
     glob: "stata/stata14_se/ukhls/?_youth.dta"
     reader: "stata"
 
-  # Context files, joined to the youth files in the tidier. These are very
-  # wide (up to ~3,100 columns), so only join keys and context items are read;
-  # the data dictionaries below list everything else they hold.
+  # Context files, joined to the youth files in the tidier. Very wide (up to
+  # ~3,100 columns), so only join keys and context items are read; the data
+  # dictionaries below list the rest.
   #
-  # BHPS youth files carry no age; `age` here is the youth's age at interview,
-  # joined on pidp.
+  # BHPS youth files carry no age; `age` here is age at interview, joined on
+  # pidp.
   - name: "bhps_indall"
     role: "data"
     glob: "stata/stata14_se/bhps/b{d,e,f,g,h,i,j,k,l,m,n,o,p,q,r}_indall.dta"
@@ -30,8 +30,8 @@ resources:
       - "b[d-r]_hidp"
       - "b[d-r]_pno"
       - "b[d-r]_age"
-  # Adult interviews: parents' education and occupation, joined on
-  # hidp + the youth's mnspno/fnspno.
+  # Adult interviews: parents' education and occupation, joined on hidp +
+  # the youth's mnspno/fnspno.
   - name: "bhps_indresp"
     role: "data"
     glob: "stata/stata14_se/bhps/b{d,e,f,g,h,i,j,k,l,m,n,o,p,q,r}_indresp.dta"
@@ -58,11 +58,10 @@ resources:
       - "[a-o]_hiqual_dv"
       - "[a-o]_jbstat"
       - "[a-o]_jbnssec8_dv"
-  # Household questionnaires: household income and composition, joined on hidp.
-  # fihhmngrs_dv (gross monthly household income) is the income measure both
-  # surveys share. BHPS youth files carry no interview date or region, so the
-  # BHPS household's interview year and month (intdatey/intdatem) and
-  # Government Office Region (gor_dv) come from here.
+  # Household questionnaires: income and composition, joined on hidp.
+  # fihhmngrs_dv is the income measure both surveys share. BHPS youth files
+  # carry no interview date or region; those come from here instead
+  # (intdatey/intdatem, gor_dv).
   - name: "bhps_hhresp"
     role: "data"
     glob: "stata/stata14_se/bhps/b{d,e,f,g,h,i,j,k,l,m,n,o,p,q,r}_hhresp.dta"
@@ -88,9 +87,9 @@ resources:
       - "[a-o]_tenure_dv"
       - "[a-o]_hhsize"
       - "[a-o]_nkids_dv"
-  # Cross-wave person file, one row per person in either survey: ethnic group
-  # (which the BHPS youth files lack) and whether born in the UK, joined on
-  # pidp to each youth and to each resident parent.
+  # Cross-wave person file, one row per person: ethnic group (BHPS youth
+  # files lack it) and UK birthplace, joined on pidp to each youth and
+  # resident parent.
   - name: "xwavedat"
     role: "data"
     glob: "stata/stata14_se/ukhls/xwavedat.dta"
@@ -103,20 +102,14 @@ resources:
   - name: "Technical and Survey Documentation"
     role: "docs"
     glob: ["mrdoc/pdf/*.pdf", "mrdoc/UKDA/UKDA_Study_6614_Information.htm", "mrdoc/read6614.htm", "mrdoc/6614_file_information.rtf"]
-  # One data dictionary per data file, for every file in the release, including
-  # the columns and files not read above.
+  # One data dictionary per data file in the release, including
+  # columns/files not read above.
   - name: "Data Dictionaries"
     role: "codebook"
     glob: "mrdoc/ukda_data_dictionaries/{bhps,ukhls}/*.rtf"
 
 notes: |
-  Understanding Society (UKHLS) study, including historical BHPS data.
-  The dataset comprises longitudinal survey data in Stata format (.dta)
-  categorized by wave and respondent type. Extensive documentation is
-  included, featuring technical reports, questionnaires, and fieldwork
-  materials provided in PDF, RTF, and HTM formats.
-  Only the youth self-completion files are read whole; the individual,
-  household, enumeration and cross-wave person files are read for join keys
-  and context variables only (see `columns`). The full release is described
-  by the per-file data dictionaries in mrdoc/ukda_data_dictionaries/.
+  Understanding Society (UKHLS), including historical BHPS data. Stata (.dta) files by wave and respondent type.
+  Only the youth self-completion files are read whole; individual, household, enumeration and cross-wave person files are read for join keys and context only (see `columns`).
+  Full release described by the per-file data dictionaries in mrdoc/ukda_data_dictionaries/.
   BPIPD-631 - UK Understanding Society

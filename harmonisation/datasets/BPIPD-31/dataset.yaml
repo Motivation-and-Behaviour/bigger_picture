@@ -54,7 +54,6 @@ resources:
     glob: "DS0001/31622-0001-User_guide-Year22_MULTI.pdf"
 
 notes: |
-  The Future of Families and Child Wellbeing Study (FFCWS) Public Use Dataset.
-  The root directory contains ICPSR catalog-level text, HTML files, and an R factor recoding script. 
-  The 'DS0001' folder contains the primary .rda dataset and extensive PDF documentation 
-  including survey wave user guides (Baseline through Year 22) and Year 22 multi-mode questionnaires.
+  FFCWS (Future of Families and Child Wellbeing Study) Public Use Dataset.
+  Root: ICPSR catalog text/HTML files and an R factor-recoding script.
+  DS0001: the primary .rda dataset plus PDF documentation (wave user guides Baseline to Year 22, Year 22 multi-mode questionnaires).

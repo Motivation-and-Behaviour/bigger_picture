@@ -8,7 +8,7 @@ data_year,compatible,"BHINTY00, CHINTY00, DHINTY00, EINTY0000, FHINTY00, GHINTY0
   as.numeric(EINTY0000),
   as.numeric(FHINTY00),
   as.numeric(GHINTY00)
-)","Year the household interview took place, recorded per cohort member in the household grid at every sweep. Fieldwork straddles two calendar years at every sweep and three at sweep 2 (2003-2005), so the recorded year is used rather than a nominal one. Missing for 224 rows where the household grid has no record",,
+)","Household interview year, from the household grid. Fieldwork spans two calendar years (three at sweep 2), so the recorded year is used.",,
 rct_arm,unavailable,,,Observational birth cohort with no randomised allocation,,
 age_years,compatible,"BHCAGE00, CHCAGE00, DCMCS4AGE, EMCS5AGE, FCMCS6AG, GCMCS7AG","coalesce(
   as.numeric(BHCAGE00) / 365.25,
@@ -17,7 +17,7 @@ age_years,compatible,"BHCAGE00, CHCAGE00, DCMCS4AGE, EMCS5AGE, FCMCS6AG, GCMCS7A
   as.numeric(EMCS5AGE),
   as.numeric(FCMCS6AG),
   as.numeric(GCMCS7AG)
-)","Cohort-member age at interview. Sweeps 2 and 3 record it in days in the household grid and are divided by 365.25; sweeps 4-7 use the cohort-member modules' age to the nearest tenth of a year, which is finer than the whole-year age the household grid carries at those sweeps. One sweep-5 case is coded 18.0, implausible for an age-11 sweep but left as recorded",,
+)","Age at interview. Sweeps 2-3: days (household grid) / 365.25. Sweeps 4-7: cohort-member modules' age to 0.1 year (finer than the grid's whole years). One sweep-5 case coded 18.0, implausible but kept.",,
 sex,compatible,"BHCSEX00, CHCSEX00, DHCSEX00, ECSEX0000, FHCSEX00, GHCSEX00","recode_values(
   coalesce(
     as.numeric(BHCSEX00),
@@ -31,7 +31,7 @@ sex,compatible,"BHCSEX00, CHCSEX00, DHCSEX00, ECSEX0000, FHCSEX00, GHCSEX00","re
   2 ~ ""Female"",
   3 ~ ""Other"",
   default = ""Unknown""
-)","Cohort-member sex as recorded in the household grid, which carries it at every sweep; the cohort-member modules carry it at only three. Sweep 7 asks the cohort member for their gender and offers a spontaneous 'other way' response, taken here as Other; the earlier sweeps record sex as male or female only",,
+)","From the household grid (all sweeps; cohort-member modules carry it at only three). Sweep 7 asks gender, with a spontaneous 'other way' response taken as Other; earlier sweeps male/female only.",,
 country,compatible,"BACTRY00, CACTRY00, DACTRY00, EACTRY00, FACTRY00, GACTRY00, G_COUNTRY","recode_values(
   coalesce(
     as.numeric(BACTRY00),
@@ -47,7 +47,7 @@ country,compatible,"BACTRY00, CACTRY00, DACTRY00, EACTRY00, FACTRY00, GACTRY00, 
   3 ~ ""Scotland"",
   4 ~ ""Northern Ireland"",
   default = ""Unknown""
-)","UK country at interview, from the administrative country variable each sweep's family-level file carries. Sweep 7 has no family-level country, so it comes from the household grid (GACTRY00) with the interviewer-recorded country of interview (G_COUNTRY) as a fallback for the rows the grid does not cover",,
+)","Family-level administrative country at each sweep. Sweep 7 has none: household grid (GACTRY00), then interviewer-recorded country (G_COUNTRY).",,
 state,unavailable,,,Not an Australian dataset,,
 ethnicity,compatible,"BDC06E00, CDC06E00, DDC06E00, FDCE0600","lookup_values(
   recode_values(
@@ -66,7 +66,7 @@ ethnicity,compatible,"BDC06E00, CDC06E00, DDC06E00, FDCE0600","lookup_values(
   lookup_ethnicity,
   dataset_id = spec$dataset_id,
   target_variable = ""ethnicity""
-)","Cohort-member ethnic group, MCS six-category census classification; the same codes are used at every sweep that carries it (2, 3, 4, 6). Ethnicity is time-invariant, so it is carried within participant_id as for sex. The six codes are relabelled inline before the shared lookup so that the lookup rows read as census categories rather than as bare codes",ethnicity,
+)","MCS six-category census classification (sweeps 2, 3, 4, 6), carried within participant_id as time-invariant. Codes relabelled inline before the shared lookup.",ethnicity,
 indigenous,unavailable,,,Not collected (UK sample),,
 minority,compatible,"BDC06E00, CDC06E00, DDC06E00, FDCE0600","recode_values(
   local({
@@ -77,7 +77,7 @@ minority,compatible,"BDC06E00, CDC06E00, DDC06E00, FDCE0600","recode_values(
   1 ~ ""Non-minority"",
   c(2, 3, 4, 5, 6) ~ ""Minority"",
   default = ""Unknown""
-)","Derived from the same carried-forward cohort-member ethnic group as ethnicity. The MCS White category includes White Irish and Other White, all treated as non-minority in the UK, matching the convention used by the other UK datasets in this project",,
+)","From the carried-forward ethnic group (see ethnicity). MCS White includes White Irish and Other White, treated as non-minority.",,
 immigrant_background,partial,"respondent_born_uk, respondent_born_uk_PARTNER","local({
   uk <- cbind(as.numeric(respondent_born_uk), as.numeric(respondent_born_uk_PARTNER))
   case_when(
@@ -85,7 +85,7 @@ immigrant_background,partial,"respondent_born_uk, respondent_born_uk_PARTNER","l
     rowSums(uk == 2, na.rm = TRUE) > 0 ~ ""Second-generation"",
     .default = ""Unknown""
   )
-})","'Were you born in the UK?' for the main and partner respondents (asked of all at sweep 2, of new respondents at sweeps 3-6), matched by person number. Native if either was, else Second-generation. Partial: the cohort member's birthplace is not released and is assumed UK-born; respondents are resident carers; a single known respondent decides alone.",,
+})","'Were you born in the UK?' for main and partner respondents (all at sweep 2, new respondents at sweeps 3-6). Native if either was, else Second-generation. Partial: cohort member's birthplace not released (assumed UK); respondents may be carers, not parents; one known respondent decides alone.",,
 ses_area,compatible,"BIMDSCOE, BIWIMDSC, BISIMDSC, BIMDSCON, CIMDSCOE, CIWIMDSC, CISIMDSC, CIMDSCON, DIMDSCOE, DIWIMDSC, DISIMDSC, DIMDSCON, EIMDSCOE, EIWIMDSC, EISIMDSC, EIMDSCON, FIMDSCOE, FIWIMDSC, FISIMDSC, FIMDSCON","recode_values(
   coalesce(
     as.numeric(BIMDSCOE),
@@ -113,7 +113,7 @@ ses_area,compatible,"BIMDSCOE, BIWIMDSC, BISIMDSC, BIMDSCON, CIMDSCOE, CIWIMDSC,
   c(5, 6) ~ ""Medium"",
   c(7, 8, 9, 10) ~ ""High"",
   default = ""Unknown""
-)","Overall Index of Multiple Deprivation decile of the child's small area, decile 1 most deprived. Each UK nation publishes its own index (IMD England, WIMD Wales, SIMD Scotland, NIMDM Northern Ireland) on its own areas, so the four are coalesced; deciles are within-nation ranks, which is how MCS analyses normally pool them. Deciles 1-4 Low, 5-6 Medium, 7-10 High, matching the schema's top-two/bottom-two quintile rule. Sweep 7 released no geographically linked data, so every sweep-7 row is Unknown",,
+)","IMD decile of the child's small area (1 most deprived); the four nations' indices (IMD, WIMD, SIMD, NIMDM) coalesced, within-nation ranks. Deciles 1-4 Low, 5-6 Medium, 7-10 High. No geographic data at sweep 7 (Unknown).",,
 ses_household,compatible,"BOECDUK0, COECDUK0, DOECDUK0, EOECDUK0, FOECDUK0","recode_values(
   coalesce(
     as.numeric(BOECDUK0),
@@ -126,8 +126,8 @@ ses_household,compatible,"BOECDUK0, COECDUK0, DOECDUK0, EOECDUK0, FOECDUK0","rec
   3 ~ ""Medium"",
   c(4, 5) ~ ""High"",
   default = ""Unknown""
-)","OECD-equivalised net household income, already banded by MCS into UK-wide weighted quintiles, so no income-band-to-quintile judgement is needed and the recode is kept inline rather than in the shared ses_household lookup. Quintiles 1-2 Low, 3 Medium, 4-5 High. Sweep 7 released no income quintiles, so every sweep-7 row is Unknown",,
-ses_household_measure,compatible,.wave,"if_else(.wave == ""sweep_7"", ""Unknown"", ""OECD equivalised net household income, UK-wide weighted quintiles"")",Names the measure behind ses_household; sweep 7 released no income variables,,
+)","OECD-equivalised net household income, released as UK-wide weighted quintiles. Quintiles 1-2 Low, 3 Medium, 4-5 High. No income quintiles at sweep 7 (Unknown).",,
+ses_household_measure,compatible,.wave,"if_else(.wave == ""sweep_7"", ""Unknown"", ""OECD equivalised net household income, UK-wide weighted quintiles"")",Names the measure behind ses_household; sweep 7 has none.,,
 ses_hukou,unavailable,,,Not a Chinese study.,,
 maternal_education,partial,"BDDNVQ00, CDDNVQ00, DDDNVQ00, EDNVQ00, FDNVQ00 , BDDNVQ00_PARTNER, CDDNVQ00_PARTNER, DDDNVQ00_PARTNER, EDNVQ00_PARTNER, FDNVQ00_PARTNER , BDDREL00, CDDREL00, DDDREL00, EDREL00, FDREL00, BDDREL00_PARTNER, CDDREL00_PARTNER, DDDREL00_PARTNER, EDREL00_PARTNER, FDREL00_PARTNER, respondent_sex, respondent_sex_PARTNER, .wave","recode_values(
   local({
@@ -176,7 +176,7 @@ maternal_education,partial,"BDDNVQ00, CDDNVQ00, DDDNVQ00, EDNVQ00, FDNVQ00 , BDD
   3 ~ ""Post-secondary"",
   c(4, 5) ~ ""Bachelor degree or higher"",
   default = ""Unknown""
-)","Highest qualification of the resident mother figure: a female respondent who is the child's natural, adoptive, foster or step parent, taking the main respondent before the partner. MCS records the highest NVQ level held across all sweeps to date, so the value is cumulative and non-decreasing. NVQ 1-2 and 'none of these' map to secondary school or less, NVQ 3 (A level or equivalent) to post-secondary, and NVQ 4-5 (first degree and above) to bachelor degree or higher. 'Overseas qualification only' (code 95) cannot be placed on the NVQ ladder and becomes Unknown. Which respondent is the mother and which the father is settled by respondent_sex, the household roster's record of each responding parent's sex, which the tidier joins onto the parent file on person number. The relationship-to-child code alone cannot do it: sweeps 2-4 name the sex in the code (natural mother, natural father) but sweeps 5-7 switch to a sex-neutral set (natural parent, step-parent) that carries none. The relationship code still decides whether the respondent is a parent figure at all, which keeps resident grandparents and other carers out; because the two code sets reuse the same numbers for different relationships, the sweep selects which set to read. Where sweeps 2-4 do name a sex, the roster agrees with it on all but 3 of 75,440 respondents. MCS7 released no parental education variables at all, so sweep-7 rows carry the value from the latest earlier sweep that recorded one; sweeps 2-6 keep what they measured. Because the NVQ measure is cumulative and non-decreasing, a carried value is a floor on education at age 17 rather than an estimate of it, which is why this row is partial rather than compatible.",,
+)","Highest NVQ level (cumulative across sweeps) of the resident mother figure: female natural, adoptive, foster or step parent, main respondent before partner. NVQ 1-2 or none -> Secondary school or less; 3 (A level) -> Post-secondary; 4-5 (degree and above) -> Bachelor degree or higher; overseas only (95) -> Unknown. Sex from the household roster (relationship codes are sex-neutral from sweep 5); the relationship code, read per sweep's code set, excludes grandparents and other carers. None at sweep 7: last earlier value carried forward, a floor, hence partial.",,
 paternal_education,partial,"BDDNVQ00, CDDNVQ00, DDDNVQ00, EDNVQ00, FDNVQ00 , BDDNVQ00_PARTNER, CDDNVQ00_PARTNER, DDDNVQ00_PARTNER, EDNVQ00_PARTNER, FDNVQ00_PARTNER , BDDREL00, CDDREL00, DDDREL00, EDREL00, FDREL00, BDDREL00_PARTNER, CDDREL00_PARTNER, DDDREL00_PARTNER, EDREL00_PARTNER, FDREL00_PARTNER, respondent_sex, respondent_sex_PARTNER, .wave","recode_values(
   local({
     nvq <- coalesce(
@@ -224,7 +224,7 @@ paternal_education,partial,"BDDNVQ00, CDDNVQ00, DDDNVQ00, EDNVQ00, FDNVQ00 , BDD
   3 ~ ""Post-secondary"",
   c(4, 5) ~ ""Bachelor degree or higher"",
   default = ""Unknown""
-)","Highest qualification of the resident father figure: a male respondent who is the child's natural, adoptive, foster or step parent, taking the main respondent before the partner. The schema defines this row as the father or second parent/carer. MCS records the highest NVQ level held across all sweeps to date, so the value is cumulative and non-decreasing. NVQ 1-2 and 'none of these' map to secondary school or less, NVQ 3 (A level or equivalent) to post-secondary, and NVQ 4-5 (first degree and above) to bachelor degree or higher. 'Overseas qualification only' (code 95) cannot be placed on the NVQ ladder and becomes Unknown. Which respondent is the mother and which the father is settled by respondent_sex, the household roster's record of each responding parent's sex, which the tidier joins onto the parent file on person number. The relationship-to-child code alone cannot do it: sweeps 2-4 name the sex in the code (natural mother, natural father) but sweeps 5-7 switch to a sex-neutral set (natural parent, step-parent) that carries none. The relationship code still decides whether the respondent is a parent figure at all, which keeps resident grandparents and other carers out; because the two code sets reuse the same numbers for different relationships, the sweep selects which set to read. Where sweeps 2-4 do name a sex, the roster agrees with it on all but 3 of 75,440 respondents. MCS7 released no parental education variables at all, so sweep-7 rows carry the value from the latest earlier sweep that recorded one; sweeps 2-6 keep what they measured. Because the NVQ measure is cumulative and non-decreasing, a carried value is a floor on education at age 17 rather than an estimate of it, which is why this row is partial rather than compatible.",,
+)","As maternal_education, for the resident father figure (male respondent).",,
 parental_education,partial,"BDDNVQ00, CDDNVQ00, DDDNVQ00, EDNVQ00, FDNVQ00 , BDDNVQ00_PARTNER, CDDNVQ00_PARTNER, DDDNVQ00_PARTNER, EDNVQ00_PARTNER, FDNVQ00_PARTNER , .wave","recode_values(
   local({
     nvq <- coalesce(
@@ -251,7 +251,7 @@ parental_education,partial,"BDDNVQ00, CDDNVQ00, DDDNVQ00, EDNVQ00, FDNVQ00 , BDD
   3 ~ ""Post-secondary"",
   c(4, 5) ~ ""Bachelor degree or higher"",
   default = ""Unknown""
-)","Higher NVQ level across the main respondent and the partner at the same sweep, whoever they are. Unlike maternal_education and paternal_education this row needs neither the respondent's sex nor their relationship to the child, so it is also populated for households whose responding carers are grandparents or other relatives rather than parent figures. MCS records the highest NVQ level held across all sweeps to date, so the value is cumulative and non-decreasing. NVQ 1-2 and 'none of these' map to secondary school or less, NVQ 3 (A level or equivalent) to post-secondary, and NVQ 4-5 (first degree and above) to bachelor degree or higher. 'Overseas qualification only' (code 95) cannot be placed on the NVQ ladder and becomes Unknown. MCS7 released no parental education variables at all, so sweep-7 rows carry the value from the latest earlier sweep that recorded one; sweeps 2-6 keep what they measured. Because the NVQ measure is cumulative and non-decreasing, a carried value is a floor on education at age 17 rather than an estimate of it, which is why this row is partial rather than compatible.",,
+)","Higher NVQ level of main respondent and partner at the same sweep, with no sex or relationship filter, so grandparents and other carers count. Coding and sweep-7 carry-forward as maternal_education, hence partial.",,
 urbanicity,partial,"bmorpcde, cmorpcde, dmorpcde, EMORPCDE, FIERURUR, FIWRURUR, BISRURUR, CISRURUR, DISRURUR, EISRURUR, FISRURUR, BINRURUR, CINRURUR, DINRURUR, EINRURUR, FINRURUR","coalesce(
   recode_values(
     coalesce(as.numeric(bmorpcde), as.numeric(cmorpcde), as.numeric(dmorpcde), as.numeric(EMORPCDE)),
@@ -289,7 +289,7 @@ urbanicity,partial,"bmorpcde, cmorpcde, dmorpcde, EMORPCDE, FIERURUR, FIWRURUR, 
     1 ~ ""Rural""
   ),
   ""Unknown""
-)","Each UK nation classifies rurality on its own scale, so the four are recoded separately and then coalesced. England and Wales use the ONS 2005 rural-urban morphology at sweeps 2-5 (settlement over 10k Urban, town and fringe Suburban, village/hamlet/isolated Rural) and its six-fold combined code at sweep 6, where the sparse and less-sparse variants of each settlement type collapse together. Scotland's six-fold classification maps large and other urban to Urban, accessible and remote small towns to Suburban, and accessible and remote rural to Rural. Northern Ireland records only a rural/urban binary, so no NI row can be Suburban - partial for that reason. Sweep 7 released no geographically linked data, so every sweep-7 row is Unknown",,
+)","Each nation's own rurality scale, recoded then coalesced. England/Wales: ONS 2005 morphology at sweeps 2-5 (settlement >10k Urban, town/fringe Suburban, village/hamlet/isolated Rural); six-fold combined code at sweep 6, sparse and less-sparse merged. Scotland six-fold: large/other urban Urban, accessible/remote small towns Suburban, accessible/remote rural Rural. Northern Ireland: urban/rural binary only, so never Suburban, hence partial. No geographic data at sweep 7 (Unknown).",,
 family_structure,compatible,"BDHTYP00, CDHTYP00, DDHTYP00, EHTYP00, FDHTYP00, GDHTYP00","recode_values(
   coalesce(
     as.numeric(BDHTYP00),
@@ -304,7 +304,7 @@ family_structure,compatible,"BDHTYP00, CDHTYP00, DDHTYP00, EHTYP00, FDHTYP00, GD
   c(15, 16, 17, 18) ~ ""Single parent"",
   c(10, 11, 12, 13, 14, 19, 20, 21, 22, 24, 26) ~ ""Other"",
   default = ""Unknown""
-)","MCS classifies the resident parent figures into up to 26 combinations. Both natural parents, natural plus adoptive parent, and two adoptive parents count as two biological/adoptive parents; a natural or adoptive parent living with a step-parent or with another parent/carer counts as a step family, following the schema's definition of at least one biological/adoptive parent plus a step-parent or partner; a lone natural or adoptive parent counts as single parent; grandparent, foster, step-parent-only and other-carer households have no resident biological or adoptive parent and count as Other. Code 23 (unknown parent types) falls to Unknown",,
+)","MCS family type (26 parent-figure combinations). Two natural/adoptive parents -> Two biological/adoptive parents; natural/adoptive parent plus step-parent or other partner -> Step family; lone natural/adoptive parent -> Single parent; grandparent, foster, step-parent-only or other-carer households -> Other. Code 23 (unknown parent types) -> Unknown.",,
 school_grade,partial,"DPSTSC00, DPDIFY00, EPSTSC00, EPDIFY00, FPSTSC00, FPDIFY00, GCDIFY00","case_when(
   as.numeric(DPSTSC00) == 1 ~ ""Year 2/Primary 3"",
   as.numeric(DPSTSC00) == 2 ~ recode_values(
@@ -334,31 +334,31 @@ school_grade,partial,"DPSTSC00, DPDIFY00, EPSTSC00, EPDIFY00, FPSTSC00, FPDIFY00
     3 ~ ""Year 13/Year 14 (Scotland, NI)"",
     4 ~ ""Other year""
   )
-)","MCS asks the parent to confirm the modal school year for the sweep and only asks which year otherwise, so the label is reconstructed from the confirmation plus the follow-up. Source labels are kept as MCS writes them, which pair the England/Wales year with the Scottish or Northern Irish equivalent. Sweeps 2 and 3 predate the question. Sweep 7 asks the cohort member directly. Children not attending school (code 3 on the confirmation) stay missing",,
-st_measure_type,compatible,,"""Categorical""","Every MCS screen-time item at every sweep is a banded hours question, never an open numeric response",,
+)","Parent confirms the sweep's modal school year, else gives the year; label built from both, kept as MCS writes it (England/Wales year with Scottish/NI equivalent). Sweeps 2-3 predate the item; sweep 7 asks the cohort member. Not attending school (code 3) stays missing.",,
+st_measure_type,compatible,,"""Categorical""",All MCS screen-time items are banded hours.,,
 st_measure_name,compatible,,"""Custom""","Bespoke MCS items, not drawn from a named instrument",,
 st_responder,compatible,.wave,"case_match(
   .wave,
   c(""sweep_2"", ""sweep_3"", ""sweep_4"", ""sweep_5"") ~ ""Parent or carer"",
   c(""sweep_6"", ""sweep_7"") ~ ""Self"",
   .default = ""Unknown""
-)","Screen use is reported by the main respondent about the child at ages 3, 5, 7 and 11, and by the cohort member about themselves at ages 14 and 17",,
-st_total_wd,incompatible,,,"Left unmapped under DR-0002, which rules that broad categories such as television and video games are not to be summed. MCS makes the case plainly: it tells respondents to count device-based watching inside the watching item and, at sweep 6, to count social networking inside the internet item, so summing all four sweep-6 items gives a mean of 12.2 hours per weekday and puts 5.8% of 14-year-olds above 24 hours. Even the disjoint sweep-7 trio (watching, gaming, social media) puts 5.8% above 24 hours, because each item has an open-ended top band that respondents can max out independently",,
+)","Main respondent about the child at ages 3, 5, 7, 11; cohort member at 14, 17.",,
+st_total_wd,incompatible,,,"Unmapped per DR-0002 (no summing categories). MCS tells respondents to include device-based watching in the watching item and, at sweep 6, social networking in the internet item, so sums double-count; even the disjoint sweep-7 items put 5.8% above 24 h (open top bands).",,
 st_total_we,unavailable,,,,,
-st_total,incompatible,,,"Same DR-0002 rule as st_total_wd. A total would also mean a different thing at every sweep: television alone at sweep 2, television plus a combined computer-and-gaming item at sweeps 3-4, television plus gaming at sweep 5 with no online items at all, and only from sweep 6 anything covering social media",,
+st_total,incompatible,,,"Same DR-0002 rule as st_total_wd. A total would also differ by sweep: TV only (sweep 2), TV plus combined computer/gaming (3-4), TV plus gaming (5), social media only from sweep 6.",,
 st_watch_wd,compatible,"CPTVHO00, DPTVHO00, EPTVHO00, FCTVHO00, GCTVHO00","coalesce(
   recode_values(coalesce(as.numeric(CPTVHO00), as.numeric(DPTVHO00)), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 8),
   recode_values(as.numeric(EPTVHO00), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 4, 6 ~ 6, 7 ~ 8),
   recode_values(as.numeric(FCTVHO00), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 4, 7 ~ 6, 8 ~ 8),
   recode_values(as.numeric(GCTVHO00), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 4, 7 ~ 6, 8 ~ 8.5, 9 ~ 11)
-)","Hours on a normal term-time weekday spent watching television programmes or films, including on a computer or mobile device. Sweeps 3 and 4 share one six-band set, sweep 5 uses seven bands, sweep 6 eight and sweep 7 nine. Bands are converted to the midpoint of their range; the open-ended top band takes a value just above its floor (8 hours where the band is '7 hours or more', 11 where it is '10 hours or more'). Negative MCS missing codes and the sweep-7 don't-know/refused codes are left unmatched and become NA.",,
+)","TV/film hours on a normal term-time weekday, including on computer or mobile. Six bands at sweeps 3-4, seven at 5, eight at 6, nine at 7. Band midpoints; open top band at floor + 1 (8 h for '7 hours or more', 11 h for '10 hours or more'). Negative, don't-know and refused codes -> NA.",,
 st_watch_we,unavailable,,,,,
-st_watch,partial,BPTVHO00,"recode_values(as.numeric(BPTVHO00), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4)","Sweep 2 only. The question asks 'How many hours a day' the three-year-old watches television, videos or DVDs, with no weekday/weekend split, so it maps to the usual-day row rather than to st_watch_wd. Partial because the four bands are much coarser than the later sweeps' and the top band ('more than 3 hours') is open-ended with no upper anchor. Bands are converted to the midpoint of their range; the open-ended top band takes a value just above its floor (8 hours where the band is '7 hours or more', 11 where it is '10 hours or more'). Negative MCS missing codes and the sweep-7 don't-know/refused codes are left unmatched and become NA.",,
+st_watch,partial,BPTVHO00,"recode_values(as.numeric(BPTVHO00), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4)","Sweep 2 only: 'How many hours a day' the child watches TV, videos or DVDs; no weekday/weekend split. Partial: four coarse bands, open top band ('more than 3 hours'). Band midpoints; top band at floor + 1 (4 h).",,
 st_game_wd,compatible,"EPCOMP00, FCCOMH00, GCCOMH00","coalesce(
   recode_values(as.numeric(EPCOMP00), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 4, 6 ~ 6, 7 ~ 8),
   recode_values(as.numeric(FCCOMH00), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 4, 7 ~ 6, 8 ~ 8),
   recode_values(as.numeric(GCCOMH00), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 4, 7 ~ 6, 8 ~ 8.5, 9 ~ 11)
-)","Hours on a normal term-time weekday playing electronic games. Sweeps 5 and 6 ask about games on a computer or games console (Wii, DS, Xbox, PlayStation); sweep 7 widens the device list to tablets and smartphones and names online games, so sweep 7 captures a little more than the earlier two. The MCS variable labels are misleading here: EPCOMP00 is labelled 'on computer or games' but the question asks only about electronic games. Sweeps 3 and 4 asked a combined computer-use and gaming question, which is mapped to st_comp_wd instead. Bands are converted to the midpoint of their range; the open-ended top band takes a value just above its floor (8 hours where the band is '7 hours or more', 11 where it is '10 hours or more'). Negative MCS missing codes and the sweep-7 don't-know/refused codes are left unmatched and become NA.",,
+)","Electronic-gaming hours on a normal term-time weekday: computer/console at sweeps 5-6 (Wii, DS, Xbox, PlayStation); sweep 7 adds tablets, smartphones and online games. EPCOMP00's label ('on computer or games') is misleading; the item is gaming only. Sweeps 3-4 combined item: see st_comp_wd. Bands as st_watch_wd.",,
 st_game_we,unavailable,,,,,
 st_game,unavailable,,,,,
 st_game_comp_wd,unavailable,,,,,
@@ -382,7 +382,7 @@ st_game_tablet,unavailable,,,,,
 st_comp_nongaming_wd,unavailable,,,,,
 st_comp_nongaming_we,unavailable,,,,,
 st_comp_nongaming,unavailable,,,,,
-st_comp_wd,partial,"CPCOMP00, DPCOMP00","recode_values(coalesce(as.numeric(CPCOMP00), as.numeric(DPCOMP00)), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 8)","Sweeps 3 and 4 only, which ask the same question: 'On a normal weekday during term time, how many hours does [the child] spend using a computer or playing electronic games outside school lessons?'. That mixes non-gaming computer use with gaming on any device and matches neither st_comp_wd nor st_game_wd exactly. Mapped here because computer use is the named activity, and marked partial for the gaming overlap; it must not be pooled with st_game_wd, which covers the gaming-only items at sweeps 5-7. Bands are converted to the midpoint of their range; the open-ended top band takes a value just above its floor (8 hours where the band is '7 hours or more', 11 where it is '10 hours or more'). Negative MCS missing codes and the sweep-7 don't-know/refused codes are left unmatched and become NA.",,
+st_comp_wd,partial,"CPCOMP00, DPCOMP00","recode_values(coalesce(as.numeric(CPCOMP00), as.numeric(DPCOMP00)), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 8)","Sweeps 3-4: hours 'using a computer or playing electronic games outside school lessons' on a normal term-time weekday. Mapped here as computer use is the named activity; partial for the gaming overlap. Do not pool with st_game_wd (gaming only, sweeps 5-7). Bands as st_watch_wd.",,
 st_comp_we,unavailable,,,,,
 st_comp,unavailable,,,,,
 st_tablet_wd,unavailable,,,,,
@@ -394,7 +394,7 @@ st_phone,unavailable,,,,,
 st_socmedia_wd,compatible,"FCSOME00, GCSOME00","coalesce(
   recode_values(as.numeric(FCSOME00), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 4, 7 ~ 6, 8 ~ 8),
   recode_values(as.numeric(GCSOME00), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 4, 7 ~ 6, 8 ~ 8.5, 9 ~ 11)
-)","Hours on a normal term-time weekday on social networking or messaging sites and apps. FCSOME00's MCS label says 'Hours per week', which is wrong: the sweep-6 young person questionnaire asks 'On a normal week day during term time, how many hours do you spend on social networking or messaging sites or Apps on the internet such as Facebook, Twitter and WhatsApp?', and its bands are identical to the other per-weekday items in the same block. Bands are converted to the midpoint of their range; the open-ended top band takes a value just above its floor (8 hours where the band is '7 hours or more', 11 where it is '10 hours or more'). Negative MCS missing codes and the sweep-7 don't-know/refused codes are left unmatched and become NA.",,
+)","Social networking/messaging hours on a normal term-time weekday (sweeps 6-7). FCSOME00's label ('Hours per week') is wrong; the item asks about a normal weekday, with the same bands as the other weekday items. Bands as st_watch_wd.",,
 st_socmedia_we,unavailable,,,,,
 st_socmedia,unavailable,,,,,
 st_educational_wd,unavailable,,,,,
@@ -403,7 +403,7 @@ st_educational,unavailable,,,,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
-st_internet_wd,compatible,FCINTH00,"recode_values(as.numeric(FCINTH00), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 4, 7 ~ 6, 8 ~ 8)","Sweep 6 only. FCINTH00's MCS label says 'Does CM ever use the internet at home', which is wrong: the values are the eight-band hours set and the sweep-6 young person questionnaire asks 'On a normal week day during term time, how many hours do you spend using the internet?', including on tablets and smartphones and including homework time. Overlaps st_socmedia_wd by design, so per DR-0002 the two must never be summed. Bands are converted to the midpoint of their range; the open-ended top band takes a value just above its floor (8 hours where the band is '7 hours or more', 11 where it is '10 hours or more'). Negative MCS missing codes and the sweep-7 don't-know/refused codes are left unmatched and become NA.",,
+st_internet_wd,compatible,FCINTH00,"recode_values(as.numeric(FCINTH00), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 4, 7 ~ 6, 8 ~ 8)","Sweep 6 only: internet hours on a normal term-time weekday, including tablets/smartphones and homework. FCINTH00's label ('Does CM ever use the internet at home') is wrong; values are the eight hours bands. Overlaps st_socmedia_wd; never sum (DR-0002). Bands as st_watch_wd.",,
 st_internet_we,unavailable,,,,,
 st_internet,unavailable,,,,,
 st_videochat,unavailable,,,,,
@@ -422,7 +422,7 @@ st_phone_school,unavailable,,,,,
 acc_academachment_selfrated,unavailable,,,MCS collects no pupil-reported or school-record attainment grades in this release,,
 acc_academachment_lettergrades,unavailable,,,MCS collects no pupil-reported or school-record attainment grades in this release,,
 acc_academachment_stdtest,unavailable,,,MCS collects no pupil-reported or school-record attainment grades in this release,,
-acc_schoolengage_caresschool,unavailable,,,"Nearest MCS items ask how often the child tries their best or finds school interesting, on frequency scales that do not match the schema's Always/Usually/Sometimes/Never levels",,
+acc_schoolengage_caresschool,unavailable,,,"Nearest items (tries their best, finds school interesting) use frequency scales that do not match Always/Usually/Sometimes/Never.",,
 acc_schoolengage_homework,unavailable,,,Not asked; MCS records only whether someone helps with homework and how often,,
 acc_academachment_numgrades,unavailable,,,MCS collects no pupil-reported or school-record attainment grades in this release,,
 acc_academachment_teacherrated,partial,"DQ2162, DQ2164, DQ2166, DQ2167, EQ2A, EQ2C, EQ2D","recode_values(
@@ -445,12 +445,12 @@ acc_academachment_teacherrated,partial,"DQ2162, DQ2164, DQ2166, DQ2167, EQ2A, EQ
   2 ~ ""Good"",
   3 ~ ""Average"",
   c(4, 5) ~ ""Below average""
-)","Teacher report, sweeps 4 and 5 only (ages 7 and 11). The MCS teacher survey never rates overall performance, only individual subjects against the child's age group, so this is the mean of the core academic subjects: reading, writing, science and maths at sweep 4, English, maths and science at sweep 5. The optional subjects the survey also covers (art, music, PE, ICT) are excluded as not academic attainment, and the Welsh/Gaelic/Irish-medium duplicates are excluded because every child rated on them is also rated on the English-medium item, so they add no coverage. Partial on two counts: a composite of subject ratings is not the holistic judgement the schema row describes, and the source's five levels collapse onto four, so Below average carries both 'below average' and 'well below average'. Ties on the rounding boundary (17.8% of sweep-4 rows, 0.2% of sweep-5) resolve to the poorer rating. Subject ratings correlate 0.75-0.78, and the composite agrees with reading or English alone on 82% of rows",,
-acc_numeracy_stdtest,partial,DCNSCO00,as.numeric(DCNSCO00),"Sweep 4 only (age 7). NFER Number Skills test administered in the MCS4 cognitive assessment; the release provides only the computed raw score, 0-15, with no standardised or age-adjusted form, hence partial. Standardise within dataset and wave at analysis",,
-acc_literacy_stdtest,compatible,DCWRSD00,as.numeric(DCWRSD00),"Sweep 4 only (age 7). British Ability Scales II Word Reading standard score, age-normed to mean 100 and SD 15; observed range 55-145. The ability score (DCWRAB00) and raw total (DCWRSC00) are also released but are not comparable across ages",,
+)","Teacher report, sweeps 4-5 (ages 7, 11): mean of core-subject ratings against the age group (sweep 4 reading, writing, science, maths; sweep 5 English, maths, science), rounded, ties to the poorer rating. Optional subjects and Welsh/Gaelic/Irish-medium duplicates excluded. Partial: subject composite, not a holistic rating; five levels collapse to four (Below average includes 'well below average').",,
+acc_numeracy_stdtest,partial,DCNSCO00,as.numeric(DCNSCO00),"Sweep 4 only (age 7). NFER Number Skills raw score (0-15); no standardised or age-adjusted form, hence partial. Standardise within dataset and wave at analysis.",,
+acc_literacy_stdtest,compatible,DCWRSD00,as.numeric(DCWRSD00),"Sweep 4 only (age 7). BAS II Word Reading standard score, age-normed (mean 100, SD 15). Ability score (DCWRAB00) and raw total (DCWRSC00) are not age-comparable.",,
 beh_hyper_basc2,unavailable,,,Instrument not administered,,
 beh_atten_basc2,unavailable,,,Instrument not administered,,
-beh_atten_self,unavailable,,,"MCS measures attention only through the parent-, teacher- and self-report SDQ hyperactivity/inattention subscales, which are mapped to the beh_hyper_sdq_* rows",,
+beh_atten_self,unavailable,,,MCS measures attention only via the SDQ hyperactivity/inattention subscales; see beh_hyper_sdq_*.,,
 beh_selfreg_htks,unavailable,,,Instrument not administered,,
 beh_bullied,partial,"BPSDFB00, CPSDFB00, DPSDFB00, EPSDFB00, FPSDFB00, GPSDFB00","recode_values(
   coalesce(
@@ -463,7 +463,7 @@ beh_bullied,partial,"BPSDFB00, CPSDFB00, DPSDFB00, EPSDFB00, FPSDFB00, GPSDFB00"
   ),
   1 ~ ""FALSE"",
   c(2, 3) ~ ""TRUE""
-)","'Often fights with other children or bullies them'. SDQ item asked of the main respondent about the child at all six sweeps with the same three-level response set. Dichotomised as TRUE for 'somewhat true' or 'certainly true' and FALSE for 'not true', which is the conventional split for a single SDQ item. Partial because the schema row is a yes/no behaviour report and this is a three-level frequency judgement, and because it is parent- rather than self-reported. The SDQ reference period is the last six months. The parent SDQ item is used in preference to the child self-report items, which exist only at some sweeps and change wording between them.",,
+)","SDQ item 'Often fights with other children or bullies them', parent report, all six sweeps, last six months (not true/somewhat true/certainly true). TRUE for somewhat or certainly true. Partial: three-level rating, not yes/no, and parent report; child self-report items exist at only some sweeps and change wording.",,
 beh_beenbullied,partial,"BPSDPB00, CPSDPB00, DPSDPB00, EPSDPB00, FPSDPB00, GPSDPB00","recode_values(
   coalesce(
     as.numeric(BPSDPB00),
@@ -475,11 +475,11 @@ beh_beenbullied,partial,"BPSDPB00, CPSDPB00, DPSDPB00, EPSDPB00, FPSDPB00, GPSDP
   ),
   1 ~ ""FALSE"",
   c(2, 3) ~ ""TRUE""
-)","'Picked on or bullied by other children'. SDQ item asked of the main respondent about the child at all six sweeps with the same three-level response set. Dichotomised as TRUE for 'somewhat true' or 'certainly true' and FALSE for 'not true', which is the conventional split for a single SDQ item. Partial because the schema row is a yes/no behaviour report and this is a three-level frequency judgement, and because it is parent- rather than self-reported. The SDQ reference period is the last six months. Self-reported alternatives exist at sweeps 4-7 (DCSC0036, ECQ56X00, FCHURT00, GCSDQS00) but change instrument and wording between sweeps.",,
-beh_beenbullied_online,partial,FCCYBU00,"recode_values(as.numeric(FCCYBU00), 6 ~ ""FALSE"", c(1, 2, 3, 4, 5) ~ ""TRUE"")","Sweep 6 only, self-reported: 'How often have other children bullied you online?' on a six-level most-days-to-never scale. Dichotomised as TRUE for any occurrence and FALSE for 'never'. Partial because the threshold is any-versus-never, which includes the large 'less often' group",,
-beh_bullied_online,partial,FCCYBO00,"recode_values(as.numeric(FCCYBO00), 6 ~ ""FALSE"", c(1, 2, 3, 4, 5) ~ ""TRUE"")","Sweep 6 only, self-reported: 'How often have you bullied other children online?', same scale and same any-versus-never threshold as beh_beenbullied_online",,
-beh_fight,partial,"FCHITT00, GCHITT00","recode_values(coalesce(as.numeric(FCHITT00), as.numeric(GCHITT00)), 2 ~ ""FALSE"", 1 ~ ""TRUE"")","Sweeps 6 and 7, self-reported: 'In the last 12 months have you pushed or shoved, hit, slapped or punched someone?'. Partial because the item is broader than fighting, covering a single push or shove, and its 12-month window is longer than the schema's implied recent period",,
-beh_truancy,partial,"ECQ45X00, FCTRUA00","recode_values(coalesce(as.numeric(ECQ45X00), as.numeric(FCTRUA00)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","'Missed school without your parents' permission even if only for half a day or a single lesson', yes/no: ever at sweep 5, last 12 months at sweep 6. Partial for the lifetime recall at sweep 5.",,
+)","SDQ item 'Picked on or bullied by other children'; scoring and partial reason as beh_bullied. Self-report alternatives at sweeps 4-7 (DCSC0036, ECQ56X00, FCHURT00, GCSDQS00) change instrument and wording.",,
+beh_beenbullied_online,partial,FCCYBU00,"recode_values(as.numeric(FCCYBU00), 6 ~ ""FALSE"", c(1, 2, 3, 4, 5) ~ ""TRUE"")","Sweep 6 only, self-report: 'How often have other children bullied you online?', six levels, most days to never. TRUE for any occurrence. Partial: any-vs-never threshold includes the large 'less often' group.",,
+beh_bullied_online,partial,FCCYBO00,"recode_values(as.numeric(FCCYBO00), 6 ~ ""FALSE"", c(1, 2, 3, 4, 5) ~ ""TRUE"")","Sweep 6 only, self-report: 'How often have you bullied other children online?'. Scale and threshold as beh_beenbullied_online.",,
+beh_fight,partial,"FCHITT00, GCHITT00","recode_values(coalesce(as.numeric(FCHITT00), as.numeric(GCHITT00)), 2 ~ ""FALSE"", 1 ~ ""TRUE"")","Sweeps 6-7, self-report: 'In the last 12 months have you pushed or shoved, hit, slapped or punched someone?' Partial: broader than fighting (a single push counts); 12-month recall.",,
+beh_truancy,partial,"ECQ45X00, FCTRUA00","recode_values(coalesce(as.numeric(ECQ45X00), as.numeric(FCTRUA00)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","'Missed school without your parents' permission, even for half a day or one lesson', yes/no: lifetime at sweep 5, past 12 months at sweep 6. Partial for the lifetime recall at sweep 5.",,
 beh_stealing,partial,"ECQ26X00, FCSTOL00, GCSTOL00, FCSTLN00, GCSTLN00, GCJYRD00","local({
   items <- cbind(
     coalesce(as.numeric(ECQ26X00), as.numeric(FCSTOL00), as.numeric(GCSTOL00)),
@@ -500,7 +500,7 @@ beh_conduct_sdq_parent,compatible,"BCONDUCT, CCONDUCT, DDCONDUCT, ECONDUCT, FCON
   as.numeric(ECONDUCT),
   as.numeric(FCONDUCT),
   as.numeric(GCONDUCT)
-)","Parent/carer report at all six sweeps (ages 3, 5, 7, 11, 14, 17). MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
+)","Parent/carer report, all six sweeps. MCS-derived SDQ subscale (0-10; items 0-2), no missing-value sentinels.",,
 beh_hyper_sdq_parent,compatible,"BHYPER, CHYPER, DDHYPER, EHYPER, FHYPER, GHYPER","coalesce(
   as.numeric(BHYPER),
   as.numeric(CHYPER),
@@ -508,7 +508,7 @@ beh_hyper_sdq_parent,compatible,"BHYPER, CHYPER, DDHYPER, EHYPER, FHYPER, GHYPER
   as.numeric(EHYPER),
   as.numeric(FHYPER),
   as.numeric(GHYPER)
-)","Parent/carer report at all six sweeps (ages 3, 5, 7, 11, 14, 17). MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
+)",As beh_conduct_sdq_parent.,,
 beh_peerprob_sdq_parent,compatible,"BPEER, CPEER, DDPEER, EPEER, FPEER, GPEER","coalesce(
   as.numeric(BPEER),
   as.numeric(CPEER),
@@ -516,7 +516,7 @@ beh_peerprob_sdq_parent,compatible,"BPEER, CPEER, DDPEER, EPEER, FPEER, GPEER","
   as.numeric(EPEER),
   as.numeric(FPEER),
   as.numeric(GPEER)
-)","Parent/carer report at all six sweeps (ages 3, 5, 7, 11, 14, 17). MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
+)",As beh_conduct_sdq_parent.,,
 beh_prosocial_sdq_parent,compatible,"BPROSOC, CPROSOC, DDPROSOC, EPROSOC, FPROSOC, GPROSOC","coalesce(
   as.numeric(BPROSOC),
   as.numeric(CPROSOC),
@@ -524,29 +524,29 @@ beh_prosocial_sdq_parent,compatible,"BPROSOC, CPROSOC, DDPROSOC, EPROSOC, FPROSO
   as.numeric(EPROSOC),
   as.numeric(FPROSOC),
   as.numeric(GPROSOC)
-)","Parent/carer report at all six sweeps (ages 3, 5, 7, 11, 14, 17). MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-beh_aggphys_bpaq_self,unavailable,,,No aggression scale administered; MCS covers aggressive behaviour only through single antisocial-behaviour items and the SDQ conduct subscale,,
-beh_aggverb_bpaq_self,unavailable,,,No aggression scale administered; MCS covers aggressive behaviour only through single antisocial-behaviour items and the SDQ conduct subscale,,
-beh_agganger_bpaq_self,unavailable,,,No aggression scale administered; MCS covers aggressive behaviour only through single antisocial-behaviour items and the SDQ conduct subscale,,
-beh_agghostility_bpaq_self,unavailable,,,No aggression scale administered; MCS covers aggressive behaviour only through single antisocial-behaviour items and the SDQ conduct subscale,,
-beh_agg_self,unavailable,,,No aggression scale administered; MCS covers aggressive behaviour only through single antisocial-behaviour items and the SDQ conduct subscale,,
-beh_argues,unavailable,,,"Not asked; the nearest MCS items are SDQ items on a three-level not-true/somewhat-true/certainly-true scale, which does not match this row's response levels",,
-beh_persistence_finishwork,unavailable,,,"Not asked; the nearest MCS items are SDQ items on a three-level not-true/somewhat-true/certainly-true scale, which does not match this row's response levels",,
-beh_emotreg_stayscalm,unavailable,,,"Not asked; the nearest MCS items are SDQ items on a three-level not-true/somewhat-true/certainly-true scale, which does not match this row's response levels",,
-beh_peerprob_makefriends,unavailable,,,"Not asked; the nearest MCS items are SDQ items on a three-level not-true/somewhat-true/certainly-true scale, which does not match this row's response levels",,
+)",As beh_conduct_sdq_parent.,,
+beh_aggphys_bpaq_self,unavailable,,,No aggression scale administered; MCS covers aggressive behaviour only via single antisocial-behaviour items and the SDQ conduct subscale.,,
+beh_aggverb_bpaq_self,unavailable,,,As beh_aggphys_bpaq_self.,,
+beh_agganger_bpaq_self,unavailable,,,As beh_aggphys_bpaq_self.,,
+beh_agghostility_bpaq_self,unavailable,,,As beh_aggphys_bpaq_self.,,
+beh_agg_self,unavailable,,,As beh_aggphys_bpaq_self.,,
+beh_argues,unavailable,,,Not asked; nearest SDQ items use a not true/somewhat true/certainly true scale that does not match this row's levels.,,
+beh_persistence_finishwork,unavailable,,,As beh_argues.,,
+beh_emotreg_stayscalm,unavailable,,,As beh_argues.,,
+beh_peerprob_makefriends,unavailable,,,As beh_argues.,,
 beh_conduct_diagnosed,unavailable,,,No professional diagnosis of behavioural or conduct problems is recorded,,
 beh_conduct_diagnosed_severity,unavailable,,,No professional diagnosis of behavioural or conduct problems is recorded,,
-beh_conduct_sdq_self,compatible,GCONDUCT_C,as.numeric(GCONDUCT_C),"Sweep 7 only (age 17); the cohort member completes the SDQ about themselves, which is within the age 11+ range the self-report form is validated for. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-beh_hyper_sdq_self,compatible,GHYPER_C,as.numeric(GHYPER_C),"Sweep 7 only (age 17); the cohort member completes the SDQ about themselves, which is within the age 11+ range the self-report form is validated for. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-beh_peerprob_sdq_self,compatible,GPEER_C,as.numeric(GPEER_C),"Sweep 7 only (age 17); the cohort member completes the SDQ about themselves, which is within the age 11+ range the self-report form is validated for. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-beh_prosocial_sdq_self,compatible,GPROSOC_C,as.numeric(GPROSOC_C),"Sweep 7 only (age 17); the cohort member completes the SDQ about themselves, which is within the age 11+ range the self-report form is validated for. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-beh_conduct_sdq_teacher,compatible,"DDCOND_T, ECOND_T","coalesce(as.numeric(DDCOND_T), as.numeric(ECOND_T))","Teacher report, sweeps 4 and 5 only (ages 7 and 11); the teacher survey was not run at the other sweeps. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-beh_hyper_sdq_teacher,compatible,"DDHYPER_T, EHYPER_T","coalesce(as.numeric(DDHYPER_T), as.numeric(EHYPER_T))","Teacher report, sweeps 4 and 5 only (ages 7 and 11); the teacher survey was not run at the other sweeps. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-beh_peerprob_sdq_teacher,compatible,"DDPEER_T, EPEER_T","coalesce(as.numeric(DDPEER_T), as.numeric(EPEER_T))","Teacher report, sweeps 4 and 5 only (ages 7 and 11); the teacher survey was not run at the other sweeps. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-beh_prosocial_sdq_teacher,compatible,"DDPROSO_T, EPROSO_T","coalesce(as.numeric(DDPROSO_T), as.numeric(EPROSO_T))","Teacher report, sweeps 4 and 5 only (ages 7 and 11); the teacher survey was not run at the other sweeps. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-beh_ext_sdq_parent,unavailable,,,"MCS releases the SDQ component subscales, so per the schema note the externalising composite should be derived at analysis rather than mapped",,
-beh_ext_sdq_self,unavailable,,,"MCS releases the SDQ component subscales, so per the schema note the externalising composite should be derived at analysis rather than mapped",,
-beh_ext_sdq_teacher,unavailable,,,"MCS releases the SDQ component subscales, so per the schema note the externalising composite should be derived at analysis rather than mapped",,
+beh_conduct_sdq_self,compatible,GCONDUCT_C,as.numeric(GCONDUCT_C),"Sweep 7 only (age 17), self-report SDQ (validated for 11+). MCS-derived subscale (0-10; items 0-2), no missing-value sentinels.",,
+beh_hyper_sdq_self,compatible,GHYPER_C,as.numeric(GHYPER_C),As beh_conduct_sdq_self.,,
+beh_peerprob_sdq_self,compatible,GPEER_C,as.numeric(GPEER_C),As beh_conduct_sdq_self.,,
+beh_prosocial_sdq_self,compatible,GPROSOC_C,as.numeric(GPROSOC_C),As beh_conduct_sdq_self.,,
+beh_conduct_sdq_teacher,compatible,"DDCOND_T, ECOND_T","coalesce(as.numeric(DDCOND_T), as.numeric(ECOND_T))","Teacher report, sweeps 4-5 only (ages 7, 11). MCS-derived subscale (0-10; items 0-2), no missing-value sentinels.",,
+beh_hyper_sdq_teacher,compatible,"DDHYPER_T, EHYPER_T","coalesce(as.numeric(DDHYPER_T), as.numeric(EHYPER_T))",As beh_conduct_sdq_teacher.,,
+beh_peerprob_sdq_teacher,compatible,"DDPEER_T, EPEER_T","coalesce(as.numeric(DDPEER_T), as.numeric(EPEER_T))",As beh_conduct_sdq_teacher.,,
+beh_prosocial_sdq_teacher,compatible,"DDPROSO_T, EPROSO_T","coalesce(as.numeric(DDPROSO_T), as.numeric(EPROSO_T))",As beh_conduct_sdq_teacher.,,
+beh_ext_sdq_parent,unavailable,,,SDQ subscales released; derive the externalising composite at analysis (schema note).,,
+beh_ext_sdq_self,unavailable,,,As beh_ext_sdq_parent.,,
+beh_ext_sdq_teacher,unavailable,,,As beh_ext_sdq_parent.,,
 beh_agg_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_atten_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
@@ -554,31 +554,31 @@ beh_ext_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_cbcl_measure,unavailable,,,CBCL not administered; MCS uses the SDQ,,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,Not collected.,,
-cog_execfunc_basc2,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_langexec_nepsy,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_phono_nepsy,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_inhibcont_nepsy,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_vismotor_nepsy,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_verbalfluency_nepsy,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_inhib_nihtb_flanker,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_flex_nihtb_dccs,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_wm_nihtb_listsort,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_speed_nihtb_pattern,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_epimem_nihtb_picseq,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_vocab_nihtb_picvocab,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_fluidcomp_nihtb,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_crystcomp_nihtb,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_totalcomp_nihtb,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_wm_digitspan,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_iq_fullscale,unavailable,,,"MCS administers individual British Ability Scales II subtests, never the full battery, so no general conceptual ability or full-scale IQ score exists",,
-cog_vocab_bpvs,unavailable,,,"The BAS II Naming Vocabulary test used at sweeps 2 and 3 is an expressive vocabulary test and is not the British Picture Vocabulary Scale, which is receptive and separately normed",,
-cog_vocab_ppvt,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_execfunc_brief_parent,unavailable,,,MCS uses the British Ability Scales II and the Bracken School Readiness Assessment rather than any of the batteries this domain names,,
-cog_vocab_bas_naming,compatible,"BDBAST00, CCNVTSCORE","coalesce(ifelse(as.numeric(BDBAST00) >= 0, as.numeric(BDBAST00), NA_real_), as.numeric(CCNVTSCORE))","Sweeps 2 and 3 (ages 3 and 5). BAS II Naming Vocabulary T-score, observed range 20-80 at both sweeps and age-normed, so the two sweeps are directly comparable. MCS releases the score forms the BAS II publishes: T-scores and standard scores are age-normed and comparable across ages, ability scores are not. The sweep-2 variable carries MCS's negative not-carried-out and not-administered codes, which are excluded.",,
-cog_nonverbalreason_bas_picsim,compatible,CCPSABIL,as.numeric(CCPSABIL),"Sweep 3 only (age 5). BAS II Picture Similarities ability score, observed range 10-119. An ability score is not age-normed, so standardise within dataset and wave at analysis. MCS releases the score forms the BAS II publishes: T-scores and standard scores are age-normed and comparable across ages, ability scores are not. MCS releases no T-score for this subtest.",,
-cog_spatial_bas_pattern,compatible,"CCPCABIL, DCPCAB00","coalesce(as.numeric(CCPCABIL), as.numeric(DCPCAB00))","Sweeps 3 and 4 (ages 5 and 7). BAS II Pattern Construction ability score. Ability scores are not age-normed and the two sweeps sit on different parts of the scale (observed 10-152 at age 5, 10-211 at age 7), so these must be standardised within dataset and wave and never pooled raw across the two ages. MCS releases the score forms the BAS II publishes: T-scores and standard scores are age-normed and comparable across ages, ability scores are not.",,
-cog_verbalreason_bas_versim,compatible,EVSTSCO,as.numeric(EVSTSCO),"Sweep 5 only (age 11). BAS II Verbal Similarities standard score as MCS releases it, observed range 20-80 and age-normed. MCS releases the score forms the BAS II publishes: T-scores and standard scores are age-normed and comparable across ages, ability scores are not.",,
-cog_schoolread_bracken,compatible,BDSRCS00,"ifelse(as.numeric(BDSRCS00) >= 0, as.numeric(BDSRCS00), NA_real_)","Sweep 2 only (age 3). Bracken School Readiness Composite standard score, observed range 56-149, covering the colours, letters, numbers, sizes, comparisons and shapes subtests. MCS also releases the raw composite, percentile and percent-mastery forms; the standard score is taken because it is the age-normed one. The negative not-carried-out, subtest-not- completed and age-unknown codes are excluded.",,
+cog_execfunc_basc2,unavailable,,,"MCS uses BAS II and the Bracken School Readiness Assessment, not this battery.",,
+cog_langexec_nepsy,unavailable,,,As cog_execfunc_basc2.,,
+cog_phono_nepsy,unavailable,,,As cog_execfunc_basc2.,,
+cog_inhibcont_nepsy,unavailable,,,As cog_execfunc_basc2.,,
+cog_vismotor_nepsy,unavailable,,,As cog_execfunc_basc2.,,
+cog_verbalfluency_nepsy,unavailable,,,As cog_execfunc_basc2.,,
+cog_inhib_nihtb_flanker,unavailable,,,As cog_execfunc_basc2.,,
+cog_flex_nihtb_dccs,unavailable,,,As cog_execfunc_basc2.,,
+cog_wm_nihtb_listsort,unavailable,,,As cog_execfunc_basc2.,,
+cog_speed_nihtb_pattern,unavailable,,,As cog_execfunc_basc2.,,
+cog_epimem_nihtb_picseq,unavailable,,,As cog_execfunc_basc2.,,
+cog_vocab_nihtb_picvocab,unavailable,,,As cog_execfunc_basc2.,,
+cog_fluidcomp_nihtb,unavailable,,,As cog_execfunc_basc2.,,
+cog_crystcomp_nihtb,unavailable,,,As cog_execfunc_basc2.,,
+cog_totalcomp_nihtb,unavailable,,,As cog_execfunc_basc2.,,
+cog_wm_digitspan,unavailable,,,As cog_execfunc_basc2.,,
+cog_iq_fullscale,unavailable,,,"Only individual BAS II subtests, never the full battery, so no general conceptual ability or full-scale IQ score.",,
+cog_vocab_bpvs,unavailable,,,"BAS II Naming Vocabulary (sweeps 2-3) is expressive, not the receptive, separately normed British Picture Vocabulary Scale.",,
+cog_vocab_ppvt,unavailable,,,As cog_execfunc_basc2.,,
+cog_execfunc_brief_parent,unavailable,,,As cog_execfunc_basc2.,,
+cog_vocab_bas_naming,compatible,"BDBAST00, CCNVTSCORE","coalesce(ifelse(as.numeric(BDBAST00) >= 0, as.numeric(BDBAST00), NA_real_), as.numeric(CCNVTSCORE))","Sweeps 2-3 (ages 3, 5). BAS II Naming Vocabulary T-score, age-normed, so comparable across sweeps. Sweep-2 negative not-carried-out/not-administered codes excluded.",,
+cog_nonverbalreason_bas_picsim,compatible,CCPSABIL,as.numeric(CCPSABIL),"Sweep 3 only (age 5). BAS II Picture Similarities ability score; not age-normed, so standardise within dataset and wave at analysis. No T-score released for this subtest.",,
+cog_spatial_bas_pattern,compatible,"CCPCABIL, DCPCAB00","coalesce(as.numeric(CCPCABIL), as.numeric(DCPCAB00))","Sweeps 3-4 (ages 5, 7). BAS II Pattern Construction ability score; not age-normed and the two sweeps sit on different parts of the scale, so standardise within dataset and wave, never pool raw across ages.",,
+cog_verbalreason_bas_versim,compatible,EVSTSCO,as.numeric(EVSTSCO),"Sweep 5 only (age 11). BAS II Verbal Similarities standard score, age-normed.",,
+cog_schoolread_bracken,compatible,BDSRCS00,"ifelse(as.numeric(BDSRCS00) >= 0, as.numeric(BDSRCS00), NA_real_)","Sweep 2 only (age 3). Bracken School Readiness Composite standard score (colours, letters, numbers, sizes, comparisons, shapes), the age-normed form. Negative not-carried-out/not-completed/age-unknown codes excluded.",,
 cog_creativethinking_stdtest,unavailable,,,Not collected.,,
 mh_anx_basc2,unavailable,,,Instrument not administered,,
 mh_dep_basc2,unavailable,,,Instrument not administered,,
@@ -589,7 +589,7 @@ mh_emotsymp_sdq_parent,compatible,"BEMOTION, CEMOTION, DDEMOTION, EEMOTION, FEMO
   as.numeric(EEMOTION),
   as.numeric(FEMOTION),
   as.numeric(GEMOTION)
-)","Parent/carer report at all six sweeps (ages 3, 5, 7, 11, 14, 17). MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
+)",As beh_conduct_sdq_parent.,,
 mh_totaldiff_sdq_parent,compatible,"BEBDTOT, CEBDTOT, DDDEBDTOT, EEBDTOT, FEBDTOT, GEBDTOT","coalesce(
   as.numeric(BEBDTOT),
   as.numeric(CEBDTOT),
@@ -597,18 +597,18 @@ mh_totaldiff_sdq_parent,compatible,"BEBDTOT, CEBDTOT, DDDEBDTOT, EEBDTOT, FEBDTO
   as.numeric(EEBDTOT),
   as.numeric(FEBDTOT),
   as.numeric(GEBDTOT)
-)","Parent/carer report at all six sweeps (ages 3, 5, 7, 11, 14, 17). MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-mh_anx_diagnosed,incompatible,,,"Sweep 7 asks the cohort member whether a doctor has ever told them they suffer from 'depression or serious anxiety' (GCDEAN00) and whether they are currently treated for it (GCTRDE00). The item combines the two conditions and cannot be split, so mapping it here would attribute an anxiety-or-depression diagnosis to one condition alone. A combined row would be needed to use it",,
-mh_anx_diagnosed_severity,unavailable,,,No severity rating is collected; MCS records only whether the cohort member is currently in treatment,,
-mh_dep_diagnosed,incompatible,,,"Sweep 7 asks the cohort member whether a doctor has ever told them they suffer from 'depression or serious anxiety' (GCDEAN00) and whether they are currently treated for it (GCTRDE00). The item combines the two conditions and cannot be split, so mapping it here would attribute an anxiety-or-depression diagnosis to one condition alone. A combined row would be needed to use it",,
-mh_dep_diagnosed_severity,unavailable,,,No severity rating is collected; MCS records only whether the cohort member is currently in treatment,,
-mh_emotsymp_sdq_self,compatible,GEMOTION_C,as.numeric(GEMOTION_C),"Sweep 7 only (age 17); the cohort member completes the SDQ about themselves, which is within the age 11+ range the self-report form is validated for. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-mh_emotsymp_sdq_teacher,compatible,"DDEMOTI_T, EEMOTI_T","coalesce(as.numeric(DDEMOTI_T), as.numeric(EEMOTI_T))","Teacher report, sweeps 4 and 5 only (ages 7 and 11); the teacher survey was not run at the other sweeps. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-mh_totaldiff_sdq_self,compatible,GEBDTOT_C,as.numeric(GEBDTOT_C),"Sweep 7 only (age 17); the cohort member completes the SDQ about themselves, which is within the age 11+ range the self-report form is validated for. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-mh_totaldiff_sdq_teacher,compatible,"DDDEBDTO_T, EEBDTO_T","coalesce(as.numeric(DDDEBDTO_T), as.numeric(EEBDTO_T))","Teacher report, sweeps 4 and 5 only (ages 7 and 11); the teacher survey was not run at the other sweeps. MCS-derived SDQ subscale score using the standard 0-2 item scoring, observed range 0-10 with no missing-value sentinels.",,
-mh_int_sdq_parent,unavailable,,,"MCS releases the SDQ component subscales, so per the schema note the internalising composite should be derived at analysis rather than mapped",,
-mh_int_sdq_self,unavailable,,,"MCS releases the SDQ component subscales, so per the schema note the internalising composite should be derived at analysis rather than mapped",,
-mh_int_sdq_teacher,unavailable,,,"MCS releases the SDQ component subscales, so per the schema note the internalising composite should be derived at analysis rather than mapped",,
+)",As beh_conduct_sdq_parent; total difficulties (0-40).,,
+mh_anx_diagnosed,incompatible,,,"Sweep 7 'Has a doctor ever told you that you suffer from depression or serious anxiety?' (GCDEAN00, with treatment GCTRDE00) cannot be split by condition; see mh_depanx_diagnosed.",,
+mh_anx_diagnosed_severity,unavailable,,,No severity rating; MCS records only current treatment.,,
+mh_dep_diagnosed,incompatible,,,As mh_anx_diagnosed.,,
+mh_dep_diagnosed_severity,unavailable,,,As mh_anx_diagnosed_severity.,,
+mh_emotsymp_sdq_self,compatible,GEMOTION_C,as.numeric(GEMOTION_C),As beh_conduct_sdq_self.,,
+mh_emotsymp_sdq_teacher,compatible,"DDEMOTI_T, EEMOTI_T","coalesce(as.numeric(DDEMOTI_T), as.numeric(EEMOTI_T))",As beh_conduct_sdq_teacher.,,
+mh_totaldiff_sdq_self,compatible,GEBDTOT_C,as.numeric(GEBDTOT_C),As beh_conduct_sdq_self; total difficulties (0-40).,,
+mh_totaldiff_sdq_teacher,compatible,"DDDEBDTO_T, EEBDTO_T","coalesce(as.numeric(DDDEBDTO_T), as.numeric(EEBDTO_T))",As beh_conduct_sdq_teacher; total difficulties (0-40).,,
+mh_int_sdq_parent,unavailable,,,SDQ subscales released; derive the internalising composite at analysis (schema note).,,
+mh_int_sdq_self,unavailable,,,As mh_int_sdq_parent.,,
+mh_int_sdq_teacher,unavailable,,,As mh_int_sdq_parent.,,
 mh_dep_smfq_self,compatible,"FCMDSA00, FCMDSB00, FCMDSC00, FCMDSD00, FCMDSE00, FCMDSF00, FCMDSG00, FCMDSH00, FCMDSI00, FCMDSJ00, FCMDSK00, FCMDSL00, FCMDSM00","(as.numeric(FCMDSA00) +
   as.numeric(FCMDSB00) +
   as.numeric(FCMDSC00) +
@@ -622,7 +622,7 @@ mh_dep_smfq_self,compatible,"FCMDSA00, FCMDSB00, FCMDSC00, FCMDSD00, FCMDSE00, F
   as.numeric(FCMDSK00) +
   as.numeric(FCMDSL00) +
   as.numeric(FCMDSM00)) -
-  13","Sweep 6 only (age 14). All 13 Short Mood and Feelings Questionnaire items, self-completed. MCS codes the responses 1 = not true, 2 = sometimes, 3 = true; subtracting 1 per item gives the standard 0-2 item scoring and a 0-26 total. Scored complete-case: a cohort member missing any item scores NA",,
+  13","Sweep 6 only (age 14). All 13 SMFQ items, self-completed; MCS codes 1-3 (not true, sometimes, true), minus 1 per item for 0-2 scoring, 0-26 total. Complete-case.",,
 mh_dep_smfq_parent,unavailable,,,Instrument not administered,,
 mh_dep_cdi_self,unavailable,,,Instrument not administered,,
 mh_dep_cesd_self,unavailable,,,Instrument not administered,,
@@ -630,7 +630,7 @@ mh_dep_phq9_self,unavailable,,,Instrument not administered,,
 mh_dep_rcads_self,unavailable,,,Instrument not administered,,
 mh_dep_dass21_self,unavailable,,,Instrument not administered,,
 mh_dep_scl_self,unavailable,,,Instrument not administered,,
-mh_distress_k6_self,compatible,GDCKESSL,as.numeric(GDCKESSL),"Sweep 7 only (age 17). MCS-derived Kessler 6 total for the cohort member's own responses, already on 0-4 item scoring with an observed range of 0-24. The Kessler scores at sweeps 2-6 (BDKESS00 to FDKESSL) are the parent's own distress, not the child's, so they are not mapped here",,
+mh_distress_k6_self,compatible,GDCKESSL,as.numeric(GDCKESSL),"Sweep 7 only (age 17). MCS-derived Kessler 6 total, cohort member's own responses (items 0-4, total 0-24). Kessler scores at sweeps 2-6 (BDKESS00-FDKESSL) are the parent's own distress.",,
 mh_distress_k10_self,unavailable,,,Instrument not administered,,
 mh_anx_masc_self,unavailable,,,Instrument not administered,,
 mh_anx_scas_self,unavailable,,,Instrument not administered,,
@@ -659,16 +659,16 @@ mh_dep_binary_self,compatible,"FCMDSA00, FCMDSB00, FCMDSC00, FCMDSD00, FCMDSE00,
     13
   if_else(smfq >= 12, ""Yes"", ""No"")
 })","Sweep 6: SMFQ total (13 items, 0-26, past two weeks) of 12 or more, the cut-point used in MCS age-14 studies. Complete-case, as for mh_dep_smfq_self.",,
-mh_dep_self,unavailable,,,"The only self-reported depression scale is the full 13-item SMFQ, which is mapped to its own row (mh_dep_smfq_self)",,
-mh_dep_measure,unavailable,,,"The only self-reported depression scale is the full 13-item SMFQ, which is mapped to its own row (mh_dep_smfq_self)",,
-mh_anx_self,unavailable,,,No self-reported anxiety scale; the only anxiety content is the SDQ emotional symptoms subscale and the combined depression-or-anxiety diagnosis item at sweep 7,,
-mh_anx_measure,unavailable,,,No self-reported anxiety scale; the only anxiety content is the SDQ emotional symptoms subscale and the combined depression-or-anxiety diagnosis item at sweep 7,,
+mh_dep_self,unavailable,,,Only self-reported depression scale is the 13-item SMFQ; mapped to mh_dep_smfq_self.,,
+mh_dep_measure,unavailable,,,As mh_dep_self.,,
+mh_anx_self,unavailable,,,No self-reported anxiety scale; only the SDQ emotional symptoms subscale and the sweep-7 combined depression-or-anxiety diagnosis item.,,
+mh_anx_measure,unavailable,,,As mh_anx_self.,,
 mh_depanx_diagnosed,partial,"GCDEAN00, GCTRDE00","case_when(
   as.numeric(GCDEAN00) == 2 ~ ""Never diagnosed"",
   as.numeric(GCDEAN00) == 1 & as.numeric(GCTRDE00) == 1 ~ ""Currently diagnosed"",
   as.numeric(GCDEAN00) == 1 & as.numeric(GCTRDE00) == 2 ~ ""Previously diagnosed"",
   .default = NA_character_
-)","Sweep 7 only (age 17), self-reported: 'Has a doctor ever told you that you suffer from depression or serious anxiety?' (1,034 yes, 9,047 no), followed for those diagnosed by 'Are you currently being treated for depression or serious anxiety?' (439 yes, 593 no). Partial because current treatment is a proxy for currently having the condition: someone diagnosed but no longer in treatment is counted as previously diagnosed even though they may still have it, so this row understates current cases. The item names depression and anxiety together and cannot be split, which is why it maps here rather than to mh_dep_diagnosed or mh_anx_diagnosed",,
+)","Sweep 7 only, self-report: 'Has a doctor ever told you that you suffer from depression or serious anxiety?' (GCDEAN00), then, if yes, current treatment (GCTRDE00). Partial: current treatment proxies current diagnosis, so current cases are understated. Depression and anxiety cannot be split, hence this row.",,
 mh_stress_self,unavailable,,,Not collected.,,
 mh_lonely_self,incompatible,,,"SMFQ 'I felt lonely' (sweep 6) is a not true/sometimes/true rating, not a frequency; sweep 4 'feel left out of things by other children' is peer exclusion.",,
 mh_lonely_scale_self,unavailable,,,No loneliness scale.,,
@@ -676,15 +676,15 @@ mh_lonely_measure,unavailable,,,No loneliness scale.,,
 mh_sad_self,proximate,"DCSC0013, ECQ76X00","coalesce(
   recode_values(as.numeric(DCSC0013), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Never""),
   recode_values(as.numeric(ECQ76X00), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")
-)","Sweep 4 'How often do you feel sad?' (all of the time, some of the time, never; no recall period) and sweep 5 'In the last four weeks, how often did you feel sad?' (never to almost always), in rank order. Proximate: three levels at sweep 4.",,
+)","Sweep 4 'How often do you feel sad?' (all/some of the time, never; no recall period) and sweep 5 'In the last four weeks, how often did you feel sad?' (never to almost always), in rank order. Proximate: three levels at sweep 4.",,
 mh_worry_self,partial,"DCSC0012, ECQ75X00","coalesce(
   recode_values(as.numeric(DCSC0012), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Never""),
   recode_values(as.numeric(ECQ75X00), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")
-)","Sweep 4 'How often do you get worried?' (all of the time, some of the time, never; no recall period) and sweep 5 'how often did you get worried about what would happen to you?' (past four weeks, never to almost always), in rank order. Partial: getting worried rather than very worried; three levels at sweep 4.",,
+)","Sweep 4 'How often do you get worried?' (all/some of the time, never; no recall period) and sweep 5 'how often did you get worried about what would happen to you?' (past four weeks, never to almost always), in rank order. Partial: worried, not 'very worried'; three levels at sweep 4.",,
 mh_irritable_self,partial,"DCSC0017, ECQ79X00","coalesce(
   recode_values(as.numeric(DCSC0017), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Never""),
   recode_values(as.numeric(ECQ79X00), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")
-)","Sweep 4 'How often do you lose your temper?' (all of the time, some of the time, never; no recall period) and sweep 5 'how often did you get angry?' (past four weeks, never to almost always), in rank order. Partial: anger rather than irritability at sweep 5; three levels at sweep 4.",,
+)","Sweep 4 'How often do you lose your temper?' (all/some of the time, never; no recall period) and sweep 5 'how often did you get angry?' (past four weeks, never to almost always), in rank order. Partial: anger, not irritability, at sweep 5; three levels at sweep 4.",,
 mh_nobodycares_self,incompatible,,,"Only the SMFQ item 'I thought nobody really loved me' (not true, sometimes, true; sweep 6), a truth rating rather than a frequency.",,
 mh_lifenotworth_self,unavailable,,,Not collected.,,
 mh_suicide_ideation_self,unavailable,,,Not collected; only self-harm (sweeps 6-7) and attempt (sweep 7) items.,,
@@ -692,17 +692,17 @@ mh_suicide_attempt_self,partial,GCSUIC00,"recode_values(as.numeric(GCSUIC00), 1 
 mh_psychsom_hbscscl_self,unavailable,,,Not collected.,,
 mh_psychsom_measure,unavailable,,,Not collected.,,
 wb_emotsc_basc2,unavailable,,,Instrument not administered,,
-wb_mwb_wemwbs,incompatible,,,"Sweep 7 administers the 7-item short form (SWEMWBS: GCWWOP00, GCWWUS00, GCWWRE00, GCWWDE00, GCWWTH00, GCWWCL00, GCWWMN00) and releases GDWEMWBS, the Rasch-transformed metric score on 7-35. That is neither the 14-item WEMWBS this row describes nor its 14-70 raw sum, and the two are not interchangeable, so it is left unmapped pending a SWEMWBS row",,
+wb_mwb_wemwbs,incompatible,,,Sweep 7 has only the 7-item SWEMWBS (see wb_mwb_swemwbs_self); its 7-35 metric score is not the 14-item WEMWBS or its 14-70 sum.,,
 wb_lifesatisfaction_cantrilladder,unavailable,,,"MCS asks life satisfaction on a seven-point completely-happy to not-at-all-happy scale, not the 0-10 Cantril ladder; that item is mapped to wb_lifesat_singleitem_self",,
 wb_resil_basc2,unavailable,,,Instrument not administered,,
 wb_psychcomplaints_feellow,unavailable,,,HBSC symptom checklist not administered,,
 wb_psychcomplaints_irritable,unavailable,,,HBSC symptom checklist not administered,,
 wb_psychcomplaints_nervous,unavailable,,,HBSC symptom checklist not administered,,
 wb_psychcomplaints_diffsleep,unavailable,,,HBSC symptom checklist not administered,,
-wb_bodyimage,unavailable,,,"No too-thin/too-fat body image item. MCS asks how happy the child is with the way they look, which measures appearance satisfaction rather than perceived body size",,
+wb_bodyimage,unavailable,,,No too-thin/too-fat item; MCS asks how happy the child is with how they look (appearance satisfaction).,,
 wb_lifesat_slss_self,unavailable,,,Instrument not administered,,
 wb_lifesat_swls_self,unavailable,,,Instrument not administered,,
-wb_lifesat_singleitem_self,compatible,"ECQ10F00, FCLIFE00","8 - coalesce(as.numeric(ECQ10F00), as.numeric(FCLIFE00))","Sweeps 5 and 6 (ages 11 and 14), self-completed: 'How happy are you with your life as a whole?' answered on a seven-point scale of faces, 1 = completely happy to 7 = not at all happy. Reversed so that higher means greater satisfaction, giving a 1-7 range. Sweep 7 replaced this item with the SWEMWBS, so no sweep-7 row is populated",,
+wb_lifesat_singleitem_self,compatible,"ECQ10F00, FCLIFE00","8 - coalesce(as.numeric(ECQ10F00), as.numeric(FCLIFE00))","Sweeps 5-6 (ages 11, 14), self-completed: 'How happy are you with your life as a whole?', 7-point faces scale (1 completely happy to 7 not at all happy). Reversed so higher = more satisfied (1-7). Sweep 7 replaced the item with the SWEMWBS.",,
 wb_domainsat_schoolwork_self,compatible,"ECQ10A00, FCSCWK00","8 - coalesce(as.numeric(ECQ10A00), as.numeric(FCSCWK00))","Sweeps 5-6: 'How do you feel about your school work?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
 wb_domainsat_appearance_self,compatible,"ECQ10B00, FCWYLK00","8 - coalesce(as.numeric(ECQ10B00), as.numeric(FCWYLK00))","Sweeps 5-6: 'How do you feel about the way you look?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
 wb_domainsat_family_self,compatible,"ECQ10C00, FCFMLY00","8 - coalesce(as.numeric(ECQ10C00), as.numeric(FCFMLY00))","Sweeps 5-6: 'How do you feel about your family?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
@@ -712,7 +712,7 @@ wb_qol_pedsql_self,unavailable,,,Instrument not administered,,
 wb_qol_pedsql_parent,unavailable,,,Instrument not administered,,
 wb_qol_kidscreen10_self,unavailable,,,Instrument not administered,,
 wb_qol_kidscreen10_parent,unavailable,,,Instrument not administered,,
-wb_selfesteem_rosenberg_self,unavailable,,,"MCS administers only 5 of the 10 Rosenberg items, so the 10-40 total this row expects cannot be formed; the 5-item score is mapped to wb_selfesteem_self",,
+wb_selfesteem_rosenberg_self,unavailable,,,"Only 5 of the 10 Rosenberg items, so no 10-40 total; the 5-item score is on wb_selfesteem_self.",,
 wb_selfesteem_self,compatible,"ECQ11A00, ECQ11B00, ECQ11C00, ECQ11D00, ECQ11E00, FCSATI00, FCGDQL00, FCDOWL00, FCVALU00, FCGDSF00, GCSATI00, GCGDQL00, GCDOWL00, GCVALU00, GCGDSF00","local({
   a <- coalesce(as.numeric(ECQ11A00), as.numeric(FCSATI00), as.numeric(GCSATI00))
   b <- coalesce(as.numeric(ECQ11B00), as.numeric(FCGDQL00), as.numeric(GCGDQL00))
@@ -724,7 +724,7 @@ wb_selfesteem_self,compatible,"ECQ11A00, ECQ11B00, ECQ11C00, ECQ11D00, ECQ11E00,
     ifelse(d %in% 1:4, 5 - d, NA_real_) +
     ifelse(e %in% 1:4, 5 - e, NA_real_) +
     ifelse(f %in% 1:4, 5 - f, NA_real_)
-})","Sweeps 5, 6 and 7 (ages 11, 14 and 17), self-completed. The same five positively worded Rosenberg items are asked at each sweep, under different MCS names. MCS codes 1 = strongly agree to 4 = strongly disagree, so each item is reversed to 5 minus the code, giving 4 for strongly agree, and the five are summed to a 5-20 total where higher means greater self-esteem. Scored complete-case. Codes above 4 at sweep 7 are don't know / refused / no answer and are excluded",,
+})","Sweeps 5-7 (ages 11, 14, 17), self-completed: the same five positively worded Rosenberg items. MCS codes 1 = strongly agree to 4 = strongly disagree; reversed (5 - code) and summed, 5-20, higher = greater self-esteem. Complete-case; sweep-7 codes above 4 (don't know/refused/no answer) excluded.",,
 wb_selfesteem_measure,compatible,.wave,"if_else(
   .wave %in% c(""sweep_5"", ""sweep_6"", ""sweep_7""),
   ""Rosenberg Self-Esteem Scale, 5 of 10 items, 1-4 item scoring reversed so higher is greater self-esteem (range 5-20)"",
@@ -735,7 +735,7 @@ wb_selfefficacy_self,unavailable,,,Instrument not administered,,
 wb_selfefficacy_measure,unavailable,,,Instrument not administered,,
 wb_mwb_who5_self,unavailable,,,Instrument not administered,,
 wb_happiness_shs_self,unavailable,,,Instrument not administered,,
-wb_mwb_swemwbs_self,compatible,GDWEMWBS,as.numeric(GDWEMWBS),"Sweep 7 only (age 17), self-completed. MCS releases the Rasch-transformed metric score for the seven short-form items (GCWWOP00, GCWWUS00, GCWWRE00, GCWWDE00, GCWWTH00, GCWWCL00, GCWWMN00), which is the published SWEMWBS conversion of the 7-35 raw sum and is itself on 7-35; observed median 22.35. The metric score is mapped rather than the raw sum. The 14-item WEMWBS in wb_mwb_wemwbs was not administered",,
+wb_mwb_swemwbs_self,compatible,GDWEMWBS,as.numeric(GDWEMWBS),"Sweep 7 only (age 17), self-completed. GDWEMWBS: published SWEMWBS Rasch metric score for the 7 items (7-35), mapped instead of the raw sum. 14-item WEMWBS not administered (wb_mwb_wemwbs).",,
 wb_selfratedhealth_self,compatible,"FCCGHE00, GCCGHE00","recode_values(
   coalesce(as.numeric(FCCGHE00), as.numeric(GCCGHE00)),
   1 ~ ""Excellent"",
@@ -750,11 +750,11 @@ wb_eudaimonic_self,unavailable,,,Not collected.,,
 wb_eudaimonic_measure,unavailable,,,Not collected.,,
 st_measure_type,inferred,,"""Continuous""","Time-use diary: activities recorded in 10-minute slots over a full day, summed to minutes per diary day in the tidier (bp27_tud_minutes()).",,diary
 st_measure_name,inferred,,"""MCS time use diary""","Sweep-6 time-use diary (app, web or paper), one weekday and one weekend day per cohort member; harmonised activity codes from mcs6_cm_tud_harmonised.",,diary
-st_responder,inferred,,"""Self""","The cohort member completes the diary; 4,639 of the 11,852 sweep-6 cohort members returned at least one diary day.",,diary
-st_watch_wd,compatible,tud_tv_mins_wd,tud_tv_mins_wd / 60,"Diary activity 38 'Watch TV, DVDs, downloaded videos' on the weekday diary day, minutes to hours. Diary minutes are exact rather than banded, so no band midpoints are involved.",,diary
+st_responder,inferred,,"""Self""",Completed by the cohort member.,,diary
+st_watch_wd,compatible,tud_tv_mins_wd,tud_tv_mins_wd / 60,"Diary activity 38 ('Watch TV, DVDs, downloaded videos'), weekday diary day; exact minutes / 60.",,diary
 st_watch_we,compatible,tud_tv_mins_we,tud_tv_mins_we / 60,"Diary activity 38 on the weekend diary day, minutes to hours.",,diary
 st_watch,compatible,"tud_tv_mins_wd, tud_tv_mins_we",((tud_tv_mins_wd * 5) + (tud_tv_mins_we * 2)) / 7 / 60,5:2 weighted mean of the weekday and weekend diary days (project convention); NA for the cohort members who returned only one day type.,,diary
-st_game_wd,partial,tud_game_mins_wd,tud_game_mins_wd / 60,"Diary activity 37 'Playing electronic games and Apps' on the weekday diary day. Partial: the code covers games on any device, including phone and tablet apps, not only computer or console gaming.",,diary
+st_game_wd,partial,tud_game_mins_wd,tud_game_mins_wd / 60,"Diary activity 37 ('Playing electronic games and Apps'), weekday diary day. Partial: games on any device, including phone and tablet apps.",,diary
 st_game_we,partial,tud_game_mins_we,tud_game_mins_we / 60,Diary activity 37 on the weekend diary day; see st_game_wd for the coverage caveat.,,diary
 st_game,partial,"tud_game_mins_wd, tud_game_mins_we",((tud_game_mins_wd * 5) + (tud_game_mins_we * 2)) / 7 / 60,5:2 weighted mean of the diary days; NA when only one day type was returned. Partial as for st_game_wd.,,diary
 st_socmedia_wd,compatible,tud_socmedia_mins_wd,tud_socmedia_mins_wd / 60,"Diary activity 34 'Browsing and updating social networking sites (e.g. Twitter, Facebook, BBM, Snapchat)' on the weekday diary day.",,diary
@@ -763,5 +763,5 @@ st_socmedia,compatible,"tud_socmedia_mins_wd, tud_socmedia_mins_we",((tud_socmed
 st_internet_wd,compatible,tud_internet_mins_wd,tud_internet_mins_wd / 60,"Diary activity 35 'General internet browsing, programming (not time on social networking sites)' on the weekday diary day.",,diary
 st_internet_we,compatible,tud_internet_mins_we,tud_internet_mins_we / 60,Diary activity 35 on the weekend diary day.,,diary
 st_internet,compatible,"tud_internet_mins_wd, tud_internet_mins_we",((tud_internet_mins_wd * 5) + (tud_internet_mins_we * 2)) / 7 / 60,5:2 weighted mean of the diary days; NA when only one day type was returned.,,diary
-st_videochat,incompatible,,,"Diary activity 31 'Speaking on the phone (including Skype, video calls)' pools voice calls with video calls, so it cannot defensibly become video-chat time (tud_calls_mins_wd/we are kept in the tidied table).",,diary
-st_email,incompatible,,,"Diary activity 33 'Answering emails, instant messaging, texting' pools texting and messaging with email, so it cannot defensibly become email time (tud_messaging_mins_wd/we are kept in the tidied table).",,diary
+st_videochat,incompatible,,,"Diary activity 31 ('Speaking on the phone, including Skype/video calls') pools voice and video calls (tud_calls_mins_wd/we kept in the tidied table).",,diary
+st_email,incompatible,,,"Diary activity 33 ('Answering emails, instant messaging, texting') pools email with texting and messaging (tud_messaging_mins_wd/we kept in the tidied table).",,diary

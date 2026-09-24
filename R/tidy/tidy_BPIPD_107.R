@@ -1,24 +1,20 @@
 #' Tidier for BPIPD-107 (PISA)
 #'
-#' PISA releases one student questionnaire file and one school questionnaire
-#' file per cycle, plus, in some cycles, separate files for additional samples
-#' (financial literacy, Moscow City, the 2015 additional countries) and for
-#' scores released later (2018 Viet Nam, 2022 creative thinking). The spec
-#' declares each cycle as a wave. This tidier assembles each cycle from its
-#' files following `bp107_cycle_recipes`, joins the school columns on, keeps the
-#' columns listed in `bp107_column_map()`, binds the cycles into one table, and
-#' builds a participant id that is unique across cycles. Columns keep their
-#' original PISA names, except where the same name carries a different coding
-#' in different cycles (the ISCED parental-education indices); recoding is the
-#' harmonisation step's job.
+#' Each cycle releases a student file and a school file, plus, in some
+#' cycles, extra files (financial literacy, Moscow City, 2015 additional
+#' countries, 2018 Viet Nam scores, 2022 creative thinking). Assembles each
+#' cycle per `bp107_cycle_recipes`, joins on school columns, keeps the
+#' columns in `bp107_column_map()`, binds cycles, and builds a participant id
+#' unique across cycles. Columns keep their original PISA names, except the
+#' ISCED parental-education indices, which differ in coding by cycle;
+#' recoding is harmonisation's job.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble with one row per student per cycle; `pisa_source` names the
-#'   spec resource each student row came from
+#' - one row per student per cycle; `pisa_source` names the source resource
 tidy_BPIPD_107 <- function(raw_dataset, spec) {
   waves <- vapply(spec$waves, function(w) as.character(w$wave), character(1))
   parts <- lapply(waves, function(wave) bp107_tidy_wave(raw_dataset, wave))
@@ -27,7 +23,7 @@ tidy_BPIPD_107 <- function(raw_dataset, spec) {
   bp107_check_label_conflicts(parts)
   df <- bp107_bind_waves(parts)
 
-  # `bind_rows()` appends each later cycle's new columns at the end; restore
+  # `bind_rows()` appends later cycles' new columns at the end; restore
   # the column map's order.
   ordered <- intersect(bp107_column_map()$column, names(df))
   df <- df[c(ordered, "pisa_source", ".wave", ".wave_label")]
@@ -49,18 +45,14 @@ tidy_BPIPD_107 <- function(raw_dataset, spec) {
 
 #' How each cycle's files assemble into one student table
 #'
-#' - `spine`: student tables whose rows are participants; a cycle with
-#'   additional samples lists several, and they stack.
-#' - `replace`: for a spine table, a table that re-issues some of its rows
-#'   with more columns filled in (2018 Viet Nam, whose test scores were
-#'   released separately); matched rows are overwritten.
-#' - `exclude`: countries dropped from a table, keyed by resource name. The
-#'   only one is Albania, the 2015 additional file that is
-#'   also in the main 2015 file
-#' - `join`: groups of tables that add columns to existing participants,
-#'   keyed on `CNTSTUID`; the tables in a group stack before joining.
-#' - `school`: school questionnaire tables, stacked and joined on
-#'   `CNT` + `CNTSCHID`.
+#' - `spine`: student tables whose rows are participants; stacked if several.
+#' - `replace`: re-issues some spine rows with more columns filled in (2018
+#'   Viet Nam scores, released separately); matched rows overwritten.
+#' - `exclude`: countries dropped from a table, by resource name. Only
+#'   Albania, already in the main 2015 file.
+#' - `join`: table groups that add columns to existing participants, keyed
+#'   on `CNTSTUID`; stacked before joining.
+#' - `school`: school tables, stacked and joined on `CNT` + `CNTSCHID`.
 bp107_cycle_recipes <- list(
   "2015" = list(
     spine = c("stu_2015", "stu_cm2_2015"),
@@ -90,9 +82,8 @@ bp107_cycle_recipes <- list(
 
 #' One cycle's students, assembled from its files per `bp107_cycle_recipes`
 #'
-#' Every table a recipe names must have been read, so a file that went
-#' missing from the data folder is an error rather than a silently smaller
-#' sample. The assembled table is then cut down to the column map.
+#' Every table a recipe names must have been read; a missing file errors
+#' rather than silently shrinking the sample. Cut down to the column map.
 bp107_tidy_wave <- function(raw_dataset, wave) {
   recipe <- bp107_cycle_recipes[[wave]]
   if (is.null(recipe)) {
@@ -154,9 +145,9 @@ bp107_tidy_wave <- function(raw_dataset, wave) {
   bp107_zap_cycle_labels(bp107_align_id_types(stu))
 }
 
-#' Identifier columns that PISA 2025 stores as zero-padded strings where
-#' earlier cycles store numbers ("00800001" versus 800001). They are made
-#' numeric in every cycle so the cycles bind and the ids compare equal.
+#' Identifier columns PISA 2025 stores as zero-padded strings where earlier
+#' cycles store numbers ("00800001" vs 800001). Made numeric in every cycle
+#' so cycles bind and ids compare equal.
 bp107_numeric_ids <- c("CNTRYID", "CNTSCHID", "CNTSTUID", "REGION")
 
 bp107_align_id_types <- function(tbl) {
@@ -172,9 +163,9 @@ bp107_align_id_types <- function(tbl) {
 
 #' Stack same-cycle tables and insist the key is unique across them
 #'
-#' Value labels of the mapped columns must agree between the tables (see
-#' `bp107_check_label_conflicts()`); label differences in columns the map does
-#' not keep are ignored.
+#' Value labels of the mapped columns must agree between tables (see
+#' `bp107_check_label_conflicts()`); differences in unmapped columns are
+#' ignored.
 bp107_stack <- function(tables, key, what, mapped) {
   if (length(tables) > 1) {
     bp107_check_label_conflicts(tables, columns = mapped)
@@ -220,11 +211,11 @@ bp107_replace_rows <- function(x, y, what) {
   out
 }
 
-#' Left-join a cycle table onto the student rows without changing the row count
+#' Left-join a cycle table onto the student rows without changing row count
 #'
-#' Columns of `y` that already exist in `x` (design and administrative columns
-#' such as `STRATUM`, `OECD`, `.wave`) are dropped from `y` first, so the join
-#' never produces `.x`/`.y` suffixes. `y` must have one row per key.
+#' Columns of `y` already in `x` (e.g. `STRATUM`, `OECD`, `.wave`) are
+#' dropped first, so the join never produces `.x`/`.y` suffixes. `y` must
+#' have one row per key.
 bp107_join <- function(x, y, by, what) {
   y <- tibble::as_tibble(y)
   missing_keys <- setdiff(by, names(y))
@@ -258,10 +249,9 @@ bp107_cycles <- c("2015", "2018", "2022", "2025")
 
 #' One column-map entry
 #'
-#' `cycles` lists the cycles whose files carry the item under the tidied name.
-#' `source` is only needed when the tidied name differs from the file's column
-#' name: a character vector of source columns named by cycle, which then also
-#' defines the cycles.
+#' `cycles` lists cycles carrying the item under the tidied name. `source`
+#' is only needed when the tidied name differs from the file's column name:
+#' source columns by cycle, which then also defines the cycles.
 bp107_entry <- function(label, cycles = bp107_cycles, source = NULL) {
   list(label = label, cycles = cycles, source = source)
 }
@@ -278,10 +268,10 @@ bp107_pv_entries <- function(suffix, domain, cycles = bp107_cycles) {
 #' Columns carried into the tidied table, with a label and the cycles that
 #' have them
 #'
-#' Names are the original PISA variable names. Where a cycle lacks an item the
-#' tidied column is `NA` for that cycle. Add here anything the harmonisation
-#' step turns out to need; `bp107_select_columns()` errors if a listed column is
-#' missing from a cycle's files, so renamed or dropped items surface at once.
+#' Names are the original PISA variable names; `NA` where a cycle lacks an
+#' item. Add anything harmonisation needs; `bp107_select_columns()` errors on
+#' a listed column missing from a cycle's files, so renames or drops surface
+#' at once.
 bp107_column_map <- function() {
   entries <- c(
     list(
@@ -947,9 +937,8 @@ bp107_column_map <- function() {
 
 #' Cut a cycle's joined table down to the column map
 #'
-#' Errors if the cycle is unknown to the map or if any column the map expects
-#' for that cycle is absent, so a renamed or dropped item is noticed rather
-#' than silently becoming `NA`.
+#' Errors if the cycle is unknown to the map, or an expected column is
+#' absent, rather than silently becoming `NA`.
 bp107_select_columns <- function(tbl, wave) {
   map <- bp107_column_map()
   if (!wave %in% names(map)) {
@@ -986,10 +975,10 @@ bp107_select_columns <- function(tbl, wave) {
 
 # Value-label safety across cycles --------------------------------------------
 
-#' Columns whose codes are cycle-specific lists (sampling strata). The same
-#' code names a different thing in each cycle, so their value labels are
-#' dropped before binding; the codes and the variable label stay, and the
-#' cycle's codebook (or the raw target) gives the meaning within a cycle.
+#' Columns whose codes are cycle-specific (sampling strata): the same code
+#' means different things per cycle, so value labels are dropped before
+#' binding; codes and the variable label stay, and that cycle's codebook
+#' gives the meaning.
 bp107_cycle_specific_codes <- c("STRATUM")
 
 bp107_zap_cycle_labels <- function(tbl) {
@@ -998,11 +987,10 @@ bp107_zap_cycle_labels <- function(tbl) {
   tbl
 }
 
-#' Columns whose value labels are worded differently across cycles but whose
-#' codes mean the same thing (for example "Turkey" / "Türkiye", "Native" /
-#' "Native student"). Checked by hand against the 2015, 2018 and 2022 files;
-#' extend after inspecting the conflicts `bp107_check_label_conflicts()`
-#' reports for a new cycle.
+#' Columns whose value labels are worded differently across cycles but code
+#' the same thing (e.g. "Turkey"/"Türkiye", "Native"/"Native student").
+#' Checked by hand against 2015/2018/2022; extend after reviewing conflicts
+#' `bp107_check_label_conflicts()` reports for a new cycle.
 bp107_label_conflicts_ok <- c(
   "CNTRYID",
   "CNT",
@@ -1018,13 +1006,12 @@ bp107_label_conflicts_ok <- c(
 
 #' Stop if a shared column's value labels disagree between cycles
 #'
-#' `dplyr::bind_rows()` unions the value labels of `haven_labelled` columns
-#' and, where one code carries different labels in two cycles, keeps the first
-#' cycle's label with only a warning. That would mislabel a recoded item. This
-#' check compares labels for the same code across cycles (case, spacing and
-#' punctuation ignored), skipping PISA's missing-value codes (5-9, 95-99,
-#' 995-999, ...), and errors unless the column is listed in
-#' `bp107_label_conflicts_ok`.
+#' `dplyr::bind_rows()` unions value labels of `haven_labelled` columns and,
+#' where one code has different labels in two cycles, keeps the first
+#' cycle's with only a warning, risking a silent mislabel. Compares labels
+#' per code across cycles (case/spacing/punctuation ignored), skips PISA's
+#' missing-value codes (5-9, 95-99, 995-999, ...), and errors unless the
+#' column is in `bp107_label_conflicts_ok`.
 bp107_check_label_conflicts <- function(parts, columns = NULL) {
   labels_of <- function(tbl) {
     cols <- names(tbl)[vapply(tbl, haven::is.labelled, logical(1))]

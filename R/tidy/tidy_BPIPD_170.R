@@ -103,9 +103,8 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
       )
     }
 
-    # Up to 2011 the 8th/10th release splits the two grades across files:
-    # DS0001-DS0004 are the four 8th-grade forms and DS0005-DS0008 the four
-    # 10th-grade forms.
+    # Up to 2011, DS0001-DS0004 are the four 8th-grade forms and
+    # DS0005-DS0008 the four 10th-grade forms.
     grade <- if (identical(stream, "12")) {
       rep(12L, nrow(df))
     } else if (year <= 2011L) {
@@ -144,8 +143,8 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
       }
     }
 
-    # Resolved here rather than in `variables.csv` because the codes change
-    # in 2005: 0/1 is White/Black up to 2004, then 1/2/3 is Black/White/Hispanic
+    # Resolved here, not in variables.csv: codes change in 2005 (0/1
+    # White/Black up to 2004, then 1/2/3 Black/White/Hispanic).
     if ("race" %in% names(out)) {
       labels <- if (year <= 2004L) {
         c("0" = "White", "1" = "Black")
@@ -192,7 +191,7 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
     )
   }
 
-  # Everything outside these ranges is a supplementary release
+  # Outside these ranges is a supplementary release.
   is_primary <- (index$stream == "12" & index$ds <= 7L) |
     (index$stream == "8-10" & index$year <= 2011L & index$ds <= 8L) |
     (index$stream == "8-10" & index$year >= 2012L & index$ds == 1L)
@@ -210,7 +209,7 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
   # ---- assemble each stream-year -----------------------------------------
   assemble <- function(rows) {
     if (!identical(index$stream[rows[1]], "12")) {
-      # 8th/10th grade: form files are disjoint samples, so they simply stack.
+      # 8th/10th grade form files are disjoint samples: just stack them.
       return(dplyr::bind_rows(prepped[rows]))
     }
 
@@ -250,16 +249,16 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
   )
 
   # ---- participant key ----------------------------------------------------
-  # The serial repeats between the 8th- and 10th-grade samples of a year and
-  # again in every later year, so all three parts are needed.
+  # Serial repeats across grades within a year and across years, so the
+  # key needs all three parts.
   df <- dplyr::mutate(
     df,
     participant_id = paste(data_year, grade, serial, sep = "-"),
     .before = 1
   )
 
-  # `bind_rows()` drops the label attributes the item loop attached, so put
-  # back the label of the first file that matched each column.
+  # bind_rows() drops the label attributes; restore each column's label
+  # from the first file that matched it.
   item_labels <- list()
   for (part in prepped) {
     for (nm in names(item_vars)) {
@@ -301,9 +300,9 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
 
 #' Item variables, by the label text that identifies them
 #'
-#' MTF renumbers its variables across forms, grades and releases (e.g., TV hours
-#' is V1120 in 2000, V1121 from 2004, V2120/V3120/V4120 on the other forms), so
-#' each item is located by its label rather than by name.
+#' MTF renumbers variables across forms, grades and releases (e.g. TV hours is
+#' V1120 in 2000, V1121 from 2004, V2120/V3120/V4120 on other forms), so items
+#' are located by label, not name.
 bp170_item_vars <- function() {
   design_vars <- c(
     region = "SCHOOL REGION|SCHL RGN|SCH REG",
@@ -322,7 +321,7 @@ bp170_item_vars <- function() {
     hshld_father = "HSHLD FATHE",
     hshld_mother = "HSHLD MOTHE"
   )
-  # Time-use items are in hours per WEEK up to 2017 and hours per DAY from 2018
+  # Time-use items: hours/WEEK up to 2017, hours/DAY from 2018.
   screen_week_vars <- c(
     computer_hrs_week_school = "HR/W CO?MPUTR SC",
     computer_hrs_week_job = "HR/W CO?MPUTR JO",

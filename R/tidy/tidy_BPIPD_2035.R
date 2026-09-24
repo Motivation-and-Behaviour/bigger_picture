@@ -1,8 +1,8 @@
 #' Tidier for BPIPD-2035 (National Survey on Cyber Violence Among Adolescents)
 #'
-#' Three independent cross-sections of school students (2020, 2021, 2023), one
-#' Excel workbook each with its own questionnaire and column names; the adult,
-#' teacher and parent workbooks are separate samples and are not combined here.
+#' Three independent cross-sections of school students (2020, 2021, 2023),
+#' one Excel workbook each with its own questionnaire and columns. Adult,
+#' teacher and parent workbooks are separate samples, not combined here.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -96,8 +96,8 @@ bp2035_shape_survey <- function(tbl, name, id_column, labels) {
     )
   }
 
-  # `population` is the trailing token of the resource name; `wave` comes from
-  # the spec, which the reader has already stamped onto every row.
+  # `population` is the trailing token of the resource name; `wave` comes
+  # from the spec, already stamped onto every row by the reader.
   population <- sub("^cyber_violence_[0-9]{4}_", "", name)
   wave <- if (".wave" %in% names(tbl) && nrow(tbl) > 0L) {
     as.character(tbl$.wave[[1]])
@@ -117,13 +117,13 @@ bp2035_shape_survey <- function(tbl, name, id_column, labels) {
     tbl <- bp2035_apply_labels(tbl, labels)
   }
 
-  # `.wave`/`.wave_label` are the reader's, not the study's, so they are
-  # replaced by the identifier columns rather than carried through prefixed.
+  # `.wave`/`.wave_label` are the reader's, not the study's; replaced by the
+  # identifier columns rather than carried through prefixed.
   body <- dplyr::select(tbl, -dplyr::any_of(c(".wave", ".wave_label")))
 
-  # Each year is a different questionnaire, so the same name means a different
-  # item from year to year (2020 `Q1` is an hours grid, 2021 `Q1` a band); the
-  # prefix keeps them apart and `variables.csv` aligns the items across years.
+  # Each year is a different questionnaire, so the same name can mean a
+  # different item (2020 `Q1` is an hours grid, 2021 `Q1` a band); the prefix
+  # keeps them apart, and `variables.csv` aligns items across years.
   body <- dplyr::rename_with(body, ~ paste(population, wave, .x, sep = "_"))
 
   dplyr::bind_cols(
@@ -138,11 +138,10 @@ bp2035_shape_survey <- function(tbl, name, id_column, labels) {
 
 #' Variable and value labels from a cyber-violence codebook
 #'
-#' The three youth workbooks carry the same two blocks in three layouts: the
-#' 2023 codebook keeps them on a sheet each (`변수정보`, `변수값`), the 2021
-#' workbook on an English-named pair (`Variable`, `Value`), and the 2020
-#' workbook stacks both in one `변수가이드` sheet, with the marker row
-#' `작업 파일의 변수` between them.
+#' Same two blocks, three layouts: 2023 keeps them on a sheet each
+#' (`변수정보`, `변수값`), 2021 on an English-named pair (`Variable`,
+#' `Value`), and 2020 stacks both in one `변수가이드` sheet, split by the
+#' marker row `작업 파일의 변수`.
 bp2035_read_labels <- function(path) {
   sheets <- readxl::excel_sheets(path)
 
@@ -172,10 +171,10 @@ bp2035_read_labels <- function(path) {
 
 #' The first three columns of a codebook sheet, unheaded
 #'
-#' Every block is `variable`, `code`, `label`, but the header rows sit at a
-#' different depth in each layout, so the sheets are read without column names
-#' and sliced by the caller. `code` is the variable's position in the variable
-#' block and the value being labelled in the value block.
+#' Every block is `variable`, `code`, `label`, but header rows sit at a
+#' different depth in each layout, so sheets are read without column names
+#' and sliced by the caller. `code` means the variable's position in the
+#' variable block, and the value being labelled in the value block.
 bp2035_read_sheet <- function(path, sheet) {
   columns <- readxl::read_excel(
     path,
@@ -198,16 +197,14 @@ bp2035_variable_labels <- function(info) {
 
 #' Carry a multi-column item's label onto the rest of its block
 #'
-#' The 2021 `Variable` sheet writes the question text once, against the first
-#' column of a block (`Q2_1` for `Q2_1`-`Q2_3`, `Q7_1_1 TO Q7_1_8` for that
-#' block), and leaves the sibling columns' label cell empty. A sibling is
-#' recognised by sharing the block's stem, so a column that merely follows a
-#' block without belonging to it — `qa7`, after `Q6_1a` — keeps its empty label
-#' rather than inheriting a question it does not ask. Only the block's question
-#' text is inherited: the four ranked blocks (`Q2_1`, `Q5_1`, `Q22_1`, `Q23_1`)
-#' open with a `[1순위]` marker that belongs to the first-choice column
-#' alone, and the sheet states no rank for the siblings, so the marker is
-#' dropped rather than repeated onto the second- and third-choice columns.
+#' The 2021 `Variable` sheet writes the question text once, against a
+#' block's first column (`Q2_1` for `Q2_1`-`Q2_3`, `Q7_1_1 TO Q7_1_8` for
+#' that block), leaving sibling columns' label cells empty. A sibling is
+#' recognised by sharing the block's stem, so `qa7`, which merely follows
+#' `Q6_1a` without belonging to it, keeps its empty label. The four ranked
+#' blocks (`Q2_1`, `Q5_1`, `Q22_1`, `Q23_1`) open with a `[1순위]` marker
+#' that belongs to the first-choice column alone, so it's dropped rather
+#' than repeated onto the second- and third-choice siblings.
 bp2035_fill_block_labels <- function(info) {
   stem <- NA_character_
   text <- NA_character_
@@ -271,13 +268,14 @@ bp2035_fill_down <- function(x) {
 
 #' Attach codebook variable and value labels to the columns they describe
 #'
-#' Value labels are attached to numeric columns only. The 2021 workbook writes
-#' its missing marker as the text `#NULL!`, so the Excel reader types most of
-#' that year's coded columns as character; `as.numeric()` on a `haven_labelled`
-#' character vector errors, and `variables.csv` reads those columns that way,
-#' so labelling them would break the mapping. A list whose codes are not all
-#' distinct numbers is left off too — no youth codebook has one today, but a
-#' `haven::labelled()` built from one would be ambiguous or would error.
+#' Value labels are attached to numeric columns only. The 2021 workbook's
+#' missing marker is the text `#NULL!`, so the Excel reader types most of
+#' that year's coded columns as character; `as.numeric()` on a
+#' `haven_labelled` character vector errors, and `variables.csv` reads those
+#' columns that way, so labelling them would break the mapping. A list whose
+#' codes aren't all distinct numbers is skipped too (no youth codebook has
+#' one today): a `haven::labelled()` built from one would be ambiguous or
+#' would error.
 bp2035_apply_labels <- function(tbl, labels) {
   for (column in intersect(names(tbl), names(labels$variable))) {
     attr(tbl[[column]], "label") <- unname(labels$variable[[column]])

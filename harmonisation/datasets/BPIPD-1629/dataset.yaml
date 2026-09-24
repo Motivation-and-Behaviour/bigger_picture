@@ -51,8 +51,5 @@ resources:
     glob: "read6885.htm"
 
 notes: |
-  Dataset includes primary survey data in Stata format (.dta), accompanied
-  by data dictionaries (.rtf, .xls) and supplemental analytical packs (.xls).
-  Documentation and reports are provided in PDF, RTF, and HTM
-  formats, covering technical user guides, comparative country questionnaires,
-  and cross-platform conversion instructions.
+  Primary data in Stata; codebooks and analytical packs in RTF/XLS.
+  Docs in PDF/RTF/HTM: technical report, country questionnaires, SPSS-to-Stata conversion notes.

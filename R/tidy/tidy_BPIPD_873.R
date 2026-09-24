@@ -11,8 +11,8 @@
 #' Output:
 #' - one tibble, one row per person per wave (`pid` x `wave`), aged 19 or under
 tidy_BPIPD_873 <- function(raw_dataset, spec) {
-  # 2012 is absent from `bp873_waves()` because no screen-use duration item was
-  # fielded that year; this guards any wave map that likewise contributes none.
+  # 2012 fielded no screen-use duration item, so it's absent from
+  # `bp873_waves()`; this guards any wave map that likewise contributes none.
   asked <- Filter(
     function(wave) {
       canonical <- c(names(wave$child_vars), names(wave$individual_vars))
@@ -52,9 +52,9 @@ tidy_BPIPD_873 <- function(raw_dataset, spec) {
     )
   }
 
-  # Keep children and adolescents only: the dataschema caps `age_years` at 19,
-  # and CFPS routes 16-19s to the adult/person questionnaire rather than the
-  # child one. Rows with neither a reported age nor a birth year go too.
+  # Keep children/adolescents only: `age_years` caps at 19, and CFPS routes
+  # 16-19s to the adult/person questionnaire, not the child one. Rows with
+  # neither a reported age nor a birth year go too.
   age <- dplyr::coalesce(df$age_reported, as.numeric(df$wave) - df$birth_year)
   df[!is.na(age) & age <= 19, ]
 }
@@ -72,9 +72,9 @@ bp873_waves <- function() {
         urban = "urban",
         age_reported = "wa1age",
         school_grade = "wf302",
-        # 2010 codes the stage one step lower than every later wave (1 =
-        # kindergarten here, 1 = nursery from 2014), so it keeps its own column
-        # rather than binding under labels that would misdescribe it.
+        # 2010 codes stage one step lower than later waves (1 = kindergarten
+        # here, 1 = nursery from 2014), so it keeps its own column instead of
+        # binding under mismatched labels.
         school_stage_2010 = "wf301",
         ethnicity_code = "wa6code",
         internet_any = "ku2",
@@ -84,9 +84,9 @@ bp873_waves <- function() {
         tv_we_hours_self = "kt402_a_2",
         internet_wd_hours_self = "kt403_a_1",
         internet_we_hours_self = "kt403_a_2",
-        # 2010 and 2014 ask about leave of absence and cutting class in one
-        # four-option item; from 2016 cutting class is a yes/no item of its own
-        # (`class_cut`), so the two codings keep separate columns.
+        # 2010/2014 fold leave-of-absence and cutting class into one
+        # four-option item; from 2016 `class_cut` is its own yes/no item, so
+        # the two codings keep separate columns.
         class_absence = "kr430",
         school_satisfaction = "ks701",
         schoolwork_satisfaction = "ks501",

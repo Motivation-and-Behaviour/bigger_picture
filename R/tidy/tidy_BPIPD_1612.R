@@ -1,10 +1,9 @@
 #' Tidier for BPIPD-1612 (Konok & Szőke 2022)
 #'
-#' Two sheets of a two-wave parent-report study: a T1 cross-section, one row
-#' per child, and a longitudinal sheet holding the T1 and T2 blocks of the
-#' children followed up at T2 side by side, one row per child. The T1 rows come
-#' from the cross-section and the T2 rows from the longitudinal sheet, linked
-#' on the T1 answers the longitudinal sheet repeats.
+#' Two-wave parent-report study. T1 cross-section (one row/child) plus a
+#' longitudinal sheet holding the T1 and T2 blocks of children followed up
+#' at T2, side by side. T1 rows come from the cross-section, T2 rows from
+#' the longitudinal sheet, linked on the T1 answers it repeats.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -15,8 +14,7 @@
 tidy_BPIPD_1612 <- function(raw_dataset, spec) {
   maps <- bp1612_columns()
 
-  # Neither sheet has an identifier, so the id is the sheet a child is first
-  # seen in (`d` cross-section, `l` longitudinal) plus its row number there.
+  # No identifier in either sheet; id = sheet first seen in (`d`/`l`) + row number.
   t1 <- bp1612_take(raw_dataset$data$data_t1, maps$cross_section)
   t1 <- tibble::add_column(
     t1,
@@ -49,12 +47,12 @@ tidy_BPIPD_1612 <- function(raw_dataset, spec) {
 
 #' Source column for each tidied column, per sheet block
 #'
-#' The three blocks name the same construct differently (`Child_age` in the
-#' cross-section, `Child_age_T1` and `Child age_T2` in the longitudinal sheet),
-#' so each is selected and renamed through its own map; the tidied names are
-#' the cross-section's. Household composition, the responding parent's own
-#' education and the unreversed copies of the five reversed SDQ items were
-#' asked at T2 only.
+#' Each block names the same construct differently (`Child_age` in the
+#' cross-section, `Child_age_T1` and `Child age_T2` in the longitudinal
+#' sheet), so each gets its own select/rename map; tidied names follow the
+#' cross-section. Household composition, the responding parent's own
+#' education and the unreversed copies of the five reversed SDQ items are
+#' T2-only.
 bp1612_columns <- function() {
   shared <- c(
     "Child_age",
@@ -93,8 +91,8 @@ bp1612_columns <- function() {
     "SDQ_25_hip_rev"
   )
 
-  # The cross-section drops the `SDQ_` prefix and calls the conduct subscale
-  # `beh`; the T2 block suffixes every item, lower-casing the suffix on item 13.
+  # Cross-section drops the `SDQ_` prefix, calls conduct `beh`; T2 suffixes
+  # every item, lower-casing the suffix on item 13.
   items_cross <- sub("_cond", "_beh", sub("^SDQ_", "", items))
   items_t2 <- paste0(items, "_T2")
   items_t2[items == "SDQ_13_emo"] <- "SDQ_13_emo_t2"
@@ -139,19 +137,19 @@ bp1612_columns <- function() {
   )
 }
 
-#' Select one sheet's block of columns under the tidied names
+#' Select one sheet's block under the tidied names
 bp1612_take <- function(df, map) {
   dplyr::select(tibble::as_tibble(df), dplyr::all_of(map))
 }
 
 #' Id of the cross-section row each longitudinal row belongs to
 #'
-#' The longitudinal sheet repeats all 37 T1 answers, and those are distinct
-#' across the cross-section's children, so the sheets link on them even though
-#' neither holds an identifier. The 10 children the authors could not match to
-#' their T1 questionnaire (Konok & Szőke 2022, Section 2.1) have an empty T1
-#' block; they are somewhere in the cross-section too, but nothing in the
-#' workbook says where, so they become children of their own.
+#' The longitudinal sheet repeats all 37 T1 answers, distinct across the
+#' cross-section's children, so the sheets link on them despite neither
+#' holding an identifier. The 10 children the authors couldn't match to
+#' their T1 questionnaire (Konok & Szőke 2022, Section 2.1) have an empty
+#' T1 block; they're in the cross-section too, but nothing says where, so
+#' they become children of their own.
 bp1612_link <- function(block, roster) {
   seen <- rowSums(!is.na(block)) > 0L
 
@@ -185,8 +183,8 @@ bp1612_key <- function(df) {
 
 #' Blank a child's sex where the two waves disagree
 #'
-#' Two children are recorded as a boy at one wave and a girl at the other, and
-#' nothing in the workbook says which is right, so neither wave's value is kept.
+#' Two children are a boy at one wave, a girl at the other; nothing says
+#' which is right, so neither value is kept.
 bp1612_resolve_sex <- function(df) {
   dplyr::mutate(
     df,
@@ -201,9 +199,9 @@ bp1612_resolve_sex <- function(df) {
 
 #' Label the tidied columns from the workbook's `variables_longit` sheet
 #'
-#' The data sheets carry no labels, and the codebook describes each construct
-#' against its T2 column, leaving the T1 twin's row blank, so every column
-#' takes its T2 description with the trailing wave phrase trimmed.
+#' Data sheets carry no labels; the codebook describes each construct
+#' against its T2 column only, so every column takes that T2 description
+#' with the trailing wave phrase trimmed.
 bp1612_label_columns <- function(df, codebook_path, t2_map) {
   codebook <- readxl::read_excel(
     codebook_path,

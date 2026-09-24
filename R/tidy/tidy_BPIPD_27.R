@@ -4,14 +4,14 @@
 #'
 #' - cohort-member modules (`mcs<n>_cm_*`) are keyed on family plus
 #'   cohort-member number and form the spine;
-#' - `hhgrid` holds one row per household member, and is read at both of the
-#'   grains it contains: the cohort member's own row joins onto the spine, and
-#'   the rest of the roster supplies each responding parent's sex;
+#' - `hhgrid` holds one row per household member and is read at two grains:
+#'   the cohort member's own row joins the spine, the rest of the roster
+#'   supplies each responding parent's sex;
 #' - family modules are keyed on family alone and are broadcast to every
 #'   cohort member in the family (MCS families can hold twins or triplets);
-#' - parent modules hold one row per responding parent, so they are reduced to
-#'   one row per family before joining. At the earlier sweeps the main
-#'   respondent is also the person who reports the child's screen use;
+#' - parent modules hold one row per responding parent, reduced to one row
+#'   per family before joining; at the earlier sweeps the main respondent
+#'   also reports the child's screen use;
 #' - `parent_interview` supplies only whether each respondent was born in the
 #'   UK, looked up across sweeps by person number.
 #'
@@ -210,8 +210,8 @@ bp27_tud_minutes <- function(tbl) {
     per_day[[nm]] <- as.numeric(minutes[child_day])
   }
 
-  # A child with two days of one type (not the case in this release) gets
-  # the mean of the two.
+  # A child with two days of one type gets the mean (not the case in this
+  # release).
   per_type <- dplyr::summarise(
     per_day,
     dplyr::across(

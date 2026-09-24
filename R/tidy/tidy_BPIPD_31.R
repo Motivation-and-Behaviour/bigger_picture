@@ -1,8 +1,8 @@
 #' Tidier for BPIPD-31 (FFCWS, ICPSR 31622 public use file)
 #'
-#' The release is a single wide file holding every wave side by side, so each
-#' wave is sliced out of it with the column map in `bp31_wave_columns()`, the
-#' slices are stacked long, and `bp31_apply_labels()` puts the labels back.
+#' Slices each wave out of the single wide release using the column map in
+#' `bp31_wave_columns()`, stacks the slices long, then `bp31_apply_labels()`
+#' re-attaches labels.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -52,8 +52,8 @@ tidy_BPIPD_31 <- function(raw_dataset, spec) {
 
 #' Waves carried into the harmonisation, in collection order
 #'
-#' Baseline and Year 1 ask no screen-use item and Year 22's respondents are
-#' young adults outside the 0-19 age range
+#' Baseline/Year 1 ask no screen-use item; Year 22 respondents are adults,
+#' outside the 0-19 range.
 bp31_waves <- function() {
   c(
     y3 = "Year 3",
@@ -76,10 +76,10 @@ bp31_constant_columns <- function() {
 
 #' Source column for each tidied stem at each wave
 #'
-#' `NA` means the wave did not ask the item. Stems are grouped so that every
-#' wave contributing to a stem used the same response format; where a construct
-#' changes format across waves (weekday screen-time bands at Year 9 versus
-#' hours at Year 15) it gets separate stems instead.
+#' `NA` means the wave didn't ask the item. Stems are grouped so every wave
+#' contributing to one used the same response format; a construct that
+#' changes format across waves (e.g. weekday bands at Year 9 vs hours at
+#' Year 15) gets separate stems instead.
 bp31_wave_columns <- function() {
   entries <- list(
     # --- provenance and demographics ---------------------------------------
@@ -542,8 +542,8 @@ bp31_wave_frame <- function(raw, fixed, wave, wave_map) {
     stems[present]
   ))
 
-  # A participant-wave is kept only where the wave recorded an interview year
-  # or a reported quantity of screen use
+  # Keep a participant-wave only if it recorded an interview year or a
+  # reported quantity of screen use
   markers <- intersect(
     c("interview_year", bp31_screen_use_stems()),
     names(wave_data)
@@ -579,8 +579,7 @@ bp31_screen_use_stems <- function() {
 
 #' Turn an ICPSR factor back into its original numeric code
 #'
-#' FFCWS codes missingness negatively throughout the release (-10 n/a for a
-#' specific reason through -1 refuse)
+#' FFCWS codes missingness negatively throughout (-10 n/a through -1 refuse).
 bp31_decode <- function(x) {
   if (is.factor(x)) {
     x <- sub("^\\((-?)0*([0-9]+)\\).*$", "\\1\\2", as.character(x))
@@ -697,16 +696,16 @@ bp31_label_column <- function(x, label, value_labels) {
 
 #' CBCL items making up each subscale, by wave
 #'
-#' Taken from the item tables the user guides publish: Year 3 Table 27 (the
-#' 2000 CBCL/1.5-5 form), Year 5 Table 27 (CBCL/4-18, 1991) and Year 15
-#' Table 18 (CBCL/6-18). Year 9 administered the most CBCL items of any wave
-#' (111) but its user guide prints only three example items per subscale and
-#' directs researchers to FFData@princeton.edu for the full lists, so it is
-#' deliberately absent here rather than guessed at.
+#' Item tables from the user guides: Year 3 Table 27 (CBCL/1.5-5, 2000), Year
+#' 5 Table 27 (CBCL/4-18, 1991), Year 15 Table 18 (CBCL/6-18). Year 9
+#' administered the most CBCL items (111) but its user guide prints only
+#' three example items per subscale and points researchers to
+#' FFData@princeton.edu for the full list, so it's deliberately absent here
+#' rather than guessed at.
 #'
-#' The forms differ by age, so the subscales available differ too: the Year 3
-#' preschool form has no attention problems or rule-breaking syndrome scale,
-#' which is why externalising cannot be formed at that wave.
+#' Subscales available differ by age form: the Year 3 preschool form has no
+#' attention problems or rule-breaking scale, so externalising can't be
+#' formed there.
 bp31_cbcl_items <- function() {
   list(
     y3 = list(

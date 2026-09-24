@@ -1,12 +1,11 @@
 #' Tidier for BPIPD-1928 (PeNSE, Pesquisa Nacional de Saude do Escolar)
 #'
-#' PeNSE is a repeated cross-section of Brazilian school students: each edition
-#' draws an independent sample, so the editions stack and no participant is
-#' followed. From 2012 every edition ships a student file, a school file and a
-#' merged student-plus-school file, and the merged file is the one used here;
-#' 2009 predates the school questionnaire and ships one flat fixed-width
-#' student file. The releases carry no variable labels, so each edition's
-#' dictionary sheets are read for them.
+#' Repeated cross-section: each edition draws an independent sample, so
+#' editions stack and no participant is followed. From 2012 the merged
+#' student-plus-school file is used (the separate student/school files are
+#' not read); 2009 predates the school questionnaire and ships one flat
+#' fixed-width student file. Labels come from each edition's dictionary
+#' sheets, since the raw releases carry none.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -51,15 +50,13 @@ tidy_BPIPD_1928 <- function(raw_dataset, spec) {
 
 #' The merged student file, dictionary sheets and row key of each edition
 #'
-#' `data` is the student-plus-school file, which is the union of the edition's
-#' student and school files, so those two are not read. `codebooks` names each
-#' dictionary sheet with the columns holding the variable name and its
-#' description: the 2009 and 2012 sheets are file layouts whose description
-#' sits in the sixth column, and the 2024 sheet leads with type and width. `id`
-#' is the study's own row key; 2009 and 2012 have none. `na` is the release's
-#' own missing marker, which only the 2009 flat file carries. `consent` names
-#' the consent item where the release still holds students who declined, which
-#' only 2009 does.
+#' `data` is the student-plus-school file (the union of the separate
+#' student/school files, so those aren't read). `codebooks` names each dictionary sheet with the columns
+#' holding the variable name and description: 2009/2012 are file layouts with
+#' description in column 6; 2024 leads with type and width. `id` is the
+#' study's own row key (2009/2012 have none). `na` is 2009's own missing
+#' marker. `consent` names 2009's consent item; only 2009 still holds
+#' students who declined to take part.
 bp1928_editions <- function() {
   list(
     "2009" = list(
@@ -111,7 +108,7 @@ bp1928_editions <- function() {
 bp1928_take <- function(tables, wave, edition) {
   tbl <- tibble::as_tibble(tables[[edition$data]])
 
-  # 2009 is a SAS flat file whose every numeric field writes missing as `.`
+  # 2009's SAS flat file writes missing as `.` for every numeric field
   # (`Input SAS/SAS_2009.xls` reads all but two fields as numeric).
   if (!is.null(edition$na)) {
     tbl[] <- lapply(tbl, function(x) {
@@ -120,10 +117,9 @@ bp1928_take <- function(tables, wave, edition) {
     })
   }
 
-  # Only valid questionnaires are kept. From 2019 the release pads the file with
-  # rows standing for enrolled but non-attending students, who answer nothing
-  # (`IND_EXPANSAO` in the dictionary), and 2009 still holds the students who
-  # declined to take part, which the later releases already leave out.
+  # Keep only valid questionnaires: from 2019 the file is padded with rows for
+  # enrolled but non-attending students (`IND_EXPANSAO`), and 2009 still holds
+  # students who declined, which later releases already exclude.
   keep <- rep(TRUE, nrow(tbl))
   if ("IND_EXPANSAO" %in% names(tbl)) {
     keep <- keep & as.numeric(tbl$IND_EXPANSAO) %in% 1
@@ -144,8 +140,8 @@ bp1928_take <- function(tables, wave, edition) {
     dplyr::all_of(recoded)
   )
 
-  # 2009 and 2012 carry no student identifier (2009's `ID` is the school), so
-  # the row's position in the file completes their key.
+  # 2009/2012 have no student identifier (2009's `ID` is the school), so row
+  # position completes their key.
   key <- if (is.null(edition$id)) {
     list(position)
   } else {
@@ -159,21 +155,21 @@ bp1928_take <- function(tables, wave, edition) {
 #' Items whose codes changed meaning between editions without a new name
 #'
 #' PeNSE renames a revised item (`B03009`, `VB03009A`, `B03009B`, `B03009C`),
-#' but these six kept their name while their code list shifted: `B01003` moves
-#' from single years to age bands, `B04003`, `B08007` and `E01P01` gain or lose
-#' a leading category, `V0008` swaps Federal with Municipal between the two
-#' 2015 samples, and `CAPITAL` is the capital's state code in 2009 but a
+#' but these six keep their name while the code list shifts: `B01003` moves
+#' from single years to age bands; `B04003`, `B08007` and `E01P01` gain or
+#' lose a leading category; `V0008` swaps Federal with Municipal between the
+#' two 2015 samples; `CAPITAL` is the capital's state code in 2009 but a
 #' capital/not-capital flag in 2012 (1/2) and 2024 (0/1). Each edition's copy
-#' therefore carries the edition in its name.
+#' is suffixed with the edition.
 bp1928_recoded_items <- function() {
   c("B01003", "B04003", "B08007", "CAPITAL", "E01P01", "V0008")
 }
 
 #' Read a column of digits stored as text back as a number
 #'
-#' The Excel releases store the same coded item as text in one edition and as a
-#' number in the next, which `bind_rows()` refuses. The genuinely textual
-#' columns (`DEPENDADM`, `POSEST`) do not parse and are left alone.
+#' Some coded items are text in one edition and numeric in the next, which
+#' `bind_rows()` refuses. Genuinely textual columns (`DEPENDADM`, `POSEST`)
+#' don't parse and are left alone.
 bp1928_as_number <- function(x) {
   parsed <- suppressWarnings(as.numeric(x))
   if (!is.character(x) || anyNA(parsed[!is.na(x)])) {
@@ -222,9 +218,9 @@ bp1928_labels <- function(paths, sheets, codebooks) {
 
 #' Variable names and descriptions from one dictionary sheet
 #'
-#' Every sheet interleaves a variable's row with the rows listing its response
-#' categories, and the category rows leave the name cell empty, so the pair is
-#' kept only where both cells are filled.
+#' Sheets interleave a variable's row with its response-category rows;
+#' category rows leave the name cell empty, so a pair is kept only where
+#' both cells are filled.
 bp1928_read_labels <- function(path, sheet, columns) {
   rows <- readxl::read_excel(
     path,
@@ -247,13 +243,12 @@ bp1928_read_labels <- function(path, sheet, columns) {
 
 #' The dictionary description of one column
 #'
-#' A column `bp1928_recoded_items()` suffixed with its edition is described by
-#' that edition's own dictionary, because the suffix exists precisely where the
-#' editions disagree about what the name means; every other column takes the
-#' merged description, i.e. the most recent edition that carries it. The 2019
-#' dictionary writes an item's suffix in lower case (`B03009b` for `B03009B`),
-#' and the 2012 merged file suffixes `N` onto the four items it renumbered when
-#' it merged the student and school files (`B01010N` for `B01010`).
+#' A `bp1928_recoded_items()` column suffixed with its edition uses that
+#' edition's own dictionary, since the suffix marks exactly where editions
+#' disagree; every other column takes the merged (most recent) description.
+#' 2019 lower-cases the suffix (`B03009b` for `B03009B`); the 2012 merged
+#' file suffixes `N` onto four items renumbered when it merged the student
+#' and school files (`B01010N` for `B01010`).
 bp1928_label <- function(labels, by_edition, column, waves) {
   suffix <- paste0("_(", paste(waves, collapse = "|"), ")$")
   edition <- regmatches(column, regexpr(suffix, column))

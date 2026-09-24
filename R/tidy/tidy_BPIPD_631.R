@@ -1,10 +1,9 @@
 #' Tidier for BPIPD-631 (UK Understanding Society)
 #'
 #' Stacks the youth self-completion files of BHPS waves 4-18 and UKHLS waves
-#' 1-15, and joins each youth, within the same wave, to their household's
-#' interview, their resident mother's and father's adult interviews and, for
-#' BHPS, their own age from the household roster; the cross-wave person file
-#' adds ethnicity and birthplace for the youth and each parent.
+#' 1-15, joining each youth (within wave) to their household, resident
+#' parents' adult interviews and, for BHPS, age from the household roster;
+#' the cross-wave person file adds ethnicity and birthplace.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -20,8 +19,8 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
   indresp <- bp631_stack(tables, "indresp")
   xwave <- bp631_zap_missing(raw_dataset$data$xwavedat)
 
-  # `mnspno`/`fnspno` are the person numbers of the natural, step or adoptive
-  # mother and father in the household; 0 (none) matches no `pno`.
+  # `mnspno`/`fnspno`: natural/step/adoptive mother's and father's person
+  # numbers; 0 (none) matches no `pno`.
   df <- bp631_stack(tables, "youth") |>
     bp631_add(
       bp631_stack(tables, "indall"),
@@ -129,8 +128,8 @@ bp631_older_codings <- function() {
 
 #' Set the release's missing-value codes to NA and drop their value labels
 bp631_zap_missing <- function(tbl) {
-  # Every negative code the release labels is a missing code (-1 don't know to
-  # -9 missing); UKHLS household income has real negative values, unlabelled.
+  # Every negative labelled code is missing (-1 don't know to -9 missing);
+  # UKHLS household income has real negative values, unlabelled.
   tbl[] <- lapply(tbl, function(x) {
     labels <- attr(x, "labels", exact = TRUE)
     if (!is.numeric(labels) || !any(labels < 0)) {

@@ -1,16 +1,15 @@
 #' Tidier for BPIPD-625 (YRBSS national high school surveys, 1999-2019)
 #'
-#' Each survey year is an independent cross-section in its own Access file, and
-#' YRBS renumbers its questionnaire every time, so a construct sits under a
-#' different `q` column each year. `bp625_items()` names the source column per
-#' wave and carries the question wording that becomes the column's label; the
-#' `q` columns themselves are not kept, because the same name means a different
-#' question from one year to the next.
+#' Each survey year is an independent cross-section in its own Access file,
+#' and YRBS renumbers its questionnaire every year, so a construct sits under
+#' a different `q` column each wave. `bp625_items()` maps the source column
+#' per wave and carries the question wording used as the column label; the
+#' `q` columns are dropped since the same name means a different question
+#' from year to year.
 #'
-#' The spec also declares 2021 and 2023, but neither year asks a screen-time
-#' item this project can use: 2021 asks only one aggregate screen-time item and
-#' 2023 only how often students use social media. Those two waves are left out
-#' here by project decision rather than carried with no exposure.
+#' The spec also declares 2021 and 2023, but neither asks a usable
+#' screen-time item (2021: one aggregate item; 2023: social media frequency
+#' only), so they are left out by project decision.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -30,8 +29,7 @@ tidy_BPIPD_625 <- function(raw_dataset, spec) {
     stop("BPIPD-625: `participant_id` is not unique.", call. = FALSE)
   }
 
-  # `bind_rows()` appends each later year's new stems, so put the map's order
-  # back
+  # bind_rows() appends each year's new stems last; restore the map's order
   df <- df[c("participant_id", ".wave", ".wave_label", items$stem)]
 
   bp625_label(df, items)
@@ -39,10 +37,9 @@ tidy_BPIPD_625 <- function(raw_dataset, spec) {
 
 #' The data resource holding each survey year's raw questionnaire responses
 #'
-#' From 2013 the spec also reads an `XXHqn` table; it holds only CDC's
-#' dichotomous recodes of the same items, so `XXHq` is the source used here.
-#' 2021 and 2023 are declared in the spec but deliberately absent (see
-#' `tidy_BPIPD_625()`).
+#' From 2013 the spec also reads `XXHqn`, which holds only CDC's dichotomous
+#' recodes of the same items, so `XXHq` is used here. 2021 and 2023 are
+#' declared but deliberately absent (see `tidy_BPIPD_625()`).
 bp625_sources <- function() {
   c(
     "1999" = "yrbs_1999_data",
@@ -70,12 +67,12 @@ bp625_entry <- function(label, ...) {
 
 #' Source column for each tidied stem at each survey year
 #'
-#' A wave the item omits is left out. Stems are split wherever the response
-#' options or the construct differ, so a wave never contributes to a stem under
-#' another wave's meaning: the pre-2007 race question numbers its categories
-#' differently from CDC's `raceeth`, and from 2013 the games item's examples
-#' add smartphones, YouTube and social networking, so 2013-2019 answers go to
-#' `game_device_hours` rather than `game_hours`.
+#' A wave the item omits is left out. Stems split wherever the response
+#' options or construct differ, so no wave's answers land under another
+#' wave's meaning: pre-2007 race numbers categories differently from CDC's
+#' `raceeth`, and from 2013 the games item's examples add smartphones,
+#' YouTube and social networking, so those years go to `game_device_hours`
+#' rather than `game_hours`.
 bp625_items <- function() {
   entries <- list(
     # --- provenance --------------------------------------------------------
@@ -397,7 +394,7 @@ bp625_items <- function() {
 #' Pull one survey year's mapped columns out of its Access table
 bp625_wave_frame <- function(raw_dataset, wave, items) {
   tbl <- raw_dataset$data[[bp625_sources()[[wave]]]]
-  # 1999, 2003 and the 2017 `XXHqn` table name their columns in upper case
+  # 1999, 2003 and the 2017 `XXHqn` table use upper-case column names
   names(tbl) <- tolower(names(tbl))
 
   sources <- items[[wave]]
@@ -407,8 +404,8 @@ bp625_wave_frame <- function(raw_dataset, wave, items) {
     items$stem[present]
   ))
 
-  # Only 2013 onwards carries CDC's `record` number; the earlier files hold no
-  # student identifier, so the row's position in the file stands in for one.
+  # Only 2013+ carries CDC's `record` number; earlier files have no student
+  # identifier, so row position stands in for one.
   serial <- if ("record" %in% names(out)) out$record else seq_len(nrow(out))
 
   dplyr::mutate(

@@ -238,30 +238,10 @@ waves:
         glob: "PeNSE_2024/Exemplos_Calculo_R_SAS/Exemplo_SAS.txt"
 
 notes: |
-  PeNSE (Pesquisa Nacional de Saude do Escolar - National School Health Survey) has 6 waves: 2009, 2012, 2015 
-  (two independent samples), 2019, and 2024.
-  Where a wave provides the same data in multiple formats (.txt/.csv/.sas7bdat alongside .xlsx), 
-  the .xlsx version was treated as the canonical "data" resource (reader: excel, with the sheet supplied), 
-  since that is the format sheet names were confirmed for. The other-format duplicates are included as "docs" 
-  resources.
-  Codebook/dictionary files that contain more than one relevant sheet (e.g. 2012, 2015 samples, 2019) 
-  have been split into one codebook resource per sheet.
-  Two files needed a judgment call because they don't fit cleanly as "docs" despite being syntax rather than survey data:
-    - 2009 "SAS_2009.xls" (SAS input/read specification) - classified as role "codebook" (reader: excel, sheet: "SAS") 
-      since it structurally describes how to read the raw data, similar to a data dictionary.
-    - Plain .sas syntax files elsewhere (2012 "Input SAS" folder) had no sheet specified and were left as role "docs" with no reader.
-  Two folder/file names contain corrupted characters that were confirmed by copying directly from the file explorer: 
-  "Documentaç╞o" and "DROGAS IL╓CITAS.doc". These are almost certainly "Documentação" and "DROGAS ILÍCITAS.doc" 
-  (Portuguese for "Documentation" and "Illicit Drugs") with mangled accented characters - this typically happens 
-  when a zip/archive containing accented filenames is extracted using the wrong codepage, permanently baking incorrect 
-  box-drawing characters into the filename. The glob values above use the literal corrupted characters as confirmed, 
-  since that is what must match on disk. If the files are ever renamed/re-extracted with correct encoding, these globs 
-  will need to be updated to match.
-  The 2009 release is the one edition that ships only a fixed-width flat file (311 data columns per record,
-  CRLF line endings, "." as the missing marker). It is read with reader: "fwf" and the layout in
-  layouts/pense_2009.csv, which was derived from the DICIONARIO sheet of "Dicionario_Base Pense_Completa.xls"
-  (187 fields; CAMPO/INICIO/TERMINO/DECIMAIS/DESCRICAO). The file is pure ASCII, so no encoding is set.
-  dataset_name was corrected from "Brazilian National Health Survey" to PeNSE: the study folder is named after the
-  general Brazilian National Health Survey (PNS), but every file here belongs to the National **School** Health
-  Survey (student-focused), which is a different IBGE survey. The folder name is matched on dataset_id only,
-  so the correction does not affect discovery.
+  PeNSE has 6 waves: 2009, 2012, 2015 (two independent samples), 2019, 2024.
+  Where a wave ships the same data as .txt/.csv/.sas7bdat and .xlsx, the .xlsx is the canonical "data" resource (sheet names were confirmed against it); other formats are "docs".
+  Codebook sheets are split one resource per sheet where a dictionary file has more than one (2012, 2015 samples, 2019).
+  2009 "SAS_2009.xls" (SAS read spec) is classified "codebook" (reader: excel, sheet "SAS") since it describes how to read the raw data. Plain .sas syntax files (2012 "Input SAS") have no sheet and are left "docs" with no reader.
+  Two folder/file names have corrupted characters, confirmed via the file explorer: "Documentaç╞o" and "DROGAS IL╓CITAS.doc" (should be "Documentação" and "DROGAS ILÍCITAS.doc"; likely a wrong-codepage zip extraction). Globs use the literal corrupted characters to match disk; update if the files are ever re-extracted correctly.
+  2009 is the only edition shipped as a fixed-width flat file (311 columns, CRLF, "." as missing marker); reader "fwf" with layouts/pense_2009.csv, derived from the DICIONARIO sheet of "Dicionario_Base Pense_Completa.xls" (187 fields; CAMPO/INICIO/TERMINO/DECIMAIS/DESCRICAO). Pure ASCII, no encoding set.
+  dataset_name was corrected from "Brazilian National Health Survey" to PeNSE: the folder is named after the general Brazilian National Health Survey (PNS), but every file here is the National School Health Survey, a different IBGE survey. Folder matching is by dataset_id only, so this doesn't affect discovery.

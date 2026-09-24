@@ -1,8 +1,8 @@
 #' Tidier for BPIPD-736 (Saving and Empowering Young Lives in Europe)
 #'
-#' One wide Stata file holds all three assessments of the German SEYLE site:
-#' the wave is carried in the column prefix (`pb`, `pm`, `py`) and the item
-#' number in the rest of the name, so the file is pivoted to one row per wave.
+#' One wide Stata file holds all three assessments of the German SEYLE site;
+#' wave is carried in the column prefix (`pb`/`pm`/`py`), item number in the
+#' rest of the name. Pivoted to one row per pupil per wave.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -22,10 +22,9 @@ tidy_BPIPD_736 <- function(raw_dataset, spec) {
 
   df <- bp736_unify_wave_value_labels(df, new_names)
 
-  # `pivot_longer()` carries attributes only on the `haven_labelled` copies, so
-  # the plain numeric and free-text items (`q90`, "Hours per day online", and
-  # the scored scales) would arrive unlabelled; keep each stem's label here and
-  # put it back once the copies have been stacked.
+  # pivot_longer() keeps attributes only on haven_labelled copies, so the
+  # plain numeric/text items (q90, the scored scales) would arrive unlabelled;
+  # save each stem's label here and reapply once the copies are stacked.
   item_labels <- vapply(
     df[new_names],
     function(x) {
@@ -54,16 +53,16 @@ tidy_BPIPD_736 <- function(raw_dataset, spec) {
     item_labels
   )
 
-  # The source labels name what each prefix letter is: `p[bmy]_bdi_cat` are
-  # labelled "Depression baseline", "Depression 3-month", "Depression 12-month".
+  # Source labels confirm the prefix letters: `p[bmy]_bdi_cat` is labelled
+  # "Depression baseline"/"3-month"/"12-month".
   long <- dplyr::mutate(
     long,
     wave = unname(c(b = "Baseline", m = "3-month", y = "12-month")[wave]),
     .after = "id"
   )
 
-  # Stata string variables come back as "" rather than NA, so the free-text
-  # items cannot tell us whether a pupil answered this wave's questionnaire.
+  # Stata strings come back as "" not NA, so free-text items can't tell us
+  # whether a pupil answered this wave's questionnaire.
   measured <- setdiff(
     names(long),
     c("id", "wave", "country", "age", "gender", "schooltype")
@@ -85,16 +84,14 @@ tidy_BPIPD_736 <- function(raw_dataset, spec) {
 #' Give every wave's copy of an item one set of labels
 #'
 #' An item has one copy per wave it was asked at (all three, or baseline and
-#' 12-month for the 30 items the 3-month questionnaire skipped). The copies
-#' carry the same codes and differ only in wording ("I don't know" against
-#' "Don't know"), so binding them would warn without a question to answer;
-#' copies whose code sets disagreed would be a real question about meaning,
-#' so that stops instead. The value labels come from the first wave that
-#' carries any, because a copy can be unlabelled where another is not
-#' (`pb9c` has no value labels while `py9c` labels 77 "Don't know"). The
-#' variable label is the baseline copy's, with the wave's own
-#' recall window or wave name trimmed off ("during past 6 / 3 / 12 months",
-#' "baseline", "3-month", "12-month") so the pivoted column gets one label.
+#' 12-month for the 30 items the 3-month questionnaire skipped). Copies carry
+#' the same codes and differ only in wording ("I don't know" vs "Don't know"),
+#' which would just make binding warn; copies whose code sets differ would
+#' change meaning, so they stop the tidier. Value labels
+#' are taken from the first wave that has any, since one copy can be
+#' unlabelled where another isn't (`pb9c` has none, `py9c` labels 77 "Don't
+#' know"). The variable label is the baseline copy's with its recall window
+#' or wave name trimmed off, so the pivoted column gets one label.
 bp736_unify_wave_value_labels <- function(df, cols) {
   for (grp in split(cols, sub("_[bmy]$", "", cols))) {
     coded <- grp[
