@@ -69,6 +69,20 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
   # hours); the wave 15 youth questionnaire gives it the responses of `ypnetcht`.
   attr(df$ypnetchtw, "labels") <- attr(df$ypnetcht, "labels")
 
+  # `psu`/`strata` -9 (none assigned) is unlabelled, so
+  # `bp631_zap_missing()` leaves it.
+  df$psu[df$psu < 0] <- NA
+  df$strata[df$strata < 0] <- NA
+
+  # Fill household income and composition missed at a wave from the
+  # participant's nearest wave interviewed 12 months or less away.
+  interview_month <- 12 *
+    dplyr::coalesce(bp631_num(df$intdaty_dv), bp631_num(df$intdatey)) +
+    dplyr::coalesce(bp631_num(df$intdatm_dv), bp631_num(df$intdatem))
+  for (col in c("fihhmngrs_dv", "ieqmoecd_dv", "hhsize", "nkids_dv")) {
+    df[[col]] <- bp631_carry_gap(df[[col]], df$pidp, interview_month)
+  }
+
   if (anyDuplicated(df[c("pidp", "wave")]) > 0) {
     stop(
       "BPIPD-631: `pidp` and `wave` do not uniquely identify rows.",
@@ -218,6 +232,41 @@ bp631_add <- function(base, tbl, by, relationship) {
     out[[col]][gap] <- out[[paste0(col, ".fill")]][gap]
   }
   out[setdiff(names(out), paste0(shared, ".fill"))]
+}
+
+#' A column as plain numeric with negative (missing) codes set to NA
+bp631_num <- function(x) {
+  x <- as.numeric(x)
+  x[x < 0] <- NA
+  x
+}
+
+#' Fill NA in `x` from the same participant's nearest other wave, only when
+#' that wave's interview is `max_gap` months or less away (`time` in months),
+#' else leave NA
+bp631_carry_gap <- function(x, pidp, time, max_gap = 12) {
+  out <- x
+  for (id in unique(pidp[is.na(x)])) {
+    idx <- which(pidp == id)
+    if (length(idx) < 2) {
+      next
+    }
+    vals <- x[idx]
+    times <- time[idx]
+    for (i in which(is.na(vals))) {
+      if (is.na(times[i])) {
+        next
+      }
+      gap <- abs(times - times[i])
+      gap[i] <- NA
+      gap[is.na(vals)] <- NA
+      candidates <- which(!is.na(gap) & gap <= max_gap)
+      if (length(candidates) > 0) {
+        out[idx[i]] <- vals[candidates[which.min(gap[candidates])]]
+      }
+    }
+  }
+  out
 }
 
 #' A person table keyed for joining as a parent, its columns named for them

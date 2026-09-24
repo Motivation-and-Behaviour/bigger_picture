@@ -89,6 +89,9 @@ bp873_waves <- function() {
         subpopulation = "subpopulation",
         sleep_wd_hours = "kt101_a_1",
         sleep_we_hours = "kt101_a_2",
+        # 2010 anchors (Healthy...Very unhealthy) differ from the
+        # Excellent-Poor wording used from 2014, so it keeps its own column.
+        self_rated_health_2010 = "wl1",
         activity_1 = "wk8_s_1",
         activity_2 = "wk8_s_2",
         activity_3 = "wk8_s_3",
@@ -234,6 +237,7 @@ bp873_waves <- function() {
         urban = "urban14",
         weight_cross = "rswt_natcs14",
         subpopulation = "subpopulation10",
+        self_rated_health = "wl1",
         activity_1 = "wk8_s_1",
         activity_2 = "wk8_s_2",
         activity_3 = "wk8_s_3",
@@ -371,6 +375,7 @@ bp873_waves <- function() {
         urban = "urban16",
         weight_cross = "rswt_natcs16",
         subpopulation = "subpopulation",
+        self_rated_health = "wl1",
         tv_restrict = "wf605m",
         academic_pressure = "ks502",
         drank_12m = "wk813",

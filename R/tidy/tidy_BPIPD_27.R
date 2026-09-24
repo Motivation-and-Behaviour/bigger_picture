@@ -277,8 +277,10 @@ bp27_tud_minutes <- function(tbl) {
 #' figures: a natural, adoptive, foster or step parent respondent of that sex,
 #' main respondent first) and `respondent_nvq`/`respondent_nvq_PARTNER` (the
 #' main and partner respondents, whatever their relationship). Codes are the
-#' MCS derived NVQ levels. Sweep 7 released no parent education, so each
-#' participant's latest earlier sweep is carried forward.
+#' MCS derived NVQ levels. Parent education is always carried forward: sweep
+#' 7 released none at all, and a sweep 2-6 row missing a value (no resident
+#' parent of that sex, or the respondent pair not interviewed) takes its
+#' participant's latest earlier sweep with data.
 bp27_parent_education <- function(df, wave_order) {
   nvq <- c(
     sweep_2 = "BDDNVQ00",
@@ -355,24 +357,45 @@ bp27_parent_education <- function(df, wave_order) {
   mother <- by_role(2L)
   father <- by_role(1L)
 
-  # The participant's latest earlier row where `observed` holds
-  asked <- df$.wave %in% names(nvq)
+  # For each row, the row index of its participant's latest strictly-earlier
+  # row (by wave rank) where `observed` holds, or NA. A missing value then
+  # carries from the nearest earlier sweep with data, never a later one, so
+  # gaps within sweeps 2-6 fill the same way sweep 7 does.
   rank <- match(df$.wave, wave_order)
-  latest <- function(observed) {
-    rows <- which(asked & observed)
-    rows <- rows[order(rank[rows], decreasing = TRUE)]
-    rows <- rows[!duplicated(df$participant_id[rows])]
-    rows[match(df$participant_id, df$participant_id[rows])]
+  ord <- order(df$participant_id, rank)
+  latest_before <- function(observed) {
+    obs_ord <- observed[ord]
+    id_ord <- df$participant_id[ord]
+    new_participant <- c(TRUE, id_ord[-1] != id_ord[-length(id_ord)])
+    src_ord <- rep(NA_integer_, length(obs_ord))
+    last <- NA_integer_
+    for (i in seq_along(obs_ord)) {
+      if (new_participant[i]) {
+        last <- NA_integer_
+      }
+      src_ord[i] <- last
+      if (obs_ord[i]) {
+        last <- ord[i]
+      }
+    }
+    src <- rep(NA_integer_, length(observed))
+    src[ord] <- src_ord
+    src
   }
-  carry <- !asked
-  from <- latest(!is.na(mother))[carry]
-  mother[carry] <- mother[from]
-  from <- latest(!is.na(father))[carry]
-  father[carry] <- father[from]
-  # The two respondents' levels travel together from one sweep
-  from <- latest(!is.na(main) | !is.na(partner))[carry]
-  main[carry] <- main[from]
-  partner[carry] <- partner[from]
+  carry <- function(values) {
+    from <- latest_before(!is.na(values))
+    fill <- is.na(values) & !is.na(from)
+    values[fill] <- values[from[fill]]
+    values
+  }
+  mother <- carry(mother)
+  father <- carry(father)
+  # The two respondents' levels travel together from one earlier sweep, so a
+  # row missing both is filled from a single earlier interview, not a mix.
+  from <- latest_before(!is.na(main) | !is.na(partner))
+  fill <- is.na(main) & is.na(partner) & !is.na(from)
+  main[fill] <- main[from[fill]]
+  partner[fill] <- partner[from[fill]]
 
   levels <- c(
     "NVQ level 1" = 1L,
@@ -383,7 +406,7 @@ bp27_parent_education <- function(df, wave_order) {
     "Overseas qual only" = 95L,
     "None of these" = 96L
   )
-  carried <- "; sweep 7 carries the latest earlier sweep"
+  carried <- "; missing sweeps, sweep 7 included, carry the latest earlier sweep with data"
   df$mother_nvq <- haven::labelled(
     mother,
     levels,

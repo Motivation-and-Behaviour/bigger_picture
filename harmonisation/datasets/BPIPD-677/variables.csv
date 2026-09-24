@@ -3,9 +3,9 @@ participant_id,compatible,responseid,as.character(responseid),Numeric in source;
 wave,unavailable,,,Single collection occasion.,,
 data_year,inferred,,2018,"Fieldwork early March 2018 (ICM Unlimited online panel), per the Methods of 10.1098/rsos.171474.",,
 rct_arm,unavailable,,,Not a randomised trial.,,
-survey_weight,unavailable,,,"Not a survey sample (non-probability online panel, ICM Unlimited); no weight released.",,
-survey_strata,unavailable,,,Not a survey sample.,,
-survey_cluster,unavailable,,,Not a survey sample.,,
+survey_weight,unavailable,,,Not collected.,,
+survey_strata,unavailable,,,Not collected.,,
+survey_cluster,unavailable,,,Not collected.,,
 age_years,compatible,dagechildfinal,as.numeric(as.character(haven::as_factor(dagechildfinal))) + 0.5,"Carer-reported child age in completed years (14 or 15), + 0.5.",,
 sex,compatible,d8,"recode_values(d8, 1 ~ ""Male"", 2 ~ ""Female"", 3 ~ ""Other"", 4 ~ ""Unknown"", default = ""Unknown"")","Carer-reported child gender (D8); 'Another way' -> Other, 'Prefer not to say' -> Unknown.",,
 country,compatible,gor,"recode_values(

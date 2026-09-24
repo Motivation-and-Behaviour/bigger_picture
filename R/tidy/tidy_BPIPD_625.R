@@ -368,6 +368,12 @@ bp625_items <- function() {
       "2005" = "q7",
       "2007" = "q98"
     ),
+    difficulty_concentrating = bp625_entry(
+      "Because of a physical, mental, or emotional problem, do you have serious difficulty concentrating, remembering, or making decisions? (1 = Yes, 2 = No)",
+      "2015" = "q98",
+      "2017" = "q98",
+      "2019" = "q98"
+    ),
     sleep_hours = bp625_entry(
       "On an average school night, how many hours of sleep do you get? (1 = 4 or less ... 7 = 10 or more)",
       "2007" = "q97",

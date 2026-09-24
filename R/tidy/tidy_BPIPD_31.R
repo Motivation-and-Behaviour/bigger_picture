@@ -19,6 +19,7 @@ tidy_BPIPD_31 <- function(raw_dataset, spec) {
     )
   }
   raw <- bp31_add_cbcl_scores(raw_dataset$data[[1]])
+  raw <- bp31_add_parentstress_mother(raw)
 
   constants <- bp31_constant_columns()
   wave_map <- bp31_wave_columns()
@@ -575,22 +576,30 @@ bp31_wave_columns <- function() {
       y15 = "K6D20A"
     ),
     parentstress_a = bp31_entry(
-      "Aggravation in Parenting scale item a, PCG report, 1 strongly agree - 4 strongly disagree (Years 9 and 15 only)",
+      "Aggravation in Parenting scale item a, 1 strongly agree - 4 strongly disagree: mother report (resident else non-resident) at Years 3 and 5, PCG report at Years 9 and 15",
+      y3 = "BP31PSTRESS_MOM_Y3_A",
+      y5 = "BP31PSTRESS_MOM_Y5_A",
       y9 = "P5K1A",
       y15 = "P6D32"
     ),
     parentstress_b = bp31_entry(
-      "Aggravation in Parenting scale item b, PCG report, 1 strongly agree - 4 strongly disagree (Years 9 and 15 only)",
+      "Aggravation in Parenting scale item b, 1 strongly agree - 4 strongly disagree: mother report (resident else non-resident) at Years 3 and 5, PCG report at Years 9 and 15",
+      y3 = "BP31PSTRESS_MOM_Y3_B",
+      y5 = "BP31PSTRESS_MOM_Y5_B",
       y9 = "P5K1B",
       y15 = "P6D33"
     ),
     parentstress_c = bp31_entry(
-      "Aggravation in Parenting scale item c, PCG report, 1 strongly agree - 4 strongly disagree (Years 9 and 15 only)",
+      "Aggravation in Parenting scale item c, 1 strongly agree - 4 strongly disagree: mother report (resident else non-resident) at Years 3 and 5, PCG report at Years 9 and 15",
+      y3 = "BP31PSTRESS_MOM_Y3_C",
+      y5 = "BP31PSTRESS_MOM_Y5_C",
       y9 = "P5K1C",
       y15 = "P6D34"
     ),
     parentstress_d = bp31_entry(
-      "Aggravation in Parenting scale item d, PCG report, 1 strongly agree - 4 strongly disagree (Years 9 and 15 only)",
+      "Aggravation in Parenting scale item d, 1 strongly agree - 4 strongly disagree: mother report (resident else non-resident) at Years 3 and 5, PCG report at Years 9 and 15",
+      y3 = "BP31PSTRESS_MOM_Y3_D",
+      y5 = "BP31PSTRESS_MOM_Y5_D",
       y9 = "P5K1D",
       y15 = "P6D35"
     ),
@@ -1314,6 +1323,47 @@ bp31_add_cbcl_scores <- function(raw) {
     for (wave in names(single[[item]])) {
       column <- paste("BP31CBCLITEM", toupper(wave), toupper(item), sep = "_")
       raw[[column]] <- bp31_cbcl_item(raw, single[[item]][[wave]])
+    }
+  }
+
+  raw
+}
+
+#' Mother's own Aggravation in Parenting items at Years 3 and 5
+#'
+#' Years 3 and 5 ask resident and non-resident mothers (and fathers)
+#' separately rather than one PCG item; the mother's own report (resident
+#' else non-resident) fills `parentstress_a`-`parentstress_d` at these two
+#' waves. Fathers are not used here.
+bp31_add_parentstress_mother <- function(raw) {
+  items <- list(
+    y3 = list(
+      a = c("M3B6A", "M3B34A"),
+      b = c("M3B6B", "M3B34B"),
+      c = c("M3B6C", "M3B34C"),
+      d = c("M3B6D", "M3B34D")
+    ),
+    y5 = list(
+      a = c("M4B6A", "M4B31A"),
+      b = c("M4B6B", "M4B31B"),
+      c = c("M4B6C", "M4B31C"),
+      d = c("M4B6D", "M4B31D")
+    )
+  )
+
+  for (wave in names(items)) {
+    for (item in names(items[[wave]])) {
+      cols <- items[[wave]][[item]]
+      column <- paste(
+        "BP31PSTRESS_MOM",
+        toupper(wave),
+        toupper(item),
+        sep = "_"
+      )
+      raw[[column]] <- dplyr::coalesce(
+        bp31_decode(raw[[cols[[1]]]]),
+        bp31_decode(raw[[cols[[2]]]])
+      )
     }
   }
 

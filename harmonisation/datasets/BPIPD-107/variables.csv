@@ -26,7 +26,7 @@ country,compatible,"CNT, STRATUM, .wave","local({
 })","CNT through lookups/country.csv. UK rows take their nation (England, Scotland, Wales, Northern Ireland) from the cycle's sampling stratum; undisclosed UK strata stay United Kingdom. Sub-national samples map to their country (Baku, Moscow City/Region, Tatarstan, Chinese provinces, US states, Buenos Aires, Spanish/Ukrainian regions, Kurdistan, Dushanbe).",country,
 state,compatible,"STRATUM, .wave","lookup_values(paste(.wave, STRATUM), lookup_state, default = NA_character_)",Australian strata encode state and sector; undisclosed stratum = Unknown; non-AU rows NA.,state,
 ethnicity,incompatible,"IMMIG, ST019AQ01T, ST022Q01TA",,"No ethnic-group item; birthplace (ST019AQ01T, 2015-2022; IMMIG, mapped to immigrant_background) and home language (ST022Q01TA) only.",,
-indigenous,unavailable,,,Not in the international file; the AU national file carries it.,,
+indigenous,unavailable,,,Not in the supplied extract; the AU national file carries it.,,
 minority,proximate,IMMIG,"recode_values(as.numeric(IMMIG), 1 ~ ""Non-minority"", c(2, 3) ~ ""Minority"", default = ""Unknown"")","Immigrant background as proxy: first/second-generation (student or both parents born abroad) = Minority, native = Non-minority. Ethnicity not collected.",,
 immigrant_background,compatible,IMMIG,"recode_values(as.numeric(IMMIG), 1 ~ ""Native"", 2 ~ ""Second-generation"", 3 ~ ""First-generation"", default = ""Unknown"")",OECD immigrant-background index from the birthplace of the student and both parents.,,
 born_in_country,compatible,"ST019AQ01T, BICT_S","coalesce(
@@ -164,7 +164,7 @@ parental_education,proximate,"HISCED_isced97, HISCED_isced11, HISCED_2025","coal
   ""Unknown""
 )","OECD highest-parent index HISCED, the study's own highest-parent variable, through the shared education lookup: ISCED-97 in 2015/2018, ISCED-2011 in 2022 and 2025 (2025 renumbers the codes; recoded per cycle). ISCED 4 sits in Secondary for 2015/2018 (ISCED-97 '3A or 4') but in Post-secondary from 2022; proximate.",maternal_education,
 urbanicity,proximate,SC001Q01TA,"recode_values(as.numeric(SC001Q01TA), 1 ~ ""Rural"", c(2, 3) ~ ""Suburban"", c(4, 5, 6) ~ ""Urban"", default = ""Unknown"")","Principal's report of the school community's size: village (under 3,000) Rural; small town (3,000-15,000) and town (15,000-100,000) Suburban; city (100,000+), large city and, from 2022, megacity Urban. School location and size bands stand in for residence (proximate).",,
-family_structure,incompatible,ST403Q01DA,,"Only a 2025 count of parents or guardians (ST403Q01DA); it cannot separate biological, step and other parents.",,
+family_structure,proximate,ST403Q01DA,"recode_values(as.numeric(ST403Q01DA), 1 ~ ""Other"", 2 ~ ""Single parent"", 3 ~ ""Two biological/adoptive parents"")","2025 'how many parents and/or guardians do you have' (ST403Q01DA; co-residence not asked), mapped to the category each count forces: None = Other, One = Single parent, Two = Two biological/adoptive parents (step not separable); Three and Four or more force no single category and stay NA.",,
 fam_screenrules,compatible,PA202Q01DA,"case_when(as.numeric(PA202Q01DA) == 1 ~ TRUE, as.numeric(PA202Q01DA) == 2 ~ FALSE, .default = NA)","2025 only, optional parent questionnaire, parent report: 'I define rules about how long or when my child is allowed to use <digital resources>' (PA202Q01DA), yes/no; all digital devices.",,
 fam_bedroomscreen,unavailable,,,Not collected.,,
 fam_parentstress,unavailable,,,Not collected.,,
@@ -184,29 +184,32 @@ school_grade,compatible,ST001D01T,"recode_values(
 st_measure_type,inferred,,"""Categorical""",Duration bands in every cycle.,,
 st_measure_name,inferred,,"""Custom""",Items written for PISA: ICT familiarity questionnaire internet-time items IC005-IC007 (2015/2018); ST326 digital-resource hours and ICT questionnaire leisure items IC177/IC178 (2022/2025).,,
 st_responder,inferred,,"""Self""",The student self-completes the student and ICT familiarity questionnaires.,,
-st_total_wd,partial,"ST326Q01JA, ST326Q02JA, ST326Q04JA, ST326Q05JA","sum_nonmissing(
-  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
-  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
-  recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
-  recode_values(as.numeric(ST326Q05JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
-)","2022/2025: ST326 hours on digital resources on a school day, the OECD's split of one digital-device item by purpose (learning, leisure) and place (at school, before or after school); sum of the 4 parts, unanswered parts 0 as the OECD scores them. Band midpoints; top band 'more than 7 hours' = 7 (OECD uses 7.5, so published PISA figures differ). Digital devices only, TV excluded (partial). Sums above 24 h kept for the preregistered implausible-value exclusion.",,
-st_total_we,partial,"ST326Q03JA, ST326Q06JA","sum_nonmissing(
-  recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
-  recode_values(as.numeric(ST326Q06JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
-)",2022/2025: ST326 learning plus leisure hours on a weekend day (2 parts); rules and top band (7) as st_total_wd.,,
-st_total,partial,"ST326Q01JA, ST326Q02JA, ST326Q03JA, ST326Q04JA, ST326Q05JA, ST326Q06JA","((sum_nonmissing(
-  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
-  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
-  recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
-  recode_values(as.numeric(ST326Q05JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
-)) *
+st_total_wd,partial,"ST326Q01JA, ST326Q02JA, ST326Q04JA, ST326Q05JA","recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q05JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)","2022/2025: ST326 hours on digital resources on a school day, the OECD's split of one digital-device item by purpose (learning, leisure) and place (at school, before or after school); sum of the 4 parts, NA if any part is blank. Band midpoints; top band 'more than 7 hours' = 7 (OECD uses 7.5, so published PISA figures differ). Digital devices only, TV excluded (partial). Sums above 24 h kept for the preregistered implausible-value exclusion.",,
+st_total_we,partial,"ST326Q03JA, ST326Q06JA","recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q06JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)",2022/2025: ST326 learning plus leisure hours on a weekend day (2 parts); blank-part rule and top band (7) as st_total_wd.,,
+st_total,partial,"ST326Q01JA, ST326Q02JA, ST326Q03JA, ST326Q04JA, ST326Q05JA, ST326Q06JA","((recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q05JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)) *
   5 +
-  (sum_nonmissing(
-    recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
-    recode_values(as.numeric(ST326Q06JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
-  )) *
+  (recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+    recode_values(
+      as.numeric(ST326Q06JA),
+      1 ~ 0,
+      2 ~ 0.5,
+      3 ~ 1.5,
+      4 ~ 2.5,
+      5 ~ 3.5,
+      6 ~ 4.5,
+      7 ~ 5.5,
+      8 ~ 6.5,
+      9 ~ 7
+    )) *
     2) /
-  7","5:2 mean of st_total_wd and st_total_we; rules and top band (7) as st_total_wd, no cap.",,
+  7","5:2 mean of st_total_wd and st_total_we; blank-part rule and top band (7) as st_total_wd, no cap.",,
 st_watch_wd,incompatible,IC177Q03JA,,"Videos bundled with news, podcasts and music in browsing the Internet for fun (IC177Q03JA, 2022/2025); mapped nowhere.",,
 st_watch_we,incompatible,IC178Q03JA,,"Videos bundled with news, podcasts and music in browsing the Internet for fun (IC178Q03JA, 2022/2025); mapped nowhere.",,
 st_watch,incompatible,"IC177Q03JA, IC178Q03JA",,"Videos bundled with news, podcasts and music in browsing the Internet for fun (IC177Q03JA, IC178Q03JA, 2022/2025); mapped nowhere.",,
@@ -246,21 +249,17 @@ st_tablet,incompatible,"IC170Q03JA, IC171Q03JA",,"Frequency of use by device onl
 st_phone_wd,unavailable,,,No weekday/weekend split.,,
 st_phone_we,unavailable,,,No weekday/weekend split.,,
 st_phone,incompatible,"IC170Q02JA, IC171Q02JA",,"Frequency of use by device only: smartphone at and outside school (IC170Q02JA, IC171Q02JA, 2022/2025); no duration.",,
-st_socmedia_wd,partial,IC177Q02JA,"recode_values(as.numeric(IC177Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)","2022/2025: browsing social networks only, typical weekday (IC177Q02JA); bands as st_game_wd (top band 7). IC177Q05JA (communicating and sharing on any platform) not added: it also covers email and chat.",,
-st_socmedia_we,partial,IC178Q02JA,"recode_values(as.numeric(IC178Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)",Same item for a typical weekend day (IC178Q02JA); bands as st_game_wd (top band 7).,,
+st_socmedia_wd,partial,IC177Q02JA,"recode_values(as.numeric(IC177Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)","2022/2025: browsing social networks only, typical weekday (IC177Q02JA); bands as st_game_wd (top band 7). IC177Q05JA (communicate and share on social networks or any communication platform) is unused: it overlaps browsing (r = 0.60) and also covers messaging.",,
+st_socmedia_we,partial,IC178Q02JA,"recode_values(as.numeric(IC178Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)","Same item for a typical weekend day (IC178Q02JA); bands as st_game_wd (top band 7). IC178Q05JA unused, as st_socmedia_wd.",,
 st_socmedia,partial,"IC177Q02JA, IC178Q02JA","((recode_values(as.numeric(IC177Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) *
   5 +
   (recode_values(as.numeric(IC178Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) * 2) /
-  7",5:2 mean of st_socmedia_wd and st_socmedia_we.,,
-st_educational_wd,compatible,"ST326Q01JA, ST326Q02JA","sum_nonmissing(
-  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
-  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
-)","2022/2025: sum of ST326Q01JA, ST326Q02JA (DR-0002), learning hours at school and before or after school on a school day. Band midpoints; top band 'more than 7 hours' = 7 (OECD uses 7.5).",,
+  7",5:2 mean of st_socmedia_wd and st_socmedia_we; communicate-and-share items unused (see st_socmedia_wd).,,
+st_educational_wd,compatible,"ST326Q01JA, ST326Q02JA","recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)","2022/2025: sum of ST326Q01JA, ST326Q02JA (DR-0002), learning hours at school and before or after school on a school day; NA if either part is blank. Band midpoints; top band 'more than 7 hours' = 7 (OECD uses 7.5).",,
 st_educational_we,compatible,ST326Q03JA,"recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)",2022/2025: ST326 learning hours on a weekend day; bands as st_educational_wd (top band 7).,,
-st_educational,compatible,"ST326Q01JA, ST326Q02JA, ST326Q03JA","((sum_nonmissing(
-  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
-  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
-)) *
+st_educational,compatible,"ST326Q01JA, ST326Q02JA, ST326Q03JA","((recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q02JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)) *
   5 +
   (recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)) *
     2) /
@@ -269,27 +268,25 @@ st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
 st_internet_wd,compatible,"IC005Q01TA, IC006Q01TA","recode_values(as.numeric(IC005Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6) +
-  recode_values(as.numeric(IC006Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)","2015/2018 ICT questionnaire: sum of IC005Q01TA, IC006Q01TA (DR-0002), internet use at school and outside school on a typical weekday. Band midpoints; top band 'more than 6 hours' = 6.",,
-st_internet_we,compatible,IC007Q01TA,"recode_values(as.numeric(IC007Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)","2015/2018: internet use outside school on a typical weekend day (IC007Q01TA), the whole day as there is no school; bands as st_internet_wd (top band 6).",,
+  recode_values(as.numeric(IC006Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)","2015/2018 ICT questionnaire: sum of IC005Q01TA, IC006Q01TA (DR-0002), internet use at school and outside school on a typical weekday. Band midpoints; top band 'more than 6 hours' = 6. 2022/2025 asks only leisure browsing for fun (IC177Q03JA; see st_watch), which is unused, so the row is NA in those waves.",,
+st_internet_we,compatible,IC007Q01TA,"recode_values(as.numeric(IC007Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)","2015/2018: internet use outside school on a typical weekend day (IC007Q01TA), the whole day as there is no school; bands as st_internet_wd (top band 6). 2022/2025 leisure browsing (IC178Q03JA) unused, as st_internet_wd.",,
 st_internet,compatible,"IC005Q01TA, IC006Q01TA, IC007Q01TA","((recode_values(as.numeric(IC005Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6) +
   recode_values(as.numeric(IC006Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)) *
   5 +
   (recode_values(as.numeric(IC007Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)) * 2) /
-  7",5:2 mean of st_internet_wd and st_internet_we.,,
+  7",5:2 mean of st_internet_wd and st_internet_we; NA in 2022/2025 (see st_internet_wd).,,
 st_videochat,incompatible,"IC177Q05JA, IC178Q05JA",,"Calls not separable from messaging and sharing on any communication platform (IC177Q05JA, IC178Q05JA, 2022/2025; see st_messaging).",,
-st_messaging_wd,incompatible,IC177Q05JA,,Bundles messaging with social-network sharing; excluded per schema.,,
-st_messaging_we,incompatible,IC178Q05JA,,Bundles messaging with social-network sharing; excluded per schema.,,
-st_messaging,incompatible,"IC177Q05JA, IC178Q05JA, WB160Q01HA",,"Duration items bundle messaging with social networks; WB160 (contact with friends by phone, text or social media) is a frequency.",,
+st_messaging_wd,incompatible,IC177Q05JA,,"Communicating and sharing on social networks or any communication platform (IC177Q05JA, 2022/2025) bundles messaging with social networks; unused (see st_socmedia_wd).",,
+st_messaging_we,incompatible,IC178Q05JA,,"Communicating and sharing on social networks or any communication platform (IC178Q05JA, 2022/2025) bundles messaging with social networks; unused (see st_socmedia_wd).",,
+st_messaging,incompatible,"IC177Q05JA, IC178Q05JA, WB160Q01HA",,"Duration items IC177Q05JA, IC178Q05JA bundle messaging with social networks and are unused (see st_socmedia_wd); WB160 (contact with friends by phone, text or social media) is a frequency.",,
 st_creating,partial,"IC177Q07JA, IC178Q07JA","((recode_values(as.numeric(IC177Q07JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) *
   5 +
   (recode_values(as.numeric(IC178Q07JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) * 2) /
   7","2022/2025: creating or editing own digital content (pictures, videos, music, computer programs), weekday and weekend (IC177Q07JA, IC178Q07JA), 5:2 mean; bands as st_game_wd (top band 7). No posting; includes programming (partial).",,
 st_email,incompatible,IC008Q03TA,,2015/2018 frequency of email use outside school (IC008Q03TA) only; no duration.,,
 st_shopping,incompatible,"IC177Q04JA, IC178Q04JA",,"Buying bundled with finding places and booking tickets in looking for practical information online (IC177Q04JA, IC178Q04JA, 2022/2025); mapped nowhere.",,
-st_total_school,partial,"ST326Q01JA, ST326Q04JA","sum_nonmissing(
-  recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7),
-  recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)
-)",2022/2025: ST326 learning plus leisure hours at school on a school day (2 parts); rules and top band (7) as st_total_wd.,,
+st_total_school,partial,"ST326Q01JA, ST326Q04JA","recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)",2022/2025: ST326 learning plus leisure hours at school on a school day (2 parts); blank-part rule and top band (7) as st_total_wd.,,
 st_educational_school,compatible,ST326Q01JA,"recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)",2022/2025: ST326 learning hours at school on a school day; bands as st_educational_wd (top band 7).,,
 st_comp_school,incompatible,IC170Q01JA,,"Frequency of desktop or laptop use at school only (IC170Q01JA, 2022/2025); no duration.",,
 st_tablet_school,incompatible,IC170Q03JA,,"Frequency of tablet or e-book reader use at school only (IC170Q03JA, 2022/2025); no duration.",,
@@ -300,7 +297,7 @@ acc_academachment_lettergrades,unavailable,,,Not collected.,,
 acc_academachment_stdtest,compatible,PV1SCIE,as.numeric(PV1SCIE),"First plausible value on the PISA science scale (OECD mean 500, SD 100 at scale setting), every cycle; missing for the separate 2018 and 2022 financial-literacy samples. Financial literacy is not mapped; creative thinking is on cog_creativethinking_stdtest.",,
 acc_schoolengage_caresschool,incompatible,"ST268Q07JA, ST268Q08JA, ST268Q09JA",,"2022 agreement ratings of wanting to do well in mathematics, test-language and science classes (ST268Q07JA, ST268Q08JA, ST268Q09JA); not a frequency.",,
 acc_schoolengage_homework,incompatible,ST296Q04JA,,"Only total daily homework time (ST296Q04JA, 2022 and 2025), not how often all homework is completed.",,
-acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolpressure_self,incompatible,ANXTEST,,"2015 test-anxiety index ANXTEST (ST118 items, e.g. 'I often worry that it will be difficult for me taking a test'): a related item, not pressure from schoolwork; mapped nowhere.",,
 acc_schoolbelonging_self,compatible,BELONG,as.numeric(BELONG),"OECD sense-of-belonging index BELONG, a WLE of the 6 ST034 agreement items keyed so higher = stronger belonging, as released (computed for students answering at least 3 items); every cycle. OECD rescales per cycle, so standardise within wave.",,
 acc_schoolbelonging_measure,inferred,,"""PISA sense of belonging to school (ST034), 6 of 6 items, 1-4 item scoring (strongly agree to strongly disagree; no fixed range), OECD WLE index; reversed by the OECD: I make friends easily at school, I feel like I belong at school, other students seem to like me""",Describes acc_schoolbelonging_self; the scale is in every cycle's core student questionnaire.,,
 acc_academachment_numgrades,unavailable,,,Not collected.,,
@@ -457,7 +454,7 @@ mh_depanx_diagnosed,unavailable,,,Not collected.,,
 mh_stress_self,unavailable,,,Not collected.,,
 mh_lonely_self,incompatible,ST034Q06TA,,"'I feel lonely at school' is an agree/disagree item, not a frequency.",,
 mh_lonely_scale_self,incompatible,ST034Q06TA,,"Only the agreement item 'I feel lonely at school' (ST034Q06TA), scored in acc_schoolbelonging_self; no loneliness scale.",,
-mh_lonely_measure,unavailable,,,No loneliness scale.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
 mh_sad_self,proximate,ST186Q08HA,"recode_values(as.numeric(ST186Q08HA), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Always"")","2018 only: how often normally feels sad (never/rarely/sometimes/always). 4 points, no 'Often'; no recall period.",,
 mh_worry_self,incompatible,"WB164Q01HA, ST345Q03JA, WB154Q09HA",,"The 2018/2022 past-six-month feeling anxious item (WB154Q09HA) is anxiety, not worry; WB164 is worry about the family's money only; 'I worry about many things' (ST345Q03JA, 2022) is agree/disagree.",,
 mh_irritable_self,incompatible,WB154Q05HA,,"HBSC-SCL irritability or bad temper (WB154Q05HA, 2018/2022) is mapped to wb_psychcomplaints_irritable.",,
@@ -562,24 +559,17 @@ wb_eudaimonic_measure,inferred,".wave, CNT, ST185Q01HA","if_else(
   ""PISA 2018 meaning in life items, 3 of 3 items, 1-4 item scoring from strongly disagree to strongly agree, sum (range 3-12)"",
   NA_character_
 )",Describes wb_eudaimonic_self; 2018 country-cycles that fielded the items only.,,
-wb_socsupport_family_self,partial,"EMOSUPS, FAMSUP","coalesce(as.numeric(EMOSUPS), as.numeric(FAMSUP))","Parents' support around schooling, not general family support (partial): OECD WLE indices as released (missing-item rule not documented), EMOSUPS from ST123 agreement items, e.g. 'My parents support me when I am facing difficulties at school' (2015/2018), and FAMSUP from ST300 frequency of family talk and involvement, e.g. 'Spend time just talking with you' (2022/2025). Different scales; standardise within wave.",,
+wb_socsupport_family_self,partial,EMOSUPS,as.numeric(EMOSUPS),"Parents' support around schooling, not general family support (partial): OECD WLE index EMOSUPS from ST123 agreement items, e.g. 'My parents support me when I am facing difficulties at school' (2015/2018 only); standardise within wave. FAMSUP (ST300 frequency of family talk and involvement, 2022/2025) is family involvement, not support received; unused.",,
 wb_socsupport_friends_self,incompatible,WB162Q07HA,,"Only the single item 'How easy is it for you to talk to your close friend(s) about things that really bother you?' (WB162Q07HA, 2018/2022 well-being option); no friend-support scale.",,
-wb_socsupport_measure,inferred,".wave, CNT, EMOSUPS, FAMSUP","if_else(
-  stats::ave(
-    !is.na(coalesce(as.numeric(EMOSUPS), as.numeric(FAMSUP))),
-    .wave,
-    as.character(haven::zap_labels(CNT)),
-    FUN = any
-  ),
+wb_socsupport_measure,inferred,".wave, CNT, EMOSUPS","if_else(
+  stats::ave(!is.na(as.numeric(EMOSUPS)), .wave, as.character(haven::zap_labels(CNT)), FUN = any),
   recode_values(
     .wave,
     ""2015"" ~ ""PISA parents' emotional support (ST123); family: 4 items, 1-4 agreement scoring, OECD WLE index (no fixed range); friends: none"",
-    ""2018"" ~ ""PISA parents' emotional support (ST123); family: 3 items, 1-4 agreement scoring, OECD WLE index (no fixed range); friends: none"",
-    ""2022"" ~ ""PISA family support (ST300); family: 10 items, 1-5 frequency scoring, OECD WLE index (no fixed range); friends: none"",
-    ""2025"" ~ ""PISA family support (ST300); family: 5 items, 1-5 frequency scoring, OECD WLE index (no fixed range); friends: none""
+    ""2018"" ~ ""PISA parents' emotional support (ST123); family: 3 items, 1-4 agreement scoring, OECD WLE index (no fixed range); friends: none""
   ),
   NA_character_
-)",Describes wb_socsupport_family_self; filled in the country-cycles with a family-support score.,,
+)",Describes wb_socsupport_family_self; filled in the 2015/2018 country-cycles with an EMOSUPS score.,,
 hlth_sleep_wd,unavailable,,,Not collected.,,
 hlth_sleep_we,unavailable,,,Not collected.,,
 hlth_sleep,unavailable,,,Not collected.,,

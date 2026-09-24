@@ -719,6 +719,7 @@ bp107_column_map <- function() {
         c("2015", "2018", "2022", "2025")
       ),
       ST034Q06TA = bp107_entry("Belonging: I feel lonely at school"),
+      ANXTEST = bp107_entry("Test anxiety index (ST118)", "2015"),
       EMOSUPS = bp107_entry(
         "Parents' emotional support perceived by student index (ST123)",
         c("2015", "2018")

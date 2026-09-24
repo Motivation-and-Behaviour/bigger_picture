@@ -356,9 +356,12 @@ bp170_item_vars <- function() {
   outcome_vars <- c(
     grade_average = "R HS GRADE/D ?= ?1",
     fight_gang = "FRQ GANG FIGHT",
+    fight_parents = "FRQ FIGHT PARNTS",
     serious_fight = "FRQ FGT WRK/SCHL",
     steal_under50 = "FRQ STEAL <\\$50",
     steal_over50 = "FRQ STEAL >\\$50",
+    # 12th grade only.
+    steal_shoplift = "FRQ SHOPLIFT",
     damage_school_property = "FRQ DMG SCH PPTY",
     # 12th grade only.
     damage_work_property = "FRQ DMG WK PRPTY",
@@ -394,6 +397,7 @@ bp170_item_vars <- function() {
     sat_parents = "SAT GT ALNG PRN",
     enjoy_school = "LSTYR/ENJOY SCHL",
     happy_school = "LSTYR/HAPPY IN SCH",
+    best_work = "LSTYR/DO BEST WK",
     # Past-30-day use; 12th grade from the core file only.
     alcohol_30d = "#X (DRNK/LAST30DA|ALC/30D SIPS)Y?( F[0-9]+)?$",
     cigarettes_30d = "#CIGS SMKD/30DA(Y)?( ?\\(CORE\\))?( F[0-9]+)?$",
@@ -402,7 +406,37 @@ bp170_item_vars <- function() {
     parent_limit_tv = "#X PRNT LIMIT TV",
     parent_limit_screen = "#X PRNT LIMIT SCRN TIME",
     sleep_7hrs = "OFTN 7HRS SLEEP",
-    sleep_less = "OFTN SLEEP ?<SHLD"
+    sleep_less = "OFTN SLEEP ?<SHLD",
+    # Single items the schema rejects, kept for source_columns. 2019-2024.
+    temper_control = "CONTROL TEMPER",
+    worry_react = "HOW PPL REACT TO ME",
+    # 12th grade only.
+    professional_visit_emotional = "#X/12M DOC-PSY",
+    selfrated_health_relative = "RLTV PHY HEALTH",
+    # 2021 only.
+    covid_sad_change = "COVID CH SAD",
+    covid_angry_change = "COVID CH ANGRY",
+    covid_annoyed_change = "COVID CH ANNOYED",
+    covid_worried_change = "COVID CH WORRIED",
+    # Locus-of-control items, 12th grade.
+    plans_work = "MY PLANS DO WORK",
+    plan_ahead_better = "PLANS->BTR RSLTS",
+    planning_unhappy = "PLNNG MKS UNHPPY",
+    accept_life_happier = "ACPT LIFE->HAPPR",
+    little_chance = "PPL LK ME -CHANC",
+    master_fate = "PPL MASTER FATE",
+    # Health-symptom-checklist items, 12th grade, past 30 days.
+    trouble_concentrating_days = "#DA DFCT THINK",
+    trouble_remembering_days = "#DA TRBL REMEM",
+    trouble_sleeping_days = "#DA TRBL SLEEP",
+    symptom_headache = "#DA HEADACHE",
+    symptom_sorethroat = "#DA SORE THROAT",
+    symptom_sinuscong = "#DA SINUS CONG",
+    symptom_chestcold = "#DA CHEST COLD",
+    symptom_coughing = "#DA COUGHING",
+    symptom_coughphlegm = "#DA COUGH PHLM",
+    symptom_shortbreath = "#DA SHORT BRTH",
+    symptom_wheezing = "#DA WHEEZING"
   )
   c(
     design_vars,

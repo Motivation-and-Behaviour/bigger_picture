@@ -1,7 +1,7 @@
 target_variable,status,source_columns,expression,notes,lookup_table,measure
 participant_id,compatible,participant_id,as.character(participant_id),MCSID + cohort-member number; stable across sweeps.,,
 wave,compatible,.wave,as.character(.wave),Six MCS sweeps: sweep_2 (age 3) to sweep_7 (age 17),,
-data_year,inferred,"BHINTY00, CHINTY00, DHINTY00, EINTY0000, FHINTY00, GHINTY00, .wave","coalesce(
+data_year,compatible,"BHINTY00, CHINTY00, DHINTY00, EINTY0000, FHINTY00, GHINTY00, .wave","coalesce(
   as.numeric(BHINTY00),
   as.numeric(CHINTY00),
   as.numeric(DHINTY00),
@@ -17,10 +17,14 @@ data_year,inferred,"BHINTY00, CHINTY00, DHINTY00, EINTY0000, FHINTY00, GHINTY00,
     ""sweep_6"" ~ 2015,
     ""sweep_7"" ~ 2018
   )
-)","Household interview year (household grid). 229 rows with none (7 at sweep 2, 222 at sweep 7) take the sweep's modal fieldwork year (2004, 2006, 2008, 2012, 2015, 2018). Inferred: per-row and assigned years are mixed.",,
-rct_arm,unavailable,,,Observational birth cohort with no randomised allocation,,
-survey_weight,partial,BDWGT200,"if_else(as.numeric(BDWGT200) > 0, as.numeric(BDWGT200), NA_real_)","Sweep 2 only. BDWGT200, the UK-wide sampling weight of the family's stratum (0.23-2.0), with no attrition adjustment; the sweep-specific overall weights are not in the supplied extract. Partial: design weight only.",,
-survey_strata,compatible,BDPTY200,"if_else(as.numeric(BDPTY200) > 0, as.character(as.numeric(BDPTY200)), NA_character_)","Sweep 2 only. BDPTY200, stratum within country (9 codes: advantaged and disadvantaged wards per UK country, plus England ethnic-minority wards).",,
+)","Household interview year (household grid). 229 rows with none (7 at sweep 2, 222 at sweep 7) take the sweep's modal fieldwork year (2004, 2006, 2008, 2012, 2015, 2018).",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,partial,"BDWGT200, participant_id, .wave","carry_within(if_else(as.numeric(BDWGT200) > 0, as.numeric(BDWGT200), NA_real_), participant_id, .wave)","Sweep 2 design weight (BDWGT200, the UK-wide sampling weight of the family's stratum, 0.23-2.0), fixed at sampling and carried within participant to every sweep; no attrition adjustment, and the sweep-specific overall weights are not in the supplied extract. Partial: carried design weight only.",,
+survey_strata,compatible,"BDPTY200, participant_id, .wave","carry_within(
+  if_else(as.numeric(BDPTY200) > 0, as.character(as.numeric(BDPTY200)), NA_character_),
+  participant_id,
+  .wave
+)","Sweep 2 stratum (BDPTY200, 9 codes: advantaged and disadvantaged wards per UK country, plus England ethnic-minority wards), fixed at sampling; carried within participant to every sweep, no wave prefix.",,
 survey_cluster,unavailable,,,Not in the supplied extract.,,
 age_years,compatible,"BHCAGE00, CHCAGE00, DCMCS4AGE, EMCS5AGE, ECAGE0000, FCMCS6AG, GCMCS7AG","coalesce(
   as.numeric(BHCAGE00) / 365.25,
@@ -58,7 +62,7 @@ country,compatible,"BACTRY00, CACTRY00, DACTRY00, EACTRY00, FACTRY00, GACTRY00, 
   4 ~ ""Northern Ireland"",
   default = ""Unknown""
 )","Family-level administrative country at each sweep. Sweep 7 has none: household grid (GACTRY00), then interviewer-recorded country (G_COUNTRY).",,
-state,unavailable,,,Not an Australian dataset,,
+state,unavailable,,,Not an Australian dataset.,,
 ethnicity,compatible,"BDC06E00, CDC06E00, DDC06E00, FDCE0600, participant_id, .wave","coalesce(
   lookup_values(
     recode_values(
@@ -80,7 +84,7 @@ ethnicity,compatible,"BDC06E00, CDC06E00, DDC06E00, FDCE0600, participant_id, .w
   ),
   ""Unknown""
 )","MCS six-category ethnic group (sweeps 2, 3, 4, 6), carried within participant from the earliest sweep into sweeps without one; codes relabelled inline before the shared lookup. None at any sweep (117 participants) -> Unknown.",ethnicity,
-indigenous,unavailable,,,Not collected (UK sample),,
+indigenous,unavailable,,,Not collected.,,
 minority,compatible,"BDC06E00, CDC06E00, DDC06E00, FDCE0600, participant_id, .wave","recode_values(
   carry_within(
     coalesce(as.numeric(BDC06E00), as.numeric(CDC06E00), as.numeric(DDC06E00), as.numeric(FDCE0600)),
@@ -100,7 +104,7 @@ immigrant_background,partial,"respondent_born_uk, respondent_born_uk_PARTNER, pa
   )
   coalesce(carry_within(v, participant_id, .wave), ""Unknown"")
 })","'Were you born in the UK?' for the main and partner respondents (all at sweep 2, new respondents at sweeps 3-6, looked up by person number). Native if either was; Second-generation if none was and at least one was born abroad. Carried within participant from the earliest sweep, then Unknown. Partial: respondents may be resident carers rather than parents, and the cohort member's birthplace is not released (assumed UK).",,
-born_in_country,unavailable,,,Not collected.,,
+born_in_country,unavailable,,,"Not collected. Eligibility includes children born abroad who were resident in the UK by age 9 months, so recruitment does not guarantee UK birth.",,
 ses_area,compatible,"BIMDSCOE, BIWIMDSC, BISIMDSC, BIMDSCON, CIMDSCOE, CIWIMDSC, CISIMDSC, CIMDSCON, DIMDSCOE, DIWIMDSC, DISIMDSC, DIMDSCON, EIMDSCOE, EIWIMDSC, EISIMDSC, EIMDSCON, FIMDSCOE, FIWIMDSC, FISIMDSC, FIMDSCON","recode_values(
   coalesce(
     as.numeric(BIMDSCOE),
@@ -143,7 +147,7 @@ ses_household,compatible,"BOEDEX00, BDOEDS00, COEDEX00, CDOEDS00, DDOEDEX0, DDOE
   case_when(inc <= lo ~ ""Low"", inc <= hi ~ ""Medium"", inc > hi ~ ""High"", .default = ""Unknown"")
 })","OECD-equivalised net weekly family income (sweeps 2-4: predicted income / OECD scale, matching BDOEDE00, CDOEDE00 and DDOEDE00, which are missing for top incomes; sweeps 5-6: EOEDE000, FOEDE000), cut 40/20/40 on the unweighted rows within sweep (at or below the 40th percentile Low, above the 60th High): 40/20/40 at every sweep. No income at sweep 7 (3-year gap): Unknown.",,
 ses_household_measure,inferred,.wave,"if_else(.wave == ""sweep_7"", NA_character_, ""Income: OECD-equivalised net household income"")",Sweeps 2-6; NA at sweep 7 (no income measure).,,
-ses_hukou,unavailable,,,Not a Chinese study.,,
+ses_hukou,unavailable,,,Not a Chinese dataset.,,
 maternal_education,proximate,mother_nvq,"coalesce(
   lookup_values(
     haven::as_factor(mother_nvq),
@@ -354,14 +358,14 @@ st_tablet_school,unavailable,,,No item on use at school.,,
 st_internet_school,unavailable,,,No item on use at school.,,
 st_phone_school,unavailable,,,No item on use at school.,,
 acc_academachment_selfrated,incompatible,"ECQ46A00, ECQ46B00, ECQ46C00, ECQ46D00, FCENGL00, FCMTHS00, FCSCIE00",,"Only subject self-concept agreement items (ECQ46A00-ECQ46D00 sweep 5; FCENGL00, FCMTHS00, FCSCIE00 sweep 6: 'I am good at ...'); no overall performance rating.",,
-acc_academachment_lettergrades,unavailable,,,MCS collects no pupil-reported or school-record attainment grades in this release,,
-acc_academachment_stdtest,unavailable,,,No science or composite test; BAS Word Reading and NFER Number Skills are in acc_literacy_stdtest / acc_numeracy_stdtest.,,
+acc_academachment_lettergrades,unavailable,,,Not collected.,,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
 acc_schoolengage_caresschool,incompatible,"DCSC0027, ECQ35X00, FCSCBE00, EQ3C, EQ3A, ECQ36X00, DCSC0031, FCSINT00",,"Only how often the child tries their best (DCSC0027, ECQ35X00, FCSCBE00; teacher EQ3C) and enjoyment or interest items (teacher EQ3A; ECQ36X00, DCSC0031, FCSINT00): effort and liking, not caring about doing well.",,
 acc_schoolengage_homework,incompatible,"EQ3E, EPPRVC00, EPHWKM00, FCHWKM00",,"Teacher EQ3E (hands in homework late) is lateness, EPPRVC00 is parental checking and EPHWKM00/FCHWKM00 are homework hours; none is completion frequency.",,
 acc_schoolpressure_self,unavailable,,,Not collected.,,
 acc_schoolbelonging_self,incompatible,"DCSC0032, ECQ37X00, FCSUNH00, ECQ10E00, FCSCHL00",,"No belonging or connectedness scale; only the single item 'How often do you feel unhappy at school?' (DCSC0032, ECQ37X00, FCSUNH00) from a school-motivation grid, mapped nowhere; satisfaction with the school (ECQ10E00, FCSCHL00) is on wb_domainsat_school_self.",,
 acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
-acc_academachment_numgrades,unavailable,,,MCS collects no pupil-reported or school-record attainment grades in this release,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
 acc_academachment_teacherrated,partial,"DQ2162, DQ2164, DQ2166, DQ2167, EQ2A, EQ2C, EQ2D","recode_values(
   local({
     m <- coalesce(
@@ -386,11 +390,11 @@ acc_academachment_teacherrated,partial,"DQ2162, DQ2164, DQ2166, DQ2167, EQ2A, EQ
 )","Teacher report, sweeps 4-5 (ages 7, 11): mean of the core-subject ratings against the age group (sweep 4 reading, writing, science, maths; sweep 5 English, maths, science), all required, rounded half toward the poorer rating. Welsh/Gaelic/Irish-medium duplicates, speaking and listening, PE, ICT and arts excluded. Five levels: well above -> Very good, above -> Good, average -> Average, below and well below -> Below average. Partial: subject composite.",,
 acc_numeracy_stdtest,partial,DCNSCO00,as.numeric(DCNSCO00),"Sweep 4 only (age 7). NFER Number Skills raw score (0-15); no standardised or age-adjusted form, hence partial. Standardise within dataset and wave at analysis.",,
 acc_literacy_stdtest,compatible,DCWRSD00,as.numeric(DCWRSD00),"Sweep 4 only (age 7). BAS II Word Reading standard score, age-normed (mean 100, SD 15). Ability score (DCWRAB00) and raw total (DCWRSC00) are not age-comparable.",,
-beh_hyper_basc2,unavailable,,,Instrument not administered,,
-beh_atten_basc2,unavailable,,,Instrument not administered,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_parent.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_parent.,,
 beh_atten_self,incompatible,GHYPER_C,,SDQ hyperactivity/inattention only; mapped to beh_hyper_sdq_*.,,
 beh_atten_measure,unavailable,,,See beh_atten_self.,,
-beh_selfreg_htks,unavailable,,,Instrument not administered,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
 beh_bullied,partial,"ECQ57X00, FCPCKP00","recode_values(coalesce(as.numeric(ECQ57X00), as.numeric(FCPCKP00)), 6 ~ ""FALSE"", c(1, 2, 3, 4, 5) ~ ""TRUE"")","Self-report, sweeps 5-6: 'How often do you hurt or pick on other children on purpose?' (most days to never); TRUE for any occurrence. Partial: hurtful acts not framed as bullying, and no stated reference period. SDQ item 12 (truth-rated) not used.",,
 beh_beenbullied,partial,"DCSC0036, ECQ56X00, FCHURT00","local({
   hurt <- coalesce(as.numeric(ECQ56X00), as.numeric(FCHURT00))
@@ -486,18 +490,18 @@ beh_prosocial_sdq_parent,compatible,"BPROSOC, CPROSOC, DDPROSOC, EPROSOC, FPROSO
   as.numeric(FPROSOC),
   as.numeric(GPROSOC)
 )","As beh_conduct_sdq_parent, for the prosocial subscale. Checked against the parent items (xPSD*00): at least 3 of 5 answered, prorated, rounded half up wherever the items are in the tidied table.",,
-beh_aggphys_bpaq_self,unavailable,,,No aggression scale administered; MCS covers aggressive behaviour only via single antisocial-behaviour items and the SDQ conduct subscale.,,
-beh_aggverb_bpaq_self,unavailable,,,As beh_aggphys_bpaq_self.,,
-beh_agganger_bpaq_self,unavailable,,,As beh_aggphys_bpaq_self.,,
-beh_agghostility_bpaq_self,unavailable,,,As beh_aggphys_bpaq_self.,,
-beh_agg_self,unavailable,,,As beh_aggphys_bpaq_self.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_conduct_sdq_self.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_conduct_sdq_self.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ-SF not administered; see mh_irritable_self.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agg_self,incompatible,"FCHITT00, GCHITT00, GCONDUCT_C",,"Only a single push-or-hit item (sweeps 6-7, on beh_fight) and the SDQ conduct subscale (beh_conduct_sdq_self); no aggression scale.",,
 beh_agg_measure,unavailable,,,See beh_agg_self.,,
 beh_argues,incompatible,BPSDOA00,,"Only SDQ 3-4 form item 18 'Often argumentative with adults' (sweep 2, parent), a truth rating scored in beh_conduct_sdq_parent.",,
 beh_persistence_finishwork,incompatible,"BPSDTE00, CPSDTE00, DPSDTE00, EPSDTE00, FPSDTE00, GPSDTE00, DQ2195, EQ5Y, GCSDQY00",,"Only SDQ item 25 'sees tasks through to the end' (parent, teacher and self), a truth rating scored in the hyperactivity subscale.",,
 beh_emotreg_stayscalm,incompatible,"BPSDTT00, CPSDTT00, DPSDTT00, EPSDTT00, FPSDTT00, GPSDTT00, DQ2175, EQ5E, GCSDQE00",,"Only SDQ item 5 'often has temper tantrums or hot tempers' (parent, teacher and self), a problem-worded truth rating scored in the conduct subscale.",,
 beh_peerprob_makefriends,incompatible,"BPSDGF00, CPSDGF00, DPSDGF00, EPSDGF00, FPSDGF00, GPSDGF00, BPSDLC00, CPSDLC00, DPSDLC00, EPSDLC00, FPSDLC00, GPSDLC00, DQ2181, DQ2184, EQ5K, EQ5N, GCSDQK00, GCSDQN00",,"Only SDQ items 11 'has at least one good friend' and 14 'generally liked by other children' (parent, teacher and self), truth ratings scored in the peer problems subscale.",,
-beh_conduct_diagnosed,unavailable,,,No professional diagnosis of behavioural or conduct problems is recorded,,
-beh_conduct_diagnosed_severity,unavailable,,,No professional diagnosis of behavioural or conduct problems is recorded,,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
 beh_conduct_sdq_self,compatible,GCONDUCT_C,as.numeric(GCONDUCT_C),"MCS-derived SDQ conduct subscale, self-report, sweep 7 only (age 17; none under 11). Range 0-10. Checked against the GCSDQ*00 items: at least 3 of 5 answered, prorated, rounded half up.",,
 beh_hyper_sdq_self,compatible,GHYPER_C,as.numeric(GHYPER_C),"As beh_conduct_sdq_self, for the hyperactivity/inattention subscale. Checked against the GCSDQ*00 items: at least 3 of 5 answered, prorated, rounded half up.",,
 beh_peerprob_sdq_self,compatible,GPEER_C,as.numeric(GPEER_C),"As beh_conduct_sdq_self, for the peer problems subscale. Checked against the GCSDQ*00 items: at least 3 of 5 answered, prorated, rounded half up.",,
@@ -506,16 +510,16 @@ beh_conduct_sdq_teacher,compatible,"DDCOND_T, ECOND_T","coalesce(as.numeric(DDCO
 beh_hyper_sdq_teacher,compatible,"DDHYPER_T, EHYPER_T","coalesce(as.numeric(DDHYPER_T), as.numeric(EHYPER_T))","As beh_conduct_sdq_teacher, for the hyperactivity/inattention subscale. Checked against the teacher items (DQ2171-DQ2195, EQ5A-EQ5Y): at least 3 of 5 answered, prorated, rounded half up.",,
 beh_peerprob_sdq_teacher,compatible,"DDPEER_T, EPEER_T","coalesce(as.numeric(DDPEER_T), as.numeric(EPEER_T))","As beh_conduct_sdq_teacher, for the peer problems subscale. Checked against the teacher items (DQ2171-DQ2195, EQ5A-EQ5Y): at least 3 of 5 answered, prorated, rounded half up.",,
 beh_prosocial_sdq_teacher,compatible,"DDPROSO_T, EPROSO_T","coalesce(as.numeric(DDPROSO_T), as.numeric(EPROSO_T))","As beh_conduct_sdq_teacher, for the prosocial subscale. Checked against the teacher items (DQ2171-DQ2195, EQ5A-EQ5Y): at least 3 of 5 answered, prorated, rounded half up.",,
-beh_ext_sdq_parent,unavailable,,,SDQ subscales released; derive the externalising composite at analysis (schema note).,,
-beh_ext_sdq_self,unavailable,,,As beh_ext_sdq_parent.,,
-beh_ext_sdq_teacher,unavailable,,,As beh_ext_sdq_parent.,,
-beh_agg_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
-beh_atten_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
-beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
-beh_ext_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
-beh_cbcl_measure,unavailable,,,CBCL not administered; MCS uses the SDQ,,
+beh_ext_sdq_parent,unavailable,,,Derive at analysis from beh_conduct_sdq_parent and beh_hyper_sdq_parent.,,
+beh_ext_sdq_self,unavailable,,,Derive at analysis from beh_conduct_sdq_self and beh_hyper_sdq_self.,,
+beh_ext_sdq_teacher,unavailable,,,Derive at analysis from beh_conduct_sdq_teacher and beh_hyper_sdq_teacher.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered; see beh_hyper_sdq_parent.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent and beh_hyper_sdq_parent.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
-beh_prosocial_online_measure,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
 beh_problematicuse_self,incompatible,GCSOCM00,,Only the single agreement item 'I think I am addicted to social media' (sweep 7); no multi-item scale.,,
 beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
 cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
@@ -544,8 +548,8 @@ cog_spatial_bas_pattern,compatible,"CCPCTSCORE, DCPCTS00","coalesce(as.numeric(C
 cog_verbalreason_bas_versim,compatible,EVSTSCO,as.numeric(EVSTSCO),"Sweep 5 only (age 11). BAS II Verbal Similarities T-score (mean 50, SD 10, 20-80), which MCS labels 'standard score'.",,
 cog_schoolread_bracken,compatible,BDSRCS00,"ifelse(as.numeric(BDSRCS00) >= 0, as.numeric(BDSRCS00), NA_real_)","Sweep 2 only (age 3). Bracken School Readiness Composite standard score (colours, letters, numbers, sizes, comparisons, shapes), the age-normed form. Negative not-carried-out/not-completed/age-unknown codes excluded.",,
 cog_creativethinking_stdtest,unavailable,,,Not collected.,,
-mh_anx_basc2,unavailable,,,Instrument not administered,,
-mh_dep_basc2,unavailable,,,Instrument not administered,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered; see mh_emotsymp_sdq_parent.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered; see mh_dep_smfq_self.,,
 mh_emotsymp_sdq_parent,compatible,"BEMOTION, CEMOTION, DDEMOTION, EEMOTION, FEMOTION, GEMOTION","coalesce(
   as.numeric(BEMOTION),
   as.numeric(CEMOTION),
@@ -563,16 +567,16 @@ mh_totaldiff_sdq_parent,compatible,"BEBDTOT, CEBDTOT, DDDEBDTOT, EEBDTOT, FEBDTO
   as.numeric(GEBDTOT)
 )","MCS-derived SDQ total difficulties (sum of the four difficulty subscales, 0-2 item scoring), range 0-40; parent report, all six sweeps (3-4 form at sweep 2); observed maximum 38. Equals the sum of the item-checked subscales, scored only when all four are.",,
 mh_anx_diagnosed,incompatible,"GCDEAN00, GCTRDE00",,"Sweep 7 'Has a doctor ever told you that you suffer from depression or serious anxiety?' (GCDEAN00, with treatment GCTRDE00) cannot be split by condition; see mh_depanx_diagnosed.",,
-mh_anx_diagnosed_severity,unavailable,,,No severity rating; MCS records only current treatment.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
 mh_dep_diagnosed,incompatible,"GCDEAN00, GCTRDE00",,As mh_anx_diagnosed.,,
-mh_dep_diagnosed_severity,unavailable,,,As mh_anx_diagnosed_severity.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
 mh_emotsymp_sdq_self,compatible,GEMOTION_C,as.numeric(GEMOTION_C),"MCS-derived SDQ emotional symptoms subscale, self-report, sweep 7 only (age 17). Range 0-10. Checked against the GCSDQ*00 items: at least 3 of 5 answered, prorated, rounded half up.",,
 mh_emotsymp_sdq_teacher,compatible,"DDEMOTI_T, EEMOTI_T","coalesce(as.numeric(DDEMOTI_T), as.numeric(EEMOTI_T))","MCS-derived SDQ emotional symptoms subscale, teacher report, sweeps 4-5 only (ages 7, 11). Range 0-10. Checked against the teacher items (DQ2171-DQ2195, EQ5A-EQ5Y): at least 3 of 5 answered, prorated, rounded half up.",,
 mh_totaldiff_sdq_self,compatible,GEBDTOT_C,as.numeric(GEBDTOT_C),"MCS-derived SDQ total difficulties (sum of the four difficulty subscales, 0-2 item scoring), range 0-40; self-report, sweep 7 only (age 17); observed maximum 34. Equals the sum of the item-checked subscales, scored only when all four are.",,
 mh_totaldiff_sdq_teacher,compatible,"DDDEBDTO_T, EEBDTO_T","coalesce(as.numeric(DDDEBDTO_T), as.numeric(EEBDTO_T))","MCS-derived SDQ total difficulties (sum of the four difficulty subscales, 0-2 item scoring), range 0-40; teacher report, sweeps 4-5 (ages 7, 11); observed maximum 37. Equals the sum of the item-checked subscales, scored only when all four are.",,
-mh_int_sdq_parent,unavailable,,,SDQ subscales released; derive the internalising composite at analysis (schema note).,,
-mh_int_sdq_self,unavailable,,,As mh_int_sdq_parent.,,
-mh_int_sdq_teacher,unavailable,,,As mh_int_sdq_parent.,,
+mh_int_sdq_parent,unavailable,,,Derive at analysis from mh_emotsymp_sdq_parent and beh_peerprob_sdq_parent.,,
+mh_int_sdq_self,unavailable,,,Derive at analysis from mh_emotsymp_sdq_self and beh_peerprob_sdq_self.,,
+mh_int_sdq_teacher,unavailable,,,Derive at analysis from mh_emotsymp_sdq_teacher and beh_peerprob_sdq_teacher.,,
 mh_dep_smfq_self,compatible,"FCMDSA00, FCMDSB00, FCMDSC00, FCMDSD00, FCMDSE00, FCMDSF00, FCMDSG00, FCMDSH00, FCMDSI00, FCMDSJ00, FCMDSK00, FCMDSL00, FCMDSM00","(as.numeric(FCMDSA00) +
   as.numeric(FCMDSB00) +
   as.numeric(FCMDSC00) +
@@ -587,25 +591,25 @@ mh_dep_smfq_self,compatible,"FCMDSA00, FCMDSB00, FCMDSC00, FCMDSD00, FCMDSE00, F
   as.numeric(FCMDSL00) +
   as.numeric(FCMDSM00)) -
   13","Sweep 6 only (age 14). All 13 SMFQ items, self-completed; MCS codes 1-3 (not true, sometimes, true), minus 1 per item for 0-2 scoring, 0-26 total. Complete-case.",,
-mh_dep_smfq_parent,unavailable,,,Instrument not administered,,
-mh_dep_cdi_self,unavailable,,,Instrument not administered,,
-mh_dep_cesd_self,unavailable,,,Instrument not administered,,
-mh_dep_phq9_self,unavailable,,,Instrument not administered,,
-mh_dep_rcads_self,unavailable,,,Instrument not administered,,
-mh_dep_dass21_self,unavailable,,,Instrument not administered,,
-mh_dep_scl_self,unavailable,,,Instrument not administered,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered; see mh_dep_smfq_self.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered.,,
 mh_distress_k6_self,compatible,GDCKESSL,as.numeric(GDCKESSL),"Sweep 7 only (age 17). MCS-derived Kessler 6 total of the cohort member's own reversed items (0-4, total 0-24); missing-item rule not documented, and the items are not in the tidied table. Kessler scores at sweeps 2-6 are the parent's own distress.",,
-mh_distress_k10_self,unavailable,,,Instrument not administered,,
-mh_anx_masc_self,unavailable,,,Instrument not administered,,
-mh_anx_scas_self,unavailable,,,Instrument not administered,,
-mh_anx_scas_parent,unavailable,,,Instrument not administered,,
-mh_anx_scared_self,unavailable,,,Instrument not administered,,
-mh_anx_scared_parent,unavailable,,,Instrument not administered,,
-mh_anx_gad7_self,unavailable,,,Instrument not administered,,
-mh_anx_rcads_self,unavailable,,,Instrument not administered,,
-mh_anx_dass21_self,unavailable,,,Instrument not administered,,
-mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
-mh_int_cbcl_parent,unavailable,,,CBCL not administered; MCS uses the SDQ,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_anx_masc_self,unavailable,,,MASC not administered.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_parent.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_parent and beh_peerprob_sdq_parent.,,
 mh_dep_binary_self,incompatible,"FCMDSA00, FCMDSB00, FCMDSC00, FCMDSD00, FCMDSE00, FCMDSF00, FCMDSG00, FCMDSH00, FCMDSI00, FCMDSJ00, FCMDSK00, FCMDSL00, FCMDSM00",,SMFQ total in mh_dep_smfq_self; scale totals are not dichotomised here.,,
 mh_dep_self,compatible,"FCMDSA00, FCMDSB00, FCMDSC00, FCMDSD00, FCMDSE00, FCMDSF00, FCMDSG00, FCMDSH00, FCMDSI00, FCMDSJ00, FCMDSK00, FCMDSL00, FCMDSM00","(as.numeric(FCMDSA00) +
   as.numeric(FCMDSB00) +
@@ -636,8 +640,8 @@ mh_depanx_diagnosed,partial,"GCDEAN00, GCTRDE00","case_when(
 )","Sweep 7 only, self-report: 'Has a doctor ever told you that you suffer from depression or serious anxiety?' (GCDEAN00), then, if yes, current treatment (GCTRDE00). Partial: current treatment proxies current diagnosis, so current cases are understated. Depression and anxiety cannot be split, hence this row.",,
 mh_stress_self,unavailable,,,Not collected.,,
 mh_lonely_self,incompatible,"FCMDSJ00, DCSC0038",,"SMFQ 'I felt lonely' (FCMDSJ00, sweep 6) is a not true/sometimes/true rating, not a frequency; sweep-4 DCSC0038 'feel left out of things by other children' is peer exclusion.",,
-mh_lonely_scale_self,unavailable,,,No loneliness scale.,,
-mh_lonely_measure,unavailable,,,No loneliness scale.,,
+mh_lonely_scale_self,incompatible,FCMDSJ00,,"Only the SMFQ item 'I felt lonely' (sweep 6), scored in mh_dep_smfq_self; no loneliness scale.",,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
 mh_sad_self,proximate,"DCSC0013, ECQ76X00","coalesce(
   recode_values(as.numeric(DCSC0013), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Never""),
   recode_values(as.numeric(ECQ76X00), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", 5 ~ ""Always"")
@@ -671,21 +675,21 @@ mh_selfharm_self,compatible,"FCHARM00, GCSHCU00, GCSHBU00, GCSHBR00, GCSHOD00, G
     .default = NA_character_
   )
 })","Self-report, past year. Sweep 6: 'In the past year have you hurt yourself on purpose in any way?'. Sweep 7: 'During the last year, have you hurt yourself on purpose in any of the following ways?' (cut, burned, bruised, overdose, pulled hair, other); Yes if any, No if every answered method is no; 'do not wish to answer' is unanswered.",,
-mh_psychsom_hbscscl_self,unavailable,,,Not collected.,,
-mh_psychsom_measure,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
 mh_somatic_self,incompatible,GCSDQC00,,"Only SDQ item 3 'I get a lot of headaches, stomach-aches or sickness' (sweep 7), a truth rating scored in mh_emotsymp_sdq_self.",,
 mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
-wb_emotsc_basc2,unavailable,,,Instrument not administered,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
 wb_mwb_wemwbs,incompatible,GDWEMWBS,,"Only SWEMWBS (sweep 7), mapped to wb_mwb_swemwbs_self.",,
 wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered; see wb_lifesat_singleitem_self.,,
-wb_resil_basc2,unavailable,,,Instrument not administered,,
-wb_psychcomplaints_feellow,unavailable,,,HBSC symptom checklist not administered,,
-wb_psychcomplaints_irritable,unavailable,,,HBSC symptom checklist not administered,,
-wb_psychcomplaints_nervous,unavailable,,,HBSC symptom checklist not administered,,
-wb_psychcomplaints_diffsleep,unavailable,,,HBSC symptom checklist not administered,,
-wb_bodyimage,unavailable,,,No too-thin/too-fat item; MCS asks how happy the child is with how they look (appearance satisfaction).,,
-wb_lifesat_slss_self,unavailable,,,Instrument not administered,,
-wb_lifesat_swls_self,unavailable,,,Instrument not administered,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_worry_self.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see hlth_sleepprob.,,
+wb_bodyimage,incompatible,"ECQ10B00, FCWYLK00",,"Appearance-satisfaction item ('How do you feel about the way you look?', sweeps 5-6) is not a too-thin/too-fat item; see wb_domainsat_appearance_self.",,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
 wb_lifesat_singleitem_self,compatible,"ECQ10F00, FCLIFE00","8 - coalesce(as.numeric(ECQ10F00), as.numeric(FCLIFE00))","Sweeps 5-6 (ages 11, 14), self-completed: 'How happy are you with your life as a whole?', 7-point faces scale (1 completely happy to 7 not at all happy). Reversed so higher = more satisfied (1-7). Sweep 7 replaced the item with the SWEMWBS.",,
 wb_happiness_singleitem_self,partial,"DCSC0011, ECQ74X00","coalesce(
   recode_values(as.numeric(DCSC0011), 1 ~ 3, 2 ~ 2, 3 ~ 1),
@@ -696,10 +700,10 @@ wb_domainsat_appearance_self,compatible,"ECQ10B00, FCWYLK00","8 - coalesce(as.nu
 wb_domainsat_family_self,compatible,"ECQ10C00, FCFMLY00","8 - coalesce(as.numeric(ECQ10C00), as.numeric(FCFMLY00))","Sweeps 5-6: 'How do you feel about your family?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
 wb_domainsat_friends_self,compatible,"ECQ10D00, FCFRNS00","8 - coalesce(as.numeric(ECQ10D00), as.numeric(FCFRNS00))","Sweeps 5-6: 'How do you feel about your friends?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
 wb_domainsat_school_self,compatible,"ECQ10E00, FCSCHL00","8 - coalesce(as.numeric(ECQ10E00), as.numeric(FCSCHL00))","Sweeps 5-6: 'How do you feel about the school you go to?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
-wb_qol_pedsql_self,unavailable,,,Instrument not administered,,
-wb_qol_pedsql_parent,unavailable,,,Instrument not administered,,
-wb_qol_kidscreen10_self,unavailable,,,Instrument not administered,,
-wb_qol_kidscreen10_parent,unavailable,,,Instrument not administered,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
 wb_selfesteem_rosenberg_self,incompatible,"ECQ11A00, ECQ11B00, ECQ11C00, ECQ11D00, ECQ11E00, FCSATI00, FCGDQL00, FCDOWL00, FCVALU00, FCGDSF00, GCSATI00, GCGDQL00, GCDOWL00, GCVALU00, GCGDSF00",,5 of 10 items; mapped to wb_selfesteem_self.,,
 wb_selfesteem_self,compatible,"ECQ11A00, ECQ11B00, ECQ11C00, ECQ11D00, ECQ11E00, FCSATI00, FCGDQL00, FCDOWL00, FCVALU00, FCGDSF00, GCSATI00, GCGDQL00, GCDOWL00, GCVALU00, GCGDSF00","local({
   a <- coalesce(as.numeric(ECQ11A00), as.numeric(FCSATI00), as.numeric(GCSATI00))
@@ -718,11 +722,11 @@ wb_selfesteem_measure,inferred,.wave,"if_else(
   ""Rosenberg Self-Esteem Scale, 5 of 10 items, 1-4 item scoring (range 5-20), sum; all 5 items reverse-coded from the source"",
   NA_character_
 )",Sweeps 5-7; NA elsewhere (no self-esteem items).,,
-wb_selfefficacy_gse_self,unavailable,,,Instrument not administered,,
-wb_selfefficacy_self,unavailable,,,Instrument not administered,,
-wb_selfefficacy_measure,unavailable,,,Instrument not administered,,
-wb_mwb_who5_self,unavailable,,,Instrument not administered,,
-wb_happiness_shs_self,unavailable,,,Instrument not administered,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered; see wb_mwb_swemwbs_self.,,
+wb_happiness_shs_self,unavailable,,,SHS not administered; see wb_happiness_singleitem_self.,,
 wb_mwb_swemwbs_self,compatible,GDWEMWBS,as.numeric(GDWEMWBS),"Sweep 7 only (age 17), self-completed. GDWEMWBS: published SWEMWBS Rasch metric score for the 7 items (7-35), mapped instead of the raw sum. 14-item WEMWBS not administered (wb_mwb_wemwbs).",,
 wb_selfratedhealth_self,compatible,"FCCGHE00, GCCGHE00","recode_values(
   coalesce(as.numeric(FCCGHE00), as.numeric(GCCGHE00)),
@@ -741,9 +745,9 @@ wb_generalhealth_parent,compatible,"CPCGHE00, DPCGHE00, EPCGHE00","recode_values
   5 ~ ""Poor""
 )","Parent, sweeps 3-5: 'CM's general level of health', excellent to poor, one-to-one.",,
 wb_posaffect_self,incompatible,"DCSC0011, DCSC0016, ECQ74X00, ECQ78X00",,Only single 'happy' and 'laugh' frequency items (sweeps 4-5; the happy items are on wb_happiness_singleitem_self); no positive-affect scale.,,
-wb_posaffect_measure,unavailable,,,No positive-affect scale.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
 wb_eudaimonic_self,unavailable,,,Not collected.,,
-wb_eudaimonic_measure,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
 wb_socsupport_family_self,incompatible,"FCSAFF00, FCTRSS00, FCNCLS00, GCSAFF00, GCTRSS00, GCNCLS00",,Only a 3-item social-support grid (sweeps 6-7: family and friends who help me feel safe; someone I trust; no one I feel close to) that pools family and friends.,,
 wb_socsupport_friends_self,incompatible,"FCSAFF00, FCTRSS00, FCNCLS00, GCSAFF00, GCTRSS00, GCNCLS00",,Only a 3-item social-support grid (sweeps 6-7) that pools family and friends; see wb_socsupport_family_self.,,
 wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
@@ -751,12 +755,12 @@ hlth_sleep_wd,partial,"FCSLWK00, FCWUWK00","local({
   onset <- recode_values(as.numeric(FCSLWK00), 1 ~ 21, 2 ~ 21.5, 3 ~ 22.5, 4 ~ 23.5, 5 ~ 24)
   wake <- recode_values(as.numeric(FCWUWK00), 1 ~ 6, 2 ~ 6.5, 3 ~ 7.5, 4 ~ 8.5, 5 ~ 9)
   wake + 24 - onset
-})","Self-report, sweep 6 only: banded time of going to sleep on a school night and waking on a school day; wake minus sleep time, closed bands at their midpoints, open bands at their bound (before 9pm 21:00, after midnight 24:00, before 6am 06:00, after 9am 09:00). Partial: clock times, not hours asleep.",,
+})","Self-report, sweep 6 only: banded time (5 categories) of going to sleep and waking on a school night/day; wake minus sleep time, closed bands at their midpoint, open bands at their stated bound (before 9pm 21:00, after midnight 24:00, before 6am 06:00, after 9am 09:00). Partial: banded onset and waking times.",,
 hlth_sleep_we,partial,"FCSLWE00, FCWUWE00","local({
   onset <- recode_values(as.numeric(FCSLWE00), 1 ~ 21, 2 ~ 21.5, 3 ~ 22.5, 4 ~ 23.5, 5 ~ 24)
   wake <- recode_values(as.numeric(FCWUWE00), 1 ~ 8, 2 ~ 8.5, 3 ~ 9.5, 4 ~ 10.5, 5 ~ 11.5, 6 ~ 12)
   wake + 24 - onset
-})","Self-report, sweep 6 only: banded sleep time before a non-school day and wake time when there is no school; scored as hlth_sleep_wd (before 8am 08:00, after midday 12:00). Partial: clock times, not hours asleep.",,
+})","Self-report, sweep 6 only: banded sleep time before a non-school day and wake time when there is no school; scored as hlth_sleep_wd (before 8am 08:00, after midday 12:00). Partial: banded onset and waking times.",,
 hlth_sleep,partial,"FCSLWK00, FCWUWK00, FCSLWE00, FCWUWE00","(5 *
   local({
     onset <- recode_values(as.numeric(FCSLWK00), 1 ~ 21, 2 ~ 21.5, 3 ~ 22.5, 4 ~ 23.5, 5 ~ 24)
@@ -769,7 +773,7 @@ hlth_sleep,partial,"FCSLWK00, FCWUWK00, FCSLWE00, FCWUWE00","(5 *
       wake <- recode_values(as.numeric(FCWUWE00), 1 ~ 8, 2 ~ 8.5, 3 ~ 9.5, 4 ~ 10.5, 5 ~ 11.5, 6 ~ 12)
       wake + 24 - onset
     })) /
-  7",5:2 weighted mean of hlth_sleep_wd and hlth_sleep_we (sweep 6); partial as they are.,,
+  7",5:2 weighted mean of hlth_sleep_wd and hlth_sleep_we (sweep 6); partial as they are (banded onset and waking times).,,
 hlth_sleepprob,incompatible,"FCSLLN00, FCSLTR00, GCSQLT00, CPSLPP00",,"No sleep-problems scale: only sleep latency and night waking items (sweep 6), overall sleep quality (sweep 7) and a parent rating of sleeping habits as a problem (sweep 3).",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
 st_measure_type,inferred,,"""Continuous""","Time-use diary: activities recorded in 10-minute slots over a full day, summed to minutes per diary day in the tidier (bp27_tud_minutes()).",,diary

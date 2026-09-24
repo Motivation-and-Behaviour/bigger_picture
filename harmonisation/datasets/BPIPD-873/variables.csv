@@ -28,13 +28,13 @@ data_year,compatible,"interview_year_self, interview_year_parent, wave, tv_wd_ho
   )
   coalesce(year, as.numeric(wave))
 })","Interview year of the questionnaire that supplied the row's screen items (self-report, else proxy), so 2011, 2015, 2017 and 2019 hold spill-over interviews; missing dates take the survey year.",,
-rct_arm,unavailable,,,"Observational panel, not a trial.",,
+rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,compatible,weight_cross,as.numeric(weight_cross),"CFPS cross-sectional individual weight as released: 2010 national-sample weight (rswt_nat), 2014-2016 rswt_natcs, 2018-2022 the standardised rswt_natcs*n (mean about 1); NA for respondents without a weight.",,
-survey_strata,compatible,"subpopulation, wave","if_else(is.na(subpopulation), NA_character_, paste0(wave, ""-"", as.numeric(subpopulation)))","Sampling subpopulation (Shanghai, Liaoning, Henan, Gansu, Guangdong oversamples and the other provinces), the design's six independent sampling frames; 2014 releases the 2010 assignment. Prefixed with the wave.",,
+survey_strata,compatible,subpopulation,"if_else(is.na(subpopulation), NA_character_, as.character(as.numeric(subpopulation)))","Sampling subpopulation (Shanghai, Liaoning, Henan, Gansu, Guangdong oversamples and the other provinces), the design's six independent sampling frames; 2014 releases the 2010 assignment. Fixed at sampling, not wave-prefixed.",,
 survey_cluster,compatible,"psu, pid, wave","local({
   unit <- carry_within(as.numeric(psu), pid, as.numeric(wave))
-  if_else(is.na(unit), NA_character_, paste0(wave, ""-"", unit))
-})","CFPS primary sampling unit (county-level, fixed by the original sample). 2014 and 2016 do not release it, so they take the participant's value from another wave. Prefixed with the wave.",,
+  if_else(is.na(unit), NA_character_, as.character(unit))
+})","CFPS primary sampling unit (county-level, fixed by the original sample). 2014 and 2016 do not release it, so they take the participant's value from another wave. Fixed at sampling, not wave-prefixed.",,
 age_years,compatible,"interview_year_self, interview_month_self, interview_year_parent, interview_month_parent, birth_year, birth_month, age_reported, tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, learning_online_day_mins_self, internet_any_self, internet_mobile_user, internet_pc_user, learning_online_user_self","local({
   self <- rowSums(
     !is.na(cbind(
@@ -78,7 +78,7 @@ sex,compatible,"sex, pid","coalesce(modal_within(recode_values(as.numeric(sex), 
 country,inferred,,"""China""",CFPS samples 25 mainland provinces and municipalities.,,
 state,unavailable,,,Not an Australian dataset.,,
 ethnicity,incompatible,ethnicity_code,,minzu is China's ethnic-nationality classification and nearly all groups would map to Asian; it is used for minority.,,
-indigenous,unavailable,,,No indigenous classification in China; ethnic nationality mapped under minority.,,
+indigenous,unavailable,,,Not collected.,,
 minority,compatible,"ethnicity_code, pid, wave","local({
   code <- carry_within(as.numeric(ethnicity_code), pid, as.numeric(wave))
   case_when(is.na(code) ~ ""Unknown"", code == 1 ~ ""Non-minority"", .default = ""Minority"")
@@ -95,7 +95,7 @@ born_in_country,proximate,"birth_province, birth_address_2014, birth_address, pi
   )
   coalesce(carry_within(born, pid, as.numeric(wave)), ""Unknown"")
 })","Birth province (2010) and family address at birth (2014-2022, asked of new respondents), carried within participant. 'Outside mainland China' pools Hong Kong, Macau and Taiwan with abroad and maps to No; invalid codes (online store, no fixed workplace) are Unknown.",,
-ses_area,unavailable,,,No area-level deprivation index.,,
+ses_area,unavailable,,,Not collected.,,
 ses_household,compatible,"household_income_pc, wave","local({
   low <- stats::ave(household_income_pc, wave, FUN = function(x) stats::quantile(x, 0.4, na.rm = TRUE))
   high <- stats::ave(household_income_pc, wave, FUN = function(x) stats::quantile(x, 0.6, na.rm = TRUE))
@@ -610,12 +610,12 @@ mh_depanx_diagnosed,unavailable,,,Not collected.,,
 mh_stress_self,incompatible,"k6_nervous, k6_child2010_nervous",,"Only the K6-style past-month frequency of feeling nervous (2010 label 'stressed'), a pooled distress item; scored in mh_distress_k6_self.",,
 mh_lonely_self,proximate,lonely,"recode_values(as.numeric(lonely), 1 ~ ""Rarely"", 2 ~ ""Sometimes"", 3 ~ ""Often"", 4 ~ ""Always"", default = NA_character_)","CES-D 'I feel lonely', past week, 2016-2022; days under 1, 1-2, 3-4, 5-7 -> Rarely, Sometimes, Often, Always, so Never is not reachable. Also scored in mh_dep_cesd_self.",,
 mh_lonely_scale_self,incompatible,lonely,,"Only the CES-D item 'I feel lonely' (2016-2022), mapped to mh_lonely_self; no loneliness scale.",,
-mh_lonely_measure,unavailable,,,No loneliness scale.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
 mh_sad_self,proximate,sad,"recode_values(as.numeric(sad), 1 ~ ""Rarely"", 2 ~ ""Sometimes"", 3 ~ ""Often"", 4 ~ ""Always"", default = NA_character_)","CES-D 'I feel sad', past week, 2016-2022; 4 levels by days (under 1, 1-2, 3-4, 5-7). Recoded as mh_lonely_self.",,
 mh_worry_self,incompatible,int_worry_school,,"Only 1-5 applicability items on specific school worries (2018, 2022); no frequency item.",,
 mh_irritable_self,incompatible,int_angry_study,,"Only a 1-5 applicability item on anger at study difficulties (2018, 2022); no frequency item.",,
 mh_nobodycares_self,unavailable,,,Not collected.,,
-mh_lifenotworth_self,incompatible,"k6_meaningless, k6_child2010_meaningless, cesd_notgoing",,"Only the past-month K6-style 'felt life was meaningless' item (2010, 2014: wn406, wq606, qq606) and CES-D item 20 'I could not get going' (2016-2022); neither is a death wish.",,
+mh_lifenotworth_self,incompatible,"k6_meaningless, k6_child2010_meaningless, cesd_notgoing",,"Only the past-month K6-style 'felt life was meaningless' item (2010, 2014: wn406, wq606, qq606; held in mh_distress_k6_self) and CES-D item 20 'I could not get going' (2016-2022), which scores into mh_dep_cesd_self; neither is a death wish.",,
 mh_suicide_ideation_self,unavailable,,,Not collected.,,
 mh_suicide_attempt_self,unavailable,,,Not collected.,,
 mh_selfharm_self,unavailable,,,Not collected.,,
@@ -627,10 +627,10 @@ wb_emotsc_basc2,unavailable,,,Not collected.,,
 wb_mwb_wemwbs,unavailable,,,Not collected.,,
 wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered; see wb_lifesat_singleitem_self.,,
 wb_resil_basc2,unavailable,,,Not collected.,,
-wb_psychcomplaints_feellow,incompatible,sad,,"Only CES-D 'I feel sad' (past-week days), mapped to mh_sad_self.",,
-wb_psychcomplaints_irritable,incompatible,int_angry_study,,"Only a 1-5 applicability item on anger at study difficulties (2018, 2022); see mh_irritable_self.",,
-wb_psychcomplaints_nervous,incompatible,"k6_nervous, k6_child2010_nervous",,"Only the K6-style past-month 'nervous' item (2010, 2014), scored in mh_distress_k6_self.",,
-wb_psychcomplaints_diffsleep,incompatible,cesd_sleep,,"Only CES-D 'My sleep was restless' (past-week days, 2016-2022), not difficulty getting to sleep.",,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_distress_k6_self.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see mh_dep_cesd_self.,,
 wb_bodyimage,unavailable,,,Not collected.,,
 wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_singleitem_self.,,
 wb_lifesat_swls_self,unavailable,,,SWLS not administered; see wb_lifesat_singleitem_self.,,
@@ -696,19 +696,19 @@ wb_selfratedhealth_self,compatible,self_rated_health,"recode_values(
   4 ~ ""Fair"",
   5 ~ ""Poor"",
   default = NA_character_
-)",Five-level self-rated health; wording matches the schema's levels. Non-responses stay missing (no Unknown level).,,
-wb_generalhealth_parent,incompatible,self_rated_health,,"Only the respondent's self-rated health, mapped to wb_selfratedhealth_self; the proxy module has no parent rating of the child's health.",,
+)","Five-level self-rated health (Excellent to Poor), 2014-2022, ages 10+; labels match the schema's. The 2010 child item (Healthy, Fair, Relatively unhealthy, Unhealthy, Very unhealthy; self_rated_health_2010) is not mapped: one healthy level against three unhealthy ones is not a symmetric scale. Non-responses stay missing.",,
+wb_generalhealth_parent,incompatible,"self_rated_health, self_rated_health_2010",,Only the child's own self-rated health (see wb_selfratedhealth_self); the proxy module has no parent rating of the child's health.,,
 wb_posaffect_self,incompatible,"cesd_happy, cesd_enjoyed",,"Only the CES-D positive items 'I was happy' and 'I enjoyed life' (2016-2022), which score into mh_dep_cesd_self; no positive-affect scale.",,
-wb_posaffect_measure,unavailable,,,No positive-affect score.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
 wb_eudaimonic_self,incompatible,life_meaningful,,Only a 2022 single 0-10 item on how meaningful life feels; no scale.,,
-wb_eudaimonic_measure,unavailable,,,No eudaimonic score.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
 wb_socsupport_family_self,unavailable,,,Not collected.,,
 wb_socsupport_friends_self,unavailable,,,Not collected.,,
 wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
 hlth_sleep_wd,compatible,sleep_wd_hours,as.numeric(sleep_wd_hours),"Self-report hours of sleep: 2010 time-use grid, weekday in the latest non-vacation month (ages 10+); 2014-2022 'how long do you sleep on weekdays', asked of those whose working or school days differ from rest days.",,
 hlth_sleep_we,compatible,sleep_we_hours,as.numeric(sleep_we_hours),As hlth_sleep_wd for weekend or rest days.,,
 hlth_sleep,compatible,"sleep_wd_hours, sleep_we_hours, sleep_day_hours","coalesce((5 * as.numeric(sleep_wd_hours) + 2 * as.numeric(sleep_we_hours)) / 7, as.numeric(sleep_day_hours))","5:2 mean of hlth_sleep_wd and hlth_sleep_we; otherwise 'In general, how long do you sleep every day?' (2014-2022, respondents with no workday/rest-day distinction).",,
-hlth_sleepprob,incompatible,cesd_sleep,,"Only the CES-D item 'My sleep was restless' (past-week days, 2016-2022), a single item.",,
+hlth_sleepprob,incompatible,cesd_sleep,,"Only the CES-D item 'My sleep was restless' (past-week days, 2016-2022), which scores into mh_dep_cesd_self; not a sleep-problems scale.",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
 st_measure_type,inferred,,"""Continuous""",Proxy items ask for an open-ended duration.,,parent
 st_measure_name,inferred,,"""Custom""",Bespoke CFPS proxy-module items; not a named instrument.,,parent

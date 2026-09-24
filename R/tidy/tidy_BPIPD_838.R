@@ -54,15 +54,6 @@ tidy_BPIPD_838 <- function(raw_dataset, spec) {
 
   df <- bp838_unify_wave_value_labels(df)
 
-  # Columns that survive the pivot, minus the two free-text "other, specify"
-  # items: they store "" not NA, which would make every row look observed.
-  stems <- unique(sub(
-    "_T[0-9]+$",
-    "",
-    grep("_T[0-9]+$", names(df), value = TRUE)
-  ))
-  measured <- setdiff(stems, c("participated", "C1_32aa", "C2_14aa"))
-
   long <- df |>
     tidyr::pivot_longer(
       cols = dplyr::matches("_T[0-9]+$"),
@@ -71,12 +62,13 @@ tidy_BPIPD_838 <- function(raw_dataset, spec) {
     ) |>
     dplyr::relocate(wave, .after = SC)
 
-  # Every child sits on every wave's roster, so a participant-wave with no
-  # measured value is a skipped wave, not an observation. At T2-T4 this
-  # reproduces the participation flags exactly; T5 rows with no flag are
-  # kept because they still record class and age.
-  observed <- rowSums(!is.na(long[measured])) > 0L
-  long <- long[observed, , drop = FALSE]
+  # A row is kept only where the child actually took part in that wave.
+  # `participated` is the authoritative record (T2-T5; T1's is a constant,
+  # since every child has T1 data). T5 carries study-derived class and age
+  # for children who did not take part, so filtering on any measured value
+  # being present (rather than on `participated` itself) would keep those
+  # as if they were observations.
+  long <- long[!is.na(long$participated), , drop = FALSE]
 
   # Carry T1-only items forward: parent education always; income and partner
   # status as T5 is 12 months on. The study's T5 age is T1 + 1, so age fills T2-T4.
