@@ -20,4 +20,4 @@ resources:
     glob: "Konok&Szőke_2022_data for Bigger Picture.xlsx"
 
 notes: |
-  One workbook, with data declared three times. `data_t1` is the T1 cross-section, one row per child; `data` is the longitudinal sheet, one row per child followed  up at T2, with the T1 and T2 blocks side by side; `codebook` is the same file again for variable labels only.
+  One workbook, declared three times: `data_t1` is the T1 cross-section (one row/child), `data` is the longitudinal sheet (T1+T2 blocks side by side, one row per T2 child), `codebook` is the same file for variable labels.
