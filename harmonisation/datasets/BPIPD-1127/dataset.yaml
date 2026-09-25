@@ -1,0 +1,375 @@
+dataset_id: "1127"
+dataset_name: "TEPS"
+status: "in_progress"
+
+waves:
+  - wave: "1"
+    label: "2001"
+    wave_dir: "Wave 1"
+
+    resources:
+      - name: "wave1_questionnaire_pdfs"
+        role: "codebook"
+        glob: "C00124_*.pdf"
+
+      - name: "wave1_junior_parent_overview"
+        role: "docs"
+        glob: "First Wave (2001) Junior High School Parent Questionnaire/TEPS-EnglishOverview081231b.pdf"
+
+      - name: "wave1_junior_parent_userguide"
+        role: "docs"
+        glob: "First Wave (2001) Junior High School Parent Questionnaire/User Guide.docx"
+
+      - name: "wave1_junior_parent"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Parent Questionnaire/w1_j_p_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave1_junior_school_questionnaire"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Questionnaire Data/w1_j_sch_lv7.0.dta"
+        reader: "stata"
+
+      - name: "wave1_junior_school_questionnaire_pdf"
+        role: "codebook"
+        glob: "First Wave (2001) Junior High School Questionnaire Data/w1_jsf_sch_ques.pdf"
+
+      - name: "wave1_junior_student_performance_overview"
+        role: "docs"
+        glob: "First Wave (2001) Junior High School Student Performance/TEPS-EnglishOverview081231b.pdf"
+
+      - name: "wave1_junior_student_performance_userguide"
+        role: "docs"
+        glob: "First Wave (2001) Junior High School Student Performance/User Guide.docx"
+
+      - name: "wave1_junior_student_performance"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Student Performance/w1_j_sev_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave1_junior_student_overview"
+        role: "docs"
+        glob: "First Wave (2001) Junior High School Student Questionnaire/TEPS-EnglishOverview081231b.pdf"
+
+      - name: "wave1_junior_student_userguide"
+        role: "docs"
+        glob: "First Wave (2001) Junior High School Student Questionnaire/User Guide.docx"
+
+      - name: "wave1_junior_student"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Student Questionnaire/w1_j_s_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave1_junior_teacher_ct"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Teacher Questionnaire/w1_j_ct_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave1_junior_teacher_ctc"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Teacher Questionnaire/w1_j_ctc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave1_junior_teacher_dt"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Teacher Questionnaire/w1_j_dt_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave1_junior_teacher_dtc"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Teacher Questionnaire/w1_j_dtc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave1_junior_teacher_et"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Teacher Questionnaire/w1_j_et_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave1_junior_teacher_etc"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Teacher Questionnaire/w1_j_etc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave1_junior_teacher_mt"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Teacher Questionnaire/w1_j_mt_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave1_junior_teacher_mtc"
+        role: "data"
+        glob: "First Wave (2001) Junior High School Teacher Questionnaire/w1_j_mtc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave1_senior_performance"
+        role: "data"
+        glob: "First Wave (2001) Performance Evaluation Data of Senior, Voc, Junior College Students/w1_sf_sev_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave1_senior_parent"
+        role: "data"
+        glob: "First Wave (2001) Questionnaire Data from Senior, Voc, College Schools/w1_sf_p_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave1_senior_student"
+        role: "data"
+        glob: "First Wave (2001) Questionnaire Data of Senior High School, Vocational School and Junior College Students/w1_sf_s_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave1_senior_teacher_ct"
+        role: "data"
+        glob: "First Wave (2001) Questionnaire Data of Senior High School, Vocational School and Junior College Teachers/w1_sf_ct_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave1_senior_teacher_ctc"
+        role: "data"
+        glob: "First Wave (2001) Questionnaire Data of Senior High School, Vocational School and Junior College Teachers/w1_sf_ctc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave1_senior_teacher_dt"
+        role: "data"
+        glob: "First Wave (2001) Questionnaire Data of Senior High School, Vocational School and Junior College Teachers/w1_sf_dt_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave1_senior_teacher_dtc"
+        role: "data"
+        glob: "First Wave (2001) Questionnaire Data of Senior High School, Vocational School and Junior College Teachers/w1_sf_dtc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave1_senior_teacher_et"
+        role: "data"
+        glob: "First Wave (2001) Questionnaire Data of Senior High School, Vocational School and Junior College Teachers/w1_sf_et_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave1_senior_teacher_etc"
+        role: "data"
+        glob: "First Wave (2001) Questionnaire Data of Senior High School, Vocational School and Junior College Teachers/w1_sf_etc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave1_senior_teacher_mt"
+        role: "data"
+        glob: "First Wave (2001) Questionnaire Data of Senior High School, Vocational School and Junior College Teachers/w1_sf_mt_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave1_senior_teacher_mtc"
+        role: "data"
+        glob: "First Wave (2001) Questionnaire Data of Senior High School, Vocational School and Junior College Teachers/w1_sf_mtc_lv6.2.dta"
+        reader: "stata"
+
+  - wave: "2"
+    label: "2003"
+    wave_dir: "Wave 2"
+
+    resources:
+      - name: "wave2_questionnaire_pdfs"
+        role: "codebook"
+        glob: "C00137_*.pdf"
+
+      - name: "wave2_junior_parent"
+        role: "data"
+        glob: "Second Wave (2003) Junior High School Parent Questionnaire Data/w2_j_p_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave2_junior_student_performance"
+        role: "data"
+        glob: "Second Wave (2003) Junior High School Student Performance Assessment Data/w2_j_sev_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave2_junior_student"
+        role: "data"
+        glob: "Second Wave (2003) Junior High School Student Questionnaire/w2_j_s_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave2_junior_teacher_ct"
+        role: "data"
+        glob: "Second Wave (2003) Junior High School Teacher Questionnaire Data/w2_j_ct_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave2_junior_teacher_ctc"
+        role: "data"
+        glob: "Second Wave (2003) Junior High School Teacher Questionnaire Data/w2_j_ctc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave2_junior_teacher_dt"
+        role: "data"
+        glob: "Second Wave (2003) Junior High School Teacher Questionnaire Data/w2_j_dt_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave2_junior_teacher_dtc"
+        role: "data"
+        glob: "Second Wave (2003) Junior High School Teacher Questionnaire Data/w2_j_dtc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave2_junior_teacher_et"
+        role: "data"
+        glob: "Second Wave (2003) Junior High School Teacher Questionnaire Data/w2_j_et_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave2_junior_teacher_etc"
+        role: "data"
+        glob: "Second Wave (2003) Junior High School Teacher Questionnaire Data/w2_j_etc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave2_junior_teacher_mt"
+        role: "data"
+        glob: "Second Wave (2003) Junior High School Teacher Questionnaire Data/w2_j_mt_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave2_junior_teacher_mtc"
+        role: "data"
+        glob: "Second Wave (2003) Junior High School Teacher Questionnaire Data/w2_j_mtc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave2_senior_performance"
+        role: "data"
+        glob: "Second Wave (2003) Performance Evaluation Data of Senior High School, Vocational School and Junior College Students/w2_sf_sev_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave2_senior_student"
+        role: "data"
+        glob: "Second Wave (2003) Senior High School, Vocational School and Junior College Students/w2_sf_s_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave2_senior_parent"
+        role: "data"
+        glob: "Second Wave (2003) Senior High Schools and Vocational School/w2_sf_p_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave2_senior_teacher_ct"
+        role: "data"
+        glob: "Second Wave (2003) Senior High School, Vocational School and Junior College Teachers/w2_sf_ct_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave2_senior_teacher_ctc"
+        role: "data"
+        glob: "Second Wave (2003) Senior High School, Vocational School and Junior College Teachers/w2_sf_ctc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave2_senior_teacher_dt"
+        role: "data"
+        glob: "Second Wave (2003) Senior High School, Vocational School and Junior College Teachers/w2_sf_dt_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave2_senior_teacher_dtc"
+        role: "data"
+        glob: "Second Wave (2003) Senior High School, Vocational School and Junior College Teachers/w2_sf_dtc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave2_senior_teacher_et"
+        role: "data"
+        glob: "Second Wave (2003) Senior High School, Vocational School and Junior College Teachers/w2_sf_et_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave2_senior_teacher_etc"
+        role: "data"
+        glob: "Second Wave (2003) Senior High School, Vocational School and Junior College Teachers/w2_sf_etc_lv6.2.dta"
+        reader: "stata"
+
+      - name: "wave2_senior_teacher_mt"
+        role: "data"
+        glob: "Second Wave (2003) Senior High School, Vocational School and Junior College Teachers/w2_sf_mt_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave2_senior_teacher_mtc"
+        role: "data"
+        glob: "Second Wave (2003) Senior High School, Vocational School and Junior College Teachers/w2_sf_mtc_lv6.2.dta"
+        reader: "stata"
+
+  - wave: "3"
+    label: "2005"
+    wave_dir: "Wave 3"
+
+    resources:
+      - name: "wave3_questionnaire_pdfs"
+        role: "codebook"
+        glob: "C00175_*.pdf"
+
+      - name: "wave3_senior_performance_cp"
+        role: "data"
+        glob: "Third Wave (2005) Performance Evaluation Data of Senior High School, Vocational School and Junior College Students/w3_sf_s_cp_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave3_senior_performance_cpnp"
+        role: "data"
+        glob: "Third Wave (2005) Performance Evaluation Data of Senior High School, Vocational School and Junior College Students/w3_sf_s_cpnp_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave3_senior_parent_cp"
+        role: "data"
+        glob: "Third Wave (2005) Questionnaire Data from Senior High Schools and Vocational Schools/w3_sf_p_cp_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave3_senior_parent_cpnp"
+        role: "data"
+        glob: "Third Wave (2005) Questionnaire Data from Senior High Schools and Vocational Schools/w3_sf_p_cpnp_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave3_senior_student_cp"
+        role: "data"
+        glob: "Third Wave (2005) Questionnaire Data of Senior High School, Vocational School and Junior College Students/w3_sf_s_cp_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave3_senior_student_cpnp"
+        role: "data"
+        glob: "Third Wave (2005) Questionnaire Data of Senior High School, Vocational School and Junior College Students/w3_sf_s_cpnp_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave3_teacher_files"
+        role: "data"
+        glob: "Third Wave (2005) Questionnaire Data of Senior High School, Vocational School and Junior College Teachers/*.dta"
+        reader: "stata"
+
+  - wave: "4"
+    label: "2007"
+    wave_dir: "Wave 4"
+
+    resources:
+      - name: "wave4_questionnaire_pdfs"
+        role: "codebook"
+        glob: "C00189_*.pdf"
+
+      - name: "wave4_senior_performance_cp"
+        role: "data"
+        glob: "Fourth Wave (2007) Performance Evaluation Data of Senior High School, Vocational School and Junior College Students/w4_sf_sev_cp_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave4_senior_performance_cpnp"
+        role: "data"
+        glob: "Fourth Wave (2007) Performance Evaluation Data of Senior High School, Vocational School and Junior College Students/w4_sf_sev_cpnp_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave4_senior_parent_cp"
+        role: "data"
+        glob: "Fourth Wave (2007) Questionnaire Data from Senior High Schools and Vocational Schools/w4_sf_p_cp_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave4_senior_parent_cpnp"
+        role: "data"
+        glob: "Fourth Wave (2007) Questionnaire Data from Senior High Schools and Vocational Schools/w4_sf_p_cpnp_lv6.0.dta"
+        reader: "stata"
+
+      - name: "wave4_senior_student_cp"
+        role: "data"
+        glob: "Fourth Wave (2007) Questionnaire Data of Senior High School, Vocational School and Junior College Students/w4_sf_s_cp_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave4_senior_student_cpnp"
+        role: "data"
+        glob: "Fourth Wave (2007) Questionnaire Data of Senior High School, Vocational School and Junior College Students/w4_sf_s_cpnp_lv6.1.dta"
+        reader: "stata"
+
+      - name: "wave4_teacher_files"
+        role: "data"
+        glob: "Fourth Wave (2007) Questionnaire Data of Senior High School, Vocational School and Junior College Teachers/*.dta"
+        reader: "stata"
+
+notes: |
+  TEPS (Transition from Education to Employment Panel Survey) is organised into 
+  four wave directories (2001, 2003, 2005, and 2007). Questionnaire PDFs are 
+  treated as codebooks because they document survey instruments and variable 
+  content. TEPS-EnglishOverview PDFs and User Guide documents are treated as 
+  documentation resources. Many datasets are distributed in multiple equivalent 
+  formats (.dat, .sas, .sav, and .dta). To avoid duplication while retaining 
+  full access to the data content, only the Stata (.dta) versions are included 
+  in this specification. Where large groups of teacher datasets follow a 
+  consistent naming convention within a single folder, wildcard globs are 
+  used to capture all available Stata files.
