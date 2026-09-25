@@ -217,13 +217,9 @@ waves:
         reader: "stata"
 
 notes: |
-  China Family Panel Studies (CFPS). The dataset is organised into survey waves 
-  (2010, 2012, 2014, 2016, 2018, 2020, and 2022). Most waves contain both SAS 
-  and Stata versions of the data; only the Stata (.dta) versions are included 
-  in this specification because they duplicate the SAS datasets. Wave-specific 
-  datasets include adult, child, family, community, household economy, 
-  person-level and linkage files depending on the survey year. Questionnaire 
-  PDFs are provided for each wave and are treated as codebooks because they 
-  document survey questions and variable content. Additional 2022 
-  English-language instructions and a compressed archive file are 
-  included as documentation resources.
+  China Family Panel Studies (CFPS), biennial waves 2010-2022. Only the Stata
+  (.dta) files are specified; SAS versions duplicate them. Wave files include
+  adult, child, family, community, household economy, person-level and linkage
+  tables depending on the year. Questionnaire PDFs per wave are treated as
+  codebooks. 2022 also has English-language instructions and a compressed
+  archive as documentation.
