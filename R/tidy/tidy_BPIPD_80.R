@@ -1,8 +1,8 @@
 #' Tidier for BPIPD-80 (ISCOLE)
 #'
-#' One cross-sectional subject-level file. The SAS release stores only a format
-#' name per column, so the value labels are parsed out of the study's universal
-#' `proc format` file and attached here.
+#' One cross-sectional subject-level file. The SAS release only stores a format
+#' name per column, so value labels are parsed from the study's `proc format`
+#' file and attached here.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -11,8 +11,7 @@
 #' Output:
 #' - one tibble, one row per participant
 tidy_BPIPD_80 <- function(raw_dataset, spec) {
-  # The .sas7bdat copy names a SAS format per column.
-  # The .xlsx files have the same rows but no labels and is ignored.
+  # .xlsx copy has the same rows but no labels; unused.
   data <- raw_dataset$data$iscole_allsubjects_data_sas
   if (is.null(data)) {
     stop(
@@ -51,7 +50,7 @@ bp80_read_sas_value_formats <- function(path) {
     iconv(readLines(path, warn = FALSE), "WINDOWS-1252", "UTF-8", sub = ""),
     collapse = "\n"
   )
-  # Drop /* ... */ comments, which include one commented-out format block.
+  # Drop /* ... */ comments (includes one commented-out format block).
   text <- gsub("(?s)/\\*.*?\\*/", " ", text, perl = TRUE)
 
   quoted <- "'(?:[^']|'')*'|\"(?:[^\"]|\"\")*\""

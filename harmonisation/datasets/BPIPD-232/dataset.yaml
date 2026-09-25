@@ -129,8 +129,6 @@ waves:
           - "2023 NSCH_Topical_Variable lables_CAHMI_DRC.xlsx"
 
 notes: |
-  8 waves, one each year from 2016-2023.
-  Each wave contains a CSV data file and a PDF codebook.
-  Extra documentation is included in each wave (fast facts, guides to topics/questions,
-  sampling administration notes, variable label files, and content maps where present) -
-  grouped under a "docs" resource per wave.
+  8 waves, one per year, 2016-2023.
+  Each wave: one CSV data file, one PDF codebook.
+  Extra docs (fast facts, topic guides, sampling notes, variable labels, content maps where present) grouped under a "docs" resource per wave.
