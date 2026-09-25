@@ -14,13 +14,11 @@ resources:
     role: "codebook"
     glob: "mrdoc/excel/eu_kids_online_2010_data_dictionary.xls"
   - name: "Analytical and Supplemental Packs - eu_kids_online_education_pack_by_country.xls"
-    role: "data"
+    role: "codebook"
     glob: "mrdoc/excel/eu_kids_online_education_pack_by_country.xls"
-    reader: "excel"
   - name: "Analytical and Supplemental Packs - eu_kids_online_ses_pack.xls"
-    role: "data"
+    role: "codebook"
     glob: "mrdoc/excel/eu_kids_online_ses_pack.xls"
-    reader: "excel"
   - name: "Documentation and Reports - 6885_file_information.rtf"
     role: "docs"
     glob: "6885_file_information.rtf"
@@ -53,8 +51,5 @@ resources:
     glob: "read6885.htm"
 
 notes: |
-  Dataset includes primary survey data in Stata format (.dta), accompanied
-  by data dictionaries (.rtf, .xls) and supplemental analytical packs (.xls).
-  Documentation and reports are provided in PDF, RTF, and HTM
-  formats, covering technical user guides, comparative country questionnaires,
-  and cross-platform conversion instructions.
+  Primary data in Stata; codebooks and analytical packs in RTF/XLS.
+  Docs in PDF/RTF/HTM: technical report, country questionnaires, SPSS-to-Stata conversion notes.

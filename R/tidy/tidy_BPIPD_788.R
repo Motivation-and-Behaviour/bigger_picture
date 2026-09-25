@@ -1,15 +1,15 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-788 (KiGGS)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' KiGGS Wave 2 Scientific Use File: one cross-sectional participant-level file.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per participant
 tidy_BPIPD_788 <- function(raw_dataset, spec) {
-  tibble::as_tibble(raw_dataset$data$`Main Dataset (Stata Format)`)
+  # .sav and .dta hold identical values; .sav used because Stata caps variable
+  # labels at 80 chars and drops some value labels.
+  tibble::as_tibble(raw_dataset$data$`Main Dataset (SPSS Format)`)
 }

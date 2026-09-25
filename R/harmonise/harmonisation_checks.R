@@ -167,7 +167,16 @@ check_harmonisation_exprs <- function(
 
   issues <- lapply(variables_files, function(path) {
     variables <- readr::read_csv(path, show_col_types = FALSE)
-    ensure_required_columns(variables, harmonisation_variable_columns(), path)
+    ensure_required_columns(
+      variables,
+      harmonisation_required_columns(),
+      path
+    )
+    variables <- add_missing_columns(
+      variables,
+      harmonisation_variable_columns()
+    )
+    variables$measure <- harmonisation_measure_of(variables)
 
     evaluated <- variables$status %in% bp_evaluated_status_values()
     has_expression <- !is.na(variables$expression) &
@@ -180,6 +189,7 @@ check_harmonisation_exprs <- function(
     blank_issues <- tibble::tibble(
       variables_file = as.character(path),
       target_variable = as.character(blank$target_variable),
+      measure = as.character(blank$measure),
       status = as.character(blank$status),
       issue = "missing_expression",
       message = paste0(
@@ -201,6 +211,7 @@ check_harmonisation_exprs <- function(
       check_one_expression(
         expression = rows$expression[[i]],
         target_variable = rows$target_variable[[i]],
+        measure = rows$measure[[i]],
         status = rows$status[[i]],
         path = path,
         eval_env = eval_env,
@@ -242,7 +253,13 @@ apply_expression_fixes <- function(results) {
       col_types = readr::cols(.default = readr::col_character())
     )
 
-    matched <- match(results$target_variable[rows], variables$target_variable)
+    # A target can recur once per `measure`, so match on both.
+    file_key <- paste(
+      variables$target_variable,
+      harmonisation_measure_of(variables)
+    )
+    issue_key <- paste(results$target_variable[rows], results$measure[rows])
+    matched <- match(issue_key, file_key)
     variables$expression[matched] <- results$suggestion[rows]
 
     readr::write_csv(variables, path, na = "")
@@ -260,12 +277,14 @@ check_one_expression <- function(
   eval_env,
   check_format,
   air_path,
-  config_dir
+  config_dir,
+  measure = NA_character_
 ) {
   issue <- function(issue, message, suggestion = NA_character_) {
     tibble::tibble(
       variables_file = as.character(path),
       target_variable = as.character(target_variable),
+      measure = as.character(measure),
       status = as.character(status),
       issue = issue,
       message = message,
@@ -329,6 +348,7 @@ empty_expression_issues <- function() {
   tibble::tibble(
     variables_file = character(),
     target_variable = character(),
+    measure = character(),
     status = character(),
     issue = character(),
     message = character(),

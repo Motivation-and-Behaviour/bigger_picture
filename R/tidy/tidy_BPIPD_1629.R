@@ -1,15 +1,7 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-1629 (EU Kids Online)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
-#'
-#' Input:
-#' - `raw_dataset`: output of `read_dataset_from_spec()`
-#' - `spec`: parsed dataset YAML
-#'
-#' Output:
-#' - one tibble to be used as the harmonisation input
+#' One row per child (9-16 y.o. internet user); the primary file already
+#' carries both the child (`QC*`) and parent (`QP*`) interview, so no join is needed.
 tidy_BPIPD_1629 <- function(raw_dataset, spec) {
   tibble::as_tibble(raw_dataset$data$`Primary Dataset`)
 }
