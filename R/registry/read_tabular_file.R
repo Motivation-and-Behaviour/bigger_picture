@@ -13,7 +13,8 @@ read_opt_readers <- function() {
   list(
     col_names = c("csv", "csv2", "tsv"),
     col_positions = "fwf",
-    encoding = c("csv", "csv2", "tsv", "fwf", "stata", "spss", "sas")
+    encoding = c("csv", "csv2", "tsv", "fwf", "stata", "spss", "sas"),
+    columns = haven_readers()
   )
 }
 
@@ -40,6 +41,53 @@ check_read_opts <- function(reader, opts, path) {
     }
   }
   invisible(opts)
+}
+
+#' Readers backed by haven, which can read a subset of columns
+haven_readers <- function() {
+  c("stata", "spss", "por", "sas")
+}
+
+#' Read one file with haven, keeping only the columns the spec asks for
+#'
+#' `columns` is a set of regular expressions, each matched against the whole
+#' column name, so plain names select themselves and one pattern can cover a
+#' column whose name carries a per-file prefix (`"[a-f]_household_id"`). The column
+#' names are read first from the file's header (`n_max = 0`), and only the
+#' matching columns are kept by the full read, which is what keeps a very wide
+#' file affordable. A pattern that matches nothing is an error rather than a
+#' silently missing column: a typo here would otherwise look like a study that
+#' never collected the item.
+read_haven_file <- function(path, reader, opts) {
+  read <- switch(
+    reader,
+    "stata" = function(...) {
+      haven::read_dta(path, encoding = opts$encoding, ...)
+    },
+    "spss" = function(...) haven::read_sav(path, encoding = opts$encoding, ...),
+    "por" = function(...) haven::read_por(path, ...),
+    "sas" = function(...) haven::read_sas(path, encoding = opts$encoding, ...)
+  )
+  patterns <- as.character(unlist(opts$columns))
+  if (length(patterns) == 0) {
+    return(read())
+  }
+
+  available <- names(read(n_max = 0))
+  hits <- lapply(patterns, function(p) {
+    grepl(paste0("^(?:", p, ")$"), available, perl = TRUE)
+  })
+  unmatched <- patterns[!vapply(hits, any, logical(1))]
+  if (length(unmatched) > 0) {
+    stop(
+      "`columns` pattern(s) matched no column in ",
+      path,
+      ": ",
+      paste0("`", unmatched, "`", collapse = ", "),
+      call. = FALSE
+    )
+  }
+  read(col_select = dplyr::all_of(available[Reduce(`|`, hits)]))
 }
 
 read_locale <- function(opts) {
@@ -233,7 +281,7 @@ report_parse_problems <- function(out, path) {
 #'
 #' `opts` is the resource's `read_opts` from the resource index: the optional
 #' spec keys (`sheet`, `range`, `table`, `object`, `col_names`,
-#' `col_positions`, `encoding`) as a named list, absent keys being NULL. The
+#' `col_positions`, `encoding`, `columns`) as a named list, absent keys being NULL. The
 #' set of keys is closed by `harmonisation/dataset.schema.json`; passing them
 #' as a list just means a new option touches this file and the schema rather
 #' than every caller in between.
@@ -282,10 +330,10 @@ read_tabular_file <- function(path, reader, opts = list()) {
         guess_max = Inf
       )
     },
-    "stata" = haven::read_dta(path, encoding = opts$encoding),
-    "spss" = haven::read_sav(path, encoding = opts$encoding),
-    "por" = haven::read_por(path),
-    "sas" = haven::read_sas(path, encoding = opts$encoding),
+    "stata" = ,
+    "spss" = ,
+    "por" = ,
+    "sas" = read_haven_file(path, reader, opts),
     "rds" = readRDS(path),
     "parquet" = arrow::read_parquet(path),
     "excel" = {
