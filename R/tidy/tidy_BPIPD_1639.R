@@ -14,8 +14,7 @@ tidy_BPIPD_1639 <- function(raw_dataset, spec) {
   questionnaire <- tibble::as_tibble(raw_dataset$data$questionnaire)
   self_control <- tibble::as_tibble(raw_dataset$data$self_control)
 
-  # The 3.5-year files in the study folder are left out: that wave has no
-  # usable screen-time measure.
+  # 3.5-year files excluded: no usable screen-time measure at that wave.
   df <- demographics |>
     dplyr::left_join(
       questionnaire,
@@ -28,8 +27,7 @@ tidy_BPIPD_1639 <- function(raw_dataset, spec) {
       relationship = "one-to-one"
     )
 
-  # Children not retained to the age-5 follow-up have a demographics row and
-  # nothing else, so they are dropped.
+  # Children not retained to age 5 have only a demographics row; drop them.
   age5 <- setdiff(c(names(questionnaire), names(self_control)), "personid")
   observed <- rowSums(!is.na(df[age5])) > 0L
   df[observed, , drop = FALSE]

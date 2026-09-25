@@ -38,4 +38,4 @@ resources:
     reader: "excel"
     sheet: "Variables"
 
-notes: both sav and excel files for all data combined, and separate codebooks for each time - 5 time pts
+notes: Sav and xlsx each hold all five waves; one codebook per wave.
