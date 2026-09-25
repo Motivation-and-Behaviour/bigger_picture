@@ -94,6 +94,7 @@ stopifnot(setequal(statuses$Status, bp_harmonisation_status_values()))
 ```
 
 Rows with an "evaluated" status must have an `expression`; rows with the other three statuses are skipped and the variable is filled with typed `NA` values for that dataset.
+How to choose between the statuses, including incompatible versus unavailable, is set out under [Harmonisation conventions](#harmonisation-conventions).
 
 ## Writing expressions
 
@@ -187,9 +188,254 @@ For each tag the harmoniser evaluates the tagged rows against the same tidied ta
 Only the screen-time variables can be tagged; every other variable in those rows is copied from the primary rows.
 Screen-time variables the measure does not map are `NA` in its rows rather than inherited, and a participant-wave with no screen-time quantity for the measure gets no row at all.
 Every measure block must map `st_measure_type`, `st_measure_name` and `st_responder`, so the rows say what instrument and respondent they came from.
+On primary rows, the harmoniser sets `st_responder` to `NA` wherever every screen-time quantity is missing, because no one reported screen use there; `st_measure_type` and `st_measure_name` describe the instrument and stay filled.
 
 The tidier stays one row per participant-wave: the extra measure arrives as extra columns (`tud_tv_mins_wd`, `tv_hours_parent`), and the mapping decides which measure they belong to.
 Analyses that want the old one-row table filter on `st_measure_id == "primary"`; analyses that compare instruments use `st_measure_name` and `st_responder` as covariates.
+
+## Harmonisation conventions
+
+These rules apply across rows; rules for a single variable sit in its dataschema notes.
+Dataschema notes refer to the named rules below in bold (for example the **SDQ rule**).
+
+### Statuses
+
+- Choose the status in this order: unavailable if nothing on the row's construct is in the supplied data; incompatible if an item on the construct is in hand but cannot become the row; inferred if the value is a constant or descriptor taken from documentation, file or wave labels, or row position; otherwise compatible, partial or proximate by fidelity.
+- Incompatible covers items the schema routes to another row, items already used on another row and items asked only of a subsample; unavailable is only for 'nothing related in hand' or 'Not in the supplied extract.'
+- Typical reasons for incompatible are a wrong metric (frequency, yes/no, rank, most-used choice or ownership instead of duration), a wrong rating format (truth, agreement, intensity or distress instead of frequency), a wrong respondent and bundled content.
+- An incompatible row names the rejected item in `source_columns`, and its note says why it fails and which row holds it.
+- A row that only adds a weekday/weekend, device or at-school split the study never made is unavailable, whatever the parent row's status ('No weekday/weekend split.', 'No device split; see <row>.', 'No item on use at school.').
+- A named-instrument row is unavailable when that instrument, or a version of it, was not given to that informant ('<instrument> not administered; see <row>.'), and incompatible only when a version was given but cannot be scored.
+- A generic scale row with only single items, or only an item subset of a broader instrument not given for the construct, is incompatible, and its note points to any row that holds them.
+- A composite that can be derived at analysis from mapped rows is unavailable ('Derive at analysis from <rows>.').
+- A named instrument given only to another informant leaves this informant's row unavailable.
+- A single-item `_self` row with only a parent- or teacher-rated analogue is incompatible, item named.
+- Compatible needs a note that describes no loss; a note saying 'only', 'undercount', 'narrower', 'bundled' or 'may include' means partial at best.
+- A schema note that sends an item to another row forbids mapping it here.
+- Partial covers part of the construct, pooled or coarser sources, subsets on named rows, and lifetime or unstated recall.
+- Proximate is only for categorical rows whose sole loss is the category structure; binary and double rows use partial, and so does a row that loses both scope and categories.
+- Inferred is for constants and for descriptor rows (`st_measure_type`, `st_measure_name`, `st_responder`, every `*_measure` row), unless a source column records the value directly, such as a who-answered variable (compatible).
+- A descriptor row whose score row is unavailable is unavailable too ('See <row>.').
+- A parent's or carer's own characteristic used for the child is proximate.
+- A value derived from a recorded variable is never inferred.
+- Coverage never sets the status: a row mapped for some waves, ages or grades takes the status its mapped values deserve, and its note starts with the coverage ('2018-2023 only.').
+- A dataset that mixes waves with per-row values and waves with assigned values takes the weaker status and names the affected waves.
+- A bounded recall window (two weeks to 12 months, or 'this school year') leaves the status unchanged, even when it changes between waves; a lifetime or unstated window is partial.
+- On the binary prevalence rows for suicidal ideation, suicide attempt and depression screening, any recall other than 12 months is partial.
+- A weaker item fills waves the better item missed only on score rows standardised within wave (partial, waves in notes).
+- Yes/no prevalence rows keep the better series alone; they never splice in a different recall window or a pooled item.
+- Every unavailable or incompatible row has a one-line note.
+- Standard notes are 'Not collected.', 'Not in the supplied extract.', 'No weekday/weekend split.', 'No device split; see <row>.', 'No item on use at school.', '<instrument> not administered; see <row>.', 'Derive at analysis from <rows>.', 'Not an Australian dataset.', 'Hukou not asked.', 'Not a randomised trial.', 'Single collection occasion.', 'Not a survey sample.' (survey design rows) and 'No cognitive testing.' (cognitive rows in studies that gave no test)
+- An unavailable note never describes an item in hand and never lists the study's other instruments.
+- `source_columns` lists tidied column names, comma-separated, with no ranges and no raw-file names.
+- Notes quote the item wording and record the reporter, the waves and the recall period.
+- A row accepts any informant unless its name or description says otherwise; record the informant.
+- Notes state the rule applied and never cite another dataset as precedent.
+- A choice settled for one dataset only stays in that dataset's notes.
+- Dataschema text is public: it never names real datasets or their source columns.
+- Before finishing, re-read every note against its status.
+
+### Screen time
+
+- Every `st_*` quantity is hours per day as a double.
+- Minutes / 60; hours and minutes h + m / 60; weekly totals / 7; a total for both weekend days / 2.
+- Clear negative and sentinel codes to NA before any arithmetic.
+- Bands: 'none' = 0, closed bands at their midpoint, 'less than 1 hour' = 0.5, sub-hour bands at their midpoint ('less than 30 minutes' = 0.25), point labels ('about 2 hours') at the stated value.
+- An open top band takes the lower bound its label states ('5 or more' = 5, 'more than 7 hours' = 7).
+- A point label below the top band ('about 4 hours') is read as a band of plus or minus half an hour, so 'more than 4 hours' takes 4.5.
+- Write the top-band value into the row's notes.
+- Recode raw bands per wave where band sets differ, and use study-derived hours only if they follow these rules.
+- Weekday and school-day items map to `_wd`; weekend and non-school-day items, holidays included, map to `_we`.
+- The unsuffixed row is (5 × wd + 2 × we) / 7, and only when both are mapped for the same wave.
+- Weekday-only items fill `_wd` only; the unsuffixed row is incompatible ('Weekday items only; no usual-day value.') and `_we` is unavailable.
+- Usual-day items fill the unsuffixed row only; `_wd` and `_we` are unavailable ('No weekday/weekend split.').
+- With no day split, `_wd` and `_we` are unavailable even when the unsuffixed row is incompatible.
+- `*_school` rows take use while at school only; an item about a whole school day goes to `_wd`.
+- **Non-users:** 0 when a filter establishes non-use (routed past the item, 'not at all', or no device with use unanswered); NA when not asked or not answered; a filter never overrides a reported duration.
+- Keep values above 24 hours; they are excluded at analysis, with a sensitivity analysis that keeps them.
+- Minutes on a day of use are multiplied by the share of days used (days per week / 7) and marked partial; minutes with no frequency answer are NA.
+- Frequency-only, rank, most-used, yes/no and ownership items give no hours, so the row is incompatible, item named.
+- Sum only sub-categories of one row (DR-0002): devices within gaming, sources within watching, gaming and non-gaming within computer, activities within one device, locations within one content row.
+- Write 'Sum of A, B (DR-0002)' in the notes of a summed row.
+- Never sum across watching, gaming, computer, phone, social media or internet, including into `st_total`, whoever did the summing.
+- Screen-time sums use `+`, with routed-out parts written as explicit zeros; `sum_nonmissing()` only where the instrument scores blanks as zero.
+- A skipped part is never scored as zero, so it leaves the sum NA.
+- An item may feed its umbrella row as a DR-0002 part, but never stands in for a broader or sibling row: texting is not `st_phone`, phone gaming is not `st_phone`, internet time is not `st_total`.
+- A single-activity item mapped to its content row leaves the device row incompatible.
+- A bundled item maps to one row as partial, and every other row it touches is incompatible, naming the item and the row it went to.
+- Social media with messaging goes to `st_socmedia`.
+- Gaming with other non-school computer use goes to `st_game`, and `st_comp` is incompatible.
+- Gaming or computer items whose examples name social media never map to `st_game*`.
+- Phone with tablet goes to `st_phone` or `st_game_phone` (partial), and the tablet row is incompatible.
+- Computer with tablet as one response option goes to `st_tablet` or `st_game_tablet` (partial), and the computer row is incompatible.
+- Residual 'other online or device use' goes to `st_internet`.
+- A bundled or residual item is never added to a row that already has a direct item, nor spliced onto a row that a different item fills in other waves; name it as unused.
+- A social-media item whose examples name video-sharing platforms is not bundled with watching.
+- Watching pooled with gaming, computer or internet use goes to `st_total`.
+- Under a pooled multi-device gaming item, the device rows are unavailable ('No device split; see st_game.'); pooling activities within one device is bundling and stays incompatible.
+- `st_game` covers gaming on any device.
+- A gaming item that names devices and leaves out phones and tablets is partial whatever its year; an item naming no device is compatible.
+- An item limited to the TV set (broadcast TV, or videos and DVDs on the set) is partial on `st_watch`; the test is the device, not the word 'videos'.
+- A computer item that excludes games goes to `st_comp_nongaming`; other purpose-restricted device items are partial.
+- Internet time on one device maps to that device's row as partial.
+- Study or homework time that does not name screens is incompatible, except during fully remote schooling (partial).
+- A row that splices instruments with a documented level shift is partial.
+- Screen-time doubles never use proximate.
+- `st_measure_type` records the format behind the row's core `st_` variables.
+- `st_measure_name` takes one controlled label: a published instrument name, 'Time use diary', 'Custom' or 'Unknown'.
+- `st_measure_type` and `st_measure_name` are filled wherever the instrument was administered; the harmoniser sets only `st_responder` to NA on primary rows with no `st_` value.
+- One responder per row, including any filter that sets a value to zero; responders are never combined within a row or a variable.
+- The study's main series is primary, and a second responder, instrument or diary on the same occasion is a tagged block.
+- Block tags are `diary`, `parent`, `child`, `device` and `recall`, and every block maps `st_measure_type`, `st_measure_name` and `st_responder`.
+- A `recall` block covers the same occasion with a different reference period; its other variables belong to the occasion, so concurrent analyses exclude it.
+- Waves, and country-cycles of optional modules, with no disaggregated screen item are dropped in the tidier, so expressions need no wave conditions.
+
+### Scoring scales
+
+- Higher means more of the construct the description names; reverse source scales to match.
+- Rebase in the expression (subtract the item count for 1-based items; reverse as (min + max) - x) and record both in notes.
+- Set sentinel and off-scale item codes to NA (`na_if()`, `%in%` valid codes) before scoring, and check the observed range against the published range.
+- Before mapping a study-supplied total, check its keying (every item correlates positively with the total) and rescore from items if it fails.
+- A named-instrument row takes the full published form on its published scoring, or a study composite equated to that metric (partial).
+- The same items on a non-standard response scale are partial on the named row.
+- Short forms, item subsets and adapted forms go to the generic row, and the named row is incompatible.
+- Exceptions: `mh_dep_scl_self` takes SCL-90-R short forms, the RCADS-25 depression items map to `mh_dep_rcads_self`, and mean-item CBCL rows take item subsets as partial.
+- A generic ('any instrument') row takes a multi-item scale administered for the construct.
+- On a generic row the status reflects construct fit only; short forms, subsets and adapted scoring are compatible when the `*_measure` row describes them.
+- When a named self-report row is mapped, repeat its expression on the generic row.
+- Standardise generic rows, single-rating rows and raw-score rows within dataset at analysis, and within wave where the scale or form changes.
+- `*_measure` rows read '<instrument>, <k> of <K> items, <a>-<b> item scoring (range <min>-<max>), <sum|mean>', then the reversed items and any change of response format or recall period.
+- `*_measure` rows are inferred, entity study, filled in waves (or country-cycles) where the scale was given, a constant when every wave fielded it, and NA elsewhere, never 'Unknown' as a filler.
+- A `*_measure` row says 'Unknown' only when a score exists but its instrument cannot be identified.
+- Use a study-supplied score as released and record its missing-item rule ('rule not documented' if unknown).
+- Sums computed in the expression are complete-case (`+`), unless the manual prescribes proration.
+- **SDQ rule:** items scored 0-2 (not true 0, somewhat true 1, certainly true 2), items 7, 11, 14, 21 and 25 reversed, subscale = mean of answered items × 5 rounded half up with `floor(x + 0.5)`, NA when fewer than 3 of 5 are answered.
+- Where the SDQ items are released, check the study's subscale against them: keep it if it follows the SDQ rule, otherwise gate or recompute it from the items.
+- Where the SDQ items are not released, use the study's subscale after checking its range and reversals, and say in notes that the missing-item rule could not be verified.
+- An SDQ subscale is incompatible when fewer than 3 of its items were administered, and total difficulties is scored only when all four difficulty subscales are.
+- Pool the SDQ 2-4 and 4-17 parent forms and record the form version.
+- SDQ self rows keep every age administered and record the age range and under-11 share.
+- SDQ externalising and internalising are unavailable ('Derive at analysis from the subscale rows.') unless only the composite is released.
+- **CBCL rule:** mean of the answered 0-2 items of the form's scale, NA when fewer than 80% of administered items are answered, codes outside 0-2 set to NA.
+- CBCL composites take the mean over the union of component items, gate each component at 80%, and follow the form's published grouping.
+- `beh_cbcl_measure` records the form, items administered of the published total per scale, the scoring and the missing rule, one value per wave where forms differ.
+- PedsQL items are transformed 0-4 to 100-0 and averaged when at least half are answered.
+- BPAQ-SF rows take the published items, never a study's own syntax, and need all three items.
+- Subject composites (grades, teacher ratings) average every academic subject reported, not arts, PE or ICT, and need every component (partial).
+- Respondent suffixes are literal, respondents are never coalesced, and the CBCL and BASC-2 rows are parent report only.
+- Cognitive rows take the age-normed score the study releases: standard score (mean 100, SD 15), T-score (50, 10) or scaled score (10, 3).
+- Raw, ability or number-correct scores map only when no normed form exists, as partial; percentiles, age-equivalents and normative classifications never map.
+- Never mix score forms within a row across waves.
+- NIH Toolbox rows take the age-corrected standard score (uncorrected only as partial), and the BASC-2 executive-function row takes the T-score; never the fully corrected T-score.
+- BAS II subtests are given individually, so there is no GCA for `cog_iq_fullscale`; map T-scores, with ability scores only as a partial fallback.
+- NEPSY rows take the same-named subtest from either edition; record the edition and age at testing.
+- Only the child's own test maps; tests the caregiver took never map to child rows.
+- Parent-rated executive-function scales run higher = more problems and never pool with performance tasks.
+- Plausible-value scales use the first plausible value only.
+- Achievement tests take one domain per row (`acc_academachment_stdtest` records its domain); age-normed standard or scale scores are compatible and raw scores partial.
+- Record the test, subtest and score type, and standardise test scores within dataset and wave at analysis.
+- Social-support rows take only items on support the child receives or can call on (help, understanding, someone to talk to or confide in).
+- Parenting behaviours and family involvement are incompatible on the support rows, and a published support subscale that mixes in companionship items is partial.
+- School belonging takes only scales presented as belonging or connectedness; teacher- or classmate-support scales and school-environment quality-of-life subscales are incompatible.
+
+### Single items
+
+- **Frequency-item rules** (`mh_*_self` rows with Always to Never): self-reported frequency ratings only; truth, agreement, intensity and distress ratings are incompatible, item named.
+- Map anchors by wording: never, none, not at all -> Never; almost never, hardly ever, seldom, less than 1 day -> Rarely; sometimes, occasionally, some of the time, several days -> Sometimes; often, more than half the days -> Often; always, almost always, all of the time, nearly every day -> Always.
+- An anchor steps down one label when the source has an intensified anchor above it ('quite often' under 'very often' -> Sometimes; 'most of the time' under 'always' -> Often), and a top anchor above a source 'often' -> Always.
+- Day counts without wording map by share of a known recall window: 0 -> Never, up to 10% -> Rarely, up to 35% -> Sometimes, up to 70% -> Often, above 70% -> Always.
+- Labels the source cannot reach stay unused and are named in notes; a source with fewer than five levels is proximate; a wording mismatch is partial.
+- Record the recall period on every frequency row; it does not change the status there.
+- An item also scored in a scale may fill a single-item row when it is self-reported, frequency- or presence-rated and matches in wording; note 'also scored in <row>'.
+- Score rows take only published scale or subscale scorings, never an ad hoc sum of another instrument's items.
+- **GAD-7 crosswalk:** not at all, several days, more than half the days, nearly every day -> Never, Sometimes, Often, Always (PHQ items the same).
+- CES-D day bands <1, 1-2, 3-4, 5-7 -> Rarely, Sometimes, Often, Always; all, some, none of the time -> Always, Sometimes, Never.
+- A measure of another person (a parent's own stress or diagnosis) is unavailable on a `_self` row.
+- Always/Usually/Sometimes/Never rows take frequency scales only; degree, importance and agreement scales are incompatible.
+- On those rows, map anchors by wording with the same positional step; a four-level source whose labels do not match maps by rank, proximate, with the anchors in notes.
+- 'All/Most/Some of the time' = Always/Usually/Sometimes, and a negatively worded item is never reversed onto these rows.
+- **Five-level collapse** onto Very good, Good, Average, Below average: top -> Very good, second -> Good, middle -> Average, two lowest -> Below average (proximate), from the full-resolution source item.
+- The four HBSC-SCL single-item rows are named-instrument rows: unavailable ('HBSC-SCL not administered; see <row>.') wherever neither the checklist nor the adaptation in the row's note was given, even when a related item is in hand.
+- On school pressure, worry about school performance and test anxiety are related items (incompatible, item named), and a five-point pressure scale maps its top two levels to 'A lot'.
+- A behaviour item that places a device in the bedroom is partial on `fam_bedroomscreen`, and a parent's technical time limit is partial on `fam_screenrules`.
+- Binary behaviour rows are TRUE for any occurrence (the lowest response above never) and FALSE for never; yes/no items map directly.
+- A multi-item composite is TRUE if any answered item is positive, FALSE if every answered item is never, and NA if none is answered; study missing codes count as unanswered.
+- Use self-report where it exists; a parent-reported occurrence item is partial.
+- An item limited to one sub-type or setting of the behaviour is partial; school-based items are compatible on the bullying rows.
+- Truth- or agreement-rated items (SDQ, CBCL, 'describes this child') never map to binary or frequency rows; frequency-rated instrument items (BASC-2, PedsQL) are judged on content.
+- School rows (truancy, school and schoolwork satisfaction) are NA for respondents not enrolled in school or enrolled beyond secondary school.
+- Single-rating rows (life, domain and happiness ratings) record the scale points and anchor wording and reverse scales where the lowest number is best.
+- Keep one response scale per dataset per single-rating row where possible; where it changes between waves, standardise within dataset and wave.
+- Faces scales (completely happy to not at all happy) count as satisfaction ratings, and life as a whole always goes to `wb_lifesat_singleitem_self`.
+- Diagnosis rows: Never = never told, Previously = told but not current, Currently = told and current; treatment or medication as the proxy for current is partial; items not attributed to a health professional are incompatible.
+
+### Categorical recodes
+
+- Emit `allowed_values` exactly, case included.
+- Demographic and SES rows emit the literal "Unknown", never NA, on every row of a mapped dataset, including waves where the item was not asked and nothing is carried (`default = "Unknown"` or `coalesce(..., "Unknown")`).
+- `state` is the exception (NA outside Australia), and so is `ses_hukou` (NA outside mainland China or where not asked).
+- Academic, behaviour and mental-health categorical rows use NA, never Unknown; don't know, not graded, pass/fail and not applicable codes are NA.
+- A source code no document defines maps to Unknown on demographic rows and NA elsewhere, never to a real category.
+- A category merging a real value with Other or unknown maps to the real value (Female or unknown -> Female; Other or unknown -> Other), proximate, merge named; a merged Other/prefer-not-to-say maps to Unknown.
+- A group with no schema category folds into Other and is proximate.
+- A Hispanic-origin item sets Hispanic only in US and Canadian samples; elsewhere the race, colour or ethnic-group item decides.
+- Minority, indigenous and immigrant background are judged against the country of data collection; multi-country data use a dataset lookup keyed on site and source value, with the reference group in notes.
+- Derived rows use the same item, lookup, free-text resolution and carry-forward as their source: minority and indigenous follow ethnicity.
+- Released 'other, specify' text is resolved through a dataset lookup; a bare nationality is Unknown.
+- A participant-level characteristic is never a constant from study context; country is the exception, and so is `born_in_country` Yes (inferred) where recruitment at birth in the country guarantees it.
+- Birthplace rows use the UK as a whole and count Hong Kong and Macao in their own right.
+- Recurring vocabularies use one shared lookup each (ethnicity, education), and all three parent-education rows call the same lookup.
+
+### Age and time
+
+- Completed years take +0.5 (13 -> 13.5); a completed-year band a-b takes (a + b + 1) / 2; an open band takes its inclusive bound + 0.5.
+- The +0.5 rule is for age only; open screen-time bands take their floor.
+- Survey year minus birth year is adjusted by the fieldwork midpoint, and decimal age is derived where birth and interview months are released.
+- A single-age sample with no age item takes the centre of the sampled cohort's age at fieldwork, inferred.
+- Single completed years and survey-year differences are compatible; multi-year bands, open bands holding more than about 5% of rows and design-assigned ages are partial or inferred; a birth date against an assumed reference date is partial.
+- Ages above `max_value` are kept, eligibility is applied at analysis, and tidiers drop rows only to define the study population and the waves each participant attended.
+- `data_year` takes the per-row interview year where released (compatible) or the survey's own year label (compatible); a year recoded from wave labels or documentation is inferred.
+- A missing per-row date takes the wave's modal fieldwork year; a few such fills leave the row compatible, with the count in notes, and inferred is for waves whose year is assigned wholesale.
+- Constants cite fieldwork or design documentation with dates, never a publication year.
+- A single-occasion dataset leaves `wave` NA (unavailable); repeated cross-sections use the four-digit survey year.
+
+### Multiple waves and carry-forward
+
+- **Carry-forward:** sex, ethnicity, indigenous status, immigrant background, `born_in_country` and derived minority are carried within participant through one allowlisted helper in the expression; observed values stay, and missing or not-asked waves take the earliest observed value in wave order.
+- Sex items take the participant's modal observed value at every wave, ties Unknown; gender-identity items stay as recorded.
+- Parent education is always carried; household SES and family structure are carried across gaps of 12 months or less (inclusive) and are otherwise Unknown; this fill is done in the tidier.
+- A follow-up wave with no age item takes the nearest recorded age plus the documented interval, filled in the tidier, partial.
+- Waves and country-cycles with no disaggregated screen item are dropped in the tidier.
+- Tidiers drop a participant's rows for waves the participant did not attend.
+- Survey design values fixed at sampling (stratum, cluster, design weight) are carried within participant to every wave without a wave prefix, so a participant stays in one stratum and cluster; a carried design weight is partial.
+- The weight is the study's core release weight, and schools in a randomised trial are not survey clusters.
+- Wave coverage alone never lowers a status; list the waves in notes.
+- A second report on the same occasion is a tagged measure block, never a wave.
+- A `*_measure` string appears only in waves where its scale was given.
+
+### Sleep
+
+- Time of falling or going to sleep to waking counts as hours asleep (compatible unless banded); bedtime or lights-out to waking is partial.
+- Never subtract a separate sleep-latency item.
+- An open sleep band takes the bound its label states, or half an hour beyond a neighbouring point label ('less than 6 hours' next to '6 hours' = 5.5).
+- The share of answers in an open band does not lower the status.
+- Keep durations under 4 or over 16 hours; they are screened at analysis.
+
+### SES
+
+- **Household SES cuts:** Low, Medium and High split the unweighted sample 40/20/40 within wave, and within country or site where the measure or its bands are country- or site-specific; at or below the 40th percentile is Low and above the 60th is High.
+- A banded or discrete source classifies each band by its ridit in the same frame (below 0.4 Low, 0.4 to 0.6 Medium, above 0.6 High); if no band falls in 0.4 to 0.6, the band nearest 0.5 is Medium.
+- A fixed class scheme keeps its standard three-way collapse (proximate), and subjective standing is cut at its labelled anchors with the midpoint as Medium.
+- Income, income-to-needs, affluence or a composite index is compatible when every level lies within 10 points of 40/20/40 in every wave, and proximate otherwise.
+- Multi-country repeated cross-sections cut within country and cycle.
+- Area SES uses the index's own national quintiles, never sample quantiles.
+- School-level indicators (school type, fees, funding, track) map to neither SES row; mark them incompatible with a one-line note.
+- `ses_household_measure` reads '<type>: <measure>', with the type from a fixed list.
+- Parent education uses one vocabulary with ISCED anchors; a band spanning two levels goes to the level holding most of its members (proximate), and tertiary study begun but not completed is Post-secondary.
+- Parents are whichever mother and father figures the source records, with the row partial when one is systematically unobserved.
+- Categorical SES rows are compatible when every level matches the schema's meaning and proximate for coarser, lumped or stand-in sources (school location, subjective standing, occupational class); they never use partial, and constants are inferred.
+- Urbanicity follows a national typology on its own thresholds; raw size bands use under 5,000 Rural, 5,000 to under 100,000 Suburban and 100,000 or more Urban.
+- An urban constant is allowed only when the design guarantees urban residence at the measured wave.
 
 ## Keeping variables.csv in sync with the dataschema
 
