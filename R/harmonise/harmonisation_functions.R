@@ -24,7 +24,9 @@ bp_harmonisation_functions <- function() {
     as_factor = haven::as_factor,
     # repo helpers (defined in R/helpers.R)
     lookup_values = lookup_values,
-    sum_nonmissing = sum_nonmissing
+    sum_nonmissing = sum_nonmissing,
+    carry_within = carry_within,
+    modal_within = modal_within
   )
 }
 
