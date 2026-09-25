@@ -15,6 +15,5 @@ resources:
     sheet: "Hoja1"
 
 notes: |
-  Single-occasion cross-sectional school survey of adolescents in Madrid,
-  Spain, delivered as a Google Forms questionnaire during class time. The
-  codebook is sheet "Hoja1" of the same workbook as the data.
+  Single-occasion school survey of adolescents in Madrid, Spain, via Google
+  Forms in class. Codebook is sheet "Hoja1" of the same workbook.

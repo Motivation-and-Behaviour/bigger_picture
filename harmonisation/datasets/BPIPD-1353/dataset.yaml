@@ -181,8 +181,6 @@ waves:
         reader: "spss"
 
 notes: |
-  Dataset is organised into annual wave directories spanning 2005 through 2025. 
-  Each wave folder contains a single SPSS (.sav) data file. Dataset-level 
-  documentation includes a PDF raw data user guide covering all waves and an 
-  Excel workbook comparing questionnaires and variable definitions across 
-  survey years. No codebooks are provided separately for individual waves.
+  Annual wave directories, 2005-2025, each holding one SPSS (.sav) file.
+  A PDF user guide and an Excel questionnaire/variable crosswalk cover all
+  waves; no per-wave codebooks.
