@@ -48,10 +48,6 @@ waves:
           - "Dokumentation/*.pdf"
 
 notes: |
-  KiGGS Wave 2 includes data for children and adolescents. 
-  The dataset includes primary health data in multiple formats (Stata, SAS, SPSS). Includes
-  documentation - laboratory parameter comparisons and variable dictionaries. Questionnaires are categorized by target 
-  group: "E" for Parents (Eltern) and "PB" for Participants/Adolescents (Probanden). 
-  Also includes survey plan files (.csaplan) for statistical weighting and analysis.
-  The configuration uses root-level referencing to capture files located both in the 
-  root directory and within the 'Dokumentation' subdirectory.
+  KiGGS Wave 2 (RKI) Scientific Use File. Stata and SPSS copies hold identical values (tidier uses the .sav); the SAS copy is not declared.
+  Questionnaire files by target group: "E" = parents (Eltern), "PB" = participants (Probanden).
+  Globs cover files in both the root directory and Dokumentation/.

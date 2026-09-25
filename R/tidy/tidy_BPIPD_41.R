@@ -1,16 +1,15 @@
 #' Tidier for BPIPD-41 (ELEVA)
 #'
-#' The extract is a single sheet with the 2019 and 2022 rounds already stacked
-#' (`survey`) and carries no participant identifier, so the rounds cannot be
-#' linked and no id is constructed here.
+#' Single sheet, 2019 and 2022 rounds already stacked (`survey`). No
+#' participant identifier, so rounds cannot be linked and no id is built here.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble, one row per adolescent per survey round (2019 or 2022) who
-#'   answered at least one item
+#' - one tibble, one row per adolescent per survey round who answered at
+#'   least one item
 tidy_BPIPD_41 <- function(raw_dataset, spec) {
   data <- raw_dataset$data$data
   if (is.null(data)) {
@@ -18,7 +17,7 @@ tidy_BPIPD_41 <- function(raw_dataset, spec) {
   }
   df <- tibble::as_tibble(data)
 
-  # 134 rows (115 in 2019, 19 in 2022) carry `survey` and nothing else.
+  # Drop the 134 rows (115 in 2019, 19 in 2022) that carry only `survey`.
   items <- setdiff(names(df), "survey")
   observed <- rowSums(!is.na(df[items])) > 0L
   df <- df[observed, , drop = FALSE]

@@ -1,0 +1,23 @@
+dataset_id: "1612"
+dataset_name: "Konok"
+status: "in_progress"
+
+resources:
+  - name: "data_t1"
+    role: "data"
+    glob: "Konok&Szőke_2022_data for Bigger Picture.xlsx"
+    reader: "excel"
+    sheet: "data_T1"
+
+  - name: "data"
+    role: "data"
+    glob: "Konok&Szőke_2022_data for Bigger Picture.xlsx"
+    reader: "excel"
+    sheet: "longitudinal data (T1&T2)"
+
+  - name: "codebook"
+    role: "codebook"
+    glob: "Konok&Szőke_2022_data for Bigger Picture.xlsx"
+
+notes: |
+  One workbook, declared three times: `data_t1` is the T1 cross-section (one row/child), `data` is the longitudinal sheet (T1+T2 blocks side by side, one row per T2 child), `codebook` is the same file for variable labels.
