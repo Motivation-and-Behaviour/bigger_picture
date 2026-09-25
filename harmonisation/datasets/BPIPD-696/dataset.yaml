@@ -1,0 +1,55 @@
+dataset_id: "696"
+dataset_name: "Kaur"
+status: "in_progress"
+
+waves:
+  - wave: "Baseline"
+    label: "Baseline"
+    wave_dir: "."
+    resources:
+      - name: "data-baseline-control"
+        role: "data"
+        glob: "Clean.Baseline .xlsx"
+        sheet: "Control arm"
+        reader: "excel"
+      - name: "data-baseline-intervention"
+        role: "data"
+        glob: "Clean.Baseline .xlsx"
+        sheet: "Intervention arm"
+        reader: "excel"
+  - wave: "Midline"
+    label: "Midline"
+    wave_dir: "."
+    resources:
+      - name: "data-midline-control"
+        role: "data"
+        glob: "Midline.xlsx"
+        sheet: "Control arm"
+        reader: "excel"
+      - name: "data-midline-intervention"
+        role: "data"
+        glob: "Midline.xlsx"
+        sheet: "Intervention arm"
+        reader: "excel"
+  - wave: "Endline"
+    label: "Endline"
+    wave_dir: "."
+    resources:
+      - name: "data-endline-control"
+        role: "data"
+        glob: "Endline clean.xlsx"
+        sheet: "Control arm"
+        reader: "excel"
+      - name: "data-endline-intervention"
+        role: "data"
+        glob: "Endline clean.xlsx"
+        sheet: "Intervention arm"
+        reader: "excel"
+
+notes: |
+  3 waves (baseline/midline/endline), one .xlsx per wave, each with control-arm
+  and intervention-arm sheets.
+  Baseline also has an undeclared "Baseline" sheet: no header row (readxl takes
+  its first record as column names), not the two arm sheets stacked. Not used.
+  Also present, not read in: ANOVA.sav, and a blank "evaluation PLUMS.xlsx"
+  process-evaluation form.
