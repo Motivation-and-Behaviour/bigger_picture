@@ -471,12 +471,11 @@ waves:
           - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 Pw7 Questionnaires.pdf"
           - "[ENG] KCYPS2018 Questionnaires(w1-w7)/[ENG] KCYPS2018 hYw7 Questionnaires.pdf"
 notes: >
-  KCYPS 2018 tracks Elementary (e4) and Middle/High School (m1) student cohorts across 7 waves.
-  Data is available in two parallel formats -- CSV and RDA -- both included as separate resources
-  per wave/cohort/file. Main-panel (Y) and guardian (P) files run waves 1-7; sibling (S) files run
-  waves 2-7 only. A shared root-level Excel file (KCYPS2018 Codebook_ENG.xlsx) contains four
-  codebook sheets: elementary (CB_e), middle/high school (CB_m), adult (CB_h), and guardian (CB_p),
-  each paired with a LAYOUT_* sheet giving per-wave variable availability.
-  Wave 7 questionnaires include an additional 'hYw7' file: this is the adult questionnaire put to
-  the m1 cohort, who have left school by 2024. Its variables ship inside the ordinary m1 wave 7
-  main-panel file rather than a separate data file, so it is included as a docs resource only.
+  KCYPS 2018 tracks Elementary (e4) and Middle/High (m1) cohorts across 7 waves. Each file ships
+  as both CSV and RDA (duplicate resources per wave/cohort/file). Main-panel (Y) and guardian (P)
+  run waves 1-7; sibling (S) waves 2-7 only. Shared codebook workbook (KCYPS2018 Codebook_ENG.xlsx)
+  has four sheets: elementary (CB_e), middle/high (CB_m), adult (CB_h), guardian (CB_p), each
+  paired with a LAYOUT_* sheet for per-wave variable availability.
+  Wave 7's 'hYw7' file is the adult questionnaire given to the m1 cohort, who have left school by
+  2024. Its variables ship inside the ordinary m1 wave 7 main-panel file rather than a separate
+  data file, so it is included as a docs resource only.
