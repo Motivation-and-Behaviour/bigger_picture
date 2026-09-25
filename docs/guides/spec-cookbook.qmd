@@ -326,6 +326,8 @@ resources:
     encoding: "latin1"
 ```
 
+Stata, SPSS and SAS files also take `columns`, to read only some columns of a very wide supplementary file; see pattern 13.
+
 ## 10. Dataset-wide files alongside waves
 
 When a codebook or metadata file covers the whole study, keep it in a top-level `resources` list next to the `waves`:
@@ -441,3 +443,47 @@ resources:
 `type` is optional; `fmt` is carried for provenance and ignored by the reader.
 `WEIGHT` above has an implied decimal (`N8.3`), which the reader does not apply: the tidier divides by 1000.
 See [Fixed-width files](dataset-yaml.qmd#fixed-width-files) for the full layout contract.
+
+## 13. Main file plus a very wide context file {#wide-context-file}
+
+A per-wave youth file holds the screen-use items and is read whole, while a per-wave adult file with thousands of columns is needed only for parental education.
+`columns` keeps just the join keys and the one item from the adult files.
+
+::: {.callout-note collapse="true"}
+## Folder layout
+
+```text
+BPIPD-9999 - Example Cohort Study/
+├── stata/
+│   ├── a_youth.dta
+│   ├── a_adult.dta          # ~3,000 columns
+│   ├── b_youth.dta
+│   └── b_adult.dta
+└── data_dictionaries/
+    ├── a_adult_dictionary.rtf
+    └── b_adult_dictionary.rtf
+```
+:::
+
+```yaml
+resources:
+  - name: "youth"
+    role: "data"
+    glob: "stata/*_youth.dta"
+    reader: "stata"
+  - name: "adult"
+    role: "data"
+    glob: "stata/*_adult.dta"
+    reader: "stata"
+    columns:
+      - "person_id"
+      - "[a-b]_(household_id|person_no|highest_qual)"
+  - name: "adult_dictionaries"
+    role: "codebook"
+    glob: "data_dictionaries/*_adult_dictionary.rtf"
+```
+
+The column names carry a wave prefix (`a_household_id`, `b_household_id`), so one pattern covers every file the glob matches.
+Every pattern must match at least one column in each file.
+The declared dictionaries record what else the adult files hold, should a later item be wanted.
+See [Reading only some columns](dataset-yaml.qmd#reading-only-some-columns) for the full contract.
