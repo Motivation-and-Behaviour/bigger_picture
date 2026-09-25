@@ -141,6 +141,14 @@
           "type": "string",
           "description": "Character encoding of the source file, e.g. \"latin1\". Applies to csv, csv2, tsv, fwf (via readr's locale) and stata, spss, sas (via haven's encoding argument). Refused for other readers."
         },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Read only these columns (stata, spss, por, sas). Each entry is a regular expression matched against the whole column name, so a plain name selects just that column and a pattern such as \"[a-f]_household_id\" covers a name with a per-file prefix. Every entry must match at least one column. Refused for other readers."
+        },
         "wave_from": {
           "type": "string",
           "enum": [
@@ -211,6 +219,11 @@
                 {
                   "required": [
                     "encoding"
+                  ]
+                },
+                {
+                  "required": [
+                    "columns"
                   ]
                 }
               ]
