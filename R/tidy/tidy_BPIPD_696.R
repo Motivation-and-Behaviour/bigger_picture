@@ -1,14 +1,16 @@
 #' Tidier for BPIPD-696 (PLUMS, Kaur)
 #'
-#' The three workbooks hold one sheet per trial arm per timepoint, so the six
-#' sheets stack into one long table with `arm` taken from the sheet each row
-#' came from. The midline and endline intervention sheets store the screen-use
-#' and sleep items under the full question wording; they are renamed to the
-#' control sheets' short names before the bind.
+#' Six sheets (3 waves x 2 arms) stack into one table, with `arm` taken from
+#' the sheet each row came from. Midline/endline intervention sheets use full
+#' question wording for the screen-use and sleep items; renamed to the control
+#' sheets' short names before the bind.
 #'
-#' Every sheet holds duplicate records: the same child entered twice, with the
-#' two entries differing on a handful of items. `bp696_deduplicate()` collapses
-#' them to one row per child per wave.
+#' Every sheet has duplicate records (same child entered twice, differing on a
+#' few items); `bp696_deduplicate()` collapses these to one row per child per
+#' wave.
+#'
+#' Adds `dob_conflict` (dob blanked where the sheets disagree) and CBCL/1.5-5
+#' mean item scores (`cbcl_*_mean`) computed from the items.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -42,8 +44,8 @@ tidy_BPIPD_696 <- function(raw_dataset, spec) {
   # One baseline row carries a single stray cell and no participant id.
   df <- df[!is.na(df$Participant_ID), ]
 
-  # Three spellings of the date of birth across the six sheets; parsing here
-  # keeps the mapping step from having to know which sheet a row came from.
+  # Three dob spellings across the six sheets; parsed here so mapping doesn't
+  # need to know the source sheet.
   df <- tibble::add_column(
     df,
     dob = bp696_parse_dob(df$Q4_What_is_the_date_of_birth_of_the_child),
@@ -59,21 +61,149 @@ tidy_BPIPD_696 <- function(raw_dataset, spec) {
     )
   }
 
+  df <- bp696_blank_conflicting_dob(df)
+
+  # Parent education is carried within child from the earliest wave that
+  # records it (two children lack father's education at midline/endline).
+  wave_order <- match(df$.wave, c("Baseline", "Midline", "Endline"))
+  for (column in c("Q12_father_education", "12.1_mother_education")) {
+    df[[column]] <- carry_within(df[[column]], df$participant_id, wave_order)
+  }
+
+  bp696_add_cbcl_scores(df)
+}
+
+#' Blank the date of birth of children recorded with two different dates
+#'
+#' 33 intervention children have one dob in the baseline sheet and another in
+#' the midline/endline sheets (baseline later by whole years in 22 of them).
+#' Which sheet is right is unconfirmed, so their `dob` is NA at every wave and
+#' `dob_conflict` flags them; the parsed original stays in the Q4 column.
+bp696_blank_conflicting_dob <- function(df) {
+  distinct <- stats::ave(
+    as.numeric(df$dob),
+    df$participant_id,
+    FUN = function(x) length(unique(x[!is.na(x)]))
+  )
+  conflict <- distinct > 1
+
+  df$dob[conflict] <- NA
+  tibble::add_column(df, dob_conflict = conflict, .after = "dob")
+}
+
+#' Add CBCL/1.5-5 mean item scores computed from the item columns
+#'
+#' The study's scale totals are not used: they count a missing item as 0, keep
+#' off-scale codes (items 30, 98 and 99 hold 4, 5 and 3 once each), and the
+#' baseline control WITHDRAWN total sums item 63 in place of item 62. Codes
+#' outside 0-2 are set to NA here, before scoring; the item columns keep the
+#' delivered values.
+#'
+#' Syndrome score: mean of the answered items, NA when fewer than 80% are
+#' answered. Composite: mean over the union of its syndromes' items, NA unless
+#' every syndrome meets its own 80% threshold.
+bp696_add_cbcl_scores <- function(df) {
+  items <- bp696_cbcl_item_matrix(df)
+  syndromes <- bp696_cbcl_syndromes()
+
+  syndrome_mean <- function(numbers) {
+    block <- items[, numbers, drop = FALSE]
+    scores <- rowMeans(block, na.rm = TRUE)
+    scores[rowSums(!is.na(block)) < ceiling(0.8 * length(numbers))] <-
+      NA_real_
+    scores
+  }
+
+  composite_mean <- function(components) {
+    numbers <- sort(unique(unlist(syndromes[components])))
+    scores <- rowMeans(items[, numbers, drop = FALSE], na.rm = TRUE)
+    for (component in components) {
+      scores[is.na(syndrome_mean(syndromes[[component]]))] <- NA_real_
+    }
+    scores
+  }
+
+  for (syndrome in names(syndromes)) {
+    df[[paste0("cbcl_", syndrome, "_mean")]] <-
+      syndrome_mean(syndromes[[syndrome]])
+  }
+  df$cbcl_externalising_mean <- composite_mean(c("aggressive", "attention"))
+  df$cbcl_internalising_mean <- composite_mean(
+    c("emoreactive", "anxdep", "somatic", "withdrawn")
+  )
+
   df
+}
+
+#' CBCL/1.5-5 items 1-99 as a numeric matrix, codes outside 0-2 set to NA
+#'
+#' Column k is item k. The items sit in one block starting at item 1; the
+#' check guards against a sheet change moving them.
+bp696_cbcl_item_matrix <- function(df) {
+  first <- match(
+    "Q1_Aches_or_pains__without_medical_cause;_do_2t_include_stomach_or_headaches",
+    names(df)
+  )
+  block <- names(df)[first + 0:98]
+  if (
+    is.na(first) ||
+      !identical(sub("^Q([0-9]+)_.*$", "\\1", block), as.character(1:99))
+  ) {
+    stop("BPIPD-696: CBCL items 1-99 are not one ordered block.", call. = FALSE)
+  }
+
+  items <- vapply(
+    block,
+    function(name) suppressWarnings(as.numeric(df[[name]])),
+    numeric(nrow(df))
+  )
+  items <- matrix(items, nrow = nrow(df))
+  items[!items %in% c(0, 1, 2)] <- NA_real_
+  items
+}
+
+#' Published CBCL/1.5-5 syndrome scales used by the dataschema, by item number
+bp696_cbcl_syndromes <- function() {
+  list(
+    emoreactive = c(21, 46, 51, 79, 82, 83, 92, 97, 99),
+    anxdep = c(10, 33, 37, 43, 47, 68, 87, 90),
+    somatic = c(1, 7, 12, 19, 24, 39, 45, 52, 78, 86, 93),
+    withdrawn = c(2, 4, 23, 62, 67, 70, 71, 98),
+    attention = c(5, 6, 56, 59, 95),
+    aggressive = c(
+      8,
+      15,
+      16,
+      18,
+      20,
+      27,
+      29,
+      35,
+      40,
+      42,
+      44,
+      53,
+      58,
+      66,
+      69,
+      81,
+      85,
+      88,
+      96
+    )
+  )
 }
 
 #' Collapse duplicate records and build the participant identifier
 #'
-#' `Participant_ID` repeats within every sheet. Almost all repeats are the same
-#' child entered twice: the two rows agree on date of birth and sex and differ
-#' only on scattered items, with the sheet's own scale scores recomputed from
-#' each entry. Those collapse to the more complete row.
+#' `Participant_ID` repeats within every sheet: almost all repeats are the
+#' same child entered twice (same dob/sex, differing on scattered items), and
+#' collapse to the more complete row.
 #'
-#' The exception is a block of baseline control ids (RCT-D-159 to RCT-D-225)
-#' whose two rows carry different dates of birth or different sexes, so they are
-#' two different children sharing an id. Those keep one row each and are
-#' separated by an occurrence suffix, which says the identity is unresolved
-#' rather than asserting they are the same child.
+#' Exception: baseline control ids RCT-D-159 to RCT-D-225 have two rows with
+#' different dob or sex: two children sharing an id. These keep one row each,
+#' separated by an occurrence suffix (identity unresolved, not asserted to be
+#' the same child).
 bp696_deduplicate <- function(df) {
   child <- paste(
     df$.wave,
@@ -92,8 +222,8 @@ bp696_deduplicate <- function(df) {
   )
   df <- df[sort(keep), ]
 
-  # A suffix only where one id covers two children in the same wave; everywhere
-  # else the id is `arm`-`Participant_ID` and links a child across waves.
+  # Suffix only where one id covers two children in the same wave; otherwise
+  # the id is `arm`-`Participant_ID`, linking a child across waves.
   key <- paste(df$.wave, df$arm, df$Participant_ID)
   occurrence <- stats::ave(seq_len(nrow(df)), key, FUN = seq_along)
   collisions <- stats::ave(seq_len(nrow(df)), key, FUN = length)
@@ -111,12 +241,11 @@ bp696_deduplicate <- function(df) {
 
 #' Put family size and monthly income back under their own headers
 #'
-#' The baseline control sheet carries monthly income under the
-#' `Q14total_family_members` header and the household size under
-#' `Q15Monthly_income`; the other five sheets carry them the right way round.
-#' `Q16Per_capita_income` equals income divided by household size to within 1%
-#' in every row of every sheet once the two are swapped, and the swapped values
-#' then agree exactly with the same child's midline and endline rows.
+#' Baseline control sheet has these two swapped (income under
+#' `Q14total_family_members`, size under `Q15Monthly_income`); the other five
+#' sheets are correct. Confirmed by `Q16Per_capita_income` matching
+#' income/size to within 1% once swapped, and matching the same child's
+#' later-wave rows.
 bp696_swap_income_columns <- function(tbl) {
   size <- "Q14total_family_members"
   income <- "Q15Monthly_income"
@@ -137,9 +266,9 @@ bp696_swap_income_columns <- function(tbl) {
 
 #' Parse the date of birth out of its three spellings
 #'
-#' The baseline and control sheets hold Excel date serials as text, some midline
-#' and endline control rows hold `dd-mm-yyyy`, and the midline and endline
-#' intervention sheets hold dates that read as POSIXct and print `yyyy-mm-dd`.
+#' Baseline/control sheets: Excel date serials as text. Some midline/endline
+#' control rows: `dd-mm-yyyy`. Midline/endline intervention sheets: POSIXct,
+#' prints `yyyy-mm-dd`.
 bp696_parse_dob <- function(x) {
   out <- as.Date(rep(NA_real_, length(x)), origin = "1970-01-01")
 
@@ -167,17 +296,17 @@ bp696_parse_dob <- function(x) {
 
 #' Restore the column names readxl could not take from a header row
 bp696_align_names <- function(tbl) {
-  # Two CBCL header cells are blank in the baseline sheets; the midline and
-  # endline control sheets name the same two positions.
+  # Two CBCL header cells are blank in baseline sheets; midline/endline
+  # control name the same two positions.
   names(tbl)[names(tbl) == "...224"] <- "Q13_Cries_a_lot"
   names(tbl)[names(tbl) == "...236"] <-
     "Q25_Doesn’t_get_along_with_other_children"
 
-  # A trailing column of the baseline intervention sheet has no header and one
-  # value throughout; naming it stops `add_column()` renumbering it later.
+  # Baseline intervention's trailing unheaded column (one value throughout);
+  # named so `add_column()` doesn't renumber it later.
   names(tbl)[names(tbl) == "...328"] <- "unnamed_baseline_intervention_column"
 
-  # The midline control sheet repeats the Q9 column; the two copies are equal.
+  # Midline control repeats the Q9 column (two copies are equal).
   garden <-
     "Q9_Do_you_have_a_garden_park_area_in_near_the_house_where_the_child_can_play"
   tbl <- tbl[names(tbl) != paste0(garden, "...136")]
@@ -196,8 +325,7 @@ bp696_rename_intervention <- function(tbl) {
 
 #' Stop if an intervention sheet holds a column its control sheet does not
 #'
-#' A stale rename map strands an item in its own column instead of failing, so
-#' nothing downstream would notice.
+#' Catches a stale rename map silently stranding an item in its own column.
 bp696_check_arms <- function(tables) {
   extras <- c(
     "Q18.11_INTERNET_CONNECTION_usually_placed_in_the_room_where_the_child_sleeps_plays",
@@ -225,9 +353,9 @@ bp696_check_arms <- function(tables) {
 
 #' Cast to character the few columns the sheets read as more than one type
 #'
-#' Each is a numeric item with one text answer typed into it in a single sheet,
-#' apart from the date of birth, which is an Excel serial in some sheets and a
-#' date in others; casting keeps every value for the mapping step to resolve.
+#' Each is numeric with one stray text answer in a single sheet, apart from
+#' dob (Excel serial in some sheets, date in others); casting preserves every
+#' value for the mapping step to resolve.
 bp696_align_types <- function(tables) {
   observed <- function(name) {
     unique(unlist(lapply(tables, function(tbl) {
@@ -250,9 +378,9 @@ bp696_align_types <- function(tables) {
 
 #' The control sheets' name for each intervention-sheet column that differs
 #'
-#' Paired by question number within instrument block (screen-use questionnaire,
-#' sleep scale, behaviour checklist); the entries below the screen-use items
-#' were matched by position and confirmed against their values.
+#' Paired by question number within instrument block (DSEQ, sleep scale,
+#' CBCL); entries below the screen-use items matched by position, confirmed
+#' against values.
 bp696_intervention_columns <- function() {
   c(
     "Q1watching_too_muchST" = "Q1_Do_you_think_that_your_child_is_watching_too_much_digital_media",

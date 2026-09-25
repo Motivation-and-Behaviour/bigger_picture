@@ -190,9 +190,7 @@ waves:
         glob: "YRBS_2023_National_User_Guide.pdf"
 
 notes: |
-  Youth Risk Behavior Surveillance System (YRBSS). 
-  Dataset consists of wave-specific Microsoft Access (.mdb) data files 
-  and accompanying National User Guide PDF documentation files. 
-  Waves 1999-2011 each contain a single Access database table.
-  Waves 2013, 2015, 2017, 2019, 2021 and 2023 contain two tables within each .mdb 
-  file (XXHq and XXHqn). 
+  Youth Risk Behavior Surveillance System (YRBSS).
+  Wave-specific Access (.mdb) data files plus National User Guide PDFs.
+  1999-2011: one table per file.
+  2013-2023: two tables per file (XXHq and XXHqn).

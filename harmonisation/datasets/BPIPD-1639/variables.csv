@@ -1,277 +1,523 @@
-target_variable,status,source_columns,expression,notes,lookup_table
-participant_id,compatible,personid,personid,,
-wave,unavailable,,,,
-data_year,inferred,,2014,Assumed from 10.1186/s12966-021-01185-w,
-rct_arm,compatible,name,name,"Arm labels kept exactly as recorded in the dataset: Control (usual care), FAB (Food, Activity and Breastfeeding), Sleep, and FAB-Sleep (the arm publications call Combination, i.e. FAB + Sleep combined). Verified fully consistent with the groupsleep/groupfab dummy columns. Arm descriptions: protocol 10.1186/1471-2458-11-942",
-age_years,inferred,,5,Assumed from 10.1186/s12966-021-01185-w,
-sex,compatible,isex,"recode_values(isex, ""M"" ~ ""Male"", ""F"" ~ ""Female"")",,
-country,inferred,,"""New Zealand""",,
-state,unavailable,,,,
-ethnicity,proximate,iethnic4,"lookup_values(iethnic4, lookup_ethnicity, dataset_id = spec$dataset_id, target_variable = ""ethnicity"")",Shared ethnicity mapping stored in harmonisation/lookups/ethnicity.csv,ethnicity
-indigenous,inferred,iethnic4,"if_else(iethnic4 %in% c(""Maori"", ""Pacific""), ""Indigenous"", ""Non-Indigenous"")",,
-minority,inferred,iethnic4,"if_else(iethnic4 == ""European"", ""Non-minority"", ""Minority"")",,
-immigrant_background,in_progress,,,,
-ses_area,compatible,fnzdepcat3,"recode_values(fnzdepcat3, ""NZDep 1-3"" ~ ""High"", ""NZDep 4-7"" ~ ""Medium"", ""NZDep 8-10"" ~ ""Low"")",,
-ses_household,unavailable,,,,
-ses_household_measure,unavailable,,,,
-ses_hukou,in_progress,,,,
-maternal_education,proximate,meducat4,"lookup_values(meducat4, lookup_maternal_education, dataset_id = spec$dataset_id, target_variable = ""maternal_education"")",Shared mapping in harmonisation/lookups/maternal_education.csv,maternal_education
-paternal_education,unavailable,,,Not collected; only maternal education (see maternal_education),
-parental_education,unavailable,,,Only maternal education collected; highest-across-parents cannot be derived without paternal education (schema note: derive at analysis where both exist),
-urbanicity,unavailable,,,Not collected; whole cohort recruited via the single Dunedin maternity unit but its catchment includes rural surrounds so a constant Urban cannot be defensibly inferred,
-family_structure,partial,"related_gqt, livewmf_gqt, livewpar_gqt","case_when(
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,personid,personid,POI personid; one row per child.,,
+wave,unavailable,,,Single collection occasion: only the age-5 follow-up is harmonised; the 3.5-year wave has no screen-time item.,,
+data_year,partial,infant_dob,"as.numeric(format(infant_dob, ""%Y"")) + 5","Year of the fifth birthday (infant_dob), taken as the age-5 visit year (2014: 193, 2015: 338, 2016: 20); visits fell just before the birthday and no visit date is released.",,
+rct_arm,compatible,name,"if_else(name == ""FAB-Sleep"", ""Combination"", name)","Arms Control (usual care), FAB, Sleep and Combination (FAB + Sleep; dataset label FAB-Sleep).",,
+survey_weight,unavailable,,,Not a survey sample.,,
+survey_strata,unavailable,,,Not a survey sample.,,
+survey_cluster,unavailable,,,Not a survey sample.,,
+age_years,inferred,,5,"No age item or visit date: design age of the age-5 follow-up, scheduled at the fifth birthday.",,
+sex,compatible,isex,"recode_values(isex, ""M"" ~ ""Male"", ""F"" ~ ""Female"", default = ""Unknown"")",Infant sex from the trial demographics file (isex).,,
+country,inferred,,"""New Zealand""","Constant: all participants recruited at one Dunedin maternity unit, New Zealand.",,
+state,unavailable,,,Not an Australian dataset.,,
+ethnicity,proximate,iethnic4,"coalesce(
+  lookup_values(
+    iethnic4,
+    lookup_ethnicity,
+    dataset_id = spec$dataset_id,
+    target_variable = ""ethnicity"",
+    default = ""Unknown""
+  ),
+  ""Unknown""
+)",Infant prioritised ethnicity in 4 groups (iethnic4) via the shared lookup: European = White; Maori and Pacific (no schema category) and the residual 'Other (incl' group = Other.,ethnicity,
+indigenous,compatible,iethnic4,"case_when(iethnic4 == ""Maori"" ~ ""Indigenous"", is.na(iethnic4) ~ ""Unknown"", .default = ""Non-Indigenous"")","Maori = Indigenous from prioritised infant ethnicity (iethnic4), which counts any Maori affiliation as Maori; Pacific, European and Other = Non-Indigenous.",,
+minority,compatible,iethnic4,"case_when(iethnic4 == ""European"" ~ ""Non-minority"", is.na(iethnic4) ~ ""Unknown"", .default = ""Minority"")","European = Non-minority (NZ European majority); Maori, Pacific and Other = Minority; prioritised infant ethnicity (iethnic4).",,
+immigrant_background,unavailable,,,Not collected.,,
+born_in_country,inferred,,"""Yes""","Constant: infants recruited postnatally at one Dunedin maternity unit, so all born in New Zealand.",,
+ses_area,compatible,fnzdep,"recode_values(
+  as.numeric(fnzdep),
+  c(1, 2, 3, 4) ~ ""High"",
+  c(5, 6) ~ ""Medium"",
+  c(7, 8, 9, 10) ~ ""Low"",
+  default = ""Unknown""
+)","NZDep decile of residence (fnzdep; 1 = least deprived) on national deciles: 1-4 High, 5-6 Medium, 7-10 Low; NZDep release not documented.",,
+ses_household,unavailable,,,Not collected.,,
+ses_household_measure,unavailable,,,See ses_household.,,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,compatible,meducat4,"coalesce(
+  lookup_values(
+    meducat4,
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","Mother's education in 4 groups (meducat4, demographics file) via the shared education lookup; 3 missing = Unknown.",maternal_education,
+paternal_education,unavailable,,,Not collected.,,
+parental_education,incompatible,meducat4,,Mother's education only (meducat4); see maternal_education.,,
+urbanicity,unavailable,,,"Not collected; recruited via one Dunedin maternity unit whose catchment includes rural areas, so Urban can't be assumed.",,
+family_structure,compatible,"related_gqt, livewmf_gqt, livewpar_gqt","case_when(
   related_gqt %in% c(1, 2) & livewmf_gqt == 1 ~ ""Two biological/adoptive parents"",
   related_gqt %in% c(1, 2) & livewmf_gqt == 0 & livewpar_gqt == 1 ~ ""Step family"",
   related_gqt %in% c(1, 2) & livewmf_gqt == 0 & livewpar_gqt == 0 ~ ""Single parent"",
   related_gqt == 3 & livewmf_gqt == 1 ~ ""Step family"",
   related_gqt %in% c(3, 4, 5) ~ ""Other"",
   .default = ""Unknown""
-)","Derived from the household roster per project decision (roster items chosen over the unlabelled livewith_gqt summary). Respondent (related_gqt: 1 = mother, 2 = father) is assumed resident; livewmf_gqt = 1 means the child's other mother/father is resident; livewpar_gqt = 1 means a partner who is not the child's parent is resident. Unticked checkboxes (0) treated as genuine absence per decision. partial because (a) livewith_gqt disagrees for ~30 respondents (livewith = 1 with the mother/father box unticked; these classify as Single parent, so that level may be somewhat inflated) and (b) 4 respondents ticked both livewmf and livewpar and classify as Two biological/adoptive parents by rule order. Non-parent respondents: step-parent respondent with resident biological parent = Step family (n = 1); guardian/foster = Other (n = 1). Questionnaire non-completers (~32%) = Unknown per missing_rule",
-school_grade,unavailable,,,Not collected; age-5 wave has early-childhood education attendance/type items only (NZ school entry at 5th birthday),
-st_measure_type,inferred,,"""Continuous""",,
-st_measure_name,inferred,,"""Unknown/custom""",,
-st_responder,in_progress,,,,
-st_total_wd,in_progress,,,,
-st_total_we,in_progress,,,,
-st_total,in_progress,,,,
-st_watch_wd,unavailable,,,,
-st_watch_we,unavailable,,,,
-st_watch,compatible,"mdvdt_gqt, mfreet_gqt, mskyt_gqt, monlinet_gqt","sum_nonmissing(mdvdt_gqt, mfreet_gqt, mskyt_gqt, monlinet_gqt) / 60","Sums:
-How many minutes would they spend each day - DVD or video
-How many minutes would they spend each day - free to air TV
-How many minutes would they spend each day - sky TV
-How many minutes would they spend each day - online TV streaming",
-st_game_wd,unavailable,,,,
-st_game_we,unavailable,,,,
-st_game,compatible,"mcomgamt_gqt, mconsstt_gqt, mconsmvt_gqt, mconshht_gqt, mmobilet_gqt","sum_nonmissing(mcomgamt_gqt, mconsstt_gqt, mconsmvt_gqt, mconshht_gqt, mmobilet_gqt) / 60","Sums:
-How many minutes would they spend each day - computer for games
-How many minutes would they spend each day - console standard controllers
-How many minutes would they spend each day - console movement controllers
-How many minutes would they spend each day - handheld games console
-How many minutes would they spend each day - mobile phone for games",
-st_game_comp_wd,unavailable,,,,
-st_game_comp_we,unavailable,,,,
-st_game_comp,compatible,mcomgamt_gqt,mcomgamt_gqt / 60,,
-st_game_console_wd,unavailable,,,,
-st_game_console_we,unavailable,,,,
-st_game_console,compatible,mconsstt_gqt,mconsstt_gqt / 60,,
-st_game_handheldconsole_wd,unavailable,,,,
-st_game_handheldconsole_we,unavailable,,,,
-st_game_handheldconsole,compatible,mconshht_gqt,mconshht_gqt / 60,,
-st_game_active_wd,unavailable,,,,
-st_game_active_we,unavailable,,,,
-st_game_active,compatible,mconsmvt_gqt,mconsmvt_gqt / 60,,
-st_game_phone_wd,unavailable,,,,
-st_game_phone_we,unavailable,,,,
-st_game_phone,compatible,mmobilet_gqt,mmobilet_gqt / 60,,
-st_game_tablet_wd,in_progress,,,,
-st_game_tablet_we,in_progress,,,,
-st_game_tablet,in_progress,,,,
-st_comp_nongaming_wd,unavailable,,,,
-st_comp_nongaming_we,unavailable,,,,
-st_comp_nongaming,compatible,mcomotht_gqt,mcomotht_gqt / 60,,
-st_comp_wd,unavailable,,,,
-st_comp_we,unavailable,,,,
-st_comp,compatible,"mcomgamt_gqt, mcomotht_gqt","sum_nonmissing(mcomgamt_gqt, mcomotht_gqt) / 60","Sums:
-How many minutes would they spend each day - computer for games
-How many minutes would they spend each day - computer for other than games",
-st_tablet_wd,unavailable,,,,
-st_tablet_we,unavailable,,,,
-st_tablet,compatible,mipadt_gqt,mipadt_gqt / 60,,
-st_phone_wd,unavailable,,,,
-st_phone_we,unavailable,,,,
-st_phone,compatible,mmobilet_gqt,mmobilet_gqt / 60,,
-st_socmedia_wd,unavailable,,,Social media use not measured; age-5 media inventory covers TV/DVD/games/computer/tablet only,
-st_socmedia_we,unavailable,,,Social media use not measured; age-5 media inventory covers TV/DVD/games/computer/tablet only,
-st_socmedia,unavailable,,,Social media use not measured; age-5 media inventory covers TV/DVD/games/computer/tablet only,
-st_educational_wd,unavailable,,,No educational-content screen items; computer use split only into games vs other-than-games with content unspecified,
-st_educational_we,unavailable,,,No educational-content screen items; computer use split only into games vs other-than-games with content unspecified,
-st_educational,unavailable,,,No educational-content screen items; computer use split only into games vs other-than-games with content unspecified,
-st_work_wd,in_progress,,,,
-st_work_we,in_progress,,,,
-st_work,in_progress,,,,
-st_internet_wd,unavailable,,,No generic internet-time item; online TV streaming minutes are TV content (already in st_watch) and cannot stand for general internet use,
-st_internet_we,unavailable,,,No generic internet-time item; online TV streaming minutes are TV content (already in st_watch) and cannot stand for general internet use,
-st_internet,unavailable,,,No generic internet-time item; online TV streaming minutes are TV content (already in st_watch) and cannot stand for general internet use,
-st_videochat,in_progress,,,,
-st_messaging_wd,in_progress,,,,
-st_messaging_we,in_progress,,,,
-st_messaging,in_progress,,,,
-st_creating,in_progress,,,,
-st_email,in_progress,,,,
-st_shopping,in_progress,,,,
-st_total_school,unavailable,,,No school-context screen items; media inventory is home-based parent report at age 5,
-st_educational_school,unavailable,,,No school-context screen items; media inventory is home-based parent report at age 5,
-st_comp_school,unavailable,,,No school-context screen items; media inventory is home-based parent report at age 5,
-st_tablet_school,unavailable,,,No school-context screen items; media inventory is home-based parent report at age 5,
-st_internet_school,unavailable,,,No school-context screen items; media inventory is home-based parent report at age 5,
-st_phone_school,unavailable,,,No school-context screen items; media inventory is home-based parent report at age 5,
-acc_academachment_selfrated,unavailable,,,,
-acc_academachment_lettergrades,in_progress,,,,
-acc_academachment_stdtest,in_progress,,,,
-acc_schoolengage_caresschool,in_progress,,,,
-acc_schoolengage_homework,in_progress,,,,
-acc_academachment_numgrades,unavailable,,,No school achievement data; cohort aged 5 at this wave,
-acc_academachment_teacherrated,unavailable,,,No teacher-reported data collected,
-acc_numeracy_stdtest,unavailable,,,No standardised achievement tests; cohort aged 5 at this wave,
-acc_literacy_stdtest,unavailable,,,No standardised achievement tests; cohort aged 5 at this wave,
-beh_hyper_basc2,compatible,bhyper_gqt,bhyper_gqt,,
-beh_atten_basc2,compatible,battprob_gqt,battprob_gqt,,
-beh_atten_self,in_progress,,,,
-beh_selfreg_htks,compatible,htksraw_cst,htksraw_cst,,
-beh_bullied,unavailable,,,,
-beh_beenbullied,unavailable,,,,
-beh_beenbullied_online,in_progress,,,,
-beh_bullied_online,in_progress,,,,
-beh_fight,unavailable,,,,
-beh_truancy,in_progress,,,,
-beh_stealing,in_progress,,,,
-beh_vandalism,in_progress,,,,
-beh_conduct_sdq_parent,unavailable,,,,
-beh_hyper_sdq_parent,unavailable,,,,
-beh_peerprob_sdq_parent,unavailable,,,,
-beh_prosocial_sdq_parent,unavailable,,,,
-beh_aggphys_bpaq_self,unavailable,,,,
-beh_aggverb_bpaq_self,unavailable,,,,
-beh_agganger_bpaq_self,unavailable,,,,
-beh_agghostility_bpaq_self,unavailable,,,,
-beh_agg_self,in_progress,,,,
-beh_argues,in_progress,,,,
-beh_persistence_finishwork,in_progress,,,,
-beh_emotreg_stayscalm,in_progress,,,,
-beh_peerprob_makefriends,in_progress,,,,
-beh_conduct_diagnosed,in_progress,,,,
-beh_conduct_diagnosed_severity,in_progress,,,,
-beh_conduct_sdq_self,unavailable,,,SDQ not administered (BASC-2 parent report used); no child self-report at age 5,
-beh_hyper_sdq_self,unavailable,,,SDQ not administered (BASC-2 parent report used); no child self-report at age 5,
-beh_peerprob_sdq_self,unavailable,,,SDQ not administered (BASC-2 parent report used); no child self-report at age 5,
-beh_prosocial_sdq_self,unavailable,,,SDQ not administered (BASC-2 parent report used); no child self-report at age 5,
-beh_conduct_sdq_teacher,unavailable,,,SDQ not administered; no teacher-reported data collected,
-beh_hyper_sdq_teacher,unavailable,,,SDQ not administered; no teacher-reported data collected,
-beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered; no teacher-reported data collected,
-beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered; no teacher-reported data collected,
-beh_ext_sdq_parent,unavailable,,,SDQ not administered in any form; related parent-report constructs captured by BASC-2 (see beh_hyper_basc2),
-beh_ext_sdq_self,unavailable,,,SDQ not administered; no child self-report at age 5,
-beh_ext_sdq_teacher,unavailable,,,SDQ not administered; no teacher-reported data collected,
-beh_agg_cbcl_parent,in_progress,,,,
-beh_atten_cbcl_parent,in_progress,,,,
-beh_rulebreak_cbcl_parent,in_progress,,,,
-beh_ext_cbcl_parent,in_progress,,,,
-beh_cbcl_measure,in_progress,,,,
-beh_prosocial_online_self,in_progress,,,,
-beh_prosocial_online_measure,in_progress,,,,
-cog_execfunc_basc2,compatible,bexecfun_gqt,bexecfun_gqt,,
-cog_langexec_nepsy,compatible,compscal_cst,compscal_cst,,
-cog_phono_nepsy,compatible,phonscal_cst,phonscal_cst,,
-cog_inhibcont_nepsy,compatible,statscal_cst,statscal_cst,,
-cog_vismotor_nepsy,compatible,vmtscal_cst,vmtscal_cst,,
-cog_verbalfluency_nepsy,compatible,wordscal_cst,wordscal_cst,,
-cog_inhib_nihtb_flanker,unavailable,,,NIH Toolbox not administered (NEPSY-II and HTKS used; see cog_*_nepsy rows),
-cog_flex_nihtb_dccs,unavailable,,,NIH Toolbox not administered (NEPSY-II and HTKS used; see cog_*_nepsy rows),
-cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox not administered (NEPSY-II and HTKS used; see cog_*_nepsy rows),
-cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox not administered (NEPSY-II and HTKS used; see cog_*_nepsy rows),
-cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox not administered (NEPSY-II and HTKS used; see cog_*_nepsy rows),
-cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox not administered (NEPSY-II and HTKS used; see cog_*_nepsy rows),
-cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered (NEPSY-II and HTKS used; see cog_*_nepsy rows),
-cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered (NEPSY-II and HTKS used; see cog_*_nepsy rows),
-cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered (NEPSY-II and HTKS used; see cog_*_nepsy rows),
-cog_wm_digitspan,unavailable,,,No digit span task; NEPSY-II subtests administered do not include a memory span measure,
-cog_iq_fullscale,unavailable,,,No full-scale IQ test administered,
-cog_vocab_bpvs,unavailable,,,BPVS/PPVT not administered,
-cog_vocab_ppvt,in_progress,,,,
-cog_execfunc_brief_parent,unavailable,,,BRIEF not administered; parent-reported executive function captured by BASC-2 (see cog_execfunc_basc2),
-cog_vocab_bas_naming,in_progress,,,,
-cog_nonverbalreason_bas_picsim,in_progress,,,,
-cog_spatial_bas_pattern,in_progress,,,,
-cog_verbalreason_bas_versim,in_progress,,,,
-cog_schoolread_bracken,in_progress,,,,
-cog_creativethinking_stdtest,in_progress,,,,
-mh_anx_basc2,compatible,banxiety_gqt,banxiety_gqt,,
-mh_dep_basc2,compatible,bdepress_gqt,bdepress_gqt,,
-mh_emotsymp_sdq_parent,unavailable,,,,
-mh_totaldiff_sdq_parent,unavailable,,,,
-mh_anx_diagnosed,in_progress,,,,
-mh_anx_diagnosed_severity,in_progress,,,,
-mh_dep_diagnosed,in_progress,,,,
-mh_dep_diagnosed_severity,in_progress,,,,
-mh_emotsymp_sdq_self,unavailable,,,SDQ not administered; no child self-report at age 5,
-mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered; no teacher-reported data collected,
-mh_totaldiff_sdq_self,unavailable,,,SDQ not administered; no child self-report at age 5,
-mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered; no teacher-reported data collected,
-mh_int_sdq_parent,unavailable,,,SDQ not administered in any form; related parent-report constructs captured by BASC-2 (see mh_anx_basc2/mh_dep_basc2),
-mh_int_sdq_self,unavailable,,,SDQ not administered; no child self-report at age 5,
-mh_int_sdq_teacher,unavailable,,,SDQ not administered; no teacher-reported data collected,
-mh_dep_smfq_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_dep_smfq_parent,unavailable,,,SMFQ not administered (parent-reported depression captured by BASC-2; see mh_dep_basc2),
-mh_dep_cdi_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_dep_cesd_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_dep_phq9_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_dep_rcads_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_dep_dass21_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_dep_scl_self,in_progress,,,,
-mh_distress_k6_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_distress_k10_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_anx_masc_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_anx_scas_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_anx_scas_parent,in_progress,,,,
-mh_anx_scared_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_anx_scared_parent,unavailable,,,SCARED not administered (parent-reported anxiety captured by BASC-2; see mh_anx_basc2),
-mh_anx_gad7_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_anx_rcads_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_anx_dass21_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-mh_anxdep_cbcl_parent,in_progress,,,,
-mh_int_cbcl_parent,in_progress,,,,
-mh_dep_binary_self,in_progress,,,,
-mh_dep_self,in_progress,,,,
-mh_dep_measure,in_progress,,,,
-mh_anx_self,in_progress,,,,
-mh_anx_measure,in_progress,,,,
-mh_depanx_diagnosed,in_progress,,,,
-mh_stress_self,in_progress,,,,
-mh_lonely_self,in_progress,,,,
-mh_lonely_scale_self,in_progress,,,,
-mh_lonely_measure,in_progress,,,,
-mh_sad_self,in_progress,,,,
-mh_worry_self,in_progress,,,,
-mh_irritable_self,in_progress,,,,
-mh_nobodycares_self,in_progress,,,,
-mh_lifenotworth_self,in_progress,,,,
-mh_suicide_ideation_self,in_progress,,,,
-mh_suicide_attempt_self,in_progress,,,,
-mh_psychsom_hbscscl_self,in_progress,,,,
-mh_psychsom_measure,in_progress,,,,
-wb_emotsc_basc2,compatible,bemotsc_gqt,bemotsc_gqt,,
-wb_mwb_wemwbs,unavailable,,,,
-wb_lifesatisfaction_cantrilladder,unavailable,,,,
-wb_resil_basc2,compatible,bresili_gqt,bresili_gqt,,
-wb_psychcomplaints_feellow,unavailable,,,,
-wb_psychcomplaints_irritable,unavailable,,,,
-wb_psychcomplaints_nervous,unavailable,,,,
-wb_psychcomplaints_diffsleep,unavailable,,,,
-wb_bodyimage,unavailable,,,,
-wb_lifesat_slss_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-wb_lifesat_swls_self,in_progress,,,,
-wb_lifesat_singleitem_self,in_progress,,,,
-wb_domainsat_schoolwork_self,in_progress,,,,
-wb_domainsat_appearance_self,in_progress,,,,
-wb_domainsat_family_self,in_progress,,,,
-wb_domainsat_friends_self,in_progress,,,,
-wb_domainsat_school_self,in_progress,,,,
-wb_qol_pedsql_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-wb_qol_pedsql_parent,unavailable,,,PedsQL parent proxy not administered; parent-report wellbeing limited to BASC-2 scales (see wb_emotsc_basc2/wb_resil_basc2),
-wb_qol_kidscreen10_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-wb_qol_kidscreen10_parent,in_progress,,,,
-wb_selfesteem_rosenberg_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-wb_selfesteem_self,in_progress,,,,
-wb_selfesteem_measure,in_progress,,,,
-wb_selfefficacy_gse_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-wb_selfefficacy_self,in_progress,,,,
-wb_selfefficacy_measure,in_progress,,,,
-wb_mwb_who5_self,unavailable,,,Not administered; cohort aged 5 (no child self-report),
-wb_happiness_shs_self,in_progress,,,,
-wb_mwb_swemwbs_self,in_progress,,,,
-wb_selfratedhealth_self,in_progress,,,,
-wb_posaffect_self,in_progress,,,,
-wb_posaffect_measure,in_progress,,,,
-wb_eudaimonic_self,in_progress,,,,
-wb_eudaimonic_measure,in_progress,,,,
+)","Household roster at age 5 (related_gqt, livewmf_gqt, livewpar_gqt), respondent parent taken as resident: other parent resident = Two biological/adoptive parents, else non-parent partner = Step family, else Single parent; step-parent respondent with a resident parent = Step family; other respondents = Other. Unlabelled livewith_gqt not used; 10 rows (1.8%) Unknown.",,
+fam_screenrules,compatible,"mdvdr_gqt, mfreer_gqt, mskyr_gqt, monliner_gqt, mcomgamr_gqt, mcomothr_gqt, mconsstr_gqt, mconsmvr_gqt, mconshhr_gqt, mmobiler_gqt, mipadr_gqt","{
+  rules <- cbind(
+    mdvdr_gqt,
+    mfreer_gqt,
+    mskyr_gqt,
+    monliner_gqt,
+    mcomgamr_gqt,
+    mcomothr_gqt,
+    mconsstr_gqt,
+    mconsmvr_gqt,
+    mconshhr_gqt,
+    mmobiler_gqt,
+    mipadr_gqt
+  )
+  case_when(
+    rowSums(rules >= 2, na.rm = TRUE) > 0 ~ ""TRUE"",
+    rowSums(!is.na(rules)) > 0 ~ ""FALSE"",
+    .default = NA_character_
+  )
+}","Parent report at age 5 per medium ('Are there rules over your child using these media': none, restrict what, restrict how much, both): TRUE if any medium restricts how much, FALSE if every answered medium has no or content-only rules. Media: DVD/video, free-to-air, Sky and streamed TV, computer (games, other), consoles (standard, movement, handheld), mobile phone for games, iPad/tablet/iPod.",,
+fam_bedroomscreen,compatible,sltvbedr_gqt,"case_when(sltvbedr_gqt == 1 ~ ""TRUE"", sltvbedr_gqt == 0 ~ ""FALSE"", .default = NA_character_)","Parent report at age 5: 'Does your child have a tv, computer or games console in their bedroom' (yes/no). Devices covered: TV, computer, games console.",,
+fam_parentstress,compatible,"psi01_gqt, psi02_gqt, psi03_gqt, psi04_gqt, psi05_gqt, psi06_gqt, psi07_gqt, psi08_gqt, psi09_gqt, psi10_gqt, psi11_gqt, psi12_gqt, psi13_gqt, psi14_gqt, psi15_gqt, psi16_gqt, psi17_gqt, psi18_gqt, psi19_gqt, psi20_gqt, psi21_gqt, psi22_gqt, psi23_gqt, psi24_gqt, psi25_gqt, psi26_gqt, psi27_gqt, psi28_gqt, psi29_gqt, psi30_gqt, psi31_gqt, psi32_gqt, psi34_gqt, psi35_gqt, psi36_gqt","psi01_gqt +
+  psi02_gqt +
+  psi03_gqt +
+  psi04_gqt +
+  psi05_gqt +
+  psi06_gqt +
+  psi07_gqt +
+  psi08_gqt +
+  psi09_gqt +
+  psi10_gqt +
+  psi11_gqt +
+  psi12_gqt +
+  psi13_gqt +
+  psi14_gqt +
+  psi15_gqt +
+  psi16_gqt +
+  psi17_gqt +
+  psi18_gqt +
+  psi19_gqt +
+  psi20_gqt +
+  psi21_gqt +
+  (6 - psi22_gqt) +
+  psi23_gqt +
+  psi24_gqt +
+  psi25_gqt +
+  psi26_gqt +
+  psi27_gqt +
+  psi28_gqt +
+  psi29_gqt +
+  psi30_gqt +
+  psi31_gqt +
+  psi32_gqt +
+  psi34_gqt +
+  psi35_gqt +
+  psi36_gqt","PSI-SF Total Stress rescored from items, parent report at age 5: 35 items 1-5 (range 35-175), complete-case, observed 35-117; columns follow PSI-SF item order (the study subscales sum items 1-12, 13-24, 25-36), not the string-sorted dictionary labels. Item 22 (stored 5 = a very good parent) reversed; item 33 (count of bothersome behaviours) dropped because its codes contradict the dictionary (code 5 scores lowest on the other Difficult Child items).",,
+fam_parentstress_measure,inferred,,"""PSI-SF Total Stress (Parental Distress, Parent-Child Dysfunctional Interaction, Difficult Child), 35 of 36 items, 1-5 item scoring (range 35-175), sum; item 22 reversed, item 33 omitted""","Describes fam_parentstress; the PSI-SF was fielded once, in the age-5 home questionnaire.",,
+school_grade,unavailable,,,"Not collected; cohort aged 5, at NZ school entry.",,
+st_measure_type,inferred,,"""Continuous""","Parent enters minutes per day for each medium (open numeric entry), weighted by a banded use-frequency item.",,
+st_measure_name,inferred,,"""Custom""","Media-use items written for the POI follow-up (researcher-generated per the follow-up protocol, 10.1186/s12889-016-3383-4).",,
+st_responder,inferred,,"""Parent or carer""","Parent questionnaire at age 5; respondent is the mother (92%), father, step-parent or guardian (related_gqt).",,
+st_total_wd,unavailable,,,No weekday/weekend split.,,
+st_total_we,unavailable,,,No weekday/weekend split.,,
+st_total,incompatible,"mdvdt_gqt, mfreet_gqt, mskyt_gqt, monlinet_gqt, mcomgamt_gqt, mcomotht_gqt, mconsstt_gqt, mconsmvt_gqt, mconshht_gqt, mmobilet_gqt, mipadt_gqt",,"No all-screen item; the separately asked medium items are not summed (DR-0002, DR-0004).",,
+st_watch_wd,unavailable,,,No weekday/weekend split.,,
+st_watch_we,unavailable,,,No weekday/weekend split.,,
+st_watch,partial,"mdvdt_gqt, mdvdf_gqt, mdvdy_gqt, mfreet_gqt, mfreef_gqt, mfreey_gqt, mskyt_gqt, mskyf_gqt, mskyy_gqt, monlinet_gqt, monlinef_gqt, monliney_gqt","case_when(
+  mdvdf_gqt == 0 ~ 0,
+  is.na(mdvdf_gqt) & mdvdy_gqt == 0 ~ 0,
+  mdvdt_gqt < 0 ~ NA_real_,
+  .default = mdvdt_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mdvdf_gqt + 1] / 7
+) +
+  case_when(
+    mfreef_gqt == 0 ~ 0,
+    is.na(mfreef_gqt) & mfreey_gqt == 0 ~ 0,
+    mfreet_gqt < 0 ~ NA_real_,
+    .default = mfreet_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mfreef_gqt + 1] / 7
+  ) +
+  case_when(
+    mskyf_gqt == 0 ~ 0,
+    is.na(mskyf_gqt) & mskyy_gqt == 0 ~ 0,
+    mskyt_gqt < 0 ~ NA_real_,
+    .default = mskyt_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mskyf_gqt + 1] / 7
+  ) +
+  case_when(
+    monlinef_gqt == 0 ~ 0,
+    is.na(monlinef_gqt) & monliney_gqt == 0 ~ 0,
+    monlinet_gqt < 0 ~ NA_real_,
+    .default = monlinet_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[monlinef_gqt + 1] / 7
+  )","Sum of DVD/video, free-to-air TV, Sky TV and online TV streaming (DR-0002), each minutes on a day of use / 60 x days used per week / 7 (frequency codes 0-5 = 0, 0.5, 1.5, 4, 6.5, 7 days). Not at all, or no device with frequency unanswered = 0 (21 answers giving minutes with not at all score 0); frequency unanswered with a device = NA.",,
+st_game_wd,unavailable,,,No weekday/weekend split.,,
+st_game_we,unavailable,,,No weekday/weekend split.,,
+st_game,partial,"mcomgamt_gqt, mcomgamf_gqt, mcomgamy_gqt, mconsstt_gqt, mconsstf_gqt, mconssty_gqt, mconsmvt_gqt, mconsmvf_gqt, mconsmvy_gqt, mconshht_gqt, mconshhf_gqt, mconshhy_gqt, mmobilet_gqt, mmobilef_gqt, mmobiley_gqt","case_when(
+  mcomgamf_gqt == 0 ~ 0,
+  is.na(mcomgamf_gqt) & mcomgamy_gqt == 0 ~ 0,
+  mcomgamt_gqt < 0 ~ NA_real_,
+  .default = mcomgamt_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mcomgamf_gqt + 1] / 7
+) +
+  case_when(
+    mconsstf_gqt == 0 ~ 0,
+    is.na(mconsstf_gqt) & mconssty_gqt == 0 ~ 0,
+    mconsstt_gqt < 0 ~ NA_real_,
+    .default = mconsstt_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mconsstf_gqt + 1] / 7
+  ) +
+  case_when(
+    mconsmvf_gqt == 0 ~ 0,
+    is.na(mconsmvf_gqt) & mconsmvy_gqt == 0 ~ 0,
+    mconsmvt_gqt < 0 ~ NA_real_,
+    .default = mconsmvt_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mconsmvf_gqt + 1] / 7
+  ) +
+  case_when(
+    mconshhf_gqt == 0 ~ 0,
+    is.na(mconshhf_gqt) & mconshhy_gqt == 0 ~ 0,
+    mconshht_gqt < 0 ~ NA_real_,
+    .default = mconshht_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mconshhf_gqt + 1] / 7
+  ) +
+  case_when(
+    mmobilef_gqt == 0 ~ 0,
+    is.na(mmobilef_gqt) & mmobiley_gqt == 0 ~ 0,
+    mmobilet_gqt < 0 ~ NA_real_,
+    .default = mmobilet_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mmobilef_gqt + 1] / 7
+  )","Sum of computer, console (standard and movement controllers), handheld-console and mobile-phone gaming (DR-0002), each minutes on a day of use / 60 x days used per week / 7 (frequency codes 0-5 = 0, 0.5, 1.5, 4, 6.5, 7 days). Not at all, or no device with frequency unanswered = 0 (63 answers giving minutes with not at all score 0); frequency unanswered with a device = NA. Tablet gaming is not asked separately (see st_game_tablet).",,
+st_game_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_game_comp_we,unavailable,,,No weekday/weekend split.,,
+st_game_comp,partial,"mcomgamt_gqt, mcomgamf_gqt, mcomgamy_gqt","case_when(
+  mcomgamf_gqt == 0 ~ 0,
+  is.na(mcomgamf_gqt) & mcomgamy_gqt == 0 ~ 0,
+  mcomgamt_gqt < 0 ~ NA_real_,
+  .default = mcomgamt_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mcomgamf_gqt + 1] / 7
+)","Computer for games: minutes on a day of use / 60 x days used per week / 7 (frequency codes 0-5 = 0, 0.5, 1.5, 4, 6.5, 7 days). Not at all, or no device with frequency unanswered = 0 (53 answers giving minutes with not at all score 0); frequency unanswered with a device = NA.",,
+st_game_console_wd,unavailable,,,No weekday/weekend split.,,
+st_game_console_we,unavailable,,,No weekday/weekend split.,,
+st_game_console,partial,"mconsstt_gqt, mconsstf_gqt, mconssty_gqt","case_when(
+  mconsstf_gqt == 0 ~ 0,
+  is.na(mconsstf_gqt) & mconssty_gqt == 0 ~ 0,
+  mconsstt_gqt < 0 ~ NA_real_,
+  .default = mconsstt_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mconsstf_gqt + 1] / 7
+)","Console with standard controllers: minutes on a day of use / 60 x days used per week / 7 (frequency codes 0-5 = 0, 0.5, 1.5, 4, 6.5, 7 days). Not at all, or no device with frequency unanswered = 0 (10 answers giving minutes with not at all score 0); frequency unanswered with a device = NA.",,
+st_game_handheldconsole_wd,unavailable,,,No weekday/weekend split.,,
+st_game_handheldconsole_we,unavailable,,,No weekday/weekend split.,,
+st_game_handheldconsole,partial,"mconshht_gqt, mconshhf_gqt, mconshhy_gqt","case_when(
+  mconshhf_gqt == 0 ~ 0,
+  is.na(mconshhf_gqt) & mconshhy_gqt == 0 ~ 0,
+  mconshht_gqt < 0 ~ NA_real_,
+  .default = mconshht_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mconshhf_gqt + 1] / 7
+)","Handheld games console: minutes on a day of use / 60 x days used per week / 7 (frequency codes 0-5 = 0, 0.5, 1.5, 4, 6.5, 7 days). Not at all, or no device with frequency unanswered = 0; frequency unanswered with a device = NA.",,
+st_game_active_wd,unavailable,,,No weekday/weekend split.,,
+st_game_active_we,unavailable,,,No weekday/weekend split.,,
+st_game_active,partial,"mconsmvt_gqt, mconsmvf_gqt, mconsmvy_gqt","case_when(
+  mconsmvf_gqt == 0 ~ 0,
+  is.na(mconsmvf_gqt) & mconsmvy_gqt == 0 ~ 0,
+  mconsmvt_gqt < 0 ~ NA_real_,
+  .default = mconsmvt_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mconsmvf_gqt + 1] / 7
+)","Console with movement controllers: minutes on a day of use / 60 x days used per week / 7 (frequency codes 0-5 = 0, 0.5, 1.5, 4, 6.5, 7 days). Not at all, or no device with frequency unanswered = 0; frequency unanswered with a device = NA.",,
+st_game_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_game_phone_we,unavailable,,,No weekday/weekend split.,,
+st_game_phone,partial,"mmobilet_gqt, mmobilef_gqt, mmobiley_gqt","case_when(
+  mmobilef_gqt == 0 ~ 0,
+  is.na(mmobilef_gqt) & mmobiley_gqt == 0 ~ 0,
+  mmobilet_gqt < 0 ~ NA_real_,
+  .default = mmobilet_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mmobilef_gqt + 1] / 7
+)","Mobile phone for games: minutes on a day of use / 60 x days used per week / 7 (frequency codes 0-5 = 0, 0.5, 1.5, 4, 6.5, 7 days). Not at all, or no device with frequency unanswered = 0; frequency unanswered with a device = NA.",,
+st_game_tablet_wd,unavailable,,,No weekday/weekend split.,,
+st_game_tablet_we,unavailable,,,No weekday/weekend split.,,
+st_game_tablet,incompatible,mipadt_gqt,,"mipadt_gqt covers all iPad, tablet or iPod use, gaming not separated; mapped to st_tablet.",,
+st_comp_nongaming_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming_we,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming,partial,"mcomotht_gqt, mcomothf_gqt, mcomothy_gqt","case_when(
+  mcomothf_gqt == 0 ~ 0,
+  is.na(mcomothf_gqt) & mcomothy_gqt == 0 ~ 0,
+  mcomotht_gqt < 0 ~ NA_real_,
+  .default = mcomotht_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mcomothf_gqt + 1] / 7
+)","Computer for other than games: minutes on a day of use / 60 x days used per week / 7 (frequency codes 0-5 = 0, 0.5, 1.5, 4, 6.5, 7 days). Not at all, or no device with frequency unanswered = 0 (10 answers giving minutes with not at all score 0); frequency unanswered with a device = NA.",,
+st_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_we,unavailable,,,No weekday/weekend split.,,
+st_comp,partial,"mcomgamt_gqt, mcomgamf_gqt, mcomgamy_gqt, mcomotht_gqt, mcomothf_gqt, mcomothy_gqt","case_when(
+  mcomgamf_gqt == 0 ~ 0,
+  is.na(mcomgamf_gqt) & mcomgamy_gqt == 0 ~ 0,
+  mcomgamt_gqt < 0 ~ NA_real_,
+  .default = mcomgamt_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mcomgamf_gqt + 1] / 7
+) +
+  case_when(
+    mcomothf_gqt == 0 ~ 0,
+    is.na(mcomothf_gqt) & mcomothy_gqt == 0 ~ 0,
+    mcomotht_gqt < 0 ~ NA_real_,
+    .default = mcomotht_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mcomothf_gqt + 1] / 7
+  )","Sum of computer for games and computer for other than games (DR-0002), each minutes on a day of use / 60 x days used per week / 7 (frequency codes 0-5 = 0, 0.5, 1.5, 4, 6.5, 7 days). Not at all, or no device with frequency unanswered = 0 (63 answers giving minutes with not at all score 0); frequency unanswered with a device = NA.",,
+st_tablet_wd,unavailable,,,No weekday/weekend split.,,
+st_tablet_we,unavailable,,,No weekday/weekend split.,,
+st_tablet,partial,"mipadt_gqt, mipadf_gqt, mipady_gqt","case_when(
+  mipadf_gqt == 0 ~ 0,
+  is.na(mipadf_gqt) & mipady_gqt == 0 ~ 0,
+  mipadt_gqt < 0 ~ NA_real_,
+  .default = mipadt_gqt / 60 * c(0, 0.5, 1.5, 4, 6.5, 7)[mipadf_gqt + 1] / 7
+)","mipadt_gqt covers iPad, tablet or iPod: minutes on a day of use / 60 x days used per week / 7 (frequency codes 0-5 = 0, 0.5, 1.5, 4, 6.5, 7 days). Not at all, or no device with frequency unanswered = 0; frequency unanswered with a device = NA.",,
+st_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_phone_we,unavailable,,,No weekday/weekend split.,,
+st_phone,incompatible,mmobilet_gqt,,"Phone gaming item only (mmobilet_gqt, mobile phone for games); mapped to st_game_phone.",,
+st_socmedia_wd,unavailable,,,Not collected.,,
+st_socmedia_we,unavailable,,,Not collected.,,
+st_socmedia,unavailable,,,Not collected.,,
+st_educational_wd,unavailable,,,Not collected.,,
+st_educational_we,unavailable,,,Not collected.,,
+st_educational,unavailable,,,Not collected.,,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,unavailable,,,Not collected.,,
+st_internet_we,unavailable,,,Not collected.,,
+st_internet,unavailable,,,Not collected.,,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,unavailable,,,Not collected.,,
+st_messaging_we,unavailable,,,Not collected.,,
+st_messaging,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,unavailable,,,Not collected.,,
+acc_academachment_lettergrades,unavailable,,,Not collected; cohort aged 5.,,
+acc_academachment_stdtest,unavailable,,,Not collected; cohort aged 5.,,
+acc_schoolengage_caresschool,unavailable,,,Not collected; cohort aged 5.,,
+acc_schoolengage_homework,unavailable,,,Not collected; cohort aged 5.,,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,unavailable,,,Not collected.,,
+acc_literacy_stdtest,unavailable,,,Not collected.,,
+beh_hyper_basc2,compatible,bhyper_gqt,bhyper_gqt,"BASC-2 PRS-P Hyperactivity raw score (bhyper_gqt), parent report at age 5; 11 items 0-3 (range 0-33), observed 0-28. Study sum of answered items; 4 children answered 10 of 11.",,
+beh_atten_basc2,compatible,battprob_gqt,battprob_gqt,"BASC-2 PRS-P Attention Problems raw score (battprob_gqt), parent report at age 5; 6 items 0-3 (range 0-18), positively worded items stored reversed, observed 0-15. Study sum of answered items; 4 children answered 5 of 6.",,
+beh_atten_self,unavailable,,,No child self-report at age 5.,,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_selfreg_htks,compatible,htksraw_cst,htksraw_cst,"Head-Toes-Knees-Shoulders direct assessment at age 5, study raw total (htksraw_cst); items 0-2, observed 0-60, consistent with the 30-item three-part version; 475 of 551 assessed.",,
+beh_bullied,unavailable,,,Not collected.,,
+beh_beenbullied,incompatible,basc024_gqt,,"Parent-rated BASC-2 'complains about being teased' rates complaints, not victimisation.",,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,incompatible,basc068_gqt,,"Parent-rated BASC-2 'hits other children' rates hitting, not fighting.",,
+beh_truancy,unavailable,,,Not collected; cohort aged 5.,,
+beh_stealing,unavailable,,,Not collected.,,
+beh_vandalism,unavailable,,,Not collected.,,
+beh_alcohol_self,unavailable,,,Not collected.,,
+beh_tobacco_self,unavailable,,,Not collected.,,
+beh_cannabis_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ not administered; see beh_hyper_basc2.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_agg_self,unavailable,,,No child self-report at age 5.,,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_argues,incompatible,basc021_gqt,,"BASC-2 'argues when denied own way' rates a triggered behaviour, not arguing too much.",,
+beh_persistence_finishwork,unavailable,,,Not collected.,,
+beh_emotreg_stayscalm,incompatible,basc085_gqt,,"Nearest is BASC-2 'is easily soothed when angry': recovery, not staying calm.",,
+beh_peerprob_makefriends,proximate,basc009_gqt,"recode_values(basc009_gqt, 0 ~ ""No difficulty"", 1 ~ ""A little difficulty"", c(2, 3) ~ ""A lot of difficulty"")","BASC-2 'has trouble making new friends' (never/sometimes/often/always); often/always = a lot of difficulty. Frequency, not degree; no same-age comparison. Its item label rests on the same unchecked BASC-2 item key as cog_execfunc_basc2 and wb_resil_basc2.",,
+beh_conduct_diagnosed,incompatible,behavyn_gqt,,"Ever assessed/treated for behavioural problems; not a diagnosis, no current/previous split.",,
+beh_conduct_diagnosed_severity,unavailable,,,No severity item.,,
+beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ not administered.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_self,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered; see beh_atten_basc2.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,partial,"basc005_gqt, basc021_gqt, basc033_gqt, basc045_gqt, basc055_gqt, basc061_gqt, basc068_gqt, basc072_gqt, basc090_gqt, basc100_gqt, basc103_gqt, basc113_gqt, basc117_gqt","basc005_gqt +
+  basc021_gqt +
+  basc033_gqt +
+  basc045_gqt +
+  basc055_gqt +
+  basc061_gqt +
+  basc068_gqt +
+  basc072_gqt +
+  basc090_gqt +
+  basc100_gqt +
+  (3 - basc103_gqt) +
+  (3 - basc113_gqt) +
+  basc117_gqt","BASC-2 PRS-P Executive Functioning raw total, not the T-score (higher = more problems), parent report at age 5; 13 items 0-3 (range 0-39), complete-case, observed 0-32. Rescored from items because the study total bexecfun_gqt used basc032_gqt (labels of 32 and 33 swapped, per the study dictionary) and left basc103_gqt and basc113_gqt unreversed; the rescore reproduces the published alpha of 0.79. Item key not checked against the PRS-P manual; check before analysis.",,
+cog_langexec_nepsy,compatible,compscal_cst,compscal_cst,"NEPSY-II Comprehension of Instructions scaled score (mean 10, SD 3), age 5; raw and percentile forms not used.",,
+cog_phono_nepsy,compatible,phonscal_cst,phonscal_cst,"NEPSY-II Phonological Processing scaled score, age 5; raw and percentile forms not used.",,
+cog_inhibcont_nepsy,compatible,statscal_cst,statscal_cst,"NEPSY-II Statue scaled score (inhibition and motor persistence), age 5; observed 1-14; raw and percentile forms not used.",,
+cog_vismotor_nepsy,compatible,vmtscal_cst,vmtscal_cst,"NEPSY-II Visuomotor Precision scaled score, age 5; labelled 'scaled score visuomotor precision time', taken as the combined time-and-errors scaled score, the one scaled score the subtest yields (not checked against the manual). Time percentile and error scores not used.",,
+cog_verbalfluency_nepsy,compatible,wordscal_cst,wordscal_cst,"NEPSY-II Word Generation scaled score, age 5 (semantic condition; initial letters are not given before age 7); raw and percentile forms not used.",,
+cog_inhib_nihtb_flanker,unavailable,,,NIH Toolbox not administered.,,
+cog_flex_nihtb_dccs,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox not administered.,,
+cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox not administered.,,
+cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox not administered.,,
+cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox not administered.,,
+cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_digitspan,unavailable,,,Digit span not administered.,,
+cog_iq_fullscale,incompatible,"compscal_cst, phonscal_cst, statscal_cst, vmtscal_cst, wordscal_cst",,"Five NEPSY-II subtests only, no full-scale battery: Comprehension of Instructions, Phonological Processing, Statue, Visuomotor Precision and Word Generation (see the cog_*_nepsy rows).",,
+cog_vocab_bpvs,unavailable,,,BPVS not administered.,,
+cog_vocab_ppvt,unavailable,,,PPVT not administered.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered; see cog_execfunc_basc2.,,
+cog_vocab_bas_naming,unavailable,,,BAS II not administered.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,BAS II not administered.,,
+cog_spatial_bas_pattern,unavailable,,,BAS II not administered.,,
+cog_verbalreason_bas_versim,unavailable,,,BAS II not administered.,,
+cog_schoolread_bracken,unavailable,,,Bracken not administered.,,
+cog_creativethinking_stdtest,unavailable,,,Not collected.,,
+mh_anx_basc2,compatible,banxiety_gqt,banxiety_gqt,"BASC-2 PRS-P Anxiety raw score (banxiety_gqt), parent report at age 5; 13 items 0-3 (range 0-39), observed 0-26. Study sum of answered items (1 child with 12 of 13; a child with 9 of 13 is NA); threshold not documented.",,
+mh_dep_basc2,compatible,bdepress_gqt,bdepress_gqt,"BASC-2 PRS-P Depression raw score (bdepress_gqt), parent report at age 5; 11 items 0-3 (range 0-33), observed 0-23. Study sum of answered items (7 children with 10 of 11); threshold not documented.",,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_anx_diagnosed,incompatible,"behavyn_gqt, behavty_gqt",,Only free text after 'ever assessed/treated for behavioural problems'; no anxiety diagnosis item.,,
+mh_anx_diagnosed_severity,unavailable,,,No severity item.,,
+mh_dep_diagnosed,incompatible,"behavyn_gqt, behavty_gqt",,Only ever assessed or treated for behavioural problems (free text); no diagnosis item.,,
+mh_dep_diagnosed_severity,unavailable,,,No severity item.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ not administered.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_int_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_int_sdq_self,unavailable,,,SDQ not administered.,,
+mh_int_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered; see mh_dep_basc2.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered.,,
+mh_distress_k6_self,unavailable,,,K6 not administered.,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_anx_masc_self,unavailable,,,MASC not administered.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered; see mh_anx_basc2.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered; see mh_anx_basc2.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,incompatible,basc044_gqt,,Parent-rated BASC-2 'is sad' frequency item only; no self-report screen.,,
+mh_dep_self,unavailable,,,No child self-report at age 5.,,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,unavailable,,,No child self-report at age 5.,,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_depanx_diagnosed,incompatible,"behavyn_gqt, behavty_gqt",,Only ever assessed or treated for behavioural problems (free text); no diagnosis item.,,
+mh_stress_self,unavailable,,,Not collected.,,
+mh_lonely_self,unavailable,,,Not collected.,,
+mh_lonely_scale_self,unavailable,,,Not collected.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,incompatible,basc044_gqt,,Parent-rated BASC-2 'is sad' only; no self-report item.,,
+mh_worry_self,incompatible,basc076_gqt,,Parent-rated BASC-2 'worries' only; no self-report item.,,
+mh_irritable_self,incompatible,basc118_gqt,,Parent-rated BASC-2 'is easily annoyed by others' only; no self-report item.,,
+mh_nobodycares_self,incompatible,basc016_gqt,,Parent-rated BASC-2 'says nobody likes me' only; no self-report item.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,unavailable,,,Not collected.,,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,compatible,bemotsc_gqt,bemotsc_gqt,"BASC-2 PRS-P Emotional Self-Control raw score (bemotsc_gqt), parent report at age 5; 8 items 0-3 (range 0-24), observed 0-23; higher = poorer self-control. Study sum of answered items; 4 children answered 7 of 8.",,
+wb_mwb_wemwbs,unavailable,,,Not collected; cohort aged 5.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Not collected; cohort aged 5.,,
+wb_resil_basc2,partial,"basc009_gqt, basc029_gqt, basc042_gqt, basc048_gqt, basc054_gqt, basc085_gqt, basc097_gqt, basc100_gqt, basc113_gqt, basc117_gqt, basc118_gqt, basc128_gqt","basc029_gqt +
+  basc085_gqt +
+  basc097_gqt +
+  basc113_gqt +
+  (3 - basc009_gqt) +
+  (3 - basc042_gqt) +
+  (3 - basc048_gqt) +
+  (3 - basc054_gqt) +
+  (3 - basc100_gqt) +
+  (3 - basc117_gqt) +
+  (3 - basc118_gqt) +
+  (3 - basc128_gqt)","BASC-2 PRS-P Resiliency raw total, parent report at age 5; 12 items 0-3 (range 0-36), complete-case, observed 8-36; higher = more resilient. Rescored from items because the study total bresili_gqt added 8 problem-keyed items unreversed; reversing them reproduces the published alpha of 0.82. Partial: item key not checked against the PRS-P manual; check before analysis.",,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered.,,
+wb_bodyimage,unavailable,,,Not collected; cohort aged 5.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
+wb_lifesat_swls_self,unavailable,,,Not collected.,,
+wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_happiness_singleitem_self,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,unavailable,,,Not collected.,,
+wb_domainsat_friends_self,unavailable,,,Not collected.,,
+wb_domainsat_school_self,unavailable,,,Not collected.,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered.,,
+wb_selfesteem_self,unavailable,,,Not collected.,,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,Not collected.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,unavailable,,,Not collected.,,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,unavailable,,,Not collected.,,
+wb_socsupport_friends_self,unavailable,,,Not collected.,,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,compatible,"hbsonwdc_gqt, hbsofwdc_gqt","as.numeric(difftime(hbsofwdc_gqt, hbsonwdc_gqt, units = ""hours"")) %% 24","Parent report at age 5: usual weekday wake time (hbsofwdc_gqt) minus usual weekday fall-asleep time (hbsonwdc_gqt), in hours across midnight; observed 9.0-13.2.",,
+hlth_sleep_we,compatible,"hbsonwec_gqt, hbsofwec_gqt","as.numeric(difftime(hbsofwec_gqt, hbsonwec_gqt, units = ""hours"")) %% 24","Parent report at age 5: usual weekend wake time (hbsofwec_gqt) minus usual weekend fall-asleep time (hbsonwec_gqt), in hours across midnight; observed 8.8-16.3 (one fall-asleep time of 15:40 kept).",,
+hlth_sleep,compatible,"hbsonwdc_gqt, hbsofwdc_gqt, hbsonwec_gqt, hbsofwec_gqt","{
+  wd <- as.numeric(difftime(hbsofwdc_gqt, hbsonwdc_gqt, units = ""hours"")) %% 24
+  we <- as.numeric(difftime(hbsofwec_gqt, hbsonwec_gqt, units = ""hours"")) %% 24
+  (5 * wd + 2 * we) / 7
+}",5:2 weighted mean of hlth_sleep_wd and hlth_sleep_we (parent-reported fall-asleep and wake times).,,
+hlth_sleepprob,compatible,"dslhour_gqt, dsllong_gqt, dslrelu_gqt, dsldiff_gqt, dslanx_gqt, dsljerk_gqt, dslrep_gqt, dslvivi_gqt, dslswef_gqt, dslwake_gqt, dslback_gqt, dsllegs_gqt, dslbrea_gqt, dslgasp_gqt, dslsnor_gqt, dslswen_gqt, dslwalk_gqt, dsltalk_gqt, dslgrinf_gqt, dslconf_gqt, dslnmar_gqt, dsldwak_gqt, dsltire_gqt, dslmove_gqt, dsldays_gqt, dslinap_gqt","(6 - dslhour_gqt) +
+  dsllong_gqt +
+  dslrelu_gqt +
+  dsldiff_gqt +
+  dslanx_gqt +
+  dsljerk_gqt +
+  dslrep_gqt +
+  dslvivi_gqt +
+  dslswef_gqt +
+  dslwake_gqt +
+  dslback_gqt +
+  dsllegs_gqt +
+  dslbrea_gqt +
+  dslgasp_gqt +
+  dslsnor_gqt +
+  dslswen_gqt +
+  dslwalk_gqt +
+  dsltalk_gqt +
+  dslgrinf_gqt +
+  dslconf_gqt +
+  dslnmar_gqt +
+  dsldwak_gqt +
+  dsltire_gqt +
+  dslmove_gqt +
+  dsldays_gqt +
+  dslinap_gqt","Sleep Disturbance Scale for Children total, parent report at age 5: 26 items 1-5 (range 26-130), complete-case, observed 26-60. Item 1 (hours of sleep, stored 5 = 9-11 hours) reversed to the published key (1 = 9-11 hours).",,
+hlth_sleepprob_measure,inferred,,"""SDSC (parent report), 26 of 26 items, 1-5 item scoring (range 26-130), sum""","Describes hlth_sleepprob; the SDSC was fielded once, in the age-5 home questionnaire.",,

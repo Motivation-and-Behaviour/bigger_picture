@@ -5,8 +5,8 @@
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble, one row per adolescent (single cross-sectional carer/adolescent
-#'   survey file; the study has no waves)
+#' - one tibble, one row per adolescent (single carer/adolescent survey file,
+#'   no waves)
 tidy_BPIPD_677 <- function(raw_dataset, spec) {
   tibble::as_tibble(raw_dataset$data$data_vvg_rsos)
 }

@@ -1,30 +1,112 @@
-target_variable,status,source_columns,expression,notes,lookup_table
-participant_id,compatible,pid,as.character(pid),"CFPS person ID, stable across waves.",
-wave,compatible,wave,wave,CFPS survey year. 2012 is absent because no screen-use item was fielded that year.,
-data_year,compatible,wave,as.numeric(wave),CFPS waves are named by their fieldwork year.,
-rct_arm,unavailable,,,"Observational panel, not a trial.",
-age_years,compatible,age_reported,as.numeric(age_reported),CFPS cleaned age at interview.,
-sex,compatible,sex,"recode_values(as.numeric(sex), 1 ~ ""Male"", 0 ~ ""Female"", default = ""Unknown"")",Family roster item tb2.,
-country,inferred,,"""China""",CFPS samples 25 mainland provinces and municipalities.,
-state,unavailable,,,Not an Australian dataset.,
-ethnicity,inferred,,"""Asian""",Constant from the study population. The schema's categories cannot express within-China ethnicity; see minority.,
-indigenous,unavailable,,,China operates no indigenous classification; ethnic nationality is a different construct and is mapped under minority.,
-minority,compatible,"ethnicity_code, pid","local({
-  code <- stats::ave(as.numeric(ethnicity_code), pid, FUN = function(x) if (all(is.na(x))) x else x[!is.na(x)][1])
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,pid,as.character(pid),"CFPS person ID, stable across waves.",,
+wave,compatible,wave,wave,CFPS survey year. 2012 omitted (no screen-use item).,,
+data_year,compatible,"interview_year_self, interview_year_parent, wave, tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, learning_online_day_mins_self, internet_any_self, internet_mobile_user, internet_pc_user, learning_online_user_self","local({
+  self <- rowSums(
+    !is.na(cbind(
+      tv_wd_hours_self,
+      tv_we_hours_self,
+      tv_week_hours_self,
+      internet_wd_hours_self,
+      internet_we_hours_self,
+      internet_day_hours_self,
+      internet_week_hours_self,
+      internet_mobile_day_mins_self,
+      internet_pc_day_mins_self,
+      learning_online_day_mins_self,
+      internet_any_self,
+      internet_mobile_user,
+      internet_pc_user,
+      learning_online_user_self
+    ))
+  ) >
+    0
+  year <- if_else(
+    self,
+    coalesce(as.numeric(interview_year_self), as.numeric(interview_year_parent)),
+    coalesce(as.numeric(interview_year_parent), as.numeric(interview_year_self))
+  )
+  coalesce(year, as.numeric(wave))
+})","Interview year of the questionnaire that supplied the row's screen items (self-report, else proxy), so 2011, 2015, 2017 and 2019 hold spill-over interviews; missing dates take the survey year.",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,compatible,weight_cross,as.numeric(weight_cross),"CFPS cross-sectional individual weight as released: 2010 national-sample weight (rswt_nat), 2014-2016 rswt_natcs, 2018-2022 the standardised rswt_natcs*n (mean about 1); NA for respondents without a weight.",,
+survey_strata,compatible,subpopulation,"if_else(is.na(subpopulation), NA_character_, as.character(as.numeric(subpopulation)))","Sampling subpopulation (Shanghai, Liaoning, Henan, Gansu, Guangdong oversamples and the other provinces), the design's six independent sampling frames; 2014 releases the 2010 assignment. Fixed at sampling, not wave-prefixed.",,
+survey_cluster,compatible,"psu, pid, wave","local({
+  unit <- carry_within(as.numeric(psu), pid, as.numeric(wave))
+  if_else(is.na(unit), NA_character_, as.character(unit))
+})","CFPS primary sampling unit (county-level, fixed by the original sample). 2014 and 2016 do not release it, so they take the participant's value from another wave. Fixed at sampling, not wave-prefixed.",,
+age_years,compatible,"interview_year_self, interview_month_self, interview_year_parent, interview_month_parent, birth_year, birth_month, age_reported, tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, learning_online_day_mins_self, internet_any_self, internet_mobile_user, internet_pc_user, learning_online_user_self","local({
+  self <- rowSums(
+    !is.na(cbind(
+      tv_wd_hours_self,
+      tv_we_hours_self,
+      tv_week_hours_self,
+      internet_wd_hours_self,
+      internet_we_hours_self,
+      internet_day_hours_self,
+      internet_week_hours_self,
+      internet_mobile_day_mins_self,
+      internet_pc_day_mins_self,
+      learning_online_day_mins_self,
+      internet_any_self,
+      internet_mobile_user,
+      internet_pc_user,
+      learning_online_user_self
+    ))
+  ) >
+    0
+  year <- if_else(
+    self,
+    coalesce(as.numeric(interview_year_self), as.numeric(interview_year_parent)),
+    coalesce(as.numeric(interview_year_parent), as.numeric(interview_year_self))
+  )
+  month <- if_else(
+    self,
+    coalesce(as.numeric(interview_month_self), as.numeric(interview_month_parent)),
+    coalesce(as.numeric(interview_month_parent), as.numeric(interview_month_self))
+  )
+  interview <- year + (if_else(month %in% 1:12, month, NA_real_) - 0.5) / 12
+  born_month <- if_else(as.numeric(birth_month) %in% 1:12, as.numeric(birth_month), NA_real_)
+  derived <- coalesce(
+    interview - (as.numeric(birth_year) + (born_month - 0.5) / 12),
+    interview - (as.numeric(birth_year) + 0.5)
+  )
+  reported <- as.numeric(age_reported)
+  if_else(!is.na(derived) & derived >= 0 & abs(derived - reported) < 2, derived, reported)
+})","Decimal age from the screen questionnaire's interview year and month and the roster birth year and month (mid-month; mid-year if no month). CFPS cleaned age (survey year minus birth year) where the roster birth year is missing, gives a negative age or is 2+ years off it (about 90 rows).",,
+sex,compatible,"sex, pid","coalesce(modal_within(recode_values(as.numeric(sex), 1 ~ ""Male"", 0 ~ ""Female""), pid), ""Unknown"")",Family roster sex (tb2). Each participant's modal value across waves; ties (participants recorded with both sexes equally often) are Unknown.,,
+country,inferred,,"""China""",CFPS samples 25 mainland provinces and municipalities.,,
+state,unavailable,,,Not an Australian dataset.,,
+ethnicity,incompatible,ethnicity_code,,minzu is China's ethnic-nationality classification and nearly all groups would map to Asian; it is used for minority.,,
+indigenous,unavailable,,,Not collected.,,
+minority,compatible,"ethnicity_code, pid, wave","local({
+  code <- carry_within(as.numeric(ethnicity_code), pid, as.numeric(wave))
   case_when(is.na(code) ~ ""Unknown"", code == 1 ~ ""Non-minority"", .default = ""Minority"")
-})","Minzu (ethnic nationality), GB code 1 = Han. The other 55 recognised nationalities are China's official minorities. Ethnicity is asked each wave and is missing in some of them, so the earliest code observed for a person is carried forward.",
-immigrant_background,in_progress,,,,
-ses_area,unavailable,,,"No area-level deprivation measure. Province, county and the urban flag are carried but none is a socioeconomic index.",
-ses_household,partial,"household_income_pc, wave","recode_values(
-  stats::ave(household_income_pc, wave, FUN = function(x) {
-    findInterval(x, stats::quantile(x, c(1 / 3, 2 / 3), na.rm = TRUE)) + 1
-  }),
-  1 ~ ""Low"",
-  2 ~ ""Medium"",
-  3 ~ ""High"",
-  default = ""Unknown""
-)","Net household income per capita cut at within-wave tertiles, because nominal incomes rose steeply across the panel and pooled cut points would confound period with position. Relative rather than absolute.",
-ses_household_measure,inferred,,"""Net annual household income per capita (within-wave tertiles)""",Records the source measure behind ses_household.,
+})","Minzu (ethnic nationality, GB code): 1 = Han (Non-minority), the other 55 = Minority. Waves without a code take the earliest observed code.",,
+immigrant_background,incompatible,birth_province,,"Participant birthplace only (province, 2010); parents' birthplace is in their own adult records and is not linked.",,
+born_in_country,proximate,"birth_province, birth_address_2014, birth_address, pid, wave","local({
+  a14 <- as.numeric(birth_address_2014)
+  a18 <- as.numeric(birth_address)
+  born <- case_when(
+    !is.na(birth_province) ~ ""Yes"",
+    a14 %in% 1:5 | a18 %in% 0:6 ~ ""Yes"",
+    a14 == 6 | a18 == 7 ~ ""No"",
+    .default = NA_character_
+  )
+  coalesce(carry_within(born, pid, as.numeric(wave)), ""Unknown"")
+})","Birth province (2010) and family address at birth (2014-2022, asked of new respondents), carried within participant. 'Outside mainland China' pools Hong Kong, Macau and Taiwan with abroad and maps to No; invalid codes (online store, no fixed workplace) are Unknown.",,
+ses_area,unavailable,,,Not collected.,,
+ses_household,compatible,"household_income_pc, wave","local({
+  low <- stats::ave(household_income_pc, wave, FUN = function(x) stats::quantile(x, 0.4, na.rm = TRUE))
+  high <- stats::ave(household_income_pc, wave, FUN = function(x) stats::quantile(x, 0.6, na.rm = TRUE))
+  case_when(
+    is.na(household_income_pc) ~ ""Unknown"",
+    household_income_pc <= low ~ ""Low"",
+    household_income_pc <= high ~ ""Medium"",
+    .default = ""High""
+  )
+})","Net annual household income per capita, cut 40/20/40 within wave (household SES cuts); 40/20/40 in every wave.",,
+ses_household_measure,inferred,,"""Income: net household income per capita""",See ses_household.,,
 ses_hukou,compatible,hukou,"recode_values(
   as.numeric(hukou),
   1 ~ ""Agricultural"",
@@ -32,7 +114,7 @@ ses_hukou,compatible,hukou,"recode_values(
   7 ~ ""Residence"",
   5 ~ ""None"",
   default = ""Unknown""
-)",Household registration type from the family roster. Non-Chinese nationality falls to Unknown.,
+)","Household registration type: 2010 from the child and adult questionnaires, 2014-2022 from the family roster. Non-Chinese nationality falls to Unknown.",,
 maternal_education,compatible,education_mother,"lookup_values(
   recode_values(
     as.numeric(education_mother),
@@ -49,313 +131,563 @@ maternal_education,compatible,education_mother,"lookup_values(
   lookup_maternal_education,
   dataset_id = spec$dataset_id,
   target_variable = ""maternal_education""
-)",Family roster item tb4 for the mother. Codes 0 and 9 are non-responses and fall to Unknown.,maternal_education
-paternal_education,compatible,education_father,"recode_values(
-  as.numeric(education_father),
-  c(1, 2, 3, 4) ~ ""Secondary school or less"",
-  5 ~ ""Post-secondary"",
-  c(6, 7, 8) ~ ""Bachelor degree or higher"",
-  default = ""Unknown""
-)","Family roster item tb4 for the father, collapsed with the same vocabulary as the shared maternal_education lookup.",
-parental_education,compatible,"education_father, education_mother","recode_values(
-  pmax(
-    ifelse(as.numeric(education_father) %in% 1:8, as.numeric(education_father), NA),
-    ifelse(as.numeric(education_mother) %in% 1:8, as.numeric(education_mother), NA),
-    na.rm = TRUE
+)",Family roster item tb4 for the mother. Codes 0 and 9 are non-responses and fall to Unknown.,maternal_education,
+paternal_education,compatible,education_father,"lookup_values(
+  recode_values(
+    as.numeric(education_father),
+    1 ~ ""Illiterate/Semi-literate"",
+    2 ~ ""Primary school"",
+    3 ~ ""Junior high school"",
+    4 ~ ""Senior high school"",
+    5 ~ ""3-year college"",
+    6 ~ ""4-year college"",
+    7 ~ ""Masters degree"",
+    8 ~ ""Doctoral degree"",
+    default = ""Unknown""
   ),
-  c(1, 2, 3, 4) ~ ""Secondary school or less"",
-  5 ~ ""Post-secondary"",
-  c(6, 7, 8) ~ ""Bachelor degree or higher"",
-  default = ""Unknown""
-)",Higher of the two parents. Codes 1-8 are ordered by level; non-responses are dropped first so one missing parent cannot outrank a real qualification.,
-urbanicity,compatible,urban,"recode_values(as.numeric(urban), 1 ~ ""Urban"", 0 ~ ""Rural"", default = ""Unknown"")",NBS urban/rural classification of the community. CFPS draws no suburban distinction.,
-family_structure,partial,"father_resident, mother_resident","case_when(
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education""
+)","Family roster item tb4 for the father, through the shared education lookup. Codes 0 and 9 are non-responses and fall to Unknown.",maternal_education,
+parental_education,compatible,"education_father, education_mother","lookup_values(
+  recode_values(
+    pmax(
+      if_else(as.numeric(education_father) %in% 1:8, as.numeric(education_father), NA_real_),
+      if_else(as.numeric(education_mother) %in% 1:8, as.numeric(education_mother), NA_real_),
+      na.rm = TRUE
+    ),
+    1 ~ ""Illiterate/Semi-literate"",
+    2 ~ ""Primary school"",
+    3 ~ ""Junior high school"",
+    4 ~ ""Senior high school"",
+    5 ~ ""3-year college"",
+    6 ~ ""4-year college"",
+    7 ~ ""Masters degree"",
+    8 ~ ""Doctoral degree"",
+    default = ""Unknown""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education""
+)","Higher of the two parents' roster codes (1-8, ordered by level; non-response codes dropped first), through the shared education lookup.",maternal_education,
+urbanicity,proximate,urban,"recode_values(as.numeric(urban), 1 ~ ""Urban"", 0 ~ ""Rural"", default = ""Unknown"")",NBS urban/rural classification of the community (binary); Suburban is never emitted.,,
+family_structure,proximate,"father_resident, mother_resident","case_when(
   as.numeric(father_resident) == 1 & as.numeric(mother_resident) == 1 ~ ""Two biological/adoptive parents"",
   as.numeric(father_resident) == 1 | as.numeric(mother_resident) == 1 ~ ""Single parent"",
   as.numeric(father_resident) == 0 & as.numeric(mother_resident) == 0 ~ ""Other"",
   .default = ""Unknown""
-)","Co-residence of the roster's biological parents. CFPS does not flag step-parents, so step families are indistinguishable from two-parent households.",
+)","Co-residence of the roster father and mother, who may be step or foster parents, so step families fall into Two biological/adoptive parents (or Single parent when only the biological parent is recorded).",,
+fam_screenrules,partial,"tv_restrict_2010, tv_restrict, tv_restrict_2018","case_when(
+  as.numeric(tv_restrict_2010) %in%
+    1:4 |
+    as.numeric(tv_restrict) %in% 1:4 |
+    as.numeric(tv_restrict_2018) %in% 2:5 ~ ""TRUE"",
+  as.numeric(tv_restrict_2010) == 5 | as.numeric(tv_restrict) == 5 | as.numeric(tv_restrict_2018) == 1 ~ ""FALSE"",
+  .default = NA_character_
+)","2010-2020 only. Parent (proxy) report for school-age children: 'How often did you restrict or stop the child from watching TV?' (last year or semester); TRUE for any frequency above never. Partial: TV only, and a practice rather than a stated rule.",,
+fam_bedroomscreen,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
 school_grade,partial,"school_stage, school_stage_2010, school_grade","local({
   stage <- coalesce(as.numeric(school_stage), as.numeric(school_stage_2010) + 1)
   grade <- as.numeric(school_grade)
-  year <- case_when(
-    stage == 3 & grade %in% 1:6 ~ grade,
-    stage == 4 & grade %in% 1:3 ~ grade + 6,
-    stage == 5 & grade %in% 1:3 ~ grade + 9,
-    .default = NA_real_
-  )
-  if_else(is.na(year), NA_character_, paste0(""Grade "", year))
-})","CFPS records grade within the current stage, so the stage is needed to place it on a single ladder. The 2010 stage codes omit nursery and are shifted by one against later waves, so the tidier keeps them in school_stage_2010 and they are lifted by one here. Pre-school stages have no year level and stay missing.",
-st_measure_type,inferred,,"""Continuous""","CFPS screen items ask for an open-ended duration, not bands.",
-st_measure_name,inferred,,"""Custom""",Bespoke CFPS time-use and media items; not a named instrument.,
-st_responder,partial,"tv_wd_hours_self, tv_week_hours_self, tv_week_hours_parent","case_when(
-  !is.na(tv_wd_hours_self) | !is.na(tv_week_hours_self) ~ ""Self"",
-  !is.na(tv_week_hours_parent) ~ ""Parent or carer"",
-  .default = ""Unknown""
-)",Follows the source precedence used by st_watch. From 2018 a younger adolescent can hold both a proxy and a self report; self is preferred throughout. Rows can still mix responders across different st_ variables.,
-st_total_wd,partial,"tv_wd_hours_self, internet_wd_hours_self","sum_nonmissing(tv_wd_hours_self, internet_wd_hours_self)","2010 only. Reading of print media is excluded as non-screen. Watching video online could fall in either cell, so a small double count is possible.",
-st_total_we,partial,"tv_we_hours_self, internet_we_hours_self","sum_nonmissing(tv_we_hours_self, internet_we_hours_self)",2010 only. See st_total_wd.,
-st_total,partial,tv and internet source columns,"pmin(
-  sum_nonmissing(
-    coalesce(((tv_wd_hours_self * 5) + (tv_we_hours_self * 2)) / 7, tv_week_hours_self / 7, tv_week_hours_parent / 7),
-    pmin(
-      case_when(
-        as.numeric(internet_any) == 0 ~ 0,
-        as.numeric(internet_mobile_user) == 0 & as.numeric(internet_pc_user) == 0 ~ 0,
-        .default = coalesce(
-          ((internet_wd_hours_self * 5) + (internet_we_hours_self * 2)) / 7,
-          internet_day_hours_self,
-          internet_week_hours_self / 7,
-          sum_nonmissing(internet_mobile_day_mins_self, internet_pc_day_mins_self) / 60,
-          internet_day_mins_parent / 60
-        )
-      ),
-      24
-    )
-  ),
-  24
-)","Sum of the watching and internet components. TV and internet were asked as separate questions, so online video may be counted twice, and the two components can come from different responders. Capped at 24 hours.",
-st_watch_wd,partial,tv_wd_hours_self,tv_wd_hours_self,"2010 time-use grid. The item covers watching TV or video and listening to radio or music, so it over-counts screen use.",
-st_watch_we,partial,tv_we_hours_self,tv_we_hours_self,2010 time-use grid. Same radio and music contamination as st_watch_wd.,
-st_watch,partial,"tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, tv_week_hours_parent","coalesce(((tv_wd_hours_self * 5) + (tv_we_hours_self * 2)) / 7, tv_week_hours_self / 7, tv_week_hours_parent / 7)","Self-report preferred, parent proxy as fallback. 2010 uses the 5:2 weighted time-use grid; later waves divide a weekly TV and film total by 7. All sources record genuine zeros.",
-st_game_wd,unavailable,,,,
-st_game_we,unavailable,,,,
-st_game,unavailable,,,,
-st_game_comp_wd,unavailable,,,,
-st_game_comp_we,unavailable,,,,
-st_game_comp,unavailable,,,,
-st_game_console_wd,unavailable,,,,
-st_game_console_we,unavailable,,,,
-st_game_console,unavailable,,,,
-st_game_handheldconsole_wd,unavailable,,,,
-st_game_handheldconsole_we,unavailable,,,,
-st_game_handheldconsole,unavailable,,,,
-st_game_active_wd,unavailable,,,,
-st_game_active_we,unavailable,,,,
-st_game_active,unavailable,,,,
-st_game_phone_wd,unavailable,,,,
-st_game_phone_we,unavailable,,,,
-st_game_phone,unavailable,,,,
-st_game_tablet_wd,unavailable,,,,
-st_game_tablet_we,unavailable,,,,
-st_game_tablet,unavailable,,,,
-st_comp_nongaming_wd,unavailable,,,,
-st_comp_nongaming_we,unavailable,,,,
-st_comp_nongaming,unavailable,,,,
-st_comp_wd,unavailable,,,,
-st_comp_we,unavailable,,,,
-st_comp,unavailable,,,,
-st_tablet_wd,unavailable,,,,
-st_tablet_we,unavailable,,,,
-st_tablet,unavailable,,,,
-st_phone_wd,unavailable,,,,
-st_phone_we,unavailable,,,,
-st_phone,unavailable,,,,
-st_socmedia_wd,unavailable,,,,
-st_socmedia_we,unavailable,,,,
-st_socmedia,unavailable,,,,
-st_educational_wd,unavailable,,,,
-st_educational_we,unavailable,,,,
-st_educational,partial,"learning_online_user, learning_online_day_mins_self, learning_online_day_mins_parent","case_when(
-  as.numeric(learning_online_user) == 0 ~ 0,
-  .default = coalesce(learning_online_day_mins_self, learning_online_day_mins_parent) / 60
-)","2020 and 2022 only. Respondents who said they use no educational platform are set to zero rather than left missing; without that the measure would describe users alone. Covers formal online learning platforms, not homework done on a device.",
-st_work_wd,unavailable,,,,
-st_work_we,unavailable,,,,
-st_work,unavailable,,,,
-st_internet_wd,partial,internet_wd_hours_self,internet_wd_hours_self,"2010 time-use grid. The item asks about internet use for entertainment, so study and work use are excluded.",
-st_internet_we,partial,internet_we_hours_self,internet_we_hours_self,2010 time-use grid. Same entertainment-only restriction as st_internet_wd.,
-st_internet,partial,"internet_any, internet_mobile_user, internet_pc_user, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, internet_day_mins_parent","pmin(
   case_when(
-    as.numeric(internet_any) == 0 ~ 0,
-    as.numeric(internet_mobile_user) == 0 & as.numeric(internet_pc_user) == 0 ~ 0,
-    .default = coalesce(
-      ((internet_wd_hours_self * 5) + (internet_we_hours_self * 2)) / 7,
+    stage == 3 & grade %in% 1:6 ~ paste(""Primary"", grade),
+    stage == 4 & grade %in% 1:4 ~ paste(""Junior high"", grade),
+    stage == 4 & grade %in% 7:9 ~ paste(""Junior high"", grade - 6),
+    stage == 5 & grade %in% 1:3 ~ paste(""Senior high"", grade),
+    .default = NA_character_
+  )
+})","Grade within stage: Primary 1-6, Junior high 1-4 (year 4 in 5-4 systems), Senior high 1-3; junior-high codes 7-9 (1-9 numbering) become Junior high 1-3. 2010 stage codes are lifted by one to match later waves; other codes and pre-school stages are NA.",,
+st_measure_type,inferred,,"""Continuous""","CFPS screen items ask for an open-ended duration, not bands.",,
+st_measure_name,inferred,,"""Custom""",Bespoke CFPS time-use and media items; not a named instrument.,,
+st_responder,inferred,"tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, learning_online_day_mins_self, internet_any_self, internet_mobile_user, internet_pc_user, learning_online_user_self, tv_week_hours_parent, internet_day_mins_parent, learning_online_day_mins_parent, internet_any_parent, learning_online_user_parent","local({
+  self <- rowSums(
+    !is.na(cbind(
+      tv_wd_hours_self,
+      tv_we_hours_self,
+      tv_week_hours_self,
+      internet_wd_hours_self,
+      internet_we_hours_self,
       internet_day_hours_self,
-      internet_week_hours_self / 7,
-      sum_nonmissing(internet_mobile_day_mins_self, internet_pc_day_mins_self) / 60,
-      internet_day_mins_parent / 60
+      internet_week_hours_self,
+      internet_mobile_day_mins_self,
+      internet_pc_day_mins_self,
+      learning_online_day_mins_self,
+      internet_any_self,
+      internet_mobile_user,
+      internet_pc_user,
+      learning_online_user_self
+    ))
+  ) >
+    0
+  parent <- rowSums(
+    !is.na(cbind(
+      tv_week_hours_parent,
+      internet_day_mins_parent,
+      learning_online_day_mins_parent,
+      internet_any_parent,
+      learning_online_user_parent
+    ))
+  ) >
+    0
+  case_when(self ~ ""Self"", parent ~ ""Parent or carer"", .default = NA_character_)
+})","Deduced from the item series answered (proxy module to age 15; own module or questionnaire from age 10): Self for anyone who answered a self-report screen item or filter, whose proxy report goes to the parent block; otherwise Parent or carer.",,
+st_total_wd,incompatible,"tv_wd_hours_self, internet_wd_hours_self",,TV and internet items; not summed (DR-0002).,,
+st_total_we,incompatible,"tv_we_hours_self, internet_we_hours_self",,TV and internet items; not summed (DR-0002).,,
+st_total,incompatible,"tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, tv_week_hours_parent, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, internet_day_mins_parent",,TV and internet items; not summed (DR-0002).,,
+st_watch_wd,partial,tv_wd_hours_self,tv_wd_hours_self,"2010 time-use grid; item covers TV/video and radio/music, so it over-counts screen use.",,
+st_watch_we,partial,tv_we_hours_self,tv_we_hours_self,2010 time-use grid. See st_watch_wd.,,
+st_watch,partial,"tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, tv_week_hours_parent, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, learning_online_day_mins_self, internet_any_self, internet_mobile_user, internet_pc_user, learning_online_user_self","local({
+  self <- rowSums(
+    !is.na(cbind(
+      tv_wd_hours_self,
+      tv_we_hours_self,
+      tv_week_hours_self,
+      internet_wd_hours_self,
+      internet_we_hours_self,
+      internet_day_hours_self,
+      internet_week_hours_self,
+      internet_mobile_day_mins_self,
+      internet_pc_day_mins_self,
+      learning_online_day_mins_self,
+      internet_any_self,
+      internet_mobile_user,
+      internet_pc_user,
+      learning_online_user_self
+    ))
+  ) >
+    0
+  coalesce(
+    (tv_wd_hours_self * 5 + tv_we_hours_self * 2) / 7,
+    tv_week_hours_self / 7,
+    if_else(self, NA_real_, as.numeric(tv_week_hours_parent) / 7)
+  )
+})","Self: 2010 time-use grid (TV/video with radio/music), 5:2 mean; 2014-2022 weekly hours of TV, movies or videos / 7 (2014-2016 ages 16-19 only). Parent-only rows: proxy weekly hours of TV, movies or other videos / 7.",,
+st_game_wd,unavailable,,,No weekday/weekend split.,,
+st_game_we,unavailable,,,No weekday/weekend split.,,
+st_game,incompatible,"online_games_week, phone_games_freq",,Only yes/no online gaming in the past week (2020-2022) and phone-gaming frequency (2010); no duration.,,
+st_game_comp_wd,unavailable,,,No device split; see st_game.,,
+st_game_comp_we,unavailable,,,No device split; see st_game.,,
+st_game_comp,unavailable,,,No device split; see st_game.,,
+st_game_console_wd,unavailable,,,No device split; see st_game.,,
+st_game_console_we,unavailable,,,No device split; see st_game.,,
+st_game_console,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_wd,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_we,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole,unavailable,,,No device split; see st_game.,,
+st_game_active_wd,unavailable,,,No device split; see st_game.,,
+st_game_active_we,unavailable,,,No device split; see st_game.,,
+st_game_active,unavailable,,,No device split; see st_game.,,
+st_game_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_game_phone_we,unavailable,,,No weekday/weekend split.,,
+st_game_phone,incompatible,phone_games_freq,,Phone-gaming frequency only (2010); no duration.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_game.,,
+st_game_tablet_we,unavailable,,,No device split; see st_game.,,
+st_game_tablet,unavailable,,,No device split; see st_game.,,
+st_comp_nongaming_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming_we,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming,incompatible,internet_pc_day_mins_self,,Computer internet time can include games; mapped to st_comp.,,
+st_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_we,unavailable,,,No weekday/weekend split.,,
+st_comp,partial,"internet_pc_day_mins_self, internet_pc_user, wave","local({
+  asked <- as.logical(stats::ave(!is.na(internet_pc_day_mins_self), wave, FUN = any))
+  coalesce(as.numeric(internet_pc_day_mins_self) / 60, if_else(asked & as.numeric(internet_pc_user) == 0, 0, NA_real_))
+})",2020-2022 only. Self-reported daily minutes online on a computer / 60; 0 for non-users. Internet use on the device only.,,
+st_tablet_wd,unavailable,,,No weekday/weekend split.,,
+st_tablet_we,unavailable,,,No weekday/weekend split.,,
+st_tablet,incompatible,internet_mobile_day_mins_self,,Mobile-device internet time pools phones and tablets; mapped to st_phone.,,
+st_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_phone_we,unavailable,,,No weekday/weekend split.,,
+st_phone,partial,"internet_mobile_day_mins_self, internet_mobile_user, wave","local({
+  asked <- as.logical(stats::ave(!is.na(internet_mobile_day_mins_self), wave, FUN = any))
+  coalesce(
+    as.numeric(internet_mobile_day_mins_self) / 60,
+    if_else(asked & as.numeric(internet_mobile_user) == 0, 0, NA_real_)
+  )
+})",2020-2022 only. Self-reported daily minutes online on mobile devices / 60; 0 for non-users. Internet use on the device only; mobile devices include tablets.,,
+st_socmedia_wd,unavailable,,,No weekday/weekend split.,,
+st_socmedia_we,unavailable,,,No weekday/weekend split.,,
+st_socmedia,incompatible,socialise_freq,,"Frequency of using the internet to socialise (2014-2018), which bundles messaging. Frequency only; no duration.",,
+st_educational_wd,unavailable,,,No weekday/weekend split.,,
+st_educational_we,unavailable,,,No weekday/weekend split.,,
+st_educational,partial,"learning_online_user_self, learning_online_day_mins_self, internet_mobile_user, internet_pc_user, learning_online_user_parent, learning_online_day_mins_parent, internet_any_parent, tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, internet_any_self, wave","local({
+  self <- rowSums(
+    !is.na(cbind(
+      tv_wd_hours_self,
+      tv_we_hours_self,
+      tv_week_hours_self,
+      internet_wd_hours_self,
+      internet_we_hours_self,
+      internet_day_hours_self,
+      internet_week_hours_self,
+      internet_mobile_day_mins_self,
+      internet_pc_day_mins_self,
+      learning_online_day_mins_self,
+      internet_any_self,
+      internet_mobile_user,
+      internet_pc_user,
+      learning_online_user_self
+    ))
+  ) >
+    0
+  asked <- as.logical(stats::ave(!is.na(learning_online_user_self), wave, FUN = any))
+  self_value <- coalesce(
+    as.numeric(learning_online_day_mins_self) / 60,
+    if_else(
+      as.numeric(learning_online_user_self) == 0 |
+        (asked & as.numeric(internet_mobile_user) == 0 & as.numeric(internet_pc_user) == 0),
+      0,
+      NA_real_
     )
-  ),
-  24
-)","From 2014 the duration item is asked only of respondents who first said they use the internet, so non-users are set to zero from the filter question rather than left missing. 2010 uses the unconditional time-use grid. Item wording shifts across waves between entertainment use, leisure use and device-specific use.",
-st_videochat,unavailable,,,,
-st_messaging_wd,in_progress,,,,
-st_messaging_we,in_progress,,,,
-st_messaging,in_progress,,,,
-st_creating,in_progress,,,,
-st_email,unavailable,,,,
-st_shopping,unavailable,,,,
-st_total_school,unavailable,,,,
-st_educational_school,unavailable,,,,
-st_comp_school,unavailable,,,,
-st_tablet_school,unavailable,,,,
-st_internet_school,unavailable,,,,
-st_phone_school,unavailable,,,,
-acc_academachment_selfrated,unavailable,,,,
-acc_academachment_lettergrades,unavailable,,,,
-acc_academachment_stdtest,unavailable,,,,
-acc_schoolengage_caresschool,unavailable,,,,
-acc_schoolengage_homework,unavailable,,,,
-acc_academachment_numgrades,unavailable,,,,
-acc_academachment_teacherrated,unavailable,,,,
-acc_numeracy_stdtest,partial,math_test,as.numeric(math_test),"CFPS mathematics test, raw score. Same wave-specific forms as acc_literacy_stdtest.",
-acc_literacy_stdtest,partial,word_test,as.numeric(word_test),"CFPS word-recognition test, raw score. The test was re-fielded with wave-specific forms; only the 2010 and 2022 versions are stated to be comparable, so standardise within wave.",
-beh_hyper_basc2,unavailable,,,,
-beh_atten_basc2,unavailable,,,,
-beh_atten_self,unavailable,,,,
-beh_selfreg_htks,unavailable,,,,
-beh_bullied,unavailable,,,,
-beh_beenbullied,unavailable,,,,
-beh_beenbullied_online,unavailable,,,,
-beh_bullied_online,unavailable,,,,
-beh_fight,unavailable,,,,
-beh_truancy,in_progress,,,,
-beh_stealing,in_progress,,,,
-beh_vandalism,in_progress,,,,
-beh_conduct_sdq_parent,unavailable,,,,
-beh_hyper_sdq_parent,unavailable,,,,
-beh_peerprob_sdq_parent,unavailable,,,,
-beh_prosocial_sdq_parent,unavailable,,,,
-beh_aggphys_bpaq_self,unavailable,,,,
-beh_aggverb_bpaq_self,unavailable,,,,
-beh_agganger_bpaq_self,unavailable,,,,
-beh_agghostility_bpaq_self,unavailable,,,,
-beh_agg_self,unavailable,,,,
-beh_argues,unavailable,,,,
-beh_persistence_finishwork,unavailable,,,,
-beh_emotreg_stayscalm,unavailable,,,,
-beh_peerprob_makefriends,unavailable,,,,
-beh_conduct_diagnosed,unavailable,,,,
-beh_conduct_diagnosed_severity,unavailable,,,,
-beh_conduct_sdq_self,unavailable,,,,
-beh_hyper_sdq_self,unavailable,,,,
-beh_peerprob_sdq_self,unavailable,,,,
-beh_prosocial_sdq_self,unavailable,,,,
-beh_conduct_sdq_teacher,unavailable,,,,
-beh_hyper_sdq_teacher,unavailable,,,,
-beh_peerprob_sdq_teacher,unavailable,,,,
-beh_prosocial_sdq_teacher,unavailable,,,,
-beh_ext_sdq_parent,unavailable,,,,
-beh_ext_sdq_self,unavailable,,,,
-beh_ext_sdq_teacher,unavailable,,,,
-beh_agg_cbcl_parent,unavailable,,,,
-beh_atten_cbcl_parent,unavailable,,,,
-beh_rulebreak_cbcl_parent,unavailable,,,,
-beh_ext_cbcl_parent,unavailable,,,,
-beh_cbcl_measure,unavailable,,,,
-beh_prosocial_online_self,in_progress,,,,
-beh_prosocial_online_measure,in_progress,,,,
-cog_execfunc_basc2,unavailable,,,,
-cog_langexec_nepsy,unavailable,,,,
-cog_phono_nepsy,unavailable,,,,
-cog_inhibcont_nepsy,unavailable,,,,
-cog_vismotor_nepsy,unavailable,,,,
-cog_verbalfluency_nepsy,unavailable,,,,
-cog_inhib_nihtb_flanker,unavailable,,,,
-cog_flex_nihtb_dccs,unavailable,,,,
-cog_wm_nihtb_listsort,unavailable,,,,
-cog_speed_nihtb_pattern,unavailable,,,,
-cog_epimem_nihtb_picseq,unavailable,,,,
-cog_vocab_nihtb_picvocab,unavailable,,,,
-cog_fluidcomp_nihtb,unavailable,,,,
-cog_crystcomp_nihtb,unavailable,,,,
-cog_totalcomp_nihtb,unavailable,,,,
-cog_wm_digitspan,unavailable,,,,
-cog_iq_fullscale,unavailable,,,,
-cog_vocab_bpvs,unavailable,,,,
-cog_vocab_ppvt,unavailable,,,,
-cog_execfunc_brief_parent,unavailable,,,,
-cog_vocab_bas_naming,unavailable,,,,
-cog_nonverbalreason_bas_picsim,unavailable,,,,
-cog_spatial_bas_pattern,unavailable,,,,
-cog_verbalreason_bas_versim,unavailable,,,,
-cog_schoolread_bracken,unavailable,,,,
-cog_creativethinking_stdtest,in_progress,,,,
-mh_anx_basc2,unavailable,,,,
-mh_dep_basc2,unavailable,,,,
-mh_emotsymp_sdq_parent,unavailable,,,,
-mh_totaldiff_sdq_parent,unavailable,,,,
-mh_anx_diagnosed,unavailable,,,,
-mh_anx_diagnosed_severity,unavailable,,,,
-mh_dep_diagnosed,unavailable,,,,
-mh_dep_diagnosed_severity,unavailable,,,,
-mh_emotsymp_sdq_self,unavailable,,,,
-mh_emotsymp_sdq_teacher,unavailable,,,,
-mh_totaldiff_sdq_self,unavailable,,,,
-mh_totaldiff_sdq_teacher,unavailable,,,,
-mh_int_sdq_parent,unavailable,,,,
-mh_int_sdq_self,unavailable,,,,
-mh_int_sdq_teacher,unavailable,,,,
-mh_dep_smfq_self,unavailable,,,,
-mh_dep_smfq_parent,unavailable,,,,
-mh_dep_cdi_self,unavailable,,,,
-mh_dep_cesd_self,partial,cesd20,as.numeric(cesd20) - 20,"CFPS CES-D 20 composite, equipercentile-equated across waves and scored 1-4 per item. Subtracting the item count rebases it onto the schema's 0-3 per-item scoring.",
-mh_dep_phq9_self,unavailable,,,,
-mh_dep_rcads_self,unavailable,,,,
-mh_dep_dass21_self,unavailable,,,,
-mh_dep_scl_self,unavailable,,,,
-mh_distress_k6_self,unavailable,,,,
-mh_distress_k10_self,unavailable,,,,
-mh_anx_masc_self,unavailable,,,,
-mh_anx_scas_self,unavailable,,,,
-mh_anx_scas_parent,unavailable,,,,
-mh_anx_scared_self,unavailable,,,,
-mh_anx_scared_parent,unavailable,,,,
-mh_anx_gad7_self,unavailable,,,,
-mh_anx_rcads_self,unavailable,,,,
-mh_anx_dass21_self,unavailable,,,,
-mh_anxdep_cbcl_parent,unavailable,,,,
-mh_int_cbcl_parent,unavailable,,,,
-mh_dep_binary_self,unavailable,,,,
-mh_dep_self,compatible,cesd20,as.numeric(cesd20),Same score as mh_dep_cesd_self on its original CFPS metric.,
-mh_dep_measure,inferred,,"""CES-D 20, 20 items, 1-4 per item, CFPS equipercentile-equated composite""",Describes the metric behind mh_dep_self.,
-mh_anx_self,unavailable,,,,
-mh_anx_measure,unavailable,,,,
-mh_depanx_diagnosed,unavailable,,,,
-mh_stress_self,unavailable,,,,
-mh_lonely_self,proximate,lonely,"recode_values(as.numeric(lonely), 1 ~ ""Rarely"", 2 ~ ""Sometimes"", 3 ~ ""Often"", 4 ~ ""Always"", default = NA_character_)","CES-D loneliness item, recalled over the past week and asked in days. The four CFPS levels map onto four of the schema's five; Never is never emitted because the lowest CFPS option is 'almost never'. The schema declares no Unknown level, so non-responses stay missing.",
-mh_lonely_scale_self,in_progress,,,,
-mh_lonely_measure,in_progress,,,,
-mh_sad_self,in_progress,,,,
-mh_worry_self,in_progress,,,,
-mh_irritable_self,in_progress,,,,
-mh_nobodycares_self,in_progress,,,,
-mh_lifenotworth_self,in_progress,,,,
-mh_suicide_ideation_self,unavailable,,,,
-mh_suicide_attempt_self,unavailable,,,,
-mh_psychsom_hbscscl_self,in_progress,,,,
-mh_psychsom_measure,in_progress,,,,
-wb_emotsc_basc2,unavailable,,,,
-wb_mwb_wemwbs,unavailable,,,,
-wb_lifesatisfaction_cantrilladder,unavailable,,,,
-wb_resil_basc2,unavailable,,,,
-wb_psychcomplaints_feellow,unavailable,,,,
-wb_psychcomplaints_irritable,unavailable,,,,
-wb_psychcomplaints_nervous,unavailable,,,,
-wb_psychcomplaints_diffsleep,unavailable,,,,
-wb_bodyimage,unavailable,,,,
-wb_lifesat_slss_self,unavailable,,,,
-wb_lifesat_swls_self,unavailable,,,,
-wb_lifesat_singleitem_self,partial,happiness,as.numeric(happiness),"Single item asking how happy the respondent is, scored 0-10. Happiness is a narrower affective construct than life satisfaction.",
-wb_domainsat_schoolwork_self,in_progress,,,,
-wb_domainsat_appearance_self,in_progress,,,,
-wb_domainsat_family_self,in_progress,,,,
-wb_domainsat_friends_self,in_progress,,,,
-wb_domainsat_school_self,in_progress,,,,
-wb_qol_pedsql_self,unavailable,,,,
-wb_qol_pedsql_parent,unavailable,,,,
-wb_qol_kidscreen10_self,unavailable,,,,
-wb_qol_kidscreen10_parent,unavailable,,,,
-wb_selfesteem_rosenberg_self,unavailable,,,,
-wb_selfesteem_self,unavailable,,,,
-wb_selfesteem_measure,unavailable,,,,
-wb_selfefficacy_gse_self,unavailable,,,,
-wb_selfefficacy_self,unavailable,,,,
-wb_selfefficacy_measure,unavailable,,,,
-wb_mwb_who5_self,unavailable,,,,
-wb_happiness_shs_self,unavailable,,,,
-wb_mwb_swemwbs_self,unavailable,,,,
+  )
+  parent_value <- coalesce(
+    as.numeric(learning_online_day_mins_parent) / 60,
+    if_else(as.numeric(learning_online_user_parent) == 0 | as.numeric(internet_any_parent) == 0, 0, NA_real_)
+  )
+  if_else(self, self_value, parent_value)
+})","2020-2022 only. Daily minutes on educational online platforms (not school online classes) / 60: self-report 2022, proxy 2020-2022 on parent-only rows; 0 for non-users and children who do not go online. Platform learning only.",,
+st_work_wd,unavailable,,,No weekday/weekend split.,,
+st_work_we,unavailable,,,No weekday/weekend split.,,
+st_work,incompatible,internet_work_freq,,Only frequency of using the internet for work (2014-2018); no duration.,,
+st_internet_wd,partial,internet_wd_hours_self,internet_wd_hours_self,2010 time-use grid; entertainment use only.,,
+st_internet_we,partial,internet_we_hours_self,internet_we_hours_self,2010 time-use grid. See st_internet_wd.,,
+st_internet,partial,"tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, learning_online_day_mins_self, internet_any_self, internet_mobile_user, internet_pc_user, learning_online_user_self, tv_week_hours_parent, internet_day_mins_parent, learning_online_day_mins_parent, internet_any_parent, learning_online_user_parent","local({
+  self <- rowSums(
+    !is.na(cbind(
+      tv_wd_hours_self,
+      tv_we_hours_self,
+      tv_week_hours_self,
+      internet_wd_hours_self,
+      internet_we_hours_self,
+      internet_day_hours_self,
+      internet_week_hours_self,
+      internet_mobile_day_mins_self,
+      internet_pc_day_mins_self,
+      learning_online_day_mins_self,
+      internet_any_self,
+      internet_mobile_user,
+      internet_pc_user,
+      learning_online_user_self
+    ))
+  ) >
+    0
+  mobile <- coalesce(
+    as.numeric(internet_mobile_day_mins_self),
+    if_else(as.numeric(internet_mobile_user) == 0, 0, NA_real_)
+  )
+  pc <- coalesce(as.numeric(internet_pc_day_mins_self), if_else(as.numeric(internet_pc_user) == 0, 0, NA_real_))
+  self_value <- coalesce(
+    (internet_wd_hours_self * 5 + internet_we_hours_self * 2) / 7,
+    as.numeric(internet_day_hours_self),
+    internet_week_hours_self / 7,
+    (mobile + pc) / 60,
+    if_else(
+      as.numeric(internet_any_self) == 0 | (as.numeric(internet_mobile_user) == 0 & as.numeric(internet_pc_user) == 0),
+      0,
+      NA_real_
+    )
+  )
+  parent_value <- coalesce(
+    as.numeric(internet_day_mins_parent) / 60,
+    if_else(as.numeric(internet_any_parent) == 0, 0, NA_real_)
+  )
+  if_else(self, self_value, parent_value)
+})","Self: 2010 time-use grid (5:2 mean) or daily hours; 2014-2018 weekly hours online besides work/study / 7 (leisure only); 2020-2022 mobile + computer daily minutes / 60 (DR-0002). Parent-only rows (2020-2022): proxy daily minutes / 60. 0 where the responder's filter says no internet use, unless a duration is reported; 6 values above 24 h kept.",,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,unavailable,,,No weekday/weekend split.,,
+st_messaging_we,unavailable,,,No weekday/weekend split.,,
+st_messaging,incompatible,"socialise_freq, phone_messages_freq",,Only frequency of phone texting (2010) and of socialising online (2014-2018); no duration.,,
+st_creating,incompatible,wechat_moments_freq,,Only frequency of posting on WeChat Moments (2020-2022); no duration.,,
+st_email,incompatible,email_days_week,,Only days per week logging into email (2010-2018); no duration.,,
+st_shopping,incompatible,online_shopping_week,,Only yes/no online shopping in the past week (2020-2022); no duration.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,incompatible,internet_place,,"Only the main place of internet use (2010, 2014); no time at school.",,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,proximate,"class_rank, education_child","if_else(
+  as.numeric(education_child) %in% 4:8,
+  NA_character_,
+  recode_values(
+    as.numeric(class_rank),
+    1 ~ ""Very good"",
+    2 ~ ""Good"",
+    3 ~ ""Average"",
+    c(4, 5) ~ ""Below average"",
+    default = NA_character_
+  )
+)","2014-2022. Self-reported rank in class in the last mid-term or final exam: top 10%, 11-25%, 26-50%, 51-75%, bottom 24%, by the five-level collapse. Code 6 (rank not released) is NA; NA beyond senior high (education_child 4+).",,
+acc_academachment_lettergrades,incompatible,"grade_chinese_parent, grade_maths_parent",,"Only parent ratings of Chinese and maths grades (wf501/wf502, Excellent to Poor, meaning left to the parent), not marks.",,
+acc_academachment_stdtest,incompatible,"word_test, math_test",,"Only word and maths tests, mapped to acc_literacy_stdtest / acc_numeracy_stdtest.",,
+acc_schoolengage_caresschool,incompatible,study_hard,,Only agreement with 'I study hard' (effort item); no frequency of caring about school.,,
+acc_schoolengage_homework,incompatible,ext_homework,,"Only 'It's hard for me to finish homework' (2018, 2022, 1-5 applicability), a difficulty item.",,
+acc_schoolpressure_self,partial,"academic_pressure, education_child","if_else(
+  as.numeric(education_child) %in% 4:8,
+  NA_character_,
+  recode_values(
+    as.numeric(academic_pressure),
+    1 ~ ""Not at all"",
+    2 ~ ""A little"",
+    3 ~ ""Some"",
+    c(4, 5) ~ ""A lot"",
+    default = NA_character_
+  )
+)","'How much academic pressure do you put on yourself?', 1 no pressure to 5 lots of pressure, students, every wave; by rank with 4-5 as A lot. Self-imposed pressure rather than pressure from schoolwork. NA beyond senior high (education_child 4+).",,
+acc_schoolbelonging_self,incompatible,school_satisfaction,,"No belonging or connectedness scale; only 'Are you satisfied with your school?' (school_satisfaction), mapped to wb_domainsat_school_self.",,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,incompatible,"grade_chinese_parent, grade_maths_parent",,"Only parent ratings of Chinese and maths grades (wf501/wf502, Excellent to Poor, meaning left to the parent), not marks.",,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,partial,math_test,as.numeric(math_test),"CFPS mathematics test, raw score. Same wave-specific forms as acc_literacy_stdtest.",,
+acc_literacy_stdtest,partial,word_test,as.numeric(word_test),"CFPS word-recognition test, raw score. Re-fielded with wave-specific forms; only 2010 and 2022 are stated comparable, so standardise within wave.",,
+beh_hyper_basc2,unavailable,,,Not collected.,,
+beh_atten_basc2,unavailable,,,Not collected.,,
+beh_atten_self,incompatible,"ext_attention, ext_distracted, ext_homework",,Three attention items in the CFPS 2018/2022 six-item youth externalising set (ages 10-15; 2022 to 19); not a standalone attention scale.,,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_selfreg_htks,unavailable,,,Not collected.,,
+beh_bullied,unavailable,,,Not collected.,,
+beh_beenbullied,unavailable,,,Not collected.,,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,incompatible,ext_fight,,"Only 'I get in trouble for fighting with peers' (2018, 2022, 1-5 applicability rating); not an occurrence item.",,
+beh_truancy,compatible,"class_absence, class_cut, education_child","if_else(
+  as.numeric(education_child) %in% 4:8,
+  NA_character_,
+  coalesce(
+    recode_values(as.numeric(class_absence), c(3, 5) ~ ""TRUE"", c(1, 78) ~ ""FALSE""),
+    recode_values(as.numeric(class_cut), 1 ~ ""TRUE"", 0 ~ ""FALSE"")
+  )
+)","'In the most recent non-vacation month, did you cut a class?', students only; 2010 and 2014 ask leave and cutting in one item with separate codes, so leave alone is FALSE. NA beyond senior high (education_child 4+).",,
+beh_stealing,unavailable,,,Not collected.,,
+beh_vandalism,unavailable,,,Not collected.,,
+beh_alcohol_self,partial,"activity_1, activity_2, activity_3, activity_4, activity_5, activity_6, drank_12m","local({
+  acts <- sapply(list(activity_1, activity_2, activity_3, activity_4, activity_5, activity_6), as.numeric)
+  listed <- case_when(
+    rowSums(acts == 3, na.rm = TRUE) > 0 ~ ""TRUE"",
+    rowSums(!is.na(acts)) > 0 ~ ""FALSE"",
+    .default = NA_character_
+  )
+  coalesce(listed, recode_values(as.numeric(drank_12m), 1 ~ ""TRUE"", 5 ~ ""FALSE"", default = NA_character_))
+})","Ages 10-15, self-report. 2010 and 2014: 'Have you ever' drunk alcohol, from a list of activities (lifetime); 2016: drank alcohol in the past 12 months. The adult item (drinking 3+ times a week, past month) is not used.",,
+beh_tobacco_self,partial,"smoked_month, activity_1, activity_2, activity_3, activity_4, activity_5, activity_6, smoked_12m","local({
+  acts <- sapply(list(activity_1, activity_2, activity_3, activity_4, activity_5, activity_6), as.numeric)
+  listed <- case_when(
+    rowSums(acts == 4, na.rm = TRUE) > 0 ~ ""TRUE"",
+    rowSums(!is.na(acts)) > 0 ~ ""FALSE"",
+    .default = NA_character_
+  )
+  coalesce(
+    recode_values(as.numeric(smoked_month), 1 ~ ""TRUE"", c(0, 5) ~ ""FALSE"", default = NA_character_),
+    listed,
+    recode_values(as.numeric(smoked_12m), 1 ~ ""TRUE"", 5 ~ ""FALSE"", default = NA_character_)
+  )
+})","Self-report. Smoked cigarettes in the past month (ages 16-19 in 2010-2016, 10-19 in 2018-2022); ages 10-15: 'Have you ever' smoked, from a list of activities (2010, 2014; lifetime) and smoked in the past 12 months (2016).",,
+beh_cannabis_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,unavailable,,,Not collected.,,
+beh_hyper_sdq_parent,unavailable,,,Not collected.,,
+beh_peerprob_sdq_parent,unavailable,,,Not collected.,,
+beh_prosocial_sdq_parent,unavailable,,,Not collected.,,
+beh_aggphys_bpaq_self,unavailable,,,Not collected.,,
+beh_aggverb_bpaq_self,unavailable,,,Not collected.,,
+beh_agganger_bpaq_self,unavailable,,,Not collected.,,
+beh_agghostility_bpaq_self,unavailable,,,Not collected.,,
+beh_agg_self,incompatible,"ext_argue, ext_fight",,Quarrelling and fighting items in the CFPS 2018/2022 six-item youth externalising set; not an aggression scale.,,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_argues,incompatible,ext_argue,,"Only 'I usually quarrel with peers' (2018, 2022, 1-5 applicability rating); not a frequency item.",,
+beh_persistence_finishwork,incompatible,ext_homework,,"Only 'It's hard for me to finish homework' (2018, 2022, 1-5 applicability rating), a difficulty item.",,
+beh_emotreg_stayscalm,incompatible,int_angry_study,,"Only 'I feel angry when I have difficulty in study' (2018, 2022, 1-5 applicability rating), a problem-worded item.",,
+beh_peerprob_makefriends,incompatible,good_friends_n,,Only the number of good friends (2010); friend counts do not map.,,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,unavailable,,,Not collected.,,
+beh_hyper_sdq_self,unavailable,,,Not collected.,,
+beh_peerprob_sdq_self,unavailable,,,Not collected.,,
+beh_prosocial_sdq_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_teacher,unavailable,,,Not collected.,,
+beh_hyper_sdq_teacher,unavailable,,,Not collected.,,
+beh_peerprob_sdq_teacher,unavailable,,,Not collected.,,
+beh_prosocial_sdq_teacher,unavailable,,,Not collected.,,
+beh_ext_sdq_parent,unavailable,,,Not collected.,,
+beh_ext_sdq_self,unavailable,,,Not collected.,,
+beh_ext_sdq_teacher,unavailable,,,Not collected.,,
+beh_agg_cbcl_parent,unavailable,,,Not collected.,,
+beh_atten_cbcl_parent,unavailable,,,Not collected.,,
+beh_rulebreak_cbcl_parent,unavailable,,,Not collected.,,
+beh_ext_cbcl_parent,unavailable,,,Not collected.,,
+beh_cbcl_measure,unavailable,,,Not collected.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,Not collected.,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,Not collected.,,
+cog_langexec_nepsy,unavailable,,,Not collected.,,
+cog_phono_nepsy,unavailable,,,Not collected.,,
+cog_inhibcont_nepsy,unavailable,,,Not collected.,,
+cog_vismotor_nepsy,unavailable,,,Not collected.,,
+cog_verbalfluency_nepsy,unavailable,,,Not collected.,,
+cog_inhib_nihtb_flanker,unavailable,,,Not collected.,,
+cog_flex_nihtb_dccs,unavailable,,,Not collected.,,
+cog_wm_nihtb_listsort,unavailable,,,Not collected.,,
+cog_speed_nihtb_pattern,unavailable,,,Not collected.,,
+cog_epimem_nihtb_picseq,unavailable,,,Not collected.,,
+cog_vocab_nihtb_picvocab,unavailable,,,Not collected.,,
+cog_fluidcomp_nihtb,unavailable,,,Not collected.,,
+cog_crystcomp_nihtb,unavailable,,,Not collected.,,
+cog_totalcomp_nihtb,unavailable,,,Not collected.,,
+cog_wm_digitspan,unavailable,,,Not collected.,,
+cog_iq_fullscale,incompatible,number_series_w,,"Only a number series test (2016, 2020), a single subtest; no full-scale battery.",,
+cog_vocab_bpvs,unavailable,,,Not collected.,,
+cog_vocab_ppvt,unavailable,,,Not collected.,,
+cog_execfunc_brief_parent,unavailable,,,Not collected.,,
+cog_vocab_bas_naming,unavailable,,,Not collected.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,Not collected.,,
+cog_spatial_bas_pattern,unavailable,,,Not collected.,,
+cog_verbalreason_bas_versim,unavailable,,,Not collected.,,
+cog_schoolread_bracken,unavailable,,,Not collected.,,
+cog_creativethinking_stdtest,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,Not collected.,,
+mh_dep_basc2,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_parent,unavailable,,,Not collected.,,
+mh_totaldiff_sdq_parent,unavailable,,,Not collected.,,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_teacher,unavailable,,,Not collected.,,
+mh_totaldiff_sdq_self,unavailable,,,Not collected.,,
+mh_totaldiff_sdq_teacher,unavailable,,,Not collected.,,
+mh_int_sdq_parent,unavailable,,,Not collected.,,
+mh_int_sdq_self,unavailable,,,Not collected.,,
+mh_int_sdq_teacher,unavailable,,,Not collected.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered; see mh_dep_cesd_self.,,
+mh_dep_smfq_parent,unavailable,,,Not collected.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered; see mh_dep_cesd_self.,,
+mh_dep_cesd_self,partial,cesd20,as.numeric(cesd20) - 20,"CFPS CES-D 20 composite (cesd20sc), equipercentile-equated across waves, 1-4 per item; minus 20 (item count) to rebase to 0-3 per item. 2016-2022. Missing-item rule not documented (NA for nearly all respondents with an unanswered item).",,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered; see mh_dep_cesd_self.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered; see mh_dep_cesd_self.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered; see mh_dep_cesd_self.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered; see mh_dep_cesd_self.,,
+mh_distress_k6_self,partial,"k6_depressed, k6_nervous, k6_restless, k6_hopeless, k6_effort, k6_meaningless, k6_child2010_depressed, k6_child2010_nervous, k6_child2010_restless, k6_child2010_hopeless, k6_child2010_effort, k6_child2010_meaningless","local({
+  main <- sapply(list(k6_depressed, k6_nervous, k6_restless, k6_hopeless, k6_effort, k6_meaningless), as.numeric)
+  child2010 <- sapply(
+    list(
+      k6_child2010_depressed,
+      k6_child2010_nervous,
+      k6_child2010_restless,
+      k6_child2010_hopeless,
+      k6_child2010_effort,
+      k6_child2010_meaningless
+    ),
+    as.numeric
+  )
+  main[!(main %in% 1:5)] <- NA
+  child2010[!(child2010 %in% 1:5)] <- NA
+  coalesce(rowSums(5 - main), rowSums(5 - child2010))
+})","2010 and 2014 only. K6-style past-month set with 'life meaningless' for 'worthless' (2010 English labels: stressed, upset, everything difficult); sum of (5 - item), 0-24, complete-case. Anchors: almost every day, often, half of the time, sometimes, never; 2010 child form 2-3 times a week, 2-3 times a month, once a month. Standardise within wave.",,
+mh_distress_k10_self,unavailable,,,K10 not administered; see mh_distress_k6_self.,,
+mh_anx_masc_self,unavailable,,,Not collected.,,
+mh_anx_scas_self,unavailable,,,Not collected.,,
+mh_anx_scas_parent,unavailable,,,Not collected.,,
+mh_anx_scared_self,unavailable,,,Not collected.,,
+mh_anx_scared_parent,unavailable,,,Not collected.,,
+mh_anx_gad7_self,unavailable,,,Not collected.,,
+mh_anx_rcads_self,unavailable,,,Not collected.,,
+mh_anx_dass21_self,unavailable,,,Not collected.,,
+mh_anxdep_cbcl_parent,unavailable,,,Not collected.,,
+mh_int_cbcl_parent,unavailable,,,Not collected.,,
+mh_dep_binary_self,incompatible,"cesd20, cesd8",,CES-D-20 equated composite in mh_dep_cesd_self; scale totals are not dichotomised here.,,
+mh_dep_self,compatible,cesd20,as.numeric(cesd20) - 20,Same score as mh_dep_cesd_self (0-3 item metric).,,
+mh_dep_measure,inferred,wave,"if_else(
+  wave %in% c(""2016"", ""2018"", ""2020"", ""2022""),
+  ""CES-D, CFPS equipercentile-equated 20-item composite (8 of 20 items fielded to all; the other 12 only to a 2016 subsample), 0-3 item scoring (range 0-60)"",
+  NA_character_
+)","2016-2022, the waves that fielded the CES-D; NA in 2010 and 2014.",,
+mh_anx_self,unavailable,,,Not collected.,,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,incompatible,"k6_nervous, k6_child2010_nervous",,"Only the K6-style past-month frequency of feeling nervous (2010 label 'stressed'), a pooled distress item; scored in mh_distress_k6_self.",,
+mh_lonely_self,proximate,lonely,"recode_values(as.numeric(lonely), 1 ~ ""Rarely"", 2 ~ ""Sometimes"", 3 ~ ""Often"", 4 ~ ""Always"", default = NA_character_)","CES-D 'I feel lonely', past week, 2016-2022; days under 1, 1-2, 3-4, 5-7 -> Rarely, Sometimes, Often, Always, so Never is not reachable. Also scored in mh_dep_cesd_self.",,
+mh_lonely_scale_self,incompatible,lonely,,"Only the CES-D item 'I feel lonely' (2016-2022), mapped to mh_lonely_self; no loneliness scale.",,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,proximate,sad,"recode_values(as.numeric(sad), 1 ~ ""Rarely"", 2 ~ ""Sometimes"", 3 ~ ""Often"", 4 ~ ""Always"", default = NA_character_)","CES-D 'I feel sad', past week, 2016-2022; 4 levels by days (under 1, 1-2, 3-4, 5-7). Recoded as mh_lonely_self.",,
+mh_worry_self,incompatible,int_worry_school,,"Only 1-5 applicability items on specific school worries (2018, 2022); no frequency item.",,
+mh_irritable_self,incompatible,int_angry_study,,"Only a 1-5 applicability item on anger at study difficulties (2018, 2022); no frequency item.",,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,incompatible,"k6_meaningless, k6_child2010_meaningless, cesd_notgoing",,"Only the past-month K6-style 'felt life was meaningless' item (2010, 2014: wn406, wq606, qq606; held in mh_distress_k6_self) and CES-D item 20 'I could not get going' (2016-2022), which scores into mh_dep_cesd_self; neither is a death wish.",,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,Not collected.,,
+mh_psychsom_measure,unavailable,,,Not collected.,,
+mh_somatic_self,unavailable,,,Not collected.,,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,Not collected.,,
+wb_mwb_wemwbs,unavailable,,,Not collected.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered; see wb_lifesat_singleitem_self.,,
+wb_resil_basc2,unavailable,,,Not collected.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_distress_k6_self.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see mh_dep_cesd_self.,,
+wb_bodyimage,unavailable,,,Not collected.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_singleitem_self.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered; see wb_lifesat_singleitem_self.,,
+wb_lifesat_singleitem_self,compatible,life_satisfaction,"if_else(as.numeric(life_satisfaction) %in% 1:5, as.numeric(life_satisfaction), NA_real_)","Ages 16-19 in 2010-2020, 10-19 in 2022 (adult/person questionnaire). 'Are you satisfied with your life?', 1-5 very unsatisfied to very satisfied.",,
+wb_happiness_singleitem_self,compatible,happiness,"if_else(as.numeric(happiness) %in% 0:10, as.numeric(happiness), NA_real_)","2014-2022, self-report (child module ages 10-15, adult/person questionnaire). 'Are you happy?', 0 (lowest) to 10 (highest).",,
+wb_domainsat_schoolwork_self,partial,"schoolwork_satisfaction, education_child","if_else(
+  as.numeric(schoolwork_satisfaction) %in% 1:5 & !(as.numeric(education_child) %in% 4:8),
+  as.numeric(schoolwork_satisfaction),
+  NA_real_
+)","'How would you rate your academic performance?', 5 points (extremely unsatisfied to extremely satisfied): satisfaction with grades. Students only; NA once the respondent has completed senior high (education_child 4+).",,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,incompatible,family_satisfaction,,"Only the 2014 adult item 'Are you satisfied with the life quality of your family?' (data label 'family life'; 1-5, ages 16-19), which reads as living standard; the Chinese wording is not in the supplied files.",,
+wb_domainsat_friends_self,unavailable,,,Not collected.,,
+wb_domainsat_school_self,compatible,"school_satisfaction, education_child","if_else(
+  as.numeric(school_satisfaction) %in% 1:5 & !(as.numeric(education_child) %in% 4:8),
+  as.numeric(school_satisfaction),
+  NA_real_
+)","'Are you satisfied with your school?', 5 points (extremely unsatisfied to extremely satisfied). Students only; NA once the respondent has completed senior high (education_child 4+).",,
+wb_qol_pedsql_self,unavailable,,,Not collected.,,
+wb_qol_pedsql_parent,unavailable,,,Not collected.,,
+wb_qol_kidscreen10_self,unavailable,,,Not collected.,,
+wb_qol_kidscreen10_parent,unavailable,,,Not collected.,,
+wb_selfesteem_rosenberg_self,compatible,"rse_1, rse_2, rse_3, rse_4, rse_5, rse_6, rse_7, rse_8, rse_9, rse_10, rse14_1, rse14_2, rse14_3, rse14_4, rse14_5, rse14_6, rse14_7, rse14_8, rse14_9, rse14_10","local({
+  new <- sapply(list(rse_1, rse_2, rse_3, rse_4, rse_5, rse_6, rse_7, rse_8, rse_9, rse_10), as.numeric)
+  old <- sapply(
+    list(rse14_1, rse14_2, rse14_3, rse14_4, rse14_5, rse14_6, rse14_7, rse14_8, rse14_9, rse14_10),
+    as.numeric
+  )
+  new[!(new %in% 1:4)] <- NA
+  old[!(old %in% 1:4)] <- NA
+  item <- ifelse(is.na(new), 5 - old, new)
+  item[, c(3, 5, 8, 9, 10)] <- 5 - item[, c(3, 5, 8, 9, 10)]
+  rowSums(item)
+})","2010-2018: child-questionnaire module (ages 10-15, mostly 10-12) plus the 2018 person file (16-19). All 10 items rescored 1-4 (2014 files reversed first), negatively worded items (CFPS 3, 5, 8, 9, 10) reversed, sum 10-40, complete-case; 'neither' and 'unknown' codes NA. The 2014 and 2016 adult forms lack 'useless', so NA there.",,
+wb_selfesteem_self,compatible,"rse_1, rse_2, rse_3, rse_4, rse_5, rse_6, rse_7, rse_8, rse_9, rse_10, rse14_1, rse14_2, rse14_3, rse14_4, rse14_5, rse14_6, rse14_7, rse14_8, rse14_9, rse14_10","local({
+  new <- sapply(list(rse_1, rse_2, rse_3, rse_4, rse_5, rse_6, rse_7, rse_8, rse_9, rse_10), as.numeric)
+  old <- sapply(
+    list(rse14_1, rse14_2, rse14_3, rse14_4, rse14_5, rse14_6, rse14_7, rse14_8, rse14_9, rse14_10),
+    as.numeric
+  )
+  new[!(new %in% 1:4)] <- NA
+  old[!(old %in% 1:4)] <- NA
+  item <- ifelse(is.na(new), 5 - old, new)
+  item[, c(3, 5, 8, 9, 10)] <- 5 - item[, c(3, 5, 8, 9, 10)]
+  rowSums(item[, -9])
+})","2010-2018: child-questionnaire module (ages 10-15, mostly 10-12) plus the 2014-2018 adult/person files (16-19). The nine Rosenberg items common to every form (all but 'useless'), scored as wb_selfesteem_rosenberg_self; sum 9-36, complete-case. See wb_selfesteem_measure.",,
+wb_selfesteem_measure,inferred,wave,"if_else(
+  wave %in% c(""2010"", ""2014"", ""2016"", ""2018""),
+  ""Rosenberg Self-Esteem Scale, 9 of 10 items (item 6 'useless' dropped for a common metric), 1-4 item scoring (range 9-36), sum; items 2, 5, 8 and 9 reversed"",
+  NA_character_
+)",Waves that fielded the scale (2010-2018); NA in 2020 and 2022. Items numbered as in the published scale.,,
+wb_selfefficacy_gse_self,unavailable,,,Not collected.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_mwb_who5_self,unavailable,,,Not collected.,,
+wb_happiness_shs_self,unavailable,,,SHS not administered; see wb_happiness_singleitem_self.,,
+wb_mwb_swemwbs_self,unavailable,,,Not collected.,,
 wb_selfratedhealth_self,compatible,self_rated_health,"recode_values(
   as.numeric(self_rated_health),
   1 ~ ""Excellent"",
@@ -364,8 +696,94 @@ wb_selfratedhealth_self,compatible,self_rated_health,"recode_values(
   4 ~ ""Fair"",
   5 ~ ""Poor"",
   default = NA_character_
-)","Standard five-level self-rated health item, wording identical to the schema's levels. The schema declares no Unknown level, so non-responses stay missing.",
-wb_posaffect_self,in_progress,,,,
-wb_posaffect_measure,in_progress,,,,
-wb_eudaimonic_self,in_progress,,,,
-wb_eudaimonic_measure,in_progress,,,,
+)","Five-level self-rated health (Excellent to Poor), 2014-2022, ages 10+; labels match the schema's. The 2010 child item (Healthy, Fair, Relatively unhealthy, Unhealthy, Very unhealthy; self_rated_health_2010) is not mapped: one healthy level against three unhealthy ones is not a symmetric scale. Non-responses stay missing.",,
+wb_generalhealth_parent,incompatible,"self_rated_health, self_rated_health_2010",,Only the child's own self-rated health (see wb_selfratedhealth_self); the proxy module has no parent rating of the child's health.,,
+wb_posaffect_self,incompatible,"cesd_happy, cesd_enjoyed",,"Only the CES-D positive items 'I was happy' and 'I enjoyed life' (2016-2022), which score into mh_dep_cesd_self; no positive-affect scale.",,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_eudaimonic_self,incompatible,life_meaningful,,Only a 2022 single 0-10 item on how meaningful life feels; no scale.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,unavailable,,,Not collected.,,
+wb_socsupport_friends_self,unavailable,,,Not collected.,,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,compatible,sleep_wd_hours,as.numeric(sleep_wd_hours),"Self-report hours of sleep: 2010 time-use grid, weekday in the latest non-vacation month (ages 10+); 2014-2022 'how long do you sleep on weekdays', asked of those whose working or school days differ from rest days.",,
+hlth_sleep_we,compatible,sleep_we_hours,as.numeric(sleep_we_hours),As hlth_sleep_wd for weekend or rest days.,,
+hlth_sleep,compatible,"sleep_wd_hours, sleep_we_hours, sleep_day_hours","coalesce((5 * as.numeric(sleep_wd_hours) + 2 * as.numeric(sleep_we_hours)) / 7, as.numeric(sleep_day_hours))","5:2 mean of hlth_sleep_wd and hlth_sleep_we; otherwise 'In general, how long do you sleep every day?' (2014-2022, respondents with no workday/rest-day distinction).",,
+hlth_sleepprob,incompatible,cesd_sleep,,"Only the CES-D item 'My sleep was restless' (past-week days, 2016-2022), which scores into mh_dep_cesd_self; not a sleep-problems scale.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+st_measure_type,inferred,,"""Continuous""",Proxy items ask for an open-ended duration.,,parent
+st_measure_name,inferred,,"""Custom""",Bespoke CFPS proxy-module items; not a named instrument.,,parent
+st_responder,inferred,,"""Parent or carer""",Proxy (parent or carer) report for participants whose primary row is Self.,,parent
+st_watch,compatible,"tv_week_hours_parent, tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, learning_online_day_mins_self, internet_any_self, internet_mobile_user, internet_pc_user, learning_online_user_self","local({
+  self <- rowSums(
+    !is.na(cbind(
+      tv_wd_hours_self,
+      tv_we_hours_self,
+      tv_week_hours_self,
+      internet_wd_hours_self,
+      internet_we_hours_self,
+      internet_day_hours_self,
+      internet_week_hours_self,
+      internet_mobile_day_mins_self,
+      internet_pc_day_mins_self,
+      learning_online_day_mins_self,
+      internet_any_self,
+      internet_mobile_user,
+      internet_pc_user,
+      learning_online_user_self
+    ))
+  ) >
+    0
+  if_else(self, as.numeric(tv_week_hours_parent) / 7, NA_real_)
+})","2014-2022. Proxy weekly hours of TV, movies or other videos (not on vacation) / 7, for participants whose primary row is Self.",,parent
+st_educational,partial,"learning_online_day_mins_parent, learning_online_user_parent, internet_any_parent, tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, learning_online_day_mins_self, internet_any_self, internet_mobile_user, internet_pc_user, learning_online_user_self","local({
+  self <- rowSums(
+    !is.na(cbind(
+      tv_wd_hours_self,
+      tv_we_hours_self,
+      tv_week_hours_self,
+      internet_wd_hours_self,
+      internet_we_hours_self,
+      internet_day_hours_self,
+      internet_week_hours_self,
+      internet_mobile_day_mins_self,
+      internet_pc_day_mins_self,
+      learning_online_day_mins_self,
+      internet_any_self,
+      internet_mobile_user,
+      internet_pc_user,
+      learning_online_user_self
+    ))
+  ) >
+    0
+  value <- coalesce(
+    as.numeric(learning_online_day_mins_parent) / 60,
+    if_else(as.numeric(learning_online_user_parent) == 0 | as.numeric(internet_any_parent) == 0, 0, NA_real_)
+  )
+  if_else(self, value, NA_real_)
+})","2020-2022. Proxy daily minutes on educational online platforms or training services / 60, for participants whose primary row is Self; 0 for non-users and children who do not go online. Platform learning only.",,parent
+st_internet,compatible,"internet_day_mins_parent, internet_any_parent, tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, learning_online_day_mins_self, internet_any_self, internet_mobile_user, internet_pc_user, learning_online_user_self","local({
+  self <- rowSums(
+    !is.na(cbind(
+      tv_wd_hours_self,
+      tv_we_hours_self,
+      tv_week_hours_self,
+      internet_wd_hours_self,
+      internet_we_hours_self,
+      internet_day_hours_self,
+      internet_week_hours_self,
+      internet_mobile_day_mins_self,
+      internet_pc_day_mins_self,
+      learning_online_day_mins_self,
+      internet_any_self,
+      internet_mobile_user,
+      internet_pc_user,
+      learning_online_user_self
+    ))
+  ) >
+    0
+  value <- coalesce(
+    as.numeric(internet_day_mins_parent) / 60,
+    if_else(as.numeric(internet_any_parent) == 0, 0, NA_real_)
+  )
+  if_else(self, value, NA_real_)
+})","2020-2022. Proxy daily minutes online (mobile devices or computers) / 60, for participants whose primary row is Self; 0 where the child does not go online.",,parent

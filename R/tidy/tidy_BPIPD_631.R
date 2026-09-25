@@ -1,10 +1,9 @@
 #' Tidier for BPIPD-631 (UK Understanding Society)
 #'
 #' Stacks the youth self-completion files of BHPS waves 4-18 and UKHLS waves
-#' 1-15, and joins each youth, within the same wave, to their household's
-#' interview, their resident mother's and father's adult interviews and, for
-#' BHPS, their own age from the household roster; the cross-wave person file
-#' adds ethnicity and birthplace for the youth and each parent.
+#' 1-15, joining each youth (within wave) to their household, resident
+#' parents' adult interviews and, for BHPS, age from the household roster;
+#' the cross-wave person file adds ethnicity and birthplace.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -20,8 +19,8 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
   indresp <- bp631_stack(tables, "indresp")
   xwave <- bp631_zap_missing(raw_dataset$data$xwavedat)
 
-  # `mnspno`/`fnspno` are the person numbers of the natural, step or adoptive
-  # mother and father in the household; 0 (none) matches no `pno`.
+  # `mnspno`/`fnspno`: natural/step/adoptive mother's and father's person
+  # numbers; 0 (none) matches no `pno`.
   df <- bp631_stack(tables, "youth") |>
     bp631_add(
       bp631_stack(tables, "indall"),
@@ -30,6 +29,11 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
     ) |>
     bp631_add(
       bp631_stack(tables, "hhresp"),
+      c("survey", "wave", "hidp"),
+      "many-to-one"
+    ) |>
+    bp631_add(
+      bp631_stack(tables, "hhsamp"),
       c("survey", "wave", "hidp"),
       "many-to-one"
     ) |>
@@ -64,6 +68,20 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
   # The .dta labels of `ypnetchtw` are garbled (codes 3 and 4 both read 4-6
   # hours); the wave 15 youth questionnaire gives it the responses of `ypnetcht`.
   attr(df$ypnetchtw, "labels") <- attr(df$ypnetcht, "labels")
+
+  # `psu`/`strata` -9 (none assigned) is unlabelled, so
+  # `bp631_zap_missing()` leaves it.
+  df$psu[df$psu < 0] <- NA
+  df$strata[df$strata < 0] <- NA
+
+  # Fill household income and composition missed at a wave from the
+  # participant's nearest wave interviewed 12 months or less away.
+  interview_month <- 12 *
+    dplyr::coalesce(bp631_num(df$intdaty_dv), bp631_num(df$intdatey)) +
+    dplyr::coalesce(bp631_num(df$intdatm_dv), bp631_num(df$intdatem))
+  for (col in c("fihhmngrs_dv", "ieqmoecd_dv", "hhsize", "nkids_dv")) {
+    df[[col]] <- bp631_carry_gap(df[[col]], df$pidp, interview_month)
+  }
 
   if (anyDuplicated(df[c("pidp", "wave")]) > 0) {
     stop(
@@ -129,8 +147,8 @@ bp631_older_codings <- function() {
 
 #' Set the release's missing-value codes to NA and drop their value labels
 bp631_zap_missing <- function(tbl) {
-  # Every negative code the release labels is a missing code (-1 don't know to
-  # -9 missing); UKHLS household income has real negative values, unlabelled.
+  # Every negative labelled code is missing (-1 don't know to -9 missing);
+  # UKHLS household income has real negative values, unlabelled.
   tbl[] <- lapply(tbl, function(x) {
     labels <- attr(x, "labels", exact = TRUE)
     if (!is.numeric(labels) || !any(labels < 0)) {
@@ -214,6 +232,41 @@ bp631_add <- function(base, tbl, by, relationship) {
     out[[col]][gap] <- out[[paste0(col, ".fill")]][gap]
   }
   out[setdiff(names(out), paste0(shared, ".fill"))]
+}
+
+#' A column as plain numeric with negative (missing) codes set to NA
+bp631_num <- function(x) {
+  x <- as.numeric(x)
+  x[x < 0] <- NA
+  x
+}
+
+#' Fill NA in `x` from the same participant's nearest other wave, only when
+#' that wave's interview is `max_gap` months or less away (`time` in months),
+#' else leave NA
+bp631_carry_gap <- function(x, pidp, time, max_gap = 12) {
+  out <- x
+  for (id in unique(pidp[is.na(x)])) {
+    idx <- which(pidp == id)
+    if (length(idx) < 2) {
+      next
+    }
+    vals <- x[idx]
+    times <- time[idx]
+    for (i in which(is.na(vals))) {
+      if (is.na(times[i])) {
+        next
+      }
+      gap <- abs(times - times[i])
+      gap[i] <- NA
+      gap[is.na(vals)] <- NA
+      candidates <- which(!is.na(gap) & gap <= max_gap)
+      if (length(candidates) > 0) {
+        out[idx[i]] <- vals[candidates[which.min(gap[candidates])]]
+      }
+    }
+  }
+  out
 }
 
 #' A person table keyed for joining as a parent, its columns named for them

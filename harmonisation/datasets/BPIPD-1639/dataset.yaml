@@ -20,7 +20,6 @@ resources:
     reader: "excel"
 
 notes: |
-  This is a longitudinal dataset, but the 3.5 year data does not have useable screen time measure.
-  So we have treated this like cross-sectional study at age 5.
-  Note that there are lots of additional variables, especially on parenting, that haven't been harmonised.
-  Where possible, prefered scaled scores for instruments like NEPSY.
+  Longitudinal, but the 3.5-year wave has no usable screen-time measure; treated as cross-sectional at age 5.
+  Many additional variables, especially parenting, remain unharmonised.
+  Scaled scores used where possible (e.g. NEPSY).

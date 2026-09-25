@@ -1,7 +1,8 @@
 #' Tidier for BPIPD-1353 (Korea Youth Risk Behavior Web-based Survey)
 #'
-#' KYRBS is a repeated cross-section, not a panel: each of the 21 annual waves
-#' (2005-2025) is an independent stratified cluster sample.
+#' Repeated cross-section, not a panel: independent annual stratified cluster
+#' samples. The spec reads 2005-2025; 2005-2007 are dropped here because they
+#' field no screen-time item, leaving 2008-2025.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -12,14 +13,18 @@
 tidy_BPIPD_1353 <- function(raw_dataset, spec) {
   df <- dplyr::bind_rows(raw_dataset$data)
 
-  # The grain and `participant_id` come from the reader's `.wave`, while the
-  # mapping derives `wave` and `data_year` from the survey's own `YEAR`.
+  # Drop-wave rule: waves with no screen-time item cannot enter a screen-time
+  # model. The first internet-time items are fielded in 2008.
+  df <- dplyr::filter(df, as.integer(.wave) >= 2008L)
+
+  # Grain and `participant_id` use the reader's `.wave`; the mapping derives
+  # `wave` and `data_year` from `YEAR`, so the two must agree.
   if (any(as.character(df$YEAR) != df$.wave)) {
     stop("BPIPD-1353: `YEAR` disagrees with `.wave`.", call. = FALSE)
   }
 
-  # `OBS` and `CLUSTER` are numbered within a survey year (`OBS` is unique only
-  # inside a wave; `CLUSTER` restarts at 1 in every wave).
+  # `OBS` is unique only within a wave and `CLUSTER` restarts at 1 each wave,
+  # so both need a wave prefix to be unique dataset-wide.
   df <- dplyr::mutate(
     df,
     participant_id = paste0(.wave, "_", OBS),
