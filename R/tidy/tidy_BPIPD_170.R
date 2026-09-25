@@ -12,6 +12,7 @@
 #' - one tibble, one row per respondent per year, all years stacked
 tidy_BPIPD_170 <- function(raw_dataset, spec) {
   item_vars <- bp170_item_vars()
+  core_only_vars <- c("alcohol_30d", "cigarettes_30d", "cannabis_30d")
   serial_pattern <- "ARCHIVE ID|R'?S +ID ?- ?SERIAL"
 
   var_labels <- function(df) {
@@ -103,9 +104,8 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
       )
     }
 
-    # Up to 2011 the 8th/10th release splits the two grades across files:
-    # DS0001-DS0004 are the four 8th-grade forms and DS0005-DS0008 the four
-    # 10th-grade forms.
+    # Up to 2011, DS0001-DS0004 are the four 8th-grade forms and
+    # DS0005-DS0008 the four 10th-grade forms.
     grade <- if (identical(stream, "12")) {
       rep(12L, nrow(df))
     } else if (year <= 2011L) {
@@ -137,6 +137,11 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
 
     # MTF renumbers its variables.
     for (nm in names(item_vars)) {
+      # 12th grade form files repeat some core items, at times twice; the
+      # core file (DS0001) supplies them.
+      if (identical(stream, "12") && ds > 1L && nm %in% core_only_vars) {
+        next
+      }
       col <- find_var(df, item_vars[[nm]], file)
       if (!is.null(col)) {
         out[[nm]] <- as_code(df[[col]], col, file)
@@ -144,8 +149,8 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
       }
     }
 
-    # Resolved here rather than in `variables.csv` because the codes change
-    # in 2005: 0/1 is White/Black up to 2004, then 1/2/3 is Black/White/Hispanic
+    # Resolved here, not in variables.csv: codes change in 2005 (0/1
+    # White/Black up to 2004, then 1/2/3 Black/White/Hispanic).
     if ("race" %in% names(out)) {
       labels <- if (year <= 2004L) {
         c("0" = "White", "1" = "Black")
@@ -192,7 +197,7 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
     )
   }
 
-  # Everything outside these ranges is a supplementary release
+  # Outside these ranges is a supplementary release.
   is_primary <- (index$stream == "12" & index$ds <= 7L) |
     (index$stream == "8-10" & index$year <= 2011L & index$ds <= 8L) |
     (index$stream == "8-10" & index$year >= 2012L & index$ds == 1L)
@@ -210,7 +215,7 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
   # ---- assemble each stream-year -----------------------------------------
   assemble <- function(rows) {
     if (!identical(index$stream[rows[1]], "12")) {
-      # 8th/10th grade: form files are disjoint samples, so they simply stack.
+      # 8th/10th grade form files are disjoint samples: just stack them.
       return(dplyr::bind_rows(prepped[rows]))
     }
 
@@ -250,16 +255,16 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
   )
 
   # ---- participant key ----------------------------------------------------
-  # The serial repeats between the 8th- and 10th-grade samples of a year and
-  # again in every later year, so all three parts are needed.
+  # Serial repeats across grades within a year and across years, so the
+  # key needs all three parts.
   df <- dplyr::mutate(
     df,
     participant_id = paste(data_year, grade, serial, sep = "-"),
     .before = 1
   )
 
-  # `bind_rows()` drops the label attributes the item loop attached, so put
-  # back the label of the first file that matched each column.
+  # bind_rows() drops the label attributes; restore each column's label
+  # from the first file that matched it.
   item_labels <- list()
   for (part in prepped) {
     for (nm in names(item_vars)) {
@@ -301,9 +306,9 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
 
 #' Item variables, by the label text that identifies them
 #'
-#' MTF renumbers its variables across forms, grades and releases (e.g., TV hours
-#' is V1120 in 2000, V1121 from 2004, V2120/V3120/V4120 on the other forms), so
-#' each item is located by its label rather than by name.
+#' MTF renumbers variables across forms, grades and releases (e.g. TV hours is
+#' V1120 in 2000, V1121 from 2004, V2120/V3120/V4120 on other forms), so items
+#' are located by label, not name.
 bp170_item_vars <- function() {
   design_vars <- c(
     region = "SCHOOL REGION|SCHL RGN|SCH REG",
@@ -322,7 +327,7 @@ bp170_item_vars <- function() {
     hshld_father = "HSHLD FATHE",
     hshld_mother = "HSHLD MOTHE"
   )
-  # Time-use items are in hours per WEEK up to 2017 and hours per DAY from 2018
+  # Time-use items: hours/WEEK up to 2017, hours/DAY from 2018.
   screen_week_vars <- c(
     computer_hrs_week_school = "HR/W CO?MPUTR SC",
     computer_hrs_week_job = "HR/W CO?MPUTR JO",
@@ -351,18 +356,87 @@ bp170_item_vars <- function() {
   outcome_vars <- c(
     grade_average = "R HS GRADE/D ?= ?1",
     fight_gang = "FRQ GANG FIGHT",
+    fight_parents = "FRQ FIGHT PARNTS",
+    serious_fight = "FRQ FGT WRK/SCHL",
+    steal_under50 = "FRQ STEAL <\\$50",
+    steal_over50 = "FRQ STEAL >\\$50",
+    # 12th grade only.
+    steal_shoplift = "FRQ SHOPLIFT",
+    damage_school_property = "FRQ DMG SCH PPTY",
+    # 12th grade only.
+    damage_work_property = "FRQ DMG WK PRPTY",
+    arson = "FRQ ARSON",
+    skip_days_4wk = "#DA/4W SC MS CUT",
+    skip_class_4wk = "#DA/4W SKP CLASS",
     bullied_school = "BULLIED@SCHL",
     bullied_online = "BULLIED ONLINE",
     esteem_pos_attitude = "ATT TWD SELF",
     esteem_person_worth = "PRSN OF WORTH",
     esteem_satisfied = "SATISFD W MYSELF",
     esteem_proud = "MUCH TO B PROUD",
+    esteem_do_well = "DO WELL AS OTHRS",
+    esteem_no_good = "I AM NO GOOD",
     dep_enjoy_life = "I ENJOY LIFE",
     dep_meaningless = "LIFE MEANINGLESS",
     dep_good_alive = "GOOD TO BE ALIVE",
     dep_hopeless = "FUTURE HOPELESS",
+    dep_cant_do_right = "I DO WRONG THING",
+    dep_life_not_useful = "MY LIFE NT USEFL",
     dep_lonely = "OFTN FEEL LONELY",
-    life_satisfaction = "LIFE AS WHL"
+    lonely_left_out = "OFTN FL LEFT OUT",
+    lonely_wish_friends = "OFT WSH MOR FRND",
+    lonely_turn_to = "ALWYS SM1 HELP R",
+    lonely_talk_to = "USLY SM1 TALK TO",
+    lonely_friends_around = "USLY FRDS BE WTH",
+    anxious = "OFTEN FEEL ANXIOUS",
+    life_satisfaction = "LIFE AS WHL",
+    # Also matches the 12th grade "VRY HPY THS DAYS" label.
+    happiness = "VRY HPY THS DAY",
+    sat_education = "SAT EDUC EXPRNC",
+    sat_friends = "SAT OWN FRIENDS",
+    sat_parents = "SAT GT ALNG PRN",
+    enjoy_school = "LSTYR/ENJOY SCHL",
+    happy_school = "LSTYR/HAPPY IN SCH",
+    best_work = "LSTYR/DO BEST WK",
+    # Past-30-day use; 12th grade from the core file only.
+    alcohol_30d = "#X (DRNK/LAST30DA|ALC/30D SIPS)Y?( F[0-9]+)?$",
+    cigarettes_30d = "#CIGS SMKD/30DA(Y)?( ?\\(CORE\\))?( F[0-9]+)?$",
+    cannabis_30d = "#X ?MJ\\+HS/LAST30DA?Y?( F[0-9]+)?$",
+    # TV to 2020, all screens from 2021.
+    parent_limit_tv = "#X PRNT LIMIT TV",
+    parent_limit_screen = "#X PRNT LIMIT SCRN TIME",
+    sleep_7hrs = "OFTN 7HRS SLEEP",
+    sleep_less = "OFTN SLEEP ?<SHLD",
+    # Single items the schema rejects, kept for source_columns. 2019-2024.
+    temper_control = "CONTROL TEMPER",
+    worry_react = "HOW PPL REACT TO ME",
+    # 12th grade only.
+    professional_visit_emotional = "#X/12M DOC-PSY",
+    selfrated_health_relative = "RLTV PHY HEALTH",
+    # 2021 only.
+    covid_sad_change = "COVID CH SAD",
+    covid_angry_change = "COVID CH ANGRY",
+    covid_annoyed_change = "COVID CH ANNOYED",
+    covid_worried_change = "COVID CH WORRIED",
+    # Locus-of-control items, 12th grade.
+    plans_work = "MY PLANS DO WORK",
+    plan_ahead_better = "PLANS->BTR RSLTS",
+    planning_unhappy = "PLNNG MKS UNHPPY",
+    accept_life_happier = "ACPT LIFE->HAPPR",
+    little_chance = "PPL LK ME -CHANC",
+    master_fate = "PPL MASTER FATE",
+    # Health-symptom-checklist items, 12th grade, past 30 days.
+    trouble_concentrating_days = "#DA DFCT THINK",
+    trouble_remembering_days = "#DA TRBL REMEM",
+    trouble_sleeping_days = "#DA TRBL SLEEP",
+    symptom_headache = "#DA HEADACHE",
+    symptom_sorethroat = "#DA SORE THROAT",
+    symptom_sinuscong = "#DA SINUS CONG",
+    symptom_chestcold = "#DA CHEST COLD",
+    symptom_coughing = "#DA COUGHING",
+    symptom_coughphlegm = "#DA COUGH PHLM",
+    symptom_shortbreath = "#DA SHORT BRTH",
+    symptom_wheezing = "#DA WHEEZING"
   )
   c(
     design_vars,

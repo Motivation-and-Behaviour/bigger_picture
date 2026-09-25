@@ -1,10 +1,9 @@
 #' Tidier for BPIPD-270 (KCYPS)
 #'
-#' The elementary (e4) and middle/high (m1) cohorts each have a main-panel and
-#' a guardian file per wave, plus a sibling file from wave 2. The two youth
-#' files stack as extra participants and the guardian file joins onto them.
-#' The released data files carry no labels, so the variable and value labels
-#' are read from the shared codebook workbook.
+#' Elementary (e4) and middle/high (m1) cohorts each have a main-panel and
+#' guardian file per wave, plus a sibling file from wave 2. The youth files
+#' stack as extra participants; guardian joins onto them. Data files carry no
+#' labels, so variable/value labels come from the shared codebook workbook.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -15,9 +14,8 @@
 tidy_BPIPD_270 <- function(raw_dataset, spec) {
   index <- bp270_spec_index(spec)
 
-  # Every file has both a .csv and .rda. They are basically the same so the
-  # .rda are the ones used. Every column except ID/HID/PID carries a
-  # wave suffix (YGENDERw3, WEIGHTA1w1).
+  # Each file ships as near-identical .csv and .rda; .rda is used. Every column
+  # except ID/HID/PID carries a wave suffix (YGENDERw3, WEIGHTA1w1).
   read_respondent <- function(wave, cohort, respondent) {
     name <- paste("kcyps", wave, cohort, respondent, "data_rda", sep = "_")
     raw <- raw_dataset$data[[name]]
@@ -36,12 +34,9 @@ tidy_BPIPD_270 <- function(raw_dataset, spec) {
       dplyr::rename_with(\(x) sub("w[0-9]+$", "", x))
   }
 
-  # The released files keep the full panel roster, so a youth who did not take
-  # part in a wave still has a row: `SURVEY1 == 2` with every questionnaire item
-  # missing. Those rows carry no observation, so drop them. `SURVEY1` is absent
-  # at wave 1, where every panel member responded.
-  # (Codebook sheet CB_e/CB_m: `SURVEY1` "Survey participation (Youth)",
-  # 1 = Yes, 2 = No.)
+  # Non-participants still get a row (`SURVEY1 == 2`, every item missing);
+  # drop them. `SURVEY1` is absent at w1 (everyone responded). Codebook
+  # CB_e/CB_m: `SURVEY1` "Survey participation (Youth)", 1 = Yes, 2 = No.
   drop_nonparticipants <- function(df) {
     if (is.null(df) || !"SURVEY1" %in% names(df)) {
       return(df)
@@ -50,10 +45,9 @@ tidy_BPIPD_270 <- function(raw_dataset, spec) {
   }
 
   read_wave_cohort <- function(this_wave, this_cohort) {
-    # `main` and `sibling` are the same youth questionnaire put to two different
-    # children in the same household: they share most of their columns and none
-    # of their IDs, so they stack as extra participants rather than joining as
-    # extra variables.
+    # `main` and `sibling` are the same questionnaire put to different
+    # children in the household: shared columns, no shared IDs, so they stack
+    # rather than join.
     youth <- dplyr::bind_rows(
       main = drop_nonparticipants(
         read_respondent(this_wave, this_cohort, "main")
@@ -64,18 +58,17 @@ tidy_BPIPD_270 <- function(raw_dataset, spec) {
       .id = "respondent"
     )
 
-    # The guardian file holds at most one row per child across both youth
-    # files, keyed on the child's ID, so it joins one-to-one. It is joined from
-    # the left so that guardians of a non-participating youth do not reappear
-    # as rows with no youth data. The reader stamps `.wave`/`.wave_label` on
-    # both sides, so the guardian copies are dropped rather than carried
-    # through as `.x`/`.y` pairs.
+    # Guardian file has at most one row per child (keyed on ID), so it joins
+    # one-to-one; left join so guardians of dropped non-participants don't
+    # come back as rows without youth data. `.wave`/`.wave_label` are stamped
+    # on both sides, so drop the guardian copies to avoid `.x`/`.y` pairs.
     guardian <- read_respondent(this_wave, this_cohort, "guardian") |>
       dplyr::select(-dplyr::any_of(c(".wave", ".wave_label")))
 
-    # `cohort` is the file-derived e4/m1 label. The study's `COHORT` codes
-    # cohort and respondent together (1/3 = elementary main/sibling, 2/4 =
-    # middle main/sibling; codebook CB_e) and is absent in the guardian files.
+    # `cohort` is the file-derived elem/mid token (e4/m1 cohorts). Source
+    # `COHORT` codes cohort and respondent together (1/3 = elementary
+    # main/sibling, 2/4 = middle main/sibling; CB_e) and is absent for
+    # guardians.
     youth |>
       dplyr::left_join(
         guardian,
@@ -108,9 +101,9 @@ tidy_BPIPD_270 <- function(raw_dataset, spec) {
 
 #' Wave and cohort tokens the spec declares
 #'
-#' The spec's wave values read `<n>-<year>` ("1-2018"), while every data
-#' resource is named `kcyps_w<n>_<cohort>_<respondent>_data_<format>`, so both
-#' the wave token and the cohort token are read off the spec.
+#' Spec wave values read `<n>-<year>` ("1-2018"); resources are named
+#' `kcyps_w<n>_<cohort>_<respondent>_data_<format>`. Both tokens are read off
+#' the spec.
 bp270_spec_index <- function(spec) {
   pattern <- "^kcyps_(w[0-9]+)_([a-z0-9]+)_([a-z]+)_data_rda$"
 
@@ -167,11 +160,9 @@ bp270_spec_index <- function(spec) {
 
 #' The codebook sheet that describes each respondent's columns
 #'
-#' The shared workbook holds one codebook sheet per questionnaire: `CB_e` the
-#' elementary youth form, `CB_m` the middle/high youth form and `CB_p` the
-#' guardian form (the spec names the same three sheets on its codebook
-#' resources). Elementary comes first because the two youth forms word some
-#' shared columns differently and the elementary wording is the one kept.
+#' One sheet per questionnaire: `CB_e` elementary, `CB_m` middle/high, `CB_p`
+#' guardian (the three sheets the spec names). Elementary is first, so its
+#' wording wins where the two youth forms differ.
 bp270_codebook_sheets <- function() {
   c(elem = "CB_e", mid = "CB_m", guardian = "CB_p")
 }
@@ -183,8 +174,8 @@ bp270_apply_codebook_labels <- function(df, raw_dataset) {
     bp270_read_codebook(bp270_codebook_path(raw_dataset, part), sheets[[part]])
   }))
 
-  # First sheet wins, so a column the elementary and middle/high forms word
-  # differently keeps the elementary wording.
+  # First sheet wins: a column worded differently by elementary vs
+  # middle/high keeps the elementary wording.
   book <- book[!duplicated(book$variable), , drop = FALSE]
   book <- book[book$variable %in% names(df), , drop = FALSE]
 
@@ -202,8 +193,7 @@ bp270_apply_codebook_labels <- function(df, raw_dataset) {
 
 #' The workbook holding one respondent's codebook sheet
 #'
-#' Every wave declares the same three codebook resources and they all point at
-#' the one shared workbook, so any wave's copy serves.
+#' Every wave points at the same shared workbook, so any wave's copy serves.
 bp270_codebook_path <- function(raw_dataset, part) {
   resources <- grep(
     paste0("_", part, "_codebook$"),

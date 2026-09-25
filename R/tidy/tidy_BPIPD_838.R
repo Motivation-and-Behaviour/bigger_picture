@@ -1,8 +1,8 @@
 #' Tidier for BPIPD-838 (Lo)
 #'
-#' A single wide SPSS file holds all five parent-report waves, with the wave in
-#' a column suffix (`_T1` ... `_T5`), so the tidier normalises the suffixes and
-#' pivots the file to long.
+#' One wide SPSS file holds all five parent-report waves, wave in a column
+#' suffix (`_T1`-`_T5`); this normalises the suffixes, pivots to long and
+#' carries the T1-only background items to the later waves.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -11,7 +11,7 @@
 #' Output:
 #' - one tibble, one row per child per wave they took part in
 tidy_BPIPD_838 <- function(raw_dataset, spec) {
-  # The .sav copy carries the value labels; its .xlsx twin is ignored.
+  # .sav carries value labels; .xlsx twin is ignored.
   sav <- raw_dataset$data$`data-sav`
   if (is.null(sav)) {
     stop("BPIPD-838: resource `data-sav` is missing.", call. = FALSE)
@@ -25,18 +25,16 @@ tidy_BPIPD_838 <- function(raw_dataset, spec) {
     )
   }
 
-  # T1's class and consent items were unsuffixed.
-  # Suffix them so they pivot too.
+  # T1's class/consent items are unsuffixed; suffix them so they pivot too.
   df <- dplyr::rename_with(
     df,
     ~ paste0(.x, "_T1"),
     dplyr::all_of(c("Class", "Consent1", "Consent2", "Consent3"))
   )
 
-  # `T2`-`T5` are per-wave participation flags (1 = Yes, NA otherwise) stored
-  # without a wave suffix. There is no T1 flag because every child has T1 data
-  # (1,428 of 1,428 rows carry a measured T1 value), so T1's flag is a constant.
-  # Suffixing all five folds them into a single `participated` column.
+  # `T2`-`T5` are unsuffixed per-wave participation flags (1 = Yes, NA
+  # otherwise); there's no T1 flag since every child has T1 data, so T1's
+  # flag is a constant. Suffixing all five gives one `participated` column.
   df <- df |>
     dplyr::mutate(
       participated_T1 = haven::labelled(
@@ -56,16 +54,6 @@ tidy_BPIPD_838 <- function(raw_dataset, spec) {
 
   df <- bp838_unify_wave_value_labels(df)
 
-  # The columns that will survive the pivot, minus the two free-text
-  # "other, specify" items, which store "" rather than NA and so would make
-  # every participant-wave look observed.
-  stems <- unique(sub(
-    "_T[0-9]+$",
-    "",
-    grep("_T[0-9]+$", names(df), value = TRUE)
-  ))
-  measured <- setdiff(stems, c("participated", "C1_32aa", "C2_14aa"))
-
   long <- df |>
     tidyr::pivot_longer(
       cols = dplyr::matches("_T[0-9]+$"),
@@ -74,13 +62,33 @@ tidy_BPIPD_838 <- function(raw_dataset, spec) {
     ) |>
     dplyr::relocate(wave, .after = SC)
 
-  # Every child sits on every wave's roster, so a participant-wave with no
-  # measured value at all is a wave the child skipped, not an observation.
-  # Keeps 3,756 of 7,140 rows: T1 1,428, T2-T4 300 each, T5 1,428. At T2-T4
-  # this reproduces the participation flags exactly; the 395 T5 rows carrying
-  # no flag are kept because they still record the child's class and age.
-  observed <- rowSums(!is.na(long[measured])) > 0L
-  long[observed, , drop = FALSE]
+  # A row is kept only where the child actually took part in that wave.
+  # `participated` is the authoritative record (T2-T5; T1's is a constant,
+  # since every child has T1 data). T5 carries study-derived class and age
+  # for children who did not take part, so filtering on any measured value
+  # being present (rather than on `participated` itself) would keep those
+  # as if they were observations.
+  long <- long[!is.na(long$participated), , drop = FALSE]
+
+  # Carry T1-only items forward: parent education always; income and partner
+  # status as T5 is 12 months on. The study's T5 age is T1 + 1, so age fills T2-T4.
+  bp838_carry_from_t1(
+    long,
+    c("Edu_mother", "Edu_father", "Household_income_gp", "S1", "Age_child")
+  )
+}
+
+#' Fill each participant's missing values in `cols` with their T1 value
+bp838_carry_from_t1 <- function(long, cols) {
+  t1 <- long[long$wave == "T1", , drop = FALSE]
+  t1_row <- match(long$SC, t1$SC)
+
+  for (col in cols) {
+    from_t1 <- t1[[col]][t1_row]
+    long[[col]] <- dplyr::if_else(is.na(long[[col]]), from_t1, long[[col]])
+  }
+
+  long
 }
 
 #' Give every wave of a variable the same SPSS value labels

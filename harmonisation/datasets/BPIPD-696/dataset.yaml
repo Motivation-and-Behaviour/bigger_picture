@@ -47,12 +47,9 @@ waves:
         reader: "excel"
 
 notes: |
-  3 waves: Baseline, midline, endline.
-  Each have dataset only (.xlsx)
-  Each wave has control arm and intervention arm sheets.
-  Baseline has an additional sheet called "Baseline" that is not declared:
-  it has no header row, so readxl takes its first record as the column names,
-  and it is not the two baseline arm sheets stacked. The arm sheets carry the
-  usable baseline data.
-  File also contains an ANOVA.sav (not read in)
-  and a blank "evaluation PLUMS.xlsx" process-evaluation form (not read in).
+  3 waves (baseline/midline/endline), one .xlsx per wave, each with control-arm
+  and intervention-arm sheets.
+  Baseline also has an undeclared "Baseline" sheet: no header row (readxl takes
+  its first record as column names), not the two arm sheets stacked. Not used.
+  Also present, not read in: ANOVA.sav, and a blank "evaluation PLUMS.xlsx"
+  process-evaluation form.
