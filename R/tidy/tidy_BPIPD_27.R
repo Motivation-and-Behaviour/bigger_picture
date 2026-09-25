@@ -4,14 +4,16 @@
 #'
 #' - cohort-member modules (`mcs<n>_cm_*`) are keyed on family plus
 #'   cohort-member number and form the spine;
-#' - `hhgrid` holds one row per household member, and is read at both of the
-#'   grains it contains: the cohort member's own row joins onto the spine, and
-#'   the rest of the roster supplies each responding parent's sex;
+#' - `hhgrid` holds one row per household member and is read at two grains:
+#'   the cohort member's own row joins the spine, the rest of the roster
+#'   supplies each responding parent's sex;
 #' - family modules are keyed on family alone and are broadcast to every
 #'   cohort member in the family (MCS families can hold twins or triplets);
-#' - parent modules hold one row per responding parent, so they are reduced to
-#'   one row per family before joining. At the earlier sweeps the main
-#'   respondent is also the person who reports the child's screen use.
+#' - parent modules hold one row per responding parent, reduced to one row
+#'   per family before joining; at the earlier sweeps the main respondent
+#'   also reports the child's screen use;
+#' - `parent_interview` supplies only whether each respondent was born in the
+#'   UK, looked up across sweeps by person number.
 #'
 #' Variables keep their original MCS spelling. Every column has a one-letter
 #' sweep prefix (`B` = sweep 2 ... `G` = sweep 7)
@@ -23,14 +25,22 @@
 #' Output:
 #' - one tibble, one row per cohort member per sweep
 tidy_BPIPD_27 <- function(raw_dataset, spec) {
-  sweeps <- lapply(spec$waves, function(wave) bp27_sweep(raw_dataset, wave))
+  born_uk <- bp27_born_uk(raw_dataset)
+  sweeps <- lapply(
+    spec$waves,
+    function(wave) bp27_sweep(raw_dataset, wave, born_uk)
+  )
   df <- dplyr::bind_rows(bp27_prefix_shared_columns(sweeps))
+  df <- bp27_parent_education(
+    df,
+    vapply(spec$waves, function(wave) as.character(wave$wave), character(1))
+  )
 
   attr(df$MCSID, "label") <-
     "MCS Research ID - Anonymised Family/Household Identifier"
   attr(df$mcs_cnum, "label") <- "Cohort Member number within an MCS family"
   attr(df$participant_id, "label") <-
-    "MCSID and cohort member number, unique within a sweep"
+    "MCSID and cohort member number, stable across sweeps"
 
   if (anyDuplicated(df[c("participant_id", ".wave")]) > 0) {
     stop(
@@ -43,7 +53,7 @@ tidy_BPIPD_27 <- function(raw_dataset, spec) {
 }
 
 #' Assemble one sweep into a cohort-member table
-bp27_sweep <- function(raw_dataset, wave) {
+bp27_sweep <- function(raw_dataset, wave, born_uk) {
   modules <- function(...) bp27_modules(raw_dataset, wave$wave, ...)
 
   cm <- bp27_cognitive_scores(
@@ -104,9 +114,12 @@ bp27_sweep <- function(raw_dataset, wave) {
   # `parent_derived` carries the parental education variables
   roster_sex <- bp27_person_sex(grid)
   for (tbl in modules("parent_derived")) {
+    person <- c("MCSID", bp27_person_key(tbl))
     if (!is.null(roster_sex)) {
-      tbl <- bp27_add(tbl, roster_sex, c("MCSID", bp27_person_key(tbl)))
+      tbl <- bp27_add(tbl, roster_sex, person)
     }
+    names(born_uk)[2] <- person[2]
+    tbl <- bp27_add(tbl, born_uk, person)
     base <- bp27_add(
       base,
       bp27_respondent(tbl, 1L, "MCSID", answering = answering),
@@ -201,8 +214,8 @@ bp27_tud_minutes <- function(tbl) {
     per_day[[nm]] <- as.numeric(minutes[child_day])
   }
 
-  # A child with two days of one type (not the case in this release) gets
-  # the mean of the two.
+  # A child with two days of one type gets the mean (not the case in this
+  # release).
   per_type <- dplyr::summarise(
     per_day,
     dplyr::across(
@@ -258,6 +271,171 @@ bp27_tud_minutes <- function(tbl) {
   out
 }
 
+#' Parents' highest NVQ level, by role, carried into sweeps that did not ask
+#'
+#' Adds `mother_nvq` and `father_nvq` (the resident mother and father
+#' figures: a natural, adoptive, foster or step parent respondent of that sex,
+#' main respondent first) and `respondent_nvq`/`respondent_nvq_PARTNER` (the
+#' main and partner respondents, whatever their relationship). Codes are the
+#' MCS derived NVQ levels. Parent education is always carried forward: sweep
+#' 7 released none at all, and a sweep 2-6 row missing a value (no resident
+#' parent of that sex, or the respondent pair not interviewed) takes its
+#' participant's latest earlier sweep with data.
+bp27_parent_education <- function(df, wave_order) {
+  nvq <- c(
+    sweep_2 = "BDDNVQ00",
+    sweep_3 = "CDDNVQ00",
+    sweep_4 = "DDDNVQ00",
+    sweep_5 = "EDNVQ00",
+    sweep_6 = "FDNVQ00"
+  )
+  rel <- c(
+    sweep_2 = "BDDREL00",
+    sweep_3 = "CDDREL00",
+    sweep_4 = "DDDREL00",
+    sweep_5 = "EDREL00",
+    sweep_6 = "FDREL00"
+  )
+  # Parent figures (natural, adoptive, foster, step): codes 1-12 at sweeps 2-4,
+  # sex-neutral 7-10 at sweeps 5-6, so sex comes from the household grid.
+  parent_codes <- list(
+    sweep_2 = 1:12,
+    sweep_3 = 1:12,
+    sweep_4 = 1:12,
+    sweep_5 = 7:10,
+    sweep_6 = 7:10
+  )
+  needed <- c(
+    nvq,
+    paste0(nvq, "_PARTNER"),
+    rel,
+    paste0(rel, "_PARTNER"),
+    "respondent_sex",
+    "respondent_sex_PARTNER"
+  )
+  if (!all(needed %in% names(df))) {
+    stop(
+      "BPIPD-27: parent education needs ",
+      paste(setdiff(needed, names(df)), collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  # Each row's value from its own sweep's column
+  own_sweep <- function(cols, suffix = "") {
+    out <- rep(NA_integer_, nrow(df))
+    for (wave in names(cols)) {
+      rows <- df$.wave == wave
+      out[rows] <- bp27_plain(df[[paste0(cols[[wave]], suffix)]])[rows]
+    }
+    out[!is.na(out) & out < 0] <- NA_integer_
+    out
+  }
+  is_parent <- function(code) {
+    out <- rep(FALSE, nrow(df))
+    for (wave in names(parent_codes)) {
+      rows <- df$.wave == wave
+      out[rows] <- code[rows] %in% parent_codes[[wave]]
+    }
+    out
+  }
+
+  main <- own_sweep(nvq)
+  partner <- own_sweep(nvq, "_PARTNER")
+  parent <- is_parent(own_sweep(rel))
+  parent_partner <- is_parent(own_sweep(rel, "_PARTNER"))
+  sex <- bp27_plain(df$respondent_sex)
+  sex_partner <- bp27_plain(df$respondent_sex_PARTNER)
+
+  by_role <- function(code) {
+    dplyr::case_when(
+      parent & sex %in% code ~ main,
+      parent_partner & sex_partner %in% code ~ partner,
+      .default = NA_integer_
+    )
+  }
+  mother <- by_role(2L)
+  father <- by_role(1L)
+
+  # For each row, the row index of its participant's latest strictly-earlier
+  # row (by wave rank) where `observed` holds, or NA. A missing value then
+  # carries from the nearest earlier sweep with data, never a later one, so
+  # gaps within sweeps 2-6 fill the same way sweep 7 does.
+  rank <- match(df$.wave, wave_order)
+  ord <- order(df$participant_id, rank)
+  latest_before <- function(observed) {
+    obs_ord <- observed[ord]
+    id_ord <- df$participant_id[ord]
+    new_participant <- c(TRUE, id_ord[-1] != id_ord[-length(id_ord)])
+    src_ord <- rep(NA_integer_, length(obs_ord))
+    last <- NA_integer_
+    for (i in seq_along(obs_ord)) {
+      if (new_participant[i]) {
+        last <- NA_integer_
+      }
+      src_ord[i] <- last
+      if (obs_ord[i]) {
+        last <- ord[i]
+      }
+    }
+    src <- rep(NA_integer_, length(observed))
+    src[ord] <- src_ord
+    src
+  }
+  carry <- function(values) {
+    from <- latest_before(!is.na(values))
+    fill <- is.na(values) & !is.na(from)
+    values[fill] <- values[from[fill]]
+    values
+  }
+  mother <- carry(mother)
+  father <- carry(father)
+  # The two respondents' levels travel together from one earlier sweep, so a
+  # row missing both is filled from a single earlier interview, not a mix.
+  from <- latest_before(!is.na(main) | !is.na(partner))
+  fill <- is.na(main) & is.na(partner) & !is.na(from)
+  main[fill] <- main[from[fill]]
+  partner[fill] <- partner[from[fill]]
+
+  levels <- c(
+    "NVQ level 1" = 1L,
+    "NVQ level 2" = 2L,
+    "NVQ level 3" = 3L,
+    "NVQ level 4" = 4L,
+    "NVQ level 5" = 5L,
+    "Overseas qual only" = 95L,
+    "None of these" = 96L
+  )
+  carried <- "; missing sweeps, sweep 7 included, carry the latest earlier sweep with data"
+  df$mother_nvq <- haven::labelled(
+    mother,
+    levels,
+    label = paste0(
+      "Highest NVQ level of the mother figure (female parent respondent)",
+      carried
+    )
+  )
+  df$father_nvq <- haven::labelled(
+    father,
+    levels,
+    label = paste0(
+      "Highest NVQ level of the father figure (male parent respondent)",
+      carried
+    )
+  )
+  df$respondent_nvq <- haven::labelled(
+    main,
+    levels,
+    label = paste0("Highest NVQ level of the main respondent", carried)
+  )
+  df$respondent_nvq_PARTNER <- haven::labelled(
+    partner,
+    levels,
+    label = paste0("Highest NVQ level of the partner respondent", carried)
+  )
+  df
+}
+
 #' Give sweep-specific names to columns MCS left unprefixed
 bp27_prefix_shared_columns <- function(sweeps) {
   # Columns the tidier itself puts in every sweep are shared on purpose.
@@ -267,6 +445,8 @@ bp27_prefix_shared_columns <- function(sweeps) {
     "mcs_cnum",
     "respondent_sex",
     "respondent_sex_PARTNER",
+    "respondent_born_uk",
+    "respondent_born_uk_PARTNER",
     ".wave",
     ".wave_label"
   )
@@ -358,6 +538,41 @@ bp27_person_sex <- function(grids) {
   roster
 }
 
+#' Whether each parent respondent was born in the UK, keyed on person number
+bp27_born_uk <- function(raw_dataset) {
+  # Asked of every respondent at sweep 2, later only of new respondents, and
+  # not at sweep 7.
+  items <- c(
+    sweep_2 = "BPREBO00",
+    sweep_3 = "CPREBO00",
+    sweep_4 = "DPREBO00",
+    sweep_5 = "EPREBO00",
+    sweep_6 = "FPREBO00"
+  )
+  answers <- lapply(names(items), function(wave) {
+    tbl <- bp27_modules(raw_dataset, wave, "parent_interview")[[1]]
+    cols <- c(
+      MCSID = "MCSID",
+      pnum = bp27_person_key(tbl),
+      born = items[[wave]]
+    )
+    tbl <- dplyr::select(tbl, dplyr::all_of(cols))
+    tbl$born <- bp27_plain(tbl$born)
+    tbl
+  })
+  born <- dplyr::bind_rows(answers)
+
+  # Three people answered at two sweeps and disagree; the first answer is kept
+  born <- born[born$born %in% c(1L, 2L), ]
+  born <- born[!duplicated(born[c("MCSID", "pnum")]), ]
+  born$respondent_born_uk <- haven::labelled(
+    born$born,
+    c(Yes = 1L, No = 2L),
+    label = "Whether the respondent was born in the UK (parent interview, sweeps 2-6)"
+  )
+  born[c("MCSID", "pnum", "respondent_born_uk")]
+}
+
 #' The `*PNUM00` person-number column for a table, e.g. `"BPNUM00"`
 bp27_person_key <- function(tbl) {
   pnum <- grep("^.PNUM00$", names(tbl), value = TRUE)
@@ -382,8 +597,8 @@ bp27_cognitive_scores <- function(tables, wave) {
     sweep_2 = "^.D",
     # BAS ability scores, T-scores and test raw totals.
     sweep_3 = "ABIL$|TSCORE$|SCO00$",
-    # BAS ability and standard scores, and section/test raw totals.
-    sweep_4 = "AB00$|SD00$|SC00$|SCO00$"
+    # BAS ability, standard and T-scores, and section/test raw totals.
+    sweep_4 = "AB00$|SD00$|SC00$|SCO00$|TS00$"
   )[[wave]]
 
   if (is.null(keep)) {
