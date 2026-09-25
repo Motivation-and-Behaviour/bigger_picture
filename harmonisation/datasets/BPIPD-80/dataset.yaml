@@ -64,11 +64,8 @@ resources:
     glob: "ISCOLE Data Dictionary_ALLSITES_Ver2_0.xlsx"
 
 notes: |
-  Main subject-level data is provided in two parallel formats: SAS (.sas7bdat) and Excel (.xlsx, sheet "_sub1").
-  "Universal ISCOLE formats_allsites.sas" is a SAS syntax/format file rather than a data table, so it is included as docs.
-  The two ".doc" files are data transfer agreements (signed and template) and are administrative, not analytic content --
-  included as docs. "APPENDIX A.docx" and "ISCOLE Data Analysis Notes.docx" are likewise reference/administrative
-  documents and included as docs.
-  The codebook ("ISCOLE Data Dictionary_ALLSITES_Ver2_0.xlsx") has 7 topic sheets (Anthropometric, Demographic,
-  Diet & Lifestyle, Neighborhood, School Audit Tool, School Environment, Accelerometry), each represented as a
-  separate codebook resource pointing at the same file.
+  Subject-level data comes in two parallel formats: SAS (.sas7bdat) and Excel (.xlsx, sheet "_sub1").
+  "Universal ISCOLE formats_allsites.sas" is a SAS format file, not data, so docs.
+  The two ".doc" files are data transfer agreements (signed and template), so docs.
+  "APPENDIX A.docx" and "ISCOLE Data Analysis Notes.docx" are reference docs.
+  The codebook has 7 topic sheets (Anthropometric, Demographic, Diet & Lifestyle, Neighborhood, School Audit Tool, School Environment, Accelerometry), each a separate codebook resource on the same file.
