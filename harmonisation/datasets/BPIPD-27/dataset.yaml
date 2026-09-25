@@ -699,10 +699,10 @@ waves:
         role: "docs"
         glob: "Sweep 7 - Age 17/mrdoc/pdf/mcs7-young-person-self-completion-questionnaire.pdf"
 notes: |
-  Contains 6 sweeps (sweep_2 through sweep_7), covering ages 3, 5, 7, 11, 14, and 17.
-  Data files are SPSS .sav files, one resource per file, covering Child (cm_*), Parent/Proxy-partner, Family, Household grid (hhgrid), and (from sweep 6) Time-Use-Diary and accelerometer modules. Sweep 6 also includes four national Index of Multiple Deprivation (IMD) files.
-  Each sweep ships its own copy of the longitudinal Excel data dictionary (mcs_longitudinal_data_dictionary_2021-02-03.xlsx, sheet "Survey_Collection_DataDict"). Despite the shared filename the six copies differ in content, so each is declared as a separate codebook resource named "Sweep N Data Dictionary" (resource names must be unique across the whole spec, including across waves).
-  Documentation is PDF, one resource per file, and includes technical reports, user guides, questionnaires (parent/CAWI/self-completion/teacher), showcards, and coding/editing booklets. Sweeps 2-4 also include an Excel wave-correspondence file (mcs_1-4_new-long_old-wide_correspondence) mapping old/new variable naming across sweeps 1-4.
+  6 sweeps (sweep_2-sweep_7), ages 3, 5, 7, 11, 14, 17.
+  SPSS .sav data files, one resource per file: Child (cm_*), Parent/Proxy-partner, Family, Household grid (hhgrid), and from sweep 6 Time-Use-Diary and accelerometer modules. Sweep 6 also has four national Index of Multiple Deprivation (IMD) files.
+  Each sweep ships its own copy of the longitudinal Excel data dictionary (mcs_longitudinal_data_dictionary_2021-02-03.xlsx, sheet "Survey_Collection_DataDict"). The six copies differ in content despite the shared filename, so each is a separate codebook resource named "Sweep N Data Dictionary" (resource names must be unique across the whole spec, including across waves).
+  Documentation is PDF, one resource per file: technical reports, user guides, questionnaires (parent/CAWI/self-completion/teacher), showcards, coding/editing booklets. Sweeps 2-4 also include an Excel wave-correspondence file (mcs_1-4_new-long_old-wide_correspondence) mapping old/new variable names across sweeps 1-4.
   Folder structure per sweep: {sweep folder}/spss/spss28/*.sav (data), {sweep folder}/mrdoc/excel/*.xlsx (codebook + correspondence file), {sweep folder}/mrdoc/pdf/*.pdf (documentation).
-  Administrative files (.rtf, .htm, .zip - e.g. file_information.rtf, UKDA_Study_*_Information.htm, ukda_data_dictionaries.zip, read*.htm) are excluded to maintain repository focus.
-  
+  Administrative files (.rtf, .htm, .zip) excluded.
+

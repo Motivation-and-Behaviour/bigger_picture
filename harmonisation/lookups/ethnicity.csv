@@ -1,29 +1,4 @@
 dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
-21,ethnicity,White,White,compatible,Direct label match
-21,ethnicity,Mixed,Mixed,compatible,Direct label match
-21,ethnicity,Asian,Asian,compatible,Direct label match
-21,ethnicity,Black,Black,compatible,Direct label match
-21,ethnicity,Other or unknown,Other,compatible,Collapsed into Other to match schema
-1639,ethnicity,European,White,proximate,Not an ideal match - may be revisited as more data are added
-1639,ethnicity,Maori,Black,proximate,Not an ideal match - may be revisited as more data are added
-1639,ethnicity,Pacific,Black,proximate,Not an ideal match - may be revisited as more data are added
-1639,ethnicity,Other (incl,Other,compatible,
-677,ethnicity,White British,White,compatible,UK census categories reported by carer
-677,ethnicity,White Irish,White,compatible,
-677,ethnicity,Other White,White,compatible,
-677,ethnicity,White and Black Caribbean,Mixed,compatible,
-677,ethnicity,White and Black African,Mixed,compatible,
-677,ethnicity,White and Asian,Mixed,compatible,
-677,ethnicity,Indian,Asian,compatible,
-677,ethnicity,Pakistani,Asian,compatible,
-677,ethnicity,Bangladeshi,Asian,compatible,
-677,ethnicity,Any other Asian or Asian British background,Asian,compatible,
-677,ethnicity,Chinese,Asian,compatible,Chinese is a separate group in UK census categories; collapsed into Asian to match schema
-677,ethnicity,Caribbean,Black,compatible,
-677,ethnicity,African,Black,compatible,
-677,ethnicity,Any other Black or Black British background,Black,compatible,
-677,ethnicity,Any other ethnic group,Other,compatible,
-677,ethnicity,Would rather not say,Unknown,compatible,Explicit non-response
 31,ethnicity,Youth: white only non-Hispanic,White,compatible,CK6ETHRACE code 1; youth self-description at Year 15
 31,ethnicity,Youth: black or African American only non-Hispanic,Black,compatible,CK6ETHRACE code 2
 31,ethnicity,Youth: Hispanic or Latino,Hispanic,compatible,CK6ETHRACE code 3
@@ -92,17 +67,75 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 27,ethnicity,Pakistani and Bangladeshi,Asian,compatible,Code 4; MCS collapses the two groups in the six-category classification
 27,ethnicity,Black or Black British,Black,compatible,"Code 5; covers Black Caribbean, Black African and Other Black"
 27,ethnicity,Other ethnic group (including Chinese),Other,compatible,"Code 6; Chinese is a separate group in the UK census but MCS folds it into the residual category at six-category level, so it cannot be recovered as Asian"
-41,ethnicity,White,White,compatible,"IBGE cor/raca category Branca, the largest Brazilian group."
-41,ethnicity,Black,Black,compatible,IBGE category Preta.
-41,ethnicity,Mixed (Pardo),Mixed,compatible,"IBGE category Parda, the Brazilian mixed-race category."
-41,ethnicity,Asian,Asian,compatible,"IBGE category Amarela, i.e. of East Asian descent."
-41,ethnicity,Indigenous,Other,proximate,"IBGE category Indigena. The dataschema has no Indigenous category so it collapses to Other, matching the Brazilian Indian row for BPIPD-80; indigenous status is kept in the indigenous variable."
-41,ethnicity,Other (specify),Other,compatible,Free-text other category; the specification was not supplied in the IPD extract.
+625,ethnicity,Hispanic or Latino,Hispanic,compatible,"CDC race/ethnicity code 4 (1999-2005) or raceeth code 6 (2007-2019): Hispanic, no other race selected"
+625,ethnicity,Multiple - Hispanic,Hispanic,compatible,"Code 7 in both codings; Hispanic origin taken ahead of race, as for BPIPD-232"
+625,ethnicity,White,White,compatible,"Code 6 (1999-2005) or raceeth 5 (2007-2019): White alone, non-Hispanic"
+625,ethnicity,Black or African American,Black,compatible,"Code 3 in both codings: Black alone, non-Hispanic"
+625,ethnicity,Asian,Asian,compatible,"Code 2 in both codings: Asian alone, non-Hispanic"
+625,ethnicity,American Indian or Alaska Native,Other,proximate,US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous
+625,ethnicity,Native Hawaiian or Other Pacific Islander,Other,proximate,US Census race group with no schema equivalent; collapsed into Other
+625,ethnicity,Multiple - Non-Hispanic,Mixed,compatible,Code 8 in both codings: two or more races selected and not Hispanic
+625,ethnicity,Unknown,Unknown,compatible,CDC race/ethnicity missing (no race selected or Hispanic item blank)
+1928,ethnicity,Branca,White,compatible,IBGE cor ou raca: branca (white)
+1928,ethnicity,Preta,Black,compatible,IBGE cor ou raca: preta (black)
+1928,ethnicity,Parda,Mixed,proximate,"IBGE cor ou raca: parda (brown), the census category for mixed ancestry and the largest group; colour-based rather than ancestry-based"
+1928,ethnicity,Amarela,Asian,compatible,"IBGE cor ou raca: amarela (yellow), i.e. East Asian descent"
+1928,ethnicity,Indigena,Other,proximate,IBGE cor ou raca: indigena (indigenous); the schema has no indigenous ethnicity level (see the indigenous variable)
+1928,ethnicity,Sem resposta,Unknown,compatible,"No answer, abandoned questionnaire or item left blank (codes 9, 99, -2, -9)"
+631,ethnicity,british/english/scottish/welsh/northern irish,White,compatible,ethn_dv code 1 (White British); UK census categories derived by the study
+631,ethnicity,irish,White,compatible,ethn_dv code 2 (White Irish)
+631,ethnicity,gypsy or irish traveller,Other,proximate,ethn_dv code 3. Dataschema has no traveller/Roma category; as BPIPD-80
+631,ethnicity,any other white background,White,compatible,ethn_dv code 4
+631,ethnicity,white and black caribbean,Mixed,compatible,ethn_dv code 5
+631,ethnicity,white and black african,Mixed,compatible,ethn_dv code 6
+631,ethnicity,white and asian,Mixed,compatible,ethn_dv code 7
+631,ethnicity,any other mixed background,Mixed,compatible,ethn_dv code 8
+631,ethnicity,indian,Asian,compatible,ethn_dv code 9
+631,ethnicity,pakistani,Asian,compatible,ethn_dv code 10
+631,ethnicity,bangladeshi,Asian,compatible,ethn_dv code 11
+631,ethnicity,chinese,Asian,compatible,"ethn_dv code 12; Chinese is a separate UK census group, collapsed into Asian"
+631,ethnicity,any other asian background,Asian,compatible,ethn_dv code 13
+631,ethnicity,caribbean,Black,compatible,ethn_dv code 14 (Black Caribbean)
+631,ethnicity,african,Black,compatible,ethn_dv code 15 (Black African)
+631,ethnicity,any other black background,Black,compatible,ethn_dv code 16
+631,ethnicity,arab,Other,proximate,ethn_dv code 17. Dataschema has no Middle Eastern/North African category; as BPIPD-80
+631,ethnicity,any other ethnic group,Other,compatible,ethn_dv code 97
+677,ethnicity,White British,White,proximate,Carer's own group.
+677,ethnicity,White Irish,White,proximate,Carer's own group.
+677,ethnicity,Other White,White,proximate,Carer's own group.
+677,ethnicity,White and Black Caribbean,Mixed,proximate,Carer's own group.
+677,ethnicity,White and Black African,Mixed,proximate,Carer's own group.
+677,ethnicity,White and Asian,Mixed,proximate,Carer's own group.
+677,ethnicity,Indian,Asian,proximate,Carer's own group.
+677,ethnicity,Pakistani,Asian,proximate,Carer's own group.
+677,ethnicity,Bangladeshi,Asian,proximate,Carer's own group.
+677,ethnicity,Any other Asian or Asian British background,Asian,proximate,Carer's own group.
+677,ethnicity,Chinese,Asian,proximate,Carer's own group.
+677,ethnicity,Caribbean,Black,proximate,Carer's own group.
+677,ethnicity,African,Black,proximate,Carer's own group.
+677,ethnicity,Any other Black or Black British background,Black,proximate,Carer's own group.
+677,ethnicity,Any other ethnic group,Other,proximate,Carer's own group.
+677,ethnicity,Would rather not say,Unknown,compatible,Explicit non-response
+21,ethnicity,White,White,compatible,Direct label match
+21,ethnicity,Mixed,Mixed,compatible,Direct label match
+21,ethnicity,Asian,Asian,compatible,Direct label match
+21,ethnicity,Black,Black,compatible,Direct label match
+21,ethnicity,Other or unknown,Other,proximate,Study code merges Other with unknown; mapped to Other.
+1639,ethnicity,European,White,compatible,NZ European and other European.
+1639,ethnicity,Maori,Other,proximate,No schema category; Maori status is carried in indigenous.
+1639,ethnicity,Pacific,Other,proximate,No schema category.
+1639,ethnicity,Other (incl,Other,proximate,"Residual group (label truncated in the source), probably including Asian."
 621,ethnicity,White/European,White,compatible,Direct label match
 621,ethnicity,Black North American/African,Black,compatible,Direct label match
 621,ethnicity,Asian,Asian,compatible,"Direct label match; the survey offers no finer Asian categories, but see East Indian below"
 621,ethnicity,Hispanic/Latino,Hispanic,compatible,Direct label match
-621,ethnicity,East Indian,Asian,compatible,"South Asian collapsed into Asian to match the schema, as for BPIPD-677 Indian/Pakistani/Bangladeshi"
+621,ethnicity,East Indian,Asian,compatible,South Asian; the schema has one Asian category
 621,ethnicity,Aboriginal/North American Indian,Other,proximate,The schema has no Indigenous ethnicity category; Indigenous identity is carried by the indigenous variable instead
 621,ethnicity,Other (please specify),Other,compatible,Free text is resolved first via the dataset lookup ethnicity_other; this row catches anything unmatched there
 621,ethnicity,Prefer not to answer,Unknown,compatible,Explicit non-response
+41,ethnicity,White,White,compatible,IBGE cor/raca category Branca.
+41,ethnicity,Black,Black,compatible,IBGE category Preta.
+41,ethnicity,Mixed (Pardo),Mixed,compatible,"IBGE category Parda, the Brazilian mixed-race category."
+41,ethnicity,Asian,Asian,compatible,"IBGE category Amarela, i.e. of East Asian descent."
+41,ethnicity,Indigenous,Other,proximate,"IBGE category Indigena; no dataschema category, so Other (proximate); indigenous status is on the indigenous row."
+41,ethnicity,Other (specify),Other,compatible,Free-text other category; the specification was not supplied in the IPD extract.
