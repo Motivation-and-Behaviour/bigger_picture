@@ -1,8 +1,8 @@
 #' Tidier for BPIPD-1528 (HBSC)
 #'
-#' Four open-access HBSC waves, one CSV each, stacked long; the 2010 and 2014
-#' files shout some of their column names and the 2014 file names several
-#' shared items differently, so both are aligned with the earlier waves first.
+#' Four open-access HBSC waves, one CSV each, stacked long. Some 2010/2014
+#' column names are uppercase and 2014 renames several shared items; both are
+#' aligned to the earlier waves first.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -39,16 +39,13 @@ tidy_BPIPD_1528 <- function(raw_dataset, spec) {
       sampleweights = m137,
       monhtcollect = month
     ) |>
-    # 2001-2010 hold one `menarche` item coding 1 as "No, I have not yet begun
-    # to menstruate" and the higher codes as the age at menarche (2001
-    # codebook: menarche, range 1-17 with 0 declared missing; the 2006 and 2010
-    # items run to 18 and 2006 also carries -9/-99, which a mapping of this
-    # column would have to clear).
-    # 2014 splits it into m136 ("Have you begun to menstruate (have periods)?",
-    # whose only answer category is "No") and m136c ("AGE MENARCHE (136, 136a
-    # and 136b combined)"), so the two are recombined onto the earlier coding.
-    # m136c also carries implausible ages (its range runs from 0.17 years), so
-    # only ages above 5 and below 19 are read as an age at menarche.
+    # 2001-2010: one `menarche` item, 1 = not yet, higher codes = age (2001
+    # codebook range 1-17, 0 = missing; 2006/2010 run to 18, 2006 also has
+    # -9/-99, to clear if mapped).
+    # 2014 splits it into m136 (begun to menstruate?, only answer category
+    # "No") and m136c (age, combines 136/136a/136b); recombined onto the
+    # earlier coding here.
+    # m136c has implausible ages (down to 0.17), so only 5 < age < 19 is kept.
     dplyr::mutate(
       menarche = dplyr::case_when(
         m136 == 1 ~ 1,
@@ -58,9 +55,8 @@ tidy_BPIPD_1528 <- function(raw_dataset, spec) {
 
   df <- dplyr::bind_rows(data_2001, data_2006, data_2010, data_2014)
 
-  # `uniqueid` is unique within a wave but repeats across waves, so the id is
-  # the wave plus the source id. It is missing in some cases and those fall
-  # back to a counter over the rows of their wave, tagged `_r`.
+  # `uniqueid` repeats across waves, so id = wave + source id. Missing values
+  # fall back to a within-wave row counter, tagged `_r`.
   df <- df |>
     dplyr::group_by(surveyyear) |>
     dplyr::mutate(
@@ -77,13 +73,11 @@ tidy_BPIPD_1528 <- function(raw_dataset, spec) {
     stop("BPIPD-1528: `participant_id` is not unique.", call. = FALSE)
   }
 
-  # Family Affluence Scale: 2001-2010 carry the four-item FAS II (famcar,
-  # bedroom, holidays, computers; 2001 codebook MQ47-MQ50) and 2014 carries the
-  # six-item FAS III instead, so the two scales are scored separately and the
-  # mapping picks whichever one its wave has. Each composite is ridit-scored
-  # within country and wave so affluence is relative to the national sample,
-  # matching HBSC's own relative FAS (validated against IRFAS / IRRELFAS_LMH in
-  # the 2018 open-access file).
+  # Family Affluence Scale: FAS II (4 items: famcar, bedroom, holidays,
+  # computers; 2001 codebook MQ47-MQ50) in 2001-2010, FAS III (6 items) in
+  # 2014; scored separately, mapping picks whichever the wave has. Ridit-scored
+  # within country and wave, matching HBSC's own relative FAS (validated
+  # against IRFAS/IRRELFAS_LMH in the 2018 OA file).
   df <- df |>
     dplyr::mutate(
       fas_sum = fasfamcar +

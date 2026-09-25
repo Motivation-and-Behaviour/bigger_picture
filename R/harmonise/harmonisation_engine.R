@@ -18,6 +18,21 @@ harmonise_from_tables <- function(
     measure_id = "primary"
   )
 
+  # A primary row with no screen-time quantity had no screen-time respondent.
+  # st_measure_type and st_measure_name describe the dataset's instrument, so
+  # they stay.
+  scoped <- bp_measure_scoped_variables(dataschema)
+  quantities <- setdiff(scoped, bp_measure_metadata_variables())
+  if ("st_responder" %in% names(primary)) {
+    present <- intersect(quantities, names(primary))
+    measured <- Reduce(
+      `|`,
+      lapply(present, function(nm) !is.na(primary[[nm]])),
+      rep(FALSE, nrow(primary))
+    )
+    primary$st_responder[!measured] <- NA
+  }
+
   measures <- unique(measure[!is.na(measure)])
   if (length(measures) == 0) {
     return(primary)
@@ -27,8 +42,6 @@ harmonise_from_tables <- function(
   # the screen-time variables come from that measure's rows (or are NA when
   # the measure does not map them), everything else is copied from the
   # primary block, and rows carrying no screen-time quantity are dropped.
-  scoped <- bp_measure_scoped_variables(dataschema)
-  quantities <- setdiff(scoped, bp_measure_metadata_variables())
   blocks <- lapply(measures, function(tag) {
     rows <- variables[!is.na(measure) & measure == tag, , drop = FALSE]
     block <- primary
