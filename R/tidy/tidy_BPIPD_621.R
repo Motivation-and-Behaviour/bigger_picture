@@ -1,10 +1,9 @@
 #' Tidier for BPIPD-621 (Ellis)
 #'
-#' One online survey run in April 2020 (Ellis, Dumas & Forbes, 2020, Can J
-#' Behav Sci 52:177-187): the "before COVID" items are retrospective recall
-#' collected on the same occasion as the "since COVID" items, not a second
-#' wave, so the file stays one row per adolescent. It carries no participant
-#' identifier, so none is constructed here.
+#' One online survey, April 2020 (Ellis, Dumas & Forbes 2020, Can J Behav Sci
+#' 52:177-187). "Before COVID" items are retrospective recall from the same
+#' occasion as "since COVID", not a second wave, so this stays one row per
+#' adolescent. No participant identifier in the file, so none is built here.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`

@@ -1,8 +1,7 @@
 #' Tidier for BPIPD-831 (Pastor-Ruiz)
 #'
-#' One Google Forms export of a single cross-sectional survey. Its headers are
-#' the full question text, so each column is renamed to the questionnaire's
-#' item number and keeps its header as the column label.
+#' Google Forms export, single cross-sectional survey. Headers are the full
+#' question text; columns are renamed to item numbers, headers kept as labels.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -13,8 +12,8 @@
 tidy_BPIPD_831 <- function(raw_dataset, spec) {
   df <- tibble::as_tibble(raw_dataset$data$data)
 
-  # 26 rows repeat an earlier row exactly across all 126 columns, so these are
-  # treated as repeated form submissions and only the first of each is kept.
+  # 26 rows exactly duplicate an earlier row (all 126 columns); treated as
+  # repeat submissions, first kept.
   df <- df[!duplicated(df), ]
 
   headers <- names(df)
@@ -24,8 +23,8 @@ tidy_BPIPD_831 <- function(raw_dataset, spec) {
     attr(df[[i]], "label") <- headers[[i]]
   }
 
-  # `EDAD` is the worksheet formula `YEAR(TODAY()) - YEAR(birth date)`,
-  # so its stored values are ages at the workbook's last save.
+  # `EDAD` is the formula YEAR(TODAY()) - YEAR(birth date): age at last
+  # save, not at collection.
   attr(df$EDAD, "label") <- paste(
     "EDAD (worksheet formula YEAR(TODAY()) - YEAR(birth date)):",
     "age at the file's last save, not age at data collection"
@@ -34,7 +33,7 @@ tidy_BPIPD_831 <- function(raw_dataset, spec) {
   df
 }
 
-#' Questionnaire item numbers read from the Google Forms headers
+#' Item numbers read from the Google Forms headers
 bp831_item_codes <- function(headers) {
   codes <- sub(
     "^\\[?[[:space:]]*([0-9]+)[[:space:]]*\\.[[:space:]]*([0-9]+)?.*$",
@@ -43,8 +42,8 @@ bp831_item_codes <- function(headers) {
   )
   codes <- sub("_$", "", codes)
 
-  # The questionnaire numbers item 19.2 as a second 19.1 and item 21.4 as 214,
-  # and the export dropped item 23.9's number; `EDAD` never had one.
+  # 19.2 is numbered as a second 19.1, 21.4 as 214, and the export dropped
+  # 23.9's number; `EDAD` never had one.
   codes[[max(which(codes == "q19_1"))]] <- "q19_2"
   codes[codes == "q214"] <- "q21_4"
   codes[codes == headers & codes != "EDAD"] <- "q23_9"

@@ -112,6 +112,6 @@ waves:
         glob: "PISA2025_Codebook.xlsx"
 
 notes: |
-  PISA (OECD Programme for International Student Assessment) is a repeated cross-sectional survey of 15-year-olds run every three years.
-  The dataset folder holds one subfolder per cycle (2000, 2003, 2006, 2009, 2012, 2015, 2018, 2022, 2025) plus `Public Code Volume 1/`, the OECD's per-cycle Stata code for Volume I of the international report (declared as docs).
-  Each cycle is declared as one wave; the wave identifier is the cycle year.
+  PISA (OECD Programme for International Student Assessment): repeated cross-sectional survey of 15-year-olds, every three years.
+  One subfolder per cycle (2000, 2003, 2006, 2009, 2012, 2015, 2018, 2022, 2025) plus `Public Code Volume 1/`, the OECD's per-cycle Stata code for Volume I of the international report (docs).
+  Each cycle is one wave; wave id is the cycle year.
