@@ -269,6 +269,78 @@ sum_nonmissing <- function(...) {
   totals
 }
 
+# Fill missing values with each participant's earliest observed value, so a
+# characteristic that does not change (ethnicity, birthplace) reaches waves
+# that did not ask it. `order` decides which observation is earliest, usually
+# the wave; observed values are never changed.
+carry_within <- function(x, id, order = seq_along(x)) {
+  if (length(id) != length(x) || length(order) != length(x)) {
+    stop(
+      "`carry_within()` needs `x`, `id` and `order` of the same length.",
+      call. = FALSE
+    )
+  }
+
+  observed <- which(!is.na(x) & !is.na(id))
+  if (length(observed) == 0) {
+    return(x)
+  }
+  earliest <- observed[base::order(order[observed])]
+  earliest <- earliest[!duplicated(id[earliest])]
+
+  fill <- x[earliest][match(id, id[earliest])]
+  missing <- is.na(x)
+  x[missing] <- fill[missing]
+  x
+}
+
+# Each participant's most frequent observed value, repeated on every row, for
+# recorded characteristics whose occasional disagreements are entry errors
+# (e.g. sex). Ties and participants with no observed value give NA.
+modal_within <- function(x, id) {
+  if (length(id) != length(x)) {
+    stop(
+      "`modal_within()` needs `x` and `id` of the same length.",
+      call. = FALSE
+    )
+  }
+
+  key <- as.character(x)
+  ok <- !is.na(key) & !is.na(id)
+  if (!any(ok)) {
+    return(x[rep(NA_integer_, length(x))])
+  }
+  ids <- unique(id[ok])
+  keys <- unique(key[ok])
+  id_code <- match(id, ids)
+  key_code <- match(key, keys)
+
+  # Count each participant x value pair, then keep the top value per
+  # participant unless the runner-up has the same count.
+  cell <- (id_code[ok] - 1L) * length(keys) + key_code[ok]
+  n <- tabulate(cell, nbins = length(ids) * length(keys))
+  seen <- which(n > 0L)
+  cell_id <- (seen - 1L) %/% length(keys) + 1L
+  cell_key <- (seen - 1L) %% length(keys) + 1L
+  cell_n <- n[seen]
+  o <- base::order(cell_id, -cell_n)
+  cell_id <- cell_id[o]
+  cell_key <- cell_key[o]
+  cell_n <- cell_n[o]
+
+  top <- !duplicated(cell_id)
+  next_same <- c(
+    cell_id[-1] == cell_id[-length(cell_id)] &
+      cell_n[-1] == cell_n[-length(cell_n)],
+    FALSE
+  )
+  winner <- top & !next_same
+  mode_code <- rep(NA_integer_, length(ids))
+  mode_code[cell_id[winner]] <- cell_key[winner]
+
+  x[match(keys[mode_code[id_code]], key)]
+}
+
 # Ridit-score `x` against its own (optionally weighted) distribution: each
 # value receives the proportion of observations below it plus half the
 # proportion at it, giving a 0-1 relative rank. NA values pass through; NA
