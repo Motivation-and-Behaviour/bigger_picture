@@ -1,14 +1,33 @@
 #' Tidier for BPIPD-80 (ISCOLE)
 #'
+#' One cross-sectional subject-level file. The SAS release only stores a format
+#' name per column, so value labels are parsed from the study's `proc format`
+#' file and attached here.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per participant
 tidy_BPIPD_80 <- function(raw_dataset, spec) {
-  data <- tibble::as_tibble(raw_dataset$data$iscole_allsubjects_data_sas)
+  # .xlsx copy has the same rows but no labels; unused.
+  data <- raw_dataset$data$iscole_allsubjects_data_sas
+  if (is.null(data)) {
+    stop(
+      "BPIPD-80: resource `iscole_allsubjects_data_sas` is missing.",
+      call. = FALSE
+    )
+  }
+  data <- tibble::as_tibble(data)
+
+  # `PID` is what the mapping uses as `participant_id`.
+  if (!"PID" %in% names(data) || anyDuplicated(data$PID) > 0L) {
+    stop(
+      "BPIPD-80: `PID` is missing or does not uniquely identify rows.",
+      call. = FALSE
+    )
+  }
 
   formats_path <- grep(
     "formats_allsites\\.sas$",
@@ -17,21 +36,21 @@ tidy_BPIPD_80 <- function(raw_dataset, spec) {
   )
   if (length(formats_path) != 1L) {
     stop(
-      "Expected exactly one ISCOLE SAS formats file among the dataset docs.",
+      "BPIPD-80: expected exactly one ISCOLE SAS formats file among the dataset docs.",
       call. = FALSE
     )
   }
 
-  apply_sas_value_labels(data, read_sas_value_formats(formats_path))
+  bp80_apply_sas_value_labels(data, bp80_read_sas_value_formats(formats_path))
 }
 
 #' Parse the numeric `value` statements out of a SAS `proc format` file
-read_sas_value_formats <- function(path) {
+bp80_read_sas_value_formats <- function(path) {
   text <- paste(
     iconv(readLines(path, warn = FALSE), "WINDOWS-1252", "UTF-8", sub = ""),
     collapse = "\n"
   )
-  # Drop /* ... */ comments, which include one commented-out format block.
+  # Drop /* ... */ comments (includes one commented-out format block).
   text <- gsub("(?s)/\\*.*?\\*/", " ", text, perl = TRUE)
 
   quoted <- "'(?:[^']|'')*'|\"(?:[^\"]|\"\")*\""
@@ -54,7 +73,7 @@ read_sas_value_formats <- function(path) {
     }
 
     codes <- as.numeric(sub("\\s*=.*$", "", pairs))
-    labels <- unquote_sas(sub("^[^=]*=\\s*", "", pairs))
+    labels <- bp80_unquote_sas(sub("^[^=]*=\\s*", "", pairs))
 
     keep <- !duplicated(codes)
     formats[[tolower(name[3])]] <- stats::setNames(codes[keep], labels[keep])
@@ -64,7 +83,7 @@ read_sas_value_formats <- function(path) {
 }
 
 #' Strip the outer quotes from a SAS string literal and unescape doubled quotes
-unquote_sas <- function(x) {
+bp80_unquote_sas <- function(x) {
   inner <- substr(x, 2L, nchar(x) - 1L)
   ifelse(
     substr(x, 1L, 1L) == "'",
@@ -74,7 +93,7 @@ unquote_sas <- function(x) {
 }
 
 #' Attach parsed SAS value labels to every numeric column that names a format
-apply_sas_value_labels <- function(data, formats) {
+bp80_apply_sas_value_labels <- function(data, formats) {
   for (column_name in names(data)) {
     column <- data[[column_name]]
     format_name <- attr(column, "format.sas", exact = TRUE)

@@ -5,7 +5,7 @@ library(tarchetypes)
 tar_option_set(
   packages = c("dplyr"),
   controller = crew::crew_controller_local(
-    workers = max(1, min(parallel::detectCores() - 2, 20)),
+    workers = max(1, min(parallel::detectCores() - 2, 24)),
     seconds_idle = 15
   ),
   format = "qs"
@@ -65,15 +65,9 @@ if (nrow(.dataset_map_plan) == 0) {
         format = "file"
       ),
 
-      # Resolve every glob once, then reuse the result: file tracking, read
-      # batching, and assembly all read from this index instead of walking the
-      # study tree again per resource. The index mirrors filesystem state that
-      # targets cannot track, so rebuild it every run; downstream targets only
-      # invalidate when the index value actually changes.
       tar_target(
         resource_index,
-        build_resource_index(dataset_dir, spec),
-        cue = tar_cue(mode = "always")
+        build_resource_index(dataset_dir, spec)
       ),
       tar_target(
         data_index,
@@ -81,10 +75,12 @@ if (nrow(.dataset_map_plan) == 0) {
         iteration = "group"
       ),
 
-      # Track DATA files only
+      # Track DATA files, plus any repo-side layout file a read depends on
+      # (`col_positions` for the `fwf` reader), so an edited layout rebuilds
+      # the read.
       tar_target(
         data_files,
-        unique(data_index$file),
+        unique(c(data_index$file, read_opt_files(data_index))),
         format = "file"
       ),
 
