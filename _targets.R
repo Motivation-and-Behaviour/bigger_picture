@@ -5,7 +5,7 @@ library(tarchetypes)
 tar_option_set(
   packages = c("dplyr"),
   controller = crew::crew_controller_local(
-    workers = max(1, min(parallel::detectCores() - 2, 20)),
+    workers = max(1, min(parallel::detectCores() - 2, 24)),
     seconds_idle = 15
   ),
   format = "qs"
@@ -65,18 +65,38 @@ if (nrow(.dataset_map_plan) == 0) {
         format = "file"
       ),
 
-      # Track DATA files only
+      tar_target(
+        resource_index,
+        build_resource_index(dataset_dir, spec)
+      ),
+      tar_target(
+        data_index,
+        assign_read_batches(resource_index),
+        iteration = "group"
+      ),
+
+      # Track DATA files, plus any repo-side layout file a read depends on
+      # (`col_positions` for the `fwf` reader), so an edited layout rebuilds
+      # the read.
       tar_target(
         data_files,
-        list_data_files_from_spec(dataset_dir, spec),
+        unique(c(data_index$file, read_opt_files(data_index))),
         format = "file"
+      ),
+
+      # One branch per batch of data files, so `crew` spreads the reads.
+      tar_target(
+        raw_parts,
+        {
+          data_files
+          read_resource_files(data_index)
+        },
+        pattern = map(data_index),
+        iteration = "list"
       ),
       tar_target(
         raw,
-        {
-          data_files
-          read_dataset_from_spec(dataset_dir, spec)
-        }
+        assemble_raw_dataset(raw_parts, resource_index, spec, dataset_dir)
       ),
       tar_target(
         tidied,
