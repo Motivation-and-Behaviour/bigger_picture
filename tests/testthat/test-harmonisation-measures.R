@@ -136,6 +136,24 @@ test_that("a measure block adds rows for the participants it observes", {
   expect_identical(primary$st_measure_name, rep("Custom", 3))
 })
 
+test_that("primary rows with no screen-time quantity have no responder", {
+  data <- make_measure_data()
+  data$tv_q[2] <- NA
+  data$game_q[2] <- NA
+  result <- harmonise_from_tables(
+    analysis_base = data,
+    spec = make_test_spec(),
+    dataschema = make_measure_dataschema(),
+    harmonisation_config = make_test_config(
+      make_measure_variables(with_diary = FALSE)
+    )
+  )
+
+  expect_identical(result$st_responder, c("Self", NA, "Self"))
+  # The instrument descriptors stay on every row
+  expect_identical(result$st_measure_name, rep("Custom", 3))
+})
+
 test_that("without measure tags the harmoniser behaves as before", {
   result <- harmonise_from_tables(
     analysis_base = make_measure_data(),
