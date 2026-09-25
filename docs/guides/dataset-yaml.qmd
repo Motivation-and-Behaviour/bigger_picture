@@ -50,6 +50,7 @@ Each item in `resources` describes one file — or one group of related files �
 | `col_names` | `csv`/`csv2`/`tsv` only, optional | Whether the first row is a header. Default `true`; set `false` for a headerless file, whose columns are then named `X1`, `X2`, … for the tidier to rename (see [Headerless delimited files](#headerless-delimited-files)). |
 | `col_positions` | `fwf` only, **required** | Path to the fixed-width layout CSV, relative to the dataset's spec folder (see [Fixed-width files](#fixed-width-files)). |
 | `encoding` | Optional | Character encoding of the source file, e.g. `"latin1"`. Accepted by `csv`, `csv2`, `tsv`, `fwf`, `stata`, `spss` and `sas`; any other reader refuses it. |
+| `columns` | `stata`/`spss`/`por`/`sas` only, optional | Read only the listed columns of a very wide file; each entry is a regular expression matched against the whole column name (see [Reading only some columns](#reading-only-some-columns)). |
 
 ### Roles
 
@@ -57,7 +58,7 @@ Each item in `resources` describes one file — or one group of related files �
 |------|---------|
 | `data` | The actual dataset file(s) — `.sav`, `.dta`, `.csv`, `.xlsx`, etc. **Requires a `reader`.** Read into R and passed to the tidier. |
 | `codebook` | Data dictionaries and variable documentation. The file path is recorded for reference, but the file is **not read into R**. |
-| `docs` | Anything else: technical reports, user guides, questionnaires, syntax files. Paths only — must not have a `reader` or any reader option (`sheet`, `range`, `table`, `object`, `col_names`, `col_positions`, `encoding`). |
+| `docs` | Anything else: technical reports, user guides, questionnaires, syntax files. Paths only — must not have a `reader` or any reader option (`sheet`, `range`, `table`, `object`, `col_names`, `col_positions`, `encoding`, `columns`). |
 
 ### Globs
 
@@ -95,10 +96,10 @@ readers <- tibble::tribble(
   "tsv", "`.tsv` (tab-separated)", "`col_names`, `encoding` (both optional)",
   "fwf", "`.dat` / `.txt` (fixed-width, no delimiter)",
   "`col_positions` (required), `encoding` (optional)",
-  "stata", "`.dta` (Stata)", "`encoding` (optional)",
-  "spss", "`.sav` (SPSS)", "`encoding` (optional)",
-  "por", "`.por` (SPSS Portable)", "",
-  "sas", "`.sas7bdat` (SAS)", "`encoding` (optional)",
+  "stata", "`.dta` (Stata)", "`encoding`, `columns` (both optional)",
+  "spss", "`.sav` (SPSS)", "`encoding`, `columns` (both optional)",
+  "por", "`.por` (SPSS Portable)", "`columns` (optional)",
+  "sas", "`.sas7bdat` (SAS)", "`encoding`, `columns` (both optional)",
   "rds", "`.rds` (single R object)", "",
   "rda", "`.rda` / `.RData` (saved R workspace)",
   "`object` (optional if the file holds one object)",
@@ -160,6 +161,35 @@ Set `col_names: false` so every row is data:
 ```
 
 The columns are then named `X1`, `X2`, … and the tidier renames them from the study's documentation.
+
+### Reading only some columns {#reading-only-some-columns}
+
+By default every column of a data file is read, and that is the right default: the tidier and later harmonisation work can only use what was read.
+The exception is a supplementary file that is far wider than the study needs, such as a household-panel adult questionnaire with thousands of columns, joined to the main table only for a few context variables like parental education or household income.
+Reading such files whole can make the raw target many gigabytes, which every tidier iteration then has to load again.
+
+For the `stata`, `spss`, `por` and `sas` readers, `columns` lists the columns to keep:
+
+```yaml
+- name: "adult_interviews"
+  role: "data"
+  glob: "stata/*_adult.dta"
+  reader: "stata"
+  columns:
+    - "person_id"
+    - "[a-f]_(household_id|person_no)"
+    - "[a-f]_highest_qual"
+```
+
+- Each entry is a regular expression matched against the **whole** column name, so a plain name such as `"person_id"` selects exactly that column and not `person_id_old`.
+- A pattern lets one resource cover files whose column names carry a per-file prefix, as in the wave-prefixed names above.
+- Every entry must match at least one column in every file the glob matches; one that matches nothing is an error, so a typo cannot pass for an item the study never collected.
+  That check is per entry, so an alternation such as `"[a-f]_(household_id|highest_qual)"` passes if either name exists; list items as separate entries when each one must be present.
+- Columns come back in the file's order, not the order listed.
+
+Only the selected columns are read, so this saves memory as well as store space.
+Keep the list to what the tidier joins on and what harmonisation needs, and make sure the file's codebook is declared (`role: codebook`) so that columns left unread can still be found and added later.
+Do not use `columns` on a study's main data file: keep all of its columns, and do any renaming or column mapping in the tidier.
 
 ### Fixed-width files {#fixed-width-files}
 

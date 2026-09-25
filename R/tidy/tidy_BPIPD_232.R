@@ -23,7 +23,7 @@ tidy_BPIPD_232 <- function(raw_dataset, spec) {
   }
 
   df_2016 <- dfs$nsch_2016_data |>
-    # 2016 codes the age form T1/T2/T3 where every later year uses 1/2/3.
+    # 2016 codes age form as T1/T2/T3; later years use 1/2/3.
     dplyr::mutate(FORMTYPE = readr::parse_number(FORMTYPE)) |>
     dplyr::rename_with(~ bp232_align_names(.x, "16"))
   df_2017 <- dfs$nsch_2017_data |>
@@ -41,10 +41,9 @@ tidy_BPIPD_232 <- function(raw_dataset, spec) {
   df_2023 <- dfs$nsch_2023_data |>
     dplyr::rename_with(~ bp232_align_names(.x, "23"))
 
-  # Two columns have a year that is not the file's: `schlsafe_17` is the 2018
-  # file's second copy of its `SchlSafe_18`. `fasd_2022` is an all-NA
-  #placeholder that appears only in the 2021 file, and is not the 2022 file's
-  # `FASD_22` (which aligns to `fasd_nschyr`).
+  # `schlsafe_17` is 2018's second copy of `SchlSafe_18`, not a 2017 column.
+  # `fasd_2022` is an all-NA placeholder in the 2021 file, unrelated to the
+  # 2022 file's `FASD_22` (which aligns to `fasd_nschyr`).
   out <- dplyr::bind_rows(
     df_2016,
     df_2017,
@@ -56,8 +55,8 @@ tidy_BPIPD_232 <- function(raw_dataset, spec) {
     df_2023
   )
 
-  # The NSCH samples one child per household, and `hhid` is distinct within
-  # and across the eight annual files
+  # `hhid` identifies one sampled child per household, unique across all
+  # eight files
   if (anyDuplicated(out$hhid) > 0) {
     stop("BPIPD-232: `hhid` does not uniquely identify rows.", call. = FALSE)
   }
@@ -68,9 +67,8 @@ tidy_BPIPD_232 <- function(raw_dataset, spec) {
 
 #' One name per construct across the eight annual releases
 bp232_align_names <- function(x, year_suffix) {
-  # `TOTAGE_12_17` is an age range, not a 2017 release stamp: it is the third
-  # of the triple `TOTAGE_0_5` / `TOTAGE_6_11` / `TOTAGE_12_17` that every one
-  # of the eight files has
+  # `TOTAGE_12_17` is an age range, not a `_17` year stamp: it's the third of
+  # `TOTAGE_0_5` / `TOTAGE_6_11` / `TOTAGE_12_17`, present in every file
   renamed <- ifelse(
     x == "TOTAGE_12_17",
     x,
@@ -82,9 +80,8 @@ bp232_align_names <- function(x, year_suffix) {
 
 #' Variable labels for the stacked table, keyed by aligned column name
 #'
-#' Each year declares a "Variable labels" workbook among its `docs`. Where the
-#' wording of a label differs between years, the latest year in which the
-#' column appears is used.
+#' Each year's `docs` includes a variable-labels workbook; where wording
+#' differs between years, the latest year wins.
 bp232_labels <- function(raw_dataset) {
   matches <- raw_dataset$meta$matches
   books <- matches[
@@ -115,9 +112,8 @@ bp232_labels <- function(raw_dataset) {
 
 #' Read one year's variable-label workbook
 bp232_read_labels <- function(path) {
-  # One sheet of name/label pairs, but only four of the eight workbooks put a
-  # `Name`/`Label` header on it, so the sheet is read without one and the
-  # header dropped where it is present.
+  # One sheet of name/label pairs; only 4 of 8 workbooks have a `Name`/`Label`
+  # header, so it's read headerless and any header row dropped afterwards.
   info <- readxl::read_excel(
     path,
     sheet = 1L,
