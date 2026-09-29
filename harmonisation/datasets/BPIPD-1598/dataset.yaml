@@ -1,0 +1,32 @@
+dataset_id: "1598"
+dataset_name: "Social Distancing and Development Project"
+status: "in_progress"
+
+resources:
+  - name: "screentime_additional_measures_ngg_data"
+    role: "data"
+    reader: "excel"
+    sheet: "Data"
+    glob: "ScreenTimeCollab_Final_AdditionalMeasures_ngg.xlsx"
+  - name: "screentime_additional_measures_ngg_info"
+    role: "codebook"
+    reader: "excel"
+    sheet: "Info"
+    glob: "ScreenTimeCollab_Final_AdditionalMeasures_ngg.xlsx"
+  - name: "screentime_additional_measures_missing_screen_use_data"
+    role: "data"
+    reader: "excel"
+    sheet: "Data"
+    glob: "ScreenTimeCollab_Final_AdditionalMeasures_Version missing screen use.xlsx"
+  - name: "screentime_additional_measures_missing_screen_use_info"
+    role: "codebook"
+    reader: "excel"
+    sheet: "Info"
+    glob: "ScreenTimeCollab_Final_AdditionalMeasures_Version missing screen use.xlsx"
+
+notes: >
+  Social Distancing and Development Project (BPIPD-1598).
+  This setup tracks both collaborative screen-time Excel files.
+  For each workbook, the "Data" sheet is configured as a primary data resource
+  and the "Info" sheet is configured as an Excel-readable codebook resource to ensure
+  both are parsed into the targets pipeline.
