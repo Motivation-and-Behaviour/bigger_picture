@@ -1,0 +1,34 @@
+dataset_id: "2583"
+dataset_name: "CSTADS"
+status: "in_progress"
+
+waves:
+  - wave: "2021-22"
+    label: "2021-22"
+    wave_dir: "."
+    resources:
+      - name: "CSTADS 2021-22 Data"
+        role: "data"
+        glob: "2021-22-cstads-ectade-pumf-fmgd-data-donnees-.csv"
+        reader: "csv"
+      - name: "CSTADS 2021-22 User Guide"
+        role: "docs"
+        glob: "202122-cstads-pumf-user-guide.docx"
+  - wave: "2023-24"
+    label: "2023-24"
+    wave_dir: "."
+    resources:
+      - name: "CSTADS 2023-24 Data"
+        role: "data"
+        glob: "202324-csads-ecade-pumf-fmgd-data-donnees.csv"
+        reader: "csv"
+      - name: "CSTADS 2023-24 User Guide"
+        role: "docs"
+        glob: "202324-csads-pumf-user-guide.docx"
+notes: |
+  2 waves: 2021-22 and 2023-24. Each wave has one CSV data file and one Word user guide.
+  Filenames are bilingual (English/French combined) 
+  Statistics Canada PUMF naming: pumf/fmgd = Public Use Microdata File / Fichier de microdonnees a grande diffusion; 
+  ectade/ecade = French CSTADS acronym variants; data-donnees = data (EN/FR).
+  Note: file naming is inconsistent between waves - the 2021-22 files use "cstads" while the 2023-24 files use 
+  "csads" (missing the "t"), and the 2021-22 data filename has a trailing hyphen before ".csv". 
