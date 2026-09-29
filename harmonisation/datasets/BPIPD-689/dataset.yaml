@@ -1,0 +1,18 @@
+dataset_id: "689"
+dataset_name: "Sucha"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Internet_Gaming_Disorder_and_Risky_Behaviours.xlsx"
+    reader: "excel"
+    sheet: "data"
+  - name: "codebook"
+    role: "codebook"
+    glob: "Internet_Gaming_Disorder_and_Risky_Behaviours.xlsx"
+    reader: "excel"
+    sheet: "variables"
+
+notes: |
+  Includes one excel file with one sheet for data and one sheet for codebook. 
