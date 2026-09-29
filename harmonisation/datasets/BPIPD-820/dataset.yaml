@@ -1,0 +1,19 @@
+dataset_id: "820"
+dataset_name: "Krahé"
+status: "in_progress"
+
+resources:
+  - name: "Krahé Dataset"
+    role: "data"
+    glob: "Data_set_Krahé.sav"
+    reader: "spss"
+  - name: "Documentation and Handbook"
+    role: "docs"
+    glob: "{Data_description_Krahé.docx,Krahé_et al_PPMC_2012.pdf,Krahé_Möller_JOA_2011.pdf,Scale_Handbook.docx}"
+
+notes: |
+  Dataset includes primary SPSS data and supporting documents. Note: 
+  The 'Scale_Handbook.docx' is currently categorized as 'docs'; this 
+  should be reviewed and moved to 'codebook' if it is later 
+  confirmed to contain variable-specific scoring keys.
+  
