@@ -1,0 +1,12 @@
+dataset_id: "845"
+dataset_name: "Anuroj"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Cleaned data for bigger picture - Anuroj - Aroonkamonsri.sav"
+    reader: "spss"
+  - name: "codebook"
+    role: "codebook"
+    glob: "Codebook - Anuroj - Aroonkamonsri.doc"
