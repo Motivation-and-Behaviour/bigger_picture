@@ -1,0 +1,79 @@
+dataset_id: "138"
+dataset_name: "Healthy Steps for Young Children (BPIPD-138)"
+status: "in_progress"  
+
+resources:
+  - name: "data_dataset1"
+    role: "data"
+    glob: "ICPSR_04049/DS0001/04049-0001-Data.por"
+    reader: "spss"  
+  - name: "data_dataset2"
+    role: "data"
+    glob: "ICPSR_04049/DS0002/04049-0002-Data.por"
+    reader: "spss"
+  - name: "data_dataset3"
+    role: "data"
+    glob: "ICPSR_04049/DS0003/04049-0003-Data.por"
+    reader: "spss"
+  - name: "data_dataset4"
+    role: "data"
+    glob: "ICPSR_04049/DS0004/04049-0004-Data.por"
+    reader: "spss"
+  - name: "data_dataset5"
+    role: "data"
+    glob: "ICPSR_04049/DS0005/04049-0005-Data.por"
+    reader: "spss"
+  - name: "data_dataset6"
+    role: "data"
+    glob: "ICPSR_04049/DS0006/04049-0006-Data.por"
+    reader: "spss"
+  - name: "data_dataset7"
+    role: "data"
+    glob: "ICPSR_04049/DS0007/04049-0007-Data.por"
+    reader: "spss"
+  - name: "data_dataset8"
+    role: "data"
+    glob: "ICPSR_04049/DS0008/04049-0008-Data.por"
+    reader: "spss"
+  - name: "data_dataset9"
+    role: "data"
+    glob: "ICPSR_04049/DS0009/04049-0009-Data.por"
+    reader: "spss"
+  - name: "data_dataset10"
+    role: "data"
+    glob: "ICPSR_04049/DS0010/04049-0010-Data.por"
+    reader: "spss"
+  - name: "docs_description_citation"
+    role: "docs"
+    glob: "ICPSR_04049/04049-descriptioncitation.html"
+  - name: "docs_manifest"
+    role: "docs"
+    glob: "ICPSR_04049/04049-manifest.txt"
+  - name: "docs_related_literature"
+    role: "docs"
+    glob: "ICPSR_04049/04049-related_literature.txt"
+  - name: "docs_user_guide_vol1"
+    role: "docs"
+    glob: "ICPSR_04049/04049-User_guide-volume_1.pdf"
+  - name: "docs_user_guide_vol2"
+    role: "docs"
+    glob: "ICPSR_04049/04049-User_guide-volume_2.pdf"
+  - name: "docs_terms_of_use"
+    role: "docs"
+    glob: "ICPSR_04049/TermsOfUse.html"
+
+notes: |
+  Dataset: Healthy Steps for Young Children, BPIPD-138 (ICPSR study 04049).
+
+  Structure: single root folder "ICPSR_04049" containing ten DS000X subfolders
+  (DS0001-DS0010), each holding exactly one SPSS Portable (.por) data file, plus a
+  set of top-level reference files (description/citation, manifest, related
+  literature, two user guide volumes, and a terms-of-use page).
+
+  No dataset-specific codebook file was present in this listing - the two user
+  guide PDFs ("04049-User_guide-volume_1.pdf" / "volume_2.pdf") appear to be the
+  closest equivalent (ICPSR user guides typically bundle codebook-style variable
+  documentation alongside methodology), but they've been captured as "docs"
+  resources rather than "codebook" since it isn't confirmed they are laid out as
+  a per-variable codebook. Reclassify to role "codebook" if, on inspection, either
+  volume is in fact a variable-level codebook.
