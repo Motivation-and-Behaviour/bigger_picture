@@ -6,6 +6,18 @@ resources:
   - name: "kmp_user_guide_2025"
     role: "docs"
     glob: "2025 한국미디어패널조사_유저가이드.pdf"
+  - name: "kmp_person_codebook"
+    role: "codebook"
+    glob: "P_codebook_v32.xlsx"
+  - name: "kmp_household_codebook"
+    role: "codebook"
+    glob: "H_codebook_v32.xlsx"
+  - name: "kmp_diary_codebook"
+    role: "codebook"
+    glob: "D_codebook_v32.xlsx"
+  - name: "kmp_diary_wide_codebook"
+    role: "codebook"
+    glob: "D_codebook_wide_v32.xlsx"
 waves:
   - wave: "10"
     label: "10"
@@ -249,12 +261,19 @@ waves:
         reader: "csv"
 
 notes: |
-  15 waves (rounds 10 through 24).
+  Korea Media Panel Survey (KISDI), 15 annual waves; the wave ids 10-24 are the survey years 2010-2024.
 
   Each wave has three CSV data files, one per unit of observation:
-    d{wave}v31_KMP_csv.csv - device-level data
+    d{wave}v31_KMP_csv.csv - three-day media diary, one row per respondent per diary day
+                             (the resources keep their original `device_data` names)
     h{wave}v31_KMP_csv.csv - household-level data
     p{wave}v31_KMP_csv.csv - person/individual-level data
-  "v31" appears to denote the data version/release, common to all files.
+  "v31" is the data release; the codebooks are release v32, which adds 2025 and
+  documents the same variable names.
 
-  A single 2025 user guide PDF is included as a dataset-wide docs resource.
+  Dataset-wide resources: the 2025 user guide PDF, and KISDI's integrated codebooks
+  (Korean) for the person (P), household (H) and diary (D) files. Each codebook has a
+  guide sheet, a variable-comparison sheet listing every variable by year, one sheet
+  per questionnaire section with codes and weighted percentages, and frequency sheets.
+  D_codebook_wide_v32 documents the wide (one row per respondent) diary release, which
+  is not in the study folder; the long diary files read here follow D_codebook_v32.
