@@ -126,3 +126,11 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 232,maternal_education,Some college or technical school,Post-secondary,compatible,"A#_GRADE codes 5-6 (some college credit, no degree; associate degree)"
 232,maternal_education,College degree or higher,Bachelor degree or higher,compatible,A#_GRADE codes 7-9 (bachelor's; master's; doctorate or professional degree)
 232,maternal_education,Mother not identified or education not reported,Unknown,compatible,"No caregiver met the DRC mother definition, or that caregiver had no education recorded"
+2207,maternal_education,No schooling,Secondary school or less,compatible,Parent figure's own p_school code 1 (not schooled)
+2207,maternal_education,Elementary school or less,Secondary school or less,compatible,Parent figure's own p_school code 2
+2207,maternal_education,Middle school or less,Secondary school or less,compatible,Parent figure's own p_school code 3
+2207,maternal_education,High school or less,Secondary school or less,compatible,Parent figure's own p_school code 4 (high school graduate or less)
+2207,maternal_education,"University, not completed",Post-secondary,compatible,"p_school code 5 with p_school2 enrolled, on leave, dropped out or coursework completed (1-4): tertiary study begun, not completed"
+2207,maternal_education,University graduate (junior college or four-year),Bachelor degree or higher,proximate,"p_school code 5 with p_school2 graduated (5); pools junior-college and four-year graduates, assigned to the level assumed to hold most of them"
+2207,maternal_education,Graduate school,Bachelor degree or higher,compatible,p_school code 6 (graduate school enrolled or above)
+2207,maternal_education,Don't know or no response,Unknown,compatible,p_school or p_school2 9999; also rows with no parent figure's education found

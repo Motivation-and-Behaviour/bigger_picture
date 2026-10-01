@@ -1,0 +1,529 @@
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,pid,"sprintf(""%.0f"", pid)","KISDI's integrated person id (pid), stable across survey years; printed without scientific notation.",,
+wave,compatible,.wave,as.character(.wave),"The spec's wave id, which is the survey's own two-digit year label (10 = 2010 ... 24 = 2024).",,
+data_year,compatible,.wave,2000 + as.integer(.wave),"Survey year from the release's year label (files h/p/d<yy>); annual fieldwork, diary days fall in the survey year (diary month and day recorded, no year).",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,compatible,p_wt,as.numeric(p_wt),"Cross-sectional person weight p_wt as released (integrated-panel weight from 2019), recomputed every year; mean 1. The diary weight d_wt is identical (user guide p.26).",,
+survey_strata,unavailable,,,Not in the supplied extract.,,
+survey_cluster,unavailable,,,Not in the supplied extract.,,
+age_years,compatible,p_age1,"na_if(p_age1, 9999) + 0.5","Age in completed years (p_age1, man-age from birth year) + 0.5; 9999 (2 rows) = NA. Ages 3-5 in 19 early rows kept.",,
+sex,compatible,"p_gender, pid","coalesce(modal_within(recode_values(p_gender, 1 ~ ""Male"", 2 ~ ""Female"", default = NA_character_), pid), ""Unknown"")","Self-reported sex (p_gender: 1 male, 2 female; no other option), participant's modal value across years.",,
+country,inferred,,"""South Korea""",Nationwide household panel of South Korea (KISDI user guide p.6; Seoul and metropolitan cities only in 2010).,,
+state,unavailable,,,Not an Australian dataset.,,
+ethnicity,unavailable,,,Not collected.,,
+indigenous,unavailable,,,Not collected.,,
+minority,unavailable,,,Not collected.,,
+immigrant_background,unavailable,,,Not collected.,,
+born_in_country,unavailable,,,Not collected.,,
+ses_area,unavailable,,,Not collected.,,
+ses_household,proximate,"h_h_income1, p_age1, .wave","local({
+  band <- na_if(h_h_income1, 9999)
+  ref <- !is.na(band) & !is.na(p_age1) & p_age1 <= 19
+  out <- rep(""Unknown"", length(band))
+  for (w in unique(.wave)) {
+    x <- band[.wave == w & ref]
+    codes <- sort(unique(band[.wave == w & !is.na(band)]))
+    r <- sapply(codes, function(b) mean(x < b) + mean(x == b) / 2)
+    mid <- if (any(r >= 0.4 & r <= 0.6)) r >= 0.4 & r <= 0.6 else abs(r - 0.5) == min(abs(r - 0.5))
+    level <- ifelse(mid, ""Medium"", ifelse(r < 0.4, ""Low"", ""High""))
+    hit <- .wave == w & !is.na(band)
+    out[hit] <- level[match(band[hit], codes)]
+  }
+  out
+})","Monthly household income in KRW 0.5 million bands (h_h_income1), cut by band ridit within wave among respondents aged 19 or under (household SES cuts); 9999 and no household record = Unknown. Carried in the tidier across gaps of 12 months or less (83 values). Proximate: among under-20s 2012 splits 32/34/33 (Low/Medium/High); every other wave lies within 10 points of 40/20/40.",,
+ses_household_measure,inferred,,"""Income: average monthly household income, KRW 0.5 million bands""","Household questionnaire, every year; see ses_household.",,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,proximate,"mother_school, mother_school2","lookup_values(
+  case_when(
+    mother_school %in% 1 ~ ""No schooling"",
+    mother_school %in% 2 ~ ""Elementary school or less"",
+    mother_school %in% 3 ~ ""Middle school or less"",
+    mother_school %in% 4 ~ ""High school or less"",
+    mother_school %in% 5 & mother_school2 %in% 1:4 ~ ""University, not completed"",
+    mother_school %in% 5 & mother_school2 %in% 5 ~ ""University graduate (junior college or four-year)"",
+    mother_school %in% 6 ~ ""Graduate school"",
+    .default = ""Don't know or no response""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education"",
+  default = ""Unknown""
+)","Female parent figure. Parent figure's own highest level (p_school) and completion (p_school2) from their person row: the head and spouse for a child of the head, the head's child and child-in-law for a grandchild. Linked and carried in the tidier (earliest year with a value). University (code 5) graduates pool junior-college and four-year degrees; they go to Bachelor as the level assumed to hold most, hence proximate.",maternal_education,
+paternal_education,proximate,"father_school, father_school2","lookup_values(
+  case_when(
+    father_school %in% 1 ~ ""No schooling"",
+    father_school %in% 2 ~ ""Elementary school or less"",
+    father_school %in% 3 ~ ""Middle school or less"",
+    father_school %in% 4 ~ ""High school or less"",
+    father_school %in% 5 & father_school2 %in% 1:4 ~ ""University, not completed"",
+    father_school %in% 5 & father_school2 %in% 5 ~ ""University graduate (junior college or four-year)"",
+    father_school %in% 6 ~ ""Graduate school"",
+    .default = ""Don't know or no response""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education"",
+  default = ""Unknown""
+)","Male parent figure. Parent figure's own highest level (p_school) and completion (p_school2) from their person row: the head and spouse for a child of the head, the head's child and child-in-law for a grandchild. Linked and carried in the tidier (earliest year with a value). University (code 5) graduates pool junior-college and four-year degrees; they go to Bachelor as the level assumed to hold most, hence proximate.",maternal_education,
+parental_education,proximate,"mother_school, mother_school2, father_school, father_school2","local({
+  top <- pmax(
+    case_when(
+      mother_school %in% 1:4 ~ mother_school,
+      mother_school %in% 5 & mother_school2 %in% 1:4 ~ 5,
+      mother_school %in% 5 & mother_school2 %in% 5 ~ 6,
+      mother_school %in% 6 ~ 7
+    ),
+    case_when(
+      father_school %in% 1:4 ~ father_school,
+      father_school %in% 5 & father_school2 %in% 1:4 ~ 5,
+      father_school %in% 5 & father_school2 %in% 5 ~ 6,
+      father_school %in% 6 ~ 7
+    ),
+    na.rm = TRUE
+  )
+  lookup_values(
+    recode_values(
+      top,
+      1 ~ ""No schooling"",
+      2 ~ ""Elementary school or less"",
+      3 ~ ""Middle school or less"",
+      4 ~ ""High school or less"",
+      5 ~ ""University, not completed"",
+      6 ~ ""University graduate (junior college or four-year)"",
+      7 ~ ""Graduate school"",
+      default = ""Don't know or no response""
+    ),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education"",
+    default = ""Unknown""
+  )
+})","Higher of the two parent figures' ranked levels; don't-know codes dropped first, so one known parent suffices. Parent figure's own highest level (p_school) and completion (p_school2) from their person row: the head and spouse for a child of the head, the head's child and child-in-law for a grandchild. Linked and carried in the tidier (earliest year with a value). University (code 5) graduates pool junior-college and four-year degrees; they go to Bachelor as the level assumed to hold most, hence proximate.",maternal_education,
+urbanicity,proximate,"h_area_siz, p_area_siz","recode_values(coalesce(h_area_siz, p_area_siz), 1 ~ ""Urban"", 2 ~ ""Rural"", default = ""Unknown"")","Administrative area type of the household (h_area_siz; person-file copy p_area_siz where the household record is missing): 1 city (si-bu) = Urban, 2 county (gun-bu) = Rural. Proximate: binary city/county split, not a settlement-size typology.",,
+family_structure,proximate,parent_figures,"coalesce(
+  recode_values(
+    parent_figures,
+    2 ~ ""Two biological/adoptive parents"",
+    1 ~ ""Single parent"",
+    0 ~ ""Other"",
+    default = ""Unknown""
+  ),
+  ""Unknown""
+)","Resident parent figures in the household roster (tidier: head and spouse for a child of the head, head's child and child-in-law for a grandchild), carried across gaps of 12 months or less (168 values). 2 = two parents, 1 = single parent, 0 = no parent figure (e.g. grandparent-headed) = Other; other relations to the head = Unknown. Proximate: step-parents cannot be separated from parents.",,
+fam_screenrules,partial,"h_d01001, h_d01015, h_d01016, h_d01021, h_d01022, h_d01019, h_d02001, h_d02016, h_d02017, h_d02021, h_d02022, h_d03001, h_d03016, h_d03017, h_d03023, h_d03022, h_d04001, h_d04015, h_d04016, p_age1","case_when(
+  is.na(p_age1) | p_age1 > 18 ~ NA_character_,
+  h_d01001 %in% 1 & (h_d01015 %in% 1 | h_d01016 %in% 1 | h_d01021 %in% 1 | h_d01022 %in% 1 | h_d01019 %in% 1) ~ ""TRUE"",
+  h_d02001 %in% 1 & (h_d02016 %in% 1 | h_d02017 %in% 1 | h_d02021 %in% 1 | h_d02022 %in% 1) ~ ""TRUE"",
+  h_d03001 %in% 1 & (h_d03016 %in% 1 | h_d03017 %in% 1 | h_d03023 %in% 1 | h_d03022 %in% 1) ~ ""TRUE"",
+  h_d04001 %in% 1 & (h_d04015 %in% 1 | h_d04016 %in% 1) ~ ""TRUE"",
+  h_d01001 %in% 1:2 | h_d02001 %in% 1:2 | h_d03001 %in% 1:2 | h_d04001 %in% 1:2 ~ ""FALSE""
+)","Household questionnaire, household respondent, every year: is TV, internet or game use (smart devices from 2014) restricted for children and teenagers at home, and how. TRUE if any device's restriction limits total time, time of day or day of week, bans use, or requires permission or need; content, site and app blocking, and device settings alone = FALSE. Partial: one household answer about its children, not this child. NA for respondents aged 19+.",,
+fam_bedroomscreen,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+school_grade,compatible,"p_school4, p_school6, p_school8","case_when(
+  p_school4 %in% 1:6 ~ paste(""Elementary School"", c(""1st"", ""2nd"", ""3rd"", ""4th"", ""5th"", ""6th"")[p_school4], ""Grade""),
+  p_school6 %in% 1:3 ~ paste(""Middle School"", c(""1st"", ""2nd"", ""3rd"")[p_school6], ""Grade""),
+  p_school8 %in% 1:3 ~ paste(""High School"", c(""1st"", ""2nd"", ""3rd"")[p_school8], ""Grade"")
+)","Self-reported current grade for enrolled elementary (p_school4, 1-6), middle (p_school6, 1-3) and high school (p_school8, 1-3) students; undocumented code 9 and 9999 = NA.",,
+st_measure_type,inferred,,"""Continuous""","Three-day media diary in 15-minute slots (main and simultaneous medium, activity and connection per slot); KISDI's per-day minutes per code.",,
+st_measure_name,inferred,,"""Time use diary""","KMPS media diary, three consecutive days per respondent, every year 2010-2024.",,
+st_responder,inferred,,"""Self""","Every household member aged 6+ keeps their own diary (user guide p.6, p.16).",,
+st_total_wd,incompatible,"d_M_time3_wd, d_M_time7_wd, d_M_time19_wd, d_M_time3_we, d_M_time7_we, d_M_time19_we",,"The diary records separate media, activities and routes; no all-screen item, and a sum of separately recorded media is not a total (DR-0004).",,
+st_total_we,incompatible,"d_M_time3_wd, d_M_time7_wd, d_M_time19_wd, d_M_time3_we, d_M_time7_we, d_M_time19_we",,"The diary records separate media, activities and routes; no all-screen item, and a sum of separately recorded media is not a total (DR-0004).",,
+st_total,incompatible,"d_M_time3_wd, d_M_time7_wd, d_M_time19_wd, d_M_time3_we, d_M_time7_we, d_M_time19_we",,"The diary records separate media, activities and routes; no all-screen item, and a sum of separately recorded media is not a total (DR-0004).",,
+st_watch_wd,compatible,"d_A_time1_wd, d_A_time2_wd, d_A_time3_wd, d_A_time4_wd, d_A_time5_wd, d_A_time37_wd, d_A_time38_wd, d_A_time8_wd, d_A_time41_wd, d_A_time9_wd, d_A_time10_wd","(d_A_time1_wd +
+  d_A_time2_wd +
+  d_A_time3_wd +
+  d_A_time4_wd +
+  d_A_time5_wd +
+  d_A_time37_wd +
+  d_A_time38_wd +
+  d_A_time8_wd +
+  d_A_time41_wd +
+  d_A_time9_wd +
+  d_A_time10_wd) /
+  60","Sum of diary activity codes for TV programmes live or VOD (1-5, 37, 38), films and videos (8 to 2019, 41 from 2020) and personal broadcasts/creator video (9, 10) on any medium (DR-0002). Cinema (30), outdoor screens (29) and multimedia rooms (32) not included. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_watch_we,compatible,"d_A_time1_we, d_A_time2_we, d_A_time3_we, d_A_time4_we, d_A_time5_we, d_A_time37_we, d_A_time38_we, d_A_time8_we, d_A_time41_we, d_A_time9_we, d_A_time10_we","(d_A_time1_we +
+  d_A_time2_we +
+  d_A_time3_we +
+  d_A_time4_we +
+  d_A_time5_we +
+  d_A_time37_we +
+  d_A_time38_we +
+  d_A_time8_we +
+  d_A_time41_we +
+  d_A_time9_we +
+  d_A_time10_we) /
+  60","Sum of diary activity codes for TV programmes live or VOD (1-5, 37, 38), films and videos (8 to 2019, 41 from 2020) and personal broadcasts/creator video (9, 10) on any medium (DR-0002). Cinema (30), outdoor screens (29) and multimedia rooms (32) not included. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_watch,compatible,"d_A_time1_wd, d_A_time2_wd, d_A_time3_wd, d_A_time4_wd, d_A_time5_wd, d_A_time37_wd, d_A_time38_wd, d_A_time8_wd, d_A_time41_wd, d_A_time9_wd, d_A_time10_wd, d_A_time1_we, d_A_time2_we, d_A_time3_we, d_A_time4_we, d_A_time5_we, d_A_time37_we, d_A_time38_we, d_A_time8_we, d_A_time41_we, d_A_time9_we, d_A_time10_we","(5 *
+  (d_A_time1_wd +
+    d_A_time2_wd +
+    d_A_time3_wd +
+    d_A_time4_wd +
+    d_A_time5_wd +
+    d_A_time37_wd +
+    d_A_time38_wd +
+    d_A_time8_wd +
+    d_A_time41_wd +
+    d_A_time9_wd +
+    d_A_time10_wd) +
+  2 *
+    (d_A_time1_we +
+      d_A_time2_we +
+      d_A_time3_we +
+      d_A_time4_we +
+      d_A_time5_we +
+      d_A_time37_we +
+      d_A_time38_we +
+      d_A_time8_we +
+      d_A_time41_we +
+      d_A_time9_we +
+      d_A_time10_we)) /
+  7 /
+  60","Sum of diary activity codes for TV programmes live or VOD (1-5, 37, 38), films and videos (8 to 2019, 41 from 2020) and personal broadcasts/creator video (9, 10) on any medium (DR-0002). Cinema (30), outdoor screens (29) and multimedia rooms (32) not included. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_game_wd,compatible,d_A_time23_wd,d_A_time23_wd / 60,"Diary activity code 23, online or built-in games on any medium. Multimedia rooms (32, pooling DVD rooms with game rooms) not used. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_game_we,compatible,d_A_time23_we,d_A_time23_we / 60,"Diary activity code 23, online or built-in games on any medium. Multimedia rooms (32, pooling DVD rooms with game rooms) not used. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_game,compatible,"d_A_time23_wd, d_A_time23_we",(5 * d_A_time23_wd + 2 * d_A_time23_we) / 7 / 60,"Diary activity code 23, online or built-in games on any medium. Multimedia rooms (32, pooling DVD rooms with game rooms) not used. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_game_comp_wd,compatible,"d_M_gametime7_wd, d_M_gametime8_wd, d_M_gametime9_wd",(d_M_gametime7_wd + d_M_gametime8_wd + d_M_gametime9_wd) / 60,"Gaming (activity 23) on a desktop, laptop or netbook (media 7, 8, 9), crossed per slot in the tidier; sum of the three computers (DR-0002). Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_game_comp_we,compatible,"d_M_gametime7_we, d_M_gametime8_we, d_M_gametime9_we",(d_M_gametime7_we + d_M_gametime8_we + d_M_gametime9_we) / 60,"Gaming (activity 23) on a desktop, laptop or netbook (media 7, 8, 9), crossed per slot in the tidier; sum of the three computers (DR-0002). Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_game_comp,compatible,"d_M_gametime7_wd, d_M_gametime8_wd, d_M_gametime9_wd, d_M_gametime7_we, d_M_gametime8_we, d_M_gametime9_we","(5 *
+  (d_M_gametime7_wd + d_M_gametime8_wd + d_M_gametime9_wd) +
+  2 * (d_M_gametime7_we + d_M_gametime8_we + d_M_gametime9_we)) /
+  7 /
+  60","Gaming (activity 23) on a desktop, laptop or netbook (media 7, 8, 9), crossed per slot in the tidier; sum of the three computers (DR-0002). (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_game_console_wd,compatible,d_M_gametime32_wd,d_M_gametime32_wd / 60,"Gaming (activity 23) on a home console (media 32), crossed per slot in the tidier. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_game_console_we,compatible,d_M_gametime32_we,d_M_gametime32_we / 60,"Gaming (activity 23) on a home console (media 32), crossed per slot in the tidier. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_game_console,compatible,"d_M_gametime32_wd, d_M_gametime32_we",(5 * d_M_gametime32_wd + 2 * d_M_gametime32_we) / 7 / 60,"Gaming (activity 23) on a home console (media 32), crossed per slot in the tidier. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_game_handheldconsole_wd,compatible,d_M_gametime31_wd,d_M_gametime31_wd / 60,"Gaming (activity 23) on a handheld console (media 31), crossed per slot in the tidier. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_game_handheldconsole_we,compatible,d_M_gametime31_we,d_M_gametime31_we / 60,"Gaming (activity 23) on a handheld console (media 31), crossed per slot in the tidier. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_game_handheldconsole,compatible,"d_M_gametime31_wd, d_M_gametime31_we",(5 * d_M_gametime31_wd + 2 * d_M_gametime31_we) / 7 / 60,"Gaming (activity 23) on a handheld console (media 31), crossed per slot in the tidier. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_game_active_wd,unavailable,,,Not collected.,,
+st_game_active_we,unavailable,,,Not collected.,,
+st_game_active,unavailable,,,Not collected.,,
+st_game_phone_wd,compatible,"d_M_gametime17_wd, d_M_gametime18_wd, d_M_gametime19_wd",(d_M_gametime17_wd + d_M_gametime18_wd + d_M_gametime19_wd) / 60,"Gaming (activity 23) on a smartphone, feature phone or PDA phone (media 19, 17, 18), crossed per slot in the tidier; sum (DR-0002). Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_game_phone_we,compatible,"d_M_gametime17_we, d_M_gametime18_we, d_M_gametime19_we",(d_M_gametime17_we + d_M_gametime18_we + d_M_gametime19_we) / 60,"Gaming (activity 23) on a smartphone, feature phone or PDA phone (media 19, 17, 18), crossed per slot in the tidier; sum (DR-0002). Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_game_phone,compatible,"d_M_gametime17_wd, d_M_gametime18_wd, d_M_gametime19_wd, d_M_gametime17_we, d_M_gametime18_we, d_M_gametime19_we","(5 *
+  (d_M_gametime17_wd + d_M_gametime18_wd + d_M_gametime19_wd) +
+  2 * (d_M_gametime17_we + d_M_gametime18_we + d_M_gametime19_we)) /
+  7 /
+  60","Gaming (activity 23) on a smartphone, feature phone or PDA phone (media 19, 17, 18), crossed per slot in the tidier; sum (DR-0002). (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_game_tablet_wd,compatible,d_M_gametime10_wd,d_M_gametime10_wd / 60,"Gaming (activity 23) on a tablet (media 10, which also covers e-readers and kids' pads), crossed per slot in the tidier. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_game_tablet_we,compatible,d_M_gametime10_we,d_M_gametime10_we / 60,"Gaming (activity 23) on a tablet (media 10, which also covers e-readers and kids' pads), crossed per slot in the tidier. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_game_tablet,compatible,"d_M_gametime10_wd, d_M_gametime10_we",(5 * d_M_gametime10_wd + 2 * d_M_gametime10_we) / 7 / 60,"Gaming (activity 23) on a tablet (media 10, which also covers e-readers and kids' pads), crossed per slot in the tidier. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_comp_nongaming_wd,compatible,"d_M_time7_wd, d_M_time8_wd, d_M_time9_wd, d_M_gametime7_wd, d_M_gametime8_wd, d_M_gametime9_wd",((d_M_time7_wd + d_M_time8_wd + d_M_time9_wd) - (d_M_gametime7_wd + d_M_gametime8_wd + d_M_gametime9_wd)) / 60,"Desktop, laptop and netbook minutes (media 7, 8, 9) minus the minutes gaming on them (activity 23 crossed per slot in the tidier). Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_comp_nongaming_we,compatible,"d_M_time7_we, d_M_time8_we, d_M_time9_we, d_M_gametime7_we, d_M_gametime8_we, d_M_gametime9_we",((d_M_time7_we + d_M_time8_we + d_M_time9_we) - (d_M_gametime7_we + d_M_gametime8_we + d_M_gametime9_we)) / 60,"Desktop, laptop and netbook minutes (media 7, 8, 9) minus the minutes gaming on them (activity 23 crossed per slot in the tidier). Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_comp_nongaming,compatible,"d_M_time7_wd, d_M_time8_wd, d_M_time9_wd, d_M_gametime7_wd, d_M_gametime8_wd, d_M_gametime9_wd, d_M_time7_we, d_M_time8_we, d_M_time9_we, d_M_gametime7_we, d_M_gametime8_we, d_M_gametime9_we","(5 *
+  ((d_M_time7_wd + d_M_time8_wd + d_M_time9_wd) - (d_M_gametime7_wd + d_M_gametime8_wd + d_M_gametime9_wd)) +
+  2 * ((d_M_time7_we + d_M_time8_we + d_M_time9_we) - (d_M_gametime7_we + d_M_gametime8_we + d_M_gametime9_we))) /
+  7 /
+  60","Desktop, laptop and netbook minutes (media 7, 8, 9) minus the minutes gaming on them (activity 23 crossed per slot in the tidier). (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_comp_wd,compatible,"d_M_time7_wd, d_M_time8_wd, d_M_time9_wd",(d_M_time7_wd + d_M_time8_wd + d_M_time9_wd) / 60,"Sum of diary media codes 7 desktop, 8 laptop and 9 netbook, any activity (DR-0002). Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_comp_we,compatible,"d_M_time7_we, d_M_time8_we, d_M_time9_we",(d_M_time7_we + d_M_time8_we + d_M_time9_we) / 60,"Sum of diary media codes 7 desktop, 8 laptop and 9 netbook, any activity (DR-0002). Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_comp,compatible,"d_M_time7_wd, d_M_time8_wd, d_M_time9_wd, d_M_time7_we, d_M_time8_we, d_M_time9_we",(5 * (d_M_time7_wd + d_M_time8_wd + d_M_time9_wd) + 2 * (d_M_time7_we + d_M_time8_we + d_M_time9_we)) / 7 / 60,"Sum of diary media codes 7 desktop, 8 laptop and 9 netbook, any activity (DR-0002). (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_tablet_wd,partial,d_M_time10_wd,d_M_time10_wd / 60,"Diary media code 10, tablet PC; partial: the code also covers e-book readers, kids' and language-learning pads and convertible PCs. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_tablet_we,partial,d_M_time10_we,d_M_time10_we / 60,"Diary media code 10, tablet PC; partial: the code also covers e-book readers, kids' and language-learning pads and convertible PCs. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_tablet,partial,"d_M_time10_wd, d_M_time10_we",(5 * d_M_time10_wd + 2 * d_M_time10_we) / 7 / 60,"Diary media code 10, tablet PC; partial: the code also covers e-book readers, kids' and language-learning pads and convertible PCs. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_phone_wd,compatible,d_M_time19_wd,d_M_time19_wd / 60,"Diary media code 19, smartphone (the code covers kids' phones and smartwatches run from the phone), any activity; feature phones (17) are not smartphones. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_phone_we,compatible,d_M_time19_we,d_M_time19_we / 60,"Diary media code 19, smartphone (the code covers kids' phones and smartwatches run from the phone), any activity; feature phones (17) are not smartphones. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_phone,compatible,"d_M_time19_wd, d_M_time19_we",(5 * d_M_time19_wd + 2 * d_M_time19_we) / 7 / 60,"Diary media code 19, smartphone (the code covers kids' phones and smartwatches run from the phone), any activity; feature phones (17) are not smartphones. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_socmedia_wd,compatible,d_A_time21_wd,d_A_time21_wd / 60,"Diary activity code 21, social network services (blogs, mini-homepages, Twitter and the like) on any medium; messaging is code 19. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_socmedia_we,compatible,d_A_time21_we,d_A_time21_we / 60,"Diary activity code 21, social network services (blogs, mini-homepages, Twitter and the like) on any medium; messaging is code 19. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_socmedia,compatible,"d_A_time21_wd, d_A_time21_we",(5 * d_A_time21_wd + 2 * d_A_time21_we) / 7 / 60,"Diary activity code 21, social network services (blogs, mini-homepages, Twitter and the like) on any medium; messaging is code 19. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_educational_wd,partial,"d_A_time42_wd, d_A_time46_wd, .wave","ifelse(as.integer(.wave) >= 20, (d_A_time42_wd + d_A_time46_wd) / 60, NA)","2020-2024 only (codes introduced 2020 and 2022). Sum of activity codes 42 learning videos and 46 online classes (DR-0002); partial: other screen study (document work, information search) cannot be separated from non-study use. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_educational_we,partial,"d_A_time42_we, d_A_time46_we, .wave","ifelse(as.integer(.wave) >= 20, (d_A_time42_we + d_A_time46_we) / 60, NA)","2020-2024 only (codes introduced 2020 and 2022). Sum of activity codes 42 learning videos and 46 online classes (DR-0002); partial: other screen study (document work, information search) cannot be separated from non-study use. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_educational,partial,"d_A_time42_wd, d_A_time46_wd, d_A_time42_we, d_A_time46_we, .wave","ifelse(
+  as.integer(.wave) >= 20,
+  (5 * (d_A_time42_wd + d_A_time46_wd) + 2 * (d_A_time42_we + d_A_time46_we)) / 7 / 60,
+  NA
+)","2020-2024 only (codes introduced 2020 and 2022). Sum of activity codes 42 learning videos and 46 online classes (DR-0002); partial: other screen study (document work, information search) cannot be separated from non-study use. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_work_wd,incompatible,"d_A_time24_wd, d_A_time24_we",,"Activity code 24 (document work: word processor, spreadsheet, slides) pools paid work with study; no item on work use.",,
+st_work_we,incompatible,"d_A_time24_wd, d_A_time24_we",,"Activity code 24 (document work: word processor, spreadsheet, slides) pools paid work with study; no item on work use.",,
+st_work,incompatible,"d_A_time24_wd, d_A_time24_we",,"Activity code 24 (document work: word processor, spreadsheet, slides) pools paid work with study; no item on work use.",,
+st_internet_wd,partial,"d_C_time9_wd, d_C_time10_wd, d_C_time11_wd, d_C_time12_wd, d_C_time13_wd, d_C_time21_wd",(d_C_time9_wd + d_C_time10_wd + d_C_time11_wd + d_C_time12_wd + d_C_time13_wd + d_C_time21_wd) / 60,"Sum of diary connection codes for internet routes: wired, mobile data, Wi-Fi, mobile router, WiBro and OTT app/web (9-13, 21; DR-0002). Partial: main and simultaneous media are each counted, so two online media in one slot count twice. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_internet_we,partial,"d_C_time9_we, d_C_time10_we, d_C_time11_we, d_C_time12_we, d_C_time13_we, d_C_time21_we",(d_C_time9_we + d_C_time10_we + d_C_time11_we + d_C_time12_we + d_C_time13_we + d_C_time21_we) / 60,"Sum of diary connection codes for internet routes: wired, mobile data, Wi-Fi, mobile router, WiBro and OTT app/web (9-13, 21; DR-0002). Partial: main and simultaneous media are each counted, so two online media in one slot count twice. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
+st_internet,partial,"d_C_time9_wd, d_C_time10_wd, d_C_time11_wd, d_C_time12_wd, d_C_time13_wd, d_C_time21_wd, d_C_time9_we, d_C_time10_we, d_C_time11_we, d_C_time12_we, d_C_time13_we, d_C_time21_we","(5 *
+  (d_C_time9_wd + d_C_time10_wd + d_C_time11_wd + d_C_time12_wd + d_C_time13_wd + d_C_time21_wd) +
+  2 * (d_C_time9_we + d_C_time10_we + d_C_time11_we + d_C_time12_we + d_C_time13_we + d_C_time21_we)) /
+  7 /
+  60","Sum of diary connection codes for internet routes: wired, mobile data, Wi-Fi, mobile router, WiBro and OTT app/web (9-13, 21; DR-0002). Partial: main and simultaneous media are each counted, so two online media in one slot count twice. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_videochat,compatible,"d_A_time44_wd, d_A_time44_we, .wave","ifelse(as.integer(.wave) >= 21, (5 * d_A_time44_wd + 2 * d_A_time44_we) / 7 / 60, NA)","2021-2024 only: diary activity code 44, video calls (voice and video calls were one code, 16, before 2021). (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_messaging_wd,compatible,"d_A_time17_wd, d_A_time19_wd",(d_A_time17_wd + d_A_time19_wd) / 60,Sum of diary activity codes 17 text messages and 19 chat/messenger (DR-0002). Tidier's mean over the diary days flagged as weekdays; minutes / 60.,,
+st_messaging_we,compatible,"d_A_time17_we, d_A_time19_we",(d_A_time17_we + d_A_time19_we) / 60,Sum of diary activity codes 17 text messages and 19 chat/messenger (DR-0002). Tidier's mean over the diary days flagged as weekend days; minutes / 60.,,
+st_messaging,compatible,"d_A_time17_wd, d_A_time19_wd, d_A_time17_we, d_A_time19_we",(5 * (d_A_time17_wd + d_A_time19_wd) + 2 * (d_A_time17_we + d_A_time19_we)) / 7 / 60,"Sum of diary activity codes 17 text messages and 19 chat/messenger (DR-0002). (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_creating,partial,"d_A_time25_wd, d_A_time47_wd, d_A_time25_we, d_A_time47_we",(5 * (d_A_time25_wd + d_A_time47_wd) + 2 * (d_A_time25_we + d_A_time47_we)) / 7 / 60,"Sum of activity codes 25 graphics and programming work and 47 photo/video shooting and editing (from 2022) (DR-0002). Partial: content posted through social media sits in code 21. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_email,compatible,"d_A_time18_wd, d_A_time18_we",(5 * d_A_time18_wd + 2 * d_A_time18_we) / 7 / 60,"Diary activity code 18, e-mail. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_shopping,partial,"d_A_time22_wd, d_A_time22_we",(5 * d_A_time22_wd + 2 * d_A_time22_we) / 7 / 60,"Diary activity code 22, online commerce; partial: the code also covers online banking, payments, bookings and taxi calls. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
+st_total_school,incompatible,"d_M_edutime3_wd, d_M_edutime7_wd, d_M_edutime19_wd",,No all-screen item; a sum of separately recorded media at an education facility is not a total (DR-0004).,,
+st_educational_school,partial,"d_A_edutime42_wd, d_A_edutime46_wd, .wave","ifelse(as.integer(.wave) >= 20, (d_A_edutime42_wd + d_A_edutime46_wd) / 60, NA)","2020-2024 only. Learning videos and online classes (activity 42, 46) at an education facility; sum (DR-0002). Minutes at an education facility (diary place code 4, which also covers private academies), averaged in the tidier over weekday diary days with any time there; minutes / 60.",,
+st_comp_school,partial,"d_M_edutime7_wd, d_M_edutime8_wd, d_M_edutime9_wd",(d_M_edutime7_wd + d_M_edutime8_wd + d_M_edutime9_wd) / 60,"Desktop, laptop and netbook (media 7, 8, 9) at an education facility; sum (DR-0002). Minutes at an education facility (diary place code 4, which also covers private academies), averaged in the tidier over weekday diary days with any time there; minutes / 60.",,
+st_tablet_school,partial,d_M_edutime10_wd,d_M_edutime10_wd / 60,"Tablet (media 10) at an education facility. Minutes at an education facility (diary place code 4, which also covers private academies), averaged in the tidier over weekday diary days with any time there; minutes / 60.",,
+st_internet_school,partial,"d_C_edutime9_wd, d_C_edutime10_wd, d_C_edutime11_wd, d_C_edutime12_wd, d_C_edutime13_wd, d_C_edutime21_wd",(d_C_edutime9_wd + d_C_edutime10_wd + d_C_edutime11_wd + d_C_edutime12_wd + d_C_edutime13_wd + d_C_edutime21_wd) / 60,"Internet connection routes (9-13, 21) at an education facility; sum (DR-0002); two online media in one slot count twice. Minutes at an education facility (diary place code 4, which also covers private academies), averaged in the tidier over weekday diary days with any time there; minutes / 60.",,
+st_phone_school,partial,d_M_edutime19_wd,d_M_edutime19_wd / 60,"Smartphone (media 19) at an education facility. Minutes at an education facility (diary place code 4, which also covers private academies), averaged in the tidier over weekday diary days with any time there; minutes / 60.",,
+acc_academachment_selfrated,unavailable,,,Not collected.,,
+acc_academachment_lettergrades,unavailable,,,Not collected.,,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
+acc_schoolengage_caresschool,unavailable,,,Not collected.,,
+acc_schoolengage_homework,unavailable,,,Not collected.,,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,unavailable,,,Not collected.,,
+acc_literacy_stdtest,unavailable,,,Not collected.,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_atten_self.,,
+beh_atten_self,unavailable,,,Not collected.,,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_bullied,unavailable,,,Not collected.,,
+beh_beenbullied,unavailable,,,Not collected.,,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,unavailable,,,Not collected.,,
+beh_truancy,unavailable,,,Not collected.,,
+beh_stealing,unavailable,,,Not collected.,,
+beh_vandalism,unavailable,,,Not collected.,,
+beh_alcohol_self,partial,p_g01017,"recode_values(p_g01017, 0 ~ ""FALSE"", 1:7 ~ ""TRUE"", default = NA_character_)","2014 only, ages 13+: average drinking days per week (0-7); TRUE for 1 or more. Partial: usual-week frequency with no stated recall, so drinking less than weekly may read as none.",,
+beh_tobacco_self,partial,p_g01012,"recode_values(p_g01012, 2 ~ ""TRUE"", c(1, 3) ~ ""FALSE"", default = NA_character_)","2014 only, ages 13+: smoking status (1 quit, 2 currently smoking, 3 never); TRUE = currently smoking. Partial: current status with no recall window.",,
+beh_cannabis_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_agg_self,unavailable,,,Not collected.,,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_argues,unavailable,,,Not collected.,,
+beh_persistence_finishwork,unavailable,,,Not collected.,,
+beh_emotreg_stayscalm,unavailable,,,Not collected.,,
+beh_peerprob_makefriends,unavailable,,,Not collected.,,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ not administered.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_self,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,No cognitive testing.,,
+cog_langexec_nepsy,unavailable,,,No cognitive testing.,,
+cog_phono_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhibcont_nepsy,unavailable,,,No cognitive testing.,,
+cog_vismotor_nepsy,unavailable,,,No cognitive testing.,,
+cog_verbalfluency_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhib_nihtb_flanker,unavailable,,,No cognitive testing.,,
+cog_flex_nihtb_dccs,unavailable,,,No cognitive testing.,,
+cog_wm_nihtb_listsort,unavailable,,,No cognitive testing.,,
+cog_speed_nihtb_pattern,unavailable,,,No cognitive testing.,,
+cog_epimem_nihtb_picseq,unavailable,,,No cognitive testing.,,
+cog_vocab_nihtb_picvocab,unavailable,,,No cognitive testing.,,
+cog_fluidcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_crystcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_totalcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_wm_digitspan,unavailable,,,No cognitive testing.,,
+cog_iq_fullscale,unavailable,,,No cognitive testing.,,
+cog_vocab_bpvs,unavailable,,,No cognitive testing.,,
+cog_vocab_ppvt,unavailable,,,No cognitive testing.,,
+cog_execfunc_brief_parent,unavailable,,,No cognitive testing.,,
+cog_vocab_bas_naming,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,No cognitive testing.,,
+cog_spatial_bas_pattern,unavailable,,,No cognitive testing.,,
+cog_verbalreason_bas_versim,unavailable,,,No cognitive testing.,,
+cog_schoolread_bracken,unavailable,,,No cognitive testing.,,
+cog_creativethinking_stdtest,unavailable,,,No cognitive testing.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ not administered.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_int_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_int_sdq_self,unavailable,,,SDQ not administered.,,
+mh_int_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered; see mh_dep_self.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered; see mh_dep_self.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered; see mh_dep_self.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered; see mh_dep_self.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered; see mh_dep_self.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered; see mh_dep_self.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered; see mh_dep_self.,,
+mh_distress_k6_self,unavailable,,,K6 not administered.,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_anx_masc_self,unavailable,,,MASC not administered; see mh_anx_self.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered; see mh_anx_self.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered; see mh_anx_self.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered; see mh_anx_self.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered; see mh_anx_self.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered; see mh_anx_self.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,compatible,p_g01022,"recode_values(p_g01022, 1 ~ ""Yes"", 2 ~ ""No"", default = NA_character_)","2014 only, ages 13+: in the past 12 months, sadness or hopelessness for two weeks or more that disrupted daily life (yes/no); 9999 = NA.",,
+mh_dep_self,compatible,"p_f07007, p_f07008","local({
+  items <- cbind(p_f07007, p_f07008)
+  items[!items %in% 1:4] <- NA
+  rowSums(items - 1)
+})","2021 only, ages 13+: PHQ-2 items (little interest or pleasure; no motivation, down, depressed or hopeless) rated never, rarely, sometimes, often over the past month; 1-4 rebased to 0-3, sum 0-6, complete case.",,
+mh_dep_measure,inferred,.wave,"ifelse(
+  .wave == ""21"",
+  ""PHQ-2, 2 of 2 items, 0-3 item scoring (range 0-6), sum; responses never, rarely, sometimes, often over the past month instead of not at all to nearly every day over two weeks"",
+  NA
+)",Wave 21 (2021) only; see mh_dep_self.,,
+mh_anx_self,compatible,"p_f07009, p_f07010","local({
+  items <- cbind(p_f07009, p_f07010)
+  items[!items %in% 1:4] <- NA
+  rowSums(items - 1)
+})","2021 only, ages 13+: GAD-2 items (nervous, anxious or on edge; cannot stop or control worrying) rated never, rarely, sometimes, often over the past month; 1-4 rebased to 0-3, sum 0-6, complete case.",,
+mh_anx_measure,inferred,.wave,"ifelse(
+  .wave == ""21"",
+  ""GAD-2, 2 of 2 items, 0-3 item scoring (range 0-6), sum; responses never, rarely, sometimes, often over the past month instead of not at all to nearly every day over two weeks"",
+  NA
+)",Wave 21 (2021) only; see mh_anx_self.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,proximate,p_g01021,"recode_values(p_g01021, 1 ~ ""A great deal"", 2 ~ ""A lot"", 3 ~ ""A little"", 4 ~ ""None at all"", default = NA_character_)","2014 only, ages 13+: stress felt in daily life, four levels (very much, quite a lot, a little, hardly at all) mapped by rank; Some unused.",,
+mh_lonely_self,incompatible,p_f07002,,"The only single item is 'I feel I am alone' (2021), indirect wording; scored in mh_lonely_scale_self.",,
+mh_lonely_scale_self,compatible,"p_f07001, p_f07002, p_f07003, p_f07004, p_f07005, p_f07006","local({
+  items <- cbind(p_f07001, p_f07002, p_f07003, p_f07004, p_f07005, p_f07006)
+  items[!items %in% 1:4] <- NA
+  rowSums(items)
+})","2021 only, ages 13+: six UCLA Loneliness Scale items (lack companionship, alone, no longer close to anyone, isolated, no one knows me well, people around but not with me), never 1 to often 4 over the past month; all loneliness-keyed, sum 6-24, complete case.",,
+mh_lonely_measure,inferred,.wave,"ifelse(
+  .wave == ""21"",
+  ""UCLA Loneliness Scale (version 3) items, 6 of 20 items, 1-4 item scoring (range 6-24), sum; no reversed items; past-month recall"",
+  NA
+)",Wave 21 (2021) only; see mh_lonely_scale_self.,,
+mh_sad_self,partial,p_f07008,"recode_values(p_f07008, 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", default = NA_character_)","2021 only, ages 13+: 'I have no motivation, feel down, depressed or hopeless' over the past month (never, rarely, sometimes, often); Always unused. Partial: wording pools low mood with hopelessness and lack of motivation. Also scored in mh_dep_self.",,
+mh_worry_self,partial,p_f07010,"recode_values(p_f07010, 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", default = NA_character_)","2021 only, ages 13+: 'I cannot stop or control worrying' over the past month (never, rarely, sometimes, often), general worry; Always unused. Partial: uncontrollable worry rather than worry. Also scored in mh_anx_self.",,
+mh_irritable_self,incompatible,p_f02004,,"'Felt irritated' in the past month (2013, 2017, 2021) is rated on a seven-point scale from not at all to always with degree steps (slightly, fairly) and a neutral midpoint, not a frequency scale.",,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,unavailable,,,Not collected.,,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered; see wb_lifesat_swls_self.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_dep_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_dep_self.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered.,,
+wb_bodyimage,unavailable,,,Not collected.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_swls_self.,,
+wb_lifesat_swls_self,compatible,"p_f06001, p_f06002, p_f06003, p_f06004, p_f06005","local({
+  items <- cbind(p_f06001, p_f06002, p_f06003, p_f06004, p_f06005)
+  items[!items %in% 1:7] <- NA
+  rowSums(items)
+})","2021 only, ages 13+: Satisfaction with Life Scale, five items on the published 1-7 agreement scale; sum 5-35, complete case.",,
+wb_lifesat_singleitem_self,incompatible,p_f06003,,"The only general item, 'I am satisfied with my life' (2021), is SWLS item 3, scored in wb_lifesat_swls_self.",,
+wb_happiness_singleitem_self,partial,p_f02002,"ifelse(p_f02002 %in% 1:7, p_f02002, NA)","2013, 2017, 2021, ages 13+: felt happy in the past month, 1 not at all to 7 always, with degree steps and a neutral midpoint (4); higher = happier. Partial: an experienced-emotion rating rather than a general happiness question.",,
+wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,incompatible,p_f01002,,"Only 'satisfaction with the relational side of life' (2013, 2017, 2021), which pools all relationships.",,
+wb_domainsat_friends_self,incompatible,p_f01002,,"Only 'satisfaction with the relational side of life' (2013, 2017, 2021), which pools all relationships.",,
+wb_domainsat_school_self,unavailable,,,Not collected.,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_selfesteem_rosenberg_self,partial,"p_h01001, p_h01002, p_h01003, p_h01004, p_h01005, p_h01006, p_h01007, p_h01008, p_h01009, p_h01010","local({
+  items <- cbind(
+    p_h01001,
+    p_h01002,
+    5 - p_h01003,
+    p_h01004,
+    5 - p_h01005,
+    p_h01006,
+    p_h01007,
+    5 - p_h01008,
+    5 - p_h01009,
+    5 - p_h01010
+  )
+  items[!items %in% 1:4] <- NA
+  rowSums(items)
+})","2015, 2020, 2021, ages 13+: Rosenberg Self-Esteem Scale, 10 items, 1-4 (not really, average, mostly, always), items 3, 5, 8, 9 and 10 (the negatively worded ones) reversed; sum 10-40, complete case. Partial: the response scale is a truth-frequency scale rather than the published agreement scale.",,
+wb_selfesteem_self,compatible,"p_h01001, p_h01002, p_h01003, p_h01004, p_h01005, p_h01006, p_h01007, p_h01008, p_h01009, p_h01010","local({
+  items <- cbind(
+    p_h01001,
+    p_h01002,
+    5 - p_h01003,
+    p_h01004,
+    5 - p_h01005,
+    p_h01006,
+    p_h01007,
+    5 - p_h01008,
+    5 - p_h01009,
+    5 - p_h01010
+  )
+  items[!items %in% 1:4] <- NA
+  rowSums(items)
+})","2015, 2020, 2021, ages 13+: Rosenberg Self-Esteem Scale, 10 items, 1-4 (not really, average, mostly, always), items 3, 5, 8, 9 and 10 (the negatively worded ones) reversed; sum 10-40, complete case.",,
+wb_selfesteem_measure,inferred,.wave,"ifelse(
+  .wave %in% c(""15"", ""20"", ""21""),
+  ""Rosenberg Self-Esteem Scale, 10 of 10 items, 1-4 item scoring (range 10-40), sum; items 3, 5, 8, 9, 10 reversed; responses not really, average, mostly, always instead of strongly disagree to strongly agree"",
+  NA
+)","Waves 15, 20 and 21 (2015, 2020, 2021); see wb_selfesteem_self.",,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered; see wb_selfefficacy_self.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,SHS not administered; see wb_happiness_singleitem_self.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,unavailable,,,Not collected.,,
+wb_posaffect_self,incompatible,"p_f02001, p_f02002, p_f02003",,"Past-month ratings of feeling pleasant, happy and at ease (2013, 2017, 2021) are single emotion items of no published positive-affect scale.",,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_eudaimonic_self,compatible,"p_f03001, p_f03002, p_f03003, p_f03004, p_f03005, p_f03006, p_f03007, p_f03008","local({
+  items <- cbind(p_f03001, p_f03002, p_f03003, p_f03004, p_f03005, p_f03006, p_f03007, p_f03008)
+  items[!items %in% 1:7] <- NA
+  rowSums(items)
+})","2013 and 2017, ages 13+: Flourishing Scale (purpose, supportive relationships, engagement, contribution, competence, good person, optimism, respect), eight items on the published 1-7 agreement scale; sum 8-56, complete case.",,
+wb_eudaimonic_measure,inferred,.wave,"ifelse(.wave %in% c(""13"", ""17""), ""Flourishing Scale, 8 of 8 items, 1-7 item scoring (range 8-56), sum"", NA)","Waves 13 and 17 (2013, 2017); see wb_eudaimonic_self.",,
+wb_socsupport_family_self,incompatible,p_f03002,,"Only 'my social relationships are supportive and rewarding' (Flourishing Scale item, 2013, 2017), which pools all relationships; scored in wb_eudaimonic_self.",,
+wb_socsupport_friends_self,incompatible,p_f03002,,"Only 'my social relationships are supportive and rewarding' (Flourishing Scale item, 2013, 2017), which pools all relationships; scored in wb_eudaimonic_self.",,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,partial,d_sleep_wd,d_sleep_wd / 60,"2011-2024 (no sleep slots in 2010): diary sleep flag per 15-minute slot, 1 = asleep, summed over the calendar day (midnight to midnight) in the tidier. Partial: counts naps and the end and start of two nights rather than one night. Tidier's mean over weekday diary days; self-report diary.",,
+hlth_sleep_we,partial,d_sleep_we,d_sleep_we / 60,"2011-2024 (no sleep slots in 2010): diary sleep flag per 15-minute slot, 1 = asleep, summed over the calendar day (midnight to midnight) in the tidier. Partial: counts naps and the end and start of two nights rather than one night. Tidier's mean over weekend diary days.",,
+hlth_sleep,partial,"d_sleep_wd, d_sleep_we",(5 * d_sleep_wd + 2 * d_sleep_we) / 7 / 60,"2011-2024 (no sleep slots in 2010): diary sleep flag per 15-minute slot, 1 = asleep, summed over the calendar day (midnight to midnight) in the tidier. Partial: counts naps and the end and start of two nights rather than one night. (5 x weekday + 2 x weekend) / 7, NA unless both day types are in the diary.",,
+hlth_sleepprob,unavailable,,,Not collected.,,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+st_measure_type,inferred,,"""Continuous""",Open hours and minutes per day in the person questionnaire.,,recall
+st_measure_name,inferred,,"""Custom""",KMPS person questionnaire items on SNS (2021-2024) and instant messenger (2024) time.,,recall
+st_responder,inferred,,"""Self""",Each household member aged 6+ answers their own person questionnaire.,,recall
+st_socmedia_wd,compatible,"p_d11001, p_d11010, .wave","ifelse(as.integer(.wave) >= 21, ifelse(p_d11001 %in% 2, 0, p_d11010 / 60), NA)","2021-2024: SNS account use per day on an average weekday/weekend day (p_d11010/p_d11014, minutes converted by KISDI); non-users (p_d11001 = 2) = 0 (non-users rule). Weekday item / 60.",,recall
+st_socmedia_we,compatible,"p_d11001, p_d11014, .wave","ifelse(as.integer(.wave) >= 21, ifelse(p_d11001 %in% 2, 0, p_d11014 / 60), NA)","2021-2024: SNS account use per day on an average weekday/weekend day (p_d11010/p_d11014, minutes converted by KISDI); non-users (p_d11001 = 2) = 0 (non-users rule). Weekend item / 60.",,recall
+st_socmedia,compatible,"p_d11001, p_d11010, p_d11014, .wave","ifelse(as.integer(.wave) >= 21, ifelse(p_d11001 %in% 2, 0, (5 * p_d11010 + 2 * p_d11014) / 7 / 60), NA)","2021-2024: SNS account use per day on an average weekday/weekend day (p_d11010/p_d11014, minutes converted by KISDI); non-users (p_d11001 = 2) = 0 (non-users rule). (5 x weekday + 2 x weekend) / 7 / 60.",,recall
+st_messaging_wd,compatible,"p_d22001, p_d22024, .wave","ifelse(as.integer(.wave) >= 24, ifelse(p_d22001 %in% 2, 0, p_d22024 / 60), NA)","2024 only: instant messenger use per day on an average weekday/weekend day (p_d22024/p_d22026, minutes converted by KISDI); non-users (p_d22001 = 2) = 0 (non-users rule). Weekday item / 60.",,recall
+st_messaging_we,compatible,"p_d22001, p_d22026, .wave","ifelse(as.integer(.wave) >= 24, ifelse(p_d22001 %in% 2, 0, p_d22026 / 60), NA)","2024 only: instant messenger use per day on an average weekday/weekend day (p_d22024/p_d22026, minutes converted by KISDI); non-users (p_d22001 = 2) = 0 (non-users rule). Weekend item / 60.",,recall
+st_messaging,compatible,"p_d22001, p_d22024, p_d22026, .wave","ifelse(as.integer(.wave) >= 24, ifelse(p_d22001 %in% 2, 0, (5 * p_d22024 + 2 * p_d22026) / 7 / 60), NA)","2024 only: instant messenger use per day on an average weekday/weekend day (p_d22024/p_d22026, minutes converted by KISDI); non-users (p_d22001 = 2) = 0 (non-users rule). (5 x weekday + 2 x weekend) / 7 / 60.",,recall
