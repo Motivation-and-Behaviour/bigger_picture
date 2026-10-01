@@ -134,3 +134,14 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2207,maternal_education,University graduate (junior college or four-year),Bachelor degree or higher,proximate,"p_school code 5 with p_school2 graduated (5); pools junior-college and four-year graduates, assigned to the level assumed to hold most of them"
 2207,maternal_education,Graduate school,Bachelor degree or higher,compatible,p_school code 6 (graduate school enrolled or above)
 2207,maternal_education,Don't know or no response,Unknown,compatible,p_school or p_school2 9999; also rows with no parent figure's education found
+1025,maternal_education,No qualifications,Secondary school or less,compatible,No qualifications ticked (1980 c1.9/c1.20; 1986 t6.9) or no NVQ-level qualification (2004 BD7HNVQ 0); the three parent-education rows share these rows
+1025,maternal_education,Trade apprenticeship,Secondary school or less,compatible,"Apprenticeship (1980 c1.1/c1.12; 1986 t6.1), upper-secondary vocational"
+1025,maternal_education,O level or equivalent,Secondary school or less,compatible,"1980 O level; 1986 O levels, CSE or City and Guilds"
+1025,maternal_education,A level or equivalent,Secondary school or less,compatible,"1980 A level; 1986 A level, OND, ONC or City and Guilds (ISCED 3)"
+1025,maternal_education,Nursing qualification,Post-secondary,compatible,"1980 SRN; 1986 SEN or SRN nursing qualification, below degree"
+1025,maternal_education,Teaching qualification,Post-secondary,compatible,"1980 Certificate of Education; 1986 teacher's qualification, below degree"
+1025,maternal_education,Degree,Bachelor degree or higher,compatible,1980 degree
+1025,maternal_education,"Degree, diploma or professional membership",Bachelor degree or higher,proximate,"1986 t6.6 'degree, diploma or membership of a professional body'; spans degree and sub-degree diplomas, placed with the degrees it mostly holds"
+1025,maternal_education,Degree or higher degree,Bachelor degree or higher,compatible,"2004 cohort member's highest academic qualification (BD7HACHQ) degree, PGCE, other degree-level or higher degree"
+1025,maternal_education,Diploma or other NVQ level 4-5 qualification,Post-secondary,proximate,"2004 NVQ level 4-5 (BD7HNVQ) without an academic degree: Diploma of Higher Education, HNC/HND, nursing, teaching or higher vocational qualifications; vocational NVQ 5 may be degree-equivalent"
+1025,maternal_education,NVQ level 1-3 qualification,Secondary school or less,compatible,2004 highest NVQ level 1-3 (BD7HNVQ)
