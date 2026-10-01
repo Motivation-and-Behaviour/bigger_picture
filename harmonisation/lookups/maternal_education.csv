@@ -168,3 +168,8 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2387,maternal_education,2001: College degree or higher,Bachelor degree or higher,proximate,"ahedu code 4 (2001): college degree or higher; may include associate degrees, placed by the bachelor-or-higher majority"
 2387,maternal_education,2001: No formal education,Secondary school or less,compatible,ahedu code 91 (2001)
 2387,maternal_education,Unknown,Unknown,compatible,"Sampled adult of the other sex, or adult data not collected"
+67,maternal_education,Less than high school,Secondary school or less,compatible,"parent_educ_highest level 1: less than high school, no diploma or GED"
+67,maternal_education,High school graduate or GED,Secondary school or less,compatible,"parent_educ_highest level 2: high school diploma or GED"
+67,maternal_education,Some college (no degree) or associates degree,Post-secondary,compatible,"parent_educ_highest level 3: some college without a degree, a vocational or technical programme after high school (wave 1) or an associate degree (ISCED 4-5)"
+67,maternal_education,Bachelor's degree,Bachelor degree or higher,compatible,"parent_educ_highest level 4: bachelor's degree, including some graduate school without a degree at wave 1 (ISCED 6)"
+67,maternal_education,Advanced degree,Bachelor degree or higher,compatible,"parent_educ_highest level 5: master's, professional school or doctoral degree (ISCED 7-8)"

@@ -334,6 +334,8 @@ beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
 beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
 beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
 beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_ext_self,in_progress,,,,,
+beh_ext_measure,in_progress,,,,,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,Not collected.,,
 beh_problematicuse_self,partial,"YEAR, INT_ADDT01, INT_ADDT02, INT_ADDT03, INT_ADDT04, INT_ADDT05, INT_ADDT06, INT_ADDT07, INT_ADDT08, INT_ADDT09, INT_ADDT10, INT_ADDT11, INT_ADDT12, INT_ADDT13, INT_ADDT14, INT_ADDT15, INT_ADDT16, INT_ADDT17, INT_ADDT18, INT_ADDT19, INT_ADDT20, INT_SP_TF, INT_SP_TC, INT_SP_TS, INT_SP_OU_1, INT_SP_OU_2, INT_SP_OU_3, INT_SP_OU_4, INT_SP_OU_5, INT_SP_OU_6, INT_SP_OU_7, INT_SP_OU_8, INT_SP_OU_9, INT_SP_OU_10","case_when(
@@ -479,6 +481,8 @@ mh_stress_self,proximate,M_STR,"recode_values(
   5 ~ ""None at all"",
   default = NA_character_
 )","'How much stress do you usually feel?' Every wave; 5 options (very much, a lot, a little, not much, not at all) mapped in rank order. Proximate: KYRBS middle anchors (a little, not much) sit one step below Some and A little.",,
+mh_stress_scale_self,in_progress,,,,,
+mh_stress_measure,in_progress,,,,,
 mh_lonely_self,compatible,M_LON,"recode_values(
   as.numeric(M_LON),
   1 ~ ""Never"",
@@ -556,6 +560,7 @@ wb_selfratedhealth_self,proximate,PR_HT,"recode_values(
   5 ~ ""Poor"",
   default = NA_character_
 )","'How do you think your usual health is?' Every wave; 5 points (very healthy / healthy / average / not healthy / very unhealthy) mapped in rank order, so 'average' becomes Good.",,
+wb_selfratedmentalhealth_self,in_progress,,,,,
 wb_generalhealth_parent,incompatible,PR_HT,,"Only the student's self-rated health (PR_HT), mapped to wb_selfratedhealth_self; no parent rating.",,
 wb_posaffect_self,unavailable,,,Not collected.,,
 wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,

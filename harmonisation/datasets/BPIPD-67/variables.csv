@@ -1,0 +1,664 @@
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,PERSONID,PERSONID,"PATH PERSONID (padding trimmed in the tidier), the same across a youth's waves; the file-local CASEID is not used.",,
+wave,compatible,wave,wave,"PATH wave, from the source file's variable-name prefix (R01 = wave 1, X04 = wave 4.5; User Guide section 7.4): waves 1-8 (ICPSR 36498) and the half-waves 4.5, 5.5 and 7.5 (ICPSR 37786), follow-up interviews of the same youth between main waves.",,
+data_year,inferred,wave,"recode_values(
+  wave,
+  ""1"" ~ 2014,
+  ""2"" ~ 2015,
+  ""3"" ~ 2016,
+  ""4"" ~ 2017,
+  ""4.5"" ~ 2018,
+  ""5"" ~ 2019,
+  ""5.5"" ~ 2020,
+  ""6"" ~ 2021,
+  ""7"" ~ 2022,
+  ""7.5"" ~ 2023,
+  ""8"" ~ 2024
+)","No interview date released; PATH's data collection year, the year in which all or most of each wave's fieldwork occurred (User Guide Table 1.1; field periods in Table 1.2): wave 1 2014 (Sep 2013-Dec 2014), 2 2015, 3 2016, 4 2017 (Dec 2016-Jan 2018), 4.5 2018, 5 2019, 5.5 2020 (telephone, Jul-Dec 2020), 6 2021, 7 2022 (Jan 2022-Apr 2023), 7.5 2023, 8 2024.",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,compatible,Y_PWGT,as.numeric(Y_PWGT),"PATH's youth weight for cross-sectional estimates of each wave (User Guide Table 6.1), joined from the wave's weight file in the tidier: the cross-sectional weight at the waves that formed a cohort (wave 1; Wave 4 Cohort at wave 4; Wave 7 Cohort at wave 7) and elsewhere the single-wave weight PATH designates as pseudo cross-sectional (waves 2 and 3; Wave 4 Cohort at waves 5-6; Wave 7 Cohort at wave 8). Not rescaled: each wave sums to about 25 million US youth (16 million at wave 6, ages 14-17 only). NA at the half-waves 4.5, 5.5 and 7.5, whose weight files (ICPSR 37786) are not in the study folder, and for the 475 youth outside the wave's weighted cohort. Replicate weights (Y_PWGT1-Y_PWGT100) not harmonised.",,
+survey_strata,compatible,VARSTRAT,"if_else(is.na(VARSTRAT), NA_character_, sprintf(""%.0f"", VARSTRAT))","Variance-estimation stratum (VARSTRAT) from the youth files at waves 1-2 and each wave's weight file from wave 3; it never changes within a youth, so the tidier carries it to waves without a weight record, no wave prefix. NA for 670 rows of youth with no weight record at any wave.",,
+survey_cluster,compatible,"VARSTRAT, VARPSU","if_else(
+  is.na(VARSTRAT) | is.na(VARPSU),
+  NA_character_,
+  paste(sprintf(""%.0f"", VARSTRAT), sprintf(""%.0f"", VARPSU), sep = ""_"")
+)","Variance-estimation PSU (VARPSU), numbered 1-2 within stratum, so prefixed with VARSTRAT; coverage and carry as survey_strata.",,
+age_years,partial,R_Y_AGECAT2,"recode_values(readr::parse_number(as.character(R_Y_AGECAT2)), 1 ~ 13.5, 2 ~ 16.5)","Age at interview in two completed-year bands only (R_Y_AGECAT2: 12-14, 15-17; exact age is withheld from the public-use files), scored (a + b + 1) / 2 = 13.5 and 16.5; 3 wave-1 rows missing. Partial: three-year bands.",,
+sex,compatible,"R_Y_SEX, PERSONID","coalesce(
+  modal_within(recode_values(readr::parse_number(as.character(R_Y_SEX)), 1 ~ ""Male"", 2 ~ ""Female""), PERSONID),
+  ""Unknown""
+)","Youth-reported sex ('What is your sex?', derived as R_Y_SEX: male, female; no other option), each participant's modal value across waves (no ties); the 140 youth who never answered are Unknown. The imputed R_Y_SEX_IMP is not used.",,
+country,inferred,,"""USA""",Nationally representative sample of the US civilian non-institutionalised population; no country variable.,,
+state,unavailable,,,Not an Australian dataset.,,
+ethnicity,proximate,"R_Y_HISP, R_Y_RACECAT3, PERSONID, wave","coalesce(
+  lookup_values(
+    carry_within(
+      recode_values(
+        paste(readr::parse_number(as.character(R_Y_HISP)), readr::parse_number(as.character(R_Y_RACECAT3))),
+        c(""1 1"", ""1 2"", ""1 3"", ""1 NA"") ~ ""Hispanic"",
+        ""2 1"" ~ ""White alone, non-Hispanic"",
+        ""2 2"" ~ ""Black alone, non-Hispanic"",
+        ""2 3"" ~ ""Other race or two or more races, non-Hispanic""
+      ),
+      PERSONID,
+      order = as.numeric(wave)
+    ),
+    lookup_ethnicity,
+    dataset_id = spec$dataset_id,
+    target_variable = ""ethnicity""
+  ),
+  ""Unknown""
+)","Youth self-report: Hispanic origin (R_Y_HISP) first, then PATH's three-level race (R_Y_RACECAT3: White alone, Black alone, other), carried within participant from the earliest wave with both; via lookups/ethnicity.csv. Proximate: Asian, American Indian/Alaska Native, Pacific Islander and two or more races are pooled in RACECAT3 and land in Other. Imputed versions not used.",ethnicity,
+indigenous,incompatible,R_Y_RACECAT3,,"The race item offered American Indian or Alaska Native, but the public-use recode R_Y_RACECAT3 folds it into its other category (mapped to ethnicity).",,
+minority,compatible,"R_Y_HISP, R_Y_RACECAT3, PERSONID, wave","coalesce(
+  carry_within(
+    recode_values(
+      paste(readr::parse_number(as.character(R_Y_HISP)), readr::parse_number(as.character(R_Y_RACECAT3))),
+      c(""1 1"", ""1 2"", ""1 3"", ""1 NA"", ""2 2"", ""2 3"") ~ ""Minority"",
+      ""2 1"" ~ ""Non-minority""
+    ),
+    PERSONID,
+    order = as.numeric(wave)
+  ),
+  ""Unknown""
+)","US reference: non-Hispanic White alone is Non-minority; Hispanic, Black and other or multiracial non-Hispanic youth are Minority. Same items and carry-forward as ethnicity.",,
+immigrant_background,incompatible,"R_Y_PM0065_V2, R_Y_PM0065, R_Y_PM0069, R_Y_YM0065_V2",,"Only years lived in the US and US citizenship, for the parent respondent and the youth; no birthplace for either parent, and the other parent is never asked.",,
+born_in_country,incompatible,"R_Y_YM0065_V2, R_Y_YM0065, R_Y_YM0069",,"Residence, not birthplace: 'About how many years have you lived in the United States?' with a whole-life button (R_Y_YM0065_V2, R_Y_YM0065). Entering a number of years counts as not whole life, so 24% of wave-4 youth fall there and 32% of youth answering twice switch between the two; citizenship (R_Y_YM0069) is not birthplace.",,
+ses_area,unavailable,,,Not collected.,,
+ses_household,proximate,"R_Y_PM0130, wave","coalesce(
+  if_else(
+    wave %in% c(""2"", ""3""),
+    recode_values(readr::parse_number(as.character(R_Y_PM0130)), c(1, 2) ~ ""Low"", 3 ~ ""Medium"", c(4, 5) ~ ""High""),
+    recode_values(readr::parse_number(as.character(R_Y_PM0130)), c(1, 2, 3) ~ ""Low"", 4 ~ ""Medium"", 5 ~ ""High"")
+  ),
+  ""Unknown""
+)","Parent-reported total household income in the past 12 months, 5 bands (R_Y_PM0130, waves 2-8 and the half-waves), classified by within-wave ridit (household SES cuts): waves 2-3 Low under $25,000, Medium $25,000-49,999 (ridit 0.38-0.40, the band nearest 0.5), High $50,000 or more; waves 4-8 Low under $50,000, Medium $50,000-99,999 (ridit 0.47-0.61), High $100,000 or more. Wave 1 has no income item and is Unknown (not carried). Proximate: Low is 26-27% at waves 2-3 and 33-48% from wave 4, High 25-40% from wave 4.",,
+ses_household_measure,inferred,wave,"if_else(wave == ""1"", NA_character_, ""Income: total household income in past 12 months, 5 bands"")","Describes ses_household at waves 2-8 (parent-reported R_Y_PM0130); NA at wave 1, which has no income item.",,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,partial,mother_educ,"coalesce(
+  lookup_values(
+    mother_educ,
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","Biological mother's education (mother_educ, built in the tidier on the five-level scale of parent_educ_highest), via lookups/maternal_education.csv: the parent respondent's own education (R_Y_PM0001) where the respondent is the biological mother, else the resident spouse's or guardian's (R_Y_PM0118, waves 2-4) where that is the biological mother. Asked separately only at waves 1-4 (later waves ask the highest of parent and spouse), so it is carried within participant to every wave; youth first interviewed from wave 5 (the Wave 7 Cohort) are Unknown. Partial: biological mothers only, since PATH records adoptive and step parents without their sex.",maternal_education,
+paternal_education,partial,father_educ,"coalesce(
+  lookup_values(
+    father_educ,
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","As maternal_education, for the biological father (father_educ): the respondent's education where the respondent is the biological father, else the resident spouse's or guardian's (waves 2-4) where that is the biological father, carried within participant to every wave. Partial: biological fathers only.",maternal_education,
+parental_education,compatible,parent_educ_highest,"coalesce(
+  lookup_values(
+    parent_educ_highest,
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","Highest education of the parent respondent and resident spouse or guardian (parent_educ_highest, built in the tidier on one five-level scale), via lookups/maternal_education.csv. Waves 4.5-8: PATH's own highest of parent, spouse and guardian (R_P_PARSP_EDUC, R_P_PARSP_EDUC_V2); waves 2-4: the higher of parent (R_Y_PM0001) and spouse/guardian (R_Y_PM0118). Wave 1 asked about one parent: the parent's value where no spouse or partner lives in the household (PT0045), otherwise the highest including values the tidier carried from later waves, else Unknown (3,064 wave-1 rows).",maternal_education,
+urbanicity,unavailable,,,Not collected.,,
+family_structure,proximate,"parent_relationship, PT0045, R_P_OTHPAR_INHH, other_parent_relationship","recode_values(
+  paste(
+    parent_relationship,
+    coalesce(readr::parse_number(as.character(PT0045)), readr::parse_number(as.character(R_P_OTHPAR_INHH))),
+    other_parent_relationship
+  ),
+  c(
+    ""Biological mother 2 NA"",
+    ""Biological father 2 NA"",
+    ""Biological parent 2 NA"",
+    ""Adopted or step parent 2 NA""
+  ) ~ ""Single parent"",
+  c(
+    ""Biological mother 1 Biological mother"",
+    ""Biological mother 1 Biological father"",
+    ""Biological father 1 Biological mother"",
+    ""Biological father 1 Biological father"",
+    ""Biological parent 1 Biological parent"",
+    ""Biological mother 1 Biological parent"",
+    ""Biological father 1 Biological parent"",
+    ""Adopted or step parent 1 Adopted or step parent""
+  ) ~ ""Two biological/adoptive parents"",
+  c(
+    ""Biological mother 1 Adopted or step parent"",
+    ""Biological mother 1 Other"",
+    ""Biological father 1 Adopted or step parent"",
+    ""Biological father 1 Other"",
+    ""Biological parent 1 Other"",
+    ""Adopted or step parent 1 Biological mother"",
+    ""Adopted or step parent 1 Biological father"",
+    ""Adopted or step parent 1 Other"",
+    ""Other 1 Biological mother"",
+    ""Other 1 Biological father"",
+    ""Other 1 Biological parent""
+  ) ~ ""Step family"",
+  c(""Other 2 NA"", ""Other 1 Adopted or step parent"", ""Other 1 Other"") ~ ""Other"",
+  default = ""Unknown""
+)","Parent respondent's relationship to the youth (parent_relationship), whether another parental figure lives in the household (PT0045, wave 1: a spouse or partner; R_P_OTHPAR_INHH from wave 2: a spouse, partner or other parental figure or guardian) and that figure's relationship (other_parent_relationship); both relationship columns built in the tidier. PATH asks the respondent's relationship again only when the parent changes, so the tidier takes it from the wave before, half-waves included; Unknown is under 6% at every wave. Proximate: PATH pools adoptive with step parents (waves 1-4), and from wave 5 with other relatives and non-relatives (Other), so a parent with an adoptive or step partner is Step family, two adoptive or step parents are Two biological/adoptive parents, a lone adoptive or step parent is Single parent, and an adoptive parent from wave 5 counts as Other.",,
+fam_screenrules,unavailable,,,Not collected.,,
+fam_bedroomscreen,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+school_grade,proximate,"R_Y_YM0018, R_Y_YM0018_V2","recode_values(
+  trimws(sub(""^\\([0-9]+\\) [0-9]+ = "", """", coalesce(as.character(R_Y_YM0018), as.character(R_Y_YM0018_V2)))),
+  ""6th grade or below"" ~ ""Grade 6 or below"",
+  ""7th grade or below"" ~ ""Grade 7 or below"",
+  ""8th grade or below"" ~ ""Grade 8 or below"",
+  ""7th grade"" ~ ""Grade 7"",
+  ""8th grade"" ~ ""Grade 8"",
+  ""9th grade"" ~ ""Grade 9"",
+  ""10th grade"" ~ ""Grade 10"",
+  ""11th grade"" ~ ""Grade 11""
+)","Youth-reported grade (the grade being entered during breaks), every wave, as 'Grade N'. Proximate: the lowest level is an open band ('Grade 6 or below' at waves 1-4, 'Grade 7 or below' at waves 4.5-5, 'Grade 8 or below' from wave 5.5), and 'Other' (12th grade, ungraded, home schooled, not enrolled, college) is NA.",,
+st_measure_type,inferred,,"""Categorical""",Every screen item is a banded duration question.,,
+st_measure_name,inferred,,"""Custom""",Items written for the PATH Study youth questionnaire.,,
+st_responder,inferred,,"""Self""","Youth self-report at every wave, including the social-media filter item.",,
+st_total_wd,incompatible,"YX0494, YX0370",,"No all-screen item; the weekday TV and social-media items (st_watch_wd, st_socmedia_wd) are never summed (DR-0002, DR-0004).",,
+st_total_we,incompatible,"YX0474, YX0371",,"No all-screen item; the weekend TV and social-media items (st_watch_we, st_socmedia_we) are never summed (DR-0002, DR-0004).",,
+st_total,incompatible,"YX0494, YX0474, YX0370, YX0371, YX0320",,"No all-screen item; the TV and social-media items (st_watch, st_socmedia) are never summed (DR-0002, DR-0004).",,
+st_watch_wd,partial,"YX0494, wave","if_else(
+  wave %in% c(""1"", ""2"", ""3""),
+  NA_real_,
+  recode_values(
+    readr::parse_number(as.character(YX0494)),
+    1 ~ 0,
+    2 ~ 0.25,
+    3 ~ 1,
+    4 ~ 2,
+    5 ~ 3,
+    6 ~ 4,
+    7 ~ 5,
+    8 ~ 6,
+    9 ~ 7
+  )
+)","Waves 4-8: 'On an average weekday, about how much time do you spend watching television and streaming videos that include commercials?' None 0, half hour or less 0.25, 'about N hours' = N, top band '7 hours or more' = 7. Partial: streaming without commercials is excluded.",,
+st_watch_we,partial,YX0474,"recode_values(
+  readr::parse_number(as.character(YX0474)),
+  1 ~ 0,
+  2 ~ 0.5,
+  3 ~ 1.5,
+  4 ~ 3.5,
+  5 ~ 5.5,
+  6 ~ 7.5,
+  7 ~ 9.5,
+  8 ~ 11
+)","Waves 4-8: the same item for an average weekend day. None 0, less than 1 hour 0.5, band midpoints (1.5, 3.5, 5.5, 7.5, 9.5), top band '11 hours or more' = 11. Partial: streaming without commercials is excluded.",,
+st_watch,partial,"YX0494, YX0474, wave","case_when(
+  wave %in% c(""1"", ""2"") ~ recode_values(
+    readr::parse_number(as.character(YX0494)),
+    1 ~ 0,
+    2 ~ 0.5,
+    3 ~ 1.5,
+    4 ~ 3.5,
+    5 ~ 4
+  ),
+  wave == ""3"" ~ recode_values(readr::parse_number(as.character(YX0494)), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 3),
+  .default = (recode_values(
+    readr::parse_number(as.character(YX0494)),
+    1 ~ 0,
+    2 ~ 0.25,
+    3 ~ 1,
+    4 ~ 2,
+    5 ~ 3,
+    6 ~ 4,
+    7 ~ 5,
+    8 ~ 6,
+    9 ~ 7
+  ) *
+    5 +
+    recode_values(
+      readr::parse_number(as.character(YX0474)),
+      1 ~ 0,
+      2 ~ 0.5,
+      3 ~ 1.5,
+      4 ~ 3.5,
+      5 ~ 5.5,
+      6 ~ 7.5,
+      7 ~ 9.5,
+      8 ~ 11
+    ) *
+      2) /
+    7
+)","Waves 1-2: 'About how long do you watch TV on a typical day?' (none 0, less than 1 hour 0.5, 1.5, 3.5, top band 'more than 4 hours' = 4). Wave 3: 'On an average day, how much time do you spend watching TV or videos on a television, computer, tablet, or smartphone?' (0, 0.5, '1 to 3 hours' 2, top band 'more than 3 hours' = 3). Waves 4-8: (5 x st_watch_wd + 2 x st_watch_we) / 7. Partial: TV set only at waves 1-2; streaming without commercials excluded from wave 4.",,
+st_game_wd,unavailable,,,Not collected.,,
+st_game_we,unavailable,,,Not collected.,,
+st_game,unavailable,,,Not collected.,,
+st_game_comp_wd,unavailable,,,Not collected.,,
+st_game_comp_we,unavailable,,,Not collected.,,
+st_game_comp,unavailable,,,Not collected.,,
+st_game_console_wd,unavailable,,,Not collected.,,
+st_game_console_we,unavailable,,,Not collected.,,
+st_game_console,unavailable,,,Not collected.,,
+st_game_handheldconsole_wd,unavailable,,,Not collected.,,
+st_game_handheldconsole_we,unavailable,,,Not collected.,,
+st_game_handheldconsole,unavailable,,,Not collected.,,
+st_game_active_wd,unavailable,,,Not collected.,,
+st_game_active_we,unavailable,,,Not collected.,,
+st_game_active,unavailable,,,Not collected.,,
+st_game_phone_wd,unavailable,,,Not collected.,,
+st_game_phone_we,unavailable,,,Not collected.,,
+st_game_phone,unavailable,,,Not collected.,,
+st_game_tablet_wd,unavailable,,,Not collected.,,
+st_game_tablet_we,unavailable,,,Not collected.,,
+st_game_tablet,unavailable,,,Not collected.,,
+st_comp_nongaming_wd,unavailable,,,Not collected.,,
+st_comp_nongaming_we,unavailable,,,Not collected.,,
+st_comp_nongaming,unavailable,,,Not collected.,,
+st_comp_wd,unavailable,,,Not collected.,,
+st_comp_we,unavailable,,,Not collected.,,
+st_comp,unavailable,,,Not collected.,,
+st_tablet_wd,unavailable,,,No weekday/weekend split.,,
+st_tablet_we,unavailable,,,No weekday/weekend split.,,
+st_tablet,incompatible,YX0503_01,,"Tablet ownership only (YX0503_01, waves 2-3, yes/no); no duration.",,
+st_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_phone_we,unavailable,,,No weekday/weekend split.,,
+st_phone,incompatible,"YX0495, YX0503_02, YX0503_03",,"Only whether the youth uses a smartphone regularly (YX0495, wave 1) or has a smartphone or cell phone (YX0503_02, YX0503_03, waves 2-3), yes/no; no duration.",,
+st_socmedia_wd,compatible,"YX0370, YX0062, wave","case_when(
+  !wave %in% c(""6"", ""7"", ""7.5"", ""8"") ~ NA_real_,
+  !is.na(YX0370) ~ recode_values(
+    readr::parse_number(as.character(YX0370)),
+    1 ~ 0,
+    2 ~ 0.25,
+    3 ~ 1,
+    4 ~ 2,
+    5 ~ 3,
+    6 ~ 4,
+    7 ~ 5,
+    8 ~ 6,
+    9 ~ 7
+  ),
+  readr::parse_number(as.character(YX0062)) == 2 ~ 0
+)","Waves 6-8: 'On an average weekday, about how much time do you spend using social media?' None 0, half hour or less 0.25, 'about N hours' = N, top band '7 hours or more' = 7; 0 for youth answering No to 'Do you use social media?' (YX0062), who skip the item.",,
+st_socmedia_we,compatible,"YX0371, YX0062, wave","case_when(
+  !wave %in% c(""6"", ""7"", ""7.5"", ""8"") ~ NA_real_,
+  !is.na(YX0371) ~ recode_values(
+    readr::parse_number(as.character(YX0371)),
+    1 ~ 0,
+    2 ~ 0.5,
+    3 ~ 1.5,
+    4 ~ 3.5,
+    5 ~ 5.5,
+    6 ~ 7.5,
+    7 ~ 9.5,
+    8 ~ 11
+  ),
+  readr::parse_number(as.character(YX0062)) == 2 ~ 0
+)","Waves 6-8: the same item for an average weekend day. None 0, less than 1 hour 0.5, band midpoints (1.5, 3.5, 5.5, 7.5, 9.5), top band '11 hours or more' = 11; 0 for youth who do not use social media (YX0062).",,
+st_socmedia,compatible,"YX0320, YX0315, YX0062, YX0317, YX0370, YX0371, wave","case_when(
+  wave == ""2"" ~ coalesce(
+    recode_values(readr::parse_number(as.character(YX0320)), 1 ~ 0.25, 2 ~ 1.75, 3 ~ 4.5, 4 ~ 6),
+    if_else(
+      (readr::parse_number(as.character(YX0315)) %in% 2) |
+        (readr::parse_number(as.character(YX0062)) %in% 2) |
+        (readr::parse_number(as.character(YX0317)) %in% 7),
+      0,
+      NA_real_
+    )
+  ),
+  wave %in% c(""6"", ""7"", ""7.5"", ""8"") ~ (coalesce(
+    recode_values(
+      readr::parse_number(as.character(YX0370)),
+      1 ~ 0,
+      2 ~ 0.25,
+      3 ~ 1,
+      4 ~ 2,
+      5 ~ 3,
+      6 ~ 4,
+      7 ~ 5,
+      8 ~ 6,
+      9 ~ 7
+    ),
+    if_else(readr::parse_number(as.character(YX0062)) %in% 2, 0, NA_real_)
+  ) *
+    5 +
+    coalesce(
+      recode_values(
+        readr::parse_number(as.character(YX0371)),
+        1 ~ 0,
+        2 ~ 0.5,
+        3 ~ 1.5,
+        4 ~ 3.5,
+        5 ~ 5.5,
+        6 ~ 7.5,
+        7 ~ 9.5,
+        8 ~ 11
+      ),
+      if_else(readr::parse_number(as.character(YX0062)) %in% 2, 0, NA_real_)
+    ) *
+      2) /
+    7
+)","Wave 2: 'On a typical day, about how much total time do you spend on social media sites?' (up to 30 minutes 0.25, 1.75, 4.5, top band 'more than 6 hours' = 6), 0 for youth who never go online (YX0315), have no social-media account (YX0062) or never visit it (YX0317). Waves 6-8: (5 x st_socmedia_wd + 2 x st_socmedia_we) / 7. No duration item at waves 1 and 3-5.5.",,
+st_educational_wd,unavailable,,,Not collected.,,
+st_educational_we,unavailable,,,Not collected.,,
+st_educational,unavailable,,,Not collected.,,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,unavailable,,,No weekday/weekend split.,,
+st_internet_we,unavailable,,,No weekday/weekend split.,,
+st_internet,incompatible,"YX0486, YX0315",,"Only how often the youth uses the internet (YX0486, wave 1) and whether they ever go online (YX0315, waves 2-3); no duration.",,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,unavailable,,,Not collected.,,
+st_messaging_we,unavailable,,,Not collected.,,
+st_messaging,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,incompatible,"PT0019, R_Y_PY0019",,"Only parent-reported letter grades (PT0019, R_Y_PY0019), mapped to acc_academachment_lettergrades.",,
+acc_academachment_lettergrades,proximate,"PT0019, R_Y_PY0019","recode_values(
+  readr::parse_number(coalesce(as.character(PT0019), as.character(R_Y_PY0019))),
+  1 ~ ""A"",
+  2 ~ ""A/B"",
+  3 ~ ""B"",
+  4 ~ ""B/C"",
+  5 ~ ""C"",
+  6 ~ ""C/D"",
+  7 ~ ""D"",
+  8 ~ ""D"",
+  9 ~ ""F""
+)","Parent-reported youth's grade performance in school in the past 12 months (R_Y_PY0019 at wave 1, which also takes emancipated youth's own reports; PT0019 from wave 2): 'Mostly X's' = X, two-letter bands = X/Y, ungraded school NA. Proximate: 'D's and F's' has no D/F category and is folded to D. Same information as acc_academachment_numgrades.",,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
+acc_schoolengage_caresschool,unavailable,,,Not collected.,,
+acc_schoolengage_homework,unavailable,,,Not collected.,,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,partial,"PT0019, R_Y_PY0019","recode_values(
+  readr::parse_number(coalesce(as.character(PT0019), as.character(R_Y_PY0019))),
+  1 ~ 4,
+  2 ~ 3.5,
+  3 ~ 3,
+  4 ~ 2.5,
+  5 ~ 2,
+  6 ~ 1.5,
+  7 ~ 1,
+  8 ~ 0.5,
+  9 ~ 0
+)","The same parent-reported item on the US 4.0 scale: Mostly A's 4 to Mostly F's 0, two-letter bands at their midpoint (3.5, 2.5, 1.5, 0.5), ungraded NA. Partial: grade bands, not a grade point average. Same information as acc_academachment_lettergrades.",,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,unavailable,,,Not collected.,,
+acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered.,,
+acc_literacy_stdtest,unavailable,,,Not collected.,,
+acc_literacy_bas_wordreading,unavailable,,,BAS II not administered.,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_atten_self.,,
+beh_atten_self,incompatible,"YX0166, YX0167",,"Only two items of the psychosocial screener ('when was the last time you had a hard time paying attention / listening to instructions at school, work or home two or more times', recency ratings), not an attention scale; the externalising screener is scored on beh_ext_self.",,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_bullied,partial,YX0168,"recode_values(readr::parse_number(as.character(YX0168)), c(1, 2) ~ ""TRUE"", c(3, 4) ~ ""FALSE"")","Youth self-report, every wave: 'When was the last time you did the following two or more times: were a bully or threatened other people?' TRUE for the past 12 months (past month or 2-12 months ago), FALSE for over a year ago or never. Partial: bundles threatening, names any 'other people', and counts two or more occasions only. Also scored in beh_ext_self.",,
+beh_beenbullied,unavailable,,,Not collected.,,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,partial,YX0169,"recode_values(readr::parse_number(as.character(YX0169)), c(1, 2) ~ ""TRUE"", c(3, 4) ~ ""FALSE"")","Youth self-report, every wave: 'When was the last time you did the following two or more times: started physical fights with other people?' TRUE for the past 12 months (past month or 2-12 months ago), FALSE for over a year ago or never. Partial: fights the youth started, on two or more occasions only. Also scored in beh_ext_self.",,
+beh_truancy,incompatible,"R_Y_PY0030, PT0030",,"Only school missed through illness (R_Y_PY0030, PT0030; parent-reported, waves 1-2), which the row excludes.",,
+beh_stealing,unavailable,,,Not collected.,,
+beh_vandalism,unavailable,,,Not collected.,,
+beh_alcohol_self,compatible,"YX0673, YX0084_12M, YX0084_NB, YX0073, YX0084","case_when(
+  (readr::parse_number(as.character(YX0673)) %in% 1) | (readr::parse_number(as.character(YX0073)) %in% 1) ~ ""TRUE"",
+  (readr::parse_number(as.character(YX0673)) %in% 2) |
+    (readr::parse_number(as.character(YX0084_12M)) %in% 2) |
+    (readr::parse_number(as.character(YX0084_NB)) %in% 2) |
+    (readr::parse_number(as.character(YX0073)) %in% c(2, 3)) |
+    (readr::parse_number(as.character(YX0084)) %in% 2) ~ ""FALSE""
+)","Any alcohol in the past 30 days, youth self-report. Waves 2-8: 'Have you used alcohol in the past 30 days?' (YX0673), FALSE where it was skipped after no alcohol, sips included, in the past 12 months (YX0084_12M) or ever (YX0084_NB, new respondents). Wave 1: last use within the past 30 days (YX0073), FALSE for never (YX0084); the 2,099 wave-1 youth who never drank more than sips skip YX0073 and are NA.",,
+beh_tobacco_self,compatible,"R_Y_CUR_CIGS, R_Y_CUR_GTRAD, R_Y_CUR_GRILLO, R_Y_CUR_GFILTR, R_Y_CUR_PIPE, R_Y_CUR_HOOK, R_Y_CUR_BIDI, R_Y_CUR_KRETEK","case_when(
+  (readr::parse_number(as.character(R_Y_CUR_CIGS)) %in% 1) |
+    (readr::parse_number(as.character(R_Y_CUR_GTRAD)) %in% 1) |
+    (readr::parse_number(as.character(R_Y_CUR_GRILLO)) %in% 1) |
+    (readr::parse_number(as.character(R_Y_CUR_GFILTR)) %in% 1) |
+    (readr::parse_number(as.character(R_Y_CUR_PIPE)) %in% 1) |
+    (readr::parse_number(as.character(R_Y_CUR_HOOK)) %in% 1) |
+    (readr::parse_number(as.character(R_Y_CUR_BIDI)) %in% 1) |
+    (readr::parse_number(as.character(R_Y_CUR_KRETEK)) %in% 1) ~ ""TRUE"",
+  !is.na(R_Y_CUR_CIGS) |
+    !is.na(R_Y_CUR_GTRAD) |
+    !is.na(R_Y_CUR_GRILLO) |
+    !is.na(R_Y_CUR_GFILTR) |
+    !is.na(R_Y_CUR_PIPE) |
+    !is.na(R_Y_CUR_HOOK) |
+    !is.na(R_Y_CUR_BIDI) |
+    !is.na(R_Y_CUR_KRETEK) ~ ""FALSE""
+)","Any smoked tobacco in the past 30 days: TRUE if PATH's derived current-use flag is Yes for cigarettes, traditional cigars, cigarillos, filtered cigars, pipe, hookah, bidis or kreteks (bidis waves 1-7.5, kreteks waves 1-6), FALSE if every answered flag is No. Each flag is youth-reported use within the past 30 days, with never-users No; blunts count toward beh_cannabis_self, not here. E-cigarettes excluded.",,
+beh_cannabis_self,compatible,"YX0085_12M, YG9107, YX0078, YX0085, YG9105, YX0085_NB, YG9105_NB, YH9031, YV9042","case_when(
+  (readr::parse_number(as.character(YX0085_12M)) %in% 1) |
+    (readr::parse_number(as.character(YG9107)) %in% 1) |
+    (readr::parse_number(as.character(YX0078)) %in% c(1, 2)) ~ ""TRUE"",
+  (readr::parse_number(as.character(YX0085_12M)) %in% 2) | (readr::parse_number(as.character(YX0078)) %in% 3) ~ ""FALSE"",
+  (readr::parse_number(as.character(YX0085)) %in% 2) & !(readr::parse_number(as.character(YG9105)) %in% 1) ~ ""FALSE"",
+  (readr::parse_number(as.character(YX0085_NB)) %in% 2) &
+    !(readr::parse_number(as.character(YG9105_NB)) %in% 1) &
+    !(readr::parse_number(as.character(YH9031)) %in% 1) &
+    !(readr::parse_number(as.character(YV9042)) %in% 1) ~ ""FALSE""
+)","Any marijuana in the past 12 months, youth self-report. Waves 2-8: 'In the past 12 months, have you used marijuana, hash, THC, grass, pot or weed?' (YX0085_12M) or a blunt in the past 12 months (YG9107), whose smokers skip YX0085_12M; FALSE for new respondents who never used marijuana in any form. Wave 1: last use within the past year (YX0078), FALSE for never (YX0085). The past-30-day item skips youth whose use was all in blunts, so the 12-month window is used.",,
+beh_conduct_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_agg_self,incompatible,"YX0168, YX0169",,"Only two psychosocial-screener items (bullying or threatening others; starting fights), mapped to beh_bullied and beh_fight and scored in beh_ext_self; not an aggression scale.",,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_argues,unavailable,,,Not collected.,,
+beh_persistence_finishwork,unavailable,,,Not collected.,,
+beh_emotreg_stayscalm,unavailable,,,Not collected.,,
+beh_peerprob_makefriends,unavailable,,,Not collected.,,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,partial,"PT0052_12M, PT0052_NB, adhd_told_before, wave","case_when(
+  wave == ""1"" ~ NA_character_,
+  readr::parse_number(as.character(PT0052_12M)) == 1 ~ ""Currently diagnosed"",
+  (readr::parse_number(as.character(PT0052_12M)) == 2) &
+    ((readr::parse_number(as.character(PT0052_NB)) %in% 1) | (adhd_told_before %in% TRUE)) ~ ""Previously diagnosed"",
+  (readr::parse_number(as.character(PT0052_12M)) == 2) &
+    ((readr::parse_number(as.character(PT0052_NB)) %in% 2) | (adhd_told_before %in% FALSE)) ~ ""Never diagnosed""
+)","Waves 2-8, parent report: 'In the past 12 months, has [child] been told by a doctor, nurse or other health professional that [he/she] has ADHD or ADD?' (PT0052_12M) = Currently. Otherwise Previously if told ever (PT0052_NB, asked of new respondents) or at an earlier wave (adhd_told_before, built in the tidier), Never if not. Partial: told in the past 12 months stands in for current, and a diagnosis given during a skipped wave can be missed. Wave 1 asks ever only, which cannot separate current from previous, so it is NA.",,
+beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ not administered.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_self,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_ext_self,compatible,"YX0165, YX0166, YX0167, YX0250, YX0251, YX0168, YX0169","(readr::parse_number(as.character(YX0165)) <= 2) +
+  (readr::parse_number(as.character(YX0166)) <= 2) +
+  (readr::parse_number(as.character(YX0167)) <= 2) +
+  (readr::parse_number(as.character(YX0250)) <= 2) +
+  (readr::parse_number(as.character(YX0251)) <= 2) +
+  (readr::parse_number(as.character(YX0168)) <= 2) +
+  (readr::parse_number(as.character(YX0169)) <= 2)","Externalizing Disorder Screener of the GAIN-SS (Dennis et al. 2006, doi:10.1080/10550490601006055), identified and scored as past-year counts for PATH youth by Riehm et al. 2019 (doi:10.1001/jamapsychiatry.2019.2325): youth self-report, every wave, 'when was the last time you did the following two or more times': lied or conned; trouble paying attention; trouble listening to instructions; felt restless; answered before the question was finished; bullied or threatened others; started fights. Count of items last done in the past 12 months, 0-7, complete-case.",,
+beh_ext_measure,inferred,,"""GAIN-SS Externalizing Disorder Screener, 7 items (the five of the 20-item GAIN-SS plus restlessness and answering before the question is finished), 0-1 item scoring (range 0-7), count; an item scores 1 if last done two or more times in the past month or 2-12 months ago""",Describes beh_ext_self; every wave fielded the seven items.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,No cognitive testing.,,
+cog_langexec_nepsy,unavailable,,,No cognitive testing.,,
+cog_phono_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhibcont_nepsy,unavailable,,,No cognitive testing.,,
+cog_vismotor_nepsy,unavailable,,,No cognitive testing.,,
+cog_verbalfluency_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhib_nihtb_flanker,unavailable,,,No cognitive testing.,,
+cog_flex_nihtb_dccs,unavailable,,,No cognitive testing.,,
+cog_wm_nihtb_listsort,unavailable,,,No cognitive testing.,,
+cog_speed_nihtb_pattern,unavailable,,,No cognitive testing.,,
+cog_epimem_nihtb_picseq,unavailable,,,No cognitive testing.,,
+cog_vocab_nihtb_picvocab,unavailable,,,No cognitive testing.,,
+cog_fluidcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_crystcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_totalcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_wm_digitspan,unavailable,,,No cognitive testing.,,
+cog_iq_fullscale,unavailable,,,No cognitive testing.,,
+cog_vocab_bpvs,unavailable,,,No cognitive testing.,,
+cog_vocab_ppvt,unavailable,,,No cognitive testing.,,
+cog_execfunc_brief_parent,unavailable,,,No cognitive testing.,,
+cog_vocab_bas_naming,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,No cognitive testing.,,
+cog_spatial_bas_pattern,unavailable,,,No cognitive testing.,,
+cog_verbalreason_bas_versim,unavailable,,,No cognitive testing.,,
+cog_earlynumber_bas_enc,unavailable,,,No cognitive testing.,,
+cog_schoolread_bracken,unavailable,,,No cognitive testing.,,
+cog_creativethinking_stdtest,unavailable,,,No cognitive testing.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ not administered.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_int_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_int_sdq_self,unavailable,,,SDQ not administered.,,
+mh_int_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered; see mh_dep_self.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered; see mh_dep_self.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered; see mh_dep_self.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered; see mh_dep_self.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered; see mh_dep_self.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered; see mh_dep_self.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered; see mh_dep_self.,,
+mh_distress_k6_self,unavailable,,,K6 not administered.,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered; see mh_distress_self.,,
+mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered; see mh_distress_self.,,
+mh_distress_self,compatible,"YX0161, YX0162, YX0163, YX0164","(readr::parse_number(as.character(YX0161)) <= 2) +
+  (readr::parse_number(as.character(YX0162)) <= 2) +
+  (readr::parse_number(as.character(YX0163)) <= 2) +
+  (readr::parse_number(as.character(YX0164)) <= 2)","Internalizing Disorder Screener of the GAIN-SS (Dennis et al. 2006, doi:10.1080/10550490601006055), identified and scored as past-year counts for PATH youth by Riehm et al. 2019 (doi:10.1001/jamapsychiatry.2019.2325): youth self-report, every wave, 'when was the last time you had significant problems with' feeling trapped, lonely, sad or depressed; sleep trouble; feeling anxious or panicked; distress when reminded of the past. Count of items last present in the past 12 months (past month or 2-12 months ago), 0-4, complete-case.",,
+mh_distress_measure,inferred,,"""GAIN-SS Internalizing Disorder Screener, 4 of 5 items, 0-1 item scoring (range 0-4), count; an item scores 1 if last present in the past month or 2-12 months ago; the suicidal-thoughts item is not asked""",Describes mh_distress_self; every wave fielded the four items.,,
+mh_anx_masc_self,unavailable,,,MASC not administered; see mh_anx_self.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered; see mh_anx_self.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered; see mh_anx_self.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered; see mh_anx_self.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered; see mh_anx_self.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered; see mh_anx_self.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,partial,YX0161,"recode_values(readr::parse_number(as.character(YX0161)), c(1, 2) ~ ""Yes"", c(3, 4) ~ ""No"")","Youth self-report, every wave: 'When was the last time you had significant problems with feeling very trapped, lonely, sad, blue, depressed or hopeless about the future?', significant meaning two or more weeks, recurring or stopping you meeting responsibilities. Yes for the past 12 months (past month or 2-12 months ago), No for over a year ago or never. Partial: bundles loneliness and feeling trapped, and the threshold is not a two-week almost-daily screen. Also scored in mh_distress_self.",,
+mh_dep_self,incompatible,YX0161,,"Only one bundled screener item (YX0161), mapped to mh_dep_binary_self; its internalising screener is scored on mh_distress_self, not as a depression scale.",,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,incompatible,YX0163,,"Only one screener item ('significant problems with feeling very anxious, nervous, tense, scared, panicked or like something bad was going to happen', recency rating); its internalising screener is scored on mh_distress_self, not as an anxiety scale.",,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,incompatible,"YX0325, YX0326, YX0327, YX0328, YM1934",,"Only the PSS-4 (YX0325 to YX0328, waves 6-8), scored on mh_stress_scale_self, and a rating of stress related to the coronavirus pandemic (YM1934).",,
+mh_stress_scale_self,compatible,"YX0325, YX0326, YX0327, YX0328","(readr::parse_number(as.character(YX0325)) - 1) +
+  (5 - readr::parse_number(as.character(YX0326))) +
+  (5 - readr::parse_number(as.character(YX0327))) +
+  (readr::parse_number(as.character(YX0328)) - 1)","Waves 6-8, youth self-report: the four PSS-4 items, past 30 days ('how often you felt that you were unable to control the important things in your life', 'confident about your ability to handle your personal problems', 'that things were going your way', 'difficulties were piling up so high that you could not overcome them'), never to very often. Items scored 0-4 with the two positive items reversed, summed complete-case (0-16).",,
+mh_stress_measure,inferred,wave,"if_else(
+  wave %in% c(""6"", ""7"", ""7.5"", ""8""),
+  ""Perceived Stress Scale (PSS-4), 4 of 4 items, 0-4 item scoring (range 0-16), sum; items 2 and 3 (confident, things going your way) reversed; past 30 days"",
+  NA_character_
+)",Describes mh_stress_scale_self at waves 6-8; NA where the scale was not asked.,,
+mh_lonely_self,incompatible,YX0161,,"Loneliness only inside a bundled recency item (YX0161: trapped, lonely, sad, blue, depressed or hopeless), mapped to mh_dep_binary_self.",,
+mh_lonely_scale_self,incompatible,YX0161,,Only the bundled single item YX0161 (see mh_lonely_self); no loneliness scale.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,incompatible,YX0161,,"Only a recency rating of a bundled item (YX0161: trapped, lonely, sad, blue, depressed or hopeless), not a frequency; mapped to mh_dep_binary_self.",,
+mh_worry_self,incompatible,YX0163,,"Only a recency rating of 'feeling very anxious, nervous, tense, scared, panicked' (YX0163): feeling anxious, not worry frequency.",,
+mh_irritable_self,unavailable,,,Not collected.,,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,unavailable,,,Not collected.,,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_worry_self.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see hlth_sleepprob.,,
+wb_bodyimage,unavailable,,,Not collected.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
+wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_happiness_singleitem_self,unavailable,,,Not collected.,,
+wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,unavailable,,,Not collected.,,
+wb_domainsat_friends_self,unavailable,,,Not collected.,,
+wb_domainsat_school_self,unavailable,,,Not collected.,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered.,,
+wb_selfesteem_self,unavailable,,,Not collected.,,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,SHS not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,compatible,YX0088,"recode_values(
+  readr::parse_number(as.character(YX0088)),
+  1 ~ ""Excellent"",
+  2 ~ ""Very good"",
+  3 ~ ""Good"",
+  4 ~ ""Fair"",
+  5 ~ ""Poor""
+)","Waves 2-8, youth self-report: 'In general, would you say your overall health is...' excellent to poor (YX0088), one-to-one. Not asked at wave 1.",,
+wb_selfratedmentalhealth_self,compatible,YX0091,"recode_values(
+  readr::parse_number(as.character(YX0091)),
+  1 ~ ""Excellent"",
+  2 ~ ""Very good"",
+  3 ~ ""Good"",
+  4 ~ ""Fair"",
+  5 ~ ""Poor""
+)","Waves 2-8, youth self-report: 'In general, how would you rate your mental health, which includes stress, depression, and problems with emotions?' excellent to poor (YX0091), one-to-one. The compared-to-12-months-ago item (YX0091_12M) is not used. Not asked at wave 1.",,
+wb_generalhealth_parent,compatible,"PT0035, R_Y_PY0035","recode_values(
+  readr::parse_number(coalesce(as.character(PT0035), as.character(R_Y_PY0035))),
+  1 ~ ""Excellent"",
+  2 ~ ""Very good"",
+  3 ~ ""Good"",
+  4 ~ ""Fair"",
+  5 ~ ""Poor""
+)","Parent: 'In general, would you say [child]'s overall health is excellent, very good, good, fair, or poor?', one-to-one; R_Y_PY0035 at wave 1 (which also takes emancipated youth's own reports), PT0035 from wave 2.",,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,incompatible,"YX0329, YX0331, YX0333, YX0334",,"Wave 6 only: four items on how often support is available if needed (help with chores when sick, advice on a personal problem, someone to do something enjoyable with, someone to love you), naming no source, so neither family nor friends.",,
+wb_socsupport_friends_self,incompatible,"YX0329, YX0331, YX0333, YX0334",,As wb_socsupport_family_self: the wave-6 support items name no source.,,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self.,,
+hlth_sleep_wd,unavailable,,,No weekday/weekend split; see hlth_sleep.,,
+hlth_sleep_we,unavailable,,,No weekday/weekend split; see hlth_sleep.,,
+hlth_sleep,partial,YX0106,as.numeric(YX0106),"Wave 8 only, youth self-report: 'On average, how many hours of sleep do you get in a 24-hour period?' (YX0106), whole hours as entered (2-16; PATH removed improbable answers). Partial: a 24-hour total that includes naps.",,
+hlth_sleepprob,incompatible,YX0162,,"Only one screener item ('significant problems with sleep trouble, such as bad dreams, sleeping restlessly or falling asleep during the day', recency rating); no sleep-problems scale; scored in mh_distress_self.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,

@@ -521,6 +521,8 @@ beh_atten_cbcl_parent,unavailable,,,CBCL not administered; see beh_hyper_sdq_par
 beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
 beh_ext_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent and beh_hyper_sdq_parent.,,
 beh_cbcl_measure,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
+beh_ext_self,in_progress,,,,,
+beh_ext_measure,in_progress,,,,,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
 beh_problematicuse_self,incompatible,GCSOCM00,,Only the single agreement item 'I think I am addicted to social media' (sweep 7); no multi-item scale.,,
@@ -647,6 +649,8 @@ mh_depanx_diagnosed,partial,"GCDEAN00, GCTRDE00","case_when(
   .default = NA_character_
 )","Sweep 7 only, self-report: 'Has a doctor ever told you that you suffer from depression or serious anxiety?' (GCDEAN00), then, if yes, current treatment (GCTRDE00). Partial: current treatment proxies current diagnosis, so current cases are understated. Depression and anxiety cannot be split, hence this row.",,
 mh_stress_self,unavailable,,,Not collected.,,
+mh_stress_scale_self,in_progress,,,,,
+mh_stress_measure,in_progress,,,,,
 mh_lonely_self,incompatible,"FCMDSJ00, DCSC0038",,"SMFQ 'I felt lonely' (FCMDSJ00, sweep 6) is a not true/sometimes/true rating, not a frequency; sweep-4 DCSC0038 'feel left out of things by other children' is peer exclusion.",,
 mh_lonely_scale_self,incompatible,FCMDSJ00,,"Only the SMFQ item 'I felt lonely' (sweep 6), scored in mh_dep_smfq_self; no loneliness scale.",,
 mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
@@ -745,6 +749,7 @@ wb_selfratedhealth_self,compatible,"FCCGHE00, GCCGHE00","recode_values(
   4 ~ ""Fair"",
   5 ~ ""Poor""
 )","Sweeps 6-7: 'How would you describe your health generally?', excellent to poor.",,
+wb_selfratedmentalhealth_self,in_progress,,,,,
 wb_generalhealth_parent,compatible,"CPCGHE00, DPCGHE00, EPCGHE00","recode_values(
   coalesce(as.numeric(CPCGHE00), as.numeric(DPCGHE00), as.numeric(EPCGHE00)),
   1 ~ ""Excellent"",

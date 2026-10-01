@@ -199,3 +199,7 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2387,ethnicity,Non-Latino PI/other single race,Other,proximate,"racedo_p code 6: Pacific Islander or other single race (2001 labels it other single race); no schema equivalent, collapsed into Other"
 2387,ethnicity,Non-Latino two or more races,Mixed,compatible,racedo_p code 7: two or more races maps onto the schema Mixed category
 2387,ethnicity,Unknown,Unknown,compatible,racedo_p is never missing in the public-use files; branch retained as a guard
+67,ethnicity,Hispanic,Hispanic,compatible,"R_Y_HISP = 1 (Hispanic, Latino/Latina or Spanish origin), taken ahead of race"
+67,ethnicity,"White alone, non-Hispanic",White,compatible,R_Y_RACECAT3 = 1 (White only) among non-Hispanic youth
+67,ethnicity,"Black alone, non-Hispanic",Black,compatible,R_Y_RACECAT3 = 2 (Black or African American only) among non-Hispanic youth
+67,ethnicity,"Other race or two or more races, non-Hispanic",Other,proximate,"R_Y_RACECAT3 = 3 pools Asian, American Indian/Alaska Native, Pacific Islander, other race and two or more races; Asian and Mixed cannot be separated"
