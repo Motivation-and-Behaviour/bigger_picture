@@ -139,3 +139,55 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 41,ethnicity,Asian,Asian,compatible,"IBGE category Amarela, i.e. of East Asian descent."
 41,ethnicity,Indigenous,Other,proximate,"IBGE category Indigena; no dataschema category, so Other (proximate); indigenous status is on the indigenous row."
 41,ethnicity,Other (specify),Other,compatible,Free-text other category; the specification was not supplied in the IPD extract.
+1025,ethnicity,"1980 English, etc",White,compatible,"a12.1 code 1 (English, Welsh, Scottish or Northern Irish), 1980 parental interview; used only where the 1986 item is missing"
+1025,ethnicity,1980 Irish,White,compatible,a12.1 code 2
+1025,ethnicity,1980 Other European,White,compatible,a12.1 code 3
+1025,ethnicity,1980 West Indian,Black,compatible,a12.1 code 4 (West Indian or Guyanese)
+1025,ethnicity,1980 Indian,Asian,compatible,a12.1 code 5
+1025,ethnicity,1980 Pakistani,Asian,compatible,a12.1 code 6
+1025,ethnicity,1980 Bangladeshi,Asian,compatible,a12.1 code 7
+1025,ethnicity,1980 Other,Mixed,proximate,a12.1 code 8 with no specification; the box reads 'mixed parentage or any other ethnic group' and maps to Mixed
+1025,ethnicity,"1980 Other, specified as mixed",Mixed,compatible,a12.1 code 8 specified as mixed in a12.7
+1025,ethnicity,"1980 Other, specified as other Asian",Asian,compatible,a12.1 code 8 specified as other Asian in a12.7
+1025,ethnicity,"1980 Other, specified as other",Other,compatible,a12.1 code 8 specified as other in a12.7
+1025,ethnicity,1980 two ethnic groups ticked,Mixed,compatible,"A second ticked group (a12.4) in a different schema category, e.g. English and West Indian"
+1025,ethnicity,1986 United Kingdom,White,compatible,"oa3.1 code 1, 1986 parental interview; the scheme lists West Indian and South Asian origins separately, as in 1980"
+1025,ethnicity,1986 Irish,White,compatible,oa3.1 code 2
+1025,ethnicity,1986 Other European,White,compatible,oa3.1 code 3
+1025,ethnicity,1986 W.Indian/Guyana,Black,compatible,oa3.1 code 4
+1025,ethnicity,1986 Indian,Asian,compatible,oa3.1 code 5
+1025,ethnicity,1986 Pakistani,Asian,compatible,oa3.1 code 6
+1025,ethnicity,1986 Bangladeshi,Asian,compatible,oa3.1 code 7
+1025,ethnicity,1986 Mixed/other,Mixed,proximate,oa3.1 code 8 merges mixed with any other group and maps to Mixed
+1025,ethnicity,2004 White - British,White,compatible,"b7pcethe code 1, census 2001 England categories, parent report"
+1025,ethnicity,2004 White - Welsh,White,compatible,b7pcethw code 1
+1025,ethnicity,2004 White - Scottish,White,compatible,b7pceths code 1
+1025,ethnicity,2004 White - other British,White,compatible,b7pcethw and b7pceths code 2
+1025,ethnicity,2004 White - Irish,White,compatible,Census White Irish
+1025,ethnicity,2004 Any other White background,White,compatible,Census other White
+1025,ethnicity,2004 Mixed - White and Black Caribbean,Mixed,compatible,Census mixed
+1025,ethnicity,2004 Mixed - White and Black African,Mixed,compatible,Census mixed
+1025,ethnicity,2004 Mixed - White and Asian,Mixed,compatible,Census mixed
+1025,ethnicity,2004 Any other mixed background,Mixed,compatible,Census mixed
+1025,ethnicity,2004 Any mixed background,Mixed,compatible,Scotland census mixed
+1025,ethnicity,2004 Asian/Asian British - Indian,Asian,compatible,Census Asian
+1025,ethnicity,2004 Asian/Asian British - Pakistani,Asian,compatible,Census Asian
+1025,ethnicity,2004 Asian/Asian British - Bangladeshi,Asian,compatible,Census Asian
+1025,ethnicity,2004 Any other Asian background,Asian,compatible,Census Asian
+1025,ethnicity,2004 Asian/Asian Scottish/Asian British - Indian,Asian,compatible,Scotland census Asian
+1025,ethnicity,2004 Asian/Asian Scottish/Asian British - Pakistani,Asian,compatible,Scotland census Asian
+1025,ethnicity,2004 Asian/Asian Scottish/Asian British - Bangladeshi,Asian,compatible,Scotland census Asian
+1025,ethnicity,2004 Asian/Asian Scottish/Asian British - Chinese,Asian,compatible,Scotland census lists Chinese under Asian
+1025,ethnicity,2004 Chinese,Asian,compatible,"Census Chinese, a separate UK census group, collapsed into Asian"
+1025,ethnicity,2004 Black/Black British - Caribbean,Black,compatible,Census Black
+1025,ethnicity,2004 Black/Black British - African,Black,compatible,Census Black
+1025,ethnicity,2004 Any other Black background,Black,compatible,Census Black
+1025,ethnicity,2004 Black/Black Scottish/Black British - Caribbean,Black,compatible,Scotland census Black
+1025,ethnicity,2004 Black/Black Scottish/Black British - African,Black,compatible,Scotland census Black
+1025,ethnicity,2004 Any other,Other,compatible,Census any other ethnic group (code 95)
+1025,ethnicity,2004 Any other background,Other,compatible,Scotland census any other background (code 95)
+1127,ethnicity,Fukienese of Taiwan,Asian,compatible,"father_ethnic_group and mother_ethnic_group code 1 (from w1faethn, w1moethn, w3faethn, w3moethn); Han Taiwanese (Hoklo)"
+1127,ethnicity,Hakka of Taiwan,Asian,compatible,Code 2; Han Taiwanese
+1127,ethnicity,Mainlander,Asian,compatible,Code 3; post-1945 migrants from mainland China and their descendants
+1127,ethnicity,Aborigine,Other,proximate,Code 4; Taiwanese Indigenous peoples have no schema category
+1127,ethnicity,Other,Other,proximate,Code 5; unspecified residual group

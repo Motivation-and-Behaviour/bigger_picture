@@ -1,0 +1,548 @@
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,participant_id,as.character(participant_id),"Sample-prefixed student id from the tidier (<sample>-<stud_id>): J = 2001 grade-7 sample (the core panel keeps its J id), S = 2001 grade-11 sample, NP = 2005 grade-11 new panel; stud_id repeats between J and S.",,
+wave,compatible,.wave,as.character(.wave),"TEPS waves 1-4 (2001, 2003, 2005, 2007), from the spec.",,
+data_year,compatible,.wave_label,as.numeric(.wave_label),"Survey year label of each wave (2001, 2003, 2005, 2007), which is its modal fieldwork year: W1 2001-09-01 to 2002-03-01, W2 2003-03-03 to 2003-05-16, W3 2005-10-01 to 2006-01-31, W4 2007-03-01 to 2007-07-31 (user guides); no per-row date.",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,compatible,"w1stwt1, w2stwt1, w3stwt1, w4stwt1","coalesce(as.numeric(w1stwt1), as.numeric(w2stwt1), as.numeric(w3stwt1), as.numeric(w4stwt1))","Each wave's standardised student weight as released (mean 1; no other scaling released). W1-W2 estimate the 2001 grade-7 and grade-11 populations; W3-W4 the 2005 grade-11 population, core panel and new panel together. w2stwt2 and w4stwt2 (for IRT score analyses) and the carried first-wave weight (sampling_stwt1) are not used.",,
+survey_strata,partial,"cohort, sampling_urban3, sampling_priv, sampling_pgrm","paste(cohort, as.numeric(sampling_urban3), as.numeric(sampling_priv), as.numeric(sampling_pgrm), sep = ""_"")","Urban-rural stratum x public/private x school programme, the documented stratifiers (overview p. 8), at the sample's first wave (carried by the tidier), prefixed with the sample (J, S, NP; the core panel keeps J). Partial: no stratum code is released, so strata are rebuilt from the stratifiers.",,
+survey_cluster,unavailable,,,Not in the supplied extract.,,
+age_years,compatible,"birth_year, .wave","recode_values(.wave, ""1"" ~ 2001.916, ""2"" ~ 2003.270, ""3"" ~ 2005.916, ""4"" ~ 2007.371) - (birth_year + 0.5)","Survey year minus birth year, plus the fieldwork midpoint as a year fraction minus 0.5: midpoint as a decimal year (2001-12-01, 2003-04-09, 2005-12-01, 2007-05-16 from the user guides) minus mid-birth-year. birth_year comes from the tidier: the ROC-year labels of w1s501 (J, S and core panel, carried from W1) or w3s479 (NP, carried to W4) + 1911. w3s479's codes 1-5 are relabelled ROC 75-79 in the tidier: the released labels (ROC 71-75) would make 2005 grade-11 students 20-21, and the codes match the core panel's ROC 77-78 four codes down (NP mean age 16.85 at W3, core panel 16.80).",,
+sex,compatible,"w1s502, w2s445, w3s480, participant_id","coalesce(
+  modal_within(
+    coalesce(
+      recode_values(as.numeric(w1s502), 1 ~ ""Male"", 2 ~ ""Female""),
+      recode_values(as.numeric(w2s445), 1 ~ ""Male"", 2 ~ ""Female""),
+      recode_values(as.numeric(w3s480), 1 ~ ""Male"", 2 ~ ""Female"")
+    ),
+    participant_id
+  ),
+  ""Unknown""
+)","Self-reported gender (male, female): w1s502 (W1; the W2 and W4 files repeat it under that name), w2s445 (W2), w3s480 (W3). Each participant's modal value at every wave (carry-forward rule); 12 participants differ between waves, ties Unknown.",,
+country,inferred,,"""Taiwan""",National sample of Taiwan (TEPS overview p. 1).,,
+state,unavailable,,,Not an Australian dataset.,,
+ethnicity,proximate,"father_ethnic_group, mother_ethnic_group, participant_id, .wave","coalesce(
+  carry_within(
+    recode_values(
+      paste(
+        lookup_values(
+          as_factor(father_ethnic_group),
+          lookup_ethnicity,
+          dataset_id = spec$dataset_id,
+          target_variable = ""ethnicity""
+        ),
+        lookup_values(
+          as_factor(mother_ethnic_group),
+          lookup_ethnicity,
+          dataset_id = spec$dataset_id,
+          target_variable = ""ethnicity""
+        ),
+        sep = "" / ""
+      ),
+      c(""Asian / Asian"", ""Asian / NA"", ""NA / Asian"") ~ ""Asian"",
+      c(""Other / Other"", ""Other / NA"", ""NA / Other"") ~ ""Other"",
+      c(""Asian / Other"", ""Other / Asian"") ~ ""Mixed""
+    ),
+    participant_id,
+    as.numeric(.wave)
+  ),
+  ""Unknown""
+)","Parent-reported ethnic group of each parent's own father (father_ethnic_group, mother_ethnic_group: W1 for J and S, W3 for NP, one column each in the tidier), each through the shared lookup: the three Han groups Asian, aborigine and other Other. Father / mother: the same category, or one known, gives that category; Asian with Other = Mixed. Carried within participant. Unlabelled code 6 (W3), 97 and 99 unknown. Proximate: parents' lineage stands in for the child, and Indigenous peoples fold into Other.",ethnicity,
+indigenous,proximate,"father_ethnic_group, mother_ethnic_group, participant_id, .wave","coalesce(
+  carry_within(
+    case_when(
+      as.numeric(father_ethnic_group) %in% 4 | as.numeric(mother_ethnic_group) %in% 4 ~ ""Indigenous"",
+      as.numeric(father_ethnic_group) %in% 1:5 | as.numeric(mother_ethnic_group) %in% 1:5 ~ ""Non-Indigenous""
+    ),
+    participant_id,
+    as.numeric(.wave)
+  ),
+  ""Unknown""
+)","Same parent items as ethnicity: Indigenous if either parent's group is aborigine (Taiwanese Indigenous peoples), Non-Indigenous if a parent's group is known and neither is aborigine, carried within participant. Proximate: parents' lineage, not the child's own status.",,
+minority,proximate,"father_ethnic_group, mother_ethnic_group, participant_id, .wave","coalesce(
+  carry_within(
+    recode_values(
+      paste(
+        lookup_values(
+          as_factor(father_ethnic_group),
+          lookup_ethnicity,
+          dataset_id = spec$dataset_id,
+          target_variable = ""ethnicity""
+        ),
+        lookup_values(
+          as_factor(mother_ethnic_group),
+          lookup_ethnicity,
+          dataset_id = spec$dataset_id,
+          target_variable = ""ethnicity""
+        ),
+        sep = "" / ""
+      ),
+      c(""Asian / Asian"", ""Asian / NA"", ""NA / Asian"") ~ ""Non-minority"",
+      c(""Other / Other"", ""Other / NA"", ""NA / Other"", ""Asian / Other"", ""Other / Asian"") ~ ""Minority""
+    ),
+    participant_id,
+    as.numeric(.wave)
+  ),
+  ""Unknown""
+)","From the ethnicity derivation: Han Taiwanese (Fukienese, Hakka, Mainlander; Asian) = Non-minority, the Han majority; aborigine, other and mixed parentage = Minority. Proximate: parents' lineage stands in for the child.",ethnicity,
+immigrant_background,incompatible,"w3p105, w3p703",,"Only where each W3 parent lived longest before age 18 (w3p105, w3p703; labels truncated), not birthplace; the child's birthplace is not asked.",,
+born_in_country,unavailable,,,Not collected.,,
+ses_area,unavailable,,,Not collected.,,
+ses_household,proximate,"household_income, .wave","case_when(
+  .wave == ""1"" & as.numeric(household_income) %in% 1:2 ~ ""Low"",
+  .wave == ""1"" & as.numeric(household_income) %in% 3 ~ ""Medium"",
+  .wave == ""1"" & as.numeric(household_income) %in% 4:6 ~ ""High"",
+  .wave == ""2"" & as.numeric(household_income) %in% 1 ~ ""Low"",
+  .wave == ""2"" & as.numeric(household_income) %in% 2 ~ ""Medium"",
+  .wave == ""2"" & as.numeric(household_income) %in% 3:6 ~ ""High"",
+  .wave == ""3"" & as.numeric(household_income) %in% 1:2 ~ ""Low"",
+  .wave == ""3"" & as.numeric(household_income) %in% 3 ~ ""Medium"",
+  .wave == ""3"" & as.numeric(household_income) %in% 4:6 ~ ""High"",
+  .default = ""Unknown""
+)","Parent-reported average monthly household income, 6 bands (household_income, one column in the tidier from W1 w1p515, W2 w2p508: under NT$20,000 to NT$200,000 or more; W3 w3p602, only its lowest band labelled). Bands placed by within-wave ridit (W1 and W2 pool the J and S samples); no band falls in 0.4-0.6, so the band nearest 0.5 is Medium: W1 bands 1-2 Low (51%), 3 Medium (36%), 4-6 High (14%); W2 1 Low (15%), 2 Medium (43%), 3-6 High (43%); W3 1-2 Low (21%), 3 Medium (32%), 4-6 High (48%). W4 asks no income and the gap exceeds 12 months: Unknown. Proximate: splits far from 40/20/40.",,
+ses_household_measure,inferred,.wave,"if_else(.wave %in% c(""1"", ""2"", ""3""), ""Income: average monthly household income, 6 bands (parent report)"", NA_character_)",W1-W3; NA at W4 (no income item). W3 band limits other than the lowest are undocumented.,,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,proximate,mother_education,"coalesce(
+  lookup_values(
+    as_factor(mother_education),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","Mother figure's (incl. step or adoptive) highest education, reported by the responding parent: mother_education from the tidier, which takes the W3/W4 six-level value (moedu_w34, observed or carried) where valid, else W1's w1moedu (carried), on W1's five-level scale plus other; shared education lookup. Proximate: the junior college/institute of technology level spans short-cycle and bachelor-level tertiary and goes to Post-secondary. Other, 97 and 99 = Unknown.",maternal_education,
+paternal_education,proximate,father_education,"coalesce(
+  lookup_values(
+    as_factor(father_education),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","Father figure's (incl. step or adoptive) highest education, as maternal_education (father_education from faedu_w34, else w1faedu). Proximate: junior college/institute of technology level to Post-secondary.",maternal_education,
+parental_education,proximate,parents_highest_education,"coalesce(
+  lookup_values(
+    as_factor(parents_highest_education),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","parents_highest_education from the tidier: the higher of father_education and mother_education ('other' ignored), so one known parent suffices; neither known = Unknown. Proximate as maternal_education.",maternal_education,
+urbanicity,proximate,"w1urban3, w2urban3, w3urban3, w4urban3","recode_values(
+  coalesce(as.numeric(w1urban3), as.numeric(w2urban3), as.numeric(w3urban3), as.numeric(w4urban3)),
+  1 ~ ""Rural"",
+  2 ~ ""Suburban"",
+  3 ~ ""Urban"",
+  default = ""Unknown""
+)","The school's urban-rural sampling stratum at the wave (village, town, city), in order. Proximate: school location stands in for residence, and a town is not a suburb.",,
+family_structure,proximate,"lives_with_father, lives_with_mother, lives_with_step_parent","case_when(
+  !as.numeric(lives_with_father) %in% 0:1 |
+    !as.numeric(lives_with_mother) %in% 0:1 |
+    !as.numeric(lives_with_step_parent) %in% 0:1 ~ ""Unknown"",
+  as.numeric(lives_with_father) == 1 & as.numeric(lives_with_mother) == 1 ~ ""Two biological/adoptive parents"",
+  (as.numeric(lives_with_father) == 1 | as.numeric(lives_with_mother) == 1) &
+    as.numeric(lives_with_step_parent) == 1 ~ ""Step family"",
+  as.numeric(lives_with_father) == 1 | as.numeric(lives_with_mother) == 1 ~ ""Single parent"",
+  .default = ""Other""
+)","W1 and W3 only. Student's tick list of who currently lives with them (lives_with_* columns, one per person in the tidier from w1s2021-w1s2023 and w3s3021-w3s3023): father, mother, step or adoptive parents (W3 also foster). Father and mother = Two biological/adoptive parents; one of them plus a step or adoptive parent = Step family; one alone = Single parent; neither = Other. W2 and W4 have no current roster and gaps exceed 12 months: Unknown. Proximate: adoptive parents share the step-parent option.",,
+fam_screenrules,incompatible,w3s3431,,"Only a core-panel retrospective item on whether parents limited time for TV or play in grades 5-6 (w3s3431, W3); no current rule.",,
+fam_bedroomscreen,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+school_grade,inferred,"cohort, .wave, w1pgrm, w2pgrm, w3pgrm, w4pgrm","stringr::str_c(
+  recode_values(
+    coalesce(as.numeric(w1pgrm), as.numeric(w2pgrm), as.numeric(w3pgrm), as.numeric(w4pgrm)),
+    1 ~ ""Junior high"",
+    c(2, 3) ~ ""Senior high"",
+    4 ~ ""Vocational high"",
+    5 ~ ""Junior college""
+  ),
+  case_when(
+    cohort == ""J"" & .wave == ""1"" ~ ""1"",
+    cohort == ""J"" & .wave == ""2"" ~ ""3"",
+    .wave %in% c(""1"", ""3"") ~ ""2"",
+    .default = ""3""
+  ),
+  sep = "" ""
+)","Year of the programme attended at the wave (wNpgrm; comprehensive high schools as Senior high, five-year junior colleges as Junior college): 2001 junior sample Junior high 1 (grade 7) and Junior high 3 (grade 9); 2001 senior sample year 2 (grade 11) and year 3 (grade 12); core panel and 2005 new panel year 2 in 2005 and year 3 in 2007 (overview pp. 3, 9). Inferred: follow-up years assume normal progression; only the sampled grade (J W1, S W1, NP W3) is fixed by design.",,
+st_measure_type,inferred,,"""Categorical""",Banded self-report durations at every wave.,,
+st_measure_name,inferred,,"""Custom""",Items written for the TEPS student questionnaires.,,
+st_responder,inferred,,"""Self""",Student questionnaire at every wave.,,
+st_total_wd,unavailable,,,No weekday/weekend split.,,
+st_total_we,unavailable,,,No weekday/weekend split.,,
+st_total,incompatible,"w1s427, w1s423, w2s105, w2s106, w2s107, w3s128, w3s208, w3s209, w3s212, w3s213, w4s116, w4s117, w4s118",,"No all-screen item; the computer/internet, TV, texting, chat/BBS/e-mail, online-game and homework-internet items sit on their own rows and are not summed (DR-0002, DR-0004).",,
+st_watch_wd,unavailable,,,No weekday/weekend split.,,
+st_watch_we,unavailable,,,No weekday/weekend split.,,
+st_watch,partial,w3s208,"recode_values(as.numeric(w3s208), 6 ~ 0, 1 ~ 0.5, 2 ~ 1.5, 3 ~ 2.5, 4 ~ 3.5, 5 ~ 4)","W3 only. Average daily time watching TV or films (看電視或影片; English label 'TV or video tapes'): almost none 0, under 1 h 0.5, closed bands at midpoints, top band '4 hours or more' = 4. Partial: TV-set wording. W1's item bundles TV with sports and music (w1s423), not used; W2 and W4 ask none.",,
+st_game_wd,unavailable,,,No weekday/weekend split.,,
+st_game_we,unavailable,,,No weekday/weekend split.,,
+st_game,partial,"w2s107, w3s213, w4s118","coalesce(
+  recode_values(as.numeric(w2s107), 1 ~ 0, 2 ~ 2.5, 3 ~ 7.5, 4 ~ 12.5, 5 ~ 17.5, 6 ~ 20),
+  recode_values(as.numeric(w3s213), 6 ~ 0, 1 ~ 2.5, 2 ~ 7.5, 3 ~ 12.5, 4 ~ 17.5, 5 ~ 20),
+  recode_values(as.numeric(w4s118), 6 ~ 0, 1 ~ 2.5, 2 ~ 7.5, 3 ~ 12.5, 4 ~ 17.5, 5 ~ 20)
+) /
+  7","W2-W4 only. Weekly hours playing online games (網路遊戲, 線上遊戲) / 7: almost none 0, under 5 h 2.5, closed 5-hour bands at midpoints, top band '20 hours or more' = 20. Partial: online games only. W1 asks only whether the student spent over 2 h a day online or on video games in the summer (w1s1145), not used.",,
+st_game_comp_wd,unavailable,,,No device split; see st_game.,,
+st_game_comp_we,unavailable,,,No device split; see st_game.,,
+st_game_comp,unavailable,,,No device split; see st_game.,,
+st_game_console_wd,unavailable,,,No device split; see st_game.,,
+st_game_console_we,unavailable,,,No device split; see st_game.,,
+st_game_console,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_wd,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_we,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole,unavailable,,,No device split; see st_game.,,
+st_game_active_wd,unavailable,,,No device split; see st_game.,,
+st_game_active_we,unavailable,,,No device split; see st_game.,,
+st_game_active,unavailable,,,No device split; see st_game.,,
+st_game_phone_wd,unavailable,,,No device split; see st_game.,,
+st_game_phone_we,unavailable,,,No device split; see st_game.,,
+st_game_phone,unavailable,,,No device split; see st_game.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_game.,,
+st_game_tablet_we,unavailable,,,No device split; see st_game.,,
+st_game_tablet,unavailable,,,No device split; see st_game.,,
+st_comp_nongaming_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming_we,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming,incompatible,w1s427,,The W1 computer-or-internet item includes games; mapped to st_comp.,,
+st_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_we,unavailable,,,No weekday/weekend split.,,
+st_comp,compatible,"w1s427, w1s4261","case_when(
+  as.numeric(w1s427) %in% 1:5 ~ recode_values(as.numeric(w1s427), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3),
+  as.numeric(w1s4261) %in% 1 ~ 0,
+  .default = NA_real_
+)","W1 only. Usual daily time using the computer or going online (打電腦或上網): almost none 0, under 1 h 0.5, closed bands at midpoints, top band '3 hours or more' = 3; 0 where the student ticked 'never use a computer' (w1s4261) and left the hours item invalid. Online use in 2001 was computer-based.",,
+st_tablet_wd,unavailable,,,Not collected.,,
+st_tablet_we,unavailable,,,Not collected.,,
+st_tablet,unavailable,,,Not collected.,,
+st_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_phone_we,unavailable,,,No weekday/weekend split.,,
+st_phone,incompatible,w3s209,,"Only phone calls or texting with friends (w3s209, W3), a single phone activity mapped to st_messaging.",,
+st_socmedia_wd,unavailable,,,No weekday/weekend split.,,
+st_socmedia_we,unavailable,,,No weekday/weekend split.,,
+st_socmedia,partial,"w2s106, w3s212, w4s117","coalesce(
+  recode_values(as.numeric(w2s106), 1 ~ 0, 2 ~ 2.5, 3 ~ 7.5, 4 ~ 12.5, 5 ~ 17.5, 6 ~ 20),
+  recode_values(as.numeric(w3s212), 6 ~ 0, 1 ~ 2.5, 2 ~ 7.5, 3 ~ 12.5, 4 ~ 17.5, 5 ~ 20),
+  recode_values(as.numeric(w4s117), 6 ~ 0, 1 ~ 2.5, 2 ~ 7.5, 3 ~ 12.5, 4 ~ 17.5, 5 ~ 20)
+) /
+  7","W2-W4 only. Weekly hours in chat rooms, on BBS, e-mailing or on instant messengers (ICQ, MSN, Yahoo Messenger, Skype) / 7: almost none 0, under 5 h 2.5, closed 5-hour bands at midpoints, top band '20 hours or more' = 20. Partial: BBS and chat rooms bundled with e-mail and messaging.",,
+st_educational_wd,unavailable,,,No weekday/weekend split.,,
+st_educational_we,unavailable,,,No weekday/weekend split.,,
+st_educational,partial,"w2s105, w3s128, w4s116","coalesce(
+  recode_values(as.numeric(w2s105), 1 ~ 0, 2 ~ 1, 3 ~ 3, 4 ~ 5, 5 ~ 7, 6 ~ 8),
+  recode_values(as.numeric(w3s128), 6 ~ 0, 1 ~ 1, 2 ~ 3, 3 ~ 5, 4 ~ 7, 5 ~ 8),
+  recode_values(as.numeric(w4s116), 6 ~ 0, 1 ~ 1, 2 ~ 3, 3 ~ 5, 4 ~ 7, 5 ~ 8)
+) /
+  7","W2-W4 only. Weekly hours online looking up information for homework / 7: almost none 0, under 2 h 1, closed 2-hour bands at midpoints, top band '8 hours or more' = 8. Partial: internet searching for homework only.",,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,unavailable,,,No weekday/weekend split.,,
+st_internet_we,unavailable,,,No weekday/weekend split.,,
+st_internet,incompatible,"w1s427, w2s105, w2s106, w2s107, w3s128, w3s212, w3s213, w4s116, w4s117, w4s118",,"Online time asked only by purpose (homework, chat/BBS/e-mail, online games; mapped to st_educational, st_socmedia and st_game) and, at W1, pooled with computer use (mapped to st_comp).",,
+st_videochat,incompatible,"w3s212, w4s117",,"Skype only inside the chat/BBS/e-mail/instant-messaging items (W3, W4), mapped to st_socmedia.",,
+st_messaging_wd,unavailable,,,No weekday/weekend split.,,
+st_messaging_we,unavailable,,,No weekday/weekend split.,,
+st_messaging,partial,w3s209,"recode_values(as.numeric(w3s209), 6 ~ 0, 1 ~ 0.25, 2 ~ 0.75, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3)","W3 only. Average daily time talking with friends on the phone or texting (w3s209): almost none 0, under 30 min 0.25, closed bands at midpoints, top band '3 hours or more' = 3. Partial: voice calls bundled with texting, friends only. The chat/BBS/e-mail/messenger items are on st_socmedia.",,
+st_creating,unavailable,,,Not collected.,,
+st_email,incompatible,"w2s106, w3s212, w4s117",,"E-mail only inside the chat/BBS/e-mail/instant-messaging items (W2-W4), mapped to st_socmedia.",,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,incompatible,w3s307,,"Only a core-panel comparison of one's school performance with siblings' (w3s307, W3); no rating against classmates or of grades.",,
+acc_academachment_lettergrades,unavailable,,,Not collected.,,
+acc_academachment_stdtest,partial,"w1all3p, w2all3p, w3all3p, w4all3p","coalesce(as.numeric(w1all3p), as.numeric(w2all3p), as.numeric(w3all3p), as.numeric(w4all3p))","Comprehensive Analytical Ability Test (CAAT), overall 3PL IRT ability estimate (wNall3p), on one scale across waves and programmes; every wave. Domain: analytical reasoning and mathematics (general analytical and mathematics subtests). Partial: an ability (theta) score, not age-normed, from a problem-solving test rather than a curriculum test (overview p. 4).",,
+acc_schoolengage_caresschool,incompatible,"w1tcs2, w1tes2, w1tms2, w2tcs2, w2tes2, w2tms2",,"Only subject teachers' ratings of whether the student studies hard (W1, W2), an effort item; mapped nowhere.",,
+acc_schoolengage_homework,incompatible,"w1td11, w1tcs3, w1tes3, w1tms3, w2tcs3, w2tes3, w2tms3",,"Only teacher reports: often not doing homework (w1td11, yes/no) and how often assignments are late (W1, W2); not completion frequency; mapped nowhere.",,
+acc_schoolpressure_self,incompatible,w2s118,,"Only worry that schoolwork would fall behind without maths tutoring (w2s118, W2 junior sample), a related item; the general 'under a lot of pressure' item is on mh_stress_self.",,
+acc_schoolbelonging_self,incompatible,"w1s301, w1s302, w1s303, w1s304, w3s108, w3s109, w3s110, w3s111",,"Only agreement that the school is a happy place, a place to make friends, boring, or a place to learn (W1, W3), not a belonging or connectedness scale; 'happy place' is on wb_domainsat_school_self.",,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
+acc_academachment_teacherrated,partial,"w2tcs5, w2tes5, w2tms5","recode_values(
+  floor(
+    (if_else(as.numeric(w2tcs5) %in% 1:5, as.numeric(w2tcs5), NA_real_) +
+      if_else(as.numeric(w2tes5) %in% 1:5, as.numeric(w2tes5), NA_real_) +
+      if_else(as.numeric(w2tms5) %in% 1:5, as.numeric(w2tms5), NA_real_)) /
+      3 +
+      0.5
+  ),
+  1 ~ ""Very good"",
+  2 ~ ""Good"",
+  3 ~ ""Average"",
+  c(4, 5) ~ ""Below average""
+)","W2 only. Chinese, English and maths teachers' ratings of the student's class rank (top 5 of the class, above average, around average, below average, bottom 5): mean of all three (all required), rounded half toward the poorer level, then the five-level collapse. Partial: mean of subject ratings.",,
+acc_numeracy_stdtest,partial,"w1m3p, w2m3p, w3m3p, w4m3p","coalesce(as.numeric(w1m3p), as.numeric(w2m3p), as.numeric(w3m3p), as.numeric(w4m3p))","CAAT mathematics subtest, 3PL IRT ability estimate (wNm3p), on one scale across waves and programmes; every wave. Partial: an ability (theta) score, not age-normed.",,
+acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered; see acc_numeracy_stdtest.,,
+acc_literacy_stdtest,unavailable,,,Not in the supplied extract.,,
+acc_literacy_bas_wordreading,unavailable,,,BAS II not administered.,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_self,incompatible,w1s515,,"Only the single checklist item 'can't concentrate' (w1s515, W1); no attention scale; mapped nowhere.",,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_selfreg_htks,unavailable,,,Not collected.,,
+beh_bullied,unavailable,,,Not collected.,,
+beh_beenbullied,partial,"w1s334, w1s335, w3s117, w3s118","case_when(
+  (as.numeric(w1s334) %in% 2:4) |
+    (as.numeric(w1s335) %in% 2:4) |
+    (as.numeric(w3s117) %in% 1:3) |
+    (as.numeric(w3s118) %in% 1:3) ~ TRUE,
+  (as.numeric(w1s334) %in% 1:4) |
+    (as.numeric(w1s335) %in% 1:4) |
+    (as.numeric(w3s117) %in% 1:4) |
+    (as.numeric(w3s118) %in% 1:4) ~ FALSE
+)","W1 and W3 only. Self-report that someone threatened the student, or extorted or robbed them (never, 1-2, 3-4, 5+ times): W1 since the start of the semester (senior sample: since entering senior high school), W3 at school since entering senior high school. TRUE for any occurrence. Partial: acts by anyone, not framed as bullying by peers.",,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,compatible,w2s127,"recode_values(as.numeric(w2s127), 1 ~ FALSE, c(2, 3, 4) ~ TRUE)","W2 only. Self-report 'got into fights and caused trouble' (打架鬧事; never, seldom, sometimes, often) since grade 8 (junior sample) or the start of grade 12 (senior sample); TRUE for any occurrence. W1, W3 and W4 ask 'fighting at school or conflict with teachers' (w1s510, w3s449, w4s123), a pooled item not spliced in.",,
+beh_truancy,compatible,"w1s509, w2s125, w3s447, w3s448, w4s121, w4s122","case_when(
+  (as.numeric(w1s509) %in% 2:4) |
+    (as.numeric(w2s125) %in% 2:4) |
+    (as.numeric(w3s447) %in% 2:4) |
+    (as.numeric(w3s448) %in% 2:4) |
+    (as.numeric(w4s121) %in% 2:4) |
+    (as.numeric(w4s122) %in% 2:4) ~ TRUE,
+  (as.numeric(w1s509) %in% 1:4) |
+    (as.numeric(w2s125) %in% 1:4) |
+    (as.numeric(w3s447) %in% 1:4) |
+    (as.numeric(w3s448) %in% 1:4) |
+    (as.numeric(w4s121) %in% 1:4) |
+    (as.numeric(w4s122) %in% 1:4) ~ FALSE
+)","Self-report (never, seldom, sometimes, often): 'truancy or skipping classes' (逃學或翹課) at W1 (this semester) and W2 (since grade 8 for the junior sample, since the start of grade 12 for the senior sample); separate truancy and class-skipping items at W3 (this semester) and W4 (since the start of grade 12). TRUE for any occurrence.",,
+beh_stealing,partial,w1td17,"recode_values(as.numeric(w1td17), 1 ~ TRUE, 2 ~ FALSE)","W1 only. Homeroom teacher's report that the student has stolen (偷竊) since the start of the semester (yes, no; not sure NA). Partial: teacher report; the students' and parents' items pool stealing with damaging property (w1s514, w3s453, w4s127, w1p221, w3p215).",,
+beh_vandalism,incompatible,"w1s514, w3s453, w4s127, w1p221, w3p215",,"Only 'stealing or damaging others' belongings' in one item (student W1, W3, W4; parent W1, W3); a steal-or-damage item.",,
+beh_alcohol_self,partial,"w4s4631, w4s4632, w4s4633, w4s4634, w4s4635, w4s4636","case_when(
+  (as.numeric(w4s4633) %in% 1) ~ TRUE,
+  (as.numeric(w4s4631) %in% 1) |
+    (as.numeric(w4s4632) %in% 1) |
+    (as.numeric(w4s4634) %in% 1) |
+    (as.numeric(w4s4635) %in% 1) |
+    (as.numeric(w4s4636) %in% 1) ~ FALSE
+)","W4 only. Self-report of ever having got drunk (a tick in a list of risk behaviours with 'none of the above'): TRUE if ticked, FALSE if another option was ticked. Partial: drunkenness only, lifetime. The smoking, drinking or betel-nut items (W1, W3, W4) pool substances and are not used.",,
+beh_tobacco_self,incompatible,"w1s512, w3s451, w4s125",,"Only 'smoking, drinking alcohol or chewing betel nut' as one item (W1, W3, W4); smoking cannot be separated.",,
+beh_cannabis_self,partial,"w4s4661, w4s4662, w4s4663, w4s4664","case_when(
+  as.numeric(w4s4661) %in% 1 | as.numeric(w4s4662) %in% 1 | as.numeric(w4s4663) %in% 1 ~ TRUE,
+  as.numeric(w4s4664) %in% 1 ~ FALSE,
+  .default = NA
+)","W4 only. Self-report of ever taking drugs (嗑藥) in elementary, junior high or senior high school, or never, asked after items on ecstasy and other illegal drugs. Partial: any illegal drug, lifetime; cannabis is not named.",,
+beh_conduct_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_agg_self,incompatible,urge_scream_hit,,"Only the single checklist item 'feel like screaming, smashing things, quarrelling or hitting someone' (W1-W4); no aggression scale; scored in mh_distress_self.",,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_argues,incompatible,urge_scream_hit,,"Only the urge to scream, smash things, quarrel or hit someone (checklist frequency, W1-W4), not arguing too much; scored in mh_distress_self.",,
+beh_persistence_finishwork,incompatible,w1s535,,"Only 'since elementary school nothing has stopped me doing my homework' (w1s535, W1), a truth rating; mapped nowhere.",,
+beh_emotreg_stayscalm,incompatible,"w1s540, w2s415, w4s432",,"Only 'I am always calm and steady, not restless' (W1, W2, W4 core panel), a truth rating of a trait; mapped nowhere.",,
+beh_peerprob_makefriends,incompatible,"w1s539, w1s431, w3s454",,"Only 'I always take the initiative to make new friends' (w1s539, truth rating) and counts of close friends (w1s431, w3s454); mapped nowhere.",,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ not administered.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_self,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_problematicuse_self,incompatible,w2s130,,"Only the single item 'lose track of time once online' (w2s130, W2); no problematic-use scale; mapped nowhere.",,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,NEPSY not administered.,,
+cog_phono_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhibcont_nepsy,unavailable,,,NEPSY not administered.,,
+cog_vismotor_nepsy,unavailable,,,NEPSY not administered.,,
+cog_verbalfluency_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhib_nihtb_flanker,unavailable,,,NIH Toolbox not administered.,,
+cog_flex_nihtb_dccs,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox not administered.,,
+cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox not administered.,,
+cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox not administered.,,
+cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox not administered.,,
+cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_digitspan,unavailable,,,Digit span not administered.,,
+cog_iq_fullscale,incompatible,"w1all3p, w2all3p, w3all3p, w4all3p",,"Only the CAAT analytical-ability IRT score, not a normed IQ battery; mapped to acc_academachment_stdtest.",,
+cog_vocab_bpvs,unavailable,,,BPVS not administered.,,
+cog_vocab_ppvt,unavailable,,,PPVT not administered.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_vocab_bas_naming,unavailable,,,BAS II not administered.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,BAS II not administered.,,
+cog_spatial_bas_pattern,unavailable,,,BAS II not administered.,,
+cog_verbalreason_bas_versim,unavailable,,,BAS II not administered.,,
+cog_earlynumber_bas_enc,unavailable,,,BAS II not administered.,,
+cog_schoolread_bracken,unavailable,,,Bracken not administered.,,
+cog_creativethinking_stdtest,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ not administered.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_int_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_int_sdq_self,unavailable,,,SDQ not administered.,,
+mh_int_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered.,,
+mh_distress_k6_self,unavailable,,,K6 not administered; see mh_distress_self.,,
+mh_distress_k10_self,unavailable,,,K10 not administered; see mh_distress_self.,,
+mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered; see mh_distress_self.,,
+mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered; see mh_distress_self.,,
+mh_distress_self,partial,"feel_withdrawn, feel_low, urge_scream_hit, feel_lonely, sleep_problems, tight_head_numbness","(if_else(as.numeric(feel_withdrawn) %in% 1:4, as.numeric(feel_withdrawn), NA_real_) +
+  if_else(as.numeric(feel_low) %in% 1:4, as.numeric(feel_low), NA_real_) +
+  if_else(as.numeric(urge_scream_hit) %in% 1:4, as.numeric(urge_scream_hit), NA_real_) +
+  if_else(as.numeric(feel_lonely) %in% 1:4, as.numeric(feel_lonely), NA_real_) +
+  if_else(as.numeric(sleep_problems) %in% 1:4, as.numeric(sleep_problems), NA_real_) +
+  if_else(as.numeric(tight_head_numbness) %in% 1:4, as.numeric(tight_head_numbness), NA_real_)) -
+  6","Every wave, self-report. Sum of the six problem items of the study's symptom checklist asked at every wave, each one column in the tidier: don't want to associate with others (feel_withdrawn), feel low (feel_low, 鬱卒), feel like screaming, smashing things, quarrelling or hitting someone (urge_scream_hit), lonely (feel_lonely), can't sleep or sleep badly (sleep_problems), tight head, numbness or trembling (tight_head_numbness). Codes 1-4 (never to often) summed minus 6, so items score 0-3, complete-case (range 0-18); recall this semester (W2: since grade 8, or the second semester of grade 12). Cronbach's alpha 0.80 at each wave; every item correlates positively with the rest. Partial: the study's own checklist with no published scoring; its other 7-11 items per wave are not used.",,
+mh_distress_measure,inferred,,"""TEPS student symptom checklist, 6 of 13-17 items (those asked at every wave), 0-3 item scoring (range 0-18), sum; never to often, this semester (W2 since grade 8 or the second semester of grade 12)""",Describes mh_distress_self; every wave fielded the six items.,,
+mh_anx_masc_self,unavailable,,,MASC not administered.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,incompatible,feel_low,,"Only the frequency of feeling low (鬱卒), mapped to mh_sad_self; no yes/no screening item.",,
+mh_dep_self,incompatible,"feel_low, feel_lonely, w1s523, w3s434, w4s448",,"Only single items of a study symptom checklist (never to often), no depression scale; the checklist's six core items are scored on mh_distress_self (general distress), low mood on mh_sad_self, loneliness on mh_lonely_self.",,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,incompatible,"w1s518, w3s442, w4s456",,"Only single checklist items: anxious and worried (W1, mapped to mh_worry_self) and nervous, anxious or impatient (W3, W4); no anxiety scale. The checklist's core score is on mh_distress_self.",,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,partial,"w3s445, w4s459","recode_values(
+  coalesce(as.numeric(w3s445), as.numeric(w4s459)),
+  1 ~ ""None at all"",
+  2 ~ ""A little"",
+  3 ~ ""Some"",
+  4 ~ ""A lot""
+)","W3 and W4 only. How often this semester the student felt under great pressure (壓力很大; never, seldom, sometimes, often), mapped by rank; A great deal never emitted. Partial: frequency of high stress, not amount of stress usually felt.",,
+mh_lonely_self,proximate,feel_lonely,"recode_values(as.numeric(feel_lonely), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"")","Self-report 'feel lonely' (感到孤單), every wave: this semester (W1, W3, W4) or since grade 8 / the second semester of grade 12 (W2). Never, seldom, sometimes, often = Never, Rarely, Sometimes, Often. Proximate: four levels, Always never emitted. Also scored in mh_distress_self.",,
+mh_lonely_scale_self,incompatible,feel_lonely,,"Single loneliness item only, no scale; mapped to mh_lonely_self.",,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,partial,feel_low,"recode_values(as.numeric(feel_low), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"")","Self-report 'feel low' (鬱卒; W4 adds 情緒低落, low mood), every wave, recall as mh_lonely_self. Never, seldom, sometimes, often = Never, Rarely, Sometimes, Often; Always never emitted. Partial: low mood, not 'sad', on four levels. Also scored in mh_distress_self.",,
+mh_worry_self,partial,w1s518,"recode_values(coalesce(as.numeric(w1s518)), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"")","W1 only. Self-report 'anxious and worried' (焦慮擔心) this semester; never, seldom, sometimes, often = Never, Rarely, Sometimes, Often. Partial: worry without 'very', pooled with anxiety, four levels. W3 and W4 ask 'nervous, anxious or impatient' (w3s442, w4s456), not used.",,
+mh_irritable_self,partial,"w2s437, w3s440, w4s454","recode_values(
+  coalesce(as.numeric(w2s437), as.numeric(w3s440), as.numeric(w4s454)),
+  1 ~ ""Never"",
+  2 ~ ""Rarely"",
+  3 ~ ""Sometimes"",
+  4 ~ ""Often""
+)","W2 (junior sample), W3 and W4. Self-report 'provoked to anger' (被激怒; English label 'easily irritated by others'), recall as mh_lonely_self; never, seldom, sometimes, often = Never, Rarely, Sometimes, Often. Partial: anger item, four levels. The urge to scream or hit (W1-W4) is not used.",,
+mh_nobodycares_self,incompatible,"w1s523, w3s434, w4s448, w2s435, w3s438, w4s452",,"Only 'feel helpless, no one to rely on' (support availability) and 'feel cared for and loved' (positive wording), not feeling that nobody cares.",,
+mh_lifenotworth_self,proximate,"w1s520, w3s432, w4s446","recode_values(
+  coalesce(as.numeric(w1s520), as.numeric(w3s432), as.numeric(w4s446)),
+  1 ~ ""Never"",
+  2 ~ ""Rarely"",
+  3 ~ ""Sometimes"",
+  4 ~ ""Often""
+)","W1, W3 and W4. Self-report 'don't want to live any more' (不想活了; W1 English label 'terminate your own life') this semester; never, seldom, sometimes, often = Never, Rarely, Sometimes, Often. Proximate: four levels, Always never emitted.",,
+mh_suicide_ideation_self,incompatible,"w1s520, w3s432, w4s446",,"Only the frequency of not wanting to live (checklist, W1, W3, W4), a passive death wish mapped to mh_lifenotworth_self; no suicidal-ideation item.",,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,incompatible,"w1s524, w1s525, w1s528, tight_head_numbness",,"Only somatic items of a study symptom checklist (dizziness, headache or stomach ache; muscle pain; tight head, numbness or trembling; lump in the throat), with no somatic scale; the checklist's six core items, one of them somatic, are scored on mh_distress_self.",,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_anx_self.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see hlth_sleepprob.,,
+wb_bodyimage,proximate,"w1s504, w2s454, w3s402","recode_values(
+  coalesce(as.numeric(w1s504), as.numeric(w2s454), as.numeric(w3s402)),
+  1 ~ ""A bit too fat"",
+  2 ~ ""About right"",
+  3 ~ ""A bit too thin""
+)","W1-W3. Self-report 'what do you think of your weight?' (too heavy, just right, too skinny); undegraded too heavy and too skinny = A bit too fat and A bit too thin, Much too fat and Much too thin never emitted. Proximate: weight wording, three levels.",,
+wb_lifesat_slss_self,unavailable,,,Not collected.,,
+wb_lifesat_swls_self,unavailable,,,Not collected.,,
+wb_lifesat_singleitem_self,incompatible,"w1s555, w2s458, w3s478, w4s460",,Happiness item mapped to wb_happiness_singleitem_self; no life-satisfaction item.,,
+wb_happiness_singleitem_self,compatible,"w1s555, w2s458, w3s478, w4s460","5 -
+  if_else(
+    coalesce(as.numeric(w1s555), as.numeric(w2s458), as.numeric(w3s478), as.numeric(w4s460)) %in% 1:4,
+    coalesce(as.numeric(w1s555), as.numeric(w2s458), as.numeric(w3s478), as.numeric(w4s460)),
+    NA_real_
+  )","'Taken all together, are your days happy at present?' (整體來說，你目前的日子過得快樂嗎), every wave; 4 points very happy, pretty happy, not too happy, not happy at all, reversed (5 - x) so 4 = very happy.",,
+wb_happiness_singleitem_parent,compatible,w3p216,"5 - if_else(as.numeric(w3p216) %in% 1:4, as.numeric(w3p216), NA_real_)","W3 only. Responding parent: 'Taken all together, how would you say that things are for him/her these days - would you say that he/she is very happy, pretty happy, not too happy, or not happy at all?' Codes 1-4 follow the options in the question (only code 1 is labelled in the release), reversed (5 - x) so 4 = very happy; undocumented code 5 (3%, probably not sure) NA.",,
+wb_domainsat_schoolwork_self,incompatible,w3s309,,"Only whether the student's parents are satisfied with their school performance (w3s309, core panel, W3), not the student's own satisfaction.",,
+wb_domainsat_appearance_self,compatible,w3s403,"5 - if_else(as.numeric(w3s403) %in% 1:4, as.numeric(w3s403), NA_real_)","W3 only. 'Are you satisfied with your physical appearance?' 4 points (very satisfied, somewhat satisfied, not satisfied, not satisfied at all), reversed (5 - x) so 4 = very satisfied.",,
+wb_domainsat_family_self,incompatible,w1s253,,"Only 'my family is an important source of support' (w1s253, W1 agreement), a support item; see wb_socsupport_family_self.",,
+wb_domainsat_friends_self,incompatible,"w1s435, w3s462",,"Only whether a close friend can be confided in (W1) and how many (W3), support items and counts.",,
+wb_domainsat_school_self,partial,"w1s301, w3s108","5 -
+  if_else(
+    coalesce(as.numeric(w1s301), as.numeric(w3s108)) %in% 1:4,
+    coalesce(as.numeric(w1s301), as.numeric(w3s108)),
+    NA_real_
+  )","W1 and W3 only. Agreement that the student's school is a happy place (快樂的地方; strongly agree to strongly disagree), reversed (5 - x) so 4 = strongly agree. Partial: happy-at-school agreement, not satisfaction.",,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered.,,
+wb_selfesteem_self,unavailable,,,Not collected.,,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered; see wb_selfefficacy_self.,,
+wb_selfefficacy_self,incompatible,"w1s551, w2s424, w4s441",,"Only the single item 'few problems in life defeat me; I always find a way' (W1, W2, W4 core panel), a truth rating; no self-efficacy scale.",,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,Subjective Happiness Scale not administered; see wb_happiness_singleitem_self.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,unavailable,,,Not collected.,,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_eudaimonic_self,incompatible,"w4s403, w4s404",,"Only single W4 items on how often the student thinks about the meaning of life and thinks life is meaningless (w4s403, w4s404); no eudaimonic scale.",,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,incompatible,w1s253,,"Single item only ('my family is an important source of support', w1s253, W1); no family-support scale.",,
+wb_socsupport_friends_self,incompatible,"w1s435, w3s462",,"Only whether a close friend can be confided in (w1s435, W1) and how many (w3s462, W3), a single item and a count; no friend-support scale.",,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,partial,"w1s101, w1s109a, w1s109b, w2s101, w3s101, w4s102, w4s103","coalesce(
+  recode_values(coalesce(as.numeric(w2s101), as.numeric(w3s101)), 1 ~ 5, 2 ~ 5.5, 3 ~ 6.5, 4 ~ 7.5, 5 ~ 8),
+  recode_values(as.numeric(w1s101), 1 ~ 4, 2 ~ 4.5, 3 ~ 5.5, 4 ~ 6.5, 5 ~ 7) +
+    24 -
+    coalesce(
+      recode_values(as.numeric(w1s109a), 1 ~ 21, 2 ~ 21.5, 3 ~ 22.5, 4 ~ 23.5, 5 ~ 24.5, 6 ~ 25),
+      recode_values(as.numeric(w1s109b), 1 ~ 22, 2 ~ 22.5, 3 ~ 23.5, 4 ~ 24)
+    ),
+  recode_values(as.numeric(w4s103), 1 ~ 4, 2 ~ 4.5, 3 ~ 5.5, 4 ~ 6.5, 5 ~ 7) +
+    24 -
+    recode_values(as.numeric(w4s102), 1 ~ 22, 2 ~ 22.5, 3 ~ 23.5, 4 ~ 24.5, 5 ~ 25)
+)","Self-report, school term. W2 and W3: hours slept on a normal school day (上課期間平均每天), bands at midpoints, open bands at their stated bounds ('less than 5 hours' = 5, '8 hours or more' = 8). W1 and W4: usual term-time wake time minus bedtime (W1 junior-college form w1s109b), closed bands at midpoints, open bands at their bounds (before 9 pm 21:00, before 10 pm 22:00, midnight or later 00:00, 1 am or later 01:00, before 4 am 04:00, 7 am or later 07:00); 'it depends' NA. Partial: banded, and bed-to-wake time at W1 and W4.",,
+hlth_sleep_we,unavailable,,,No weekday/weekend split.,,
+hlth_sleep,incompatible,"w1s101, w1s109a, w1s109b, w2s101, w3s101, w4s102, w4s103",,School-term items only; no usual-night value; see hlth_sleep_wd.,,
+hlth_sleepprob,incompatible,sleep_problems,,"Single checklist item only (can't sleep, sleep badly, wake easily or have nightmares; W1-W4); no sleep-problems scale; scored in mh_distress_self.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
