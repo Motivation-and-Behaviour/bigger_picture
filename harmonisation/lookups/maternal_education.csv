@@ -145,3 +145,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1025,maternal_education,Degree or higher degree,Bachelor degree or higher,compatible,"2004 cohort member's highest academic qualification (BD7HACHQ) degree, PGCE, other degree-level or higher degree"
 1025,maternal_education,Diploma or other NVQ level 4-5 qualification,Post-secondary,proximate,"2004 NVQ level 4-5 (BD7HNVQ) without an academic degree: Diploma of Higher Education, HNC/HND, nursing, teaching or higher vocational qualifications; vocational NVQ 5 may be degree-equivalent"
 1025,maternal_education,NVQ level 1-3 qualification,Secondary school or less,compatible,2004 highest NVQ level 1-3 (BD7HNVQ)
+1127,maternal_education,Junior high school or less,Secondary school or less,compatible,"Code 1 of the tidier's father_education, mother_education and parents_highest_education (W1's scale; W3/W4 code 1)"
+1127,maternal_education,Senior (vocational) high school,Secondary school or less,compatible,"Code 2: W1 code 2, or W3/W4 senior high (2) and vocational high (3) school, merged in the tidier"
+1127,maternal_education,Junior college or institute of technology,Post-secondary,proximate,"Code 3 (W1 code 3, W3/W4 code 4): 2-, 3- and 5-year junior colleges (short-cycle tertiary) with institutes of technology, which also award bachelor's degrees; junior colleges hold most of this parent generation's graduates, so Post-secondary (majority rule)"
+1127,maternal_education,University,Bachelor degree or higher,compatible,"Code 4 (W1 code 4, W3/W4 code 5)"
+1127,maternal_education,Graduate school,Bachelor degree or higher,compatible,"Code 5 (W1 code 5, W3/W4 code 6)"
+1127,maternal_education,Other,Unknown,compatible,"Code 6, W1's 'other'"

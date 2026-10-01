@@ -186,3 +186,8 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1025,ethnicity,2004 Black/Black Scottish/Black British - African,Black,compatible,Scotland census Black
 1025,ethnicity,2004 Any other,Other,compatible,Census any other ethnic group (code 95)
 1025,ethnicity,2004 Any other background,Other,compatible,Scotland census any other background (code 95)
+1127,ethnicity,Fukienese of Taiwan,Asian,compatible,"father_ethnic_group and mother_ethnic_group code 1 (from w1faethn, w1moethn, w3faethn, w3moethn); Han Taiwanese (Hoklo)"
+1127,ethnicity,Hakka of Taiwan,Asian,compatible,Code 2; Han Taiwanese
+1127,ethnicity,Mainlander,Asian,compatible,Code 3; post-1945 migrants from mainland China and their descendants
+1127,ethnicity,Aborigine,Other,proximate,Code 4; Taiwanese Indigenous peoples have no schema category
+1127,ethnicity,Other,Other,proximate,Code 5; unspecified residual group
