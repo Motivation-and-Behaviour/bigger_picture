@@ -323,6 +323,7 @@ beh_emotreg_stayscalm,incompatible,basc085_gqt,,"Nearest is BASC-2 'is easily so
 beh_peerprob_makefriends,proximate,basc009_gqt,"recode_values(basc009_gqt, 0 ~ ""No difficulty"", 1 ~ ""A little difficulty"", c(2, 3) ~ ""A lot of difficulty"")","BASC-2 'has trouble making new friends' (never/sometimes/often/always); often/always = a lot of difficulty. Frequency, not degree; no same-age comparison. Its item label rests on the same unchecked BASC-2 item key as cog_execfunc_basc2 and wb_resil_basc2.",,
 beh_conduct_diagnosed,incompatible,behavyn_gqt,,"Ever assessed/treated for behavioural problems; not a diagnosis, no current/previous split.",,
 beh_conduct_diagnosed_severity,unavailable,,,No severity item.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
 beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
 beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,

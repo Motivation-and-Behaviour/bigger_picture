@@ -291,6 +291,7 @@ beh_emotreg_stayscalm,incompatible,"YPSY4B01, YPSY4B05",,"Only problem-worded ag
 beh_peerprob_makefriends,unavailable,,,Not collected.,,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
 beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
 beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,

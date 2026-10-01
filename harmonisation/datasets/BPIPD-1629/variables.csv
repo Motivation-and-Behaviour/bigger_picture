@@ -318,6 +318,7 @@ beh_emotreg_stayscalm,incompatible,QC104d,,"QC104d (SDQ 5, 'I get very angry and
 beh_peerprob_makefriends,incompatible,"QC105a, QC105d",,"QC105a ('I have at least one good friend', SDQ 11) and QC105d ('Other people my age generally like me', SDQ 14) are truth-rated SDQ items, scored in beh_peerprob_sdq_self.",,
 beh_conduct_diagnosed,incompatible,QP213d,,"QP213d: parent-reported 'behavioural difficulty', one line of a 5-item checklist; not attributed to a professional, no never/previously/currently structure.",,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,compatible,"DCSDQcpMN, QC104d, QC104f, QC105b, QC105g, QC106d","if_else(
   rowSums(
     cbind(

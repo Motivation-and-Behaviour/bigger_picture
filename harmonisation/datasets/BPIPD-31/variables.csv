@@ -354,6 +354,7 @@ beh_peerprob_makefriends,proximate,makes_friends_easily,"recode_values(
 )","Year 15 self-report 'I make friends easily', from the FFCWS adaptation of the Social Skills Rating System assertion scale, reversed onto the schema's difficulty wording. Proximate: the item asks about ease of making friends only, not keeping them, and carries no same-age-peer comparison. Year 15 only.",,
 beh_conduct_diagnosed,unavailable,,,Diagnosed behavioural or conduct problems are not asked about.,,
 beh_conduct_diagnosed_severity,unavailable,,,Diagnosed behavioural or conduct problems are not asked about.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,"SDQ not administered. The Year 9 child interview's 'SDQ' is Marsh's Self-Description Questionnaire, an unrelated instrument.",,
 beh_hyper_sdq_self,unavailable,,,SDQ not administered; see beh_conduct_sdq_self.,,
 beh_peerprob_sdq_self,unavailable,,,SDQ not administered; see beh_conduct_sdq_self.,,

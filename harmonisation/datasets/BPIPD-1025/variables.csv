@@ -428,6 +428,7 @@ beh_emotreg_stayscalm,incompatible,sdq_p05,,"Only SDQ item 5 'temper tantrums' (
 beh_peerprob_makefriends,incompatible,"sdq_p11, sdq_p14",,"Only SDQ items 11 'at least one good friend' and 14 'generally liked' (parent), truth ratings scored in beh_peerprob_sdq_parent.",,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,SDQ self-report not administered; see beh_conduct_sdq_parent.,,
 beh_hyper_sdq_self,unavailable,,,SDQ self-report not administered; see beh_hyper_sdq_parent.,,
 beh_peerprob_sdq_self,unavailable,,,SDQ self-report not administered; see beh_peerprob_sdq_parent.,,

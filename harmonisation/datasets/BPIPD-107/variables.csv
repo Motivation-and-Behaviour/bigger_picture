@@ -366,6 +366,7 @@ beh_emotreg_stayscalm,incompatible,ST313Q05JA,,2022 agreement item 'I stay calm 
 beh_peerprob_makefriends,incompatible,"ST034Q02TA, WB156Q01HA",,"Agreement item 'I make friends easily at school' (ST034Q02TA), school only, and a count of close friends (WB156Q01HA, 2018/2022); no difficulty rating.",,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
 beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
 beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,

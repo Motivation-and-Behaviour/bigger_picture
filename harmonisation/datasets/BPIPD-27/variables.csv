@@ -504,6 +504,7 @@ beh_emotreg_stayscalm,incompatible,"BPSDTT00, CPSDTT00, DPSDTT00, EPSDTT00, FPSD
 beh_peerprob_makefriends,incompatible,"BPSDGF00, CPSDGF00, DPSDGF00, EPSDGF00, FPSDGF00, GPSDGF00, BPSDLC00, CPSDLC00, DPSDLC00, EPSDLC00, FPSDLC00, GPSDLC00, DQ2181, DQ2184, EQ5K, EQ5N, GCSDQK00, GCSDQN00",,"Only SDQ items 11 'has at least one good friend' and 14 'generally liked by other children' (parent, teacher and self), truth ratings scored in the peer problems subscale.",,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,compatible,GCONDUCT_C,as.numeric(GCONDUCT_C),"MCS-derived SDQ conduct subscale, self-report, sweep 7 only (age 17; none under 11). Range 0-10. Checked against the GCSDQ*00 items: at least 3 of 5 answered, prorated, rounded half up.",,
 beh_hyper_sdq_self,compatible,GHYPER_C,as.numeric(GHYPER_C),"As beh_conduct_sdq_self, for the hyperactivity/inattention subscale. Checked against the GCSDQ*00 items: at least 3 of 5 answered, prorated, rounded half up.",,
 beh_peerprob_sdq_self,compatible,GPEER_C,as.numeric(GPEER_C),"As beh_conduct_sdq_self, for the peer problems subscale. Checked against the GCSDQ*00 items: at least 3 of 5 answered, prorated, rounded half up.",,

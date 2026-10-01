@@ -502,6 +502,7 @@ beh_emotreg_stayscalm,incompatible,int_angry_study,,"Only 'I feel angry when I h
 beh_peerprob_makefriends,incompatible,good_friends_n,,Only the number of good friends (2010); friend counts do not map.,,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,Not collected.,,
 beh_hyper_sdq_self,unavailable,,,Not collected.,,
 beh_peerprob_sdq_self,unavailable,,,Not collected.,,

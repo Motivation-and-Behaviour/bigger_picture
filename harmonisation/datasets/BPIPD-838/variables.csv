@@ -211,6 +211,7 @@ beh_emotreg_stayscalm,incompatible,E5,,SDQ item 5 (temper tantrums) is a problem
 beh_peerprob_makefriends,incompatible,"E11, E14, F3_1, F3_2",,"SDQ items 11 and 14 (truth ratings) and PedsQL getting along / others not wanting to be friends (peer acceptance, not difficulty making friends), parent report.",,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,SDQ self-report not administered; see beh_conduct_sdq_parent.,,
 beh_hyper_sdq_self,unavailable,,,SDQ self-report not administered; see beh_hyper_sdq_parent.,,
 beh_peerprob_sdq_self,unavailable,,,SDQ self-report not administered; see beh_peerprob_sdq_parent.,,
