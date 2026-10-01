@@ -342,6 +342,7 @@ beh_emotreg_stayscalm,incompatible,"w1s540, w2s415, w4s432",,"Only 'I am always 
 beh_peerprob_makefriends,incompatible,"w1s539, w1s431, w3s454",,"Only 'I always take the initiative to make new friends' (w1s539, truth rating) and counts of close friends (w1s431, w3s454); mapped nowhere.",,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
 beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
 beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,

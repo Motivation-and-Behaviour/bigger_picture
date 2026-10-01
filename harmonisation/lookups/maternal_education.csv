@@ -151,3 +151,20 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1127,maternal_education,University,Bachelor degree or higher,compatible,"Code 4 (W1 code 4, W3/W4 code 5)"
 1127,maternal_education,Graduate school,Bachelor degree or higher,compatible,"Code 5 (W1 code 5, W3/W4 code 6)"
 1127,maternal_education,Other,Unknown,compatible,"Code 6, W1's 'other'"
+2387,maternal_education,Grade 1-8,Secondary school or less,compatible,"aheduc code 1 (2005-2009), ISCED 1-2"
+2387,maternal_education,Grade 9-11,Secondary school or less,compatible,"aheduc code 2, ISCED 2-3 without completion"
+2387,maternal_education,Grade 12/H.S. diploma,Secondary school or less,compatible,"aheduc code 3, ISCED 3"
+2387,maternal_education,Some college,Post-secondary,compatible,aheduc code 4: tertiary study begun but not completed
+2387,maternal_education,Vocational school,Post-secondary,compatible,"aheduc code 5: vocational school after high school, ISCED 4"
+2387,maternal_education,AA or AS degree,Post-secondary,compatible,"aheduc code 6: associate degree, ISCED 5"
+2387,maternal_education,BA or BS degree,Bachelor degree or higher,compatible,"aheduc code 7, ISCED 6"
+2387,maternal_education,Some grad. school,Bachelor degree or higher,compatible,aheduc code 8: graduate study begun after a bachelor degree
+2387,maternal_education,MA or MS degree,Bachelor degree or higher,compatible,"aheduc code 9, ISCED 7"
+2387,maternal_education,Ph.D. or equivalent,Bachelor degree or higher,compatible,"aheduc code 10, ISCED 8"
+2387,maternal_education,No formal education,Secondary school or less,compatible,aheduc code 91
+2387,maternal_education,2001: Less than high school,Secondary school or less,compatible,"ahedu code 1 (2001, 4-level recode)"
+2387,maternal_education,2001: High school,Secondary school or less,compatible,ahedu code 2 (2001)
+2387,maternal_education,2001: Some college,Post-secondary,proximate,"ahedu code 3 (2001): some college; its source item is not in the supplied documents, so vocational and associate-degree holders are assumed to sit here"
+2387,maternal_education,2001: College degree or higher,Bachelor degree or higher,proximate,"ahedu code 4 (2001): college degree or higher; may include associate degrees, placed by the bachelor-or-higher majority"
+2387,maternal_education,2001: No formal education,Secondary school or less,compatible,ahedu code 91 (2001)
+2387,maternal_education,Unknown,Unknown,compatible,"Sampled adult of the other sex, or adult data not collected"

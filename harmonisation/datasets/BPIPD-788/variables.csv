@@ -222,6 +222,7 @@ beh_emotreg_stayscalm,incompatible,"VAsdq5, VAEsdq5",,"SDQ item 5 'often has tem
 beh_peerprob_makefriends,incompatible,"VAsdq11, VAsdq14, VAEsdq11, VAEsdq14",,"SDQ items 11 'has at least one good friend' and 14 'generally liked by other children', truth ratings scored in beh_peerprob_sdq_*.",,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,compatible,VAverh,as.numeric(haven::zap_labels(VAverh)),"RKI-derived SDQ conduct problems subscale, self-reported. Same scoring as beh_conduct_sdq_parent. Range 0-10. Ages 11-17.",,
 beh_hyper_sdq_self,compatible,VAhyp,as.numeric(haven::zap_labels(VAhyp)),"RKI-derived SDQ hyperactivity/inattention subscale, self-reported. Same scoring as beh_conduct_sdq_parent. Range 0-10. Ages 11-17.",,
 beh_peerprob_sdq_self,compatible,VApeer,as.numeric(haven::zap_labels(VApeer)),"RKI-derived SDQ peer problems subscale, self-reported. Same scoring as beh_conduct_sdq_parent. Range 0-10. Ages 11-17.",,

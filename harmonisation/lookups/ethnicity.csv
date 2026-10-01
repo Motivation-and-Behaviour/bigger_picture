@@ -191,3 +191,11 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1127,ethnicity,Mainlander,Asian,compatible,Code 3; post-1945 migrants from mainland China and their descendants
 1127,ethnicity,Aborigine,Other,proximate,Code 4; Taiwanese Indigenous peoples have no schema category
 1127,ethnicity,Other,Other,proximate,Code 5; unspecified residual group
+2387,ethnicity,Latino,Hispanic,compatible,"racedo_p code 1: Latino origin, taken ahead of race"
+2387,ethnicity,Non-Latino American Indian/Alaska Native,Other,proximate,racedo_p code 2: US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous
+2387,ethnicity,Non-Latino Asian,Asian,compatible,racedo_p code 3: single race among non-Latino respondents
+2387,ethnicity,Non-Latino African American,Black,compatible,racedo_p code 4: single race among non-Latino respondents
+2387,ethnicity,Non-Latino White,White,compatible,racedo_p code 5: single race among non-Latino respondents
+2387,ethnicity,Non-Latino PI/other single race,Other,proximate,"racedo_p code 6: Pacific Islander or other single race (2001 labels it other single race); no schema equivalent, collapsed into Other"
+2387,ethnicity,Non-Latino two or more races,Mixed,compatible,racedo_p code 7: two or more races maps onto the schema Mixed category
+2387,ethnicity,Unknown,Unknown,compatible,racedo_p is never missing in the public-use files; branch retained as a guard
