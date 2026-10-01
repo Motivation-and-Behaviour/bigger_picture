@@ -64,7 +64,7 @@ waves:
         glob: "UKDA-3535-spss/3535_file_information.rtf"
       - name: "bcs3535_ukda_study_3535_information_htm"
         role: "docs"
-        glob: "UKDA-3535-spss/mrdoc/pdf/UKDA/UKDA_Study_3535_Information.htm"
+        glob: "UKDA-3535-spss/mrdoc/UKDA/UKDA_Study_3535_Information.htm"
       - name: "bcs3535_ukda_data_dictionaries_zip"
         role: "docs"
         glob: "UKDA-3535-spss/mrdoc/ukda_data_dictionaries.zip"
@@ -125,7 +125,7 @@ waves:
         glob: "UKDA-3723-spss/3723_file_information.rtf"
       - name: "bcs3723_ukda_study_3723_information_htm"
         role: "docs"
-        glob: "UKDA-3723-spss/mrdoc/pdf/UKDA/UKDA_Study_3723_Information.htm"
+        glob: "UKDA-3723-spss/mrdoc/UKDA/UKDA_Study_3723_Information.htm"
       - name: "bcs3723_ukda_data_dictionaries_zip"
         role: "docs"
         glob: "UKDA-3723-spss/mrdoc/ukda_data_dictionaries.zip"
@@ -167,7 +167,7 @@ waves:
         glob: "UKDA-3833-spss/3833_file_information.rtf"
       - name: "bcs3833_ukda_study_3833_information_htm"
         role: "docs"
-        glob: "UKDA-3833-spss/mrdoc/pdf/UKDA/UKDA_Study_3833_Information.htm"
+        glob: "UKDA-3833-spss/mrdoc/UKDA/UKDA_Study_3833_Information.htm"
       - name: "bcs3833_ukda_data_dictionaries_zip"
         role: "docs"
         glob: "UKDA-3833-spss/mrdoc/ukda_data_dictionaries.zip"
@@ -275,7 +275,7 @@ waves:
         glob: "UKDA-5585-spss/5585_file_information.rtf"
       - name: "bcs5585_ukda_study_5585_information_htm"
         role: "docs"
-        glob: "UKDA-5585-spss/mrdoc/pdf/UKDA/UKDA_Study_5585_Information.htm"
+        glob: "UKDA-5585-spss/mrdoc/UKDA/UKDA_Study_5585_Information.htm"
       - name: "bcs5585_ukda_data_dictionaries_zip"
         role: "docs"
         glob: "UKDA-5585-spss/mrdoc/ukda_data_dictionaries.zip"
@@ -301,7 +301,7 @@ waves:
         glob: "UKDA-6095-spss/6095_file_information.rtf"
       - name: "bcs6095_ukda_study_6095_information_htm"
         role: "docs"
-        glob: "UKDA-6095-spss/mrdoc/pdf/UKDA/UKDA_Study_6095_Information.htm"
+        glob: "UKDA-6095-spss/mrdoc/UKDA/UKDA_Study_6095_Information.htm"
       - name: "bcs6095_ukda_data_dictionaries_zip"
         role: "docs"
         glob: "UKDA-6095-spss/mrdoc/ukda_data_dictionaries.zip"
@@ -395,7 +395,7 @@ waves:
         glob: "UKDA-7473-spss/7473_file_information.rtf"
       - name: "bcs7473_ukda_study_7473_information_htm"
         role: "docs"
-        glob: "UKDA-7473-spss/mrdoc/pdf/UKDA/UKDA_Study_7473_Information.htm"
+        glob: "UKDA-7473-spss/mrdoc/UKDA/UKDA_Study_7473_Information.htm"
       - name: "bcs7473_ukda_data_dictionaries_zip"
         role: "docs"
         glob: "UKDA-7473-spss/mrdoc/ukda_data_dictionaries.zip"
@@ -418,7 +418,7 @@ waves:
         glob: "UKDA-8288-spss/8288_file_information.rtf"
       - name: "bcs8288_ukda_study_8288_information_htm"
         role: "docs"
-        glob: "UKDA-8288-spss/mrdoc/pdf/UKDA/UKDA_Study_8288_Information.htm"
+        glob: "UKDA-8288-spss/mrdoc/UKDA/UKDA_Study_8288_Information.htm"
       - name: "bcs8288_ukda_data_dictionaries_zip"
         role: "docs"
         glob: "UKDA-8288-spss/mrdoc/ukda_data_dictionaries.zip"
@@ -453,7 +453,7 @@ waves:
         glob: "UKDA-8949-spss/8949_file_information.rtf"
       - name: "bcs8949_ukda_study_8949_information_htm"
         role: "docs"
-        glob: "UKDA-8949-spss/mrdoc/pdf/UKDA/UKDA_Study_8949_Information.htm"
+        glob: "UKDA-8949-spss/mrdoc/UKDA/UKDA_Study_8949_Information.htm"
       - name: "bcs8949_ukda_data_dictionaries_zip"
         role: "docs"
         glob: "UKDA-8949-spss/mrdoc/ukda_data_dictionaries.zip"
@@ -551,7 +551,7 @@ waves:
         glob: "UKDA-9347-spss/9347_file_information.rtf"
       - name: "bcs9347_ukda_study_9347_information_htm"
         role: "docs"
-        glob: "UKDA-9347-spss/mrdoc/pdf/UKDA/UKDA_Study_9347_Information.htm"
+        glob: "UKDA-9347-spss/mrdoc/UKDA/UKDA_Study_9347_Information.htm"
       - name: "bcs9347_ukda_data_dictionaries_zip"
         role: "docs"
         glob: "UKDA-9347-spss/mrdoc/ukda_data_dictionaries.zip"
@@ -581,7 +581,7 @@ notes: |
 
   Administrative files are read in as docs resources for every wave:
     - {study}_file_information.rtf - UKDA study-level file manifest/cover sheet.
-    - UKDA_Study_{study}_Information.htm - UKDA's study information page (nested under mrdoc/pdf/UKDA/).
+    - UKDA_Study_{study}_Information.htm - UKDA's study information page (nested under mrdoc/UKDA/).
     - ukda_data_dictionaries.zip - a zipped archive of data dictionaries (no reader exists for .zip in the
       schema, so this is docs-only and its contents are not unpacked/read individually).
     - read{study}.htm - the top-level "read me" HTML file for the study folder.

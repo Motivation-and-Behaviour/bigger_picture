@@ -1,208 +1,732 @@
-target_variable,status,source_columns,expression,notes,lookup_table
-participant_id,in_progress,,,,
-wave,in_progress,,,,
-data_year,in_progress,,,,
-rct_arm,in_progress,,,,
-age_years,in_progress,,,,
-sex,in_progress,,,,
-country,in_progress,,,,
-state,in_progress,,,,
-ethnicity,in_progress,,,,
-indigenous,in_progress,,,,
-minority,in_progress,,,,
-ses_area,in_progress,,,,
-ses_household,in_progress,,,,
-ses_household_measure,in_progress,,,,
-maternal_education,in_progress,,,,
-paternal_education,in_progress,,,,
-parental_education,in_progress,,,,
-urbanicity,in_progress,,,,
-family_structure,in_progress,,,,
-school_grade,in_progress,,,,
-st_measure_type,in_progress,,,,
-st_measure_name,in_progress,,,,
-st_responder,in_progress,,,,
-st_total_wd,in_progress,,,,
-st_total_we,in_progress,,,,
-st_total,in_progress,,,,
-st_watch_wd,in_progress,,,,
-st_watch_we,in_progress,,,,
-st_watch,in_progress,,,,
-st_game_wd,in_progress,,,,
-st_game_we,in_progress,,,,
-st_game,in_progress,,,,
-st_game_comp_wd,in_progress,,,,
-st_game_comp_we,in_progress,,,,
-st_game_comp,in_progress,,,,
-st_game_console_wd,in_progress,,,,
-st_game_console_we,in_progress,,,,
-st_game_console,in_progress,,,,
-st_game_handheldconsole_wd,in_progress,,,,
-st_game_handheldconsole_we,in_progress,,,,
-st_game_handheldconsole,in_progress,,,,
-st_game_active_wd,in_progress,,,,
-st_game_active_we,in_progress,,,,
-st_game_active,in_progress,,,,
-st_game_phone_wd,in_progress,,,,
-st_game_phone_we,in_progress,,,,
-st_game_phone,in_progress,,,,
-st_game_tablet_wd,in_progress,,,,
-st_game_tablet_we,in_progress,,,,
-st_game_tablet,in_progress,,,,
-st_comp_nongaming_wd,in_progress,,,,
-st_comp_nongaming_we,in_progress,,,,
-st_comp_nongaming,in_progress,,,,
-st_comp_wd,in_progress,,,,
-st_comp_we,in_progress,,,,
-st_comp,in_progress,,,,
-st_tablet_wd,in_progress,,,,
-st_tablet_we,in_progress,,,,
-st_tablet,in_progress,,,,
-st_phone_wd,in_progress,,,,
-st_phone_we,in_progress,,,,
-st_phone,in_progress,,,,
-st_socmedia_wd,in_progress,,,,
-st_socmedia_we,in_progress,,,,
-st_socmedia,in_progress,,,,
-st_educational_wd,in_progress,,,,
-st_educational_we,in_progress,,,,
-st_educational,in_progress,,,,
-st_internet_wd,in_progress,,,,
-st_internet_we,in_progress,,,,
-st_internet,in_progress,,,,
-st_videochat,in_progress,,,,
-st_email,in_progress,,,,
-st_shopping,in_progress,,,,
-st_total_school,in_progress,,,,
-st_educational_school,in_progress,,,,
-st_comp_school,in_progress,,,,
-st_tablet_school,in_progress,,,,
-st_internet_school,in_progress,,,,
-st_phone_school,in_progress,,,,
-acc_academachment_selfrated,in_progress,,,,
-acc_academachment_lettergrades,in_progress,,,,
-acc_academachment_stdtest,in_progress,,,,
-acc_schoolengage_caresschool,in_progress,,,,
-acc_schoolengage_homework,in_progress,,,,
-acc_academachment_numgrades,in_progress,,,,
-acc_academachment_teacherrated,in_progress,,,,
-acc_numeracy_stdtest,in_progress,,,,
-acc_literacy_stdtest,in_progress,,,,
-beh_hyper_basc2,in_progress,,,,
-beh_atten_basc2,in_progress,,,,
-beh_atten_self,in_progress,,,,
-beh_selfreg_htks,in_progress,,,,
-beh_bullied,in_progress,,,,
-beh_beenbullied,in_progress,,,,
-beh_beenbullied_online,in_progress,,,,
-beh_fight,in_progress,,,,
-beh_conduct_sdq_parent,in_progress,,,,
-beh_hyper_sdq_parent,in_progress,,,,
-beh_peerprob_sdq_parent,in_progress,,,,
-beh_prosocial_sdq_parent,in_progress,,,,
-beh_aggphys_bpaq_self,in_progress,,,,
-beh_aggverb_bpaq_self,in_progress,,,,
-beh_agganger_bpaq_self,in_progress,,,,
-beh_agghostility_bpaq_self,in_progress,,,,
-beh_agg_self,in_progress,,,,
-beh_argues,in_progress,,,,
-beh_persistence_finishwork,in_progress,,,,
-beh_emotreg_stayscalm,in_progress,,,,
-beh_peerprob_makefriends,in_progress,,,,
-beh_conduct_diagnosed,in_progress,,,,
-beh_conduct_diagnosed_severity,in_progress,,,,
-beh_conduct_sdq_self,in_progress,,,,
-beh_hyper_sdq_self,in_progress,,,,
-beh_peerprob_sdq_self,in_progress,,,,
-beh_prosocial_sdq_self,in_progress,,,,
-beh_conduct_sdq_teacher,in_progress,,,,
-beh_hyper_sdq_teacher,in_progress,,,,
-beh_peerprob_sdq_teacher,in_progress,,,,
-beh_prosocial_sdq_teacher,in_progress,,,,
-beh_ext_sdq_parent,in_progress,,,,
-beh_ext_sdq_self,in_progress,,,,
-beh_ext_sdq_teacher,in_progress,,,,
-beh_agg_cbcl_parent,in_progress,,,,
-beh_atten_cbcl_parent,in_progress,,,,
-beh_rulebreak_cbcl_parent,in_progress,,,,
-beh_ext_cbcl_parent,in_progress,,,,
-beh_cbcl_measure,in_progress,,,,
-cog_execfunc_basc2,in_progress,,,,
-cog_langexec_nepsy,in_progress,,,,
-cog_phono_nepsy,in_progress,,,,
-cog_inhibcont_nepsy,in_progress,,,,
-cog_vismotor_nepsy,in_progress,,,,
-cog_verbalfluency_nepsy,in_progress,,,,
-cog_inhib_nihtb_flanker,in_progress,,,,
-cog_flex_nihtb_dccs,in_progress,,,,
-cog_wm_nihtb_listsort,in_progress,,,,
-cog_speed_nihtb_pattern,in_progress,,,,
-cog_epimem_nihtb_picseq,in_progress,,,,
-cog_vocab_nihtb_picvocab,in_progress,,,,
-cog_fluidcomp_nihtb,in_progress,,,,
-cog_crystcomp_nihtb,in_progress,,,,
-cog_totalcomp_nihtb,in_progress,,,,
-cog_wm_digitspan,in_progress,,,,
-cog_iq_fullscale,in_progress,,,,
-cog_vocab_bpvs,in_progress,,,,
-cog_vocab_ppvt,in_progress,,,,
-cog_execfunc_brief_parent,in_progress,,,,
-mh_anx_basc2,in_progress,,,,
-mh_dep_basc2,in_progress,,,,
-mh_emotsymp_sdq_parent,in_progress,,,,
-mh_totaldiff_sdq_parent,in_progress,,,,
-mh_anx_diagnosed,in_progress,,,,
-mh_anx_diagnosed_severity,in_progress,,,,
-mh_dep_diagnosed,in_progress,,,,
-mh_dep_diagnosed_severity,in_progress,,,,
-mh_emotsymp_sdq_self,in_progress,,,,
-mh_emotsymp_sdq_teacher,in_progress,,,,
-mh_totaldiff_sdq_self,in_progress,,,,
-mh_totaldiff_sdq_teacher,in_progress,,,,
-mh_int_sdq_parent,in_progress,,,,
-mh_int_sdq_self,in_progress,,,,
-mh_int_sdq_teacher,in_progress,,,,
-mh_dep_smfq_self,in_progress,,,,
-mh_dep_smfq_parent,in_progress,,,,
-mh_dep_cdi_self,in_progress,,,,
-mh_dep_cesd_self,in_progress,,,,
-mh_dep_phq9_self,in_progress,,,,
-mh_dep_rcads_self,in_progress,,,,
-mh_dep_dass21_self,in_progress,,,,
-mh_dep_scl_self,in_progress,,,,
-mh_distress_k6_self,in_progress,,,,
-mh_distress_k10_self,in_progress,,,,
-mh_anx_masc_self,in_progress,,,,
-mh_anx_scas_self,in_progress,,,,
-mh_anx_scas_parent,in_progress,,,,
-mh_anx_scared_self,in_progress,,,,
-mh_anx_scared_parent,in_progress,,,,
-mh_anx_gad7_self,in_progress,,,,
-mh_anx_rcads_self,in_progress,,,,
-mh_anx_dass21_self,in_progress,,,,
-mh_anxdep_cbcl_parent,in_progress,,,,
-mh_int_cbcl_parent,in_progress,,,,
-mh_anx_self,in_progress,,,,
-mh_anx_measure,in_progress,,,,
-wb_emotsc_basc2,in_progress,,,,
-wb_mwb_wemwbs,in_progress,,,,
-wb_lifesatisfaction_cantrilladder,in_progress,,,,
-wb_resil_basc2,in_progress,,,,
-wb_psychcomplaints_feellow,in_progress,,,,
-wb_psychcomplaints_irritable,in_progress,,,,
-wb_psychcomplaints_nervous,in_progress,,,,
-wb_psychcomplaints_diffsleep,in_progress,,,,
-wb_bodyimage,in_progress,,,,
-wb_lifesat_slss_self,in_progress,,,,
-wb_lifesat_swls_self,in_progress,,,,
-wb_lifesat_singleitem_self,in_progress,,,,
-wb_qol_pedsql_self,in_progress,,,,
-wb_qol_pedsql_parent,in_progress,,,,
-wb_qol_kidscreen10_self,in_progress,,,,
-wb_qol_kidscreen10_parent,in_progress,,,,
-wb_selfesteem_rosenberg_self,in_progress,,,,
-wb_selfesteem_self,in_progress,,,,
-wb_selfesteem_measure,in_progress,,,,
-wb_selfefficacy_gse_self,in_progress,,,,
-wb_mwb_who5_self,in_progress,,,,
-wb_happiness_shs_self,in_progress,,,,
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,participant_id,participant_id,"BCSID on cohort-member rows (age16); BCSID plus child number on child2004 rows, whose participant is the cohort member's child.",,
+wave,compatible,wave,wave,"Sweep built by the tidier: age16 (1986-87) and child2004 (cohort members' children, 2004-05); the spec's waves are UKDA releases, not sweeps. The age-10 sweep (TV frequency only) and the adult sweeps are not harmonised.",,
+data_year,compatible,"fdoc_yr, gdoc_yr, hdoc_yr, qdoc_yr, odoc_yr, pdoc_yr, tdoc_yr, rdoc_yr, ldoc_yr, b7intyr, wave","coalesce(
+  1900 +
+    coalesce(
+      as.numeric(fdoc_yr),
+      as.numeric(gdoc_yr),
+      as.numeric(hdoc_yr),
+      as.numeric(qdoc_yr),
+      as.numeric(odoc_yr),
+      as.numeric(pdoc_yr),
+      as.numeric(tdoc_yr),
+      as.numeric(rdoc_yr),
+      as.numeric(ldoc_yr)
+    ),
+  as.numeric(b7intyr),
+  recode_values(wave, ""age16"" ~ 1986, ""child2004"" ~ 2004)
+)","Per-row year. age16: completion year of Document F (the screen items), else the first dated document (G, H, Q, O, P, T, R, L); 245 rows with no dated document take 1986, the modal fieldwork year. child2004: interview year.",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,unavailable,,,Not a survey sample.,,
+survey_strata,unavailable,,,Not a survey sample.,,
+survey_cluster,unavailable,,,Not a survey sample.,,
+age_years,compatible,"dob86, fdoc_yr, fdoc_mt, gdoc_yr, gdoc_mt, hdoc_yr, hdoc_mt, qdoc_yr, qdoc_mt, odoc_yr, odoc_mt, pdoc_yr, pdoc_mt, tdoc_yr, tdoc_mt, rdoc_yr, rdoc_mt, ldoc_yr, ldoc_mt, b7age, b7nmonth, wave","case_when(
+  wave == ""age16"" ~ 1900 +
+    coalesce(
+      as.numeric(fdoc_yr) + (as.numeric(fdoc_mt) - 0.5) / 12,
+      as.numeric(gdoc_yr) + (as.numeric(gdoc_mt) - 0.5) / 12,
+      as.numeric(hdoc_yr) + (as.numeric(hdoc_mt) - 0.5) / 12,
+      as.numeric(qdoc_yr) + (as.numeric(qdoc_mt) - 0.5) / 12,
+      as.numeric(odoc_yr) + (as.numeric(odoc_mt) - 0.5) / 12,
+      as.numeric(pdoc_yr) + (as.numeric(pdoc_mt) - 0.5) / 12,
+      as.numeric(tdoc_yr) + (as.numeric(tdoc_mt) - 0.5) / 12,
+      as.numeric(rdoc_yr) + (as.numeric(rdoc_mt) - 0.5) / 12,
+      as.numeric(ldoc_yr) + (as.numeric(ldoc_mt) - 0.5) / 12
+    ) -
+    (1970 + (90 + as.numeric(dob86) - 0.5) / 365.25),
+  wave == ""child2004"" ~ as.numeric(b7age) + as.numeric(b7nmonth) / 12
+)","age16: decimal age from the birth date (5-11 April 1970; day in dob86) to the mid-month completion date of Document F, else the first dated document; 268 rows with no dated document NA. child2004: completed years plus months / 12 (b7age, b7nmonth).",,
+sex,compatible,"sex86, b7csex","recode_values(coalesce(as.numeric(sex86), as.numeric(b7csex)), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","Recorded sex: age16 sex86 (codes 1 and 2 unlabelled in the release; 1 = male confirmed against the 1980 record and the JIIG-CAL SEX), child2004 b7csex (parent interview). One row per participant, so nothing to carry.",,
+country,compatible,"BD4CNTRY, land86, BD7CNTRY","recode_values(
+  coalesce(as.numeric(BD4CNTRY), as.numeric(land86), as.numeric(BD7CNTRY)),
+  1 ~ ""England"",
+  2 ~ ""Wales"",
+  3 ~ ""Scotland"",
+  4 ~ ""Northern Ireland"",
+  default = ""Unknown""
+)","Study-derived country of interview (BD4CNTRY 1986; BD7CNTRY 2004, the parent's household for child2004 rows); at age16 the cohort member's 'which country in Great Britain' (land86, codes 1-3 unlabelled, matching BD4CNTRY) fills gaps. Great Britain sample; Northern Ireland never occurs.",,
+state,unavailable,,,Not an Australian dataset.,,
+ethnicity,proximate,"oa3.1, a12.1, a12.4, a12.7, b7pcethe, b7pcethw, b7pceths","coalesce(
+  lookup_values(
+    case_when(
+      !is.na(oa3.1) ~ paste(""1986"", haven::as_factor(oa3.1)),
+      !is.na(a12.4) &
+        !(as.numeric(a12.1) %in% 1:3 & as.numeric(a12.4) %in% 1:3) &
+        !(as.numeric(a12.1) %in% 5:7 & as.numeric(a12.4) %in% 5:7) ~ ""1980 two ethnic groups ticked"",
+      as.numeric(a12.1) == 8 & as.numeric(a12.7) == 1 ~ ""1980 Other, specified as mixed"",
+      as.numeric(a12.1) == 8 & as.numeric(a12.7) == 2 ~ ""1980 Other, specified as other Asian"",
+      as.numeric(a12.1) == 8 & as.numeric(a12.7) == 3 ~ ""1980 Other, specified as other"",
+      !is.na(a12.1) ~ paste(""1980"", haven::as_factor(a12.1)),
+      !is.na(b7pcethe) ~ paste(""2004"", haven::as_factor(b7pcethe)),
+      !is.na(b7pcethw) ~ paste(""2004"", haven::as_factor(b7pcethw)),
+      !is.na(b7pceths) ~ paste(""2004"", haven::as_factor(b7pceths))
+    ),
+    lookup_ethnicity,
+    dataset_id = spec$dataset_id,
+    target_variable = ""ethnicity""
+  ),
+  ""Unknown""
+)","Parent-reported ethnic group of the child. age16: 1986 parental interview (oa3.1), else the 1980 parental interview carried to the age-16 row by the tidier (a12.1, a second ticked group a12.4, the specified 'other' a12.7; two ticks spanning schema categories -> Mixed). child2004: parent-reported census 2001 categories for England, Wales or Scotland. Proximate: the 1986 'Mixed/other' code and an unspecified 1980 'mixed parentage or any other' tick merge Mixed with Other and map to Mixed (merge named). Shared ethnicity lookup.",ethnicity,
+indigenous,unavailable,,,Not collected.,,
+minority,compatible,"oa3.1, a12.1, a12.4, a12.7, b7pcethe, b7pcethw, b7pceths","recode_values(
+  coalesce(
+    lookup_values(
+      case_when(
+        !is.na(oa3.1) ~ paste(""1986"", haven::as_factor(oa3.1)),
+        !is.na(a12.4) &
+          !(as.numeric(a12.1) %in% 1:3 & as.numeric(a12.4) %in% 1:3) &
+          !(as.numeric(a12.1) %in% 5:7 & as.numeric(a12.4) %in% 5:7) ~ ""1980 two ethnic groups ticked"",
+        as.numeric(a12.1) == 8 & as.numeric(a12.7) == 1 ~ ""1980 Other, specified as mixed"",
+        as.numeric(a12.1) == 8 & as.numeric(a12.7) == 2 ~ ""1980 Other, specified as other Asian"",
+        as.numeric(a12.1) == 8 & as.numeric(a12.7) == 3 ~ ""1980 Other, specified as other"",
+        !is.na(a12.1) ~ paste(""1980"", haven::as_factor(a12.1)),
+        !is.na(b7pcethe) ~ paste(""2004"", haven::as_factor(b7pcethe)),
+        !is.na(b7pcethw) ~ paste(""2004"", haven::as_factor(b7pcethw)),
+        !is.na(b7pceths) ~ paste(""2004"", haven::as_factor(b7pceths))
+      ),
+      lookup_ethnicity,
+      dataset_id = spec$dataset_id,
+      target_variable = ""ethnicity""
+    ),
+    ""Unknown""
+  ),
+  ""White"" ~ ""Non-minority"",
+  c(""Black"", ""Mixed"", ""Asian"", ""Hispanic"", ""Other"") ~ ""Minority"",
+  default = ""Unknown""
+)","From the same items and lookup as ethnicity. Any White group (English, Welsh, Scottish, Northern Irish, United Kingdom, Irish, other European) -> Non-minority; every other group, including Mixed, -> Minority; the merged Mixed/other codes are Minority either way.",ethnicity,
+immigrant_background,incompatible,"oa2.1, a2.1",,"Only the cohort member's own country of birth (oa2.1, a2.1; mapped to born_in_country); parents' birthplaces not asked, so Native cannot be separated from Second-generation.",,
+born_in_country,compatible,"oa2.1, a2.1","recode_values(coalesce(as.numeric(oa2.1), as.numeric(a2.1)), c(1, 2, 3, 4) ~ ""Yes"", c(5, 6) ~ ""No"", default = ""Unknown"")","age16: cohort member's country of birth from the 1986 parental interview (oa2.1), else the 1980 interview carried to the age-16 row by the tidier (a2.1). England, Wales, Scotland or Northern Ireland -> Yes (UK as a whole); Irish Republic or other country -> No; 'not known' Unknown. Not a constant: children born abroad in the birth week joined at later sweeps. child2004 rows Unknown (the child's birthplace was not asked).",,
+ses_area,unavailable,,,Not in the supplied extract.,,
+ses_household,proximate,"oe2, bd7ns8, wave","case_when(
+  wave == ""age16"" ~ recode_values(
+    as.numeric(oe2),
+    c(1, 2, 3) ~ ""Low"",
+    4 ~ ""Medium"",
+    5:11 ~ ""High"",
+    default = ""Unknown""
+  ),
+  wave == ""child2004"" ~ recode_values(
+    as.numeric(bd7ns8),
+    c(1, 2) ~ ""High"",
+    c(3, 4) ~ ""Medium"",
+    c(5, 6, 7) ~ ""Low"",
+    default = ""Unknown""
+  )
+)","Household SES cuts. age16: combined parental income per week or month (oe2, 11 bands) by within-wave ridit: under 150 pounds a week Low, 150-199 Medium, 200 or more High (37/17/46%, within 10 points of 40/20/40; refused and uncertain Unknown). child2004: no household income; the parent's (cohort member's) NS-SEC three-class collapse, managerial and professional High, intermediate Medium, routine and manual Low, not in work Unknown. Proximate: child2004 is a class scheme.",,
+ses_household_measure,inferred,wave,"recode_values(
+  wave,
+  ""age16"" ~ ""Income: combined parental income per week or month, 11 bands"",
+  ""child2004"" ~ ""Occupational class: parent's (cohort member's) NS-SEC, 7 analytic classes""
+)",Names the measure behind ses_household for each sweep.,,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,proximate,mother_highest_qual,"coalesce(
+  lookup_values(
+    haven::as_factor(mother_highest_qual),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","Mother figure's highest qualification, built in the tidier (mother_highest_qual): age16 from the 1986 parental grid (t6.*, mother or both), else the 1980 grid carried to the age-16 row (c1.12-c1.22, 'other' ticks classified in c1.19); child2004 the cohort member when female (BD7HACHQ degree-level, else BD7HNVQ level). Shared education lookup: none, apprenticeship, O and A level Secondary; nursing and teaching qualifications Post-secondary; degree Bachelor. Proximate: the 1986 'degree, diploma or membership of a professional body' and the 2004 NVQ 4-5 bands span two levels. 'Other' or 'not known' only -> Unknown.",maternal_education,
+paternal_education,proximate,father_highest_qual,"coalesce(
+  lookup_values(
+    haven::as_factor(father_highest_qual),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","As maternal_education for the father figure (father_highest_qual: t6.* father or both, else c1.1-c1.11 with c1.8; 'no male head' Unknown). child2004: the cohort member when male; a female cohort member's partner's qualifications were not asked, so Unknown.",maternal_education,
+parental_education,proximate,parents_highest_qual,"coalesce(
+  lookup_values(
+    haven::as_factor(parents_highest_qual),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","Higher of the mother and father figures' qualifications from the same grids (parents_highest_qual, built in the tidier); one known parent suffices. Lookup as maternal_education. child2004 Unknown: only the cohort member's own qualifications were asked.",maternal_education,
+urbanicity,proximate,c6.13,"recode_values(as.numeric(c6.13), 1 ~ ""Urban"", 2 ~ ""Suburban"", c(3, 4) ~ ""Rural"", default = ""Unknown"")","age16: cohort member's 'do you live in a big city, town, village or the country' (c6.13): big city Urban, town Suburban, village and country Rural. child2004 Unknown. Proximate: self-described settlement type, not an official typology.",,
+family_structure,compatible,"oa9.1, oa10.1, c6.7, bd7spphh, partner_natural_parent, wave","case_when(
+  wave == ""child2004"" & as.numeric(bd7spphh) == 0 ~ ""Single parent"",
+  wave == ""child2004"" & as.numeric(partner_natural_parent) == 1 ~ ""Two biological/adoptive parents"",
+  wave == ""child2004"" & as.numeric(partner_natural_parent) == 2 ~ ""Step family"",
+  as.numeric(oa9.1) %in% 1:2 & as.numeric(oa10.1) %in% 1:2 ~ ""Two biological/adoptive parents"",
+  (as.numeric(oa9.1) %in% 1:2 & as.numeric(oa10.1) %in% c(3, 7)) |
+    (as.numeric(oa10.1) %in% 1:2 & as.numeric(oa9.1) %in% c(3, 7)) ~ ""Step family"",
+  (as.numeric(oa9.1) %in% 1:2 & !is.na(oa10.1)) | (as.numeric(oa10.1) %in% 1:2 & !is.na(oa9.1)) ~ ""Single parent"",
+  !is.na(oa9.1) & !is.na(oa10.1) ~ ""Other"",
+  as.numeric(c6.7) == 1 ~ ""Two biological/adoptive parents"",
+  as.numeric(c6.7) %in% c(2, 3) ~ ""Step family"",
+  as.numeric(c6.7) %in% c(4, 5) ~ ""Single parent"",
+  as.numeric(c6.7) %in% c(6, 7) ~ ""Other"",
+  .default = ""Unknown""
+)","age16: parental interview's present mother and father figures (oa9.1, oa10.1): both natural or adoptive Two biological/adoptive parents; one plus a step-parent or the other parent's cohabitee Step family; one plus no figure or a grandparent, sibling or other figure Single parent; neither natural nor adoptive Other. Where either figure is missing, the cohort member's 'who do you live with as parent' (c6.7). child2004: the cohort member is the child's natural or adoptive parent; no resident partner Single parent; partner the child's natural parent (partner_natural_parent, picked from the household grid in the tidier) Two biological/adoptive parents, otherwise Step family (12 adopted children may be misplaced).",,
+fam_screenrules,incompatible,"pc6to16_q8d, pc3to5_q11d",,"Only how often the parent took away TV privileges or other treats as a punishment (2004, last three months), not a rule limiting amount or timing.",,
+fam_bedroomscreen,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+school_grade,compatible,f3,"if_else(as.numeric(f3) %in% 1:7, paste(""Year group"", as.numeric(f3)), NA_character_)","age16 only: cohort member's 'Which year group are you in?' (Document F), the study's secondary-school year labels (Year group 5 = final compulsory year, 3,641; Year group 6 = first sixth-form year, 1,284). Not asked in child2004.",,
+st_measure_type,inferred,"b7age, wave","if_else(wave == ""age16"" | as.numeric(b7age) >= 10, ""Categorical"", NA_character_)","Banded duration items: age16 Document F (0 to more than 5 hours), child2004 young-person form (none to 7 hours or more). NA for child2004 children under 10, who had no screen-time instrument.",,
+st_measure_name,inferred,"b7age, wave","if_else(wave == ""age16"" | as.numeric(b7age) >= 10, ""Custom"", NA_character_)",Items written for the study's own questionnaires (1986 Document F after-school items; 2004 young-person self-completion).,,
+st_responder,inferred,"b7age, wave","if_else(wave == ""age16"" | as.numeric(b7age) >= 10, ""Self"", NA_character_)","Self-completion by the participant: the cohort member at age16, the cohort member's child aged 10-16 in child2004.",,
+st_total_wd,incompatible,"f13, f14, f15, yp_q1, yp_q2",,"No all-screen item; the watching and gaming items are separately asked categories and are not summed (DR-0002, DR-0004).",,
+st_total_we,unavailable,,,No weekend item.,,
+st_total,incompatible,"f13, f14, f15, yp_q1, yp_q2",,"No all-screen item; the category items are not summed (DR-0002, DR-0004), and both series are school-day items.",,
+st_watch_wd,partial,"f13, f14, yp_q1, wave","case_when(
+  wave == ""age16"" ~ recode_values(
+    as.numeric(f13),
+    0 ~ 0,
+    1 ~ 0.5,
+    2 ~ 1.5,
+    3 ~ 2.5,
+    4 ~ 3.5,
+    5 ~ 4.5,
+    6 ~ 5,
+    default = NA_real_
+  ) +
+    recode_values(as.numeric(f14), 0 ~ 0, 1 ~ 0.5, 2 ~ 1.5, 3 ~ 2.5, 4 ~ 3.5, 5 ~ 4.5, 6 ~ 5, default = NA_real_),
+  wave == ""child2004"" ~ recode_values(as.numeric(yp_q1), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7, default = NA_real_)
+)","age16: sum of f13 'how long did you watch television programmes (live or home-recorded) after school yesterday' and f14 'video films (bought or borrowed)' (DR-0002); bands not at all 0, less than 1 hour 0.5, 'more than N hours' N + 0.5, top band 'more than 5 hours' = 5 each. child2004 (ages 10-16): 'on a normal school day, how many hours do you spend watching TV, including videos and DVDs?' none 0, less than an hour 0.5, 1-3 hours 2, 4-6 hours 5, top band '7 hours or more' = 7. Partial: TV set only; age16 is after school on one school day.",,
+st_watch_we,unavailable,,,No weekend item.,,
+st_watch,incompatible,"f13, f14, yp_q1, gf1.1, c5j1a",,Weekday items only; no usual-day value. gf1.1 and c5j1a (age16) are frequency only. The 1986 diary fills st_watch in the diary block.,,
+st_game_wd,partial,"f15, yp_q2, wave","case_when(
+  wave == ""age16"" ~ recode_values(
+    as.numeric(f15),
+    0 ~ 0,
+    1 ~ 0.5,
+    2 ~ 1.5,
+    3 ~ 2.5,
+    4 ~ 3.5,
+    5 ~ 4.5,
+    6 ~ 5,
+    default = NA_real_
+  ),
+  wave == ""child2004"" ~ recode_values(as.numeric(yp_q2), 1 ~ 0.5, 2 ~ 2, 3 ~ 5, 4 ~ 7, c(5, 6) ~ 0, default = NA_real_)
+)","age16: f15 'how long did you spend playing computer games after school yesterday', bands as st_watch_wd (top band 'more than 5 hours' = 5). child2004 (ages 10-16): 'on a normal school day, how many hours do you spend playing computer games on your computer at home?', bands as st_watch_wd (top band '7 hours or more' = 7); 'don't play computer games at home' and 'no computer I can use at home' 0 (non-users rule). Partial: age16 is after school on one school day; child2004 covers only the home computer.",,
+st_game_we,unavailable,,,No weekend item.,,
+st_game,incompatible,"f15, yp_q2, c5j14a",,Weekday items only; no usual-day value. c5j14a (age16) is frequency only.,,
+st_game_comp_wd,compatible,yp_q2,"recode_values(as.numeric(yp_q2), 1 ~ 0.5, 2 ~ 2, 3 ~ 5, 4 ~ 7, c(5, 6) ~ 0, default = NA_real_)",child2004 only (ages 10-16): computer games on the child's home computer on a normal school day; bands and non-users as st_game_wd (top band '7 hours or more' = 7). The age16 f15 names no device (st_game_wd).,,
+st_game_comp_we,unavailable,,,No weekend item.,,
+st_game_comp,incompatible,yp_q2,,Weekday items only; no usual-day value.,,
+st_game_console_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_console_we,unavailable,,,No device split; see st_game_wd.,,
+st_game_console,unavailable,,,No device split; see st_game_wd.,,
+st_game_handheldconsole_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_handheldconsole_we,unavailable,,,No device split; see st_game_wd.,,
+st_game_handheldconsole,unavailable,,,No device split; see st_game_wd.,,
+st_game_active_wd,unavailable,,,Not collected.,,
+st_game_active_we,unavailable,,,Not collected.,,
+st_game_active,unavailable,,,Not collected.,,
+st_game_phone_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_phone_we,unavailable,,,No device split; see st_game_wd.,,
+st_game_phone,unavailable,,,No device split; see st_game_wd.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_tablet_we,unavailable,,,No device split; see st_game_wd.,,
+st_game_tablet,unavailable,,,No device split; see st_game_wd.,,
+st_comp_nongaming_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming_we,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming,incompatible,c5j8a,,"Only 'use home computer' as a leisure frequency (c5j8a, age16), which also covers games; no duration.",,
+st_comp_wd,incompatible,yp_q2,,"Only computer gaming at home (yp_q2), mapped to st_game_comp_wd; no non-gaming computer item.",,
+st_comp_we,unavailable,,,No weekend item.,,
+st_comp,incompatible,"c5j8a, yp_q2",,"Only a frequency of home computer use (c5j8a, age16) and weekday computer gaming (yp_q2, st_game_comp_wd).",,
+st_tablet_wd,unavailable,,,Not collected.,,
+st_tablet_we,unavailable,,,Not collected.,,
+st_tablet,unavailable,,,Not collected.,,
+st_phone_wd,unavailable,,,Not collected.,,
+st_phone_we,unavailable,,,Not collected.,,
+st_phone,unavailable,,,Not collected.,,
+st_socmedia_wd,unavailable,,,Not collected.,,
+st_socmedia_we,unavailable,,,Not collected.,,
+st_socmedia,unavailable,,,Not collected.,,
+st_educational_wd,incompatible,f16,,"Only time spent doing homework after school yesterday (f16, age16), which does not name screens.",,
+st_educational_we,unavailable,,,No weekend item.,,
+st_educational,incompatible,f16,,"Only homework time that does not name screens (f16, age16).",,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,unavailable,,,Not collected.,,
+st_internet_we,unavailable,,,Not collected.,,
+st_internet,unavailable,,,Not collected.,,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,unavailable,,,Not collected.,,
+st_messaging_we,unavailable,,,Not collected.,,
+st_messaging,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,incompatible,"c5h21, yp_q21, yp_q27",,"Only 'I am good at exams' (c5h21, age16, truth-rated) and Harter scholastic-competence statements (yp_q21, yp_q27, child2004); no rating of overall grades or class standing.",,
+acc_academachment_lettergrades,incompatible,jb15aa3,,"Only grades of individual CSE and O-level exams taken by July 1986, where known (jb15aa3 onwards); no overall grade.",,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
+acc_schoolengage_caresschool,incompatible,"yp_q14, yp_q15, jb14e",,"Only enjoyment of school (yp_q14), importance of good marks (yp_q15) and 'I never take work seriously' (jb14e, truth-rated): liking, importance and agreement, not caring about doing well.",,
+acc_schoolengage_homework,incompatible,"pc6to16_q20, f12, f16",,"Only whether parents make sure homework is completed (pc6to16_q20, parental checking) and whether homework was set and how long was spent on it yesterday (f12, f16).",,
+acc_schoolpressure_self,incompatible,yp_q19,,"Only worry about completing school work (yp_q19, child2004), a worry item.",,
+acc_schoolbelonging_self,incompatible,"jb14a, jb14f",,"No belonging or connectedness scale; only school-attitude statements (jb14a-jb14h, age16), and 'I do not like school' (jb14f) is on wb_domainsat_school_self.",,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,incompatible,jb15aa3,,"Only grades of individual exams taken by July 1986 (jb15aa3 onwards), where known; no overall grade.",,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,partial,"mathscore, basnsA, wave","case_when(wave == ""age16"" ~ as.numeric(mathscore), wave == ""child2004"" ~ as.numeric(basnsA))","age16: 16-year arithmetic test number correct (mathscore, 60 items; supplementary release, 3,676 rows). child2004 (ages 6-16): BAS II Number Skills ability score (basnsA), as acc_numeracy_bas_numberskills. Partial: no age-normed scores; forms differ by sweep, so standardise within wave.",,
+acc_numeracy_bas_numberskills,partial,basnsA,as.numeric(basnsA),"child2004 only (ages 6-16): BAS II Number Skills ability score (basnsA, 10-208), interviewer-administered. Partial: no standard score released, so the ability score is the fallback and lies outside the standard-score metric; standardise within dataset at analysis.",,
+acc_literacy_stdtest,partial,"BD4RREAD, baswrA, wave","case_when(wave == ""age16"" ~ as.numeric(BD4RREAD), wave == ""child2004"" ~ as.numeric(baswrA))","age16: the sweep's vocabulary test number correct (BD4RREAD, 75 items; CLS derives a reading age from it). child2004 (ages 6-16): BAS II Word Reading ability score (baswrA), as acc_literacy_bas_wordreading. Partial: no age-normed scores; the age16 test is reading vocabulary; forms differ by sweep, so standardise within wave. The study's within-sample z-score (BD4READ) and the 1986 reading-test item scores are not used.",,
+acc_literacy_bas_wordreading,partial,baswrA,as.numeric(baswrA),"child2004 only (ages 6-16): BAS II Word Reading ability score (baswrA, 10-222), interviewer-administered. Partial: no standard score released, so the ability score is the fallback and lies outside the standard-score metric; standardise within dataset at analysis. The 2004 spelling test was a shortened, rescaled version of BAS II Spelling and is not mapped.",,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_parent.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_parent.,,
+beh_atten_self,incompatible,"jb14d, c5i1",,"No attention scale; only 'I find it difficult to keep my mind on my work' (jb14d, truth-rated) and the GHQ-12 concentration item (c5i1, scored in mh_distress_ghq12_self), age16.",,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_bullied,partial,yp_q37,"recode_values(as.numeric(yp_q37), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_)","child2004 only, self-report, ages 12-16: 'Have you ever picked on or bullied another school pupil?' Partial: lifetime recall. Parent SDQ item 12 (truth-rated) not used.",,
+beh_beenbullied,partial,yp_q36,"recode_values(as.numeric(yp_q36), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_)","child2004 only, self-report, ages 12-16: 'Have you ever been picked on or bullied by another school pupil?' Partial: lifetime recall. Parent SDQ item 19 (truth-rated) not used.",,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,compatible,"hc5.1, hc5.2, hc5.3, hc5.4, hc5.5","case_when(
+  as.numeric(hc5.1) == 3 |
+    as.numeric(hc5.2) == 3 |
+    as.numeric(hc5.3) == 3 |
+    as.numeric(hc5.4) == 3 |
+    as.numeric(hc5.5) == 3 ~ ""TRUE"",
+  !is.na(hc5.1) | !is.na(hc5.2) | !is.na(hc5.3) | !is.na(hc5.4) | !is.na(hc5.5) ~ ""FALSE""
+)","age16 only, self-report: 'In the past year have you seen or taken part in a fight' at school, at football, outside a pub, on a bus or train, or elsewhere (hc5.1-hc5.5); TRUE if 'took part' in any, FALSE if every answered setting is 'no' or 'saw a fight'.",,
+beh_truancy,compatible,"jb13, yp_q16, wave","case_when(
+  wave == ""age16"" ~ recode_values(as.numeric(jb13), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_),
+  wave == ""child2004"" ~ recode_values(as.numeric(yp_q16), 1 ~ ""FALSE"", c(2, 3, 4) ~ ""TRUE"", default = NA_character_)
+)","Self-report. age16: 'Have you stayed away from school at all since September 1985 for reasons other than illness when you should have been there?' (jb13, this school year; boarders NA). child2004 (ages 10-16): times skipped or bunked off school in the last year (yp_q16; don't know and not at school NA). TRUE for any occurrence.",,
+beh_stealing,partial,"q22.7, q22.21, q22.9, q22.13, q22.15, q22.17, q22.19, q22.23, yp_q35, wave","case_when(
+  wave == ""child2004"" ~ recode_values(as.numeric(yp_q35), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_),
+  as.numeric(q22.7) <= 4 |
+    as.numeric(q22.21) <= 4 |
+    as.numeric(q22.9) <= 4 |
+    as.numeric(q22.13) <= 4 |
+    as.numeric(q22.15) <= 4 |
+    as.numeric(q22.17) <= 4 |
+    as.numeric(q22.19) <= 4 |
+    as.numeric(q22.23) <= 4 ~ ""TRUE"",
+  !is.na(q22.7) |
+    !is.na(q22.21) |
+    !is.na(q22.9) |
+    !is.na(q22.13) |
+    !is.na(q22.15) |
+    !is.na(q22.17) |
+    !is.na(q22.19) |
+    !is.na(q22.23) ~ ""FALSE""
+)","age16, self-report, past year: shoplifting over or under 5 pounds, taking a bike, breaking open a cash dispenser, stealing from a car or bike, burglary to steal, stealing from a shed or garage, taking something left lying about (q22.*); TRUE if any done in the past year, FALSE if every answered item is 'no' or 'not in the past year'. Force or threat to get money (q22.3, q22.5) excluded. child2004 (ages 12-16): 'ever stolen from a store' (yp_q35). Partial: child2004 is lifetime shoplifting only.",,
+beh_vandalism,compatible,q22.1,"recode_values(as.numeric(q22.1), 1:4 ~ ""TRUE"", c(5, 6) ~ ""FALSE"", default = NA_character_)","age16 only, self-report: 'broken windows or smashed property not yours' in the past year (q22.1); once or more in the past year TRUE, 'yes but not in the past year' and 'no' FALSE.",,
+beh_alcohol_self,partial,"hd1, yp_q32, wave","case_when(
+  wave == ""age16"" ~ recode_values(as.numeric(hd1), 1:6 ~ ""TRUE"", 7 ~ ""FALSE"", default = NA_character_),
+  wave == ""child2004"" ~ recode_values(
+    as.numeric(yp_q32),
+    c(4, 5) ~ ""TRUE"",
+    c(1, 2, 3) ~ ""FALSE"",
+    default = NA_character_
+  )
+)","age16: 'How often in the past year have you drunk alcohol?' (hd1); any frequency, special occasions included, TRUE, 'never drink' FALSE. child2004 (ages 12-16): drinking-status statement (yp_q32); drinks sometimes or weekly TRUE, never, once or twice only, or used to FALSE. Partial: the child2004 statement has no stated window.",,
+beh_tobacco_self,partial,"gh1, yp_q31, wave","case_when(
+  wave == ""age16"" ~ recode_values(as.numeric(gh1), c(3, 4) ~ ""TRUE"", c(1, 2) ~ ""FALSE"", default = NA_character_),
+  wave == ""child2004"" ~ recode_values(
+    as.numeric(yp_q31),
+    c(4, 5) ~ ""TRUE"",
+    c(1, 2, 3) ~ ""FALSE"",
+    default = NA_character_
+  )
+)","Self-report. age16: 'What kind of smoker are you?' (gh1); smokes now (under or over one a week) TRUE, never or not for 3 months FALSE. child2004 (ages 12-16): smoking-status statement (yp_q31); sometimes or weekly TRUE, never, once or twice, or used to FALSE. Partial: no stated window at child2004.",,
+beh_cannabis_self,partial,"q31.7, yp_q33, wave","case_when(
+  wave == ""age16"" ~ recode_values(as.numeric(q31.7), 3:5 ~ ""TRUE"", c(1, 2) ~ ""FALSE"", default = NA_character_),
+  wave == ""child2004"" ~ recode_values(
+    as.numeric(yp_q33),
+    c(4, 5) ~ ""TRUE"",
+    c(1, 2, 3) ~ ""FALSE"",
+    default = NA_character_
+  )
+)","age16: 'Have you ever tried taking cannabis?' (q31.7); once or more in the past year TRUE, never or not in the past year FALSE. child2004 (ages 12-16): cannabis-status statement (yp_q33); sometimes or weekly TRUE, never, once or twice, or used to FALSE. Partial: no stated window at child2004.",,
+beh_conduct_sdq_parent,compatible,"sdq_p05, sdq_p07, sdq_p12, sdq_p18, sdq_p22","if_else(
+  rowSums(cbind(!is.na(sdq_p05), !is.na(sdq_p07), !is.na(sdq_p12), !is.na(sdq_p18), !is.na(sdq_p22))) >= 3,
+  floor(
+    rowMeans(
+      cbind(
+        as.numeric(sdq_p05) - 1,
+        3 - as.numeric(sdq_p07),
+        as.numeric(sdq_p12) - 1,
+        as.numeric(sdq_p18) - 1,
+        as.numeric(sdq_p22) - 1
+      ),
+      na.rm = TRUE
+    ) *
+      5 +
+      0.5
+  ),
+  NA_real_
+)","SDQ parent report, child2004 ages 3-16: items pooled by the tidier (sdq_p01-sdq_p25) from the 6-16 form and the 3-5 form, which asks items 18, 21 and 22 in the 2-4 form's wording under age 4 and the standard wording at 4-5. Items 1-3 recoded to 0-2, item 7 reversed; SDQ rule (mean of answered items x 5, rounded half up, NA below 3 answered). Items 5, 7r, 12, 18, 22.",,
+beh_hyper_sdq_parent,compatible,"sdq_p02, sdq_p10, sdq_p15, sdq_p21, sdq_p25","if_else(
+  rowSums(cbind(!is.na(sdq_p02), !is.na(sdq_p10), !is.na(sdq_p15), !is.na(sdq_p21), !is.na(sdq_p25))) >= 3,
+  floor(
+    rowMeans(
+      cbind(
+        as.numeric(sdq_p02) - 1,
+        as.numeric(sdq_p10) - 1,
+        as.numeric(sdq_p15) - 1,
+        3 - as.numeric(sdq_p21),
+        3 - as.numeric(sdq_p25)
+      ),
+      na.rm = TRUE
+    ) *
+      5 +
+      0.5
+  ),
+  NA_real_
+)","SDQ parent report, child2004 ages 3-16: items pooled by the tidier (sdq_p01-sdq_p25) from the 6-16 form and the 3-5 form, which asks items 18, 21 and 22 in the 2-4 form's wording under age 4 and the standard wording at 4-5. Items 1-3 recoded to 0-2, items 21 and 25 reversed; SDQ rule. Items 2, 10, 15, 21r, 25r.",,
+beh_peerprob_sdq_parent,compatible,"sdq_p06, sdq_p11, sdq_p14, sdq_p19, sdq_p23","if_else(
+  rowSums(cbind(!is.na(sdq_p06), !is.na(sdq_p11), !is.na(sdq_p14), !is.na(sdq_p19), !is.na(sdq_p23))) >= 3,
+  floor(
+    rowMeans(
+      cbind(
+        as.numeric(sdq_p06) - 1,
+        3 - as.numeric(sdq_p11),
+        3 - as.numeric(sdq_p14),
+        as.numeric(sdq_p19) - 1,
+        as.numeric(sdq_p23) - 1
+      ),
+      na.rm = TRUE
+    ) *
+      5 +
+      0.5
+  ),
+  NA_real_
+)","SDQ parent report, child2004 ages 3-16: items pooled by the tidier (sdq_p01-sdq_p25) from the 6-16 form and the 3-5 form, which asks items 18, 21 and 22 in the 2-4 form's wording under age 4 and the standard wording at 4-5. Items 1-3 recoded to 0-2, items 11 and 14 reversed; SDQ rule. Items 6, 11r, 14r, 19, 23.",,
+beh_prosocial_sdq_parent,compatible,"sdq_p01, sdq_p04, sdq_p09, sdq_p17, sdq_p20","if_else(
+  rowSums(cbind(!is.na(sdq_p01), !is.na(sdq_p04), !is.na(sdq_p09), !is.na(sdq_p17), !is.na(sdq_p20))) >= 3,
+  floor(
+    rowMeans(
+      cbind(
+        as.numeric(sdq_p01) - 1,
+        as.numeric(sdq_p04) - 1,
+        as.numeric(sdq_p09) - 1,
+        as.numeric(sdq_p17) - 1,
+        as.numeric(sdq_p20) - 1
+      ),
+      na.rm = TRUE
+    ) *
+      5 +
+      0.5
+  ),
+  NA_real_
+)","SDQ parent report, child2004 ages 3-16: items pooled by the tidier (sdq_p01-sdq_p25) from the 6-16 form and the 3-5 form, which asks items 18, 21 and 22 in the 2-4 form's wording under age 4 and the standard wording at 4-5. Items 1-3 recoded to 0-2; SDQ rule. Items 1, 4, 9, 17, 20.",,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agg_self,incompatible,"c5h20, c5o9, hc5.1",,"No aggression scale; only 'I am violent' (c5h20, truth-rated), the Malaise item 'violent rage' (c5o9) and fight items (hc5.*, on beh_fight), age16.",,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_argues,incompatible,pc3to5_q3a,,"Only SDQ 2-4 item 'often argumentative with adults' (pc3to5_q3a, parent), a truth rating scored in beh_conduct_sdq_parent.",,
+beh_persistence_finishwork,incompatible,sdq_p25,,"Only SDQ item 25 'good attention span, sees tasks through' (parent), a truth rating scored in beh_hyper_sdq_parent.",,
+beh_emotreg_stayscalm,incompatible,sdq_p05,,"Only SDQ item 5 'temper tantrums' (parent), a problem-worded truth rating scored in beh_conduct_sdq_parent.",,
+beh_peerprob_makefriends,incompatible,"sdq_p11, sdq_p14",,"Only SDQ items 11 'at least one good friend' and 14 'generally liked' (parent), truth ratings scored in beh_peerprob_sdq_parent.",,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,unavailable,,,SDQ self-report not administered; see beh_conduct_sdq_parent.,,
+beh_hyper_sdq_self,unavailable,,,SDQ self-report not administered; see beh_hyper_sdq_parent.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ self-report not administered; see beh_peerprob_sdq_parent.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ self-report not administered; see beh_prosocial_sdq_parent.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ teacher report not administered; see beh_conduct_sdq_parent.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ teacher report not administered; see beh_hyper_sdq_parent.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ teacher report not administered; see beh_peerprob_sdq_parent.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ teacher report not administered; see beh_prosocial_sdq_parent.,,
+beh_ext_sdq_parent,unavailable,,,Derive at analysis from beh_conduct_sdq_parent and beh_hyper_sdq_parent.,,
+beh_ext_sdq_self,unavailable,,,SDQ self-report not administered; see beh_conduct_sdq_parent.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ teacher report not administered; see beh_conduct_sdq_parent.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered; see beh_hyper_sdq_parent.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent and beh_hyper_sdq_parent.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,NEPSY not administered.,,
+cog_phono_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhibcont_nepsy,unavailable,,,NEPSY not administered.,,
+cog_vismotor_nepsy,unavailable,,,NEPSY not administered.,,
+cog_verbalfluency_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhib_nihtb_flanker,unavailable,,,NIH Toolbox not administered.,,
+cog_flex_nihtb_dccs,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox not administered.,,
+cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox not administered.,,
+cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox not administered.,,
+cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox not administered.,,
+cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_digitspan,unavailable,,,Digit span not administered.,,
+cog_iq_fullscale,incompatible,"basnvA, basencA, baswrA, basnsA",,"No full-scale composite: child2004 has single BAS II subtests (Naming Vocabulary and Early Number Concepts at 3-5; Word Reading, Number Skills and a shortened Spelling at 6-16).",,
+cog_vocab_bpvs,unavailable,,,BPVS not administered; see cog_vocab_bas_naming.,,
+cog_vocab_ppvt,unavailable,,,PPVT not administered; see cog_vocab_bas_naming.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_vocab_bas_naming,partial,basnvA,as.numeric(basnvA),"child2004 only (ages 3-5): BAS II Naming Vocabulary ability score (basnvA, 10-170), interviewer-administered. Partial: no T-score released, so the ability score is the fallback and lies outside the 20-80 T-score range; standardise within dataset at analysis.",,
+cog_nonverbalreason_bas_picsim,unavailable,,,BAS Picture Similarities not administered.,,
+cog_spatial_bas_pattern,unavailable,,,BAS Pattern Construction not administered.,,
+cog_verbalreason_bas_versim,unavailable,,,BAS Verbal Similarities not administered.,,
+cog_earlynumber_bas_enc,partial,basencA,as.numeric(basencA),"child2004 only (ages 3-5): BAS II Early Number Concepts ability score (basencA, 10-185), interviewer-administered. Partial: no T-score released, so the ability score is the fallback and lies outside the 20-80 T-score range; standardise within dataset at analysis.",,
+cog_schoolread_bracken,unavailable,,,Bracken not administered.,,
+cog_creativethinking_stdtest,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered; see mh_emotsymp_sdq_parent.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
+mh_emotsymp_sdq_parent,compatible,"sdq_p03, sdq_p08, sdq_p13, sdq_p16, sdq_p24","if_else(
+  rowSums(cbind(!is.na(sdq_p03), !is.na(sdq_p08), !is.na(sdq_p13), !is.na(sdq_p16), !is.na(sdq_p24))) >= 3,
+  floor(
+    rowMeans(
+      cbind(
+        as.numeric(sdq_p03) - 1,
+        as.numeric(sdq_p08) - 1,
+        as.numeric(sdq_p13) - 1,
+        as.numeric(sdq_p16) - 1,
+        as.numeric(sdq_p24) - 1
+      ),
+      na.rm = TRUE
+    ) *
+      5 +
+      0.5
+  ),
+  NA_real_
+)","SDQ parent report, child2004 ages 3-16: items pooled by the tidier (sdq_p01-sdq_p25) from the 6-16 form and the 3-5 form, which asks items 18, 21 and 22 in the 2-4 form's wording under age 4 and the standard wording at 4-5. Items 1-3 recoded to 0-2; SDQ rule. Items 3, 8, 13, 16, 24.",,
+mh_totaldiff_sdq_parent,compatible,"sdq_p02, sdq_p03, sdq_p05, sdq_p06, sdq_p07, sdq_p08, sdq_p10, sdq_p11, sdq_p12, sdq_p13, sdq_p14, sdq_p15, sdq_p16, sdq_p18, sdq_p19, sdq_p21, sdq_p22, sdq_p23, sdq_p24, sdq_p25","if_else(
+  rowSums(cbind(!is.na(sdq_p03), !is.na(sdq_p08), !is.na(sdq_p13), !is.na(sdq_p16), !is.na(sdq_p24))) >= 3,
+  floor(
+    rowMeans(
+      cbind(
+        as.numeric(sdq_p03) - 1,
+        as.numeric(sdq_p08) - 1,
+        as.numeric(sdq_p13) - 1,
+        as.numeric(sdq_p16) - 1,
+        as.numeric(sdq_p24) - 1
+      ),
+      na.rm = TRUE
+    ) *
+      5 +
+      0.5
+  ),
+  NA_real_
+) +
+  if_else(
+    rowSums(cbind(!is.na(sdq_p05), !is.na(sdq_p07), !is.na(sdq_p12), !is.na(sdq_p18), !is.na(sdq_p22))) >= 3,
+    floor(
+      rowMeans(
+        cbind(
+          as.numeric(sdq_p05) - 1,
+          3 - as.numeric(sdq_p07),
+          as.numeric(sdq_p12) - 1,
+          as.numeric(sdq_p18) - 1,
+          as.numeric(sdq_p22) - 1
+        ),
+        na.rm = TRUE
+      ) *
+        5 +
+        0.5
+    ),
+    NA_real_
+  ) +
+  if_else(
+    rowSums(cbind(!is.na(sdq_p02), !is.na(sdq_p10), !is.na(sdq_p15), !is.na(sdq_p21), !is.na(sdq_p25))) >= 3,
+    floor(
+      rowMeans(
+        cbind(
+          as.numeric(sdq_p02) - 1,
+          as.numeric(sdq_p10) - 1,
+          as.numeric(sdq_p15) - 1,
+          3 - as.numeric(sdq_p21),
+          3 - as.numeric(sdq_p25)
+        ),
+        na.rm = TRUE
+      ) *
+        5 +
+        0.5
+    ),
+    NA_real_
+  ) +
+  if_else(
+    rowSums(cbind(!is.na(sdq_p06), !is.na(sdq_p11), !is.na(sdq_p14), !is.na(sdq_p19), !is.na(sdq_p23))) >= 3,
+    floor(
+      rowMeans(
+        cbind(
+          as.numeric(sdq_p06) - 1,
+          3 - as.numeric(sdq_p11),
+          3 - as.numeric(sdq_p14),
+          as.numeric(sdq_p19) - 1,
+          as.numeric(sdq_p23) - 1
+        ),
+        na.rm = TRUE
+      ) *
+        5 +
+        0.5
+    ),
+    NA_real_
+  )","Sum of the four parent difficulty subscales, each scored as in its own row (child2004, ages 3-16); NA unless all four are scored.",,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ self-report not administered; see mh_emotsymp_sdq_parent.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ teacher report not administered; see mh_emotsymp_sdq_parent.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ self-report not administered; see mh_totaldiff_sdq_parent.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ teacher report not administered; see mh_totaldiff_sdq_parent.,,
+mh_int_sdq_parent,unavailable,,,Derive at analysis from mh_emotsymp_sdq_parent and beh_peerprob_sdq_parent.,,
+mh_int_sdq_self,unavailable,,,SDQ self-report not administered; see mh_emotsymp_sdq_parent.,,
+mh_int_sdq_teacher,unavailable,,,SDQ teacher report not administered; see mh_emotsymp_sdq_parent.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered.,,
+mh_distress_k6_self,unavailable,,,K6 not administered; see mh_distress_malaise_self.,,
+mh_distress_k10_self,unavailable,,,K10 not administered; see mh_distress_malaise_self.,,
+mh_distress_malaise_self,partial,"c5o1, c5o2, c5o3, c5o4, c5o5, c5o6, c5o7, c5o8, c5o9, c5o10, c5o11, c5o12, c5o13, c5o14, c5o15, c5o16, c5o17, c5o18, c5o19, c5o20, c5o21, c5o22","(3 - as.numeric(c5o1)) +
+  (3 - as.numeric(c5o2)) +
+  (3 - as.numeric(c5o3)) +
+  (3 - as.numeric(c5o4)) +
+  (3 - as.numeric(c5o5)) +
+  (3 - as.numeric(c5o6)) +
+  (3 - as.numeric(c5o7)) +
+  (3 - as.numeric(c5o8)) +
+  (3 - as.numeric(c5o9)) +
+  (3 - as.numeric(c5o10)) +
+  (3 - as.numeric(c5o11)) +
+  (3 - as.numeric(c5o12)) +
+  (3 - as.numeric(c5o13)) +
+  (3 - as.numeric(c5o14)) +
+  (3 - as.numeric(c5o15)) +
+  (3 - as.numeric(c5o16)) +
+  (3 - as.numeric(c5o17)) +
+  (3 - as.numeric(c5o18)) +
+  (3 - as.numeric(c5o19)) +
+  (3 - as.numeric(c5o20)) +
+  (3 - as.numeric(c5o21)) +
+  (3 - as.numeric(c5o22))","age16 only, self-completion: Malaise Inventory, 22 of the 24 items (c5o1-c5o22), asked with a three-point frequency response instead of yes/no: most of the time 2, some of the time 1, rarely or never 0; complete-case sum 0-44. Equals the study's BD4MAL where every item is answered (BD4MAL sums answered items, so it is not used). Partial: 22 items on a graded response scale.",,
+mh_distress_ghq12_self,compatible,"c5i1, c5i2, c5i3, c5i4, c5i5, c5i6, c5i7, c5i8, c5i9, c5i10, c5i11, c5i12","(as.numeric(c5i1) - 1) +
+  (as.numeric(c5i2) - 1) +
+  (as.numeric(c5i3) - 1) +
+  (as.numeric(c5i4) - 1) +
+  (as.numeric(c5i5) - 1) +
+  (as.numeric(c5i6) - 1) +
+  (as.numeric(c5i7) - 1) +
+  (as.numeric(c5i8) - 1) +
+  (as.numeric(c5i9) - 1) +
+  (as.numeric(c5i10) - 1) +
+  (as.numeric(c5i11) - 1) +
+  (as.numeric(c5i12) - 1)","age16 only, self-completion: all 12 GHQ-12 items (c5i1-c5i12), Likert scoring 0-3 (positive items 'more than usual' 0 to 'much less than usual' 3; negative items 'not at all' 0 to 'much more than usual' 3); complete-case sum 0-36.",,
+mh_anx_masc_self,unavailable,,,MASC not administered.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_parent.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_parent and beh_peerprob_sdq_parent.,,
+mh_dep_binary_self,incompatible,"c5o3, c5i10",,"No yes/no depressive-episode screen; only the Malaise item 'miserable or depressed' (c5o3, on mh_sad_self) and the GHQ-12 item 'unhappy and depressed' (c5i10), age16.",,
+mh_dep_self,incompatible,"c5o1, c5i1",,"No depression scale; the Malaise Inventory and GHQ-12 (age16) are general distress inventories, mapped to mh_distress_malaise_self and mh_distress_ghq12_self.",,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,incompatible,"c5o5, c5o12, c5o16",,"No anxiety scale; only Malaise items on worry, sudden fear and feeling keyed up (c5o5, c5o12, c5o16, age16; scored in mh_distress_malaise_self, c5o5 also on mh_worry_self) and the parent SDQ emotional symptoms subscale (mh_emotsymp_sdq_parent).",,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,incompatible,c5i8,,"Only the GHQ-12 item 'felt constantly under strain' (c5i8, age16, scored in mh_distress_ghq12_self), rated against usual rather than as an amount of stress.",,
+mh_lonely_self,incompatible,"c5h23, f22e",,"Only 'I am lonely' (c5h23, applies very much to does not apply) and yes/no 'do you often feel lonely at school' (f22e), age16; no frequency rating.",,
+mh_lonely_scale_self,incompatible,"c5h23, f22e",,No loneliness scale; only single items (see mh_lonely_self).,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,partial,c5o3,"recode_values(as.numeric(c5o3), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Rarely"", default = NA_character_)","age16 only, self-completion Malaise item 'Do you feel miserable or depressed?' (no recall period): most of the time -> Always, some of the time -> Sometimes, rarely or never -> Rarely; Often and Never unused. Partial: 'miserable or depressed' wording, three levels. Also scored in mh_distress_malaise_self.",,
+mh_worry_self,partial,c5o5,"recode_values(as.numeric(c5o5), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Rarely"", default = NA_character_)","age16 only, self-completion Malaise item 'Do things worry you?' (no recall period), anchors as mh_sad_self. Partial: worry without 'very', three levels, topic unstated. Also scored in mh_distress_malaise_self.",,
+mh_irritable_self,partial,c5o14,"recode_values(as.numeric(c5o14), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Rarely"", default = NA_character_)","age16 only, self-completion Malaise item 'Are you easily upset or irritated?' (no recall period), anchors as mh_sad_self. Partial: pools being upset with irritability; three levels. Also scored in mh_distress_malaise_self.",,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,incompatible,rc4.7,,"Only the medical officer's record of 'any evidence of suicide attempts or threats' (rc4.7, age16): not self-report, pools attempts with threats.",,
+mh_suicide_attempt_self,incompatible,rc4.7,,"Only the medical officer's record of 'any evidence of suicide attempts or threats' (rc4.7, age16): not self-report, pools attempts with threats.",,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered; see mh_somatic_self.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,incompatible,"c5o1, c5o4, c5o17, c5o18, c5o22",,"No somatic scale: only Malaise items on backache, headaches, indigestion, upset stomach and eye pain (age16), scored in mh_distress_malaise_self.",,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_worry_self.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see hlth_sleepprob.,,
+wb_bodyimage,incompatible,c5g21,,"Only 'my shape is' from too fat or thin to perfect (c5g21, age16), which does not say which direction; see wb_domainsat_appearance_self.",,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
+wb_lifesat_singleitem_self,incompatible,yp_q22,,"Only Harter's 'like the way I am leading my life' (yp_q22, child2004), scored in wb_selfesteem_self.",,
+wb_happiness_singleitem_self,partial,c5g7,as.numeric(c5g7),"age16 only, self-completion: 'Compared with an average teenager of my own age and sex: I am happy' (c5g7), 5 points from 1 much less to 5 much more (only 1, 3 and 5 labelled). Partial: happiness relative to peers, not a direct rating.",,
+wb_domainsat_schoolwork_self,incompatible,"yp_q27, pb3.1",,"Only Harter's 'do very well at my schoolwork' (yp_q27, a performance statement) and the parent's satisfaction with the teenager's school progress (pb3.1, age16).",,
+wb_domainsat_appearance_self,partial,c5g21,as.numeric(c5g21),"age16 only, self-completion 'compared with others, my shape is', 5 points from 1 too fat or thin to 5 perfect (c5g21). Partial: body-shape satisfaction.",,
+wb_domainsat_family_self,unavailable,,,Not collected.,,
+wb_domainsat_friends_self,incompatible,c5g16,,"Only the number of good friends compared with others (c5g16, age16), a count rather than satisfaction.",,
+wb_domainsat_school_self,partial,"jb14f, yp_q14, wave","case_when(
+  wave == ""age16"" ~ as.numeric(jb14f),
+  wave == ""child2004"" ~ recode_values(as.numeric(yp_q14), 1 ~ 4, 2 ~ 3, 3 ~ 2, 4 ~ 1, default = NA_real_)
+)","age16: 'I do not like school' (jb14f), 1 very true, 2 partly true, 3 not true at all, so higher = likes school. child2004 (ages 10-16): 'How much do you enjoy school?' reversed to 1 never, 2 not very often, 3 sometimes, 4 always or nearly always; don't know and not at school NA. Partial: liking and enjoyment; scales differ by sweep, standardise within wave.",,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg not administered; see wb_selfesteem_self.,,
+wb_selfesteem_self,compatible,"f22a, f22b, f22c, f22d, f22e, f22f, f22g, f22h, f22i, f22j, yp_q20, yp_q22, yp_q24, yp_q26, yp_q28, yp_q30, wave","case_when(
+  wave == ""age16"" ~ as.numeric(f22a) +
+    as.numeric(f22b) +
+    as.numeric(f22c) +
+    as.numeric(f22d) +
+    as.numeric(f22e) +
+    as.numeric(f22f) +
+    as.numeric(f22g) +
+    as.numeric(f22h) +
+    as.numeric(f22i) +
+    as.numeric(f22j),
+  wave == ""child2004"" ~ as.numeric(yp_q20) +
+    as.numeric(yp_q22) +
+    (5 - as.numeric(yp_q24)) +
+    (5 - as.numeric(yp_q26)) +
+    (5 - as.numeric(yp_q28)) +
+    as.numeric(yp_q30)
+)","Self-completion. age16: Lawrence Self-Esteem Questionnaire (LAWSEQ) 16-year version, 10 items (f22a-f22j) already keyed: positive answer 2, don't know 1, negative 0; complete-case sum 0-20 (the study's f22score sums answered items, so it is not used). child2004 (ages 10-16): Harter Self-Perception Profile global self-worth, six 1-4 items, yp_q24, yp_q26 and yp_q28 reversed, complete-case sum 6-24. Instruments differ by sweep; standardise within wave.",,
+wb_selfesteem_measure,inferred,wave,"recode_values(
+  wave,
+  ""age16"" ~ ""Lawrence Self-Esteem Questionnaire (LAWSEQ), BCS70 16-year version, 10 items, 0-2 item scoring (range 0-20), sum; supplied already keyed"",
+  ""child2004"" ~ ""Harter Self-Perception Profile for Children, global self-worth, 6 of 6 items, 1-4 item scoring (range 6-24), sum; three items reversed""
+)",Names the self-esteem instrument by sweep.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,SHS not administered; see wb_happiness_singleitem_self.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,incompatible,c5g26,,"Only 'compared with others, I feel well' (c5g26, age16), a peer-relative rating.",,
+wb_generalhealth_parent,compatible,pm3.1,"recode_values(as.numeric(pm3.1), 1 ~ ""Excellent"", 2 ~ ""Good"", 3 ~ ""Fair"", 4 ~ ""Poor"", default = NA_character_)","age16 only, parent (Document P): 'Describe the teenager's health over the past 12 months', excellent, good, fair or poor, by label; Very good unused.",,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,unavailable,,,Not collected.,,
+wb_socsupport_friends_self,unavailable,,,Not collected.,,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,partial,"f60a, f60b, f61a, f61b","as.numeric(f60a) +
+  as.numeric(f60b) / 60 -
+  if_else(as.numeric(f61a) >= 12, as.numeric(f61a) - 24, as.numeric(f61a)) -
+  as.numeric(f61b) / 60","age16 only, self-report on Document F (completed at school): time went to bed last night to time got up this morning, 24-hour clock (bedtimes from noon on count as the previous day); one school night. Partial: bedtime, not sleep onset, for a single night.",,
+hlth_sleep_we,unavailable,,,No weekend item.,,
+hlth_sleep,partial,"total_activity_16, total_duration",as.numeric(total_activity_16) / (as.numeric(total_duration) / 1440) / 60,"age16 only: 1986 time-use diary sleep minutes per recorded day (total_activity_16 over the recorded minutes / 1,440), naps included. Partial: the diary covers a Friday-to-Monday run, so weekend nights weigh about half rather than 2/7.",,
+hlth_sleepprob,incompatible,"pa4.1, c5o6",,"No sleep-problems scale; only single items: mother's 'has the teenager any sleeping difficulty' (pa4.1) and the Malaise item 'great difficulty sleeping' (c5o6), age16.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+st_measure_type,inferred,,"""Continuous""","1986 leisure and television diary: episodes recorded over up to four consecutive days, aggregated by the study to minutes per activity (bcs4_leisure_diary_aggregate).",,diary
+st_measure_name,inferred,,"""Time use diary""","BCS70 age-16 leisure diary (UKDA 8949), a Friday-Saturday-Sunday-Monday diary kept by 7,242 cohort members.",,diary
+st_responder,inferred,,"""Self""",Completed by the cohort member.,,diary
+st_watch,partial,"total_activity_31, total_duration",as.numeric(total_activity_31) / (as.numeric(total_duration) / 1440) / 60,"Diary category 31 'TV, video', minutes per recorded day / 60, with days = recorded minutes / 1,440 (1 to 4 days; 16 diaries record more minutes than total_days implies). Partial: TV set only, and Friday-to-Monday diaries weigh weekend days at about half rather than 2/7; diaries flagged with 7 or fewer episodes a day (riskdiary, 228) are kept.",,diary
