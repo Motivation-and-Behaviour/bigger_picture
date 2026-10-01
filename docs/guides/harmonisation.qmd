@@ -332,7 +332,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - NEPSY rows take the same-named subtest from either edition; record the edition and age at testing.
 - Only the child's own test maps; tests the caregiver took never map to child rows.
 - Parent-rated executive-function scales run higher = more problems and never pool with performance tasks.
-- General distress inventories (Kessler, Malaise Inventory, GHQ-12) map only to their own rows, never to the depression or anxiety rows.
+- General distress inventories (Kessler, Malaise Inventory, GHQ-12) map to their own rows and repeat on the generic `mh_distress_self`, never to the depression or anxiety rows.
 - Plausible-value scales use the first plausible value only.
 - Achievement tests take one domain per row (`acc_academachment_stdtest` records its domain); age-normed standard or scale scores are compatible and raw scores partial.
 - Record the test, subtest and score type, and standardise test scores within dataset and wave at analysis.

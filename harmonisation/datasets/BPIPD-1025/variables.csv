@@ -622,6 +622,8 @@ mh_distress_ghq12_self,compatible,"c5i1, c5i2, c5i3, c5i4, c5i5, c5i6, c5i7, c5i
   (as.numeric(c5i10) - 1) +
   (as.numeric(c5i11) - 1) +
   (as.numeric(c5i12) - 1)","age16 only, self-completion: all 12 GHQ-12 items (c5i1-c5i12), Likert scoring 0-3 (positive items 'more than usual' 0 to 'much less than usual' 3; negative items 'not at all' 0 to 'much more than usual' 3); complete-case sum 0-36.",,
+mh_distress_self,in_progress,,,,,
+mh_distress_measure,in_progress,,,,,
 mh_anx_masc_self,unavailable,,,MASC not administered.,,
 mh_anx_scas_self,unavailable,,,SCAS not administered.,,
 mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
@@ -667,6 +669,7 @@ wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
 wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
 wb_lifesat_singleitem_self,incompatible,yp_q22,,"Only Harter's 'like the way I am leading my life' (yp_q22, child2004), scored in wb_selfesteem_self.",,
 wb_happiness_singleitem_self,partial,c5g7,as.numeric(c5g7),"age16 only, self-completion: 'Compared with an average teenager of my own age and sex: I am happy' (c5g7), 5 points from 1 much less to 5 much more (only 1, 3 and 5 labelled). Partial: happiness relative to peers, not a direct rating.",,
+wb_happiness_singleitem_parent,in_progress,,,,,
 wb_domainsat_schoolwork_self,incompatible,"yp_q27, pb3.1",,"Only Harter's 'do very well at my schoolwork' (yp_q27, a performance statement) and the parent's satisfaction with the teenager's school progress (pb3.1, age16).",,
 wb_domainsat_appearance_self,partial,c5g21,as.numeric(c5g21),"age16 only, self-completion 'compared with others, my shape is', 5 points from 1 too fat or thin to 5 perfect (c5g21). Partial: body-shape satisfaction.",,
 wb_domainsat_family_self,unavailable,,,Not collected.,,
