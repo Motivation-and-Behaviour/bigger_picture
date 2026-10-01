@@ -327,10 +327,12 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Raw, ability or number-correct scores map only when no normed form exists, as partial; percentiles, age-equivalents and normative classifications never map.
 - Never mix score forms within a row across waves.
 - NIH Toolbox rows take the age-corrected standard score (uncorrected only as partial), and the BASC-2 executive-function row takes the T-score; never the fully corrected T-score.
-- BAS II subtests are given individually, so there is no GCA for `cog_iq_fullscale`; map T-scores, with ability scores only as a partial fallback.
+- BAS II subtests are given individually, so there is no GCA for `cog_iq_fullscale`; map T-scores for the cognitive subtests and standard scores (mean 100, SD 15) for the achievement scales, with ability scores only as a partial fallback.
+- The BAS II Word Reading and Number Skills rows also fill the generic literacy and numeracy rows with the same score.
 - NEPSY rows take the same-named subtest from either edition; record the edition and age at testing.
 - Only the child's own test maps; tests the caregiver took never map to child rows.
 - Parent-rated executive-function scales run higher = more problems and never pool with performance tasks.
+- General distress inventories (Kessler, Malaise Inventory, GHQ-12) map to their own rows and repeat on the generic `mh_distress_self`, never to the depression or anxiety rows.
 - Plausible-value scales use the first plausible value only.
 - Achievement tests take one domain per row (`acc_academachment_stdtest` records its domain); age-normed standard or scale scores are compatible and raw scores partial.
 - Record the test, subtest and score type, and standardise test scores within dataset and wave at analysis.
