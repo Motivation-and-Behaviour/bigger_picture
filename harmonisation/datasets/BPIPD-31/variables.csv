@@ -379,6 +379,8 @@ beh_cbcl_measure,inferred,wave,"case_when(
     ""Year 15"" ~ ""CBCL/6-18, caregiver report, 1-3 item scoring recoded to 0-2; anxious/depressed 6 of 13 items, withdrawn 2 of 8, attention problems 3 of 10, aggressive 11 of 18, rule-breaking 9 of 17; externalising = aggressive + rule-breaking; internalising = anxious/depressed + withdrawn (somatic complaints not asked); mean of answered items, NA below 80% answered"",
   .default = NA_character_
 )","Form, items asked of the published total per scale, composites, scoring and missing rule at each CBCL wave; NA at Year 9 (unscored).",,
+beh_ext_self,in_progress,,,,,
+beh_ext_measure,in_progress,,,,,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
 beh_problematicuse_self,unavailable,,,Not collected.,,
@@ -479,6 +481,8 @@ mh_depanx_diagnosed,partial,"pcg_dx_depanx, pcg_rx_any, pcg_rx_depanx","case_whe
   .default = NA_character_
 )","Year 15 caregiver report that a doctor or health professional ever said the youth has depression or anxiety. Currently diagnosed where the youth regularly takes prescribed medication for it, else Previously diagnosed; partial because medication understates current cases.",,
 mh_stress_self,unavailable,,,Not collected.,,
+mh_stress_scale_self,in_progress,,,,,
+mh_stress_measure,in_progress,,,,,
 mh_lonely_self,incompatible,selfdesc_lonely,,"Year 9 child 'I often feel lonely' is rated not true to very true, not a frequency; mapped nowhere.",,
 mh_lonely_scale_self,incompatible,selfdesc_lonely,,"Only the Year 9 single item 'I often feel lonely' (truth rating), no loneliness scale; mapped nowhere (also rejected on mh_lonely_self).",,
 mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
@@ -535,6 +539,7 @@ wb_selfratedhealth_self,compatible,self_rated_health,"recode_values(
   5 ~ ""Poor"",
   default = NA_character_
 )","'In general, how is your health?', child self-report at Year 9 and teen self-report at Year 15.",,
+wb_selfratedmentalhealth_self,in_progress,,,,,
 wb_generalhealth_parent,compatible,pcg_rated_health,"recode_values(
   as.numeric(pcg_rated_health),
   1 ~ ""Excellent"",
