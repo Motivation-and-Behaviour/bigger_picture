@@ -330,6 +330,7 @@ beh_emotreg_stayscalm,incompatible,ypsdqe,,"Only SDQ item 5, 'I get very angry a
 beh_peerprob_makefriends,proximate,ypmkfrn,"recode_values(as.numeric(ypmkfrn), c(1, 2) ~ ""No difficulty"", 3 ~ ""A little difficulty"", 4 ~ ""A lot of difficulty"")","BHPS waves 7-11, 18: 'how easy to make friends' (very/quite easy, quite/very hard). Easy = no difficulty, quite hard = a little, very hard = a lot. Proximate: asks ease, not difficulty relative to peers.",,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,compatible,ypsdqcp_dv,as.numeric(ypsdqcp_dv),"UKHLS odd waves (1, 3, ..., 15): study-derived self-report SDQ subscale (ypsdq*_dv), standard 0-2 scoring, scored when at least 3 of 5 items are answered, prorated and rounded half up (checked against ypsdqa-ypsdqy). Ages 10-16; 16% of scored respondents are 10, below the form's validated 11-17.",,
 beh_hyper_sdq_self,compatible,ypsdqha_dv,as.numeric(ypsdqha_dv),See beh_conduct_sdq_self.,,
 beh_peerprob_sdq_self,compatible,ypsdqpp_dv,as.numeric(ypsdqpp_dv),See beh_conduct_sdq_self.,,

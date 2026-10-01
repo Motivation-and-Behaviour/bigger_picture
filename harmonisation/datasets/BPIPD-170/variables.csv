@@ -372,6 +372,7 @@ beh_emotreg_stayscalm,incompatible,temper_control,,Only the problem-worded agree
 beh_peerprob_makefriends,unavailable,,,Not collected.,,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,Not collected.,,
 beh_hyper_sdq_self,unavailable,,,Not collected.,,
 beh_peerprob_sdq_self,unavailable,,,Not collected.,,

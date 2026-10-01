@@ -277,6 +277,7 @@ beh_conduct_diagnosed_severity,compatible,"k2q34c, behavior_nschyr","if_else(
   recode_values(as.numeric(k2q34c), 1 ~ ""Mild"", 2 ~ ""Moderate"", 3 ~ ""Severe""),
   NA_character_
 )","K2Q34C: 'Mild, Moderate, or Severe?', asked if currently diagnosed; kept at 3 levels. NA unless BEHAVIOR_NSCHYR = 3 (currently diagnosed, ages 3-17), which drops 371 answers for children under 3.",,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
 beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
 beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,

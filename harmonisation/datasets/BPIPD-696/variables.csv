@@ -203,6 +203,7 @@ beh_emotreg_stayscalm,incompatible,"Q29_Easily_frustrated, Q85_Temper_tantrums_o
 beh_peerprob_makefriends,incompatible,Q25_Doesn’t_get_along_with_other_children,,"CBCL item 25 ('doesn't get along with other children'; 0-2 truth rating, past 2 months) is not the 3-level difficulty-making-friends item; it belongs to no mapped CBCL scale.",,
 beh_conduct_diagnosed,unavailable,,,No diagnostic history collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,See beh_conduct_diagnosed.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,See beh_atten_self.,,
 beh_hyper_sdq_self,unavailable,,,See beh_atten_self.,,
 beh_peerprob_sdq_self,unavailable,,,See beh_atten_self.,,

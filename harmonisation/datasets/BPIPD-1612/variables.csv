@@ -147,6 +147,7 @@ beh_emotreg_stayscalm,incompatible,SDQ_5_cond,,"Parent-rated SDQ item 5 ('often 
 beh_peerprob_makefriends,incompatible,"SDQ_11_peer_rev, SDQ_14_peer_rev",,"Parent-rated SDQ items 11 ('has at least one good friend') and 14 ('generally liked by other children'), truth ratings (columns reverse-scored); scored in beh_peerprob_sdq_parent.",,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,SDQ self-report form not administered; see beh_conduct_sdq_parent.,,
 beh_hyper_sdq_self,unavailable,,,SDQ self-report form not administered; see beh_hyper_sdq_parent.,,
 beh_peerprob_sdq_self,unavailable,,,SDQ self-report form not administered; see beh_peerprob_sdq_parent.,,

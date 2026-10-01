@@ -279,6 +279,7 @@ beh_emotreg_stayscalm,incompatible,"ITEM_05, a10_10",,"Only problem-worded tempe
 beh_peerprob_makefriends,incompatible,"ITEM_11, ITEM_14",,Parent SDQ friendship items are truth ratings; scored in the peer problems subscale.,,
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,in_progress,,,,,
 beh_conduct_sdq_self,unavailable,,,SDQ self-report not administered; see beh_conduct_sdq_parent.,,
 beh_hyper_sdq_self,unavailable,,,SDQ self-report not administered; see beh_hyper_sdq_parent.,,
 beh_peerprob_sdq_self,unavailable,,,SDQ self-report not administered; see beh_peerprob_sdq_parent.,,
