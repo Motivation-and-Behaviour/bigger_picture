@@ -49,6 +49,5 @@ waves:
         glob: "HBSC2014OAed1.1.pdf"
 
 notes: |
-  Multiwave study with four root-level files/waves: 2001, 2006, 2010, and 2014. 
-  Each wave has one CSV data file and one PDF codebook.
-  2018 not included because there is no screen use measure.
+  Four waves (2001, 2006, 2010, 2014), one CSV + one PDF codebook each, all at the dataset root.
+  2018 excluded: no screen-use measure.

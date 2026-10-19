@@ -1,0 +1,19 @@
+dataset_id: "831"
+dataset_name: "Pastor-Ruiz"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "data_set_PB.xlsx"
+    reader: "excel"
+    sheet: "Respuestas de formulario 1"
+  - name: "codebook"
+    role: "codebook"
+    glob: "data_set_PB.xlsx"
+    reader: "excel"
+    sheet: "Hoja1"
+
+notes: |
+  Single-occasion school survey of adolescents in Madrid, Spain, via Google
+  Forms in class. Codebook is sheet "Hoja1" of the same workbook.
