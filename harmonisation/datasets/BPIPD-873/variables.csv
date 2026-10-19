@@ -199,6 +199,7 @@ school_grade,partial,"school_stage, school_stage_2010, school_grade","local({
     .default = NA_character_
   )
 })","Grade within stage: Primary 1-6, Junior high 1-4 (year 4 in 5-4 systems), Senior high 1-3; junior-high codes 7-9 (1-9 numbering) become Junior high 1-3. 2010 stage codes are lifted by one to match later waves; other codes and pre-school stages are NA.",,
+school_sector,in_progress,,,,,
 st_measure_type,inferred,,"""Continuous""","CFPS screen items ask for an open-ended duration, not bands.",,
 st_measure_name,inferred,,"""Custom""",Bespoke CFPS time-use and media items; not a named instrument.,,
 st_responder,inferred,"tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, learning_online_day_mins_self, internet_any_self, internet_mobile_user, internet_pc_user, learning_online_user_self, tv_week_hours_parent, internet_day_mins_parent, learning_online_day_mins_parent, internet_any_parent, learning_online_user_parent","local({
@@ -540,6 +541,12 @@ cog_vocab_nihtb_picvocab,unavailable,,,Not collected.,,
 cog_fluidcomp_nihtb,unavailable,,,Not collected.,,
 cog_crystcomp_nihtb,unavailable,,,Not collected.,,
 cog_totalcomp_nihtb,unavailable,,,Not collected.,,
+cog_atten_task,in_progress,,,,,
+cog_atten_task_measure,in_progress,,,,,
+cog_flex_task,in_progress,,,,,
+cog_flex_task_measure,in_progress,,,,,
+cog_inhib_task,in_progress,,,,,
+cog_inhib_task_measure,in_progress,,,,,
 cog_wm_digitspan,unavailable,,,Not collected.,,
 cog_iq_fullscale,incompatible,number_series_w,,"Only a number series test (2016, 2020), a single subtest; no full-scale battery.",,
 cog_vocab_bpvs,unavailable,,,Not collected.,,
@@ -575,7 +582,11 @@ mh_dep_phq9_self,unavailable,,,PHQ-9 not administered; see mh_dep_cesd_self.,,
 mh_dep_rcads_self,unavailable,,,RCADS not administered; see mh_dep_cesd_self.,,
 mh_dep_dass21_self,unavailable,,,DASS-21 not administered; see mh_dep_cesd_self.,,
 mh_dep_scl_self,unavailable,,,SCL-90-R not administered; see mh_dep_cesd_self.,,
-mh_distress_k6_self,partial,"k6_depressed, k6_nervous, k6_restless, k6_hopeless, k6_effort, k6_meaningless, k6_child2010_depressed, k6_child2010_nervous, k6_child2010_restless, k6_child2010_hopeless, k6_child2010_effort, k6_child2010_meaningless","local({
+mh_distress_k6_self,incompatible,"k6_depressed, k6_nervous, k6_restless, k6_hopeless, k6_effort, k6_meaningless, k6_child2010_depressed, k6_child2010_nervous, k6_child2010_restless, k6_child2010_hopeless, k6_child2010_effort, k6_child2010_meaningless",,"2010 and 2014: a K6-style set with 'life is meaningless' substituted for 'worthless' and non-Kessler frequency anchors (almost every day to never; 2010 child form 2-3 times a week, 2-3 times a month, once a month); scored in mh_distress_self (see mh_distress_measure).",,
+mh_distress_k10_self,unavailable,,,K10 not administered; see mh_distress_self.,,
+mh_distress_malaise_self,in_progress,,,,,
+mh_distress_ghq12_self,in_progress,,,,,
+mh_distress_self,compatible,"k6_depressed, k6_nervous, k6_restless, k6_hopeless, k6_effort, k6_meaningless, k6_child2010_depressed, k6_child2010_nervous, k6_child2010_restless, k6_child2010_hopeless, k6_child2010_effort, k6_child2010_meaningless","local({
   main <- sapply(list(k6_depressed, k6_nervous, k6_restless, k6_hopeless, k6_effort, k6_meaningless), as.numeric)
   child2010 <- sapply(
     list(
@@ -591,12 +602,14 @@ mh_distress_k6_self,partial,"k6_depressed, k6_nervous, k6_restless, k6_hopeless,
   main[!(main %in% 1:5)] <- NA
   child2010[!(child2010 %in% 1:5)] <- NA
   coalesce(rowSums(5 - main), rowSums(5 - child2010))
-})","2010 and 2014 only. K6-style past-month set with 'life meaningless' for 'worthless' (2010 English labels: stressed, upset, everything difficult); sum of (5 - item), 0-24, complete-case. Anchors: almost every day, often, half of the time, sometimes, never; 2010 child form 2-3 times a week, 2-3 times a month, once a month. Standardise within wave.",,
-mh_distress_k10_self,unavailable,,,K10 not administered; see mh_distress_k6_self.,,
-mh_distress_malaise_self,in_progress,,,,,
-mh_distress_ghq12_self,in_progress,,,,,
-mh_distress_self,in_progress,,,,,
-mh_distress_measure,in_progress,,,,,
+})","2010 and 2014 only. K6-style past-month set with 'life meaningless' for 'worthless' (2010 English labels: stressed, upset, everything difficult); sum of (5 - item), 0-24, complete-case. Anchors: almost every day, often, half of the time, sometimes, never; 2010 child form 2-3 times a week, 2-3 times a month, once a month. The substituted item and the anchors are recorded in mh_distress_measure. Standardise within wave.",,
+mh_distress_measure,inferred,wave,"case_when(
+  wave ==
+    ""2010"" ~ ""Kessler 6 (K6) variant, 5 of 6 items plus 'life is meaningless' in place of 'worthless', 0-4 item scoring (range 0-24), sum; all items reversed from the source coding (1 almost every day to 5 never); past-month frequency anchors almost every day, often, half of the time, sometimes, never (child form: almost every day, 2-3 times a week, 2-3 times a month, once a month, never) instead of all of the time to none of the time"",
+  wave ==
+    ""2014"" ~ ""Kessler 6 (K6) variant, 5 of 6 items plus 'life is meaningless' in place of 'worthless', 0-4 item scoring (range 0-24), sum; all items reversed from the source coding (1 almost every day to 5 never); past-month frequency anchors almost every day, often, half of the time, sometimes, never instead of all of the time to none of the time"",
+  .default = NA_character_
+)","2010 and 2014, the waves that fielded the K6-style set; NA elsewhere. Describes mh_distress_self.",,
 mh_anx_masc_self,unavailable,,,Not collected.,,
 mh_anx_scas_self,unavailable,,,Not collected.,,
 mh_anx_scas_parent,unavailable,,,Not collected.,,
@@ -617,7 +630,7 @@ mh_dep_measure,inferred,wave,"if_else(
 mh_anx_self,unavailable,,,Not collected.,,
 mh_anx_measure,unavailable,,,See mh_anx_self.,,
 mh_depanx_diagnosed,unavailable,,,Not collected.,,
-mh_stress_self,incompatible,"k6_nervous, k6_child2010_nervous",,"Only the K6-style past-month frequency of feeling nervous (2010 label 'stressed'), a pooled distress item; scored in mh_distress_k6_self.",,
+mh_stress_self,incompatible,"k6_nervous, k6_child2010_nervous",,"Only the K6-style past-month frequency of feeling nervous (2010 label 'stressed'), a pooled distress item; scored in mh_distress_self.",,
 mh_stress_scale_self,in_progress,,,,,
 mh_stress_measure,in_progress,,,,,
 mh_lonely_self,proximate,lonely,"recode_values(as.numeric(lonely), 1 ~ ""Rarely"", 2 ~ ""Sometimes"", 3 ~ ""Often"", 4 ~ ""Always"", default = NA_character_)","CES-D 'I feel lonely', past week, 2016-2022; days under 1, 1-2, 3-4, 5-7 -> Rarely, Sometimes, Often, Always, so Never is not reachable. Also scored in mh_dep_cesd_self.",,
@@ -627,7 +640,7 @@ mh_sad_self,proximate,sad,"recode_values(as.numeric(sad), 1 ~ ""Rarely"", 2 ~ ""
 mh_worry_self,incompatible,int_worry_school,,"Only 1-5 applicability items on specific school worries (2018, 2022); no frequency item.",,
 mh_irritable_self,incompatible,int_angry_study,,"Only a 1-5 applicability item on anger at study difficulties (2018, 2022); no frequency item.",,
 mh_nobodycares_self,unavailable,,,Not collected.,,
-mh_lifenotworth_self,incompatible,"k6_meaningless, k6_child2010_meaningless, cesd_notgoing",,"Only the past-month K6-style 'felt life was meaningless' item (2010, 2014: wn406, wq606, qq606; held in mh_distress_k6_self) and CES-D item 20 'I could not get going' (2016-2022), which scores into mh_dep_cesd_self; neither is a death wish.",,
+mh_lifenotworth_self,incompatible,"k6_meaningless, k6_child2010_meaningless, cesd_notgoing",,"Only the past-month K6-style 'felt life was meaningless' item (2010, 2014: wn406, wq606, qq606; held in mh_distress_self) and CES-D item 20 'I could not get going' (2016-2022), which scores into mh_dep_cesd_self; neither is a death wish.",,
 mh_suicide_ideation_self,unavailable,,,Not collected.,,
 mh_suicide_attempt_self,unavailable,,,Not collected.,,
 mh_selfharm_self,unavailable,,,Not collected.,,
@@ -641,12 +654,14 @@ wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered;
 wb_resil_basc2,unavailable,,,Not collected.,,
 wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
 wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
-wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_distress_k6_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
 wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see mh_dep_cesd_self.,,
 wb_bodyimage,unavailable,,,Not collected.,,
 wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_singleitem_self.,,
 wb_lifesat_swls_self,unavailable,,,SWLS not administered; see wb_lifesat_singleitem_self.,,
 wb_lifesat_singleitem_self,compatible,life_satisfaction,"if_else(as.numeric(life_satisfaction) %in% 1:5, as.numeric(life_satisfaction), NA_real_)","Ages 16-19 in 2010-2020, 10-19 in 2022 (adult/person questionnaire). 'Are you satisfied with your life?', 1-5 very unsatisfied to very satisfied.",,
+wb_lifesat_self,in_progress,,,,,
+wb_lifesat_measure,in_progress,,,,,
 wb_happiness_singleitem_self,compatible,happiness,"if_else(as.numeric(happiness) %in% 0:10, as.numeric(happiness), NA_real_)","2014-2022, self-report (child module ages 10-15, adult/person questionnaire). 'Are you happy?', 0 (lowest) to 10 (highest).",,
 wb_happiness_singleitem_parent,in_progress,,,,,
 wb_domainsat_schoolwork_self,partial,"schoolwork_satisfaction, education_child","if_else(
@@ -664,6 +679,16 @@ wb_domainsat_school_self,compatible,"school_satisfaction, education_child","if_e
 )","'Are you satisfied with your school?', 5 points (extremely unsatisfied to extremely satisfied). Students only; NA once the respondent has completed senior high (education_child 4+).",,
 wb_qol_pedsql_self,unavailable,,,Not collected.,,
 wb_qol_pedsql_parent,unavailable,,,Not collected.,,
+wb_qol_pedsql_physical_self,in_progress,,,,,
+wb_qol_pedsql_emotional_self,in_progress,,,,,
+wb_qol_pedsql_social_self,in_progress,,,,,
+wb_qol_pedsql_school_self,in_progress,,,,,
+wb_qol_pedsql_psychosocial_self,in_progress,,,,,
+wb_qol_pedsql_physical_parent,in_progress,,,,,
+wb_qol_pedsql_emotional_parent,in_progress,,,,,
+wb_qol_pedsql_social_parent,in_progress,,,,,
+wb_qol_pedsql_school_parent,in_progress,,,,,
+wb_qol_pedsql_psychosocial_parent,in_progress,,,,,
 wb_qol_kidscreen10_self,unavailable,,,Not collected.,,
 wb_qol_kidscreen10_parent,unavailable,,,Not collected.,,
 wb_selfesteem_rosenberg_self,compatible,"rse_1, rse_2, rse_3, rse_4, rse_5, rse_6, rse_7, rse_8, rse_9, rse_10, rse14_1, rse14_2, rse14_3, rse14_4, rse14_5, rse14_6, rse14_7, rse14_8, rse14_9, rse14_10","local({
