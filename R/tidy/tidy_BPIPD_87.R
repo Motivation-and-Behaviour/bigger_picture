@@ -1,22 +1,35 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-87 (Mendeley)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One cross-sectional survey file (Argentina, 2019); the only assembly is
+#' removing a repeated submission so that `Código` keys the table.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per adolescent
 tidy_BPIPD_87 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
+  df <- tibble::as_tibble(raw_dataset$data$data)
+
+  # One questionnaire was submitted twice, identical except `Submission Date`.
+  resubmitted <- duplicated(df[setdiff(names(df), "Submission Date")])
+  df <- df[!resubmitted, , drop = FALSE]
+
+  if (anyDuplicated(df[["Código"]]) > 0) {
+    stop("BPIPD-87: `Código` does not uniquely identify rows.", call. = FALSE)
   }
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  # This column repeats the weekend-nap hours beside it; its header is misaligned.
+  mislabelled <- paste(
+    "¿Cuánto tiempo de pantalla (dispositivos electrónicos) utilizas",
+    "antes de dormirte los días de semana?"
+  )
+  attr(df[[mislabelled]], "label") <- paste(
+    "MISLABELLED: duplicates the weekend nap duration in hours",
+    "(¿Cuánto tiempo dormís la siesta los fines de semana o feriados?);",
+    "not a screen-time item"
+  )
+
+  df
 }
