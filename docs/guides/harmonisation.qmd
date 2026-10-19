@@ -431,7 +431,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Income, income-to-needs, affluence or a composite index is compatible when every level lies within 10 points of 40/20/40 in every wave, and proximate otherwise.
 - Multi-country repeated cross-sections cut within country and cycle.
 - Area SES uses the index's own national quintiles, never sample quantiles.
-- School-level indicators (school type, fees, funding, track) map to neither SES row; mark them incompatible with a one-line note.
+- School-level indicators (school type, fees, funding, track) map to neither SES row; mark them incompatible with a one-line note, and put a public/private sector item on `school_sector`.
 - `ses_household_measure` reads '<type>: <measure>', with the type from a fixed list.
 - Parent education uses one vocabulary with ISCED anchors; a band spanning two levels goes to the level holding most of its members (proximate), and tertiary study begun but not completed is Post-secondary.
 - Parents are whichever mother and father figures the source records, with the row partial when one is systematically unobserved.
