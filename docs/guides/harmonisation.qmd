@@ -296,9 +296,10 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Rebase in the expression (subtract the item count for 1-based items; reverse as (min + max) - x) and record both in notes.
 - Set sentinel and off-scale item codes to NA (`na_if()`, `%in%` valid codes) before scoring, and check the observed range against the published range.
 - Before mapping a study-supplied total, check its keying (every item correlates positively with the total) and rescore from items if it fails.
-- A named-instrument row takes the full published form on its published scoring, or a study composite equated to that metric (partial).
-- The same items on a non-standard response scale are partial on the named row.
-- Short forms, item subsets and adapted forms go to the generic row, and the named row is incompatible.
+- A named-instrument row takes the full published form on its published response scale and scoring, or a study composite equated to that metric (partial).
+- Short forms, item subsets, adapted forms and the same items on another response scale go to the generic row, and the named row is incompatible.
+- When the generic row already takes another scale given on the same occasion (a full named form is repeated there first), such a form stays partial on its named row instead, so its score is kept.
+- Where the construct has no generic row (e.g. KIDSCREEN-10, Subjective Happiness Scale), the same items on another response scale stay partial on the named row.
 - Exceptions: `mh_dep_scl_self` takes SCL-90-R short forms, the RCADS-25 depression items map to `mh_dep_rcads_self`, and mean-item CBCL rows take item subsets as partial.
 - A generic ('any instrument') row takes a multi-item scale administered for the construct.
 - On a generic row the status reflects construct fit only; short forms, subsets and adapted scoring are compatible when the `*_measure` row describes them.
@@ -332,6 +333,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - NEPSY rows take the same-named subtest from either edition; record the edition and age at testing.
 - Only the child's own test maps; tests the caregiver took never map to child rows.
 - Parent-rated executive-function scales run higher = more problems and never pool with performance tasks.
+- Child-performed attention, set-shifting and inhibitory-control tasks go to the generic task rows (`cog_atten_task`, `cog_flex_task`, `cog_inhib_task`), one task per dataset per row, with the task described in the matching `*_measure` row; a mapped NIH Toolbox or NEPSY task row repeats there.
 - General distress inventories (Kessler, Malaise Inventory, GHQ-12) map to their own rows and repeat on the generic `mh_distress_self`, never to the depression or anxiety rows.
 - Plausible-value scales use the first plausible value only.
 - Achievement tests take one domain per row (`acc_academachment_stdtest` records its domain); age-normed standard or scale scores are compatible and raw scores partial.
@@ -431,7 +433,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Income, income-to-needs, affluence or a composite index is compatible when every level lies within 10 points of 40/20/40 in every wave, and proximate otherwise.
 - Multi-country repeated cross-sections cut within country and cycle.
 - Area SES uses the index's own national quintiles, never sample quantiles.
-- School-level indicators (school type, fees, funding, track) map to neither SES row; mark them incompatible with a one-line note.
+- School-level indicators (school type, fees, funding, track) map to neither SES row; mark them incompatible with a one-line note, and put a public/private sector item on `school_sector`.
 - `ses_household_measure` reads '<type>: <measure>', with the type from a fixed list.
 - Parent education uses one vocabulary with ISCED anchors; a band spanning two levels goes to the level holding most of its members (proximate), and tertiary study begun but not completed is Post-secondary.
 - Parents are whichever mother and father figures the source records, with the row partial when one is systematically unobserved.
