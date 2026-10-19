@@ -332,6 +332,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - NEPSY rows take the same-named subtest from either edition; record the edition and age at testing.
 - Only the child's own test maps; tests the caregiver took never map to child rows.
 - Parent-rated executive-function scales run higher = more problems and never pool with performance tasks.
+- Child-performed attention, set-shifting and inhibitory-control tasks go to the generic task rows (`cog_atten_task`, `cog_flex_task`, `cog_inhib_task`), one task per dataset per row, with the task described in the matching `*_measure` row; a mapped NIH Toolbox or NEPSY task row repeats there.
 - General distress inventories (Kessler, Malaise Inventory, GHQ-12) map to their own rows and repeat on the generic `mh_distress_self`, never to the depression or anxiety rows.
 - Plausible-value scales use the first plausible value only.
 - Achievement tests take one domain per row (`acc_academachment_stdtest` records its domain); age-normed standard or scale scores are compatible and raw scores partial.
@@ -431,7 +432,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Income, income-to-needs, affluence or a composite index is compatible when every level lies within 10 points of 40/20/40 in every wave, and proximate otherwise.
 - Multi-country repeated cross-sections cut within country and cycle.
 - Area SES uses the index's own national quintiles, never sample quantiles.
-- School-level indicators (school type, fees, funding, track) map to neither SES row; mark them incompatible with a one-line note.
+- School-level indicators (school type, fees, funding, track) map to neither SES row; mark them incompatible with a one-line note, and put a public/private sector item on `school_sector`.
 - `ses_household_measure` reads '<type>: <measure>', with the type from a fixed list.
 - Parent education uses one vocabulary with ISCED anchors; a band spanning two levels goes to the level holding most of its members (proximate), and tertiary study begun but not completed is Post-secondary.
 - Parents are whichever mother and father figures the source records, with the row partial when one is systematically unobserved.
