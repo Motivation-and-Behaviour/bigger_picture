@@ -1,0 +1,25 @@
+dataset_id: "2281"
+dataset_name: "Grao-Cruces"
+status: "in_progress"
+
+resources:
+  - name: "Grao-Cruces Excel Dataset"
+    role: "data"
+    reader: "excel"
+    sheet: "Database_BiggerPicture_Alberto_"
+    glob: "Database_BiggerPicture_Alberto_Grao-Cruces.xlsx"
+
+  - name: "Grao-Cruces SPSS Dataset"
+    role: "data"
+    reader: "spss"
+    glob: "Database_BiggerPicture_Alberto_Grao-Cruces.sav"
+
+  - name: "Grao-Cruces Codebook"
+    role: "codebook"
+    glob: "Codebook_Alberto_Grao-Cruces.pdf"
+
+notes: |
+  Dataset contents include primary research data and reference codebooks. 
+  Structure contains both spreadsheet and statistical formats: 1 Excel file (.xlsx) 
+  target sheet 'Database_BiggerPicture_Alberto_', 1 SPSS data file (.sav), and 1 codebook 
+  documentation file (.pdf).
