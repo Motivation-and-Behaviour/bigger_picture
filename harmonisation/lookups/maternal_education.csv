@@ -181,3 +181,8 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 87,maternal_education,Terciario o universitario incompleto,Post-secondary,compatible,Non-university or university tertiary study begun but not completed: Post-secondary by definition.
 87,maternal_education,No sabe,Unknown,compatible,Explicit do-not-know answer by the adolescent.
 87,maternal_education,Terciario o universitario completo,Bachelor degree or higher,proximate,"Completed non-university tertiary or university study, one band spanning short-cycle tertiary and degree level; placed at the level taken to hold most of the band."
+2342,maternal_education,High School,Secondary school or less,compatible,SES code 1: high school diploma
+2342,maternal_education,Technical/Trade School,Post-secondary,compatible,"SES code 2: technical/trade school degree, post-secondary non-tertiary (ISCED 4)"
+2342,maternal_education,College,Post-secondary,compatible,"SES code 3: Canadian college diploma, short-cycle tertiary below bachelor level (ISCED 5)"
+2342,maternal_education,Bachelor's,Bachelor degree or higher,compatible,SES code 4: bachelor's degree
+2342,maternal_education,Graduate/Professional,Bachelor degree or higher,compatible,SES code 5: graduate or professional school
