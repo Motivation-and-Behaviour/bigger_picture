@@ -1,0 +1,9 @@
+dataset_id: "337"
+dataset_name: "Tezol"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "The Psychosocial Well-Being of Young Video-Gamer Children.sav"
+    reader: "spss"
