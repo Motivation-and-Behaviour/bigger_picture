@@ -1,22 +1,14 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-337 (Tezol)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' A single cross-sectional SPSS extract of 210 mother-child pairs, so there is
+#' nothing to join, stack or pivot; `surveynumber` already identifies a row.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per child (mother-reported, single survey round)
 tidy_BPIPD_337 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
-
-  tibble::as_tibble(raw_dataset$data[[1]])
+  tibble::as_tibble(raw_dataset$data$data)
 }
