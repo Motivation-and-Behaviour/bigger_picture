@@ -1,22 +1,38 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-2488 (Arango)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' Single cross-sectional Excel sheet; variable labels come from the
+#' workbook's `Codebook` sheet, since the Excel reader carries none.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per participant
 tidy_BPIPD_2488 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
+  df <- tibble::as_tibble(raw_dataset$data$data)
+
+  bp2488_add_codebook_labels(df, raw_dataset$codebook$codebook)
+}
+
+#' Attach the unheaded `Codebook` sheet's descriptions as variable labels
+bp2488_add_codebook_labels <- function(df, path) {
+  codebook <- readxl::read_excel(
+    path,
+    sheet = "Codebook",
+    col_names = c("variable", "description"),
+    col_types = "text"
+  )
+
+  labels <- stats::setNames(codebook$description, codebook$variable)
+  labels <- labels[!is.na(labels)]
+
+  # The codebook abbreviates the one name the data sheet spells out.
+  names(labels)[names(labels) == "Low-HRQL-PH"] <- "Low-HRQL-Physical Health"
+
+  for (column in intersect(names(df), names(labels))) {
+    attr(df[[column]], "label") <- labels[[column]]
   }
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  df
 }

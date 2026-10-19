@@ -13,7 +13,6 @@ resources:
     glob: "Dataset.xlsx"
     reader: "excel"
     sheet: "Codebook"
-    
 
 notes: |
-  Dataset and codebook on diffrent sheets in the same excel file.
+  Dataset and codebook on different sheets in the same excel file.

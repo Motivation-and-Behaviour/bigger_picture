@@ -166,6 +166,7 @@ fam_bedroomscreen,compatible,"NHEQ_ElecTv, NHEQ_ElecComp, NHEQ_ElecVideoSys","ca
 fam_parentstress,unavailable,,,Not collected.,,
 fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
 school_grade,unavailable,,,"Not recorded; each site sampled the grade with the most 10-year-olds, which differs by country.",,
+school_sector,in_progress,,,,,
 st_measure_type,inferred,,"""Categorical""","Hours/day in ordered bands (0 / <1 / 1 / 2 / 3 / 4 / 5+), converted to ISCOLE's published band scores.",,
 st_measure_name,inferred,,"""Custom""",Bespoke items in the Diet and Lifestyle Questionnaire; not a named instrument.,,
 st_responder,inferred,,"""Self""",Child-completed (item wording: 'how many hours did you watch TV'); demographic/neighbourhood forms are parent-completed.,,
@@ -413,6 +414,16 @@ wb_domainsat_friends_self,incompatible,DIET_LastWkFeelFunWithFriends,,KIDSCREEN-
 wb_domainsat_school_self,unavailable,,,Not collected.,,
 wb_qol_pedsql_self,unavailable,,,Not collected.,,
 wb_qol_pedsql_parent,unavailable,,,Not collected.,,
+wb_qol_pedsql_physical_self,in_progress,,,,,
+wb_qol_pedsql_emotional_self,in_progress,,,,,
+wb_qol_pedsql_social_self,in_progress,,,,,
+wb_qol_pedsql_school_self,in_progress,,,,,
+wb_qol_pedsql_psychosocial_self,in_progress,,,,,
+wb_qol_pedsql_physical_parent,in_progress,,,,,
+wb_qol_pedsql_emotional_parent,in_progress,,,,,
+wb_qol_pedsql_social_parent,in_progress,,,,,
+wb_qol_pedsql_school_parent,in_progress,,,,,
+wb_qol_pedsql_psychosocial_parent,in_progress,,,,,
 wb_qol_kidscreen10_self,partial,"DIET_LastWkFeelFit, DIET_LastWkFeelFullEnergy, DIET_LastWkFeelSad, DIET_LastWkFeelLonely, DIET_LastWkFeelTimeForSelf, DIET_LastWkFeelWantToDoFreetime, DIET_LastWkFeelParentTreatFairly, DIET_LastWkFeelFunWithFriends, DIET_LastWkFeelWellAtSch, DIET_LastWkFeelPayAttention","DIET_LastWkFeelFit +
   DIET_LastWkFeelFullEnergy +
   (6 - DIET_LastWkFeelSad) +
