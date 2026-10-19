@@ -334,6 +334,8 @@ wb_bodyimage,proximate,weight_perception,"recode_values(
 wb_lifesat_slss_self,unavailable,,,Not collected.,,
 wb_lifesat_swls_self,unavailable,,,Not collected.,,
 wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_lifesat_self,in_progress,,,,,
+wb_lifesat_measure,in_progress,,,,,
 wb_happiness_singleitem_self,unavailable,,,Not collected.,,
 wb_happiness_singleitem_parent,in_progress,,,,,
 wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,

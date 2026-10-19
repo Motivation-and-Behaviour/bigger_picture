@@ -503,6 +503,8 @@ wb_bodyimage,proximate,"w1s504, w2s454, w3s402","recode_values(
 wb_lifesat_slss_self,unavailable,,,Not collected.,,
 wb_lifesat_swls_self,unavailable,,,Not collected.,,
 wb_lifesat_singleitem_self,incompatible,"w1s555, w2s458, w3s478, w4s460",,Happiness item mapped to wb_happiness_singleitem_self; no life-satisfaction item.,,
+wb_lifesat_self,in_progress,,,,,
+wb_lifesat_measure,in_progress,,,,,
 wb_happiness_singleitem_self,compatible,"w1s555, w2s458, w3s478, w4s460","5 -
   if_else(
     coalesce(as.numeric(w1s555), as.numeric(w2s458), as.numeric(w3s478), as.numeric(w4s460)) %in% 1:4,

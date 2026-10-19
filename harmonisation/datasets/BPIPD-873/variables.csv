@@ -582,7 +582,11 @@ mh_dep_phq9_self,unavailable,,,PHQ-9 not administered; see mh_dep_cesd_self.,,
 mh_dep_rcads_self,unavailable,,,RCADS not administered; see mh_dep_cesd_self.,,
 mh_dep_dass21_self,unavailable,,,DASS-21 not administered; see mh_dep_cesd_self.,,
 mh_dep_scl_self,unavailable,,,SCL-90-R not administered; see mh_dep_cesd_self.,,
-mh_distress_k6_self,partial,"k6_depressed, k6_nervous, k6_restless, k6_hopeless, k6_effort, k6_meaningless, k6_child2010_depressed, k6_child2010_nervous, k6_child2010_restless, k6_child2010_hopeless, k6_child2010_effort, k6_child2010_meaningless","local({
+mh_distress_k6_self,incompatible,"k6_depressed, k6_nervous, k6_restless, k6_hopeless, k6_effort, k6_meaningless, k6_child2010_depressed, k6_child2010_nervous, k6_child2010_restless, k6_child2010_hopeless, k6_child2010_effort, k6_child2010_meaningless",,"2010 and 2014: a K6-style set with 'life is meaningless' substituted for 'worthless' and non-Kessler frequency anchors (almost every day to never; 2010 child form 2-3 times a week, 2-3 times a month, once a month); scored in mh_distress_self (see mh_distress_measure).",,
+mh_distress_k10_self,unavailable,,,K10 not administered; see mh_distress_self.,,
+mh_distress_malaise_self,in_progress,,,,,
+mh_distress_ghq12_self,in_progress,,,,,
+mh_distress_self,compatible,"k6_depressed, k6_nervous, k6_restless, k6_hopeless, k6_effort, k6_meaningless, k6_child2010_depressed, k6_child2010_nervous, k6_child2010_restless, k6_child2010_hopeless, k6_child2010_effort, k6_child2010_meaningless","local({
   main <- sapply(list(k6_depressed, k6_nervous, k6_restless, k6_hopeless, k6_effort, k6_meaningless), as.numeric)
   child2010 <- sapply(
     list(
@@ -598,12 +602,14 @@ mh_distress_k6_self,partial,"k6_depressed, k6_nervous, k6_restless, k6_hopeless,
   main[!(main %in% 1:5)] <- NA
   child2010[!(child2010 %in% 1:5)] <- NA
   coalesce(rowSums(5 - main), rowSums(5 - child2010))
-})","2010 and 2014 only. K6-style past-month set with 'life meaningless' for 'worthless' (2010 English labels: stressed, upset, everything difficult); sum of (5 - item), 0-24, complete-case. Anchors: almost every day, often, half of the time, sometimes, never; 2010 child form 2-3 times a week, 2-3 times a month, once a month. Standardise within wave.",,
-mh_distress_k10_self,unavailable,,,K10 not administered; see mh_distress_k6_self.,,
-mh_distress_malaise_self,in_progress,,,,,
-mh_distress_ghq12_self,in_progress,,,,,
-mh_distress_self,in_progress,,,,,
-mh_distress_measure,in_progress,,,,,
+})","2010 and 2014 only. K6-style past-month set with 'life meaningless' for 'worthless' (2010 English labels: stressed, upset, everything difficult); sum of (5 - item), 0-24, complete-case. Anchors: almost every day, often, half of the time, sometimes, never; 2010 child form 2-3 times a week, 2-3 times a month, once a month. The substituted item and the anchors are recorded in mh_distress_measure. Standardise within wave.",,
+mh_distress_measure,inferred,wave,"case_when(
+  wave ==
+    ""2010"" ~ ""Kessler 6 (K6) variant, 5 of 6 items plus 'life is meaningless' in place of 'worthless', 0-4 item scoring (range 0-24), sum; all items reversed from the source coding (1 almost every day to 5 never); past-month frequency anchors almost every day, often, half of the time, sometimes, never (child form: almost every day, 2-3 times a week, 2-3 times a month, once a month, never) instead of all of the time to none of the time"",
+  wave ==
+    ""2014"" ~ ""Kessler 6 (K6) variant, 5 of 6 items plus 'life is meaningless' in place of 'worthless', 0-4 item scoring (range 0-24), sum; all items reversed from the source coding (1 almost every day to 5 never); past-month frequency anchors almost every day, often, half of the time, sometimes, never instead of all of the time to none of the time"",
+  .default = NA_character_
+)","2010 and 2014, the waves that fielded the K6-style set; NA elsewhere. Describes mh_distress_self.",,
 mh_anx_masc_self,unavailable,,,Not collected.,,
 mh_anx_scas_self,unavailable,,,Not collected.,,
 mh_anx_scas_parent,unavailable,,,Not collected.,,
@@ -624,7 +630,7 @@ mh_dep_measure,inferred,wave,"if_else(
 mh_anx_self,unavailable,,,Not collected.,,
 mh_anx_measure,unavailable,,,See mh_anx_self.,,
 mh_depanx_diagnosed,unavailable,,,Not collected.,,
-mh_stress_self,incompatible,"k6_nervous, k6_child2010_nervous",,"Only the K6-style past-month frequency of feeling nervous (2010 label 'stressed'), a pooled distress item; scored in mh_distress_k6_self.",,
+mh_stress_self,incompatible,"k6_nervous, k6_child2010_nervous",,"Only the K6-style past-month frequency of feeling nervous (2010 label 'stressed'), a pooled distress item; scored in mh_distress_self.",,
 mh_stress_scale_self,in_progress,,,,,
 mh_stress_measure,in_progress,,,,,
 mh_lonely_self,proximate,lonely,"recode_values(as.numeric(lonely), 1 ~ ""Rarely"", 2 ~ ""Sometimes"", 3 ~ ""Often"", 4 ~ ""Always"", default = NA_character_)","CES-D 'I feel lonely', past week, 2016-2022; days under 1, 1-2, 3-4, 5-7 -> Rarely, Sometimes, Often, Always, so Never is not reachable. Also scored in mh_dep_cesd_self.",,
@@ -634,7 +640,7 @@ mh_sad_self,proximate,sad,"recode_values(as.numeric(sad), 1 ~ ""Rarely"", 2 ~ ""
 mh_worry_self,incompatible,int_worry_school,,"Only 1-5 applicability items on specific school worries (2018, 2022); no frequency item.",,
 mh_irritable_self,incompatible,int_angry_study,,"Only a 1-5 applicability item on anger at study difficulties (2018, 2022); no frequency item.",,
 mh_nobodycares_self,unavailable,,,Not collected.,,
-mh_lifenotworth_self,incompatible,"k6_meaningless, k6_child2010_meaningless, cesd_notgoing",,"Only the past-month K6-style 'felt life was meaningless' item (2010, 2014: wn406, wq606, qq606; held in mh_distress_k6_self) and CES-D item 20 'I could not get going' (2016-2022), which scores into mh_dep_cesd_self; neither is a death wish.",,
+mh_lifenotworth_self,incompatible,"k6_meaningless, k6_child2010_meaningless, cesd_notgoing",,"Only the past-month K6-style 'felt life was meaningless' item (2010, 2014: wn406, wq606, qq606; held in mh_distress_self) and CES-D item 20 'I could not get going' (2016-2022), which scores into mh_dep_cesd_self; neither is a death wish.",,
 mh_suicide_ideation_self,unavailable,,,Not collected.,,
 mh_suicide_attempt_self,unavailable,,,Not collected.,,
 mh_selfharm_self,unavailable,,,Not collected.,,
@@ -648,12 +654,14 @@ wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered;
 wb_resil_basc2,unavailable,,,Not collected.,,
 wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
 wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
-wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_distress_k6_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
 wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see mh_dep_cesd_self.,,
 wb_bodyimage,unavailable,,,Not collected.,,
 wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_singleitem_self.,,
 wb_lifesat_swls_self,unavailable,,,SWLS not administered; see wb_lifesat_singleitem_self.,,
 wb_lifesat_singleitem_self,compatible,life_satisfaction,"if_else(as.numeric(life_satisfaction) %in% 1:5, as.numeric(life_satisfaction), NA_real_)","Ages 16-19 in 2010-2020, 10-19 in 2022 (adult/person questionnaire). 'Are you satisfied with your life?', 1-5 very unsatisfied to very satisfied.",,
+wb_lifesat_self,in_progress,,,,,
+wb_lifesat_measure,in_progress,,,,,
 wb_happiness_singleitem_self,compatible,happiness,"if_else(as.numeric(happiness) %in% 0:10, as.numeric(happiness), NA_real_)","2014-2022, self-report (child module ages 10-15, adult/person questionnaire). 'Are you happy?', 0 (lowest) to 10 (highest).",,
 wb_happiness_singleitem_parent,in_progress,,,,,
 wb_domainsat_schoolwork_self,partial,"schoolwork_satisfaction, education_child","if_else(

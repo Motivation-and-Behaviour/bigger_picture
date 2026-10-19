@@ -377,6 +377,8 @@ wb_bodyimage,compatible,KSsubj,"recode_values(
 wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_singleitem_self.,,
 wb_lifesat_swls_self,unavailable,,,SWLS not administered; see wb_lifesat_singleitem_self.,,
 wb_lifesat_singleitem_self,partial,LQkids13,"if_else(as.numeric(LQkids13) %in% 1:5, as.numeric(LQkids13), NA_real_)","KIDSCREEN-27 'Has your life been enjoyable?', past week, 5 points not at all to extremely. Partial: hedonic, past week. Ages 11-17.",,
+wb_lifesat_self,in_progress,,,,,
+wb_lifesat_measure,in_progress,,,,,
 wb_happiness_singleitem_self,incompatible,LQkids14,,"Only KIDSCREEN-27 'Have you been in a good mood?' (LQkids14), a past-week frequency item of the psychological well-being scale, not a general happiness rating; mapped on no row.",,
 wb_happiness_singleitem_parent,in_progress,,,,,
 wb_domainsat_schoolwork_self,incompatible,LQkids9,,"KIDSCREEN 'Have you got on well at school?' (LQkids9) rates coping, not satisfaction with school work; scored in wb_qol_kidscreen10_self.",,

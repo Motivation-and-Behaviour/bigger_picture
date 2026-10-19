@@ -495,6 +495,8 @@ wb_bodyimage,proximate,tc33,"recode_values(
 wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
 wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
 wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_lifesat_self,in_progress,,,,,
+wb_lifesat_measure,in_progress,,,,,
 wb_happiness_singleitem_self,incompatible,"td5, td9",,"Only items of scales mapped on other rows: 'a happy person' (td5, MHI-5, 2001; mh_distress_self) and days felt happy (td9, CES-D 8, 2005; mh_dep_self).",,
 wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
 wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,

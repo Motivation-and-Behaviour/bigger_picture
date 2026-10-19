@@ -1,22 +1,15 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-2281 (Grao-Cruces)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One cross-section of Andalusian adolescents, delivered as the same rows in
+#' `.sav` and `.xlsx`.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per adolescent, keyed on `ID`
 tidy_BPIPD_2281 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
-
-  tibble::as_tibble(raw_dataset$data[[1]])
+  # .sav carries the labels; the .xlsx twin writes missing values as `#NULL!`.
+  tibble::as_tibble(raw_dataset$data$`Grao-Cruces SPSS Dataset`)
 }

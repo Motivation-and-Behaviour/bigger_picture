@@ -296,9 +296,10 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Rebase in the expression (subtract the item count for 1-based items; reverse as (min + max) - x) and record both in notes.
 - Set sentinel and off-scale item codes to NA (`na_if()`, `%in%` valid codes) before scoring, and check the observed range against the published range.
 - Before mapping a study-supplied total, check its keying (every item correlates positively with the total) and rescore from items if it fails.
-- A named-instrument row takes the full published form on its published scoring, or a study composite equated to that metric (partial).
-- The same items on a non-standard response scale are partial on the named row.
-- Short forms, item subsets and adapted forms go to the generic row, and the named row is incompatible.
+- A named-instrument row takes the full published form on its published response scale and scoring, or a study composite equated to that metric (partial).
+- Short forms, item subsets, adapted forms and the same items on another response scale go to the generic row, and the named row is incompatible.
+- When the generic row already takes another scale given on the same occasion (a full named form is repeated there first), such a form stays partial on its named row instead, so its score is kept.
+- Where the construct has no generic row (e.g. KIDSCREEN-10, Subjective Happiness Scale), the same items on another response scale stay partial on the named row.
 - Exceptions: `mh_dep_scl_self` takes SCL-90-R short forms, the RCADS-25 depression items map to `mh_dep_rcads_self`, and mean-item CBCL rows take item subsets as partial.
 - A generic ('any instrument') row takes a multi-item scale administered for the construct.
 - On a generic row the status reflects construct fit only; short forms, subsets and adapted scoring are compatible when the `*_measure` row describes them.

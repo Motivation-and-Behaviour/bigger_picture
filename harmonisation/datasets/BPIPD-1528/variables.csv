@@ -397,6 +397,8 @@ wb_bodyimage,compatible,thinkbody,"recode_values(
 wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesatisfaction_cantrilladder.,,
 wb_lifesat_swls_self,unavailable,,,Not collected.,,
 wb_lifesat_singleitem_self,incompatible,lifesat,,Cantril ladder only; mapped to wb_lifesatisfaction_cantrilladder.,,
+wb_lifesat_self,in_progress,,,,,
+wb_lifesat_measure,in_progress,,,,,
 wb_happiness_singleitem_self,unavailable,,,Not collected.,,
 wb_happiness_singleitem_parent,in_progress,,,,,
 wb_domainsat_schoolwork_self,incompatible,"schoolpressure, acachieve",,No satisfaction item: schoolwork pressure (schoolpressure; see acc_schoolpressure_self) and the perceived teacher rating of performance (acachieve; mapped to acc_academachment_selfrated).,,
