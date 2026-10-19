@@ -471,6 +471,8 @@ wb_bodyimage,proximate,"yphlwtr, ypwghr","recode_values(
 wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_singleitem_self.,,
 wb_lifesat_swls_self,unavailable,,,SWLS not administered; see wb_lifesat_singleitem_self.,,
 wb_lifesat_singleitem_self,compatible,yphlf,8 - as.numeric(yphlf),"'Which best describes how you feel about your life as a whole?' 7-point faces scale, 1 completely happy to 7 not at all happy; every wave. Reversed so higher = more satisfied.",,
+wb_lifesat_self,in_progress,,,,,
+wb_lifesat_measure,in_progress,,,,,
 wb_happiness_singleitem_self,incompatible,yphlf,,"'Happiness: life overall' (7-point faces scale, every wave) maps to wb_lifesat_singleitem_self as life satisfaction; no separate general happiness item.",,
 wb_happiness_singleitem_parent,in_progress,,,,,
 wb_domainsat_schoolwork_self,compatible,yphsw,8 - as.numeric(yphsw),"'How do you feel about ... your school work?' Faces scale and reversal as wb_lifesat_singleitem_self (BHPS labels only 1, 4, 7). Every wave.",,

@@ -360,7 +360,13 @@ wb_lifesat_swls_self,compatible,"LifeSatisfaction_1, LifeSatisfaction_2, LifeSat
   as.numeric(haven::zap_labels(LifeSatisfaction_3)) +
   as.numeric(haven::zap_labels(LifeSatisfaction_4)) +
   as.numeric(haven::zap_labels(LifeSatisfaction_5))","SWLS, 5 items, standard 1-7 anchors; sum 5-35, NA if any item missing. Label for 2 misspelt 'Disgree' in source.",,
-wb_lifesat_singleitem_self,incompatible,LifeSatisfaction_3,,Only the SWLS item 'I am satisfied with my life' (LifeSatisfaction_3); scored in wb_lifesat_swls_self.,,
+wb_lifesat_singleitem_self,incompatible,LifeSatisfaction_3,,Only the SWLS item 'I am satisfied with my life' (LifeSatisfaction_3); scored in wb_lifesat_swls_self and wb_lifesat_self.,,
+wb_lifesat_self,compatible,"LifeSatisfaction_1, LifeSatisfaction_2, LifeSatisfaction_3, LifeSatisfaction_4, LifeSatisfaction_5","as.numeric(haven::zap_labels(LifeSatisfaction_1)) +
+  as.numeric(haven::zap_labels(LifeSatisfaction_2)) +
+  as.numeric(haven::zap_labels(LifeSatisfaction_3)) +
+  as.numeric(haven::zap_labels(LifeSatisfaction_4)) +
+  as.numeric(haven::zap_labels(LifeSatisfaction_5))","SWLS, 5 items, standard 1-7 anchors; sum 5-35, NA if any item missing. Same score as wb_lifesat_swls_self, for pooling across instruments.",,
+wb_lifesat_measure,inferred,,"""Satisfaction With Life Scale, 5 of 5 items, 1-7 item scoring (range 5-35), sum; no reverse-scored items""",Describes wb_lifesat_self.,,
 wb_happiness_singleitem_self,unavailable,,,Not collected.,,
 wb_happiness_singleitem_parent,in_progress,,,,,
 wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,

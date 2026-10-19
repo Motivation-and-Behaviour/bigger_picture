@@ -465,7 +465,17 @@ wb_lifesat_swls_self,compatible,"p_f06001, p_f06002, p_f06003, p_f06004, p_f0600
   items[!items %in% 1:7] <- NA
   rowSums(items)
 })","2021 only, ages 13+: Satisfaction with Life Scale, five items on the published 1-7 agreement scale; sum 5-35, complete case.",,
-wb_lifesat_singleitem_self,incompatible,p_f06003,,"The only general item, 'I am satisfied with my life' (2021), is SWLS item 3, scored in wb_lifesat_swls_self.",,
+wb_lifesat_singleitem_self,incompatible,p_f06003,,"The only general item, 'I am satisfied with my life' (2021), is SWLS item 3, scored in wb_lifesat_swls_self and wb_lifesat_self.",,
+wb_lifesat_self,compatible,"p_f06001, p_f06002, p_f06003, p_f06004, p_f06005","local({
+  items <- cbind(p_f06001, p_f06002, p_f06003, p_f06004, p_f06005)
+  items[!items %in% 1:7] <- NA
+  rowSums(items)
+})","2021 only, ages 13+: Satisfaction with Life Scale, five items on the published 1-7 agreement scale; sum 5-35, complete case. Same score as wb_lifesat_swls_self, for pooling across instruments.",,
+wb_lifesat_measure,inferred,.wave,"ifelse(
+  .wave == ""21"",
+  ""Satisfaction With Life Scale, 5 of 5 items, 1-7 item scoring (range 5-35), sum; no reverse-scored items"",
+  NA
+)",Wave 21 (2021) only; see wb_lifesat_self.,,
 wb_happiness_singleitem_self,partial,p_f02002,"ifelse(p_f02002 %in% 1:7, p_f02002, NA)","2013, 2017, 2021, ages 13+: felt happy in the past month, 1 not at all to 7 always, with degree steps and a neutral midpoint (4); higher = happier. Partial: an experienced-emotion rating rather than a general happiness question.",,
 wb_happiness_singleitem_parent,in_progress,,,,,
 wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
@@ -487,22 +497,7 @@ wb_qol_pedsql_school_parent,in_progress,,,,,
 wb_qol_pedsql_psychosocial_parent,in_progress,,,,,
 wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
 wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
-wb_selfesteem_rosenberg_self,partial,"p_h01001, p_h01002, p_h01003, p_h01004, p_h01005, p_h01006, p_h01007, p_h01008, p_h01009, p_h01010","local({
-  items <- cbind(
-    p_h01001,
-    p_h01002,
-    5 - p_h01003,
-    p_h01004,
-    5 - p_h01005,
-    p_h01006,
-    p_h01007,
-    5 - p_h01008,
-    5 - p_h01009,
-    5 - p_h01010
-  )
-  items[!items %in% 1:4] <- NA
-  rowSums(items)
-})","2015, 2020, 2021, ages 13+: Rosenberg Self-Esteem Scale, 10 items, 1-4 (not really, average, mostly, always), items 3, 5, 8, 9 and 10 (the negatively worded ones) reversed; sum 10-40, complete case. Partial: the response scale is a truth-frequency scale rather than the published agreement scale.",,
+wb_selfesteem_rosenberg_self,incompatible,"p_h01001, p_h01002, p_h01003, p_h01004, p_h01005, p_h01006, p_h01007, p_h01008, p_h01009, p_h01010",,"2015, 2020, 2021, ages 13+: the ten Rosenberg Self-Esteem Scale items use a 4-point truth-frequency scale (not really, average, mostly, always) instead of the published agreement scale; scored in wb_selfesteem_self (see wb_selfesteem_measure).",,
 wb_selfesteem_self,compatible,"p_h01001, p_h01002, p_h01003, p_h01004, p_h01005, p_h01006, p_h01007, p_h01008, p_h01009, p_h01010","local({
   items <- cbind(
     p_h01001,
