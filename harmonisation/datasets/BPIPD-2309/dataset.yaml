@@ -1,0 +1,9 @@
+dataset_id: "2309"
+dataset_name: "Valkenburg"
+status: "in_progress"
+
+resources:
+  - name: "valkenburg_2021_dataset"
+    role: "data"
+    glob: "Dataset belonging to Valkenburg et al (2021).csv"
+    reader: "csv"
