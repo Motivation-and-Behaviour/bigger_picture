@@ -104,7 +104,9 @@ At a high level, `_targets.R` performs the following:
     - read and validate the per-dataset harmonisation config
     - derive harmonised variables from the tidied study tibble and
       `variables.csv`
-6.  Row-bind all harmonised dataset outputs into `analysis_data`.
+6.  Row-bind all harmonised dataset outputs into `analysis_data`,
+    convert its low-cardinality character columns to factors, and store
+    it as Parquet.
 
 ## Data Discovery Convention
 
@@ -148,7 +150,12 @@ resolve from base R plus the curated allowlist in
 `bp_harmonisation_functions()`
 (`R/harmonise/harmonisation_functions.R`), and namespaced calls such as
 `haven::as_factor()` are also allowed. Per-dataset harmonised tibbles
-are row-bound into `analysis_data`.
+are row-bound into `analysis_data`. Character columns with at most 1,000
+distinct values become factors (levels in byte order; identifiers such
+as `participant_id` stay character), and the table is stored as Parquet
+so it loads quickly and can be queried lazily with
+`arrow::open_dataset(targets::tar_path_target(analysis_data))` (see
+DR-0006).
 
 The [harmonisation
 guide](https://motivation-and-behaviour.github.io/bigger_picture/guides/harmonisation.html)
