@@ -186,3 +186,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2342,maternal_education,College,Post-secondary,compatible,"SES code 3: Canadian college diploma, short-cycle tertiary below bachelor level (ISCED 5)"
 2342,maternal_education,Bachelor's,Bachelor degree or higher,compatible,SES code 4: bachelor's degree
 2342,maternal_education,Graduate/Professional,Bachelor degree or higher,compatible,SES code 5: graduate or professional school
+1249,maternal_education,Less than high school,Secondary school or less,compatible,"q222/q224 code 1, ISCED 0-2"
+1249,maternal_education,Completed some high school,Secondary school or less,compatible,"Code 2: high school begun, not completed"
+1249,maternal_education,High school graduate or equivalent,Secondary school or less,compatible,"Code 3, ISCED 3"
+1249,maternal_education,"Completed some college, but no degree",Post-secondary,compatible,Code 4: tertiary study begun but not completed
+1249,maternal_education,Associate's degree,Post-secondary,compatible,"Code 5, ISCED 5"
+1249,maternal_education,"College graduate (e.g., B.A., B.S.)",Bachelor degree or higher,compatible,"Code 6, ISCED 6"
+1249,maternal_education,"Completed some grad school, but no degree",Bachelor degree or higher,compatible,Code 7: graduate study begun after a bachelor degree
+1249,maternal_education,Completed graduate school,Bachelor degree or higher,compatible,"Code 8, ISCED 7-8"
+1249,maternal_education,Unknown,Unknown,compatible,Not asked (18-year-olds) or not answered; the three parent-education rows share these rows
