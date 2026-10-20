@@ -529,3 +529,30 @@ testthat::test_dir("tests/testthat")
 ```
 
 Both run on every pull request — CI validates the metadata and expressions, but only your local `tar_make()` sees real values.
+
+## The combined analysis table
+
+`targets::tar_make()` row-binds every harmonised dataset into one table, `analysis_data`.
+Before it is stored, each character column with at most 1,000 distinct non-missing values is converted to a factor, so the table loads quickly ([DR-0006](../decisions/DR-0006-analysis-data-storage.md)).
+Columns with more distinct values, such as `participant_id`, `survey_cluster` and `survey_strata`, stay character.
+The levels are the values that occur in the data, in byte order (upper case before lower case); `allowed_values` in the dataschema is not used.
+A subset keeps every level of the full table, so use `droplevels()` when empty levels get in the way, and `as.numeric(as.character(x))` rather than `as.numeric(x)` to turn a factor of numbers back into numbers.
+
+`analysis_data` is stored as a Parquet file.
+`targets::tar_read(analysis_data)` returns within seconds because `arrow` converts each column to an ordinary R vector only when it is first used.
+Select the columns you need before filtering or mutating: an operation that touches every column of the lazily loaded table, such as `dplyr::filter()` on the full table, is about three times slower than on ordinary vectors.
+For whole-table work, setting `options(arrow.use_altrep = FALSE)` before reading converts every column up front, which makes later operations fast but briefly needs about twice the table's memory.
+`arrow` can also read only some columns, or filter and summarise before anything is loaded:
+
+```r
+path <- targets::tar_path_target(analysis_data)
+
+# Only the columns you need
+arrow::read_parquet(path, col_select = c(dataset_id, wave, sex, age_years))
+
+# A lazy query: nothing is loaded until collect()
+arrow::open_dataset(path) |>
+  dplyr::filter(st_measure_id == "primary") |>
+  dplyr::count(dataset_id, sex) |>
+  dplyr::collect()
+```

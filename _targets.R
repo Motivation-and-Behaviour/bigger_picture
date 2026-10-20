@@ -8,7 +8,8 @@ tar_option_set(
     workers = max(1, min(parallel::detectCores() - 2, 24)),
     seconds_idle = 15
   ),
-  format = "qs"
+  format = "qs",
+  resources = tar_resources(qs = tar_resources_qs(nthreads = 4L))
 )
 
 tar_source()
@@ -44,7 +45,11 @@ if (nrow(.dataset_map_plan) == 0) {
   .harmonisation_file_targets <- list()
   .harmonisation_config_targets <- list()
   .harmonised_targets <- list()
-  .analysis_target <- tar_target(analysis_data, tibble::tibble())
+  .analysis_target <- tar_target(
+    analysis_data,
+    tibble::tibble(),
+    format = "parquet"
+  )
 } else {
   .dataset_targets <- tar_map(
     values = .dataset_map_plan,
@@ -117,7 +122,11 @@ if (nrow(.dataset_map_plan) == 0) {
     .harmonisation_file_targets <- list()
     .harmonisation_config_targets <- list()
     .harmonised_targets <- list()
-    .analysis_target <- tar_target(analysis_data, tibble::tibble())
+    .analysis_target <- tar_target(
+      analysis_data,
+      tibble::tibble(),
+      format = "parquet"
+    )
   } else {
     .harmonisation_file_targets <- list()
     .harmonisation_config_targets <- list()
@@ -186,7 +195,8 @@ if (nrow(.dataset_map_plan) == 0) {
     .analysis_target <- tar_combine(
       analysis_data,
       .harmonised_targets,
-      command = dplyr::bind_rows(!!!.x)
+      command = factorise_analysis_data(dplyr::bind_rows(!!!.x)),
+      format = "parquet"
     )
   }
 }
