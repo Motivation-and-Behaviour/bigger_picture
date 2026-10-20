@@ -173,6 +173,14 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 67,maternal_education,Some college (no degree) or associates degree,Post-secondary,compatible,"parent_educ_highest level 3: some college without a degree, a vocational or technical programme after high school (wave 1) or an associate degree (ISCED 4-5)"
 67,maternal_education,Bachelor's degree,Bachelor degree or higher,compatible,"parent_educ_highest level 4: bachelor's degree, including some graduate school without a degree at wave 1 (ISCED 6)"
 67,maternal_education,Advanced degree,Bachelor degree or higher,compatible,"parent_educ_highest level 5: master's, professional school or doctoral degree (ISCED 7-8)"
+87,maternal_education,Sin educación,Secondary school or less,compatible,"No schooling (ISCED 0); highest level of the father, mother or guardian, adolescent report."
+87,maternal_education,Primario incompleto,Secondary school or less,compatible,"Primary school begun, not completed."
+87,maternal_education,Primario completo,Secondary school or less,compatible,Primary school completed (ISCED 1).
+87,maternal_education,Secundario incompleto,Secondary school or less,compatible,"Secondary school begun, not completed."
+87,maternal_education,Secundario completo,Secondary school or less,compatible,Secondary school completed (ISCED 3).
+87,maternal_education,Terciario o universitario incompleto,Post-secondary,compatible,Non-university or university tertiary study begun but not completed: Post-secondary by definition.
+87,maternal_education,No sabe,Unknown,compatible,Explicit do-not-know answer by the adolescent.
+87,maternal_education,Terciario o universitario completo,Bachelor degree or higher,proximate,"Completed non-university tertiary or university study, one band spanning short-cycle tertiary and degree level; placed at the level taken to hold most of the band."
 2342,maternal_education,High School,Secondary school or less,compatible,SES code 1: high school diploma
 2342,maternal_education,Technical/Trade School,Post-secondary,compatible,"SES code 2: technical/trade school degree, post-secondary non-tertiary (ISCED 4)"
 2342,maternal_education,College,Post-secondary,compatible,"SES code 3: Canadian college diploma, short-cycle tertiary below bachelor level (ISCED 5)"
