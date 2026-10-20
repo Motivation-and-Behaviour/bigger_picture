@@ -247,6 +247,21 @@ fam_screenrules,partial,"DPTVRL00, DPTVRH00","local({
 fam_bedroomscreen,partial,"DPTVRM00, EPTVRM00","recode_values(coalesce(as.numeric(DPTVRM00), as.numeric(EPTVRM00)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","Sweeps 4-5, parent: 'Does CM have a television in their bedroom?', yes/no. Partial: TV only.",,
 fam_parentstress,unavailable,,,Not collected.,,
 fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+fam_readto_freq,partial,"BPOFRE00, BPREOF00, CPREOF00, DPREOF00","local({
+  own <- coalesce(as.numeric(BPOFRE00), as.numeric(CPREOF00), as.numeric(DPREOF00))
+  own[!own %in% 1:6] <- NA
+  other <- as.numeric(BPREOF00)
+  other[!other %in% 1:6] <- NA
+  recode_values(
+    pmin(own, other, na.rm = TRUE),
+    1 ~ ""Every day"",
+    2 ~ ""Several times a week"",
+    3 ~ ""Once or twice a week"",
+    c(4, 5, 6) ~ ""Less than once a week""
+  )
+})","Sweeps 2-4 (ages 3, 5, 7), main respondent: 'How often do you read to [child]?' (BPOFRE00 sweep 2, CPREOF00 sweep 3) and 'How often do you read with or to [child]?' (DPREOF00 sweep 4, 'every day or almost every day' = Every day); at sweep 2 the more frequent of that and 'How often does anyone else at home read to [child]?' (BPREOF00). Every day, several times a week and once or twice a week by wording; once or twice a month, less often and not at all = Less than once a week. Partial: the respondent's own reading only at sweeps 3-4.",,
+fam_readto_time,in_progress,,,,,
+fam_childbooks,in_progress,,,,,
 school_grade,partial,"DPSTSC00, DPDIFY00, EPSTSC00, EPDIFY00, FPSTSC00, FPDIFY00, GCDIFY00","case_when(
   as.numeric(DPSTSC00) == 1 ~ ""Year 2/Primary 3"",
   as.numeric(DPSTSC00) == 2 ~ recode_values(
@@ -277,6 +292,7 @@ school_grade,partial,"DPSTSC00, DPDIFY00, EPSTSC00, EPDIFY00, FPSTSC00, FPDIFY00
     4 ~ ""Other year""
   )
 )","Parent confirms the sweep's modal school year, else gives the year; label built from both, kept as MCS writes it (England/Wales year with Scottish/NI equivalent). Sweeps 2-3 predate the item; sweep 7 asks the cohort member. Not attending school (code 3) stays missing.",,
+school_sector,in_progress,,,,,
 st_measure_type,inferred,,"""Categorical""",Banded hours items at every sweep.,,
 st_measure_name,inferred,,"""Custom""",Items written for MCS.,,
 st_responder,inferred,.wave,"case_match(.wave, c(""sweep_2"", ""sweep_3"", ""sweep_4"", ""sweep_5"") ~ ""Parent or carer"", c(""sweep_6"", ""sweep_7"") ~ ""Self"")","Main parent respondent at sweeps 2-5 (ages 3-11); cohort member at sweeps 6-7 (ages 14, 17), by design.",,
@@ -357,7 +373,7 @@ st_comp_school,unavailable,,,No item on use at school.,,
 st_tablet_school,unavailable,,,No item on use at school.,,
 st_internet_school,unavailable,,,No item on use at school.,,
 st_phone_school,unavailable,,,No item on use at school.,,
-acc_academachment_selfrated,incompatible,"ECQ46A00, ECQ46B00, ECQ46C00, ECQ46D00, FCENGL00, FCMTHS00, FCSCIE00",,"Only subject self-concept agreement items (ECQ46A00-ECQ46D00 sweep 5; FCENGL00, FCMTHS00, FCSCIE00 sweep 6: 'I am good at ...'); no overall performance rating.",,
+acc_academachment_selfrated,incompatible,"ECQ46A00, ECQ46B00, ECQ46C00, ECQ46D00, FCENGL00, FCMTHS00, FCSCIE00",,"Only subject self-concept agreement items (ECQ46A00-ECQ46D00 sweep 5; FCENGL00, FCMTHS00, FCSCIE00 sweep 6: 'I am good at ...'), the English, maths and science items mapped to wb_selfconcept_verbal_self, wb_selfconcept_maths_self and wb_selfconcept_science_self; no overall performance rating.",,
 acc_academachment_lettergrades,unavailable,,,Not collected.,,
 acc_academachment_stdtest,unavailable,,,Not collected.,,
 acc_schoolengage_caresschool,incompatible,"DCSC0027, ECQ35X00, FCSCBE00, EQ3C, EQ3A, ECQ36X00, DCSC0031, FCSINT00",,"Only how often the child tries their best (DCSC0027, ECQ35X00, FCSCBE00; teacher EQ3C) and enjoyment or interest items (teacher EQ3A; ECQ36X00, DCSC0031, FCSINT00): effort and liking, not caring about doing well.",,
@@ -388,14 +404,19 @@ acc_academachment_teacherrated,partial,"DQ2162, DQ2164, DQ2166, DQ2167, EQ2A, EQ
   3 ~ ""Average"",
   c(4, 5) ~ ""Below average""
 )","Teacher report, sweeps 4-5 (ages 7, 11): mean of the core-subject ratings against the age group (sweep 4 reading, writing, science, maths; sweep 5 English, maths, science), all required, rounded half toward the poorer rating. Welsh/Gaelic/Irish-medium duplicates, speaking and listening, PE, ICT and arts excluded. Five levels: well above -> Very good, above -> Good, average -> Average, below and well below -> Below average. Partial: subject composite.",,
+acc_academachment_parentrated,in_progress,,,,,
 acc_numeracy_stdtest,partial,DCNSCO00,as.numeric(DCNSCO00),"Sweep 4 only (age 7). NFER Number Skills raw score (0-15); no standardised or age-adjusted form, hence partial. Standardise within dataset and wave at analysis.",,
 acc_numeracy_bas_numberskills,in_progress,,,,,
 acc_literacy_stdtest,compatible,DCWRSD00,as.numeric(DCWRSD00),"Sweep 4 only (age 7). BAS II Word Reading standard score, age-normed (mean 100, SD 15). Ability score (DCWRAB00) and raw total (DCWRSC00) are not age-comparable.",,
 acc_literacy_bas_wordreading,in_progress,,,,,
+acc_learningdisab_diagnosed,incompatible,"DQ2330, DQ2331, EQ13A, EQ13B, DPRSEN0A, DPRSEN0B, DPRSEN0C, DPRSEN0D, DPRSEN0E, DPRSEN0F, DPRSEN0G, DPRSEN0H, DPRSEN0I, DPRSEN0J, DPRSEN0K, DPRSEN0L, DPRSEN0M, DPRASN0A, DPRASN0B, DPRASN0C, DPRASN0D, DPRASN0E, DPRASN0F, DPRASN0G, DPRASN0H, DPRASN0I, DPRASN0J, DPRASN0K, DPRASN0L, DPRASN0M, DPRASN0N, DPRASN0O, DPRASN0P, DPRASN0Q, EPRSEN0A, EPRSEN0B, EPRASN0A, EPRASN0B, FPRSEN0A, FPRSEN0B, FPRASN0A, FPRASN0B, EPCLSX1J, ECASSX0U, EPASXX0L, FPASUX0M",,"Only school special-needs reasons and other unattributed reports: teacher-reported reasons for special educational needs (dyslexia, learning difficulties; DQ2330, DQ2331 sweep 4, EQ13A, EQ13B sweep 5) and the parent's reasons for special education or additional support (DPRSEN0A-M and DPRASN0A-Q codes 1-2, sweep 4; EPRSEN0A-B, EPRASN0A-B sweep 5; FPRSEN0A-B, FPRASN0A-B sweep 6); the parent's 'other' area a longstanding condition affects, back-coded as dyslexia (EPCLSX1J, sweep 5); the interviewer's note that the child has dyslexia, among the circumstances of the cognitive assessment (ECASSX0U, sweep 5); and the parent's reasons the child is unlikely to attend university, coded dyslexia (EPASXX0L sweep 5, FPASUX0M sweep 6). None is attributed to a health professional.",,
+acc_learningdisab_diagnosed_severity,in_progress,,,,,
 beh_hyper_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_parent.,,
 beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_parent.,,
 beh_atten_self,incompatible,GHYPER_C,,SDQ hyperactivity/inattention only; mapped to beh_hyper_sdq_*.,,
 beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_impulsivity_self,incompatible,"GCBSCA00, GCBSCB00, GCBSCC00, GCBSCD00, BPSEIA00, CPSEIA00, DPSEIA00",,"Only four Brief Self-Control Scale items (GCBSCA00-GCBSCD00, sweep 7, self-report), a self-control scale, and the parent's single item 'impulsive and acts without thinking' (BPSEIA00, CPSEIA00, DPSEIA00, sweeps 2-4); no self-report impulsivity scale.",,
+beh_impulsivity_measure,in_progress,,,,,
 beh_selfreg_htks,unavailable,,,HTKS not administered.,,
 beh_bullied,partial,"ECQ57X00, FCPCKP00","recode_values(coalesce(as.numeric(ECQ57X00), as.numeric(FCPCKP00)), 6 ~ ""FALSE"", c(1, 2, 3, 4, 5) ~ ""TRUE"")","Self-report, sweeps 5-6: 'How often do you hurt or pick on other children on purpose?' (most days to never); TRUE for any occurrence. Partial: hurtful acts not framed as bullying, and no stated reference period. SDQ item 12 (truth-rated) not used.",,
 beh_beenbullied,partial,"DCSC0036, ECQ56X00, FCHURT00","local({
@@ -498,6 +519,11 @@ beh_agganger_bpaq_self,unavailable,,,BPAQ-SF not administered; see mh_irritable_
 beh_agghostility_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
 beh_agg_self,incompatible,"FCHITT00, GCHITT00, GCONDUCT_C",,"Only a single push-or-hit item (sweeps 6-7, on beh_fight) and the SDQ conduct subscale (beh_conduct_sdq_self); no aggression scale.",,
 beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,incompatible,"FCHITT00, GCHITT00",,"Only the single item 'pushed or shoved, hit, slapped or punched someone' (FCHITT00, GCHITT00, sweeps 6-7), mapped to beh_fight; no physical aggression scale.",,
+beh_aggphys_measure,in_progress,,,,,
+beh_aggrel_self,in_progress,,,,,
+beh_aggrel_measure,in_progress,,,,,
+beh_agg_singleitem_teacher,in_progress,,,,,
 beh_argues,incompatible,BPSDOA00,,"Only SDQ 3-4 form item 18 'Often argumentative with adults' (sweep 2, parent), a truth rating scored in beh_conduct_sdq_parent.",,
 beh_persistence_finishwork,incompatible,"BPSDTE00, CPSDTE00, DPSDTE00, EPSDTE00, FPSDTE00, GPSDTE00, DQ2195, EQ5Y, GCSDQY00",,"Only SDQ item 25 'sees tasks through to the end' (parent, teacher and self), a truth rating scored in the hyperactivity subscale.",,
 beh_emotreg_stayscalm,incompatible,"BPSDTT00, CPSDTT00, DPSDTT00, EPSDTT00, FPSDTT00, GPSDTT00, DQ2175, EQ5E, GCSDQE00",,"Only SDQ item 5 'often has temper tantrums or hot tempers' (parent, teacher and self), a problem-worded truth rating scored in the conduct subscale.",,
@@ -505,6 +531,32 @@ beh_peerprob_makefriends,incompatible,"BPSDGF00, CPSDGF00, DPSDGF00, EPSDGF00, F
 beh_conduct_diagnosed,unavailable,,,Not collected.,,
 beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
 beh_adhd_diagnosed,in_progress,,,,,
+beh_autism_diagnosed,partial,"CPAUTS00, DPAUTS00, EPAUTS00, FPAUTS00, participant_id, .wave","local({
+  ans <- coalesce(as.numeric(CPAUTS00), as.numeric(DPAUTS00), as.numeric(EPAUTS00), as.numeric(FPAUTS00))
+  ans[!ans %in% 1:2] <- NA
+  sweep <- match(.wave, c(""sweep_3"", ""sweep_4"", ""sweep_5"", ""sweep_6""))
+  prior <- stats::ave(seq_along(ans), participant_id, FUN = function(i) {
+    vapply(
+      i,
+      function(r) {
+        earlier <- i[!is.na(sweep[i]) & sweep[i] < sweep[r] & !is.na(ans[i])]
+        if (is.na(sweep[r]) || length(earlier) == 0) {
+          NA_real_
+        } else {
+          ans[earlier][which.max(sweep[earlier])]
+        }
+      },
+      numeric(1)
+    )
+  })
+  case_when(
+    ans == 1 ~ ""Currently diagnosed"",
+    ans == 2 ~ ""Never diagnosed"",
+    .wave %in% c(""sweep_5"", ""sweep_6"") & prior == 1 ~ ""Currently diagnosed"",
+    .default = NA_character_
+  )
+})","Sweeps 3-6 (ages 5, 7, 11, 14), main respondent: 'Has a doctor or health professional ever told you that [child] had any of the following problems? Autism, Asperger's Syndrome or other autistic spectrum disorder' (sweep 3 'Autism or Asperger's Syndrome'). Told = Currently diagnosed, not told = Never diagnosed. Sweeps 5 and 6 ask only children not reported told at the prior interview, so a skipped child whose latest earlier answer was told is Currently diagnosed (360 rows: 189 at sweep 5, 171 at sweep 6); an earlier told answer followed by not told is kept as reported. Partial: a binary ever-told item, with no current or previous split.",,
+beh_autism_diagnosed_severity,in_progress,,,,,
 beh_conduct_sdq_self,compatible,GCONDUCT_C,as.numeric(GCONDUCT_C),"MCS-derived SDQ conduct subscale, self-report, sweep 7 only (age 17; none under 11). Range 0-10. Checked against the GCSDQ*00 items: at least 3 of 5 answered, prorated, rounded half up.",,
 beh_hyper_sdq_self,compatible,GHYPER_C,as.numeric(GHYPER_C),"As beh_conduct_sdq_self, for the hyperactivity/inattention subscale. Checked against the GCSDQ*00 items: at least 3 of 5 answered, prorated, rounded half up.",,
 beh_peerprob_sdq_self,compatible,GPEER_C,as.numeric(GPEER_C),"As beh_conduct_sdq_self, for the peer problems subscale. Checked against the GCSDQ*00 items: at least 3 of 5 answered, prorated, rounded half up.",,
@@ -525,6 +577,13 @@ beh_ext_self,in_progress,,,,,
 beh_ext_measure,in_progress,,,,,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,compatible,GPROSOC_C,as.numeric(GPROSOC_C),"Same score as beh_prosocial_sdq_self, for pooling across instruments: MCS-derived SDQ prosocial subscale, self-report, sweep 7 only (age 17). Range 0-10.",,
+beh_prosocial_measure,inferred,.wave,"if_else(
+  .wave == ""sweep_7"",
+  ""Strengths and Difficulties Questionnaire prosocial subscale (self-report), 5 of 5 items, 0-2 item scoring (range 0-10), sum prorated when 3-4 items are answered; none reversed"",
+  NA_character_
+)",Describes beh_prosocial_self; sweep 7 only.,,
+beh_prosocial_singleitem_teacher,in_progress,,,,,
 beh_problematicuse_self,incompatible,GCSOCM00,,Only the single agreement item 'I think I am addicted to social media' (sweep 7); no multi-item scale.,,
 beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
 cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
@@ -542,6 +601,12 @@ cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox Picture Vocabulary not admini
 cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
 cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
 cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_atten_task,in_progress,,,,,
+cog_atten_task_measure,in_progress,,,,,
+cog_flex_task,in_progress,,,,,
+cog_flex_task_measure,in_progress,,,,,
+cog_inhib_task,in_progress,,,,,
+cog_inhib_task_measure,in_progress,,,,,
 cog_wm_digitspan,unavailable,,,Digit span not administered.,,
 cog_iq_fullscale,incompatible,"BDBAST00, CCNVTSCORE, CCPSTSCORE, CCPCTSCORE, DCPCTS00, DCWRSD00, EVSTSCO",,"Only single BAS II subtests, no GCA: Naming Vocabulary (cog_vocab_bas_naming), Picture Similarities (cog_nonverbalreason_bas_picsim), Pattern Construction (cog_spatial_bas_pattern), Word Reading (acc_literacy_stdtest), Verbal Similarities (cog_verbalreason_bas_versim).",,
 cog_vocab_bpvs,unavailable,,,BPVS not administered; see cog_vocab_bas_naming.,,
@@ -554,6 +619,8 @@ cog_verbalreason_bas_versim,compatible,EVSTSCO,as.numeric(EVSTSCO),"Sweep 5 only
 cog_earlynumber_bas_enc,in_progress,,,,,
 cog_schoolread_bracken,compatible,BDSRCS00,"ifelse(as.numeric(BDSRCS00) >= 0, as.numeric(BDSRCS00), NA_real_)","Sweep 2 only (age 3). Bracken School Readiness Composite standard score (colours, letters, numbers, sizes, comparisons, shapes), the age-normed form. Negative not-carried-out/not-completed/age-unknown codes excluded.",,
 cog_creativethinking_stdtest,unavailable,,,Not collected.,,
+cog_speechlang_diagnosed,incompatible,"DQ2336, EQ13F, DPRSEN0A, DPRSEN0B, DPRSEN0C, DPRSEN0D, DPRSEN0E, DPRSEN0F, DPRSEN0G, DPRSEN0H, DPRSEN0I, DPRSEN0J, DPRSEN0K, DPRSEN0L, DPRSEN0M, DPRASN0A, DPRASN0B, DPRASN0C, DPRASN0D, DPRASN0E, DPRASN0F, DPRASN0G, DPRASN0H, DPRASN0I, DPRASN0J, DPRASN0K, DPRASN0L, DPRASN0M, DPRASN0N, DPRASN0O, DPRASN0P, DPRASN0Q, EPRSEN0F, EPRASN0F, FPRSEN0F, FPRASN0F, BPSPLM0A, BPSPLM0B, BPSPLM0C, BPSPLM0D, BPSPLM0E, BPSPLM0F, BPSPLM0G, BPSPLM0H, BPSPLM0I, BPSPLM0J, BPSPLM0K, BPSPLM0L, BPSPLM0M, CPSPLO0A, CPSPLO0B, CPSPLO0C, CPSPLO0D, CPSPLO0E, EPLNPR0A, EPLNPR0B, FPLNPR0A, FPLNPR0B",,"Only special-needs reasons (problem with speech or language: teacher DQ2336 sweep 4, EQ13F sweep 5; parent DPRSEN0A-M and DPRASN0A-Q code 6, EPRSEN0F, EPRASN0F, FPRSEN0F, FPRASN0F), parent concerns about speech or language (BPSPLM0A-M sweep 2, CPSPLO0A-E sweep 3) and parent-reported communication problems (stammer, another problem with talking; EPLNPR0A-B sweep 5, FPLNPR0A-B sweep 6); none is a diagnosis attributed to a health professional.",,
+cog_speechlang_diagnosed_severity,in_progress,,,,,
 mh_anx_basc2,unavailable,,,BASC-2 not administered; see mh_emotsymp_sdq_parent.,,
 mh_dep_basc2,unavailable,,,BASC-2 not administered; see mh_dep_smfq_self.,,
 mh_emotsymp_sdq_parent,compatible,"BEMOTION, CEMOTION, DDEMOTION, EEMOTION, FEMOTION, GEMOTION","coalesce(
@@ -703,6 +770,8 @@ wb_bodyimage,incompatible,"ECQ10B00, FCWYLK00",,"Appearance-satisfaction item ('
 wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
 wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
 wb_lifesat_singleitem_self,compatible,"ECQ10F00, FCLIFE00","8 - coalesce(as.numeric(ECQ10F00), as.numeric(FCLIFE00))","Sweeps 5-6 (ages 11, 14), self-completed: 'How happy are you with your life as a whole?', 7-point faces scale (1 completely happy to 7 not at all happy). Reversed so higher = more satisfied (1-7). Sweep 7 replaced the item with the SWEMWBS.",,
+wb_lifesat_self,in_progress,,,,,
+wb_lifesat_measure,in_progress,,,,,
 wb_happiness_singleitem_self,partial,"DCSC0011, ECQ74X00","coalesce(
   recode_values(as.numeric(DCSC0011), 1 ~ 3, 2 ~ 2, 3 ~ 1),
   if_else(as.numeric(ECQ74X00) %in% c(1, 2, 3, 4, 5), as.numeric(ECQ74X00), NA_real_)
@@ -715,6 +784,16 @@ wb_domainsat_friends_self,compatible,"ECQ10D00, FCFRNS00","8 - coalesce(as.numer
 wb_domainsat_school_self,compatible,"ECQ10E00, FCSCHL00","8 - coalesce(as.numeric(ECQ10E00), as.numeric(FCSCHL00))","Sweeps 5-6: 'How do you feel about the school you go to?', 7 points from completely happy (1) to not at all happy (7). Reversed so 7 is completely happy.",,
 wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
 wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_self,in_progress,,,,,
+wb_qol_pedsql_emotional_self,in_progress,,,,,
+wb_qol_pedsql_social_self,in_progress,,,,,
+wb_qol_pedsql_school_self,in_progress,,,,,
+wb_qol_pedsql_psychosocial_self,in_progress,,,,,
+wb_qol_pedsql_physical_parent,in_progress,,,,,
+wb_qol_pedsql_emotional_parent,in_progress,,,,,
+wb_qol_pedsql_social_parent,in_progress,,,,,
+wb_qol_pedsql_school_parent,in_progress,,,,,
+wb_qol_pedsql_psychosocial_parent,in_progress,,,,,
 wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
 wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
 wb_selfesteem_rosenberg_self,incompatible,"ECQ11A00, ECQ11B00, ECQ11C00, ECQ11D00, ECQ11E00, FCSATI00, FCGDQL00, FCDOWL00, FCVALU00, FCGDSF00, GCSATI00, GCGDQL00, GCDOWL00, GCVALU00, GCGDSF00",,5 of 10 items; mapped to wb_selfesteem_self.,,
@@ -738,6 +817,32 @@ wb_selfesteem_measure,inferred,.wave,"if_else(
 wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
 wb_selfefficacy_self,unavailable,,,Not collected.,,
 wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_selfefficacy_academic_self,in_progress,,,,,
+wb_selfefficacy_academic_measure,in_progress,,,,,
+wb_selfconcept_academic_self,incompatible,"ECQ46A00, ECQ46B00, ECQ46C00, ECQ46D00, FCENGL00, FCWLSH00, FCMTHS00, FCSCIE00, FCGDPE00",,"Only single subject items 'I am good at ...' (sweep 5 ECQ46A00-ECQ46D00; sweep 6 FCENGL00, FCWLSH00, FCMTHS00, FCSCIE00, FCGDPE00); the English, maths and science items are on wb_selfconcept_verbal_self, wb_selfconcept_maths_self and wb_selfconcept_science_self, and a mean across subjects fills no self-concept row. No general-school scale.",,
+wb_selfconcept_maths_self,partial,"ECQ46B00, FCMTHS00, .wave","local({
+  s5 <- as.numeric(ECQ46B00)
+  s6 <- as.numeric(FCMTHS00)
+  case_when(.wave == ""sweep_5"" & s5 %in% 1:4 ~ 5 - s5, .wave == ""sweep_6"" & s6 %in% 1:4 ~ s6, .default = NA_real_)
+})","Sweeps 5 and 6 only (ages 11 and 14). Self-completion single item 'I am good at Maths', 4-point agreement keyed so 4 = strongly agree: sweep 5 ECQ46B00 (1 strongly agree to 4 strongly disagree, reversed); sweep 6 FCMTHS00 from the study's academic self-concept grid (1 strongly disagree to 4 strongly agree). Partial: a single item rating competence in the subject, not a scale. Codes outside 1-4 are NA.",,
+wb_selfconcept_verbal_self,partial,"ECQ46A00, FCENGL00, .wave","local({
+  s5 <- as.numeric(ECQ46A00)
+  s6 <- as.numeric(FCENGL00)
+  case_when(.wave == ""sweep_5"" & s5 %in% 1:4 ~ 5 - s5, .wave == ""sweep_6"" & s6 %in% 1:4 ~ s6, .default = NA_real_)
+})","Sweeps 5 and 6 only (ages 11 and 14). Self-completion single item 'I am good at English', 4-point agreement keyed so 4 = strongly agree: sweep 5 ECQ46A00 (1 strongly agree to 4 strongly disagree, reversed); sweep 6 FCENGL00 from the study's academic self-concept grid (1 strongly disagree to 4 strongly agree). Partial: a single item rating competence in the subject, not a scale. Codes outside 1-4 are NA. 'I am good at Welsh' (ECQ46C00, FCWLSH00), asked in Wales only, is not used.",,
+wb_selfconcept_science_self,partial,"ECQ46D00, FCSCIE00, .wave","local({
+  s5 <- as.numeric(ECQ46D00)
+  s6 <- as.numeric(FCSCIE00)
+  case_when(.wave == ""sweep_5"" & s5 %in% 1:4 ~ 5 - s5, .wave == ""sweep_6"" & s6 %in% 1:4 ~ s6, .default = NA_real_)
+})","Sweeps 5 and 6 only (ages 11 and 14). Self-completion single item 'I am good at Science', 4-point agreement keyed so 4 = strongly agree: sweep 5 ECQ46D00 (1 strongly agree to 4 strongly disagree, reversed); sweep 6 FCSCIE00 from the study's academic self-concept grid (1 strongly disagree to 4 strongly agree). Partial: a single item rating competence in the subject, not a scale. Codes outside 1-4 are NA.",,
+wb_selfconcept_social_self,in_progress,,,,,
+wb_selfconcept_measure,inferred,.wave,"case_when(
+  .wave ==
+    ""sweep_5"" ~ ""Study subject self-concept items; maths: I am good at Maths, single item, 1-4 item scoring; verbal: I am good at English, single item, 1-4 item scoring; science: I am good at Science, single item, 1-4 item scoring; all reversed (source coded 1 = strongly agree); Welsh item not used"",
+  .wave ==
+    ""sweep_6"" ~ ""Study academic self-concept grid; maths: I am good at Maths, single item, 1-4 item scoring; verbal: I am good at English, single item, 1-4 item scoring; science: I am good at Science, single item, 1-4 item scoring; supplied already keyed; Welsh and PE items not used"",
+  .default = NA_character_
+)",Names the subject self-concept items; sweeps 5 and 6 only.,,
 wb_mwb_who5_self,unavailable,,,WHO-5 not administered; see wb_mwb_swemwbs_self.,,
 wb_happiness_shs_self,unavailable,,,SHS not administered; see wb_happiness_singleitem_self.,,
 wb_mwb_swemwbs_self,compatible,GDWEMWBS,as.numeric(GDWEMWBS),"Sweep 7 only (age 17), self-completed. GDWEMWBS: published SWEMWBS Rasch metric score for the 7 items (7-35), mapped instead of the raw sum. 14-item WEMWBS not administered (wb_mwb_wemwbs).",,

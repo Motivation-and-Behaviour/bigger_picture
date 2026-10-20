@@ -206,7 +206,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - An incompatible row names the rejected item in `source_columns`, and its note says why it fails and which row holds it.
 - A row that only adds a weekday/weekend, device or at-school split the study never made is unavailable, whatever the parent row's status ('No weekday/weekend split.', 'No device split; see <row>.', 'No item on use at school.').
 - A named-instrument row is unavailable when that instrument, or a version of it, was not given to that informant ('<instrument> not administered; see <row>.'), and incompatible only when a version was given but cannot be scored.
-- A generic scale row with only single items, or only an item subset of a broader instrument not given for the construct, is incompatible, and its note points to any row that holds them.
+- A generic scale row with only single items, or only an item subset of a broader instrument not given for the construct, is incompatible, and its note points to any row that holds them; the subject self-concept rows are the exception and take a single item, or an item subset of a broader instrument, on their subject as partial.
 - A composite that can be derived at analysis from mapped rows is unavailable ('Derive at analysis from <rows>.').
 - A named instrument given only to another informant leaves this informant's row unavailable.
 - A single-item `_self` row with only a parent- or teacher-rated analogue is incompatible, item named.
@@ -225,7 +225,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - A weaker item fills waves the better item missed only on score rows standardised within wave (partial, waves in notes).
 - Yes/no prevalence rows keep the better series alone; they never splice in a different recall window or a pooled item.
 - Every unavailable or incompatible row has a one-line note.
-- Standard notes are 'Not collected.', 'Not in the supplied extract.', 'No weekday/weekend split.', 'No device split; see <row>.', 'No item on use at school.', '<instrument> not administered; see <row>.', 'Derive at analysis from <rows>.', 'Not an Australian dataset.', 'Hukou not asked.', 'Not a randomised trial.', 'Single collection occasion.', 'Not a survey sample.' (survey design rows) and 'No cognitive testing.' (cognitive rows in studies that gave no test)
+- Standard notes are 'Not collected.', 'Not in the supplied extract.', 'No weekday/weekend split.', 'No device split; see <row>.', 'No item on use at school.', '<instrument> not administered; see <row>.', 'Derive at analysis from <rows>.', 'Not an Australian dataset.', 'Hukou not asked.', 'Not a randomised trial.', 'Single collection occasion.', 'Not a survey sample.' (survey design rows) and 'No cognitive testing.' (cognitive test rows in studies that gave no test; not the speech or language diagnosis rows)
 - An unavailable note never describes an item in hand and never lists the study's other instruments.
 - `source_columns` lists tidied column names, comma-separated, with no ranges and no raw-file names.
 - Notes quote the item wording and record the reporter, the waves and the recall period.
@@ -253,7 +253,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - `*_school` rows take use while at school only; an item about a whole school day goes to `_wd`.
 - **Non-users:** 0 when a filter establishes non-use (routed past the item, 'not at all', or no device with use unanswered); NA when not asked or not answered; a filter never overrides a reported duration.
 - Keep values above 24 hours; they are excluded at analysis, with a sensitivity analysis that keeps them.
-- Minutes on a day of use are multiplied by the share of days used (days per week / 7) and marked partial; minutes with no frequency answer are NA.
+- **Day-of-use rule:** minutes on a day of use are multiplied by the share of days used (days per week / 7) and marked partial; minutes with no frequency answer are NA.
 - Frequency-only, rank, most-used, yes/no and ownership items give no hours, so the row is incompatible, item named.
 - Sum only sub-categories of one row (DR-0002): devices within gaming, sources within watching, gaming and non-gaming within computer, activities within one device, locations within one content row.
 - Write 'Sum of A, B (DR-0002)' in the notes of a summed row.
@@ -296,9 +296,10 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Rebase in the expression (subtract the item count for 1-based items; reverse as (min + max) - x) and record both in notes.
 - Set sentinel and off-scale item codes to NA (`na_if()`, `%in%` valid codes) before scoring, and check the observed range against the published range.
 - Before mapping a study-supplied total, check its keying (every item correlates positively with the total) and rescore from items if it fails.
-- A named-instrument row takes the full published form on its published scoring, or a study composite equated to that metric (partial).
-- The same items on a non-standard response scale are partial on the named row.
-- Short forms, item subsets and adapted forms go to the generic row, and the named row is incompatible.
+- A named-instrument row takes the full published form on its published response scale and scoring, or a study composite equated to that metric (partial).
+- Short forms, item subsets, adapted forms and the same items on another response scale go to the generic row, and the named row is incompatible.
+- When the generic row already takes another scale given on the same occasion (a full named form is repeated there first), such a form stays partial on its named row instead, so its score is kept.
+- Where the construct has no generic row (e.g. KIDSCREEN-10, Subjective Happiness Scale), the same items on another response scale stay partial on the named row.
 - Exceptions: `mh_dep_scl_self` takes SCL-90-R short forms, the RCADS-25 depression items map to `mh_dep_rcads_self`, and mean-item CBCL rows take item subsets as partial.
 - A generic ('any instrument') row takes a multi-item scale administered for the construct.
 - On a generic row the status reflects construct fit only; short forms, subsets and adapted scoring are compatible when the `*_measure` row describes them.
@@ -316,12 +317,14 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Pool the SDQ 2-4 and 4-17 parent forms and record the form version.
 - SDQ self rows keep every age administered and record the age range and under-11 share.
 - SDQ externalising and internalising are unavailable ('Derive at analysis from the subscale rows.') unless only the composite is released.
+- Marsh's Self-Description Questionnaire (SDQ-I, SDQ-II, SDQ-III) is not the Strengths and Difficulties Questionnaire and never fills a `*_sdq_*` row: its General School (SDQ-III General Academic), subject and same-sex or peer-relations scales go to the self-concept rows, its Total Academic score is a composite across subjects and fills none, and its general-self scale goes to `wb_selfesteem_self`.
 - **CBCL rule:** mean of the answered 0-2 items of the form's scale, NA when fewer than 80% of administered items are answered, codes outside 0-2 set to NA.
 - CBCL composites take the mean over the union of component items, gate each component at 80%, and follow the form's published grouping.
 - `beh_cbcl_measure` records the form, items administered of the published total per scale, the scoring and the missing rule, one value per wave where forms differ.
 - PedsQL items are transformed 0-4 to 100-0 and averaged when at least half are answered.
 - BPAQ-SF rows take the published items, never a study's own syntax, and need all three items.
-- Subject composites (grades, teacher ratings) average every academic subject reported, not arts, PE or ICT, and need every component (partial).
+- Subject composites (grades, teacher and parent ratings) average every academic subject reported, not arts, PE or ICT, and need every component (partial).
+- Self-concept and self-efficacy are never averaged across subjects: maths, verbal and science self-concept go to their own rows, a composite across subjects fills no self-concept row, and subject self-efficacy scales are incompatible on `wb_selfefficacy_academic_self`, which does take a published academic efficacy subscale whose items each name a subject.
 - Respondent suffixes are literal, respondents are never coalesced, and the CBCL and BASC-2 rows are parent report only.
 - Cognitive rows take the age-normed score the study releases: standard score (mean 100, SD 15), T-score (50, 10) or scaled score (10, 3).
 - Raw, ability or number-correct scores map only when no normed form exists, as partial; percentiles, age-equivalents and normative classifications never map.
@@ -332,6 +335,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - NEPSY rows take the same-named subtest from either edition; record the edition and age at testing.
 - Only the child's own test maps; tests the caregiver took never map to child rows.
 - Parent-rated executive-function scales run higher = more problems and never pool with performance tasks.
+- Child-performed attention, set-shifting and inhibitory-control tasks go to the generic task rows (`cog_atten_task`, `cog_flex_task`, `cog_inhib_task`), one task per dataset per row, with the task described in the matching `*_measure` row; a mapped NIH Toolbox or NEPSY task row repeats there.
 - General distress inventories (Kessler, Malaise Inventory, GHQ-12) map to their own rows and repeat on the generic `mh_distress_self`, never to the depression or anxiety rows.
 - Plausible-value scales use the first plausible value only.
 - Achievement tests take one domain per row (`acc_academachment_stdtest` records its domain); age-normed standard or scale scores are compatible and raw scores partial.
@@ -360,16 +364,24 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - The four HBSC-SCL single-item rows are named-instrument rows: unavailable ('HBSC-SCL not administered; see <row>.') wherever neither the checklist nor the adaptation in the row's note was given, even when a related item is in hand.
 - On school pressure, worry about school performance and test anxiety are related items (incompatible, item named), and a five-point pressure scale maps its top two levels to 'A lot'.
 - A behaviour item that places a device in the bedroom is partial on `fam_bedroomscreen`, and a parent's technical time limit is partial on `fam_screenrules`.
+- `fam_readto_time` takes hours per average day under the screen-time band rules, **Non-users** and the **Day-of-use rule**, so minutes on each day of reading are scaled by days read to per week / 7 and marked partial.
+- A verbal reading frequency takes the days of its `fam_readto_freq` level (7, 4.5 or 1.5), and a frequency below weekly leaves `fam_readto_time` NA.
 - Binary behaviour rows are TRUE for any occurrence (the lowest response above never) and FALSE for never; yes/no items map directly.
 - A multi-item composite is TRUE if any answered item is positive, FALSE if every answered item is never, and NA if none is answered; study missing codes count as unanswered.
 - Use self-report where it exists; a parent-reported occurrence item is partial.
 - An item limited to one sub-type or setting of the behaviour is partial; school-based items are compatible on the bullying rows.
 - Truth- or agreement-rated items (SDQ, CBCL, 'describes this child') never map to binary or frequency rows; frequency-rated instrument items (BASC-2, PedsQL) are judged on content.
-- School rows (truancy, school and schoolwork satisfaction) are NA for respondents not enrolled in school or enrolled beyond secondary school.
+- School rows (truancy, school and schoolwork satisfaction, parent-rated school performance, academic self-efficacy, and academic and subject self-concept) are NA for respondents not enrolled in school or enrolled beyond secondary school.
 - Single-rating rows (life, domain and happiness ratings) record the scale points and anchor wording and reverse scales where the lowest number is best.
 - Keep one response scale per dataset per single-rating row where possible; where it changes between waves, standardise within dataset and wave.
+- The teacher behaviour ratings (`beh_agg_singleitem_teacher`, `beh_prosocial_singleitem_teacher`) record the scale points, anchors and recall period and keep one response scale per dataset where possible, like the single-rating rows, but are keyed so that higher means more of the behaviour the row names.
 - Faces scales (completely happy to not at all happy) count as satisfaction ratings, and life as a whole always goes to `wb_lifesat_singleitem_self`.
 - Diagnosis rows: Never = never told, Previously = told but not current, Currently = told and current; treatment or medication as the proxy for current is partial; items not attributed to a health professional are incompatible.
+- A stem that pools educators with health professionals ('a doctor, other health care provider, or educator ever told you') counts as attributed to a health professional, with no loss of status.
+- A binary ever-told item attributed to a health professional, with no current or previous split, maps told to Currently diagnosed and not told to Never diagnosed, partial; it does not fill the waves of a row whose other waves separate current from previous diagnosis, which stay NA, because a weaker item fills missed waves only on score rows standardised within wave.
+- Where a wave skips children already reported told of a condition at an earlier interview, a skipped child whose latest earlier answer was told takes Currently diagnosed, partial, and the notes name the routing.
+- Where a study asks separately about conditions one diagnosis row covers (e.g. ADD and ADHD, or autism and PDD), a child told of any is told, and currently has the condition if any told item is current.
+- Diagnosis severity rows (`*_diagnosed_severity`) take a rated severity of the current condition; ratings of how much a condition affects learning or daily activities are incompatible.
 
 ### Categorical recodes
 
@@ -398,7 +410,10 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Ages above `max_value` are kept, eligibility is applied at analysis, and tidiers drop rows only to define the study population and the waves each participant attended.
 - `data_year` takes the per-row interview year where released (compatible) or the survey's own year label (compatible); a year recoded from wave labels or documentation is inferred.
 - A missing per-row date takes the wave's modal fieldwork year; a few such fills leave the row compatible, with the count in notes, and inferred is for waves whose year is assigned wholesale.
-- Constants cite fieldwork or design documentation with dates, never a publication year.
+- Constants cite the fieldwork or design documentation that dates them or, under the publication fallback below, the publication or bound that dates them.
+- Fieldwork timing documented by the study's investigators counts even when it sits outside the supplied documents (e.g. a project description or funding report), and each wave takes its documented year, inferred.
+- Only where nothing documents when collection took place is `data_year` the year of the earliest publication reporting the data, one constant for every row, inferred, with that publication cited in notes (DR-0005).
+- Where a publication reporting the data documents an upper bound on when collection ended (e.g. a received or submission date) in a year before that constant, the constant takes the earliest such bound's year instead, and the notes cite the bound.
 - A single-occasion dataset leaves `wave` NA (unavailable); repeated cross-sections use the four-digit survey year.
 
 ### Multiple waves and carry-forward
@@ -431,7 +446,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Income, income-to-needs, affluence or a composite index is compatible when every level lies within 10 points of 40/20/40 in every wave, and proximate otherwise.
 - Multi-country repeated cross-sections cut within country and cycle.
 - Area SES uses the index's own national quintiles, never sample quantiles.
-- School-level indicators (school type, fees, funding, track) map to neither SES row; mark them incompatible with a one-line note.
+- School-level indicators (school type, fees, funding, track) map to neither SES row; mark them incompatible with a one-line note, and put a public/private sector item on `school_sector`.
 - `ses_household_measure` reads '<type>: <measure>', with the type from a fixed list.
 - Parent education uses one vocabulary with ISCED anchors; a band spanning two levels goes to the level holding most of its members (proximate), and tertiary study begun but not completed is Post-secondary.
 - Parents are whichever mother and father figures the source records, with the row partial when one is systematically unobserved.
