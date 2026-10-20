@@ -186,6 +186,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2342,maternal_education,College,Post-secondary,compatible,"SES code 3: Canadian college diploma, short-cycle tertiary below bachelor level (ISCED 5)"
 2342,maternal_education,Bachelor's,Bachelor degree or higher,compatible,SES code 4: bachelor's degree
 2342,maternal_education,Graduate/Professional,Bachelor degree or higher,compatible,SES code 5: graduate or professional school
+131,maternal_education,Less than high school diploma,Secondary school or less,compatible,"MOMEDUC1, DADEDUC1 and PARGRADE07 code 1: up to 12th grade without a diploma or GED (ISCED 0-3)"
+131,maternal_education,High school graduate or equivalent,Secondary school or less,compatible,Code 2: high school diploma or GED (ISCED 3)
+131,maternal_education,Vocational/technical after high school or some college,Post-secondary,compatible,"Code 3: vocational or technical school after high school with or without its diploma, some college without a degree, or an associate degree (ISCED 4-5, or tertiary study begun)"
+131,maternal_education,College graduate,Bachelor degree or higher,compatible,Code 4: bachelor's degree (ISCED 6)
+131,maternal_education,Graduate or professional school,Bachelor degree or higher,compatible,"Code 5: graduate study after a bachelor's degree, master's, doctorate or professional degree (ISCED 6-8)"
+131,maternal_education,Unknown,Unknown,compatible,"No parent figure of that sex in the household, or only a non-parent guardian"
 1249,maternal_education,Less than high school,Secondary school or less,compatible,"q222/q224 code 1, ISCED 0-2"
 1249,maternal_education,Completed some high school,Secondary school or less,compatible,"Code 2: high school begun, not completed"
 1249,maternal_education,High school graduate or equivalent,Secondary school or less,compatible,"Code 3, ISCED 3"
