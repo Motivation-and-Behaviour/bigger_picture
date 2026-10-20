@@ -173,3 +173,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 67,maternal_education,Some college (no degree) or associates degree,Post-secondary,compatible,"parent_educ_highest level 3: some college without a degree, a vocational or technical programme after high school (wave 1) or an associate degree (ISCED 4-5)"
 67,maternal_education,Bachelor's degree,Bachelor degree or higher,compatible,"parent_educ_highest level 4: bachelor's degree, including some graduate school without a degree at wave 1 (ISCED 6)"
 67,maternal_education,Advanced degree,Bachelor degree or higher,compatible,"parent_educ_highest level 5: master's, professional school or doctoral degree (ISCED 7-8)"
+1249,maternal_education,Less than high school,Secondary school or less,compatible,"q222/q224 code 1, ISCED 0-2"
+1249,maternal_education,Completed some high school,Secondary school or less,compatible,"Code 2: high school begun, not completed"
+1249,maternal_education,High school graduate or equivalent,Secondary school or less,compatible,"Code 3, ISCED 3"
+1249,maternal_education,"Completed some college, but no degree",Post-secondary,compatible,Code 4: tertiary study begun but not completed
+1249,maternal_education,Associate's degree,Post-secondary,compatible,"Code 5, ISCED 5"
+1249,maternal_education,"College graduate (e.g., B.A., B.S.)",Bachelor degree or higher,compatible,"Code 6, ISCED 6"
+1249,maternal_education,"Completed some grad school, but no degree",Bachelor degree or higher,compatible,Code 7: graduate study begun after a bachelor degree
+1249,maternal_education,Completed graduate school,Bachelor degree or higher,compatible,"Code 8, ISCED 7-8"
+1249,maternal_education,Unknown,Unknown,compatible,Not asked (18-year-olds) or not answered; the three parent-education rows share these rows

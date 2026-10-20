@@ -203,3 +203,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 67,ethnicity,"White alone, non-Hispanic",White,compatible,R_Y_RACECAT3 = 1 (White only) among non-Hispanic youth
 67,ethnicity,"Black alone, non-Hispanic",Black,compatible,R_Y_RACECAT3 = 2 (Black or African American only) among non-Hispanic youth
 67,ethnicity,"Other race or two or more races, non-Hispanic",Other,proximate,"R_Y_RACECAT3 = 3 pools Asian, American Indian/Alaska Native, Pacific Islander, other race and two or more races; Asian and Mixed cannot be separated"
+1249,ethnicity,Hispanic origin,Hispanic,compatible,"q236 = 1 (of Hispanic origin), taken ahead of race"
+1249,ethnicity,Not Hispanic: White,White,compatible,q238 = 1 among non-Hispanic youth (q236 = 2)
+1249,ethnicity,Not Hispanic: Black,Black,compatible,q238 = 2 among non-Hispanic youth
+1249,ethnicity,Not Hispanic: African American,Black,compatible,"q238 = 8, offered beside Black; same schema group"
+1249,ethnicity,Not Hispanic: Asian or Pacific Islander,Asian,proximate,"q238 = 3: one option merging Asian with Pacific Islander (Other in the schema); mapped to the real value, merge named"
+1249,ethnicity,Not Hispanic: Native American or Alaskan native,Other,proximate,q238 = 4: US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous
+1249,ethnicity,Not Hispanic: Mixed racial background,Mixed,compatible,q238 = 5: mixed racial background maps onto the schema Mixed category
+1249,ethnicity,Not Hispanic: Other race,Other,compatible,q238 = 6: residual race category
+1249,ethnicity,Unknown,Unknown,compatible,"Hispanic origin (q236) or, for non-Hispanic youth, race (q238) not answered"
