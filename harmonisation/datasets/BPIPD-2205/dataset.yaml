@@ -1,0 +1,15 @@
+dataset_id: "2205"
+dataset_name: "Burnell"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Daily Social Media Use - Bigger Picture.csv"
+    reader: "csv"
+  - name: "codebook"
+    role: "codebook"
+    glob: "Codebook info.pdf"
+
+notes: |
+  One CSV data file and one PDF codebook
