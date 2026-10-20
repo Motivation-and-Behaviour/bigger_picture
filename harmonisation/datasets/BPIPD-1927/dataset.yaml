@@ -1,0 +1,19 @@
+dataset_id: "1927"
+dataset_name: "ActiveBrains and GENOBEX"
+status: "in_progress"
+
+resources:
+  - name: "activebrains_genobex_data"
+    role: "data"
+    glob: "AB+GENOBEX_datarequest_Anonymized_ACU.sav"
+    reader: "spss"
+
+  - name: "activebrains_genobex_codebook"
+    role: "codebook"
+    glob: "Codebook AB+GENOBEX.xlsx"
+
+notes: |
+  Dataset consists of a single anonymized SPSS data file (.sav) and a single
+  Excel codebook. The SPSS file contains the analytical dataset and is read
+  using the spss reader. The Excel workbook provides variable-level
+  documentation and is classified as a codebook.
