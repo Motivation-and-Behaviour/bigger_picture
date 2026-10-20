@@ -4,29 +4,33 @@ status: "in_progress"
 
 waves:
   - wave: "2007_PFI"
-    wave_dir: "2007"
+    wave_dir: "."
     resources:
       - name: "nhes_2007_pfi_data"
         role: "data"
-        reader: "csv" # Note: This file is actually fixed-width (FWF)
+        reader: "fwf"
+        col_positions: "layouts/pfi_2007.csv"
         glob: "PFI07Asc.dat"
       - name: "nhes_2007_pfi_codebook"
         role: "codebook"
         glob: "NHES_2007_PFI_Codebook.pdf"
 
   - wave: "2007_SR"
-    wave_dir: "2007"
+    wave_dir: "."
     resources:
       - name: "nhes_2007_sr_data"
         role: "data"
-        reader: "csv" # Note: This file is actually fixed-width (FWF)
+        reader: "fwf"
+        col_positions: "layouts/sr_2007.csv"
         glob: "SR07Asc.dat"
       - name: "nhes_2007_sr_codebook"
         role: "codebook"
         glob: "NHES_2007_SR_Codebook.pdf"
 
 notes: |
-  Contains two modules: Parent/Family Involvement (PFI) for grades K–12 and School Readiness (SR) for ages 3–6. 
-  The raw files (PFI07Asc.dat, SR07Asc.dat) are plain-text Fixed-Width Format (FWF) with no column delimiters. 
-  Accompanying PDF codebooks provide the exact character-column mappings required to parse the data fields. 
-  Because the schema lacks a native 'fwf' reader, these files must be converted to CSV or parsed via column widths before ingestion.
+  NHES:2007, a US repeated cross-sectional RDD telephone survey run by NCES; the respondent is the parent or guardian in both components.
+  Two 2007 components are held as two "waves": Parent and Family Involvement in Education (PFI, children in kindergarten to grade 12 plus homeschoolers) and School Readiness (SR, children aged 3-6 and not yet in kindergarten).
+  They sample disjoint sets of children, so the tidier stacks them rather than joining them.
+  The data files are fixed-width ASCII with no delimiters and are read with the `fwf` reader; the layouts in `layouts/` were derived from the two codebook PDFs and are documented in `layouts/README.md`.
+  All four files sit in the study-folder root, so both waves use `wave_dir: "."`.
+  The 82 PFI and 81 SR fields whose codebook format carries decimals (`N9.3`, `N8.3`, `N7.3`) store the decimal point explicitly in the file, so the `fwf` reader parses them correctly and nothing needs rescaling; there are no implied decimals, and `layouts/README.md` documents the measurements behind that.

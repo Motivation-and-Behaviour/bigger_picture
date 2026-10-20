@@ -203,3 +203,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 67,ethnicity,"White alone, non-Hispanic",White,compatible,R_Y_RACECAT3 = 1 (White only) among non-Hispanic youth
 67,ethnicity,"Black alone, non-Hispanic",Black,compatible,R_Y_RACECAT3 = 2 (Black or African American only) among non-Hispanic youth
 67,ethnicity,"Other race or two or more races, non-Hispanic",Other,proximate,"R_Y_RACECAT3 = 3 pools Asian, American Indian/Alaska Native, Pacific Islander, other race and two or more races; Asian and Mixed cannot be separated"
+131,ethnicity,"Hispanic origin, any race",Hispanic,compatible,"CHISPAN = 1 (PR3 Spanish, Hispanic or Latino origin), taken ahead of race"
+131,ethnicity,"Non-Hispanic, White alone",White,compatible,PR4 White is the only race named among non-Hispanic children
+131,ethnicity,"Non-Hispanic, Black or African American alone",Black,compatible,PR4 Black or African American is the only race named among non-Hispanic children
+131,ethnicity,"Non-Hispanic, Asian alone",Asian,compatible,PR4 Asian is the only race named among non-Hispanic children
+131,ethnicity,"Non-Hispanic, American Indian or Alaska Native alone",Other,proximate,US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous
+131,ethnicity,"Non-Hispanic, Native Hawaiian or other Pacific Islander alone",Other,proximate,US Census race group with no schema equivalent; collapsed into Other
+131,ethnicity,"Non-Hispanic, other race alone",Other,compatible,PR4 other race is the only race named among non-Hispanic children
+131,ethnicity,"Non-Hispanic, two or more races",Mixed,compatible,Two or more PR4 races named among non-Hispanic children
+131,ethnicity,Unknown,Unknown,compatible,No PR4 race named; does not occur in the release (branch kept as a guard)

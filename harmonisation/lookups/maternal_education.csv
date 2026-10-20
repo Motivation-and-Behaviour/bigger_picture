@@ -173,3 +173,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 67,maternal_education,Some college (no degree) or associates degree,Post-secondary,compatible,"parent_educ_highest level 3: some college without a degree, a vocational or technical programme after high school (wave 1) or an associate degree (ISCED 4-5)"
 67,maternal_education,Bachelor's degree,Bachelor degree or higher,compatible,"parent_educ_highest level 4: bachelor's degree, including some graduate school without a degree at wave 1 (ISCED 6)"
 67,maternal_education,Advanced degree,Bachelor degree or higher,compatible,"parent_educ_highest level 5: master's, professional school or doctoral degree (ISCED 7-8)"
+131,maternal_education,Less than high school diploma,Secondary school or less,compatible,"MOMEDUC1, DADEDUC1 and PARGRADE07 code 1: up to 12th grade without a diploma or GED (ISCED 0-3)"
+131,maternal_education,High school graduate or equivalent,Secondary school or less,compatible,Code 2: high school diploma or GED (ISCED 3)
+131,maternal_education,Vocational/technical after high school or some college,Post-secondary,compatible,"Code 3: vocational or technical school after high school with or without its diploma, some college without a degree, or an associate degree (ISCED 4-5, or tertiary study begun)"
+131,maternal_education,College graduate,Bachelor degree or higher,compatible,Code 4: bachelor's degree (ISCED 6)
+131,maternal_education,Graduate or professional school,Bachelor degree or higher,compatible,"Code 5: graduate study after a bachelor's degree, master's, doctorate or professional degree (ISCED 6-8)"
+131,maternal_education,Unknown,Unknown,compatible,"No parent figure of that sex in the household, or only a non-parent guardian"
