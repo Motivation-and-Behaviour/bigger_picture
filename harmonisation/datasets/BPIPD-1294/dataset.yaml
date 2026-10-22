@@ -7,26 +7,31 @@ resources:
     role: "data"
     glob: "els_02_12_byf1sch_v1_0.rdata"
     reader: "rda"
+    object: "els_02_12_byf1sch_v1_0"
 
   - name: "els_byf3pststu"
     role: "data"
     glob: "els_02_12_byf3pststu_v1_0.rdata"
     reader: "rda"
+    object: "els_02_12_byf3pststu_v1_0"
 
   - name: "els_byf3stbrr"
     role: "data"
-    glob: "els_02_12_byf3stbrr_v1_0.rdata"
+    glob: "els_02_12_byf3stubrr_v1_0.rdata"
     reader: "rda"
+    object: "els_02_12_byf3stubrr_v1_0"
 
   - name: "els_f2inst"
     role: "data"
     glob: "els_02_12_f2inst_v1_0.rdata"
     reader: "rda"
+    object: "els_02_12_f2inst_v1_0"
 
   - name: "els_f3inst"
     role: "data"
     glob: "els_02_12_f3inst_v1_0.rdata"
     reader: "rda"
+    object: "els_02_12_f3inst_v1_0"
 
   - name: "els_codebook"
     role: "codebook"
@@ -53,7 +58,7 @@ resources:
     glob: "RecordFileLayout_ELS_02_12_F3INST.txt"
 
 notes: |
-  Education Longitudinal Study (ELS). Dataset contains five R data files (.rdata), 
-  each containing a single R object.
-  Supporting documentation consists of one codebook text file and multiple 
-  record layout text files describing the structure of the corresponding datasets. 
+  Education Longitudinal Study (ELS). Dataset contains five R data files (.rdata),
+  each holding one data frame named after its file plus a stray `.Traceback` object.
+  Supporting documentation consists of one codebook text file and multiple
+  record layout text files describing the structure of the corresponding datasets.
