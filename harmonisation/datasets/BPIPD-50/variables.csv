@@ -1,0 +1,585 @@
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,CPUBID,"sprintf(""%.0f"", CPUBID)","NLS public child id (CPUBID), one per child and the same across survey years.",,
+wave,compatible,wave,wave,"NLSY79 Child/Young Adult survey year, two-yearly 1990-2016, built by the tidier.",,
+data_year,compatible,wave,as.numeric(wave),The survey's own year label; the extract has no interview date.,,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,unavailable,,,Not in the supplied extract.,,
+survey_strata,unavailable,,,Not in the supplied extract.,,
+survey_cluster,unavailable,,,Not in the supplied extract.,,
+age_years,compatible,"CYRB, wave, YAINTV","local({
+  year <- seq(1990, 2016, by = 2)
+  child_start <- c(6, 5, 6, 4, 3, 5, 5, 6, 5, 4, 3, 11, 14, 10)
+  child_end <- c(12, 12, 12, 11, 10, 13, 11, 14, 15, 14, 13, 20, 22, 23)
+  ya_start <- c(NA, NA, 6, 5, 3, 3, 1, 1, 1, 1, 0, 8, 10, 10)
+  ya_end <- c(NA, NA, 12, 10, 9, 13, 12, 14, 15, 15, 13, 21, 22, 23)
+  i <- match(as.numeric(wave), year)
+  ya <- as.numeric(YAINTV) %in% 1
+  start <- if_else(ya, ya_start[i], child_start[i])
+  end <- if_else(ya, ya_end[i], child_end[i])
+  as.numeric(wave) - as.numeric(CYRB) + (start - 1 + end) / 24 - 0.5
+})","Survey year minus birth year (CYRB; the extract has no age, birth month or interview date) + (fieldwork midpoint as a fraction of the survey year - 0.5). Field periods as first and last month counted from January of the survey year (13 = January of the next year), per round 1990-2016: the Child survey on mother- and child-report rows (e.g. 1990 June-December 1990, 2014 February-October 2015), the Young Adult survey on rows with a Young Adult interview (YAINTV = 1; e.g. 2010 December 2009-January 2011); the 2016 Mother Supplement ran in NLSY79 round 27, October 2016-November 2017, the 2016 Young Adult period. Source: nlsinfo.org, NLSY79 Child and Young Adult 'Fielding History and Sample Issues', Table 1, and NLSY79 'Interview Methods'. Within about a year (no birth month). Values above 19 kept.",,
+sex,compatible,CSEX,"recode_values(as.numeric(CSEX), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","Sex of child (CSEX), 1 male, 2 female, a cross-round NLS variable released once per child, so the same at every round; the reporter is not documented in the codebook.",,
+country,inferred,,"""USA""","Children of the NLSY79 women, a US national cohort; no country variable (nlsinfo.org, NLSY79 Child/Young Adult Sample: An Introduction).",,
+state,unavailable,,,Not an Australian dataset.,,
+ethnicity,proximate,CRACE,"coalesce(
+  lookup_values(haven::as_factor(CRACE), lookup_ethnicity, dataset_id = spec$dataset_id, target_variable = ""ethnicity""),
+  ""Unknown""
+)","CRACE: race of child from the mother's racial/ethnic cohort in the 1979 NLSY79 screener (codebook: based on the mother's report), released once per child. Hispanic, Black; non-Black non-Hispanic maps to White, the merge with every other group named. Proximate: the mother's own cohort, and the merged group.",ethnicity,
+indigenous,unavailable,,,Not in the supplied extract.,,
+minority,proximate,CRACE,"recode_values(as.numeric(CRACE), c(1, 2) ~ ""Minority"", 3 ~ ""Non-minority"", default = ""Unknown"")","Follows ethnicity (CRACE, the mother's 1979 screener cohort): Hispanic and Black = Minority; non-Black non-Hispanic = Non-minority as the US non-Hispanic White group with other groups merged in. Proximate: the mother's cohort, and the merged group.",,
+immigrant_background,unavailable,,,Not in the supplied extract.,,
+born_in_country,unavailable,,,Not in the supplied extract.,,
+ses_area,unavailable,,,Not in the supplied extract.,,
+ses_household,unavailable,,,Not in the supplied extract.,,
+ses_household_measure,unavailable,,,See ses_household.,,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,unavailable,,,Not in the supplied extract.,,
+paternal_education,unavailable,,,Not in the supplied extract.,,
+parental_education,unavailable,,,Not in the supplied extract.,,
+maternal_employment,in_progress,,,,,
+urbanicity,unavailable,,,Not in the supplied extract.,,
+family_structure,unavailable,,,Not in the supplied extract.,,
+fam_screenrules,partial,"child_parents_limit_tv_freq, ya_parents_limit_tv_freq","local({
+  x <- coalesce(as.numeric(child_parents_limit_tv_freq), as.numeric(ya_parents_limit_tv_freq))
+  case_when(x %in% 1:3 ~ ""TRUE"", x %in% 0 ~ ""FALSE"")
+})","Self-report, child 1996-2014 and young adult 1996-2016 (2016: young adults enrolled in grade 12 or lower): 'How often do your parents ... limit the amount of time you can spend watching TV or playing video games?', never, rarely, sometimes, often; TRUE above never. Partial: how often parents limit time, not whether a rule exists. The child's yes/no 'any rules about watching television' (child_tv_rules) is not used: a yes/no row keeps one series.",,
+fam_bedroomscreen,unavailable,,,Not in the supplied extract.,,
+fam_coview_freq,in_progress,,,,,
+fam_parent_screentime,in_progress,,,,,
+fam_parentstress,unavailable,,,Not in the supplied extract.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+fam_readto_freq,unavailable,,,Not in the supplied extract.,,
+fam_readto_time,unavailable,,,Not in the supplied extract.,,
+fam_childbooks,unavailable,,,Not in the supplied extract.,,
+school_grade,proximate,"piat_child_grade, wave","local({
+  grade <- as.numeric(piat_child_grade)
+  case_when(
+    grade == 0 & wave == ""1990"" ~ ""Kindergarten or less"",
+    grade == 0 ~ ""Kindergarten"",
+    grade %in% 1:12 ~ paste(""Grade"", grade),
+    grade == 95 & wave != ""1990"" ~ ""Ungraded"",
+    .default = NA_character_
+  )
+})","1990-2002, PIAT-tested children (about ages 5-14; to 19 in 1990-1992): the child's grade in school, recorded by the interviewer on the PIAT Mathematics face sheet (it sets the start item), as Kindergarten, Grade 1-12 or Ungraded (1998: 3, 2002: 1); the 1990 code 0 keeps its label 'Kindergarten or less'. 1990 code 95 'ungraded' is NA: it holds 1,862 of 3,399 tested children, 88% of them reported in first grade or higher, and 1,601 of the 1,603 seen in 1992 were then in grades 1-12. The undocumented 1992 code 31 (1 row) is NA. Proximate: the lowest 1990 level is an open band.",,
+school_sector,unavailable,,,Not in the supplied extract.,,
+st_measure_type,inferred,"child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, child_comp_hours_week_workschool, child_comp_hours_week_leisure, ya_tv_hours_week_band, ya_game_hours_week_band, ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure, home_a_tv_hours_wd, home_a_tv_hours_we, home_b_tv_hours_wd, home_b_tv_hours_we, home_c_tv_hours_wd, home_c_tv_hours_we, home_d_tv_hours_wd, home_d_tv_hours_we, YAINTV","local({
+  child <- rowSums(!is.na(tbl[grepl(""^child_((tv|game)_hours_(wd|we|sat|sun)|comp_hours_week_.+)$"", names(tbl))])) > 0
+  ya <- rowSums(!is.na(tbl[grepl(""^ya_(tv|game|comp)_hours_week_.+$"", names(tbl))])) > 0
+  home <- rowSums(!is.na(tbl[grepl(""^home_[a-d]_tv_hours_w[de]$"", names(tbl))])) > 0
+  case_when(
+    child ~ ""Continuous"",
+    ya ~ ""Categorical"",
+    home ~ ""Continuous"",
+    as.numeric(YAINTV) %in% 1 ~ ""Categorical"",
+    .default = ""Continuous""
+  )
+})","Continuous (hours entered) for the child's and the mother's items; Categorical on young-adult rows, whose core TV and video-game items are weekly hour bands (the young adult's computer and device hours from 2008 are open entries).",,
+st_measure_name,inferred,,"""Custom""","NLSY79 Child/Young Adult questions written for the survey: the Child Supplement and Young Adult items, and the TV items of the Mother Supplement's HOME section; no published screen-time instrument.",,
+st_responder,inferred,"child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, child_comp_hours_week_workschool, child_comp_hours_week_leisure, ya_tv_hours_week_band, ya_game_hours_week_band, ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure, home_a_tv_hours_wd, home_a_tv_hours_we, home_b_tv_hours_wd, home_b_tv_hours_we, home_c_tv_hours_wd, home_c_tv_hours_we, home_d_tv_hours_wd, home_d_tv_hours_we","local({
+  self <- rowSums(
+    !is.na(tbl[grepl(
+      ""^(child_(tv|game)_hours_(wd|we|sat|sun)|(child|ya)_comp_hours_week_.+|ya_(tv|game)_hours_week_band)$"",
+      names(tbl)
+    )])
+  ) >
+    0
+  home <- rowSums(!is.na(tbl[grepl(""^home_[a-d]_tv_hours_w[de]$"", names(tbl))])) > 0
+  case_when(self ~ ""Self"", home ~ ""Parent or carer"", .default = NA_character_)
+})","Deduced from the series answered (no who-answered variable): Self wherever the child (Child Supplement, ages 10-14, 1990-2014) or the young adult answered a screen-time hours item; otherwise the mother (HOME, ages 0-14). On rows with both, the mother's report is the parent block.",,
+st_total_wd,incompatible,"home_a_tv_hours_wd, home_b_tv_hours_wd, home_c_tv_hours_wd, home_d_tv_hours_wd, child_tv_hours_wd, child_game_hours_wd",,"No item on all screen use; the separately asked weekday TV and video-game items are never summed into a total (DR-0002, DR-0004).",,
+st_total_we,incompatible,"home_a_tv_hours_we, home_b_tv_hours_we, home_c_tv_hours_we, home_d_tv_hours_we, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, child_game_hours_sat, child_game_hours_sun",,"No item on all screen use; the separately asked weekend TV and video-game items are never summed into a total (DR-0002, DR-0004).",,
+st_total,incompatible,"home_a_tv_hours_wd, home_b_tv_hours_wd, home_c_tv_hours_wd, home_d_tv_hours_wd, home_a_tv_hours_we, home_b_tv_hours_we, home_c_tv_hours_we, home_d_tv_hours_we, child_tv_hours_wd, child_game_hours_wd, ya_tv_hours_week_band, ya_game_hours_week_band, ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure",,"No item on all screen use; the separately asked TV, video-game and computer items are never summed into a total (DR-0002, DR-0004).",,
+st_watch_wd,partial,"child_tv_hours_wd, home_a_tv_hours_wd, home_b_tv_hours_wd, home_c_tv_hours_wd, home_d_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, child_comp_hours_week_workschool, child_comp_hours_week_leisure, ya_tv_hours_week_band, ya_game_hours_week_band, ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure","local({
+  self <- rowSums(
+    !is.na(tbl[grepl(
+      ""^(child_(tv|game)_hours_(wd|we|sat|sun)|(child|ya)_comp_hours_week_.+|ya_(tv|game)_hours_week_band)$"",
+      names(tbl)
+    )])
+  ) >
+    0
+  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_wd"")], function(x) replace(x, x %in% 95, 0))
+  lo <- do.call(pmin, c(forms, na.rm = TRUE))
+  hi <- do.call(pmax, c(forms, na.rm = TRUE))
+  home <- if_else(lo == hi, lo, NA_real_)
+  if_else(
+    self,
+    replace(replace(child_tv_hours_wd, child_tv_hours_wd %in% 96 & wave == ""1996"", NA), child_tv_hours_wd %in% 95, 0),
+    home
+  )
+})","Self-report rows (any child or young-adult screen hours answered): the child's 'How much time do you spend watching TV on a typical weekday?' (1990-2014); other rows: the mother's HOME report of the child's weekday TV hours, in the home or elsewhere (forms A-D by age, 1990-2016). 95 'do not have a TV' = 0 (non-users rule); the child's undocumented 1996 code 96 = NA; 0 ('< 1' or 'less than 1 hour' in 1990-1998) kept as 0; HOME where 2-4 forms are answered and disagree (1990-2000: 104 weekday, 124 weekend rows), NA. Values above 24 kept. Partial: TV set only.",,
+st_watch_we,partial,"child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, home_a_tv_hours_we, home_b_tv_hours_we, home_c_tv_hours_we, home_d_tv_hours_we, child_tv_hours_wd, child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, child_comp_hours_week_workschool, child_comp_hours_week_leisure, ya_tv_hours_week_band, ya_game_hours_week_band, ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure","local({
+  self <- rowSums(
+    !is.na(tbl[grepl(
+      ""^(child_(tv|game)_hours_(wd|we|sat|sun)|(child|ya)_comp_hours_week_.+|ya_(tv|game)_hours_week_band)$"",
+      names(tbl)
+    )])
+  ) >
+    0
+  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_we"")], function(x) replace(x, x %in% 95, 0))
+  lo <- do.call(pmin, c(forms, na.rm = TRUE))
+  hi <- do.call(pmax, c(forms, na.rm = TRUE))
+  home <- if_else(lo == hi, lo, NA_real_)
+  child_tv <- lapply(list(child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun), function(x) {
+    replace(replace(x, x %in% 96 & wave == ""1996"", NA), x %in% 95, 0)
+  })
+  child_we <- coalesce(child_tv[[2]], (child_tv[[3]] + child_tv[[4]]) / 2)
+  if_else(self, child_we, home)
+})","As st_watch_wd for a typical weekend day: the child's weekend-day item (1990-1996), then (Saturday + Sunday) / 2 (1998-2014); other rows the mother's HOME weekend item. Same codes. Partial: TV set only.",,
+st_watch,partial,"child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, home_a_tv_hours_wd, home_a_tv_hours_we, home_b_tv_hours_wd, home_b_tv_hours_we, home_c_tv_hours_wd, home_c_tv_hours_we, home_d_tv_hours_wd, home_d_tv_hours_we, ya_tv_hours_week_band, child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, child_comp_hours_week_workschool, child_comp_hours_week_leisure, ya_game_hours_week_band, ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure","local({
+  self <- rowSums(
+    !is.na(tbl[grepl(
+      ""^(child_(tv|game)_hours_(wd|we|sat|sun)|(child|ya)_comp_hours_week_.+|ya_(tv|game)_hours_week_band)$"",
+      names(tbl)
+    )])
+  ) >
+    0
+  home_tv <- lapply(c(""wd"", ""we""), function(d) {
+    forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_"", d)], function(x) replace(x, x %in% 95, 0))
+    lo <- do.call(pmin, c(forms, na.rm = TRUE))
+    hi <- do.call(pmax, c(forms, na.rm = TRUE))
+    if_else(lo == hi, lo, NA_real_)
+  })
+  child_tv <- lapply(list(child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun), function(x) {
+    replace(replace(x, x %in% 96 & wave == ""1996"", NA), x %in% 95, 0)
+  })
+  child_we <- coalesce(child_tv[[2]], (child_tv[[3]] + child_tv[[4]]) / 2)
+  ya <- c(0, 2.5, 7, 12, 17, 22, 27, 32, 35)[as.numeric(ya_tv_hours_week_band)] / 7
+  if_else(self, coalesce((child_tv[[1]] * 5 + child_we * 2) / 7, ya), (home_tv[[1]] * 5 + home_tv[[2]] * 2) / 7)
+})","(5 x weekday + 2 x weekend) / 7 for the child and the mother; young adults (2000-2016): weekly TV band / 7, none 0, under 5 2.5, closed bands at their midpoints, top band '35 or more hours per week' = 35. Partial: TV set, and from 2012 the young-adult item adds computers and mobile devices (two wordings spliced). Household TV-on hours and the 2012-2014 child weekly TV band are not used.",,
+st_game_wd,compatible,child_game_hours_wd,child_game_hours_wd,"Child self-report, 2006-2014: 'How much time do you spend playing video games on a typical weekday?' ('or on-line games' from 2012), hours (0-24); no device named.",,
+st_game_we,compatible,"child_game_hours_sat, child_game_hours_sun",(child_game_hours_sat + child_game_hours_sun) / 2,"Child self-report, 2006-2014: (Saturday + Sunday hours playing video games) / 2; NA when either day is unanswered; no device named.",,
+st_game,compatible,"child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, ya_game_hours_week_band","local({
+  ya <- c(0, 2.5, 7, 12, 17, 22, 27, 32, 35)[as.numeric(ya_game_hours_week_band)] / 7
+  coalesce((child_game_hours_wd * 5 + (child_game_hours_sat + child_game_hours_sun) / 2 * 2) / 7, ya)
+})","(5 x st_game_wd + 2 x st_game_we) / 7 from the child's items (2006-2014); young adults, 2006-2016: 'About how many hours do you spend playing video games in a typical week?', bands as st_watch (top band '35 or more hours per week' = 35), / 7; no device named. The computer-games frequencies (child_comp_games_freq, ya_comp_games_freq) give no hours, and the 2012-2014 child weekly games band (child_game_hours_week_band) is not used.",,
+st_game_comp_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_comp_we,unavailable,,,No device split; see st_game_we.,,
+st_game_comp,incompatible,"child_comp_games_freq, child_comp_games_freq_reversed, ya_comp_games_freq",,"Only how often the child (1994-2014) or young adult (1994-2006) uses a computer to play games, a frequency; no duration.",,
+st_game_console_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_console_we,unavailable,,,No device split; see st_game_we.,,
+st_game_console,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_handheldconsole_we,unavailable,,,No device split; see st_game_we.,,
+st_game_handheldconsole,unavailable,,,No device split; see st_game.,,
+st_game_active_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_active_we,unavailable,,,No device split; see st_game_we.,,
+st_game_active,unavailable,,,No device split; see st_game.,,
+st_game_phone_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_phone_we,unavailable,,,No device split; see st_game_we.,,
+st_game_phone,unavailable,,,No device split; see st_game.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_tablet_we,unavailable,,,No device split; see st_game_we.,,
+st_game_tablet,unavailable,,,No device split; see st_game.,,
+st_comp_nongaming_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming_we,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming,incompatible,"ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure",,"The young-adult computer items cover any use, gaming included; mapped to st_comp.",,
+st_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_we,unavailable,,,No weekday/weekend split.,,
+st_comp,partial,"ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure, wave","coalesce(
+  recode_values(as.numeric(ya_comp_hours_week_band), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 8, 6 ~ 10, default = NA_real_) /
+    7,
+  if_else(wave %in% c(""2008"", ""2010""), (ya_comp_hours_week_workschool + ya_comp_hours_week_leisure) / 7, NA_real_)
+)","Young-adult self-report, 2004-2010. 2004-2006: 'In a typical week, how many hours total do you use a computer?', bands none 0, under 1 hour 0.5, 1-3 2, 4-6 5, 7-9 8, top band '10 hours or more' = 10, / 7. 2008-2010: hours a week using a computer for work or school plus for leisure activities, Sum of ya_comp_hours_week_workschool, ya_comp_hours_week_leisure (DR-0002), / 7. Partial: splices the banded total, whose open top band at 10 hours a week holds 27-31% of answers (mean 0.64-0.70 h/day), with open hours by purpose (mean 2.28-2.49 h/day). From 2012 both items ask about a 'computer or mobile device' and are not used here. Values above 24 kept (2 rows).",,
+st_tablet_wd,unavailable,,,No weekday/weekend split.,,
+st_tablet_we,unavailable,,,No weekday/weekend split.,,
+st_tablet,incompatible,"ya_comp_hours_week_workschool, ya_comp_hours_week_leisure, child_comp_hours_week_workschool, child_comp_hours_week_leisure",,"From 2012 the work-or-school and leisure hours items ask about a 'computer or mobile device' as one (young adult 2012-2016, child 2012-2014); no tablet item. The leisure item goes to st_internet.",,
+st_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_phone_we,unavailable,,,No weekday/weekend split.,,
+st_phone,incompatible,"ya_comp_hours_week_workschool, ya_comp_hours_week_leisure, child_comp_hours_week_workschool, child_comp_hours_week_leisure",,"From 2012 the work-or-school and leisure hours items ask about a 'computer or mobile device' as one (young adult 2012-2016, child 2012-2014); no phone item. The leisure item goes to st_internet.",,
+st_socmedia_wd,unavailable,,,No weekday/weekend split.,,
+st_socmedia_we,unavailable,,,No weekday/weekend split.,,
+st_socmedia,incompatible,"ya_comp_hours_week_leisure, child_comp_hours_week_leisure",,"Only inside the 2012-2016 leisure hours item (computer or mobile device), whose examples bundle social networking with looking up information, games, shopping, texting, instant messaging, skyping and email; it goes to st_internet.",,
+st_educational_wd,unavailable,,,No weekday/weekend split.,,
+st_educational_we,unavailable,,,No weekday/weekend split.,,
+st_educational,partial,"ya_comp_hours_week_workschool, child_comp_hours_week_workschool, child_comp_ever_uses, child_tv_hours_week_band, child_game_hours_week_band","local({
+  child <- case_when(
+    !is.na(child_comp_hours_week_workschool) ~ child_comp_hours_week_workschool,
+    as.numeric(child_comp_ever_uses) %in%
+      0 &
+      (!is.na(child_tv_hours_week_band) | !is.na(child_game_hours_week_band)) ~ 0
+  )
+  coalesce(child, ya_comp_hours_week_workschool) / 7
+})","Self-report: hours in a typical week using a computer (young adults 2008-2010) or a computer or mobile device (young adults 2012-2016; children aged 14 and over 2012-2014) 'to do activities related to work or school', / 7. Children aged 14 and over who never use a computer or mobile device were routed past the child item: 0 (non-users rule), identified by their answer to the weekly TV and games bands asked of the same 14- and 15-year-olds. Values above 24 kept. Partial: pools study with paid work, and splices the computer-only and computer-or-mobile wordings. The 2008-2010 item is also a part of st_comp.",,
+st_leisure_wd,in_progress,,,,,
+st_leisure_we,in_progress,,,,,
+st_leisure,in_progress,,,,,
+st_work_wd,unavailable,,,No weekday/weekend split.,,
+st_work_we,unavailable,,,No weekday/weekend split.,,
+st_work,incompatible,"ya_comp_hours_week_workschool, child_comp_hours_week_workschool, ya_comp_work_freq",,"Only the work-or-school hours items, which pool paid work with study (mapped to st_educational), and how often the young adult uses a computer for work (2000-2006), a frequency.",,
+st_internet_wd,unavailable,,,No weekday/weekend split.,,
+st_internet_we,unavailable,,,No weekday/weekend split.,,
+st_internet,partial,"ya_comp_hours_week_leisure, child_comp_hours_week_leisure, child_comp_ever_uses, child_tv_hours_week_band, child_game_hours_week_band, wave","local({
+  child <- case_when(
+    !is.na(child_comp_hours_week_leisure) ~ child_comp_hours_week_leisure,
+    as.numeric(child_comp_ever_uses) %in%
+      0 &
+      (!is.na(child_tv_hours_week_band) | !is.na(child_game_hours_week_band)) ~ 0
+  )
+  coalesce(child, if_else(wave %in% c(""2012"", ""2014"", ""2016""), ya_comp_hours_week_leisure, NA_real_)) / 7
+})","Self-report, young adults 2012-2016 and children aged 14 and over 2012-2014: 'In a typical week, how many hours total do you use a computer or mobile device to do any activities NOT related to work or school, for example, looking up information, playing games, buying or selling items, visiting social networking sites ..., or communicating through texting, instant messaging, skyping or email?', hours / 7. Children aged 14 and over who never use a computer or mobile device were routed past the child item: 0 (non-users rule), identified by their answer to the weekly TV and games bands asked of the same 14- and 15-year-olds. Values above 24 kept. Partial: leisure only, a catch-all device item naming social networking among its examples, computers pooled with mobile devices. The 2008-2010 computer-only leisure hours are a part of st_comp.",,
+st_videochat,incompatible,"ya_comp_hours_week_leisure, child_comp_hours_week_leisure",,"Only inside the 2012-2016 leisure hours item (computer or mobile device), whose examples bundle skyping with games, social networking, shopping and messaging; it goes to st_internet.",,
+st_messaging_wd,unavailable,,,No weekday/weekend split.,,
+st_messaging_we,unavailable,,,No weekday/weekend split.,,
+st_messaging,incompatible,"child_comp_chat_freq, child_comp_email_im_freq, ya_comp_hours_week_leisure, child_comp_hours_week_leisure",,"Only how often the child chats online (2002-2010) or uses email, instant messaging or online chat (2012-2014), frequencies, and the 2012-2016 leisure hours item, which bundles texting and instant messaging with other uses (it goes to st_internet).",,
+st_creating,unavailable,,,Not in the supplied extract.,,
+st_email,incompatible,"ya_comp_email_freq, child_comp_email_im_freq, ya_comp_hours_week_leisure, child_comp_hours_week_leisure",,"Only how often the young adult uses a computer for email (1994-2006) and the child's email, instant messaging or chat frequency (2012-2014), frequencies, and the 2012-2016 leisure hours item, which bundles email with other uses (it goes to st_internet).",,
+st_shopping,incompatible,"ya_comp_hours_week_leisure, child_comp_hours_week_leisure",,"Only inside the 2012-2016 leisure hours item (computer or mobile device), whose examples bundle buying or selling items with other uses; it goes to st_internet.",,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,incompatible,child_comp_school_freq,,"Only how often the child uses a computer at school (1998-2014), a frequency; no duration.",,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,unavailable,,,Not in the supplied extract.,,
+acc_academachment_lettergrades,unavailable,,,Not in the supplied extract.,,
+acc_academachment_stdtest,incompatible,"MATHZ, RECOGZ, COMPZ",,"Only the PIAT Mathematics and Reading tests, which the schema sends to acc_numeracy_stdtest and acc_literacy_stdtest.",,
+acc_schoolengage_caresschool,unavailable,,,Not in the supplied extract.,,
+acc_schoolengage_homework,unavailable,,,Not in the supplied extract.,,
+acc_homework_time,in_progress,,,,,
+acc_schoolpressure_self,unavailable,,,Not in the supplied extract.,,
+acc_schoolbelonging_self,unavailable,,,Not in the supplied extract.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,unavailable,,,Not in the supplied extract.,,
+acc_academachment_teacherrated,unavailable,,,Not in the supplied extract.,,
+acc_academachment_parentrated,unavailable,,,Not in the supplied extract.,,
+acc_numeracy_stdtest,compatible,MATHZ,"if_else(MATHZ >= 65 & MATHZ <= 135, MATHZ, NA_real_)","1990-2014. PIAT Mathematics total standard score (MATHZ), age-normed, mean 100, SD 15, published range 65-135, direct assessment; values outside the range are NA (none occur). Standardise within dataset and wave.",,
+acc_numeracy_bas_numberskills,unavailable,,,Not in the supplied extract.,,
+acc_literacy_stdtest,compatible,"RECOGZ, COMPZ","if_else(RECOGZ >= 65 & RECOGZ <= 135, RECOGZ, NA_real_)","1990-2014. PIAT Reading Recognition total standard score (RECOGZ), age-normed, mean 100, SD 15, published range 65-135, direct assessment; values outside the range are NA (none occur). Reading Comprehension (COMPZ) is not used: it was given to fewer children each round (e.g. 3,353 against 4,047 in 1996). Standardise within dataset and wave.",,
+acc_literacy_bas_wordreading,unavailable,,,Not in the supplied extract.,,
+acc_learningdisab_diagnosed,incompatible,,,"Only past-12-month help-seeking reasons (in the extract, not carried): the mother's 'reason saw psychiatrist, psychologist or counselor: learning problems' (2000-2018), asked only when the mother reports the child saw a psychiatrist, psychologist or counselor about a behavioral, emotional or mental problem in the past 12 months, and the young adult's 'problems received help for in last 12 months: learning problem or disability' (2000-2020) and 'dyslexia, reading or speech' (2000-2014), asked only of young adults who received help for an emotional, behavioral or family problem in the past 12 months. No ever-told item, so a child not seen that year cannot be placed as never or previously diagnosed.",,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+beh_hyper_basc2,unavailable,,,Not in the supplied extract.,,
+beh_atten_basc2,unavailable,,,Not in the supplied extract.,,
+beh_atten_self,incompatible,HYPR,,"Only the mother-rated Behavior Problems Index hyperactive subscale (HYPR, 1990-2016): wrong respondent; no self-reported attention scale.",,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_atten_singleitem_teacher,in_progress,,,,,
+beh_impulsivity_self,incompatible,HYPR,,"Only the mother-rated Behavior Problems Index hyperactive subscale (HYPR, 1990-2016), a parent-rated hyperactivity scale; no self-report impulsivity scale.",,
+beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
+beh_selfreg_htks,unavailable,,,Not in the supplied extract.,,
+beh_selfreg_parent,in_progress,,,,,
+beh_emotdysreg_parent,in_progress,,,,,
+beh_bullied,incompatible,,,"Only the mother-rated Behavior Problems Index item 'bullies or is cruel or mean to others' (often true, sometimes true or not true, last three months; in the extract, not carried): a parent's truth rating.",,
+beh_beenbullied,unavailable,,,Not in the supplied extract.,,
+beh_beenbullied_online,unavailable,,,Not in the supplied extract.,,
+beh_bullied_online,unavailable,,,Not in the supplied extract.,,
+beh_fight,unavailable,,,Not in the supplied extract.,,
+beh_truancy,unavailable,,,Not in the supplied extract.,,
+beh_stealing,unavailable,,,Not in the supplied extract.,,
+beh_vandalism,incompatible,,,"Only the mother-rated Behavior Problems Index item 'breaks own or another's things deliberately' (often true, sometimes true or not true, last three months; in the extract, not carried): a parent's truth rating.",,
+beh_alcohol_self,incompatible,,,"Only whether the young adult received help in the past 12 months for drug or alcohol abuse (2016; in the extract, not carried), asked only of young adults who received help for an emotional, behavioral or family problem; no drinking item.",,
+beh_tobacco_self,unavailable,,,Not in the supplied extract.,,
+beh_cannabis_self,incompatible,,,"Only whether using marijuana caused emotional or psychological problems in the past 12 months (young adult, 2000-2008; in the extract, not carried), asked only of young adults who reported marijuana use in the last year; the use item is not in the extract.",,
+beh_conduct_sdq_parent,unavailable,,,Not in the supplied extract.,,
+beh_hyper_sdq_parent,unavailable,,,Not in the supplied extract.,,
+beh_peerprob_sdq_parent,unavailable,,,Not in the supplied extract.,,
+beh_prosocial_sdq_parent,unavailable,,,Not in the supplied extract.,,
+beh_aggphys_bpaq_self,unavailable,,,Not in the supplied extract.,,
+beh_aggverb_bpaq_self,unavailable,,,Not in the supplied extract.,,
+beh_agganger_bpaq_self,unavailable,,,Not in the supplied extract.,,
+beh_agghostility_bpaq_self,unavailable,,,Not in the supplied extract.,,
+beh_agg_self,incompatible,ANTI,,"Only the mother-rated Behavior Problems Index antisocial subscale (ANTI, 1990-2016) and its item 'bullies or is cruel or mean to others' (in the extract, not carried): wrong respondent; no self-report aggression scale.",,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,unavailable,,,Not in the supplied extract.,,
+beh_aggphys_measure,unavailable,,,See beh_aggphys_self.,,
+beh_aggrel_self,unavailable,,,Not in the supplied extract.,,
+beh_aggrel_measure,unavailable,,,See beh_aggrel_self.,,
+beh_agg_singleitem_teacher,unavailable,,,Not in the supplied extract.,,
+beh_disrupt_singleitem_teacher,in_progress,,,,,
+beh_argues,incompatible,,,"Only the mother-rated Behavior Problems Index item 'argues too much' (often true, sometimes true or not true, last three months; in the extract, not carried): a parent's truth rating.",,
+beh_persistence_finishwork,incompatible,,,"Only the mother-rated Behavior Problems Index item 'has difficulty concentrating, cannot pay attention for long' (often true, sometimes true or not true, last three months; in the extract, not carried): a general attention item and a truth rating.",,
+beh_emotreg_stayscalm,incompatible,,,"Only the mother-rated Behavior Problems Index item 'has a very strong temper and loses it easily' (often true, sometimes true or not true, last three months; in the extract, not carried): problem-worded and a truth rating.",,
+beh_peerprob_makefriends,incompatible,,,"Only the mother-rated Behavior Problems Index item 'is not liked by other children' (often true, sometimes true or not true, last three months; in the extract, not carried) and its 'trouble getting along with other children' item: truth ratings.",,
+beh_conduct_diagnosed,incompatible,,,"Only past-12-month help-seeking reasons (in the extract, not carried): the mother's 'reason saw psychiatrist, psychologist or counselor: school behavior problem' (1992, 1994, 2000-2018), 'temper, disruptive' and 'lying' (2000-2018), asked only when the mother reports the child saw a psychiatrist, psychologist or counselor about a behavioral, emotional or mental problem in the past 12 months, and the young adult's 'problems received help for in last 12 months: behavior problems at school' (2000-2014) and 'violent behavior, temper' (2000-2020), asked only of young adults who received help for an emotional, behavioral or family problem in the past 12 months. No ever-told item, so a child not seen that year cannot be placed as never or previously diagnosed.",,
+beh_conduct_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+beh_adhd_diagnosed,incompatible,,,"Only past-12-month help-seeking reasons (in the extract, not carried): the mother's 'reason saw psychiatrist, psychologist or counselor: attention, ADD, ADHD' (2000-2018), asked only when the mother reports the child saw a psychiatrist, psychologist or counselor about a behavioral, emotional or mental problem in the past 12 months, and the young adult's 'problems received help for in last 12 months: attention deficit disorder' (2000-2014; 'ADD' 2016-2020), asked only of young adults who received help for an emotional, behavioral or family problem in the past 12 months. No ever-told item, so a child not seen that year cannot be placed as never or previously diagnosed. The items on regularly taking medicine to control activity level or behavior (not carried) name no condition.",,
+beh_autism_diagnosed,incompatible,,,"Only the mother's past-12-month 'reason saw psychiatrist, psychologist or counselor: autism' (2000-2018; in the extract, not carried), asked only when the mother reports the child saw a psychiatrist, psychologist or counselor about a behavioral, emotional or mental problem in the past 12 months. No ever-told item, so a child not seen that year cannot be placed as never or previously diagnosed.",,
+beh_autism_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+beh_conduct_sdq_self,unavailable,,,Not in the supplied extract.,,
+beh_hyper_sdq_self,unavailable,,,Not in the supplied extract.,,
+beh_peerprob_sdq_self,unavailable,,,Not in the supplied extract.,,
+beh_prosocial_sdq_self,unavailable,,,Not in the supplied extract.,,
+beh_conduct_sdq_teacher,unavailable,,,Not in the supplied extract.,,
+beh_hyper_sdq_teacher,unavailable,,,Not in the supplied extract.,,
+beh_peerprob_sdq_teacher,unavailable,,,Not in the supplied extract.,,
+beh_prosocial_sdq_teacher,unavailable,,,Not in the supplied extract.,,
+beh_ext_sdq_parent,unavailable,,,Not in the supplied extract.,,
+beh_ext_sdq_self,unavailable,,,Not in the supplied extract.,,
+beh_ext_sdq_teacher,unavailable,,,Not in the supplied extract.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_ext_self,incompatible,BPEXTR,,"Only the mother-rated Behavior Problems Index externalising score (BPEXTR, 1990-2016): wrong respondent; no self-report externalising scale.",,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,in_progress,,,,,
+beh_hyper_parent,in_progress,,,,,
+beh_adhdsymp_parent,in_progress,,,,,
+beh_opp_parent,in_progress,,,,,
+beh_conduct_parent,in_progress,,,,,
+beh_ext_parent,in_progress,,,,,
+beh_parent_measure,in_progress,,,,,
+beh_prosocial_online_self,unavailable,,,Not in the supplied extract.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,unavailable,,,Not in the supplied extract.,,
+beh_prosocial_measure,unavailable,,,See beh_prosocial_self.,,
+beh_prosocial_parent,in_progress,,,,,
+beh_prosocial_singleitem_teacher,unavailable,,,Not in the supplied extract.,,
+beh_problematicuse_self,unavailable,,,Not in the supplied extract.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,Not in the supplied extract.,,
+cog_langexec_nepsy,unavailable,,,Not in the supplied extract.,,
+cog_phono_nepsy,unavailable,,,Not in the supplied extract.,,
+cog_inhibcont_nepsy,unavailable,,,Not in the supplied extract.,,
+cog_vismotor_nepsy,unavailable,,,Not in the supplied extract.,,
+cog_verbalfluency_nepsy,unavailable,,,Not in the supplied extract.,,
+cog_inhib_nihtb_flanker,unavailable,,,Not in the supplied extract.,,
+cog_flex_nihtb_dccs,unavailable,,,Not in the supplied extract.,,
+cog_wm_nihtb_listsort,unavailable,,,Not in the supplied extract.,,
+cog_speed_nihtb_pattern,unavailable,,,Not in the supplied extract.,,
+cog_epimem_nihtb_picseq,unavailable,,,Not in the supplied extract.,,
+cog_vocab_nihtb_picvocab,unavailable,,,Not in the supplied extract.,,
+cog_fluidcomp_nihtb,unavailable,,,Not in the supplied extract.,,
+cog_crystcomp_nihtb,unavailable,,,Not in the supplied extract.,,
+cog_totalcomp_nihtb,unavailable,,,Not in the supplied extract.,,
+cog_atten_task,unavailable,,,Not in the supplied extract.,,
+cog_atten_task_measure,unavailable,,,See cog_atten_task.,,
+cog_flex_task,unavailable,,,Not in the supplied extract.,,
+cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
+cog_inhib_task,unavailable,,,Not in the supplied extract.,,
+cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
+cog_wm_digitspan,compatible,DIGITZ,DIGITZ,"2002-2014. Digit Span total standard score (DIGITZ), mean 10, SD 3, observed 1-19, direct assessment; the codebook calls it the only normed score for the assessment and does not name the battery.",,
+cog_iq_fullscale,incompatible,DIGITZ,,No full-scale battery; only the Digit Span subtest (mapped to cog_wm_digitspan) and the PIAT achievement tests.,,
+cog_vocab_bpvs,unavailable,,,Not in the supplied extract.,,
+cog_vocab_ppvt,partial,ppvt_raw,"if_else(ppvt_raw <= 175, ppvt_raw, NA_real_)","1992 only. PPVT raw score, 'final score (ceiling minus number of errors)' recorded by the interviewer, direct assessment of the child (4,806 children, most aged 3-14); the extract holds no PPVT standard score and names neither the edition nor the test language. The 3 values above 175 (188, 193, 242), more than the items of any PPVT edition published by 1992, are NA. Partial: raw score, not age-normed; standardise within dataset and age at analysis.",,
+cog_execfunc_brief_parent,unavailable,,,Not in the supplied extract.,,
+cog_vocab_bas_naming,unavailable,,,Not in the supplied extract.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,Not in the supplied extract.,,
+cog_spatial_bas_pattern,unavailable,,,Not in the supplied extract.,,
+cog_verbalreason_bas_versim,unavailable,,,Not in the supplied extract.,,
+cog_earlynumber_bas_enc,unavailable,,,Not in the supplied extract.,,
+cog_schoolread_bracken,unavailable,,,Not in the supplied extract.,,
+cog_earlylang_parent,in_progress,,,,,
+cog_earlylang_measure,in_progress,,,,,
+cog_creativethinking_stdtest,unavailable,,,Not in the supplied extract.,,
+cog_speechlang_diagnosed,incompatible,,,"Only the young adult's past-12-month 'problems received help for: dyslexia, reading or speech' (2000-2014; in the extract, not carried), pooling speech with reading, asked only of young adults who received help for an emotional, behavioral or family problem in the past 12 months. No ever-told item, so a respondent not helped that year cannot be placed as never or previously diagnosed.",,
+cog_speechlang_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+mh_anx_basc2,unavailable,,,Not in the supplied extract.,,
+mh_dep_basc2,unavailable,,,Not in the supplied extract.,,
+mh_emotsymp_sdq_parent,unavailable,,,Not in the supplied extract.,,
+mh_totaldiff_sdq_parent,unavailable,,,Not in the supplied extract.,,
+mh_anx_diagnosed,incompatible,,,"Only the young adult's past-12-month 'problems received help for: anxieties, fears, worries' (2000-2020; 'anxiety, panic attacks' from 2016), 'panic attacks' (2000-2014) and 'phobias, obsessions' (2000-2020), asked only of young adults who received help for an emotional, behavioral or family problem in the past 12 months, and doctor-told 'emotional, nervous or psychiatric problems other than depression' ever (2014-2020), asked only at ages 29-30 or over 39 (all in the extract, not carried). No ever-told item below age 29, so a respondent not helped that year cannot be placed as never or previously diagnosed.",,
+mh_anx_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+mh_dep_diagnosed,incompatible,,,"Only the young adult's past-12-month 'problems received help for: depression' (2016-2020), asked only of young adults who received help for an emotional, behavioral or family problem in the past 12 months, and 'has a doctor ever diagnosed you as suffering from depression' (2014-2020), asked only at ages 29-30 or over 39 (both in the extract, not carried). No ever-told item below age 29, so a respondent not helped that year cannot be placed as never or previously diagnosed.",,
+mh_dep_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+mh_emotsymp_sdq_self,unavailable,,,Not in the supplied extract.,,
+mh_emotsymp_sdq_teacher,unavailable,,,Not in the supplied extract.,,
+mh_totaldiff_sdq_self,unavailable,,,Not in the supplied extract.,,
+mh_totaldiff_sdq_teacher,unavailable,,,Not in the supplied extract.,,
+mh_int_sdq_parent,unavailable,,,Not in the supplied extract.,,
+mh_int_sdq_self,unavailable,,,Not in the supplied extract.,,
+mh_int_sdq_teacher,unavailable,,,Not in the supplied extract.,,
+mh_dep_smfq_self,unavailable,,,Not in the supplied extract.,,
+mh_dep_smfq_parent,unavailable,,,Not in the supplied extract.,,
+mh_dep_cdi_self,unavailable,,,Not in the supplied extract.,,
+mh_dep_cesd_self,incompatible,ya_felt_depressed,,"Only one CES-D item, the young adult's 'I felt depressed' (past week, 1994-2016); no other CES-D item is in the extract, so no total can be scored.",,
+mh_dep_phq9_self,unavailable,,,Not in the supplied extract.,,
+mh_dep_rcads_self,unavailable,,,Not in the supplied extract.,,
+mh_dep_dass21_self,unavailable,,,Not in the supplied extract.,,
+mh_dep_scl_self,unavailable,,,Not in the supplied extract.,,
+mh_distress_k6_self,unavailable,,,Not in the supplied extract.,,
+mh_distress_k10_self,unavailable,,,Not in the supplied extract.,,
+mh_distress_malaise_self,unavailable,,,Not in the supplied extract.,,
+mh_distress_ghq12_self,unavailable,,,Not in the supplied extract.,,
+mh_distress_self,partial,"child_feels_sad_freq, child_feels_nervous_freq, child_feels_bored_freq, child_feels_lonely_freq, child_feels_tired_freq, child_feels_too_busy_freq, child_feels_pressured_freq","local({
+  items <- sapply(
+    list(
+      child_feels_sad_freq,
+      child_feels_nervous_freq,
+      child_feels_bored_freq,
+      child_feels_lonely_freq,
+      child_feels_tired_freq,
+      child_feels_too_busy_freq,
+      child_feels_pressured_freq
+    ),
+    as.numeric
+  )
+  items[!(items %in% 1:3)] <- NA
+  rowSums(3 - items)
+})","1994 only, child self-report (Child Self-Administered Supplement, ages 10-14, section 'Depression'): how often the child feels sad and blue; nervous, tense or on edge; bored; lonely; tired or worn out; too busy to get everything done; pressured by mom or dad. Often, sometimes, hardly ever scored 2, 1, 0 (3 - code), summed complete-case (range 0-14; 1,628 scored, 109 with an item unanswered NA); no recall period stated. The battery's happy and excited items are not scored. Cronbach's alpha 0.62; every item correlates positively with the rest (0.26-0.41). Partial: the study's own checklist with no published scoring. Standardise within dataset.",,
+mh_distress_measure,inferred,wave,"if_else(
+  wave == ""1994"",
+  ""Study checklist (NLSY79 Child Self-Administered Supplement 'Depression' feelings items), 7 of 9 items, 0-2 item scoring (range 0-14), sum; all items reversed from the source coding (1 often, 2 sometimes, 3 hardly ever); happy and excited not scored; no recall period stated"",
+  NA_character_
+)","Describes mh_distress_self in 1994, the only round that fielded the checklist; NA elsewhere.",,
+mh_anx_masc_self,unavailable,,,Not in the supplied extract.,,
+mh_anx_scas_self,unavailable,,,Not in the supplied extract.,,
+mh_anx_scas_parent,unavailable,,,Not in the supplied extract.,,
+mh_anx_scared_self,unavailable,,,Not in the supplied extract.,,
+mh_anx_scared_parent,unavailable,,,Not in the supplied extract.,,
+mh_anx_gad7_self,unavailable,,,Not in the supplied extract.,,
+mh_anx_rcads_self,unavailable,,,Not in the supplied extract.,,
+mh_anx_dass21_self,unavailable,,,Not in the supplied extract.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,incompatible,"ya_felt_depressed, child_feels_sad_freq",,Only mood-frequency items: the young adult's CES-D 'I felt depressed' (past week) and the child's 1994 'how often feels sad and blue'; no yes/no depressive-episode screen.,,
+mh_dep_self,incompatible,"ya_felt_depressed, child_feels_sad_freq, ANX",,"No self-report depression scale: only single items, the young adult's CES-D 'I felt depressed' (see mh_sad_self) and the child's 1994 'sad and blue' (scored in mh_distress_self), and the mother-rated Behavior Problems Index anxious/depressed subscale (ANX), a wrong respondent.",,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,incompatible,"child_feels_nervous_freq, ANX",,"No self-report anxiety scale: only the child's 1994 'how often feels nervous, tense or on edge' (single item, scored in mh_distress_self) and the mother-rated Behavior Problems Index anxious/depressed subscale (ANX), a wrong respondent.",,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_int_parent,in_progress,,,,,
+mh_anx_parent,in_progress,,,,,
+mh_dep_parent,in_progress,,,,,
+mh_totalprob_parent,in_progress,,,,,
+mh_depanx_diagnosed,incompatible,,,"Depression and other emotional, nervous or psychiatric problems are asked as separate doctor-told items (young adult, 2014 on; in the extract, not carried), only of young adults aged 29-30 or over 39; see mh_dep_diagnosed and mh_anx_diagnosed.",,
+mh_stress_self,incompatible,"child_feels_pressured_freq, child_feels_too_busy_freq",,"Only the child's 1994 'how often do you feel pressured by mom or dad' and 'too busy to get everything done': how often the child feels pressured by parents or short of time, not the amount of stress usually felt; scored in mh_distress_self.",,
+mh_stress_scale_self,incompatible,"child_feels_pressured_freq, child_feels_too_busy_freq",,"No perceived-stress scale: only the child's 1994 single items 'pressured by mom or dad' and 'too busy to get everything done', scored in mh_distress_self.",,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,proximate,child_feels_lonely_freq,"recode_values(as.numeric(child_feels_lonely_freq), 1 ~ ""Often"", 2 ~ ""Sometimes"", 3 ~ ""Rarely"", default = NA_character_)","1994 only, child self-report (Child Self-Administered Supplement): 'how often do you feel lonely', often, sometimes, hardly ever -> Often, Sometimes, Rarely by wording; no recall period stated. Always and Never unused; proximate: three levels. Also scored in mh_distress_self.",,
+mh_lonely_scale_self,incompatible,child_feels_lonely_freq,,"Only the child's 1994 single item 'how often do you feel lonely', mapped to mh_lonely_self; no loneliness scale.",,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,partial,ya_felt_depressed,"recode_values(
+  as.numeric(ya_felt_depressed),
+  0 ~ ""Rarely"",
+  1 ~ ""Sometimes"",
+  2 ~ ""Often"",
+  3 ~ ""Always"",
+  default = NA_character_
+)","Young-adult self-report, 1994-2016: CES-D 'I felt depressed', past week: rarely or none of the time (1 day), some (1-2 days), occasionally (3-4 days), most or all of the time (5-7 days) -> Rarely, Sometimes, Often, Always (CES-D crosswalk); Never unused. Partial: 'depressed', not 'sad'. The child's 1994 'sad and blue' (child_feels_sad_freq) is a different item and is not spliced in.",,
+mh_worry_self,incompatible,child_feels_nervous_freq,,"Only the child's 1994 'how often do you feel nervous, tense or on edge' ('feeling anxious', not worry) and the mother-rated Behavior Problems Index item 'worries too much' (in the extract, not carried), a parent's truth rating. The child's item is scored in mh_distress_self.",,
+mh_irritable_self,incompatible,,,"Only the mother-rated Behavior Problems Index item 'is stubborn, sullen, or irritable' (often true, sometimes true or not true, last three months; in the extract, not carried): a parent-rated analogue only.",,
+mh_nobodycares_self,incompatible,,,"Only the mother-rated Behavior Problems Index item 'feels or complains that no one loves him/her' (often true, sometimes true or not true, last three months; in the extract, not carried): a parent-rated analogue only.",,
+mh_lifenotworth_self,unavailable,,,Not in the supplied extract.,,
+mh_suicide_ideation_self,unavailable,,,Not in the supplied extract.,,
+mh_suicide_attempt_self,unavailable,,,Not in the supplied extract.,,
+mh_selfharm_self,unavailable,,,Not in the supplied extract.,,
+mh_psychsom_hbscscl_self,unavailable,,,Not in the supplied extract.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,incompatible,child_feels_tired_freq,,"No somatic-complaints scale: only the child's 1994 single item 'how often do you feel tired or worn out', scored in mh_distress_self.",,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,Not in the supplied extract.,,
+wb_mwb_wemwbs,unavailable,,,Not in the supplied extract.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Not in the supplied extract.,,
+wb_resil_basc2,unavailable,,,Not in the supplied extract.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_worry_self.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see hlth_sleepprob.,,
+wb_bodyimage,unavailable,,,Not in the supplied extract.,,
+wb_lifesat_slss_self,unavailable,,,Not in the supplied extract.,,
+wb_lifesat_swls_self,unavailable,,,Not in the supplied extract.,,
+wb_lifesat_singleitem_self,unavailable,,,Not in the supplied extract.,,
+wb_lifesat_self,unavailable,,,Not in the supplied extract.,,
+wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
+wb_happiness_singleitem_self,partial,child_feels_happy_freq,4 - as.numeric(child_feels_happy_freq),"1994 only, child self-report (Child Self-Administered Supplement): 'how often do you feel happy', 3 points, reversed (4 - x) so 3 = often, 2 = sometimes, 1 = hardly ever; no recall period stated. Partial: a frequency of feeling happy, not a general happiness rating.",,
+wb_happiness_singleitem_parent,unavailable,,,Not in the supplied extract.,,
+wb_domainsat_schoolwork_self,unavailable,,,Not in the supplied extract.,,
+wb_domainsat_appearance_self,unavailable,,,Not in the supplied extract.,,
+wb_domainsat_family_self,unavailable,,,Not in the supplied extract.,,
+wb_domainsat_friends_self,unavailable,,,Not in the supplied extract.,,
+wb_domainsat_school_self,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_self,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_parent,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_physical_self,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_emotional_self,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_social_self,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_school_self,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_physical_parent,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_emotional_parent,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_social_parent,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_school_parent,unavailable,,,Not in the supplied extract.,,
+wb_qol_pedsql_psychosocial_parent,unavailable,,,Not in the supplied extract.,,
+wb_qol_kidscreen10_self,unavailable,,,Not in the supplied extract.,,
+wb_qol_kidscreen10_parent,unavailable,,,Not in the supplied extract.,,
+wb_qol_chu9d_self,in_progress,,,,,
+wb_selfesteem_rosenberg_self,unavailable,,,Not in the supplied extract.,,
+wb_selfesteem_self,incompatible,,,"Only the mother-rated Behavior Problems Index item 'feels worthless or inferior' (often true, sometimes true or not true, last three months; in the extract, not carried): a single parent-rated item; no self-esteem scale.",,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,Not in the supplied extract.,,
+wb_selfefficacy_self,unavailable,,,Not in the supplied extract.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_selfefficacy_academic_self,unavailable,,,Not in the supplied extract.,,
+wb_selfefficacy_academic_measure,unavailable,,,See wb_selfefficacy_academic_self.,,
+wb_selfconcept_academic_self,unavailable,,,Not in the supplied extract.,,
+wb_selfconcept_maths_self,unavailable,,,Not in the supplied extract.,,
+wb_selfconcept_verbal_self,unavailable,,,Not in the supplied extract.,,
+wb_selfconcept_science_self,unavailable,,,Not in the supplied extract.,,
+wb_selfconcept_social_self,unavailable,,,Not in the supplied extract.,,
+wb_selfconcept_measure,unavailable,,,See wb_selfconcept_academic_self.,,
+wb_mwb_who5_self,unavailable,,,Not in the supplied extract.,,
+wb_happiness_shs_self,unavailable,,,Not in the supplied extract.,,
+wb_mwb_swemwbs_self,unavailable,,,Not in the supplied extract.,,
+wb_selfratedhealth_self,unavailable,,,Not in the supplied extract.,,
+wb_selfratedmentalhealth_self,unavailable,,,Not in the supplied extract.,,
+wb_generalhealth_parent,unavailable,,,Not in the supplied extract.,,
+wb_posaffect_self,incompatible,"child_feels_happy_freq, child_feels_excited_freq",,Only the child's 1994 single mood items 'how often do you feel happy' (mapped to wb_happiness_singleitem_self) and 'excited about something' (not mapped); no published positive-affect scale.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_negaffect_self,in_progress,,,,,
+wb_negaffect_measure,in_progress,,,,,
+wb_eudaimonic_self,unavailable,,,Not in the supplied extract.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,unavailable,,,Not in the supplied extract.,,
+wb_socsupport_friends_self,unavailable,,,Not in the supplied extract.,,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,unavailable,,,Not in the supplied extract.,,
+hlth_sleep_we,unavailable,,,Not in the supplied extract.,,
+hlth_sleep,unavailable,,,Not in the supplied extract.,,
+hlth_sleepprob,incompatible,,,"Only whether the young adult received help in the past 12 months for trouble sleeping or concentrating (in the extract, not carried), a single help-received item; no sleep-problems scale.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+hlth_bmi,in_progress,,,,,
+hlth_bmi_measure,in_progress,,,,,
+hlth_bmi_z,in_progress,,,,,
+hlth_bmi_z_measure,in_progress,,,,,
+hlth_pa_days60,in_progress,,,,,
+hlth_birthweight,in_progress,,,,,
+hlth_preterm,in_progress,,,,,
+hlth_breastfed,in_progress,,,,,
+hlth_prenatalsmoking,in_progress,,,,,
+st_measure_type,inferred,,"""Continuous""",The mother's HOME TV items take hours entered.,,parent
+st_measure_name,inferred,,"""Custom""","TV items of the NLSY79 Mother Supplement's HOME section, written for the survey.",,parent
+st_responder,inferred,,"""Parent or carer""","The mother (HOME), for children whose primary row is their own report.",,parent
+st_watch_wd,partial,"home_a_tv_hours_wd, home_b_tv_hours_wd, home_c_tv_hours_wd, home_d_tv_hours_wd, child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, child_comp_hours_week_workschool, child_comp_hours_week_leisure, ya_tv_hours_week_band, ya_game_hours_week_band, ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure","local({
+  self <- rowSums(
+    !is.na(tbl[grepl(
+      ""^(child_(tv|game)_hours_(wd|we|sat|sun)|(child|ya)_comp_hours_week_.+|ya_(tv|game)_hours_week_band)$"",
+      names(tbl)
+    )])
+  ) >
+    0
+  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_wd"")], function(x) replace(x, x %in% 95, 0))
+  lo <- do.call(pmin, c(forms, na.rm = TRUE))
+  hi <- do.call(pmax, c(forms, na.rm = TRUE))
+  home <- if_else(lo == hi, lo, NA_real_)
+  if_else(self, home, NA_real_)
+})","The mother's HOME weekday TV hours (forms A-D by age) on self-report rows. 95 'do not have a TV' = 0; 0 ('< 1' or 'less than 1 hour' in 1990-1998) kept as 0; where 2-4 forms are answered and disagree (1990-2000: 104 weekday, 124 weekend rows), NA. Values above 24 kept. Partial: TV set only.",,parent
+st_watch_we,partial,"home_a_tv_hours_we, home_b_tv_hours_we, home_c_tv_hours_we, home_d_tv_hours_we, child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, child_comp_hours_week_workschool, child_comp_hours_week_leisure, ya_tv_hours_week_band, ya_game_hours_week_band, ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure","local({
+  self <- rowSums(
+    !is.na(tbl[grepl(
+      ""^(child_(tv|game)_hours_(wd|we|sat|sun)|(child|ya)_comp_hours_week_.+|ya_(tv|game)_hours_week_band)$"",
+      names(tbl)
+    )])
+  ) >
+    0
+  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_we"")], function(x) replace(x, x %in% 95, 0))
+  lo <- do.call(pmin, c(forms, na.rm = TRUE))
+  hi <- do.call(pmax, c(forms, na.rm = TRUE))
+  home <- if_else(lo == hi, lo, NA_real_)
+  if_else(self, home, NA_real_)
+})",As st_watch_wd [parent] for a typical weekend day. Partial: TV set only.,,parent
+st_watch,partial,"home_a_tv_hours_wd, home_a_tv_hours_we, home_b_tv_hours_wd, home_b_tv_hours_we, home_c_tv_hours_wd, home_c_tv_hours_we, home_d_tv_hours_wd, home_d_tv_hours_we, child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, child_comp_hours_week_workschool, child_comp_hours_week_leisure, ya_tv_hours_week_band, ya_game_hours_week_band, ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure","local({
+  self <- rowSums(
+    !is.na(tbl[grepl(
+      ""^(child_(tv|game)_hours_(wd|we|sat|sun)|(child|ya)_comp_hours_week_.+|ya_(tv|game)_hours_week_band)$"",
+      names(tbl)
+    )])
+  ) >
+    0
+  home_tv <- lapply(c(""wd"", ""we""), function(d) {
+    forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_"", d)], function(x) replace(x, x %in% 95, 0))
+    lo <- do.call(pmin, c(forms, na.rm = TRUE))
+    hi <- do.call(pmax, c(forms, na.rm = TRUE))
+    if_else(lo == hi, lo, NA_real_)
+  })
+  if_else(self, (home_tv[[1]] * 5 + home_tv[[2]] * 2) / 7, NA_real_)
+})",(5 x weekday + 2 x weekend) / 7 from the mother's HOME items. Partial: TV set only.,,parent

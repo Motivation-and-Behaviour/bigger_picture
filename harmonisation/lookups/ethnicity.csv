@@ -228,3 +228,6 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1294,ethnicity,"Hispanic, race specified",Hispanic,compatible,Code 5: Hispanic origin with any race (Hispanic origin first in a US sample)
 1294,ethnicity,"More than one race, non-Hispanic",Mixed,compatible,"Code 6: two or more races, not Hispanic"
 1294,ethnicity,"White, non-Hispanic",White,compatible,"Code 7: White as the sole race, not Hispanic"
+50,ethnicity,HISPANIC,Hispanic,proximate,CRACE code 1; the mother's racial/ethnic cohort from the 1979 NLSY79 screener used for the child
+50,ethnicity,BLACK,Black,proximate,CRACE code 2; the mother's racial/ethnic cohort from the 1979 NLSY79 screener used for the child
+50,ethnicity,"NON-BLACK, NON-HISPANIC",White,proximate,CRACE code 3; the mother's screener cohort; merges White with every other non-Black non-Hispanic group (merge named)
