@@ -8,7 +8,7 @@
 #' unique across cycles. Columns keep their original PISA names, except the
 #' ISCED parental-education indices, which differ in coding by cycle;
 #' recoding is harmonisation's job. Country-cycles that fielded no
-#' disaggregated screen-time item are dropped (`bp107_drop_screenless()`).
+#' screen-time item are dropped (`bp107_drop_screenless()`).
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -46,10 +46,10 @@ tidy_BPIPD_107 <- function(raw_dataset, spec) {
   df
 }
 
-#' Disaggregated screen-time duration items: a country-cycle in which none was
-#' answered is dropped
+#' Screen-time duration items: a country-cycle in which none was answered did
+#' not field them
 bp107_screen_items <- c(
-  paste0("ST326Q0", 1:3, "JA"),
+  paste0("ST326Q0", 1:6, "JA"),
   "IC005Q01TA",
   "IC006Q01TA",
   "IC007Q01TA",
@@ -57,7 +57,7 @@ bp107_screen_items <- c(
   paste0("IC178Q0", 1:7, "JA")
 )
 
-#' Drop country-cycles that fielded no disaggregated screen-time item
+#' Drop country-cycles that fielded no screen-time item
 #'
 #' The ICT familiarity questionnaire was a national option in 2015 and 2018,
 #' and a few 2022 countries fielded neither it nor ST326, so their students

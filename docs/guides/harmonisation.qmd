@@ -293,7 +293,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Block tags are `diary`, `parent`, `child`, `device` and `recall`, and every block maps `st_measure_type`, `st_measure_name` and `st_responder`.
 - A `recall` block covers the same occasion with a different reference period; its other variables belong to the occasion, so concurrent analyses exclude it.
 - Waves, and country-cycles of optional modules, with no disaggregated screen item are dropped in the tidier, so expressions need no wave conditions.
-- The school-work part of an all-device item split by purpose counts as disaggregated (educational use) and keeps a wave; an all-device item restricted to leisure does not, so a wave whose only screen item is one is dropped.
+- The school-work part of an all-device item split by purpose counts as disaggregated (educational use) and keeps a wave, and an all-device item restricted to leisure keeps one too, though it fills only `st_leisure`.
 - Household TV-on time (hours the TV is on at home) describes the home, not the child: it fills no row and does not keep a wave.
 
 ### Scoring scales
