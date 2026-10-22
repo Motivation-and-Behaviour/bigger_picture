@@ -117,6 +117,13 @@ bp1294_columns <- function() {
     father_education = c(by = "byfathed", f1 = "F1FATHED"),
     mother_occupation = c(by = "byoccum", f1 = "F1OCCUM"),
     father_occupation = c(by = "byoccuf", f1 = "F1OCCUF"),
+    # parent questionnaire: respondent's and spouse's relationship, past-week work
+    parent_relation = c(by = "BYP01"),
+    spouse_relation = c(by = "BYP04"),
+    parent_work_week = c(by = "BYP36"),
+    parent_work_status = c(by = "BYP37"),
+    spouse_work_week = c(by = "BYP40"),
+    spouse_work_status = c(by = "BYP41"),
     grandparent_education = c(by = "bygpared"),
     home_literacy_resources = c(by = "byhomlit"),
     # base-year school context; bp1294_add_f1_school() fills 2004 control, locale
@@ -180,6 +187,9 @@ bp1294_columns <- function() {
     gpa_9_12_categorical = c(f1 = "F1RGPP2"),
     transcript_coverage_flag = c(f1 = "F1RTRFLG"),
     homework_hours_week = c(by = "byhmwrk"),
+    # BYHMWRK codes 97-99 flag a top-coded part, so both parts are kept too.
+    homework_in_school_hours_week = c(by = "BYS34A"),
+    homework_out_school_hours_week = c(by = "BYS34B"),
     homework_hours_week_band = c(f1 = "F1S31"),
     reading_hours_week_band = c(f1 = "F1S33"),
     education_expectation_by = c(by = "bystexp"),
