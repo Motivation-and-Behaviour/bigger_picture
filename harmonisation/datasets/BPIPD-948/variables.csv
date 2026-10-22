@@ -60,7 +60,12 @@ parental_education,proximate,"MotherEducation, FatherEducation","local({
     ""Unknown""
   )
 })","Higher of the mother's and father's codes (MotherEducation, FatherEducation; one known parent suffices) via the shared education lookup: literate without schooling, primary, middle and high school graduate = Secondary school or less; University graduate = Bachelor degree or higher. Proximate: 'University graduate' does not separate two-year associate degrees from bachelor's and higher degrees; placed at the level taken to hold most Turkish university graduates.",maternal_education,
-maternal_employment,in_progress,,,,,
+maternal_employment,proximate,MotherProfession,"recode_values(
+  as.numeric(haven::zap_labels(MotherProfession)),
+  1 ~ ""Not employed"",
+  c(2, 3, 4) ~ ""Employed"",
+  default = ""Unknown""
+)","The mother's report of her own occupation (MotherProfession; not in the codebook, value labels only): housewife (3,880) = Not employed; teacher/educator (505), freelancer (193) and officer (none) = Employed; others (675) and missing (350) = Unknown. Proximate: an occupation list with a homemaker option, reference period not documented. Mapped on every row, including the 40 households coded father with the nuclear or extended family, where the mother still reported her own occupation.",,
 urbanicity,unavailable,,,Not collected.,,
 family_structure,proximate,Family,"recode_values(
   as.numeric(haven::zap_labels(Family)),
@@ -169,7 +174,7 @@ acc_learningdisab_diagnosed,unavailable,,,Not collected.,,
 acc_learningdisab_diagnosed_severity,unavailable,,,Not collected.,,
 beh_hyper_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_parent.,,
 beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_atten_parent.,,
-beh_atten_self,incompatible,Subscale2CPRS,,"No self-report attention scale; only the mother-rated CPRS-R:S cognitive problems/inattention subscale (Subscale2CPRS: h3, h8, h12, h17, h21, h25, each 0-3, range 0-18), a parent rating, mapped to beh_atten_parent.",,
+beh_atten_self,incompatible,"Subscale2CPRS, Subscale4CPRS",,"No self-report attention scale; only the mother-rated CPRS-R:S cognitive problems/inattention subscale (Subscale2CPRS: h3, h8, h12, h17, h21, h25, each 0-3, range 0-18), mapped to beh_atten_parent, and ADHD Index (Subscale4CPRS: 12 items, range 0-36), mapped to beh_adhdsymp_parent; parent ratings.",,
 beh_atten_measure,unavailable,,,See beh_atten_self.,,
 beh_atten_singleitem_teacher,unavailable,,,Not collected.,,
 beh_impulsivity_self,incompatible,Subscale3CPRS,,"No self-report impulsivity scale; only the mother-rated CPRS-R:S hyperactivity subscale (Subscale3CPRS: h4, h9, h14, h18, h22, h26, each 0-3, range 0-18), a parent-rated hyperactivity symptom scale, which this row excludes; mapped to beh_hyper_parent.",,
@@ -231,13 +236,13 @@ beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
 beh_cbcl_measure,unavailable,,,CBCL not administered.,,
 beh_ext_self,incompatible,"TotalScore, Subscale4CPRS",,"No self-report externalising scale; only the mother-rated CPRS-R:S total (TotalScore: all 27 items, each 0-3, range 0-81, mixing oppositional, inattention and hyperactivity items; mapped nowhere) and ADHD index (Subscale4CPRS: 12 items, range 0-36; mapped to beh_adhdsymp_parent), parent ratings.",,
 beh_ext_measure,unavailable,,,See beh_ext_self.,,
-beh_atten_parent,in_progress,,,,,
+beh_atten_parent,compatible,Subscale2CPRS,as.numeric(Subscale2CPRS),"Mother-rated CPRS-R:S Cognitive Problems/Inattention subscale (Subscale2CPRS): 6 items (h3, h8, h12, h17, h21, h25; wording not supplied) scored 0-3, range 0-18. The study's sum, equal to the item sum on every row; no item missing. The published short-form items rate inattention and failure to finish tasks in homework, assignments and class, with no academic-skill item. Single occasion; standardise within dataset.",,
 beh_hyper_parent,compatible,Subscale3CPRS,as.numeric(Subscale3CPRS),"Mother-rated CPRS-R:S Hyperactivity subscale (Subscale3CPRS): 6 items (h4, h9, h14, h18, h22, h26; wording not supplied) scored 0-3, range 0-18. The study's sum, equal to the item sum on every row; no item missing. Single occasion; standardise within dataset.",,
 beh_adhdsymp_parent,compatible,Subscale4CPRS,as.numeric(Subscale4CPRS),"Mother-rated CPRS-R:S ADHD Index (Subscale4CPRS): 12 items (h1, h5, h7, h10, h13, h15, h17, h19, h21, h23, h25, h27; h17, h21 and h25 also in the inattention subscale) scored 0-3, range 0-36. The study's sum, equal to the item sum on every row; no item missing. A released index, not the sum of the inattention and hyperactivity subscales. Single occasion; standardise within dataset.",,
 beh_opp_parent,compatible,Subscale1CPRS,as.numeric(Subscale1CPRS),"Mother-rated CPRS-R:S Oppositional subscale (Subscale1CPRS): 6 items (h2, h6, h11, h16, h20, h24; wording not supplied) scored 0-3, range 0-18. The study's sum, equal to the item sum on every row; no item missing. Single occasion; standardise within dataset.",,
 beh_conduct_parent,unavailable,,,Not collected.,,
 beh_ext_parent,incompatible,TotalScore,,"Only the study's CPRS-R:S total (TotalScore, the sum of all 27 mother-rated items, range 0-81), the total of an ADHD and oppositional rating scale, not a broadband externalising scale; its subscales are on beh_atten_parent, beh_hyper_parent, beh_adhdsymp_parent and beh_opp_parent.",,
-beh_parent_measure,in_progress,,,,,
+beh_parent_measure,inferred,,"""Conners Parent Rating Scale-Revised: Short Form (CPRS-R:S; mother report); attention: Cognitive Problems/Inattention, 6 of 6 items, 0-3 item scoring (range 0-18), sum; hyperactivity: Hyperactivity, 6 of 6 items, 0-3 item scoring (range 0-18), sum; combined ADHD: ADHD Index, 12 of 12 items, 0-3 item scoring (range 0-36), sum; oppositional: Oppositional, 6 of 6 items, 0-3 item scoring (range 0-18), sum; supplied already keyed; study sums, equal to the item sums, no item missing""","Describes beh_atten_parent, beh_hyper_parent, beh_adhdsymp_parent and beh_opp_parent; single occasion. The study's 27-item total (TotalScore) is not used.",,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
 beh_prosocial_self,unavailable,,,Not collected.,,
@@ -433,22 +438,10 @@ hlth_birthweight,unavailable,,,Not collected.,,
 hlth_preterm,incompatible,INcubator,,"Only 'Did your child stay in an incubator after birth?' (INcubator: yes 871, no 4,732; mother report), a neonatal-care item that gives no gestational age; no preterm item; mapped nowhere.",,
 hlth_breastfed,partial,MILK,"local({
   answer <- trimws(MILK)
-  first <- if_else(
-    grepl(""[0-9]"", answer),
-    sub(""^[^0-9]*([0-9]+([.,'][0-9]+)?).*$"", ""\\1"", answer),
-    NA_character_
-  )
+  first <- if_else(grepl(""[0-9]"", answer), sub(""^[^0-9]*([0-9]+([.,'][0-9]+)?).*$"", ""\\1"", answer), NA_character_)
   first <- suppressWarnings(as.numeric(gsub(""[,']"", ""."", first)))
-  never <- grepl(
-    ""yok|hi[çc]|h[ıi]c|almad|alamad|almd|mama kul|^o ay$"",
-    answer,
-    ignore.case = TRUE
-  )
-  spelled <- grepl(
-    ""bir|[iİ]ki|[üÜ]ç|dört|beş|^on | on |yarı|evet"",
-    answer,
-    ignore.case = TRUE
-  )
+  never <- grepl(""yok|hi[çc]|h[ıi]c|almad|alamad|almd|mama kul|^o ay$"", answer, ignore.case = TRUE)
+  spelled <- grepl(""bir|[iİ]ki|[üÜ]ç|dört|beş|^on | on |yarı|evet"", answer, ignore.case = TRUE)
   date <- grepl(""(19|20)[0-9]{2}"", answer)
   case_when(
     date ~ NA_character_,

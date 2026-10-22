@@ -814,7 +814,8 @@ bp50_implied_decimals <- function(codebook) {
 #' Implied decimals shown only in the codebook's category listing
 bp50_undeclared_decimals <- function() {
   # The 2016 computer-hours listing reads "100 TO 299: 1 to 2.99 hours".
-  c(Y3595400 = 2L, Y3595500 = 2L)
+  # BPEXTR 1994 declares one decimal, but its listing runs 0-38 (mean 7.95).
+  c(Y3595400 = 2L, Y3595500 = 2L, C1505600 = 0L)
 }
 
 #' Set the release-wide missing codes (-1, -2, -3, -7) to NA

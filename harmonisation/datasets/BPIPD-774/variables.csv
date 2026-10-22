@@ -100,7 +100,21 @@ parental_education,compatible,HLEdStat,"lookup_values(
   target_variable = ""maternal_education"",
   default = ""Unknown""
 )","Study's highest education of the primary or secondary carer (HLEdStat), resident non-parent carers included; shared education lookup.",maternal_education,
-maternal_employment,in_progress,,,,,
+maternal_employment,compatible,"PCChildRel, PCSex, pcd5, SCChildRel, SCSex, scd5, PCLFStat, SCLFStat","case_when(
+  as.numeric(PCChildRel) %in% 1:4 & as.numeric(PCSex) == 2 ~ recode_values(
+    as.numeric(pcd5),
+    c(1, 2, 3) ~ ""Employed"",
+    c(4, 5) ~ ""Not employed"",
+    default = ""Unknown""
+  ),
+  as.numeric(SCChildRel) %in% 1:4 & as.numeric(SCSex) == 2 ~ recode_values(
+    as.numeric(scd5),
+    c(1, 2, 3) ~ ""Employed"",
+    c(4, 5) ~ ""Not employed"",
+    default = ""Unknown""
+  ),
+  .default = ""Unknown""
+)","Mother figure as for maternal_education: the resident carer who is female and the child's own, adoptive, step or foster parent (PCChildRel, PCSex, SCChildRel, SCSex), primary carer first; the primary carer answered for both carers; reference period last week. 'Last week did you have a full-time or part-time job of any kind?' (pcd5; scd5 for the secondary carer): worked for payment or profit, absent from a job on leave, or unpaid work in a family business = Employed; other unpaid work or no job = Not employed; refused, don't know or no resident mother figure = Unknown. This is the ABS definition the User's Guide documents; the derived PCLFStat and SCLFStat class other unpaid work as employed and are not used.",,
 urbanicity,proximate,Remoteness,"recode_values(as.numeric(Remoteness), 1 ~ ""Urban"", 2 ~ ""Suburban"", c(3, 4) ~ ""Rural"", default = ""Unknown"")","ABS Remoteness Area of the household (Remoteness; ASGS 2011, released in four levels with Remote and Very Remote combined): Major Cities = Urban, Inner Regional = Suburban, Outer Regional and Remote = Rural. Proximate: a remoteness (road distance to services) classification, not a settlement-size typology.",,
 family_structure,compatible,"family_type, PCChildRel, SCChildRel, parents, biologicalparents","case_when(
   as.numeric(family_type) %in% c(1, 2) ~ ""Two biological/adoptive parents"",
@@ -372,7 +386,7 @@ beh_cannabis_self,compatible,"yrb16, yrb19","case_when(
 beh_conduct_sdq_parent,compatible,pconduct,as.numeric(pconduct),"Carer SDQ conduct problems subscale (pconduct), 4-10 form (p1c1c* items, 2,976 children) and 11-17 form (p2c1c* items, 3,334) pooled; the released subscale equals the SDQ rule applied to the items for all 6,310.",,
 beh_hyper_sdq_parent,compatible,phyper,as.numeric(phyper),"Carer SDQ hyperactivity-inattention subscale (phyper), 4-10 form (p1c1c* items, 2,976 children) and 11-17 form (p2c1c* items, 3,334) pooled; the released subscale equals the SDQ rule applied to the items for all 6,310.",,
 beh_peerprob_sdq_parent,compatible,ppeer,as.numeric(ppeer),"Carer SDQ peer problems subscale (ppeer), 4-10 form (p1c1c* items, 2,976 children) and 11-17 form (p2c1c* items, 3,334) pooled; the released subscale equals the SDQ rule applied to the items for all 6,310.",,
-beh_prosocial_sdq_parent,compatible,pprosoc,as.numeric(pprosoc),"Carer SDQ prosocial subscale (pprosoc), 4-10 form (p1c1c* items, 2,976 children) and 11-17 form (p2c1c* items, 3,334) pooled; the released subscale equals the SDQ rule applied to the items for all 6,310.",,
+beh_prosocial_sdq_parent,compatible,pprosoc,as.numeric(pprosoc),"Carer SDQ prosocial subscale (pprosoc), 4-10 form (p1c1c* items, 2,976 children) and 11-17 form (p2c1c* items, 3,334) pooled; the released subscale equals the SDQ rule applied to the items for all 6,310. Repeated on beh_prosocial_parent.",,
 beh_aggphys_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
 beh_aggverb_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
 beh_agganger_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
@@ -555,7 +569,7 @@ mh_dep_binary_self,compatible,"ymd1, ymd1a, ymd1c, ymd1d","case_when(
 )","Youth DISC-IV depression module, ages 11-17, last year: 'were there two weeks in a row when you felt sad or depressed almost every day?' (ymd1d). Youths routed past it after No to often feeling sad or depressed (ymd1), feeling so for a long time each day (ymd1a) or almost every day (ymd1c) = No.",,
 mh_dep_self,incompatible,"ymdsymp, ymdcrity",,"Only the youth DISC-IV major depression module, a skip-structured diagnostic interview: its symptom and criteria counts (ymdsymp, ymdcrity) are not a depression rating scale. The two-week screen item is on mh_dep_binary_self.",,
 mh_dep_measure,unavailable,,,See mh_dep_self.,,
-mh_anx_self,incompatible,"chu1, ych2, ych3",,"No anxiety scale; only single items: K10 'nervous' and 'so nervous that nothing could calm you down' (ych2, ych3, scored in mh_distress_k10_self) and CHU-9D 'Do you feel worried today?' (chu1).",,
+mh_anx_self,incompatible,"chu1, ych2, ych3",,"No anxiety scale; only single items: K10 'nervous' and 'so nervous that nothing could calm you down' (ych2, ych3, scored in mh_distress_k10_self) and CHU-9D 'Do you feel worried today?' (chu1, scored in wb_qol_chu9d_self).",,
 mh_anx_measure,unavailable,,,See mh_anx_self.,,
 mh_int_parent,incompatible,"pemotion, ppeer",,"No internalising scale; only the carer SDQ emotional symptoms and peer problems subscales (pemotion, ppeer), which stay on mh_emotsymp_sdq_parent and beh_peerprob_sdq_parent (no SDQ internalising score is released; it is derived at analysis).",,
 mh_anx_parent,incompatible,"psosymp, psocrity, psasymp, psacrity, pgasymp, pgacrity, pocsymp, poccrity, pemotion",,"No anxiety rating scale; only the carer DISC-IV social phobia, separation anxiety, generalised anxiety and obsessive-compulsive symptom and last-year criterion counts (psosymp, psocrity, psasymp, psacrity, pgasymp, pgacrity, pocsymp, poccrity), skip-structured diagnostic-interview counts, and the carer SDQ emotional symptoms subscale (pemotion; mixed content), on mh_emotsymp_sdq_parent.",,
@@ -576,8 +590,8 @@ mh_sad_self,partial,ych9,"recode_values(
   4 ~ ""Often"",
   5 ~ ""Always"",
   default = NA_character_
-)","Youth, ages 11-17, past four weeks: 'about how often did you feel so sad that nothing could cheer you up?' (ych9); none, a little, some, most, all of the time = Never, Rarely, Sometimes, Often, Always. Partial: an intensified sadness item. Also scored in mh_distress_k10_self. CHU-9D 'sad today' (chu2) is an intensity rating and not used.",,
-mh_worry_self,incompatible,"chu1, ych2",,"Only CHU-9D 'Do you feel worried today?' (chu1), an intensity rating, and K10 'nervous' (ych2), feeling anxious rather than worried, scored in mh_distress_k10_self.",,
+)","Youth, ages 11-17, past four weeks: 'about how often did you feel so sad that nothing could cheer you up?' (ych9); none, a little, some, most, all of the time = Never, Rarely, Sometimes, Often, Always. Partial: an intensified sadness item. Also scored in mh_distress_k10_self. CHU-9D 'sad today' (chu2) is an intensity rating, scored in wb_qol_chu9d_self and not used here.",,
+mh_worry_self,incompatible,"chu1, ych2",,"Only CHU-9D 'Do you feel worried today?' (chu1), an intensity rating scored in wb_qol_chu9d_self, and K10 'nervous' (ych2), feeling anxious rather than worried, scored in mh_distress_k10_self.",,
 mh_irritable_self,partial,ych22,"recode_values(
   as.numeric(ych22),
   1 ~ ""Never"",
@@ -586,7 +600,7 @@ mh_irritable_self,partial,ych22,"recode_values(
   4 ~ ""Often"",
   5 ~ ""Always"",
   default = NA_character_
-)","Youth, ages 11-17, past four weeks, K10+ supplementary item: 'about how often were you mad or angry?' (ych22); none, a little, some, most, all of the time = Never, Rarely, Sometimes, Often, Always. Partial: an anger item. CHU-9D 'annoyed today' (chu5) is an intensity rating and not used.",,
+)","Youth, ages 11-17, past four weeks, K10+ supplementary item: 'about how often were you mad or angry?' (ych22); none, a little, some, most, all of the time = Never, Rarely, Sometimes, Often, Always. Partial: an anger item. CHU-9D 'annoyed today' (chu5) is an intensity rating, scored in wb_qol_chu9d_self and not used here.",,
 mh_nobodycares_self,incompatible,yfi2,,"Only 'Do you feel like there are people who are there for you?' (yfi2), a support-availability item.",,
 mh_lifenotworth_self,incompatible,yrb40,,"Only 'Have you ever felt life was not worth living?' (yrb40), a lifetime yes/no item, not a frequency rating.",,
 mh_suicide_ideation_self,compatible,yrb41,"recode_values(as.numeric(yrb41), 0 ~ ""No"", 2 ~ ""Yes"", default = NA_character_)","Ages 12-17 only (asked from 12). Youth: 'During the past 12 months, did you ever seriously consider attempting suicide?' (yrb41); prefer not to say = NA.",,
@@ -602,7 +616,7 @@ mh_selfharm_self,compatible,"yrb34, yrb35","case_when(
 )","Ages 12-17 only. Youth: deliberately harmed or injured yourself without intending to end your own life during the past 12 months (yrb35), asked if ever (yrb34; never = No); prefer not to say = NA.",,
 mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
 mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
-mh_somatic_self,incompatible,"chu3, p3c1c1_3",,"No somatic complaints scale; only single items: CHU-9D pain today (chu3) and SDQ 'I get a lot of headaches, stomach-aches or sickness' (p3c1c1_3, scored in mh_emotsymp_sdq_self).",,
+mh_somatic_self,incompatible,"chu3, p3c1c1_3",,"No somatic complaints scale; only single items: CHU-9D pain today (chu3, scored in wb_qol_chu9d_self) and SDQ 'I get a lot of headaches, stomach-aches or sickness' (p3c1c1_3, scored in mh_emotsymp_sdq_self).",,
 mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
 wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
 wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
@@ -697,9 +711,9 @@ hlth_sleep,compatible,"ypf17, ypf19, ypf21","coalesce(
     7,
   case_when(as.numeric(ypf21) == 3 ~ 3.5, as.numeric(ypf21) %in% 4:12 ~ as.numeric(ypf21), .default = NA_real_)
 )","(5 x hlth_sleep_wd + 2 x hlth_sleep_we) / 7; for the 101 youths not at school or work, the usual-night item 'How many hours of sleep do you usually get?' (ypf21) they were asked instead. 'Less than 4 hours' = 3.5, '12 or more' = 12.",,
-hlth_sleepprob,incompatible,chu7,,Only the single CHU-9D item on problems sleeping last night (chu7); no sleep-problems scale.,,
+hlth_sleepprob,incompatible,chu7,,"Only the single CHU-9D item on problems sleeping last night (chu7, scored in wb_qol_chu9d_self); no sleep-problems scale.",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_bmi,in_progress,,,,,
+hlth_bmi,partial,"bmi, height, weight, yrb47, yrb48, bmicat",as.numeric(bmi),"Youth self-report, ages 11-17: height and weight reported in 5 cm and 5 kg bands, or imperial bands (yrb47, yrb48; don't know = NA), which the study converted to estimated metres and kilograms (height, weight: closed bands near their midpoints, open bands estimated by an undocumented statistical method). The study's BMI from those values (bmi), every value kept (observed 6.9-50.3). Partial: banded height and weight, with 5.4% of weights in the open top band '86kg or more'. bmicat (Cole et al. 2007 weight-status categories) not used.",,
 hlth_bmi_measure,inferred,,"""Self-reported""","Youth self-reported height and weight, ages 11-17 (yrb47, yrb48); describes hlth_bmi; single occasion.",,
 hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
 hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
@@ -707,4 +721,4 @@ hlth_pa_days60,unavailable,,,Not collected.,,
 hlth_birthweight,unavailable,,,Not collected.,,
 hlth_preterm,unavailable,,,Not collected.,,
 hlth_breastfed,unavailable,,,Not collected.,,
-hlth_prenatalsmoking,incompatible,"PFI25, PFI27, PFI30, PFI32, PCSmoker, SCSmoker",,"Only the carers' own smoking at interview: ever a regular smoker and still smoking (PFI25, PFI27 primary carer; PFI30, PFI32 secondary carer, reported by the primary carer; derived PCSmoker, SCSmoker), not smoking in the pregnancy with the child.",,
+hlth_prenatalsmoking,incompatible,"PFI25, PFI27, PFI30, PFI32, PCSmoker, SCSmoker",,"Only the carers' own smoking history at interview: ever a regular smoker and still smoking for the primary carer (PFI25, PFI27), ever a smoker and still smoking for the secondary carer, reported by the primary carer (PFI30, PFI32), and the derived never, current or former smoker status (PCSmoker, SCSmoker); not smoking in the pregnancy with the child.",,
