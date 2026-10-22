@@ -12,6 +12,7 @@ Encoding: UTF-8
 Imports:
     arrow,
     crew,
+    data.table,
     dotenv,
     dplyr,
     fs,
