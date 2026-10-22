@@ -210,6 +210,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - A composite that can be derived at analysis from mapped rows is unavailable ('Derive at analysis from <rows>.').
 - A named instrument given only to another informant leaves this informant's row unavailable.
 - A single-item `_self` row with only a parent- or teacher-rated analogue is incompatible, item named.
+- A generic `_self` scale row with only a parent- or carer-rated scale on its construct in hand is incompatible, naming the scale and the row that holds it.
 - Compatible needs a note that describes no loss; a note saying 'only', 'undercount', 'narrower', 'bundled' or 'may include' means partial at best.
 - A schema note that sends an item to another row forbids mapping it here.
 - Partial covers part of the construct, pooled or coarser sources, subsets on named rows, and lifetime or unstated recall.
@@ -225,7 +226,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - A weaker item fills waves the better item missed only on score rows standardised within wave (partial, waves in notes).
 - Yes/no prevalence rows keep the better series alone; they never splice in a different recall window or a pooled item.
 - Every unavailable or incompatible row has a one-line note.
-- Standard notes are 'Not collected.', 'Not in the supplied extract.', 'No weekday/weekend split.', 'No device split; see <row>.', 'No item on use at school.', '<instrument> not administered; see <row>.', 'Derive at analysis from <rows>.', 'Not an Australian dataset.', 'Hukou not asked.', 'Not a randomised trial.', 'Single collection occasion.', 'Not a survey sample.' (survey design rows) and 'No cognitive testing.' (cognitive test rows in studies that gave no test; not the speech or language diagnosis rows)
+- Standard notes are 'Not collected.', 'Not in the supplied extract.', 'No weekday/weekend split.', 'No device split; see <row>.', 'No item on use at school.', '<instrument> not administered; see <row>.', 'Derive at analysis from <rows>.', 'Not an Australian dataset.', 'Hukou not asked.', 'Not a randomised trial.', 'Single collection occasion.', 'Not a survey sample.' (survey design rows) and 'No cognitive testing.' (cognitive test rows in studies that gave no test; not the speech or language diagnosis rows or the parent-report early-language row)
 - An unavailable note never describes an item in hand and never lists the study's other instruments.
 - `source_columns` lists tidied column names, comma-separated, with no ranges and no raw-file names.
 - Notes quote the item wording and record the reporter, the waves and the recall period.
@@ -272,13 +273,16 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - A bundled or residual item is never added to a row that already has a direct item, nor spliced onto a row that a different item fills in other waves; name it as unused.
 - A social-media item whose examples name video-sharing platforms is not bundled with watching.
 - Watching pooled with gaming, computer or internet use goes to `st_total`.
+- An item that would go to `st_total` but is restricted to leisure (screen use for reasons other than school work), with no paired school-work item, goes to `st_leisure`, and `st_total` is incompatible ('Leisure only; see st_leisure'); an all-device item split into a school-work and a leisure part fills `st_educational` and `st_leisure`, and their sum fills `st_total`.
+- Paired school-work and leisure items asked over one multi-device scope are summed into `st_total` as the two purpose parts, partial where the scope leaves out devices or the school part pools paid work; a pair on one device, or on the internet alone, follows that device's row or `st_internet` (DR-0002), and `st_total` is incompatible.
+- A leisure item on several devices that leaves out TV or other screens is partial on `st_leisure`; a leisure item on one device or one activity stays on that row, and `st_leisure` is incompatible; a residual item asked beside separate watching or gaming items stays on `st_internet`.
 - Under a pooled multi-device gaming item, the device rows are unavailable ('No device split; see st_game.'); pooling activities within one device is bundling and stays incompatible.
 - `st_game` covers gaming on any device.
 - A gaming item that names devices and leaves out phones and tablets is partial whatever its year; an item naming no device is compatible.
 - An item limited to the TV set (broadcast TV, or videos and DVDs on the set) is partial on `st_watch`; the test is the device, not the word 'videos'.
 - A computer item that excludes games goes to `st_comp_nongaming`; other purpose-restricted device items are partial.
 - Internet time on one device maps to that device's row as partial.
-- Study or homework time that does not name screens is incompatible, except during fully remote schooling (partial).
+- Study or homework time that does not name screens goes to `acc_homework_time` and is incompatible on the `st_*` rows, except during fully remote schooling (partial on `st_educational`).
 - A row that splices instruments with a documented level shift is partial.
 - Screen-time doubles never use proximate.
 - `st_measure_type` records the format behind the row's core `st_` variables.
@@ -289,6 +293,8 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Block tags are `diary`, `parent`, `child`, `device` and `recall`, and every block maps `st_measure_type`, `st_measure_name` and `st_responder`.
 - A `recall` block covers the same occasion with a different reference period; its other variables belong to the occasion, so concurrent analyses exclude it.
 - Waves, and country-cycles of optional modules, with no disaggregated screen item are dropped in the tidier, so expressions need no wave conditions.
+- The school-work part of an all-device item split by purpose counts as disaggregated (educational use) and keeps a wave; an all-device item restricted to leisure does not, so a wave whose only screen item is one is dropped.
+- Household TV-on time (hours the TV is on at home) describes the home, not the child: it fills no row and does not keep a wave.
 
 ### Scoring scales
 
@@ -300,15 +306,20 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Short forms, item subsets, adapted forms and the same items on another response scale go to the generic row, and the named row is incompatible.
 - When the generic row already takes another scale given on the same occasion (a full named form is repeated there first), such a form stays partial on its named row instead, so its score is kept.
 - Where the construct has no generic row (e.g. KIDSCREEN-10, Subjective Happiness Scale), the same items on another response scale stay partial on the named row.
+- Short or adapted SDQ and CBCL parent forms stay partial on their named rows, as for a construct with no generic row, and never move to a generic `_parent` row; an adapted SDQ parent prosocial subscale still repeats on `beh_prosocial_parent`.
 - Exceptions: `mh_dep_scl_self` takes SCL-90-R short forms, the RCADS-25 depression items map to `mh_dep_rcads_self`, and mean-item CBCL rows take item subsets as partial.
 - A generic ('any instrument') row takes a multi-item scale administered for the construct.
 - On a generic row the status reflects construct fit only; short forms, subsets and adapted scoring are compatible when the `*_measure` row describes them.
 - When a named self-report row is mapped, repeat its expression on the generic row.
+- When a single-construct named parent-report row is mapped (the BASC-2, SCAS, SCARED and SMFQ parent rows), repeat its expression on the generic `_parent` row of its construct; SDQ scores other than the parent prosocial subscale, and CBCL syndrome and composite scores, stay on their own rows and never repeat, and only the CBCL DSM-oriented scales and Total Problems, which have no CBCL row, map to the generic `_parent` rows.
+- The SDQ parent prosocial subscale is the one SDQ parent score that repeats: when `beh_prosocial_sdq_parent` is mapped, repeat its expression on `beh_prosocial_parent`, as the self-report subscale repeats on `beh_prosocial_self`.
 - Standardise generic rows, single-rating rows and raw-score rows within dataset at analysis, and within wave where the scale or form changes.
 - `*_measure` rows read '<instrument>, <k> of <K> items, <a>-<b> item scoring (range <min>-<max>), <sum|mean>', then the reversed items and any change of response format or recall period.
 - `*_measure` rows are inferred, entity study, filled in waves (or country-cycles) where the scale was given, a constant when every wave fielded it, and NA elsewhere, never 'Unknown' as a filler.
+- `hlth_bmi_measure` and `cog_earlylang_measure` are the exceptions: they are entity participant and their value follows the row (the height-and-weight source, or the child's form or age interval), and `hlth_bmi_measure` is compatible where a source column records the source per row.
 - A `*_measure` row says 'Unknown' only when a score exists but its instrument cannot be identified.
 - Use a study-supplied score as released and record its missing-item rule ('rule not documented' if unknown).
+- A released score prorated or averaged over answered items is used only where at least half the scale's items were answered.
 - Sums computed in the expression are complete-case (`+`), unless the manual prescribes proration.
 - **SDQ rule:** items scored 0-2 (not true 0, somewhat true 1, certainly true 2), items 7, 11, 14, 21 and 25 reversed, subscale = mean of answered items × 5 rounded half up with `floor(x + 0.5)`, NA when fewer than 3 of 5 are answered.
 - Where the SDQ items are released, check the study's subscale against them: keep it if it follows the SDQ rule, otherwise gate or recompute it from the items.
@@ -321,13 +332,24 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - **CBCL rule:** mean of the answered 0-2 items of the form's scale, NA when fewer than 80% of administered items are answered, codes outside 0-2 set to NA.
 - CBCL composites take the mean over the union of component items, gate each component at 80%, and follow the form's published grouping.
 - `beh_cbcl_measure` records the form, items administered of the published total per scale, the scoring and the missing rule, one value per wave where forms differ.
+- **Parent-scale rule:** the generic `_parent` scale rows take a published scale or subscale of a parent- or carer-rated instrument as the raw sum or mean the instrument defines, keyed so higher means more problems, with a T-score or standard score only where no raw score is released (partial) and never a percentile or cut-off band.
+- The parent-scale rule also covers `beh_selfreg_parent`, `beh_emotdysreg_parent` and `beh_prosocial_parent`, but the self-regulation and prosocial rows run higher = more self-regulation and more prosocial behaviour, and temperament effortful-control scales map to `beh_selfreg_parent` as partial while other temperament scales never map.
+- Where an instrument releases a parent score on its full response scale beside a dichotomised one, the `_parent` row takes the full-response-scale score.
+- Single parent-rated items, study checklists with no published scoring, temperament scales other than effortful control, teacher ratings and the symptom or criteria counts of skip-structured diagnostic interviews never fill a generic `_parent` row; the row is incompatible, naming them.
+- With only parent problem scales in hand (attention, hyperactivity-impulsivity, oppositional, conduct or broadband problem scales, SDQ and CBCL scores included), `beh_selfreg_parent` and `beh_emotdysreg_parent` are incompatible, naming the scales and the rows that hold them.
+- Inattention-only scales go to `beh_atten_parent` and hyperactivity-impulsivity-only scales to `beh_hyper_parent`; a scale that mixes the two, and a released combined ADHD total or index that is not the sum of those two rows, go to `beh_adhdsymp_parent`, and a sum of the two rows is derived at analysis.
+- Oppositional-defiant scales go to `beh_opp_parent` and conduct-disorder scales to `beh_conduct_parent`; a study with both fills both; a scale that mixes oppositional with conduct items or measures aggression alone goes to `beh_conduct_parent` as partial; anger or irritability mood scales fill neither row.
+- Where a parent scale's item set changes with the child's age, the `_parent` row takes the released raw score (compatible), `beh_parent_measure` gives the item counts by age, and the score is standardised within dataset and age band at analysis.
+- When two scales qualify for one generic `_parent` row on the same occasion, map the named-row repeat first, then a compatible scale over a partial one, then the scale with the most non-missing values, and name the others as unused.
 - PedsQL items are transformed 0-4 to 100-0 and averaged when at least half are answered.
 - BPAQ-SF rows take the published items, never a study's own syntax, and need all three items.
 - Subject composites (grades, teacher and parent ratings) average every academic subject reported, not arts, PE or ICT, and need every component (partial).
 - Self-concept and self-efficacy are never averaged across subjects: maths, verbal and science self-concept go to their own rows, a composite across subjects fills no self-concept row, and subject self-efficacy scales are incompatible on `wb_selfefficacy_academic_self`, which does take a published academic efficacy subscale whose items each name a subject.
 - Respondent suffixes are literal, respondents are never coalesced, and the CBCL and BASC-2 rows are parent report only.
+- `_parent` rows take a rating of the child by a parent or other caregiver, with the rater named in the notes, and a score averaged over two parents' ratings is the one exception to never coalescing respondents: it maps as partial, with the averaging named in `beh_parent_measure`.
 - Cognitive rows take the age-normed score the study releases: standard score (mean 100, SD 15), T-score (50, 10) or scaled score (10, 3).
 - Raw, ability or number-correct scores map only when no normed form exists, as partial; percentiles, age-equivalents and normative classifications never map.
+- `cog_earlylang_parent` is the exception: parent-report early-language scales change items with the child's age and publish age norms only as percentiles or cut-off zones, which never map, so the row takes the raw ASQ-3 Communication area score or CDI word count as compatible, and the form and age interval are recorded in `cog_earlylang_measure` for standardisation within dataset and form or age interval at analysis.
 - Never mix score forms within a row across waves.
 - NIH Toolbox rows take the age-corrected standard score (uncorrected only as partial), and the BASC-2 executive-function row takes the T-score; never the fully corrected T-score.
 - BAS II subtests are given individually, so there is no GCA for `cog_iq_fullscale`; map T-scores for the cognitive subtests and standard scores (mean 100, SD 15) for the achievement scales, with ability scores only as a partial fallback.
@@ -335,8 +357,11 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - NEPSY rows take the same-named subtest from either edition; record the edition and age at testing.
 - Only the child's own test maps; tests the caregiver took never map to child rows.
 - Parent-rated executive-function scales run higher = more problems and never pool with performance tasks.
+- Executive-function rating scales that have their own row (BRIEF, BASC-2 executive functioning) stay whole on it: their scales and indexes never fill `beh_selfreg_parent` or `beh_emotdysreg_parent`, and an executive-function questionnaire with no row of its own gives only its inhibitory-control subscale to `beh_selfreg_parent`, partial.
 - Child-performed attention, set-shifting and inhibitory-control tasks go to the generic task rows (`cog_atten_task`, `cog_flex_task`, `cog_inhib_task`), one task per dataset per row, with the task described in the matching `*_measure` row; a mapped NIH Toolbox or NEPSY task row repeats there.
+- Parent-rated self-regulation scales (`beh_selfreg_parent`) never pool with Head-Toes-Knees-Shoulders or other task scores, which stay on `beh_selfreg_htks` and the task rows.
 - General distress inventories (Kessler, Malaise Inventory, GHQ-12) map to their own rows and repeat on the generic `mh_distress_self`, never to the depression or anxiety rows.
+- Published negative-affect scales (e.g. PANAS negative affect) go to `wb_negaffect_self`, never to the distress, depression or anxiety rows; a study's own set of negative-feeling items with no published scoring (a survey's feelings battery, diary or experience-sampling emotion ratings) is a study checklist on `mh_distress_self`, partial; subscales and totals of depression, anxiety, stress or distress inventories stay on the mental-health rows and fill neither affect row.
 - Plausible-value scales use the first plausible value only.
 - Achievement tests take one domain per row (`acc_academachment_stdtest` records its domain); age-normed standard or scale scores are compatible and raw scores partial.
 - Record the test, subtest and score type, and standardise test scores within dataset and wave at analysis.
@@ -366,15 +391,20 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - A behaviour item that places a device in the bedroom is partial on `fam_bedroomscreen`, and a parent's technical time limit is partial on `fam_screenrules`.
 - `fam_readto_time` takes hours per average day under the screen-time band rules, **Non-users** and the **Day-of-use rule**, so minutes on each day of reading are scaled by days read to per week / 7 and marked partial.
 - A verbal reading frequency takes the days of its `fam_readto_freq` level (7, 4.5 or 1.5), and a frequency below weekly leaves `fam_readto_time` NA.
+- `fam_coview_freq` takes screen use together with a parent or carer, or with one present and supervising, from any informant: verbal and share-of-time anchors map by the **Frequency-item rules** wording ('most of the time' under 'all of the time' is Often), day counts by their day-share cuts, and items asked per medium take the most frequent level.
+- `fam_parent_screentime` takes the responding parent's own hours per average day under the screen-time band and **Non-users** rules, weekday and weekend items (5 × wd + 2 × we) / 7, and never the child's screen time.
 - Binary behaviour rows are TRUE for any occurrence (the lowest response above never) and FALSE for never; yes/no items map directly.
 - A multi-item composite is TRUE if any answered item is positive, FALSE if every answered item is never, and NA if none is answered; study missing codes count as unanswered.
 - Use self-report where it exists; a parent-reported occurrence item is partial.
 - An item limited to one sub-type or setting of the behaviour is partial; school-based items are compatible on the bullying rows.
 - Truth- or agreement-rated items (SDQ, CBCL, 'describes this child') never map to binary or frequency rows; frequency-rated instrument items (BASC-2, PedsQL) are judged on content.
-- School rows (truancy, school and schoolwork satisfaction, parent-rated school performance, academic self-efficacy, and academic and subject self-concept) are NA for respondents not enrolled in school or enrolled beyond secondary school.
+- School rows (truancy, school and schoolwork satisfaction, parent-rated school performance, homework time, academic self-efficacy, and academic and subject self-concept) are NA for respondents not enrolled in school or enrolled beyond secondary school.
+- `acc_homework_time` takes homework time in hours per average day under the screen-time band rules, **Non-users** (0 where a filter says no homework is set or done) and the **Day-of-use rule**; a total for the whole weekend is halved to one weekend day before the 5:2 weighting (partial), an item on school days only is taken as the average day (partial), and an item on yesterday or one named day is partial.
+- Study time that also counts revision, exam preparation or work set by a private tutor or cram school is partial on `acc_homework_time`; time spent attending school lessons, tutoring or cram classes, or an item that counts it, is incompatible; a homework item that names screens goes to `st_educational`; where a child and a parent both report, the child's report is used.
 - Single-rating rows (life, domain and happiness ratings) record the scale points and anchor wording and reverse scales where the lowest number is best.
 - Keep one response scale per dataset per single-rating row where possible; where it changes between waves, standardise within dataset and wave.
-- The teacher behaviour ratings (`beh_agg_singleitem_teacher`, `beh_prosocial_singleitem_teacher`) record the scale points, anchors and recall period and keep one response scale per dataset where possible, like the single-rating rows, but are keyed so that higher means more of the behaviour the row names.
+- The teacher behaviour ratings (`beh_agg_singleitem_teacher`, `beh_prosocial_singleitem_teacher`, `beh_atten_singleitem_teacher`, `beh_disrupt_singleitem_teacher`) record the scale points, anchors and recall period and keep one response scale per dataset where possible, like the single-rating rows, but are keyed so that higher means more of the behaviour the row names (more attention problems on `beh_atten_singleitem_teacher`).
+- Where two teachers rated the same item, a teacher behaviour rating takes one teacher, the one who rates the child on the dataset's other teacher-rated rows (else the one with more ratings), and names the other as unused; two teachers' ratings are never averaged.
 - Faces scales (completely happy to not at all happy) count as satisfaction ratings, and life as a whole always goes to `wb_lifesat_singleitem_self`.
 - Diagnosis rows: Never = never told, Previously = told but not current, Currently = told and current; treatment or medication as the proxy for current is partial; items not attributed to a health professional are incompatible.
 - A stem that pools educators with health professionals ('a doctor, other health care provider, or educator ever told you') counts as attributed to a health professional, with no loss of status.
@@ -388,7 +418,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Emit `allowed_values` exactly, case included.
 - Demographic and SES rows emit the literal "Unknown", never NA, on every row of a mapped dataset, including waves where the item was not asked and nothing is carried (`default = "Unknown"` or `coalesce(..., "Unknown")`).
 - `state` is the exception (NA outside Australia), and so is `ses_hukou` (NA outside mainland China or where not asked).
-- Academic, behaviour and mental-health categorical rows use NA, never Unknown; don't know, not graded, pass/fail and not applicable codes are NA.
+- Academic, behaviour, mental-health and health categorical rows use NA, never Unknown (except `hlth_bmi_measure`, whose 'Unknown' marks a value whose source cannot be identified); don't know, not graded, pass/fail and not applicable codes are NA.
 - A source code no document defines maps to Unknown on demographic rows and NA elsewhere, never to a real category.
 - A category merging a real value with Other or unknown maps to the real value (Female or unknown -> Female; Other or unknown -> Other), proximate, merge named; a merged Other/prefer-not-to-say maps to Unknown.
 - A group with no schema category folds into Other and is proximate.
@@ -418,9 +448,9 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 
 ### Multiple waves and carry-forward
 
-- **Carry-forward:** sex, ethnicity, indigenous status, immigrant background, `born_in_country` and derived minority are carried within participant through one allowlisted helper in the expression; observed values stay, and missing or not-asked waves take the earliest observed value in wave order.
+- **Carry-forward:** sex, ethnicity, indigenous status, immigrant background, `born_in_country`, derived minority and the early-life rows (`hlth_birthweight`, `hlth_preterm`, `hlth_breastfed`, `hlth_prenatalsmoking`) are carried within participant through one allowlisted helper in the expression; observed values stay, and missing or not-asked waves take the earliest observed value in wave order.
 - Sex items take the participant's modal observed value at every wave, ties Unknown; gender-identity items stay as recorded.
-- Parent education is always carried; household SES and family structure are carried across gaps of 12 months or less (inclusive) and are otherwise Unknown; this fill is done in the tidier.
+- Parent education is always carried; household SES, family structure and maternal employment are carried across gaps of 12 months or less (inclusive) and are otherwise Unknown; this fill is done in the tidier.
 - A follow-up wave with no age item takes the nearest recorded age plus the documented interval, filled in the tidier, partial.
 - Waves and country-cycles with no disaggregated screen item are dropped in the tidier.
 - Tidiers drop a participant's rows for waves the participant did not attend.
@@ -438,6 +468,21 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - The share of answers in an open band does not lower the status.
 - Keep durations under 4 or over 16 hours; they are screened at analysis.
 
+### Body size, activity and early life
+
+- `hlth_bmi` takes kg/m2 at the occasion, measured or reported, as released or computed from height and weight.
+- Where one occasion has more than one BMI source, take measured, then the child's own report, then a parent's report, and name the others as unused.
+- `hlth_bmi_measure` records whether height and weight were measured, self-reported or parent-reported, filled per row where the source differs within a wave, an exception to the `*_measure` rules: compatible where a source column records the source, and 'Unknown' only when a value exists but its source cannot be identified.
+- A released BMI-for-age z-score goes to `hlth_bmi_z`, with its growth reference in `hlth_bmi_z_measure`, only where neither BMI nor the height and weight to compute it are released; otherwise z-scores are derived at analysis on one reference, and percentile-only and category-only releases are incompatible.
+- Height, weight, BMI and birth-weight values are kept as entered, including entries only possible in another unit, and are screened at analysis, as screen time and sleep are.
+- `hlth_pa_days60` takes only the days-of-60-minutes item, past 7 days or a usual week (the past 7 days where both are asked, never their mean); day bands take their midpoint (partial), and every other activity format is incompatible.
+- BMI, BMI z-scores and activity days are never carried across waves.
+- The early-life rows describe the child's birth and infancy and are carried by the carry-forward rule.
+- Birth weight is in grams: closed bands at their midpoint, an open band half the neighbouring band's width beyond its bound (partial); low-birth-weight flags are incompatible.
+- Preterm means before 37 completed weeks; a yes/no item with another cut or none, including 'born 3 weeks or more early', is partial.
+- Breastfeeding is ever or never: any duration above zero is TRUE.
+- Smoking in pregnancy is TRUE for any smoking at any point in the pregnancy; the mother's smoking at another time and household smoking are incompatible.
+
 ### SES
 
 - **Household SES cuts:** Low, Medium and High split the unweighted sample 40/20/40 within wave, and within country or site where the measure or its bands are country- or site-specific; at or below the 40th percentile is Low and above the 60th is High.
@@ -450,6 +495,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - `ses_household_measure` reads '<type>: <measure>', with the type from a fixed list.
 - Parent education uses one vocabulary with ISCED anchors; a band spanning two levels goes to the level holding most of its members (proximate), and tertiary study begun but not completed is Post-secondary.
 - Parents are whichever mother and father figures the source records, with the row partial when one is systematically unobserved.
+- `maternal_employment` takes the mother figure's paid work now or in the past week (Employed or Not employed); a longer window or an occupation list with a homemaker option is proximate, and the occupation of a current or most recent job is not employment status (incompatible).
 - Categorical SES rows are compatible when every level matches the schema's meaning and proximate for coarser, lumped or stand-in sources (school location, subjective standing, occupational class); they never use partial, and constants are inferred.
 - Urbanicity follows a national typology on its own thresholds; raw size bands use under 5,000 Rural, 5,000 to under 100,000 Suburban and 100,000 or more Urban.
 - An urban constant is allowed only when the design guarantees urban residence at the measured wave.

@@ -1,12 +1,16 @@
 #' Tidier for BPIPD-232 (NSCH)
 #'
+#' Stacks the eight annual files (2016-2023), then drops the survey years in
+#' which no caregiver answered a disaggregated screen item
+#' (`bp232_drop_screenless()`), which leaves 2016-2017.
+#'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
 #' - one tibble, one row per sampled child per survey year (the NSCH is a
-#'   repeated cross-section)
+#'   repeated cross-section), 2016-2017
 tidy_BPIPD_232 <- function(raw_dataset, spec) {
   dfs <- raw_dataset$data
 
@@ -61,8 +65,25 @@ tidy_BPIPD_232 <- function(raw_dataset, spec) {
     stop("BPIPD-232: `hhid` does not uniquely identify rows.", call. = FALSE)
   }
 
-  # The CSV releases carry no labels; each year's workbook supplies them.
-  bp232_apply_labels(out, bp232_labels(raw_dataset))
+  out <- bp232_drop_screenless(out)
+
+  # The CSV releases carry no labels; each kept year's workbook supplies them.
+  bp232_apply_labels(out, bp232_labels(raw_dataset, sort(unique(out$year))))
+}
+
+#' Keep survey years in which a caregiver answered a disaggregated screen item
+bp232_drop_screenless <- function(df) {
+  if (!"k7q60_r" %in% names(df)) {
+    stop(
+      "BPIPD-232: no TV item `k7q60_r` in the stacked table; check ",
+      "`bp232_align_names()`.",
+      call. = FALSE
+    )
+  }
+  # Only the TV item K7Q60_R counts: K7Q91_R (2016-2017) and SCREENTIME
+  # (2018-2023) are multi-device items restricted to leisure (screen-wave rule).
+  answered <- as.numeric(df$k7q60_r) %in% 1:6
+  df[df$year %in% unique(df$year[answered]), , drop = FALSE]
 }
 
 #' One name per construct across the eight annual releases
@@ -80,9 +101,10 @@ bp232_align_names <- function(x, year_suffix) {
 
 #' Variable labels for the stacked table, keyed by aligned column name
 #'
-#' Each year's `docs` includes a variable-labels workbook; where wording
-#' differs between years, the latest year wins.
-bp232_labels <- function(raw_dataset) {
+#' Each year's `docs` includes a variable-labels workbook; only the `years`
+#' the table keeps are read, and where wording differs between them, the
+#' latest year wins.
+bp232_labels <- function(raw_dataset, years) {
   matches <- raw_dataset$meta$matches
   books <- matches[
     matches$role == "docs" & grepl("\\.xlsx$", matches$file),
@@ -91,7 +113,7 @@ bp232_labels <- function(raw_dataset) {
   ]
 
   labels <- character(0)
-  for (year in 2016:2023) {
+  for (year in years) {
     path <- books$file[books$resource_name == paste0("nsch_", year, "_docs")]
     if (length(path) != 1L) {
       stop(
