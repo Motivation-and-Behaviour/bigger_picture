@@ -201,6 +201,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1249,maternal_education,"Completed some grad school, but no degree",Bachelor degree or higher,compatible,Code 7: graduate study begun after a bachelor degree
 1249,maternal_education,Completed graduate school,Bachelor degree or higher,compatible,"Code 8, ISCED 7-8"
 1249,maternal_education,Unknown,Unknown,compatible,Not asked (18-year-olds) or not answered; the three parent-education rows share these rows
+774,maternal_education,Bachelor degree or higher,Bachelor degree or higher,compatible,"Carer education code 1 (PCEdStat, SCEdStat, HLEdStat), ISCED 6-8."
+774,maternal_education,Diploma or certificate III/IV,Post-secondary,compatible,"Code 2: AQF Certificate III or IV (ISCED 4) or Diploma (ISCED 5)."
+774,maternal_education,Year 11 or 12,Secondary school or less,compatible,"Code 3: highest level Year 11 or 12 (ISCED 3)."
+774,maternal_education,Year 10 or below,Secondary school or less,compatible,"Code 4: highest level Year 10 or below (ISCED 0-2)."
+774,maternal_education,Not stated,Unknown,compatible,Code 9 (not stated).
+774,maternal_education,No resident parent figure,Unknown,compatible,"No resident carer of the matching sex is the child's own, adoptive, step or foster parent."
 948,maternal_education,1,Secondary school or less,compatible,Code 1 literate (but did not go to school): ISCED 0.
 948,maternal_education,2,Secondary school or less,compatible,Code 2 primary school graduate: ISCED 1.
 948,maternal_education,3,Secondary school or less,compatible,Code 3 middle school graduate: ISCED 2.
