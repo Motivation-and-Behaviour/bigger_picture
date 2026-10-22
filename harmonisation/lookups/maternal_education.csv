@@ -201,3 +201,10 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1249,maternal_education,"Completed some grad school, but no degree",Bachelor degree or higher,compatible,Code 7: graduate study begun after a bachelor degree
 1249,maternal_education,Completed graduate school,Bachelor degree or higher,compatible,"Code 8, ISCED 7-8"
 1249,maternal_education,Unknown,Unknown,compatible,Not asked (18-year-olds) or not answered; the three parent-education rows share these rows
+718,maternal_education,No formal qualifications,Secondary school or less,compatible,ALSWH highest qualification code 1: no formal qualifications (ISCED 0-2)
+718,maternal_education,School or Intermediate Certificate (or equivalent),Secondary school or less,compatible,"ALSWH code 2: Year 10 or equivalent (ISCED 2)"
+718,maternal_education,Higher School or Leaving Certificate (or equivalent),Secondary school or less,compatible,"ALSWH code 3: Year 12 or equivalent (ISCED 3)"
+718,maternal_education,"Trade/apprenticeship (eg Hairdresser, Chef)",Secondary school or less,compatible,"ALSWH code 4: trade qualification or apprenticeship, which the education vocabulary places with upper-secondary vocational qualifications"
+718,maternal_education,"Certificate/diploma (eg Child Care, Technician)",Post-secondary,proximate,"ALSWH code 5: vocational certificates and diplomas below bachelor level, from upper-secondary certificates (ISCED 3) to diplomas (ISCED 5); placed at Post-secondary, the level most of the band is taken to hold"
+718,maternal_education,University degree,Bachelor degree or higher,compatible,"ALSWH code 6: bachelor degree (ISCED 6)"
+718,maternal_education,"High University degree (eg Grad Dip, Masters, PhD)",Bachelor degree or higher,compatible,"ALSWH code 7: graduate diploma, masters or doctorate (ISCED 7-8)"
