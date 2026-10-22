@@ -201,6 +201,14 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1249,maternal_education,"Completed some grad school, but no degree",Bachelor degree or higher,compatible,Code 7: graduate study begun after a bachelor degree
 1249,maternal_education,Completed graduate school,Bachelor degree or higher,compatible,"Code 8, ISCED 7-8"
 1249,maternal_education,Unknown,Unknown,compatible,Not asked (18-year-olds) or not answered; the three parent-education rows share these rows
+1294,maternal_education,Did not finish high school,Secondary school or less,compatible,BYMOTHED/BYFATHED/BYPARED (and F1 copies) code 1: no high school diploma (ISCED 0-2)
+1294,maternal_education,Graduated from high school or GED,Secondary school or less,compatible,Code 2: high school diploma or GED (ISCED 3)
+1294,maternal_education,"Attended 2-year school, no degree",Post-secondary,compatible,Code 3: two-year college begun but not completed (tertiary study begun)
+1294,maternal_education,Graduated from 2-year school,Post-secondary,compatible,Code 4: two-year (associate) degree (ISCED 5)
+1294,maternal_education,"Attended college, no 4-year degree",Post-secondary,compatible,Code 5: four-year college begun without a degree (tertiary study begun)
+1294,maternal_education,Graduated from college,Bachelor degree or higher,compatible,Code 6: bachelor's degree (ISCED 6)
+1294,maternal_education,Completed Master's degree or equivalent,Bachelor degree or higher,compatible,Code 7: master's degree (ISCED 7)
+1294,maternal_education,"Completed PhD, MD, other advanced degree",Bachelor degree or higher,compatible,Code 8: doctoral or professional degree (ISCED 8)
 774,maternal_education,Bachelor degree or higher,Bachelor degree or higher,compatible,"Carer education code 1 (PCEdStat, SCEdStat, HLEdStat), ISCED 6-8."
 774,maternal_education,Diploma or certificate III/IV,Post-secondary,compatible,"Code 2: AQF Certificate III or IV (ISCED 4) or Diploma (ISCED 5)."
 774,maternal_education,Year 11 or 12,Secondary school or less,compatible,"Code 3: highest level Year 11 or 12 (ISCED 3)."
