@@ -221,3 +221,6 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1249,ethnicity,Not Hispanic: Mixed racial background,Mixed,compatible,q238 = 5: mixed racial background maps onto the schema Mixed category
 1249,ethnicity,Not Hispanic: Other race,Other,compatible,q238 = 6: residual race category
 1249,ethnicity,Unknown,Unknown,compatible,"Hispanic origin (q236) or, for non-Hispanic youth, race (q238) not answered"
+50,ethnicity,HISPANIC,Hispanic,proximate,CRACE code 1; the mother's racial/ethnic cohort from the 1979 NLSY79 screener used for the child
+50,ethnicity,BLACK,Black,proximate,CRACE code 2; the mother's racial/ethnic cohort from the 1979 NLSY79 screener used for the child
+50,ethnicity,"NON-BLACK, NON-HISPANIC",White,proximate,CRACE code 3; the mother's screener cohort; merges White with every other non-Black non-Hispanic group (merge named)
