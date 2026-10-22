@@ -201,3 +201,8 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1249,maternal_education,"Completed some grad school, but no degree",Bachelor degree or higher,compatible,Code 7: graduate study begun after a bachelor degree
 1249,maternal_education,Completed graduate school,Bachelor degree or higher,compatible,"Code 8, ISCED 7-8"
 1249,maternal_education,Unknown,Unknown,compatible,Not asked (18-year-olds) or not answered; the three parent-education rows share these rows
+948,maternal_education,1,Secondary school or less,compatible,Code 1 literate (but did not go to school): ISCED 0.
+948,maternal_education,2,Secondary school or less,compatible,Code 2 primary school graduate: ISCED 1.
+948,maternal_education,3,Secondary school or less,compatible,Code 3 middle school graduate: ISCED 2.
+948,maternal_education,4,Secondary school or less,compatible,Code 4 high school graduate: ISCED 3.
+948,maternal_education,5,Bachelor degree or higher,proximate,Code 5 university graduate: does not separate two-year associate degrees (ISCED 5) from bachelor's and higher degrees (ISCED 6-8); placed at the level taken to hold most of the band.
