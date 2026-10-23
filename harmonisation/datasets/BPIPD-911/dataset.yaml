@@ -1,0 +1,20 @@
+dataset_id: "911"
+dataset_name: "Rojo-Wissar"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "ST_rr.sav"
+    reader: "spss"
+
+  - name: "measures_list"
+    role: "docs"
+    glob: "Stage 3 Measures List.doc"
+
+  - name: "technology_questionnaire"
+    role: "docs"
+    glob: "Technology Questionnaire.docx"
+
+notes: |
+ Also includes docx questionnaires and measures - not read in
