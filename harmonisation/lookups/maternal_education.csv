@@ -241,3 +241,17 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 535,maternal_education,Two-Year Degree,Post-secondary,compatible,q162 code 4: two-year (associate) degree (ISCED 5)
 535,maternal_education,Four-Year Degree,Bachelor degree or higher,compatible,q162 code 5: four-year (bachelor's) degree (ISCED 6)
 535,maternal_education,Graduate or Professional Degree,Bachelor degree or higher,compatible,q162 code 6: graduate or professional degree (ISCED 7-8)
+2296,maternal_education,Less than a high school degree,Secondary school or less,compatible,"PHIGHED code 1, ISCED 0-2"
+2296,maternal_education,A high school degree or GED,Secondary school or less,compatible,"PHIGHED code 2, ISCED 3"
+2296,maternal_education,Some college but not a college degree,Post-secondary,compatible,PHIGHED code 3: tertiary study begun but no 4-year degree
+2296,maternal_education,A 4-year college degree or higher,Bachelor degree or higher,compatible,"PHIGHED code 4, ISCED 6-8"
+2296,maternal_education,Unknown,Unknown,compatible,"PHIGHED -9, a respondent of the other sex, or no parent record"
+64,maternal_education,nicht beantwortet,Unknown,unavailable,Not answered.
+64,maternal_education,"Keinen Abschluss, noch in beruflicher Ausbildung (z.B. Student/in, AZUBI, BVJ)",Secondary school or less,compatible,"No vocational qualification yet, still in training (students, apprentices, pre-vocational year); school level only, and most hold no Abitur."
+64,maternal_education,Keinen Berufsabschluss und nicht in Ausbildung,Secondary school or less,compatible,No vocational qualification and not in training; school level only.
+64,maternal_education,"Lehre, also beruflich-betriebliche Ausbildung",Secondary school or less,compatible,Dual-system apprenticeship; ISCED 3 upper-secondary vocational rather than post-secondary.
+64,maternal_education,"Ausbildung an der Berufsfachschule, Handelsschule, also beruflich-schulische Ausbildung",Secondary school or less,compatible,School-based vocational training (Berufsfachschule/Handelsschule); ISCED 3-4.
+64,maternal_education,"Fachschule, z.B. Meister-, Technikerschule, Berufs- oder Fachakademie",Post-secondary,compatible,"Fachschule, Meister, Techniker or Fachakademie; ISCED 5 short-cycle tertiary, below degree."
+64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
+64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
+64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
