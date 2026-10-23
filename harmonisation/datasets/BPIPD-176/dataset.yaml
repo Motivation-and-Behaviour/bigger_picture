@@ -1,0 +1,12 @@
+dataset_id: "176"
+dataset_name: "Gentile, 2014"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "EDG W123_R2_noname.sav"
+    reader: "spss"
+
+notes: |
+  Single .sav file

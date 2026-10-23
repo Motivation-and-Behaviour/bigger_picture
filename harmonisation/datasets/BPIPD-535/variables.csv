@@ -1,0 +1,813 @@
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,inferred,participant_id,participant_id,"Built in the tidier from the child's row position in the merged file (zero-padded), the same on all four wave rows; no source identifier covers every child (UniqueID is missing for 23).",,
+wave,compatible,wave,wave,"Assessment 1-4 from the source's wave suffixes and item prefixes: 1 baseline (Sep-Dec 2005), 2 mid-intervention (Jan-Feb 2006, child survey and pedometer only), 3 post-intervention (Apr-May 2006), 4 six-month follow-up (Oct-Dec 2006).",,
+data_year,compatible,"Date, wave","coalesce(Date %% 10000, if_else(wave == ""1"", 2005, 2006))","Year of the row's child survey date (Date, Date2-Date4, stored as MMDDYYYY; the 34 wave-4 values that hold only the year still give 2006). 116 rows with no survey date take the wave's modal year (30 at wave 1 = 2005; 86 at waves 2-4 = 2006).",,
+rct_arm,compatible,Demo,"recode_values(as.numeric(Demo), 0 ~ ""Control"", 1 ~ ""Experimental"")","Demo (0 Control, 1 Demo): schools matched within district and randomly assigned; arms named as in the outcome paper (experimental and control schools; doi:10.1186/1741-7015-7-49). dm_or_ct, the same allocation differing for one child, is not used.",,
+survey_weight,unavailable,,,Not a survey sample.,,
+survey_strata,unavailable,,,Not a survey sample.,,
+survey_cluster,unavailable,,,Not a survey sample.,,
+age_years,compatible,"Age_yrs, age_dob, wave","if_else(wave %in% c(""2"", ""4""), if_else(age_dob < 100, age_dob, NA_real_), as.numeric(Age_yrs))","Decimal years. Waves 1 and 3: the study's released age at the anthropometry date (ageW1, Age_yrs_W3). Waves 2 and 4: decimal age from date of birth to the child survey date (age_dob, derived in the tidier before the birth date was dropped); the released wave-4 age (Age_W4) is not used because it is about one year above the date-based age. One child's birth date is the SPSS date origin, a missing-date code (the study's own ages for that child are missing), so derived ages of 100 or more are NA. NA on 35 wave-1 and 39 wave-3 rows with no released age, and on 42 wave-2 and 53 wave-4 rows: 18 and 38 have no usable survey date (34 wave-4 dates hold only the year), 23 and 14 no birth date, and 1 and 1 the SPSS-origin birth date.",,
+sex,compatible,Sex,"coalesce(modal_within(recode_values(as.numeric(Sex), 1 ~ ""Male"", 2 ~ ""Female""), participant_id), ""Unknown"")","Sex (1 Male, 2 Female), the study's child-level sex variable, repeated on every wave row; reporter not documented. Participant's modal value; the one child with no value is Unknown. The wave-4 file's SexW4 and teacher-reported q225 are not used.",,
+country,inferred,,"""USA""","Constant: the two participating communities are Lakeville, Minnesota and Cedar Rapids, Iowa (district; doi:10.1186/1741-7015-7-49).",,
+state,unavailable,,,Not an Australian dataset.,,
+ethnicity,proximate,Race,"coalesce(
+  carry_within(
+    lookup_values(
+      haven::as_factor(Race),
+      lookup_ethnicity,
+      dataset_id = spec$dataset_id,
+      target_variable = ""ethnicity""
+    ),
+    participant_id,
+    order = as.integer(wave)
+  ),
+  ""Unknown""
+)","Race (Caucasian, AfricanAmerican, Hispanic, Other), the study's child-level race variable, the same on every wave row; reporter not documented. Shared ethnicity lookup; Hispanic, a category of the same item, stands in this US sample. Proximate: Other lumps Asian, multiracial and Native American children. The undefined code 14 and missing values = Unknown. The teacher's report (q226) and the parent's own race (q161) are not used.",ethnicity,
+indigenous,incompatible,"q226, q161",,"Indigenous follows the ethnicity item (Race), which offers no Native American category; the teacher's (q226) and the parent's own (q161) race items offer Native American but are not the ethnicity item.",,
+minority,compatible,Race,"coalesce(
+  carry_within(
+    recode_values(as.numeric(Race), 1 ~ ""Non-minority"", c(2, 3, 4) ~ ""Minority""),
+    participant_id,
+    order = as.integer(wave)
+  ),
+  ""Unknown""
+)","Same item as ethnicity (Race): Caucasian = Non-minority (the US non-Hispanic White majority); African American, Hispanic and Other = Minority; the undefined code 14 and missing values = Unknown. Identical to the study's own Minority flag.",,
+immigrant_background,incompatible,"q035, q164, q228",,"Only language items: child 'Is English your first language' (q035, mapped to home_language), parent 'Is English your native language' (q164), teacher 'Is child a native English speaker' (q228); no birthplace of the child or parents.",,
+born_in_country,unavailable,,,Not collected.,,
+home_language,proximate,"q035, b035","coalesce(
+  carry_within(
+    recode_values(
+      coalesce(as.numeric(q035), as.numeric(b035)),
+      1 ~ ""Country language only"",
+      2 ~ ""Another language, country language not recorded""
+    ),
+    participant_id,
+    order = as.integer(wave)
+  ),
+  ""Unknown""
+)","Child 'Is English your first language' (q035; b035 at wave 2), asked at every wave: Yes = Country language only, No = Another language, country language not recorded (English counted as the country language). Proximate: the participant's own first language stands in for the home language. Observed answers stay; waves without one take the earliest observed answer; otherwise Unknown. Not used: the teacher's 'Is child a native English speaker' (q228; the child is the screen-time respondent) and the parent's own native language (q164, a parent's first language).",,
+ses_area,unavailable,,,Not collected.,,
+ses_household,proximate,q163,"recode_values(as.numeric(q163), c(1, 2, 3, 4) ~ ""Low"", 5 ~ ""Medium"", 6 ~ ""High"", default = ""Unknown"")","Household SES cuts by band ridit within wave on parent-reported total household income (q163, 6 bands), waves 1 and 3, carried in the tidier to waves 2 and 4 across gaps of 12 months or less: under $55,000 (bands 1-4, ridits 0.01-0.19) Low, $55K-$100K (band 5, ridits 0.42-0.46) Medium, over $100,000 (band 6, ridits 0.81-0.83) High in every wave; shares about 26/40/34%, more than 10 points from 40/20/40, so proximate. Undefined code 7 and unfilled rows = Unknown.",,
+ses_household_measure,inferred,,"""Income: total household income, parent report, 6 bands""","Constant: q163 at waves 1 and 3, carried to waves 2 and 4 in the tidier.",,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,proximate,"q162, q159_q162","if_else(
+  as.numeric(q159_q162) %in% 2,
+  lookup_values(
+    haven::as_factor(q162),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education"",
+    default = ""Unknown""
+  ),
+  ""Unknown""
+)","Responding parent's own 'Highest level of education you finished' (q162, waves 1 and 3, carried in the tidier from the earliest answer) where the parent who gave it was female (q159_q162, the 'Who completed survey' answer behind the carried value); a male, 'Both' or undefined respondent, no answer and the undefined code 7 = Unknown. Shared education lookup. Proximate: the mother is inferred from the respondent's sex.",maternal_education,
+paternal_education,proximate,"q162, q159_q162","if_else(
+  as.numeric(q159_q162) %in% 1,
+  lookup_values(
+    haven::as_factor(q162),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education"",
+    default = ""Unknown""
+  ),
+  ""Unknown""
+)","As maternal_education where the parent who gave q162 was male (q159_q162 = 1); about 8% of parent respondents, so fathers are mostly Unknown. Proximate: the father is inferred from the respondent's sex.",maternal_education,
+parental_education,incompatible,q162,,"Only the responding parent's own education (q162); the other parent is never asked, so the highest level across parents cannot be formed. See maternal_education and paternal_education.",,
+maternal_employment,unavailable,,,Not collected.,,
+urbanicity,incompatible,district,,"Only the two community names (district: Lakeville MN, Cedar Rapids IA); no residential urban/rural classification, and none is imported from external data.",,
+family_structure,proximate,q160,"recode_values(
+  as.numeric(q160),
+  1 ~ ""Two biological/adoptive parents"",
+  c(2, 3, 4) ~ ""Single parent"",
+  default = ""Unknown""
+)","Responding parent's marital status (q160), parent report, waves 1 and 3, carried in the tidier to waves 2 and 4 across gaps of 12 months or less between child survey months. Married = Two biological/adoptive parents (cannot separate step families); Divorced/Separated, Single and Widowed = Single parent (a co-resident partner is not asked); Other, the undefined code 7 and unfilled rows = Unknown. Proximate: marital status forces the category.",,
+fam_screenrules,partial,"q010, q011, q018, q019, b010, b011, b018, b019","local({
+  items <- cbind(as.numeric(q010), as.numeric(q011), as.numeric(q018), as.numeric(q019))
+  items[!items %in% 1:3] <- NA
+  wave2 <- cbind(as.numeric(b010), as.numeric(b011), as.numeric(b018), as.numeric(b019))
+  items[is.na(items)] <- c(3, 1, 2)[match(wave2[is.na(items)], 1:3)]
+  case_when(
+    rowSums(items >= 2, na.rm = TRUE) > 0 ~ ""TRUE"",
+    rowSums(items == 1, na.rm = TRUE) > 0 ~ ""FALSE"",
+    .default = NA_character_
+  )
+})","Child report, all four waves: 'Does family have rules about how much TV may be watched' (q010), '... when TV may be watched' (q011), '... how much you may play VGs' (q018) and '... when you may play VGs' (q019), No, Sometimes, Yes; b010-b019 at wave 2, recoded from its own order (1 Yes, 2 No, 3 Sometimes; don't know and undefined codes NA). TRUE if any item is Yes or Sometimes (a rule at any frequency), FALSE if every answered item is No, NA if none is answered. Partial: TV and video games only. The parent's items (q117, q118, q128, q129) are not used: one respondent per row.",,
+fam_bedroomscreen,partial,"q012, q021, b012, b021","local({
+  items <- cbind(coalesce(as.numeric(q012), as.numeric(b012)), coalesce(as.numeric(q021), as.numeric(b021)))
+  items[!items %in% 1:3] <- NA
+  case_when(
+    rowSums(items == 1 | items == 3, na.rm = TRUE) > 0 ~ ""TRUE"",
+    rowSums(items == 2, na.rm = TRUE) > 0 ~ ""FALSE"",
+    .default = NA_character_
+  )
+})","Child report, all four waves: 'Do you have a television in your bedroom?' (q012) and 'Do you play VGs in your bedroom' (q021), Yes, No, Sometimes; b012 and b021 at wave 2, same codes; don't know and undefined codes NA. TRUE if either is Yes or Sometimes, FALSE if every answered item is No. Devices covered: TV, and video-game devices by use. Partial: the TV item covers one device and the gaming item is a behaviour item. The parent's items (q114, q126) are not used: one respondent per row.",,
+fam_coview_freq,proximate,"q003, q004, q014, b003, b004, b014","local({
+  tv <- coalesce(as.numeric(q003), as.numeric(b003))
+  dvd <- coalesce(as.numeric(q004), as.numeric(b004))
+  games <- coalesce(as.numeric(q014), as.numeric(b014))
+  top <- pmax(
+    if_else(tv %in% 1:4, tv, NA_real_),
+    if_else(dvd %in% 1:4, dvd, NA_real_),
+    if_else(games %in% 1:4, games, NA_real_),
+    na.rm = TRUE
+  )
+  recode_values(top, 1 ~ ""Never"", 2 ~ ""Sometimes"", 3 ~ ""Often"", 4 ~ ""Always"")
+})","Child report, all four waves (b003, b004, b014 at wave 2, same codes): 'How often do you watch TV together with a parent?' (q003), 'How often watch movies/DVDs with a parent?' (q004) and 'How often does a parent play VGs with you' (q014); the most frequent level across the three media. Never, A little, Often, Always = Never, Sometimes, Often, Always (Rarely unused); undefined codes NA; recall not stated. Proximate: four levels. The parent's report (q109, q121) is not used: the row takes the report of the screen-time respondent, the child.",,
+fam_mediation_restrict,partial,"child_Time, q006, q010, q011, q018, q019, b006, b010, b011, b018, b019","local({
+  rules <- cbind(as.numeric(q010), as.numeric(q011), as.numeric(q018), as.numeric(q019))
+  rules[!rules %in% 1:3] <- NA
+  rules_w2 <- cbind(as.numeric(b010), as.numeric(b011), as.numeric(b018), as.numeric(b019))
+  rules[is.na(rules)] <- c(3, 1, 2)[match(rules_w2[is.na(rules)], 1:3)]
+  limit <- coalesce(as.numeric(q006), as.numeric(b006))
+  limit[!limit %in% 1:4] <- NA
+  items <- cbind(limit, rules)
+  answered <- rowSums(!is.na(items))
+  score <- if_else(wave == ""2"", rowMeans(items, na.rm = TRUE), as.numeric(child_Time))
+  if_else(answered >= 3, score, NA_real_)
+})","Child report, all four waves: the study's Parental Limits on Media Time score (child_Time, waves 1, 3, 4), the mean of answered items of 'How often does parent put limits on how much time you may watch TV' (q006, Never to Always 1-4) and family rules about how much and when TV may be watched and video games played (q010, q011, q018, q019; No, Sometimes, Yes 1-3); used as released where at least 3 of 5 items were answered (149 released values fall under the gate). Wave 2 released no score, so it is built the same way from b006-b019 after recoding the wave-2 rules items (1 Yes, 2 No, 3 Sometimes; don't know and undefined codes NA). Partial: TV and video games only. The per-medium scores (child_TimeTV, child_TimeVG), the overall involvement score (child_ParInv) and the parent's indices (parent_Time) are not used: the child is the screen-time respondent.",,
+fam_mediation_active,partial,"child_ActMed, q005, q015, q007, q016, q009, q017, b005, b015, b007, b016, b009, b017","local({
+  items <- cbind(
+    coalesce(as.numeric(q005), as.numeric(b005)),
+    coalesce(as.numeric(q015), as.numeric(b015)),
+    coalesce(as.numeric(q007), as.numeric(b007)),
+    coalesce(as.numeric(q016), as.numeric(b016)),
+    coalesce(as.numeric(q009), as.numeric(b009)),
+    coalesce(as.numeric(q017), as.numeric(b017))
+  )
+  items[!items %in% 1:4] <- NA
+  answered <- rowSums(!is.na(items))
+  score <- if_else(wave == ""2"", rowMeans(items, na.rm = TRUE), as.numeric(child_ActMed))
+  if_else(answered >= 3, score, NA_real_)
+})","Child report, all four waves: the study's Active Parental Mediation score (child_ActMed, waves 1, 3, 4), the mean of answered items of how often a parent talks about the TV or movies (q005) and the video games (q015) the child uses, helps decide what programmes to watch (q007) and what games to buy or rent (q016), and requires permission before a movie (q009) or a game (q017), Never to Always 1-4; used as released where at least 3 of 6 items were answered. Wave 2 released no score, so it is built the same way from b005-b017 (same codes; undefined code 7 NA). Partial: the index pools content-choice and permission items with talk, and covers TV and video games only. The per-medium scores (child_ActMedTV, child_ActMedVG), child_ParInv and the parent's indices (parent_ActMed) are not used.",,
+fam_mediation_measure,inferred,,"""SWITCH parental media involvement scores (child report; TV and video games), items adapted from the General Media Habits Questionnaire and the Adult Involvement in Media questionnaire; restrictive: Parental Limits on Media Time, 5 of 5 items (q006 limits on TV time, 1-4 never to always; q010, q011, q018, q019 family rules on how much and when TV and video games, 1-3 no, sometimes, yes), one 1-4 and four 1-3 items (range 1-3.33), mean; active: Active Parental Mediation, 6 of 6 items (talks about TV and games, helps decide programmes and games, asks permission), 1-4 never to always (range 1-4), mean; no item reversed; mean of answered items, used where at least half the items were answered; released at waves 1, 3 and 4, built from the items at wave 2, whose rules items are recoded from 1 yes, 2 no, 3 sometimes""","Constant: the study's two child-reported involvement scores (child_Time, child_ActMed); item sources from the design paper (doi:10.1186/1471-2458-8-223).",,
+fam_parent_screentime,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+fam_readto_freq,incompatible,"q033, q103",,"Only the child's own reading: minutes read for fun on a normal day (q033, child) and how often the child reads for fun (q103, parent); no item on reading to the child.",,
+fam_readto_time,incompatible,"q033, q103",,"Only the child's own reading (q033 minutes read for fun, child; q103, parent); no item on reading to the child.",,
+fam_childbooks,unavailable,,,Not collected.,,
+school_grade,inferred,"GRADE, wave","local({
+  grade <- as.numeric(GRADE)
+  case_when(!grade %in% 3:5 ~ NA_character_, wave == ""4"" ~ paste(""Grade"", grade + 1), .default = paste(""Grade"", grade))
+})","Waves 1-3 (school year 2005-06): the roster grade (GRADE, grades 3-5), 'Grade N'. Wave 4 (Oct-Dec 2006, the next school year): the file's GRADEw4 equals each child's baseline grade on every row, so it is baseline grade + 1, inferred from cohort progression from the grades 3-5 the papers name (repetition not recorded). Inferred overall, as wave 4 is assigned.",,
+school_sector,unavailable,,,Not collected.,,
+st_measure_type,inferred,,"""Continuous""",Open entry of hours per daypart (stored in tenths of an hour; wave 2 keeps the study's codes for long and unclear answers).,,
+st_measure_name,inferred,,"""Custom""",The study's own child survey items (design paper doi:10.1186/1471-2458-8-223).,,
+st_responder,inferred,,"""Self""","The child's self-report survey, the study's main screen-time series, at all four waves.",,
+st_total_wd,incompatible,"q023.1, q023.2, q023.3, b023.1, b023.2, b023.3, q025.1, q025.2, q025.3, b025.1, b025.2, b025.3, q027.1, q027.2, q027.3, b027.1, b027.2, b027.3",,"No item on all screen use; only separately asked TV, video-game and online dayparts (mapped to st_watch_wd, st_game_wd, st_internet_wd), which are never summed (DR-0004).",,
+st_total_we,incompatible,"q024.1, q024.2, q024.3, b024.1, b024.2, b024.3, q026.1, q026.2, q026.3, b026.1, b026.2, b026.3, q028.1, q028.2, q028.3, b028.1, b028.2, b028.3",,"No item on all screen use; only separately asked TV, video-game and online dayparts (mapped to st_watch_we, st_game_we, st_internet_we), which are never summed (DR-0004).",,
+st_total,incompatible,"child_TST, child_TST2",,"The study's weekly totals (child_TST: TV + video games + online; child_TST2: TV + video games) sum separately asked activities, so they are incompatible (DR-0004); see st_watch, st_game, st_internet.",,
+st_watch_wd,partial,"q023.1, q023.2, q023.3, b023.1, b023.2, b023.3","local({
+  hours <- sapply(list(list(q023.1, q023.2, q023.3, b023.1, b023.2, b023.3)), function(d) {
+    wave2 <- sapply(d[4:6], function(b) {
+      x <- as.numeric(b)
+      case_when(
+        x >= 0 & x <= 69 ~ x / 10,
+        x >= 70 & x <= 77 ~ c(6.5, 7, 7.5, 8, 9, 10, 11, 12)[match(x, 70:77)],
+        x == 80 ~ 0.125,
+        .default = NA_real_
+      )
+    })
+    blank <- sapply(d[4:6], function(b) as.numeric(b) %in% 96)
+    wave2[blank & rowSums(!is.na(wave2)) > 0] <- 0
+    coalesce((d[[1]] + d[[2]] + d[[3]]) / 10, wave2[, 1] + wave2[, 2] + wave2[, 3])
+  })
+  hours[, 1]
+})","Child self-report, all four waves: 'On school day, hours watching TV' from when you wake up until lunch, between lunch and dinner, and between dinner and bedtime. Sum of the three dayparts (DR-0002), complete-case; waves 1, 3 and 4 are stored in tenths of an hour (/ 10). Wave 2 (b-prefixed items) keeps the source codes: 0-69 tenths of an hour, 70-77 '6 1/2 hours' to '12 or more hours' = 6.5, 7, 7.5, 8, 9, 10, 11, 12 (top band '12 or more hours' = 12), 80 '<1/4 hour' = 0.125; 96 'Left blank=0' scored 0 within an answered activity-day, the study's own rule (applied at waves 1, 3 and 4), and NA when no daypart of the activity-day holds a duration; 'Checked', 'Not applicable', 'Skipped altogether', 'Whole time' and other codes NA. Partial: a TV-set item.",,
+st_watch_we,partial,"q024.1, q024.2, q024.3, b024.1, b024.2, b024.3","local({
+  hours <- sapply(list(list(q024.1, q024.2, q024.3, b024.1, b024.2, b024.3)), function(d) {
+    wave2 <- sapply(d[4:6], function(b) {
+      x <- as.numeric(b)
+      case_when(
+        x >= 0 & x <= 69 ~ x / 10,
+        x >= 70 & x <= 77 ~ c(6.5, 7, 7.5, 8, 9, 10, 11, 12)[match(x, 70:77)],
+        x == 80 ~ 0.125,
+        .default = NA_real_
+      )
+    })
+    blank <- sapply(d[4:6], function(b) as.numeric(b) %in% 96)
+    wave2[blank & rowSums(!is.na(wave2)) > 0] <- 0
+    coalesce((d[[1]] + d[[2]] + d[[3]]) / 10, wave2[, 1] + wave2[, 2] + wave2[, 3])
+  })
+  hours[, 1]
+})","Child self-report, all four waves: 'On weekend, hours watching TV' from when you wake up until lunch, between lunch and dinner, and between dinner and bedtime. Sum of the three dayparts (DR-0002), complete-case; waves 1, 3 and 4 are stored in tenths of an hour (/ 10). Wave 2 (b-prefixed items) keeps the source codes: 0-69 tenths of an hour, 70-77 '6 1/2 hours' to '12 or more hours' = 6.5, 7, 7.5, 8, 9, 10, 11, 12 (top band '12 or more hours' = 12), 80 '<1/4 hour' = 0.125; 96 'Left blank=0' scored 0 within an answered activity-day, the study's own rule (applied at waves 1, 3 and 4), and NA when no daypart of the activity-day holds a duration; 'Checked', 'Not applicable', 'Skipped altogether', 'Whole time' and other codes NA. Partial: a TV-set item.",,
+st_watch,partial,"q023.1, q023.2, q023.3, b023.1, b023.2, b023.3, q024.1, q024.2, q024.3, b024.1, b024.2, b024.3","local({
+  hours <- sapply(
+    list(list(q023.1, q023.2, q023.3, b023.1, b023.2, b023.3), list(q024.1, q024.2, q024.3, b024.1, b024.2, b024.3)),
+    function(d) {
+      wave2 <- sapply(d[4:6], function(b) {
+        x <- as.numeric(b)
+        case_when(
+          x >= 0 & x <= 69 ~ x / 10,
+          x >= 70 & x <= 77 ~ c(6.5, 7, 7.5, 8, 9, 10, 11, 12)[match(x, 70:77)],
+          x == 80 ~ 0.125,
+          .default = NA_real_
+        )
+      })
+      blank <- sapply(d[4:6], function(b) as.numeric(b) %in% 96)
+      wave2[blank & rowSums(!is.na(wave2)) > 0] <- 0
+      coalesce((d[[1]] + d[[2]] + d[[3]]) / 10, wave2[, 1] + wave2[, 2] + wave2[, 3])
+    }
+  )
+  (5 * hours[, 1] + 2 * hours[, 2]) / 7
+})","(5 x st_watch_wd + 2 x st_watch_we) / 7; item wording, wave-2 codes and top band in st_watch_wd. Partial: a TV-set item.",,
+st_game_wd,compatible,"q025.1, q025.2, q025.3, b025.1, b025.2, b025.3, q013, b013","local({
+  hours <- sapply(list(list(q025.1, q025.2, q025.3, b025.1, b025.2, b025.3)), function(d) {
+    wave2 <- sapply(d[4:6], function(b) {
+      x <- as.numeric(b)
+      case_when(
+        x >= 0 & x <= 69 ~ x / 10,
+        x >= 70 & x <= 77 ~ c(6.5, 7, 7.5, 8, 9, 10, 11, 12)[match(x, 70:77)],
+        x == 80 ~ 0.125,
+        .default = NA_real_
+      )
+    })
+    blank <- sapply(d[4:6], function(b) as.numeric(b) %in% 96)
+    wave2[blank & rowSums(!is.na(wave2)) > 0] <- 0
+    coalesce((d[[1]] + d[[2]] + d[[3]]) / 10, wave2[, 1] + wave2[, 2] + wave2[, 3])
+  })
+  plays <- coalesce(as.numeric(q013), as.numeric(b013))
+  hours[is.na(hours) & plays %in% 2] <- 0
+  hours[, 1]
+})","Child self-report, all four waves: 'On school day, hours play Video Games' from when you wake up until lunch, between lunch and dinner, and between dinner and bedtime. Sum of the three dayparts (DR-0002), complete-case; waves 1, 3 and 4 are stored in tenths of an hour (/ 10). Wave 2 (b-prefixed items) keeps the source codes: 0-69 tenths of an hour, 70-77 '6 1/2 hours' to '12 or more hours' = 6.5, 7, 7.5, 8, 9, 10, 11, 12 (top band '12 or more hours' = 12), 80 '<1/4 hour' = 0.125; 96 'Left blank=0' scored 0 within an answered activity-day, the study's own rule (applied at waves 1, 3 and 4), and NA when no daypart of the activity-day holds a duration; 'Checked', 'Not applicable', 'Skipped altogether', 'Whole time' and other codes NA. Names no device. Non-users: 0 where the child answered 'Do you ever play VGs' No (q013, b013) and left the dayparts unanswered; never overrides a reported duration.",,
+st_game_we,compatible,"q026.1, q026.2, q026.3, b026.1, b026.2, b026.3, q013, b013","local({
+  hours <- sapply(list(list(q026.1, q026.2, q026.3, b026.1, b026.2, b026.3)), function(d) {
+    wave2 <- sapply(d[4:6], function(b) {
+      x <- as.numeric(b)
+      case_when(
+        x >= 0 & x <= 69 ~ x / 10,
+        x >= 70 & x <= 77 ~ c(6.5, 7, 7.5, 8, 9, 10, 11, 12)[match(x, 70:77)],
+        x == 80 ~ 0.125,
+        .default = NA_real_
+      )
+    })
+    blank <- sapply(d[4:6], function(b) as.numeric(b) %in% 96)
+    wave2[blank & rowSums(!is.na(wave2)) > 0] <- 0
+    coalesce((d[[1]] + d[[2]] + d[[3]]) / 10, wave2[, 1] + wave2[, 2] + wave2[, 3])
+  })
+  plays <- coalesce(as.numeric(q013), as.numeric(b013))
+  hours[is.na(hours) & plays %in% 2] <- 0
+  hours[, 1]
+})","Child self-report, all four waves: 'On weekend, hours play Video Games' from when you wake up until lunch, between lunch and dinner, and between dinner and bedtime. Sum of the three dayparts (DR-0002), complete-case; waves 1, 3 and 4 are stored in tenths of an hour (/ 10). Wave 2 (b-prefixed items) keeps the source codes: 0-69 tenths of an hour, 70-77 '6 1/2 hours' to '12 or more hours' = 6.5, 7, 7.5, 8, 9, 10, 11, 12 (top band '12 or more hours' = 12), 80 '<1/4 hour' = 0.125; 96 'Left blank=0' scored 0 within an answered activity-day, the study's own rule (applied at waves 1, 3 and 4), and NA when no daypart of the activity-day holds a duration; 'Checked', 'Not applicable', 'Skipped altogether', 'Whole time' and other codes NA. Names no device. Non-users: 0 where the child answered 'Do you ever play VGs' No (q013, b013) and left the dayparts unanswered; never overrides a reported duration.",,
+st_game,compatible,"q025.1, q025.2, q025.3, b025.1, b025.2, b025.3, q013, b013, q026.1, q026.2, q026.3, b026.1, b026.2, b026.3, q013, b013","local({
+  hours <- sapply(
+    list(list(q025.1, q025.2, q025.3, b025.1, b025.2, b025.3), list(q026.1, q026.2, q026.3, b026.1, b026.2, b026.3)),
+    function(d) {
+      wave2 <- sapply(d[4:6], function(b) {
+        x <- as.numeric(b)
+        case_when(
+          x >= 0 & x <= 69 ~ x / 10,
+          x >= 70 & x <= 77 ~ c(6.5, 7, 7.5, 8, 9, 10, 11, 12)[match(x, 70:77)],
+          x == 80 ~ 0.125,
+          .default = NA_real_
+        )
+      })
+      blank <- sapply(d[4:6], function(b) as.numeric(b) %in% 96)
+      wave2[blank & rowSums(!is.na(wave2)) > 0] <- 0
+      coalesce((d[[1]] + d[[2]] + d[[3]]) / 10, wave2[, 1] + wave2[, 2] + wave2[, 3])
+    }
+  )
+  plays <- coalesce(as.numeric(q013), as.numeric(b013))
+  hours[is.na(hours) & plays %in% 2] <- 0
+  (5 * hours[, 1] + 2 * hours[, 2]) / 7
+})","(5 x st_game_wd + 2 x st_game_we) / 7; item wording, wave-2 codes and top band in st_game_wd. Names no device. Non-users: 0 where the child answered 'Do you ever play VGs' No (q013, b013) and left the dayparts unanswered; never overrides a reported duration.",,
+st_game_comp_wd,unavailable,,,No device split; see st_game.,,
+st_game_comp_we,unavailable,,,No device split; see st_game.,,
+st_game_comp,unavailable,,,No device split; see st_game.,,
+st_game_console_wd,unavailable,,,No device split; see st_game.,,
+st_game_console_we,unavailable,,,No device split; see st_game.,,
+st_game_console,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_wd,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_we,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole,unavailable,,,No device split; see st_game.,,
+st_game_active_wd,unavailable,,,No device split; see st_game.,,
+st_game_active_we,unavailable,,,No device split; see st_game.,,
+st_game_active,unavailable,,,No device split; see st_game.,,
+st_game_phone_wd,unavailable,,,No device split; see st_game.,,
+st_game_phone_we,unavailable,,,No device split; see st_game.,,
+st_game_phone,unavailable,,,No device split; see st_game.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_game.,,
+st_game_tablet_we,unavailable,,,No device split; see st_game.,,
+st_game_tablet,unavailable,,,No device split; see st_game.,,
+st_comp_nongaming_wd,unavailable,,,No device split; see st_internet_wd.,,
+st_comp_nongaming_we,unavailable,,,No device split; see st_internet_we.,,
+st_comp_nongaming,unavailable,,,No device split; see st_internet.,,
+st_comp_wd,unavailable,,,No device split; see st_internet_wd.,,
+st_comp_we,unavailable,,,No device split; see st_internet_we.,,
+st_comp,unavailable,,,No device split; see st_internet.,,
+st_tablet_wd,unavailable,,,Not collected.,,
+st_tablet_we,unavailable,,,Not collected.,,
+st_tablet,unavailable,,,Not collected.,,
+st_phone_wd,unavailable,,,Not collected.,,
+st_phone_we,unavailable,,,Not collected.,,
+st_phone,unavailable,,,Not collected.,,
+st_socmedia_wd,unavailable,,,Not collected.,,
+st_socmedia_we,unavailable,,,Not collected.,,
+st_socmedia,unavailable,,,Not collected.,,
+st_educational_wd,unavailable,,,Not collected.,,
+st_educational_we,unavailable,,,Not collected.,,
+st_educational,unavailable,,,Not collected.,,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch,incompatible,"child_VTV_ind, q001.a1, q001.a2, q001.a3, q001.b1, q001.b2, q001.b3",,"Index, not hours; see st_violent_watch_index: favourite shows are rated for how often (q001.a1-a3), not how long, they are watched.",,
+st_violent_game_wd,unavailable,,,No weekday/weekend split.,,
+st_violent_game_we,unavailable,,,No weekday/weekend split.,,
+st_violent_game,incompatible,"child_VGV_ind, q002.a1, q002.a2, q002.a3, q002.b1, q002.b2, q002.b3",,"Index, not hours; see st_violent_game_index: favourite games are rated for how often (q002.a1-a3), not how long, they are played.",,
+st_violent_watch_index,partial,"child_VTV_ind, q001.a1, q001.b1, q001.a2, q001.b2, q001.a3, q001.b3, b001.a1, b001.b1, b001.a2, b001.b2, b001.a3, b001.b3","local({
+  freq <- cbind(
+    coalesce(as.numeric(q001.a1), 6 - as.numeric(b001.a1)),
+    coalesce(as.numeric(q001.a2), 6 - as.numeric(b001.a2)),
+    coalesce(as.numeric(q001.a3), 6 - as.numeric(b001.a3))
+  )
+  viol <- cbind(
+    coalesce(as.numeric(q001.b1), 4 - as.numeric(b001.b1)),
+    coalesce(as.numeric(q001.b2), 4 - as.numeric(b001.b2)),
+    coalesce(as.numeric(q001.b3), 4 - as.numeric(b001.b3))
+  )
+  freq[!freq %in% 1:5] <- NA
+  viol[!viol %in% 0:3] <- NA
+  products <- freq * viol
+  rated <- rowSums(!is.na(products))
+  answered <- rowSums(!is.na(freq) | !is.na(viol))
+  rebuilt <- if_else(rated > 0, rowSums(products, na.rm = TRUE) / pmax(rated, 1), NA_real_)
+  score <- if_else(wave == ""2"", rebuilt, as.numeric(child_VTV_ind))
+  if_else(rated >= answered / 2, score, NA_real_)
+})","Child report, all four waves: the study's Violent TV Exposure Index (child_VTV_ind, waves 1, 3, 4): for up to three favourite TV shows, how often the show is watched (1 Almost never to 5 Almost every day) x how violent it is (child-rated, 0 Not at all to 3 Very violent), mean over shows with both answers (range 0-15). Wave 2 released no index, so it is built the same way from b001 after reversing its codes (frequency 6 - code, violence 4 - code). Used only where at least half the shows with any answer (frequency or rating) have both a frequency and a rating; title codes alone do not count. Partial: TV shows only. Not used: child_MVE (pooled over shows, games and movies), child_viol_tv (violence with no time weight) and child_freq_tv (frequency only).",,
+st_violent_game_index,compatible,"child_VGV_ind, q002.a1, q002.b1, q002.a2, q002.b2, q002.a3, q002.b3, b002.a1, b002.b1, b002.a2, b002.b2, b002.a3, b002.b3, q013, b013","local({
+  freq <- cbind(
+    coalesce(as.numeric(q002.a1), 6 - as.numeric(b002.a1)),
+    coalesce(as.numeric(q002.a2), 6 - as.numeric(b002.a2)),
+    coalesce(as.numeric(q002.a3), 6 - as.numeric(b002.a3))
+  )
+  viol <- cbind(
+    coalesce(as.numeric(q002.b1), 4 - as.numeric(b002.b1)),
+    coalesce(as.numeric(q002.b2), 4 - as.numeric(b002.b2)),
+    coalesce(as.numeric(q002.b3), 4 - as.numeric(b002.b3))
+  )
+  freq[!freq %in% 1:5] <- NA
+  viol[!viol %in% 0:3] <- NA
+  products <- freq * viol
+  rated <- rowSums(!is.na(products))
+  answered <- rowSums(!is.na(freq) | !is.na(viol))
+  rebuilt <- if_else(rated > 0, rowSums(products, na.rm = TRUE) / pmax(rated, 1), NA_real_)
+  score <- if_else(wave == ""2"", rebuilt, as.numeric(child_VGV_ind))
+  score <- if_else(rated >= answered / 2, score, NA_real_)
+  plays <- coalesce(as.numeric(q013), as.numeric(b013))
+  if_else(is.na(score) & rated == 0 & plays %in% 2, 0, score)
+})","Child report, all four waves: the study's Violent Video Games Exposure Index (child_VGV_ind, waves 1, 3, 4): for up to three favourite video games, how often the game is played (1 Almost never to 5 Almost every day) x how violent it is (child-rated, 0 Not at all to 3 Very violent), mean over games with both answers (range 0-15). Wave 2 built from b002 as for st_violent_watch_index (reversed codes). Used only where at least half the games with any answer (frequency or rating) have both a frequency and a rating. Non-users: 0 where the child answered 'Do you ever play VGs' No (q013, b013) and rated no game; never overrides a rated game. Not used: child_MVE (pooled over media), child_viol_vg (no time weight) and child_freq_vg (frequency only).",,
+st_violent_measure,inferred,,"""st_violent_watch_index: 3 named favourite TV shows, time weight frequency 1-5 (almost never to almost every day), violence classification self-rated 0-3 (not at all to very violent), product per title, mean over rated titles (range 0-15); st_violent_game_index: 3 named favourite video games, time weight frequency 1-5, violence classification self-rated 0-3, product per title, mean over rated titles (range 0-15). Study child survey items and indices (Violent TV Exposure Index, Violent Video Games Exposure Index), released at waves 1, 3 and 4 and built from the items at wave 2; an index is used where at least half the titles with any answer were rated""","Constant. Not used: child_MVE (the study's index over shows, games and movies; no combined row), child_viol_* (violence ratings with no time weight) and child_freq_* (frequency only).",,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,compatible,"q027.1, q027.2, q027.3, b027.1, b027.2, b027.3","local({
+  hours <- sapply(list(list(q027.1, q027.2, q027.3, b027.1, b027.2, b027.3)), function(d) {
+    wave2 <- sapply(d[4:6], function(b) {
+      x <- as.numeric(b)
+      case_when(
+        x >= 0 & x <= 69 ~ x / 10,
+        x >= 70 & x <= 77 ~ c(6.5, 7, 7.5, 8, 9, 10, 11, 12)[match(x, 70:77)],
+        x == 80 ~ 0.125,
+        .default = NA_real_
+      )
+    })
+    blank <- sapply(d[4:6], function(b) as.numeric(b) %in% 96)
+    wave2[blank & rowSums(!is.na(wave2)) > 0] <- 0
+    coalesce((d[[1]] + d[[2]] + d[[3]]) / 10, wave2[, 1] + wave2[, 2] + wave2[, 3])
+  })
+  hours[, 1]
+})","Child self-report, all four waves: 'On school day, hours online' from when you wake up until lunch, between lunch and dinner, and between dinner and bedtime. Sum of the three dayparts (DR-0002), complete-case; waves 1, 3 and 4 are stored in tenths of an hour (/ 10). Wave 2 (b-prefixed items) keeps the source codes: 0-69 tenths of an hour, 70-77 '6 1/2 hours' to '12 or more hours' = 6.5, 7, 7.5, 8, 9, 10, 11, 12 (top band '12 or more hours' = 12), 80 '<1/4 hour' = 0.125; 96 'Left blank=0' scored 0 within an answered activity-day, the study's own rule (applied at waves 1, 3 and 4), and NA when no daypart of the activity-day holds a duration; 'Checked', 'Not applicable', 'Skipped altogether', 'Whole time' and other codes NA. Online time naming no device (the study's weekly score is labelled online computer time).",,
+st_internet_we,compatible,"q028.1, q028.2, q028.3, b028.1, b028.2, b028.3","local({
+  hours <- sapply(list(list(q028.1, q028.2, q028.3, b028.1, b028.2, b028.3)), function(d) {
+    wave2 <- sapply(d[4:6], function(b) {
+      x <- as.numeric(b)
+      case_when(
+        x >= 0 & x <= 69 ~ x / 10,
+        x >= 70 & x <= 77 ~ c(6.5, 7, 7.5, 8, 9, 10, 11, 12)[match(x, 70:77)],
+        x == 80 ~ 0.125,
+        .default = NA_real_
+      )
+    })
+    blank <- sapply(d[4:6], function(b) as.numeric(b) %in% 96)
+    wave2[blank & rowSums(!is.na(wave2)) > 0] <- 0
+    coalesce((d[[1]] + d[[2]] + d[[3]]) / 10, wave2[, 1] + wave2[, 2] + wave2[, 3])
+  })
+  hours[, 1]
+})","Child self-report, all four waves: 'On weekend, hours online' from when you wake up until lunch, between lunch and dinner, and between dinner and bedtime. Sum of the three dayparts (DR-0002), complete-case; waves 1, 3 and 4 are stored in tenths of an hour (/ 10). Wave 2 (b-prefixed items) keeps the source codes: 0-69 tenths of an hour, 70-77 '6 1/2 hours' to '12 or more hours' = 6.5, 7, 7.5, 8, 9, 10, 11, 12 (top band '12 or more hours' = 12), 80 '<1/4 hour' = 0.125; 96 'Left blank=0' scored 0 within an answered activity-day, the study's own rule (applied at waves 1, 3 and 4), and NA when no daypart of the activity-day holds a duration; 'Checked', 'Not applicable', 'Skipped altogether', 'Whole time' and other codes NA. Online time naming no device (the study's weekly score is labelled online computer time).",,
+st_internet,compatible,"q027.1, q027.2, q027.3, b027.1, b027.2, b027.3, q028.1, q028.2, q028.3, b028.1, b028.2, b028.3","local({
+  hours <- sapply(
+    list(list(q027.1, q027.2, q027.3, b027.1, b027.2, b027.3), list(q028.1, q028.2, q028.3, b028.1, b028.2, b028.3)),
+    function(d) {
+      wave2 <- sapply(d[4:6], function(b) {
+        x <- as.numeric(b)
+        case_when(
+          x >= 0 & x <= 69 ~ x / 10,
+          x >= 70 & x <= 77 ~ c(6.5, 7, 7.5, 8, 9, 10, 11, 12)[match(x, 70:77)],
+          x == 80 ~ 0.125,
+          .default = NA_real_
+        )
+      })
+      blank <- sapply(d[4:6], function(b) as.numeric(b) %in% 96)
+      wave2[blank & rowSums(!is.na(wave2)) > 0] <- 0
+      coalesce((d[[1]] + d[[2]] + d[[3]]) / 10, wave2[, 1] + wave2[, 2] + wave2[, 3])
+    }
+  )
+  (5 * hours[, 1] + 2 * hours[, 2]) / 7
+})","(5 x st_internet_wd + 2 x st_internet_we) / 7; item wording, wave-2 codes and top band in st_internet_wd. Online time naming no device (the study's weekly score is labelled online computer time).",,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,unavailable,,,Not collected.,,
+st_messaging_we,unavailable,,,Not collected.,,
+st_messaging,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,unavailable,,,Not collected.,,
+acc_academachment_lettergrades,proximate,q227,"recode_values(as.numeric(q227), 1:3 ~ ""A"", 4:6 ~ ""B"", 7:9 ~ ""C"", 10:12 ~ ""D"", 13 ~ ""F"")","Waves 1, 3 and 4, teacher report: 'Child's average school grade' (q227), A+ to F on 13 points; + and - folded onto the letter; don't know (98) NA. Same information as acc_academachment_numgrades. Proximate: + and - folded. The parent's report (q139) is not used: one informant per row.",,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
+acc_schoolengage_caresschool,unavailable,,,Not collected.,,
+acc_schoolengage_homework,unavailable,,,Not collected.,,
+acc_homework_time,unavailable,,,Not collected.,,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,compatible,q227,"recode_values(
+  as.numeric(q227),
+  1 ~ 4.3,
+  2 ~ 4,
+  3 ~ 3.7,
+  4 ~ 3.3,
+  5 ~ 3,
+  6 ~ 2.7,
+  7 ~ 2.3,
+  8 ~ 2,
+  9 ~ 1.7,
+  10 ~ 1.3,
+  11 ~ 1,
+  12 ~ 0.7,
+  13 ~ 0
+)","The q227 grade (see acc_academachment_lettergrades) on the US 4.0 scale: A = 4, B = 3, C = 2, D = 1, F = 0, + and - = plus or minus 0.3 (A+ = 4.3); don't know (98) NA. One overall grade. Same information as acc_academachment_lettergrades.",,
+acc_academachment_teacherrated,incompatible,q227,,"Only the teacher's report of the child's average letter grade (q227), which the dataschema routes to acc_academachment_lettergrades and acc_academachment_numgrades.",,
+acc_academachment_parentrated,incompatible,q139,,"Only the parent's report of the child's average letter grade (q139), which the dataschema routes to acc_academachment_lettergrades and acc_academachment_numgrades.",,
+acc_numeracy_stdtest,unavailable,,,Not collected.,,
+acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered.,,
+acc_literacy_stdtest,unavailable,,,Not collected.,,
+acc_literacy_bas_wordreading,unavailable,,,BAS II not administered.,,
+acc_learningdisab_diagnosed,unavailable,,,Not collected.,,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not collected.,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_self,incompatible,"teacher_att, q221, q222, q223",,"Only the teacher-rated attention-problems scale (teacher_att: difficulty staying on task, difficulty paying attention, interrupts other children's work; waves 1, 3, 4), mapped to beh_adhdsymp_teacher; no self-report scale.",,
+beh_hyper_self,incompatible,"teacher_att, q221, q222, q223",,"Only the teacher-rated attention-problems scale (teacher_att: difficulty staying on task, difficulty paying attention, interrupts other children's work; mapped to beh_adhdsymp_teacher); no self-report scale.",,
+beh_adhdsymp_self,incompatible,"teacher_att, q221, q222, q223",,"Only the teacher-rated attention-problems scale (teacher_att, mapped to beh_adhdsymp_teacher); no self-report scale.",,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_atten_singleitem_teacher,incompatible,"q221, q222",,"Teacher items 'has difficulty staying on task' and 'has difficulty paying attention' (Never true to Almost always true) are items of the multi-item teacher attention-problems scale (teacher_att, mapped to beh_adhdsymp_teacher), which this single-item row does not take.",,
+beh_impulsivity_self,unavailable,,,Not collected.,,
+beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_selfreg_parent,unavailable,,,Not collected.,,
+beh_emotdysreg_parent,unavailable,,,Not collected.,,
+beh_emotreg_parent,unavailable,,,Not collected.,,
+beh_selfreg_self,unavailable,,,Not collected.,,
+beh_emotreg_self,unavailable,,,Not collected.,,
+beh_emotdysreg_self,unavailable,,,Not collected.,,
+beh_emotreg_suppression_self,unavailable,,,Not collected.,,
+beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
+beh_emotaware_self,unavailable,,,Not collected.,,
+beh_selfreg_measure,unavailable,,,See beh_selfreg_self.,,
+beh_bullied,incompatible,"teacher_PAgg, teacher_RAgg",,"Only teacher-rated physical and relational aggression towards peers (teacher_PAgg, teacher_RAgg; mapped to beh_aggphys_teacher and beh_aggrel_teacher), not framed as bullying and not the child's report.",,
+beh_beenbullied,incompatible,"teacher_pv, teacher_rv, q063, q064",,"Teacher-rated physical and relational victimisation scales (teacher_pv, teacher_rv; mapped to beh_victphys_teacher and beh_victrel_teacher) and two child items on being made fun of or called names because of weight (q063, q064), asked only of intervention-arm children at wave 3 (a subsample).",,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,compatible,"q034, b034","recode_values(coalesce(as.numeric(q034), as.numeric(b034)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","Child self-report, all four waves: 'Have you been in a physical fight in the past year' (q034; b034 at wave 2), 1 Yes = TRUE, 2 No = FALSE; past 12 months.",,
+beh_truancy,unavailable,,,Not collected.,,
+beh_stealing,unavailable,,,Not collected.,,
+beh_vandalism,unavailable,,,Not collected.,,
+beh_alcohol_self,unavailable,,,Not collected.,,
+beh_tobacco_self,unavailable,,,Not collected.,,
+beh_cannabis_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agg_self,incompatible,"teacher_PAgg, teacher_RAgg, q034",,"Only the teacher-rated physical and relational aggression scales (teacher_PAgg, teacher_RAgg; mapped to beh_aggphys_teacher and beh_aggrel_teacher) and the single child item on physical fights (q034, mapped to beh_fight).",,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,incompatible,"teacher_PAgg, q203, q206, q210, q212, q034",,"Only the teacher-rated physical aggression scale (teacher_PAgg: hits or kicks, gets into fights, threatens to hit, pushes peers; mapped to beh_aggphys_teacher) and the single child fight item (q034, mapped to beh_fight).",,
+beh_aggphys_measure,unavailable,,,See beh_aggphys_self.,,
+beh_aggrel_self,incompatible,"teacher_RAgg, q202, q205, q207, q209, q211",,"Only the teacher-rated relational aggression scale (teacher_RAgg), mapped to beh_aggrel_teacher.",,
+beh_aggrel_measure,unavailable,,,See beh_aggrel_self.,,
+beh_aggbeliefs_self,unavailable,,,Not collected.,,
+beh_agghostattrib_self,unavailable,,,Not collected.,,
+beh_aggfantasy_self,unavailable,,,Not collected.,,
+beh_aggcog_measure,unavailable,,,See beh_aggbeliefs_self.,,
+beh_agg_singleitem_teacher,incompatible,"teacher_PAgg, teacher_RAgg, q202, q203, q205, q206, q207, q209, q210, q211, q212",,"Only items and scores of the multi-item teacher physical and relational aggression scales (Never true to Almost always true), mapped to beh_aggphys_teacher and beh_aggrel_teacher, which this single-item row does not take.",,
+beh_disrupt_singleitem_teacher,incompatible,q223,,"Teacher item 'often interrupts other children's work' is an item of the multi-item teacher attention-problems scale (teacher_att, mapped to beh_adhdsymp_teacher), which this single-item row does not take.",,
+beh_aggphys_teacher,compatible,"teacher_PAgg, q203, q206, q210, q212","local({
+  answered <- rowSums(!is.na(cbind(as.numeric(q203), as.numeric(q206), as.numeric(q210), as.numeric(q212))))
+  if_else(answered >= 2, as.numeric(teacher_PAgg), NA_real_)
+})","Waves 1, 3 and 4 (no wave-2 teacher survey), class teacher; Never true (1) to Almost always true (5). The study's physical aggression score (teacher_PAgg), items adapted from the Teacher Ratings of Aggressive and Prosocial Behavior Scale (doi:10.1186/1471-2458-8-223): hits or kicks peers (q203), initiates or gets into physical fights (q206), threatens to hit or beat up other children (q210), pushes or shoves peers (q212); mean of answered items (equal to the item mean on every row), used where at least 2 of 4 were answered. Higher = more aggression.",,
+beh_aggrel_teacher,compatible,"teacher_RAgg, q202, q205, q207, q209, q211","local({
+  answered <- rowSums(
+    !is.na(cbind(as.numeric(q202), as.numeric(q205), as.numeric(q207), as.numeric(q209), as.numeric(q211)))
+  )
+  if_else(answered >= 3, as.numeric(teacher_RAgg), NA_real_)
+})","Waves 1, 3 and 4 (no wave-2 teacher survey), class teacher; Never true (1) to Almost always true (5). The study's relational aggression score (teacher_RAgg), items adapted from the Teacher Ratings of Aggressive and Prosocial Behavior Scale: gets even by excluding a peer from the clique or playgroup (q202), spreads rumours or gossips (q205), tries to get others to stop playing with or liking a peer (q207), threatens to stop being a friend (q209), ignores or stops talking to a peer when mad (q211); mean of answered items, used where at least 3 of 5 were answered.",,
+beh_agg_teacher,incompatible,"teacher_PAgg, teacher_RAgg",,"Only pure-form teacher scales (physical teacher_PAgg, relational teacher_RAgg), mapped to beh_aggphys_teacher and beh_aggrel_teacher; no teacher total across forms.",,
+beh_victphys_teacher,compatible,"teacher_pv, q214, q216, q219","local({
+  answered <- rowSums(!is.na(cbind(as.numeric(q214), as.numeric(q216), as.numeric(q219))))
+  if_else(answered >= 2, as.numeric(teacher_pv), NA_real_)
+})","Waves 1, 3 and 4 (no wave-2 teacher survey), class teacher; Never true (1) to Almost always true (5). The study's physical victimisation score (teacher_pv; item source not named): gets hit or kicked (q214), pushed or shoved (q216), physically threatened (q219) by peers; mean of answered items, used where at least 2 of 3 were answered. Higher = more victimisation.",,
+beh_victrel_teacher,compatible,"teacher_rv, q215, q218, q220","local({
+  answered <- rowSums(!is.na(cbind(as.numeric(q215), as.numeric(q218), as.numeric(q220))))
+  if_else(answered >= 2, as.numeric(teacher_rv), NA_real_)
+})","Waves 1, 3 and 4 (no wave-2 teacher survey), class teacher; Never true (1) to Almost always true (5). The study's relational victimisation score (teacher_rv; item source not named): gets ignored when a peer is mad (q215), gets left out of the group (q218), is the target of rumours or gossip (q220); mean of answered items, used where at least 2 of 3 were answered. Higher = more victimisation.",,
+beh_vict_teacher,incompatible,"teacher_pv, teacher_rv",,"Only pure-form teacher victimisation scales (physical teacher_pv, relational teacher_rv), mapped to beh_victphys_teacher and beh_victrel_teacher; no total across forms.",,
+beh_atten_teacher,incompatible,"teacher_att, q221, q222, q223",,"The only teacher attention scale (teacher_att) mixes two inattention items with an impulsivity item ('often interrupts other children's work', q223), so it is mapped to beh_adhdsymp_teacher.",,
+beh_hyper_teacher,incompatible,"teacher_att, q221, q222, q223",,No hyperactivity-impulsivity scale free of inattention items; the teacher attention-problems scale (teacher_att) mixes both and is mapped to beh_adhdsymp_teacher.,,
+beh_adhdsymp_teacher,compatible,"teacher_att, q221, q222, q223","local({
+  answered <- rowSums(!is.na(cbind(as.numeric(q221), as.numeric(q222), as.numeric(q223))))
+  if_else(answered >= 2, as.numeric(teacher_att), NA_real_)
+})","Waves 1, 3 and 4 (no wave-2 teacher survey), class teacher; Never true (1) to Almost always true (5). The study's attention-problems score (teacher_att; item source not named): has difficulty staying on task (q221), has difficulty paying attention (q222), often interrupts other children's work (q223), mixing inattention with an impulsivity item; mean of answered items, used where at least 2 of 3 were answered. Higher = more ADHD symptoms.",,
+beh_prosocial_teacher,compatible,"teacher_pro, q201, q204, q208, q213","local({
+  answered <- rowSums(!is.na(cbind(as.numeric(q201), as.numeric(q204), as.numeric(q208), as.numeric(q213))))
+  if_else(answered >= 2, as.numeric(teacher_pro), NA_real_)
+})","Waves 1, 3 and 4 (no wave-2 teacher survey), class teacher; Never true (1) to Almost always true (5). The study's prosocial score (teacher_pro), items adapted from the Teacher Ratings of Aggressive and Prosocial Behavior Scale: says supportive things to peers (q201), tries to cheer up upset peers (q204), is helpful to peers (q208), is kind to peers (q213); mean of answered items, used where at least 2 of 4 were answered. Higher = more prosocial. 'Gets help from peers' (q217, teacher_ri) is an act received and is not used.",,
+beh_teacher_measure,inferred,wave,"if_else(
+  wave == ""2"",
+  NA_character_,
+  ""Study teacher ratings of peer behaviour (class teacher), aggression and prosocial items adapted from the Teacher Ratings of Aggressive and Prosocial Behavior Scale, victimisation and attention items of undocumented source; physical aggression: study scale, 4 of 4 items (q203, q206, q210, q212), 1-5 item scoring (range 1-5), mean; relational aggression: study scale, 5 of 5 items (q202, q205, q207, q209, q211), 1-5 item scoring (range 1-5), mean; physical victimisation: study scale, 3 of 3 items (q214, q216, q219), 1-5 item scoring (range 1-5), mean; relational victimisation: study scale, 3 of 3 items (q215, q218, q220), 1-5 item scoring (range 1-5), mean; combined ADHD: study attention-problems scale, 3 of 3 items (q221, q222 inattention; q223 interrupts other children's work), 1-5 item scoring (range 1-5), mean; prosocial: study scale, 4 of 4 items (q201, q204, q208, q213), 1-5 item scoring (range 1-5), mean; items Never true to Almost always true, supplied already keyed; mean of answered items, used where at least half the scale's items were answered""
+)","One string for waves 1, 3 and 4; NA at wave 2 (no teacher survey).",,
+beh_argues,unavailable,,,Not collected.,,
+beh_persistence_finishwork,incompatible,q221,,"Only the truth-rated teacher item 'has difficulty staying on task' (q221), a general attention item of the teacher attention-problems scale (teacher_att, mapped to beh_adhdsymp_teacher).",,
+beh_emotreg_stayscalm,unavailable,,,Not collected.,,
+beh_peerprob_makefriends,unavailable,,,Not collected.,,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,unavailable,,,Not collected.,,
+beh_autism_diagnosed,unavailable,,,Not collected.,,
+beh_autism_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ not administered.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered; see beh_prosocial_teacher.,,
+beh_ext_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_self,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_ext_self,incompatible,"q034, b034, teacher_PAgg, teacher_RAgg, teacher_att",,"No self-report externalising scale; only the single child fight item (q034, b034; mapped to beh_fight) and teacher-rated aggression and attention scales (wrong respondent; mapped to the teacher aggression rows and beh_adhdsymp_teacher).",,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,incompatible,"teacher_att, q221, q222, q223",,"Only the teacher-rated attention-problems scale (teacher_att, mapped to beh_adhdsymp_teacher); teacher ratings never fill a parent-rated row.",,
+beh_hyper_parent,incompatible,"teacher_att, q221, q222, q223",,"Only the teacher-rated attention-problems scale (teacher_att, mapped to beh_adhdsymp_teacher); teacher ratings never fill a parent-rated row.",,
+beh_adhdsymp_parent,incompatible,"teacher_att, q221, q222, q223",,"Only the teacher-rated attention-problems scale (teacher_att, mapped to beh_adhdsymp_teacher); teacher ratings never fill a parent-rated row.",,
+beh_opp_parent,unavailable,,,Not collected.,,
+beh_conduct_parent,incompatible,"teacher_PAgg, teacher_RAgg",,Only teacher-rated physical and relational aggression scales (mapped to beh_aggphys_teacher and beh_aggrel_teacher); teacher ratings never fill a parent-rated row.,,
+beh_ext_parent,incompatible,"teacher_PAgg, teacher_RAgg, teacher_att",,Only teacher-rated aggression and attention scales (mapped to the teacher aggression rows and beh_adhdsymp_teacher); teacher ratings never fill a parent-rated row.,,
+beh_parent_measure,unavailable,,,See beh_atten_parent.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,incompatible,"teacher_pro, q201, q204, q208, q213",,"Only the teacher-rated prosocial scale (teacher_pro: says supportive things, cheers up, is helpful, is kind to peers), mapped to beh_prosocial_teacher; no self-report scale.",,
+beh_prosocial_measure,unavailable,,,See beh_prosocial_self.,,
+beh_prosocial_parent,incompatible,teacher_pro,,"Only the teacher-rated prosocial scale (teacher_pro, mapped to beh_prosocial_teacher); teacher ratings never fill a parent-rated row.",,
+beh_prosocial_singleitem_teacher,incompatible,"teacher_pro, q201, q204, q208, q213",,"Only items and the score of the multi-item teacher prosocial scale, mapped to beh_prosocial_teacher, which this single-item row does not take.",,
+beh_empathy_self,unavailable,,,Not collected.,,
+beh_empathy_measure,unavailable,,,See beh_empathy_self.,,
+beh_problematicuse_self,incompatible,"q020, q029, q031",,"Single child items only: 'play VGs so much that it hurts your homework' (q020), 'try to stop watching so much TV' (q029), 'try to stop playing VGs so much' (q031); no scale.",,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,No cognitive testing.,,
+cog_phono_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhibcont_nepsy,unavailable,,,No cognitive testing.,,
+cog_vismotor_nepsy,unavailable,,,No cognitive testing.,,
+cog_verbalfluency_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhib_nihtb_flanker,unavailable,,,No cognitive testing.,,
+cog_flex_nihtb_dccs,unavailable,,,No cognitive testing.,,
+cog_wm_nihtb_listsort,unavailable,,,No cognitive testing.,,
+cog_speed_nihtb_pattern,unavailable,,,No cognitive testing.,,
+cog_epimem_nihtb_picseq,unavailable,,,No cognitive testing.,,
+cog_vocab_nihtb_picvocab,unavailable,,,No cognitive testing.,,
+cog_fluidcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_crystcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_totalcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_atten_task,unavailable,,,No cognitive testing.,,
+cog_atten_task_measure,unavailable,,,See cog_atten_task.,,
+cog_flex_task,unavailable,,,No cognitive testing.,,
+cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
+cog_inhib_task,unavailable,,,No cognitive testing.,,
+cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
+cog_wm_digitspan,unavailable,,,No cognitive testing.,,
+cog_iq_fullscale,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_task,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_task_measure,unavailable,,,See cog_nonverbalreason_task.,,
+cog_vocab_bpvs,unavailable,,,No cognitive testing.,,
+cog_vocab_ppvt,unavailable,,,No cognitive testing.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_vocab_bas_naming,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,No cognitive testing.,,
+cog_spatial_bas_pattern,unavailable,,,No cognitive testing.,,
+cog_verbalreason_bas_versim,unavailable,,,No cognitive testing.,,
+cog_earlynumber_bas_enc,unavailable,,,No cognitive testing.,,
+cog_schoolread_bracken,unavailable,,,No cognitive testing.,,
+cog_earlylang_parent,unavailable,,,Not collected.,,
+cog_earlylang_measure,unavailable,,,See cog_earlylang_parent.,,
+cog_creativethinking_stdtest,unavailable,,,No cognitive testing.,,
+cog_speechlang_diagnosed,unavailable,,,Not collected.,,
+cog_speechlang_diagnosed_severity,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ not administered.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_int_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_int_sdq_self,unavailable,,,SDQ not administered.,,
+mh_int_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered.,,
+mh_distress_k6_self,unavailable,,,K6 not administered.,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered.,,
+mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered.,,
+mh_distress_self,unavailable,,,Not collected.,,
+mh_distress_measure,unavailable,,,See mh_distress_self.,,
+mh_anx_masc_self,unavailable,,,MASC not administered.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,unavailable,,,Not collected.,,
+mh_dep_self,unavailable,,,Not collected.,,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,unavailable,,,Not collected.,,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_socanx_self,unavailable,,,Not collected.,,
+mh_socanx_measure,unavailable,,,See mh_socanx_self.,,
+mh_int_parent,unavailable,,,Not collected.,,
+mh_anx_parent,unavailable,,,Not collected.,,
+mh_dep_parent,unavailable,,,Not collected.,,
+mh_totalprob_parent,unavailable,,,Not collected.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,unavailable,,,Not collected.,,
+mh_stress_scale_self,unavailable,,,Not collected.,,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,unavailable,,,Not collected.,,
+mh_lonely_scale_self,unavailable,,,Not collected.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,unavailable,,,Not collected.,,
+mh_worry_self,unavailable,,,Not collected.,,
+mh_irritable_self,unavailable,,,Not collected.,,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,unavailable,,,Not collected.,,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered.,,
+wb_bodyimage,unavailable,,,Not collected.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
+wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_lifesat_self,unavailable,,,Not collected.,,
+wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
+wb_happiness_singleitem_self,unavailable,,,Not collected.,,
+wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,unavailable,,,Not collected.,,
+wb_domainsat_friends_self,unavailable,,,Not collected.,,
+wb_domainsat_school_self,unavailable,,,Not collected.,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg scale not administered.,,
+wb_selfesteem_self,unavailable,,,Not collected.,,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_selfefficacy_academic_self,unavailable,,,Not collected.,,
+wb_selfefficacy_academic_measure,unavailable,,,See wb_selfefficacy_academic_self.,,
+wb_selfconcept_academic_self,unavailable,,,Not collected.,,
+wb_selfconcept_maths_self,unavailable,,,Not collected.,,
+wb_selfconcept_verbal_self,unavailable,,,Not collected.,,
+wb_selfconcept_science_self,unavailable,,,Not collected.,,
+wb_selfconcept_social_self,unavailable,,,Not collected.,,
+wb_selfconcept_measure,unavailable,,,See wb_selfconcept_academic_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,SHS not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,unavailable,,,Not collected.,,
+wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,unavailable,,,Not collected.,,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_negaffect_self,unavailable,,,Not collected.,,
+wb_negaffect_measure,unavailable,,,See wb_negaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,unavailable,,,Not collected.,,
+wb_socsupport_friends_self,incompatible,"q217, teacher_ri",,"Only the teacher's rating 'This child gets help from peers when s/he needs it' (q217, Never true to Almost always true, waves 1, 3, 4; the study's Relational Inclusion score teacher_ri), a single teacher-rated item; wrong respondent and not a scale.",,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,compatible,"q036, q037, b036, b037","coalesce(((as.numeric(q037) - as.numeric(q036)) / 3600) %% 24, ((as.numeric(b037) - as.numeric(b036)) / 3600) %% 24)","Child report, all four waves: 'On school nights, time usually go to sleep' (q036) to 'On school mornings, time usually get up' (q037); b036 and b037 at wave 2. Wake time minus sleep time in hours, plus 24 across midnight. Durations under 4 or over 16 hours kept, screened at analysis. The parent's items (q146, q147) are not used: one respondent per row.",,
+hlth_sleep_we,compatible,"q038, q039, b038, b039","coalesce(((as.numeric(q039) - as.numeric(q038)) / 3600) %% 24, ((as.numeric(b039) - as.numeric(b038)) / 3600) %% 24)","Child report, all four waves: 'On weekends, time usually go to sleep' (q038) to 'On weekends, time usually get up' (q039); b038 and b039 at wave 2. Wake time minus sleep time in hours, plus 24 across midnight. Durations under 4 or over 16 hours kept, screened at analysis. The parent's items (q148, q149) are not used: one respondent per row.",,
+hlth_sleep,compatible,"q036, q037, b036, b037, q038, q039, b038, b039","local({
+  wd <- coalesce(
+    ((as.numeric(q037) - as.numeric(q036)) / 3600) %% 24,
+    ((as.numeric(b037) - as.numeric(b036)) / 3600) %% 24
+  )
+  we <- coalesce(
+    ((as.numeric(q039) - as.numeric(q038)) / 3600) %% 24,
+    ((as.numeric(b039) - as.numeric(b038)) / 3600) %% 24
+  )
+  (5 * wd + 2 * we) / 7
+})","(5 x hlth_sleep_wd + 2 x hlth_sleep_we) / 7, child report; items in hlth_sleep_wd and hlth_sleep_we.",,
+hlth_sleepprob,incompatible,q224,,"Only a single teacher item, 'often is sleepy when he/she comes to school' (q224); no sleep-problems scale.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+hlth_bmi,compatible,BMI,BMI,"BMI (kg/m2) as released at waves 1, 3 and 4 from height and weight measured by school nurses; equals Weight_kg / (Height / 100)^2 on every row. No anthropometry at wave 2 (NA).",,
+hlth_bmi_measure,inferred,,"if_else(wave == ""2"", NA_character_, ""Measured"")","Waves 1, 3 and 4: height and weight measured by trained school nurses (doi:10.1186/1741-7015-7-49); NA at wave 2, which had no anthropometry.",,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_pa_days60,incompatible,"Mean_Wk_Ped, q041",,"Only device-measured activity (pedometer steps, Mean_Wk_Ped) and the child's rating of being more or less active than others (q041); no days-of-60-minutes item.",,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+st_measure_type,inferred,,"""Continuous""","Open entry of hours per daypart, stored in tenths of an hour.",,parent
+st_measure_name,inferred,,"""Custom""",The study's own parent survey items (design paper doi:10.1186/1471-2458-8-223).,,parent
+st_responder,inferred,,"""Parent or carer""","The parent survey's report of the child's screen time, waves 1, 3 and 4 (no parent survey at wave 2); a second responder on the same occasion as the child's self-report.",,parent
+st_watch_wd,partial,"q140.1, q140.2, q140.3",(q140.1 + q140.2 + q140.3) / 10,"Parent report of the child, waves 1, 3 and 4: 'On a school day, hours watching TV' 6am-noon, noon-6pm and 6pm-midnight. Sum of the three dayparts (DR-0002), complete-case, stored in tenths of an hour (/ 10); one wave-4 parent's code 89 is read as 8.9 hours, as the study's weekly total reads it. Partial: a TV-set item.",,parent
+st_watch_we,partial,"q141.1, q141.2, q141.3",(q141.1 + q141.2 + q141.3) / 10,"Parent report of the child, waves 1, 3 and 4: 'On a weekend, hours watching TV' 6am-noon, noon-6pm and 6pm-midnight. Sum of the three dayparts (DR-0002), complete-case, stored in tenths of an hour (/ 10); one wave-4 parent's code 89 is read as 8.9 hours, as the study's weekly total reads it. Partial: a TV-set item.",,parent
+st_watch,partial,"q140.1, q140.2, q140.3, q141.1, q141.2, q141.3","local({
+  wd <- (q140.1 + q140.2 + q140.3) / 10
+  we <- (q141.1 + q141.2 + q141.3) / 10
+  (5 * wd + 2 * we) / 7
+})",(5 x st_watch_wd + 2 x st_watch_we) / 7 of the parent block; wording in st_watch_wd. Partial: a TV-set item.,,parent
+st_game_wd,compatible,"q142.1, q142.2, q142.3, q120","if_else(is.na((q142.1 + q142.2 + q142.3) / 10) & as.numeric(q120) %in% 2, 0, (q142.1 + q142.2 + q142.3) / 10)","Parent report of the child, waves 1, 3 and 4: 'On a school day, hours play Video Games' 6am-noon, noon-6pm and 6pm-midnight. Sum of the three dayparts (DR-0002), complete-case, stored in tenths of an hour (/ 10); one wave-4 parent's code 89 is read as 8.9 hours, as the study's weekly total reads it. Names no device. Non-users: 0 where the parent answered 'Does child ever play VGs' No (q120) and left the dayparts unanswered; never overrides a reported duration.",,parent
+st_game_we,compatible,"q143.1, q143.2, q143.3, q120","if_else(is.na((q143.1 + q143.2 + q143.3) / 10) & as.numeric(q120) %in% 2, 0, (q143.1 + q143.2 + q143.3) / 10)","Parent report of the child, waves 1, 3 and 4: 'On a weekend, hours play Video Games' 6am-noon, noon-6pm and 6pm-midnight. Sum of the three dayparts (DR-0002), complete-case, stored in tenths of an hour (/ 10); one wave-4 parent's code 89 is read as 8.9 hours, as the study's weekly total reads it. Names no device. Non-users: 0 where the parent answered 'Does child ever play VGs' No (q120) and left the dayparts unanswered; never overrides a reported duration.",,parent
+st_game,compatible,"q142.1, q142.2, q142.3, q120, q143.1, q143.2, q143.3, q120","local({
+  wd <- if_else(is.na((q142.1 + q142.2 + q142.3) / 10) & as.numeric(q120) %in% 2, 0, (q142.1 + q142.2 + q142.3) / 10)
+  we <- if_else(is.na((q143.1 + q143.2 + q143.3) / 10) & as.numeric(q120) %in% 2, 0, (q143.1 + q143.2 + q143.3) / 10)
+  (5 * wd + 2 * we) / 7
+})",(5 x st_game_wd + 2 x st_game_we) / 7 of the parent block; wording in st_game_wd. Names no device. Non-users: 0 where the parent answered 'Does child ever play VGs' No (q120) and left the dayparts unanswered; never overrides a reported duration.,,parent
+st_internet_wd,compatible,"q144.1, q144.2, q144.3",(q144.1 + q144.2 + q144.3) / 10,"Parent report of the child, waves 1, 3 and 4: 'On a school day, hours online' 6am-noon, noon-6pm and 6pm-midnight. Sum of the three dayparts (DR-0002), complete-case, stored in tenths of an hour (/ 10); one wave-4 parent's code 89 is read as 8.9 hours, as the study's weekly total reads it. Online time naming no device.",,parent
+st_internet_we,compatible,"q145.1, q145.2, q145.3",(q145.1 + q145.2 + q145.3) / 10,"Parent report of the child, waves 1, 3 and 4: 'On a weekend, hours online' 6am-noon, noon-6pm and 6pm-midnight. Sum of the three dayparts (DR-0002), complete-case, stored in tenths of an hour (/ 10); one wave-4 parent's code 89 is read as 8.9 hours, as the study's weekly total reads it. Online time naming no device.",,parent
+st_internet,compatible,"q144.1, q144.2, q144.3, q145.1, q145.2, q145.3","local({
+  wd <- (q144.1 + q144.2 + q144.3) / 10
+  we <- (q145.1 + q145.2 + q145.3) / 10
+  (5 * wd + 2 * we) / 7
+})",(5 x st_internet_wd + 2 x st_internet_we) / 7 of the parent block; wording in st_internet_wd. Online time naming no device.,,parent
