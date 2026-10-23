@@ -235,3 +235,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 138,maternal_education,Some college/associate degree,Post-secondary,compatible,"Code 6; tertiary study begun but not completed or associate degree (ISCED 5)"
 138,maternal_education,College graduate,Bachelor degree or higher,compatible,"Code 7; bachelor degree, ISCED 6"
 138,maternal_education,Graduate school,Bachelor degree or higher,compatible,"Code 8; graduate study after a bachelor degree, ISCED 7-8"
+911,maternal_education,Did not complete high school,Secondary school or less,compatible,EDUp_1 code 1: high school not completed (ISCED 0-2); the responding parent's own education
+911,maternal_education,High School degree (or GED),Secondary school or less,compatible,EDUp_1 code 2: high school diploma or GED (ISCED 3)
+911,maternal_education,Some college,Post-secondary,compatible,EDUp_1 code 3: tertiary study begun but not completed
+911,maternal_education,College degree,Bachelor degree or higher,proximate,"EDUp_1 code 4: college degree; may include associate degrees (ISCED 5), placed by the bachelor-or-higher majority"
+911,maternal_education,Some graduate school,Bachelor degree or higher,compatible,EDUp_1 code 5: graduate study begun after a degree (ISCED 6)
+911,maternal_education,"Graduate degree (MA, JD, MD, PhD)",Bachelor degree or higher,compatible,"EDUp_1 code 6: master's, professional or doctoral degree (ISCED 7-8)"

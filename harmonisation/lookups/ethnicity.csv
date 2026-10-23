@@ -238,3 +238,10 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 138,ethnicity,Asian/Pacific Islander,Asian,proximate,NBQ11 code 4; merges Pacific Islanders with Asian (merge named); mother's race used for the child
 138,ethnicity,Other,Other,proximate,NBQ11 code 7; mother's race used for the child
 138,ethnicity,Missing,Unknown,proximate,NBQ11 code 9 or no newborn form
+911,ethnicity,White,White,compatible,raceP_1 code 1; the responding parent's own group ('Which of the following groups describe you?') used for the child
+911,ethnicity,Black/African American,Black,compatible,raceP_1 code 2; the responding parent's own group used for the child
+911,ethnicity,American Indian or Alaska Native,Other,proximate,raceP_1 code 3; US race group with no schema category (AI/AN = Other); the parent's own group
+911,ethnicity,Native Hawaiian,Other,proximate,raceP_1 code 4; US race group with no schema category (NHPI = Other); the parent's own group
+911,ethnicity,Other Pacific Islander,Other,proximate,raceP_1 code 5; US race group with no schema category (NHPI = Other); the parent's own group
+911,ethnicity,Asian,Asian,compatible,raceP_1 code 6; the responding parent's own group used for the child
+911,ethnicity,Hispanic,Hispanic,compatible,raceP_1 code 7; offered beside the race groups in a US sample; the parent's own group
