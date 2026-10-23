@@ -154,6 +154,44 @@ test_that("primary rows with no screen-time quantity have no responder", {
   expect_identical(result$st_measure_name, rep("Custom", 3))
 })
 
+test_that("a character screen_time row is never a screen-time quantity", {
+  dataschema <- tibble::add_row(
+    make_measure_dataschema(),
+    variable_name = "st_violent_measure",
+    domain = "screen_time",
+    data_type = "character"
+  )
+  method <- tibble::tibble(
+    target_variable = "st_violent_measure",
+    status = "inferred",
+    expression = '"Study-coded titles"',
+    measure = c(NA_character_, "diary"),
+    source_columns = NA_character_,
+    notes = NA_character_,
+    lookup_table = NA_character_
+  )
+  data <- make_measure_data()
+  data$tv_q[2] <- NA
+  data$game_q[2] <- NA
+
+  result <- harmonise_from_tables(
+    analysis_base = data,
+    spec = make_test_spec(),
+    dataschema = dataschema,
+    harmonisation_config = make_test_config(
+      dplyr::bind_rows(make_measure_variables(), method)
+    )
+  )
+
+  primary <- result[result$st_measure_id == "primary", ]
+  # A constant method string keeps no responder on a row with no screen value
+  expect_identical(primary$st_responder, c("Self", NA, "Self"))
+  expect_identical(primary$st_violent_measure, rep("Study-coded titles", 3))
+  # ...and keeps no block row: participant 2 has no diary value
+  diary <- result[result$st_measure_id == "diary", ]
+  expect_identical(diary$participant_id, c("1", "3"))
+})
+
 test_that("without measure tags the harmoniser behaves as before", {
   result <- harmonise_from_tables(
     analysis_base = make_measure_data(),

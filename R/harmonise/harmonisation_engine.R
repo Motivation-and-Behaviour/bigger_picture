@@ -20,9 +20,14 @@ harmonise_from_tables <- function(
 
   # A primary row with no screen-time quantity had no screen-time respondent.
   # st_measure_type and st_measure_name describe the dataset's instrument, so
-  # they stay.
+  # they stay. Only double screen_time rows are quantities: a character row
+  # (e.g. st_violent_measure) describes a method and never keeps a row.
   scoped <- bp_measure_scoped_variables(dataschema)
-  quantities <- setdiff(scoped, bp_measure_metadata_variables())
+  doubles <- dataschema$variable_name[dataschema$data_type %in% "double"]
+  quantities <- intersect(
+    setdiff(scoped, bp_measure_metadata_variables()),
+    doubles
+  )
   if ("st_responder" %in% names(primary)) {
     present <- intersect(quantities, names(primary))
     measured <- Reduce(
