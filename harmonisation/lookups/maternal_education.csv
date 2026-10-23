@@ -235,3 +235,8 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 138,maternal_education,Some college/associate degree,Post-secondary,compatible,"Code 6; tertiary study begun but not completed or associate degree (ISCED 5)"
 138,maternal_education,College graduate,Bachelor degree or higher,compatible,"Code 7; bachelor degree, ISCED 6"
 138,maternal_education,Graduate school,Bachelor degree or higher,compatible,"Code 8; graduate study after a bachelor degree, ISCED 7-8"
+2296,maternal_education,Less than a high school degree,Secondary school or less,compatible,"PHIGHED code 1, ISCED 0-2"
+2296,maternal_education,A high school degree or GED,Secondary school or less,compatible,"PHIGHED code 2, ISCED 3"
+2296,maternal_education,Some college but not a college degree,Post-secondary,compatible,PHIGHED code 3: tertiary study begun but no 4-year degree
+2296,maternal_education,A 4-year college degree or higher,Bachelor degree or higher,compatible,"PHIGHED code 4, ISCED 6-8"
+2296,maternal_education,Unknown,Unknown,compatible,"PHIGHED -9, a respondent of the other sex, or no parent record"
