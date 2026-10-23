@@ -238,3 +238,7 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 138,ethnicity,Asian/Pacific Islander,Asian,proximate,NBQ11 code 4; merges Pacific Islanders with Asian (merge named); mother's race used for the child
 138,ethnicity,Other,Other,proximate,NBQ11 code 7; mother's race used for the child
 138,ethnicity,Missing,Unknown,proximate,NBQ11 code 9 or no newborn form
+2296,ethnicity,Hispanic,Hispanic,compatible,"TETHRAC_RC code 1: Hispanic, Latino/a or Spanish origin, taken ahead of race"
+2296,ethnicity,Non-Hispanic Black alone,Black,compatible,TETHRAC_RC code 2: Black or African American as the only race among non-Hispanic teens
+2296,ethnicity,Non-Hispanic White alone,White,compatible,TETHRAC_RC code 3: White as the only race among non-Hispanic teens
+2296,ethnicity,Other,Other,proximate,"TETHRAC_RC code 4 pools non-Hispanic Asian, American Indian/Alaska Native, Native Hawaiian/Pacific Islander and two or more races; Asian and Mixed cannot be separated"
