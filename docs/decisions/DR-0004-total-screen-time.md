@@ -22,6 +22,7 @@ Summed totals ran well past what a day allows; in one study some weekday totals 
 
 - A sum of separately asked activity or device items is incompatible on these rows, whoever did the summing, including a total the study published.
 - Internet-only and single-device items go to their own rows and are incompatible on the total rows.
+- An all-device item restricted to leisure (screen use for reasons other than school work) goes to `st_leisure` and is incompatible on the total rows.
 
 This departs from the preregistration's plan to sum devices or types where a study has no total item.
 
