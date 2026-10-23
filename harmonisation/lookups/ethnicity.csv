@@ -231,3 +231,10 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 50,ethnicity,HISPANIC,Hispanic,proximate,CRACE code 1; the mother's racial/ethnic cohort from the 1979 NLSY79 screener used for the child
 50,ethnicity,BLACK,Black,proximate,CRACE code 2; the mother's racial/ethnic cohort from the 1979 NLSY79 screener used for the child
 50,ethnicity,"NON-BLACK, NON-HISPANIC",White,proximate,CRACE code 3; the mother's screener cohort; merges White with every other non-Black non-Hispanic group (merge named)
+138,ethnicity,Hispanic,Hispanic,proximate,NBQ12 code 1 (mother is of Hispanic or Latino origin); the mother's newborn-form report used for the child; Hispanic origin taken before race
+138,ethnicity,White,White,proximate,NBQ11 code 1; mother's race used for the child
+138,ethnicity,Black/African American,Black,proximate,NBQ11 code 2; mother's race used for the child
+138,ethnicity,American Indian/Alaskan Native,Other,proximate,NBQ11 code 3; no schema category; mother's race used for the child
+138,ethnicity,Asian/Pacific Islander,Asian,proximate,NBQ11 code 4; merges Pacific Islanders with Asian (merge named); mother's race used for the child
+138,ethnicity,Other,Other,proximate,NBQ11 code 7; mother's race used for the child
+138,ethnicity,Missing,Unknown,proximate,NBQ11 code 9 or no newborn form
