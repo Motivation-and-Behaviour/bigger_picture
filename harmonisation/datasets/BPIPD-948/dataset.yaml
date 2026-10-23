@@ -1,0 +1,12 @@
+dataset_id: "948"
+dataset_name: "Günüç"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "ADHD-DATA.sav"
+    reader: "spss"
+  - name: "codebook"
+    role: "codebook"
+    glob: "codebook.docx"
