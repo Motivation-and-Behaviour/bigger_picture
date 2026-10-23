@@ -1,0 +1,83 @@
+source_value,harmonised_value,notes
+friend,Other,"Lives with friends, housemates or in a hostel; no parent in the household."
+friends,Other,"Lives with friends, housemates or in a hostel; no parent in the household."
+hostel,Other,"Lives with friends, housemates or in a hostel; no parent in the household."
+"hostel, overseas",Other,"Lives with friends, housemates or in a hostel; no parent in the household."
+housemates,Other,"Lives with friends, housemates or in a hostel; no parent in the household."
+sister and friend,Other,"Lives with friends, housemates or in a hostel; no parent in the household."
+taiwanese friends,Other,"Lives with friends, housemates or in a hostel; no parent in the household."
+father and grand-parents,Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+"father, grandmother",Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+"father,brother and grandfather",Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+grandparents and father,Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+grandparents and mother,Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+mother & grandparents,Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+mother and grandmam,Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+mother and grandmother,Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+"mother, grandparents,uncle and cousin",Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+"mother,aunt,grandparents and cousin",Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+"mother,brother,grandparents,aunty and others",Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+"mother,grandmother and aunt",Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+mother/brothers,Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+mum & grandparents,Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+mum & siblinas,Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+"sister, father",Single parent,"Names one parent and no partner or step-parent; grandparents, siblings or other relatives also listed."
+both parents & suster,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+both parents and brother,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+both parents and edler brother,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+both parents and grandmother,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+both parents and grandnother and sister,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+both parents and grandparents,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+both parents and siblings,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+both parents and sister,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+both parents with grandparents,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"both parents, 3 brothers, 2 maids",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"both parents, elder brother and elder sister",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"both parents, one elder brother",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"both parents, sister and brother",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"both parents,grandparents and aunt",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"both parents,little brother and grandmother",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"both parents,siblings,maid",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"bother, parents and a younger sister",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"brother,parents,grandpa,cousin",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+father mother grandparents,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"father, mother, brother, sister",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+grandparents and parents,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"mom, dad, grandmother",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"mother, father and brothers",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"mother, father and grandmother",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+mother+father+grandparents+siblings,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+parants and grandmother,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+parents & grandmother,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+parents & grandparents,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+parents & sister,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+parents and grandfather,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+parents and grandparents,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"parents, brother , sister",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+"parents, grandparents siblings",Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+siblings and both parents,Two biological/adoptive parents,Names both parents (with other household members); 'both parents' rather than a step-parent.
+all,Unknown,Does not say who the household members are.
+aunt,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+"aunt, uncle",Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+aunt's family,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+aunty,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+both grandparents,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+brother,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+"brother, sister",Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+"brothers, sisters",Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+cousin,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+cousins,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+everyone,Unknown,Does not say who the household members are.
+family,Unknown,Does not say who the household members are.
+grandmother,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+"maid, tenant",Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+mother and guardian,Unknown,"Names the mother with a guardian who may or may not be her partner, so single parent and step family cannot be told apart."
+"mother and stepfather, father and stepmother",Unknown,Shared care between two households; the main home is not identified.
+"mother at times, father at times",Unknown,Shared care between two households; the main home is not identified.
+na,Unknown,Does not say who the household members are.
+overseas,Unknown,Does not say who the household members are.
+relatives,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+sister,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+"sister, grandmother",Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+sisters,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
+tennant,Unknown,"Names only other household members (siblings, grandparents, relatives, a guardian, a maid or tenant); children also list such members beside their parents, so whether a parent lives in the household is not known."
