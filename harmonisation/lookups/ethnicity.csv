@@ -243,3 +243,11 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 176,ethnicity,indian,Asian,compatible,race code 3
 176,ethnicity,eurasian,Mixed,compatible,"race code 4; Eurasian, Singapore's group of mixed European and Asian parentage"
 176,ethnicity,others,Other,compatible,race code 5; residual group
+535,ethnicity,Caucasian,White,compatible,Race code 1
+535,ethnicity,AfricanAmerican,Black,compatible,Race code 2
+535,ethnicity,Hispanic,Hispanic,compatible,Race code 3: Hispanic stands in a US sample
+535,ethnicity,Other,Other,proximate,"Race code 4: lumps Asian, multiracial and Native American children"
+2296,ethnicity,Hispanic,Hispanic,compatible,"TETHRAC_RC code 1: Hispanic, Latino/a or Spanish origin, taken ahead of race"
+2296,ethnicity,Non-Hispanic Black alone,Black,compatible,TETHRAC_RC code 2: Black or African American as the only race among non-Hispanic teens
+2296,ethnicity,Non-Hispanic White alone,White,compatible,TETHRAC_RC code 3: White as the only race among non-Hispanic teens
+2296,ethnicity,Other,Other,proximate,"TETHRAC_RC code 4 pools non-Hispanic Asian, American Indian/Alaska Native, Native Hawaiian/Pacific Islander and two or more races; Asian and Mixed cannot be separated"
