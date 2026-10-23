@@ -1,0 +1,12 @@
+dataset_id: "1249"
+dataset_name: "Gentile, 2009"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Harris Path VG Data - Recoded_4 - Deidentified.sav"
+    reader: "spss"
+
+notes: |
+  Single .sav file
