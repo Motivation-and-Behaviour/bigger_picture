@@ -1,213 +1,761 @@
-target_variable,status,source_columns,expression,notes,lookup_table
-participant_id,in_progress,,,,
-wave,in_progress,,,,
-data_year,in_progress,,,,
-rct_arm,in_progress,,,,
-age_years,in_progress,,,,
-sex,in_progress,,,,
-country,in_progress,,,,
-state,in_progress,,,,
-ethnicity,in_progress,,,,
-indigenous,in_progress,,,,
-minority,in_progress,,,,
-ses_area,in_progress,,,,
-ses_household,in_progress,,,,
-ses_household_measure,in_progress,,,,
-maternal_education,in_progress,,,,
-paternal_education,in_progress,,,,
-parental_education,in_progress,,,,
-urbanicity,in_progress,,,,
-family_structure,in_progress,,,,
-school_grade,in_progress,,,,
-st_measure_type,in_progress,,,,
-st_measure_name,in_progress,,,,
-st_responder,in_progress,,,,
-st_total_wd,in_progress,,,,
-st_total_we,in_progress,,,,
-st_total,in_progress,,,,
-st_watch_wd,in_progress,,,,
-st_watch_we,in_progress,,,,
-st_watch,in_progress,,,,
-st_game_wd,in_progress,,,,
-st_game_we,in_progress,,,,
-st_game,in_progress,,,,
-st_game_comp_wd,in_progress,,,,
-st_game_comp_we,in_progress,,,,
-st_game_comp,in_progress,,,,
-st_game_console_wd,in_progress,,,,
-st_game_console_we,in_progress,,,,
-st_game_console,in_progress,,,,
-st_game_handheldconsole_wd,in_progress,,,,
-st_game_handheldconsole_we,in_progress,,,,
-st_game_handheldconsole,in_progress,,,,
-st_game_active_wd,in_progress,,,,
-st_game_active_we,in_progress,,,,
-st_game_active,in_progress,,,,
-st_game_phone_wd,in_progress,,,,
-st_game_phone_we,in_progress,,,,
-st_game_phone,in_progress,,,,
-st_game_tablet_wd,in_progress,,,,
-st_game_tablet_we,in_progress,,,,
-st_game_tablet,in_progress,,,,
-st_comp_nongaming_wd,in_progress,,,,
-st_comp_nongaming_we,in_progress,,,,
-st_comp_nongaming,in_progress,,,,
-st_comp_wd,in_progress,,,,
-st_comp_we,in_progress,,,,
-st_comp,in_progress,,,,
-st_tablet_wd,in_progress,,,,
-st_tablet_we,in_progress,,,,
-st_tablet,in_progress,,,,
-st_phone_wd,in_progress,,,,
-st_phone_we,in_progress,,,,
-st_phone,in_progress,,,,
-st_socmedia_wd,in_progress,,,,
-st_socmedia_we,in_progress,,,,
-st_socmedia,in_progress,,,,
-st_educational_wd,in_progress,,,,
-st_educational_we,in_progress,,,,
-st_educational,in_progress,,,,
-st_internet_wd,in_progress,,,,
-st_internet_we,in_progress,,,,
-st_internet,in_progress,,,,
-st_videochat,in_progress,,,,
-st_email,in_progress,,,,
-st_shopping,in_progress,,,,
-st_total_school,in_progress,,,,
-st_educational_school,in_progress,,,,
-st_comp_school,in_progress,,,,
-st_tablet_school,in_progress,,,,
-st_internet_school,in_progress,,,,
-st_phone_school,in_progress,,,,
-acc_academachment_selfrated,in_progress,,,,
-acc_academachment_lettergrades,in_progress,,,,
-acc_academachment_stdtest,in_progress,,,,
-acc_schoolengage_caresschool,in_progress,,,,
-acc_schoolengage_homework,in_progress,,,,
-acc_academachment_numgrades,in_progress,,,,
-acc_academachment_teacherrated,in_progress,,,,
-acc_numeracy_stdtest,in_progress,,,,
-acc_literacy_stdtest,in_progress,,,,
-beh_hyper_basc2,in_progress,,,,
-beh_atten_basc2,in_progress,,,,
-beh_atten_self,in_progress,,,,
-beh_selfreg_htks,in_progress,,,,
-beh_bullied,in_progress,,,,
-beh_beenbullied,in_progress,,,,
-beh_beenbullied_online,in_progress,,,,
-beh_bullied_online,in_progress,,,,
-beh_fight,in_progress,,,,
-beh_conduct_sdq_parent,in_progress,,,,
-beh_hyper_sdq_parent,in_progress,,,,
-beh_peerprob_sdq_parent,in_progress,,,,
-beh_prosocial_sdq_parent,in_progress,,,,
-beh_aggphys_bpaq_self,in_progress,,,,
-beh_aggverb_bpaq_self,in_progress,,,,
-beh_agganger_bpaq_self,in_progress,,,,
-beh_agghostility_bpaq_self,in_progress,,,,
-beh_agg_self,in_progress,,,,
-beh_argues,in_progress,,,,
-beh_persistence_finishwork,in_progress,,,,
-beh_emotreg_stayscalm,in_progress,,,,
-beh_peerprob_makefriends,in_progress,,,,
-beh_conduct_diagnosed,in_progress,,,,
-beh_conduct_diagnosed_severity,in_progress,,,,
-beh_conduct_sdq_self,in_progress,,,,
-beh_hyper_sdq_self,in_progress,,,,
-beh_peerprob_sdq_self,in_progress,,,,
-beh_prosocial_sdq_self,in_progress,,,,
-beh_conduct_sdq_teacher,in_progress,,,,
-beh_hyper_sdq_teacher,in_progress,,,,
-beh_peerprob_sdq_teacher,in_progress,,,,
-beh_prosocial_sdq_teacher,in_progress,,,,
-beh_ext_sdq_parent,in_progress,,,,
-beh_ext_sdq_self,in_progress,,,,
-beh_ext_sdq_teacher,in_progress,,,,
-beh_agg_cbcl_parent,in_progress,,,,
-beh_atten_cbcl_parent,in_progress,,,,
-beh_rulebreak_cbcl_parent,in_progress,,,,
-beh_ext_cbcl_parent,in_progress,,,,
-beh_cbcl_measure,in_progress,,,,
-cog_execfunc_basc2,in_progress,,,,
-cog_langexec_nepsy,in_progress,,,,
-cog_phono_nepsy,in_progress,,,,
-cog_inhibcont_nepsy,in_progress,,,,
-cog_vismotor_nepsy,in_progress,,,,
-cog_verbalfluency_nepsy,in_progress,,,,
-cog_inhib_nihtb_flanker,in_progress,,,,
-cog_flex_nihtb_dccs,in_progress,,,,
-cog_wm_nihtb_listsort,in_progress,,,,
-cog_speed_nihtb_pattern,in_progress,,,,
-cog_epimem_nihtb_picseq,in_progress,,,,
-cog_vocab_nihtb_picvocab,in_progress,,,,
-cog_fluidcomp_nihtb,in_progress,,,,
-cog_crystcomp_nihtb,in_progress,,,,
-cog_totalcomp_nihtb,in_progress,,,,
-cog_wm_digitspan,in_progress,,,,
-cog_iq_fullscale,in_progress,,,,
-cog_vocab_bpvs,in_progress,,,,
-cog_vocab_ppvt,in_progress,,,,
-cog_execfunc_brief_parent,in_progress,,,,
-mh_anx_basc2,in_progress,,,,
-mh_dep_basc2,in_progress,,,,
-mh_emotsymp_sdq_parent,in_progress,,,,
-mh_totaldiff_sdq_parent,in_progress,,,,
-mh_anx_diagnosed,in_progress,,,,
-mh_anx_diagnosed_severity,in_progress,,,,
-mh_dep_diagnosed,in_progress,,,,
-mh_dep_diagnosed_severity,in_progress,,,,
-mh_emotsymp_sdq_self,in_progress,,,,
-mh_emotsymp_sdq_teacher,in_progress,,,,
-mh_totaldiff_sdq_self,in_progress,,,,
-mh_totaldiff_sdq_teacher,in_progress,,,,
-mh_int_sdq_parent,in_progress,,,,
-mh_int_sdq_self,in_progress,,,,
-mh_int_sdq_teacher,in_progress,,,,
-mh_dep_smfq_self,in_progress,,,,
-mh_dep_smfq_parent,in_progress,,,,
-mh_dep_cdi_self,in_progress,,,,
-mh_dep_cesd_self,in_progress,,,,
-mh_dep_phq9_self,in_progress,,,,
-mh_dep_rcads_self,in_progress,,,,
-mh_dep_dass21_self,in_progress,,,,
-mh_dep_scl_self,in_progress,,,,
-mh_distress_k6_self,in_progress,,,,
-mh_distress_k10_self,in_progress,,,,
-mh_anx_masc_self,in_progress,,,,
-mh_anx_scas_self,in_progress,,,,
-mh_anx_scas_parent,in_progress,,,,
-mh_anx_scared_self,in_progress,,,,
-mh_anx_scared_parent,in_progress,,,,
-mh_anx_gad7_self,in_progress,,,,
-mh_anx_rcads_self,in_progress,,,,
-mh_anx_dass21_self,in_progress,,,,
-mh_anxdep_cbcl_parent,in_progress,,,,
-mh_int_cbcl_parent,in_progress,,,,
-mh_dep_self,in_progress,,,,
-mh_dep_measure,in_progress,,,,
-mh_anx_self,in_progress,,,,
-mh_anx_measure,in_progress,,,,
-wb_emotsc_basc2,in_progress,,,,
-wb_mwb_wemwbs,in_progress,,,,
-wb_lifesatisfaction_cantrilladder,in_progress,,,,
-wb_resil_basc2,in_progress,,,,
-wb_psychcomplaints_feellow,in_progress,,,,
-wb_psychcomplaints_irritable,in_progress,,,,
-wb_psychcomplaints_nervous,in_progress,,,,
-wb_psychcomplaints_diffsleep,in_progress,,,,
-wb_bodyimage,in_progress,,,,
-wb_lifesat_slss_self,in_progress,,,,
-wb_lifesat_swls_self,in_progress,,,,
-wb_lifesat_singleitem_self,in_progress,,,,
-wb_qol_pedsql_self,in_progress,,,,
-wb_qol_pedsql_parent,in_progress,,,,
-wb_qol_kidscreen10_self,in_progress,,,,
-wb_qol_kidscreen10_parent,in_progress,,,,
-wb_selfesteem_rosenberg_self,in_progress,,,,
-wb_selfesteem_self,in_progress,,,,
-wb_selfesteem_measure,in_progress,,,,
-wb_selfefficacy_gse_self,in_progress,,,,
-wb_selfefficacy_self,in_progress,,,,
-wb_selfefficacy_measure,in_progress,,,,
-wb_mwb_who5_self,in_progress,,,,
-wb_happiness_shs_self,in_progress,,,,
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,sn,"sprintf(""%.0f"", as.numeric(sn))","Study serial number (sn), unique per child and the same at every wave.",,
+wave,compatible,wave,wave,Wave 1-3 as the study numbers them (wave prefix of the source columns); annual waves.,,
+data_year,inferred,wave,"recode_values(wave, ""1"" ~ 2007, ""2"" ~ 2008, ""3"" ~ 2009)","Wave 1 = 2007, wave 2 = 2008, wave 3 = 2009: 'These students were surveyed annually between 2007 and 2009' (Gentile et al. 2011, Pediatrics 127(2):e319-e329, doi:10.1542/peds.2010-1353); no date in the file.",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,compatible,Weight,as.numeric(Weight),"Wave 1 only. Post-stratification weight to Singapore's 10-14-year-olds by sex and race (2000 Census, 2005 General Household Survey; Choo et al. 2010, Ann Acad Med Singapore 39:822-829, Data Weighting), mean 1, one value per sex x race cell; NA for the 40 children missing sex or race. Waves 2-3 have no weight (NA).",,
+survey_strata,unavailable,,,Not collected.,,
+survey_cluster,compatible,school,"sprintf(""%.0f"", as.numeric(school))","School (school, 12 schools, one value per child). The researchers selected 12 primary and secondary schools across Singapore's regions and each school chose four classes per sampled grade (Choo et al. 2010, Procedures), so schools were the sampled units.",,
+age_years,compatible,age,as.numeric(age) + 0.5,"Child's age in completed years, asked at every wave (age; 8-18), +0.5.",,
+sex,compatible,sex,"coalesce(recode_values(as.numeric(sex), 1 ~ ""Male"", 2 ~ ""Female""), ""Unknown"")","Child self-report (sex: male, female), one time-invariant column, so nothing to carry; 23 rows missing = Unknown.",,
+country,inferred,,"""Singapore""",No country variable; 12 schools in Singapore (Gentile et al. 2011; Choo et al. 2010).,,
+state,unavailable,,,Not an Australian dataset.,,
+ethnicity,compatible,race,"coalesce(
+  lookup_values(haven::as_factor(race), lookup_ethnicity, dataset_id = spec$dataset_id, target_variable = ""ethnicity""),
+  ""Unknown""
+)","Child's race (race: chinese, malay, indian, eurasian, others), one time-invariant column, via the shared ethnicity lookup: Chinese, Malay and Indian = Asian, Eurasian (mixed European and Asian parentage) = Mixed, others = Other; missing = Unknown.",ethnicity,
+indigenous,unavailable,,,Not collected.,,
+minority,compatible,race,"coalesce(recode_values(as.numeric(race), 1 ~ ""Non-minority"", c(2, 3, 4, 5) ~ ""Minority""), ""Unknown"")","Same item as ethnicity (race): Chinese, Singapore's numerical majority, = Non-minority; Malay, Indian, Eurasian and others = Minority; missing = Unknown.",,
+immigrant_background,compatible,"birthplace, birthplacet, mabirth, mabirtht.q, pabirth, pabirtht.q, sn, wave","local({
+  child_code <- as.numeric(birthplace)
+  mother_code <- as.numeric(mabirth)
+  father_code <- as.numeric(pabirth)
+  child <- case_when(
+    child_code == 1 ~ ""in"",
+    child_code %in% 2:6 ~ ""abroad"",
+    child_code == 7 & grepl(""singapore|bugis"", tolower(birthplacet)) ~ NA_character_,
+    child_code == 7 ~ ""abroad""
+  )
+  mother <- case_when(
+    mother_code == 1 ~ ""in"",
+    mother_code %in% 2:6 ~ ""abroad"",
+    mother_code == 7 & grepl(""singapore|bugis"", tolower(mabirtht.q)) ~ NA_character_,
+    mother_code == 7 ~ ""abroad""
+  )
+  father <- case_when(
+    father_code == 1 ~ ""in"",
+    father_code %in% 2:6 ~ ""abroad"",
+    father_code == 7 & grepl(""singapore|bugis"", tolower(pabirtht.q)) ~ NA_character_,
+    father_code == 7 ~ ""abroad""
+  )
+  background <- case_when(
+    mother %in% ""in"" | father %in% ""in"" ~ ""Native"",
+    is.na(mother) & is.na(father) ~ NA_character_,
+    child %in% ""in"" ~ ""Second-generation"",
+    child %in% ""abroad"" ~ ""First-generation""
+  )
+  coalesce(carry_within(background, sn, order = as.numeric(wave)), ""Unknown"")
+})","Wave 2 items, carried within child to waves 1 and 3 (carry-forward rule): child's (birthplace), biological mother's (mabirth) and biological father's (pabirth) place of birth, Singapore, Malaysia, India, China, USA, Europe, others (specify), don't know. Singapore = in the country; other places abroad; 'others' text naming Singapore or Bugis ('Singapore PR', 'Bangkok / Singapore', 'Bugis') and don't know = unknown. One parent unknown: the other decides. Children not seen at wave 2 = Unknown.",,
+born_in_country,compatible,"birthplace, birthplacet, sn, wave","local({
+  bp <- as.numeric(birthplace)
+  born <- case_when(
+    bp == 1 ~ ""Yes"",
+    bp %in% 2:6 ~ ""No"",
+    bp == 7 & grepl(""singapore"", tolower(birthplacet)) ~ NA_character_,
+    bp == 7 ~ ""No""
+  )
+  coalesce(carry_within(born, sn, order = as.numeric(wave)), ""Unknown"")
+})","Child's place of birth (birthplace), wave 2 only, carried within child to waves 1 and 3 (carry-forward rule): Singapore = Yes; Malaysia, India, China, USA, Europe and other countries = No; 'others' text 'Singapore PR' and don't know = Unknown; children not seen at wave 2 = Unknown.",,
+home_language,unavailable,,,Not collected.,,
+ses_area,unavailable,,,Not collected.,,
+ses_household,compatible,house,"coalesce(recode_values(as.numeric(house), c(1, 2, 3) ~ ""Low"", 4 ~ ""Medium"", c(5, 6, 7, 8) ~ ""High""), ""Unknown"")","Household SES cuts: housing type (house; the study's SES proxy, Choo et al. 2010), 8 bands placed by within-wave ridit: HDB 2-, 3- and 4-room flats Low (ridit up to 0.32), HDB 5-room Medium (0.52-0.55), HDB executive flat, private condominium, terrace or semi-detached house and bungalow High (0.67 and above); the same cut at every wave, giving 45/20/35, 43/21/36 and 42/20/38. Adjacent-wave fill done in the tidier; missing = Unknown.",,
+ses_household_measure,inferred,,"""Affluence/assets: housing type (public flat size, private condominium, landed house), 8 bands""",Names the measure behind ses_household (house) at every wave.,,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,proximate,maedu,"coalesce(
+  lookup_values(
+    haven::as_factor(maedu),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","Child report at wave 1 of the mother's highest education (maedu: none, primary, secondary, ITE, A-levels, diploma, university, don't know), carried to waves 2-3 in the tidier; via the shared education lookup: none, primary, secondary, ITE and A-levels = Secondary school or less; diploma = Post-secondary; university = Bachelor degree or higher; don't know and missing = Unknown. Don't know is the modal answer (49% of wave-1 children). Proximate: ITE (Institute of Technical Education) certificates span upper-secondary vocational (Nitec) and post-secondary (Higher Nitec) levels and are placed with the upper-secondary certificates that make up most of them.",maternal_education,
+paternal_education,proximate,paedu,"coalesce(
+  lookup_values(
+    haven::as_factor(paedu),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","Child report at wave 1 of the father's highest education (paedu, same options as maedu), carried to waves 2-3 in the tidier; mapped through the shared education lookup as maternal_education: none, primary, secondary, ITE and A-levels = Secondary school or less; diploma = Post-secondary; university = Bachelor degree or higher; don't know and missing = Unknown. Proximate: ITE (Institute of Technical Education) certificates span upper-secondary vocational (Nitec) and post-secondary (Higher Nitec) levels and are placed with the upper-secondary certificates that make up most of them.",maternal_education,
+parental_education,proximate,"maedu, paedu","local({
+  levels_ordered <- c(""Secondary school or less"", ""Post-secondary"", ""Bachelor degree or higher"")
+  mother <- lookup_values(
+    haven::as_factor(maedu),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  )
+  father <- lookup_values(
+    haven::as_factor(paedu),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  )
+  coalesce(levels_ordered[pmax(match(mother, levels_ordered), match(father, levels_ordered), na.rm = TRUE)], ""Unknown"")
+})","Higher of the mother's (maedu) and father's (paedu) education as mapped on maternal_education and paternal_education, don't know dropped so one known parent suffices; Unknown when neither is known. Proximate: ITE (Institute of Technical Education) certificates span upper-secondary vocational (Nitec) and post-secondary (Higher Nitec) levels and are placed with the upper-secondary certificates that make up most of them.",maternal_education,
+maternal_employment,unavailable,,,Not collected.,,
+urbanicity,inferred,,"""Urban""","Not measured; Singapore is a city-state classified as entirely urban, so a Singapore school sample guarantees urban residence.",,
+family_structure,compatible,"livwithr, livwitht.q","local({
+  code <- as.numeric(livwithr)
+  other <- lookup_values(tolower(trimws(livwitht.q)), lookup_family_structure_other, default = ""Unknown"")
+  coalesce(
+    case_when(
+      code == 1 ~ ""Two biological/adoptive parents"",
+      code %in% c(2, 3) ~ ""Single parent"",
+      code %in% c(4, 5) ~ ""Step family"",
+      code %in% c(6, 7) ~ ""Other"",
+      code == 8 ~ other
+    ),
+    ""Unknown""
+  )
+})","Child report, every wave: 'you live with' (livwithr; adjacent-wave fill done in the tidier): both parents = Two biological/adoptive parents; mother only, father only = Single parent; mother and stepfather, father and stepmother = Step family; grandparents only, guardian = Other; others resolved from the specify text (livwitht.q) through the dataset lookup family_structure_other, unresolved or blank text = Unknown; missing = Unknown.",family_structure_other,
+fam_screenrules,partial,"hb2, hb3_0, hb6_0","local({
+  hours <- as.numeric(hb2)
+  how_long <- as.numeric(hb3_0)
+  when <- as.numeric(hb6_0)
+  case_when(
+    hours %in% 2:4 | how_long %in% 2:4 | when %in% 2:4 ~ ""TRUE"",
+    hours %in% 1 | how_long %in% 1 | when %in% 1 ~ ""FALSE""
+  )
+})","Child report of adults' involvement in gaming (Adult Involvement in Media items): wave 1 'Set specific playing videogame hours' (hb2); waves 2-3 'set limits on how long I may play video games' (hb3_0) or 'set limits on when I may play video games' (hb6_0); never, one or two times a month, one or two times a week, every day or almost every day; TRUE above never on any, FALSE if never on every answered item. Partial: video games only, and a frequency of limiting rather than a stated rule. Content-only items (hb1, hb3, hb10_0) and 'make me ask permission' (hb4_0) not used here; the study's limits score over these items (AIMlimits) is on fam_mediation_restrict.",,
+fam_bedroomscreen,compatible,"ac1, ac2, ac3, ac4, ac5","local({
+  items <- cbind(as.numeric(ac1), as.numeric(ac2), as.numeric(ac3), as.numeric(ac4), as.numeric(ac5))
+  case_when(rowSums(items == 1, na.rm = TRUE) > 0 ~ ""TRUE"", rowSums(!is.na(items)) > 0 ~ ""FALSE"")
+})","Child report, every wave: 'what do you have in your own bedroom?' (ac1-ac5: computer not connected to the Internet, computer connected to the Internet, video game console, handheld video game, TV; have or don't have); TRUE if any. Devices covered: computer, games console, handheld console, TV (no phone or tablet item).",,
+fam_coview_freq,partial,"hb9, hb8_9","recode_values(coalesce(as.numeric(hb9), as.numeric(hb8_9)), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Always"")","Child report, every wave: adults 'Play videogame with me' (hb9, wave 1; hb8_9, waves 2-3; Adult Involvement in Media items), no recall stated: never = Never; one or two times a month (under 10% of days) = Rarely; one or two times a week (14-29%) = Sometimes; every day or almost every day = Always (day-share cuts); Often unused. Partial: co-playing video games only; four levels. The study's co-viewing score (AIMcoview) not used.",,
+fam_mediation_restrict,partial,"AIMlimits, hb1, hb2, hb3, hb10_0, hb3_0, hb4_0, hb6_0",as.numeric(AIMlimits),"Child report, every wave: the study's limits score (AIMlimits, 'Adult Inv in Media - Limits') from its parental involvement items adapted from the Adult Involvement in Media Scale (Gentile et al. 2014): how often adults restrict or ban certain games, set specific playing hours and specify games I cannot play (hb1-hb3, wave 1), or restrict or ban certain games, set limits on the types of games, on how long and on when I may play, and make me ask permission before I play (hb1, hb10_0, hb3_0, hb6_0, hb4_0, waves 2-3); never (1) to every day or almost every day (4); mean of answered items, used as released (released only with at least half answered: 2 of 3 at wave 1, 3 of 5 at waves 2-3). Partial: video games only. The items change at wave 2, so standardise within wave. The limits-and-mediation total (AIMtot) is not used; the limit items hb2, hb3_0 and hb6_0 also fill fam_screenrules.",,
+fam_mediation_active,partial,"AIMmediation, hb4, hb5, hb6, hb7, hb8, hb10, hb11, hb2_6, hb5_7, hb7_8, hb9_10",as.numeric(AIMmediation),"Child report, every wave: the study's mediation score (AIMmediation, 'Adult Inv in Media - Mediation') from the same adapted Adult Involvement in Media items: how often adults explain the meaning of some games, discuss game characters, point out good and bad things about playing, explain the reality behind games, encourage me to review a game's information (ratings, contents, difficulty) before buying or playing it, and talk about the games I play (hb4-hb8, hb10, hb11, wave 1; hb11, hb2_6, hb5_7, hb7_8, hb9_10, waves 2-3); never (1) to every day or almost every day (4); mean of answered items, used as released (released only with at least 5 of 7 answered at wave 1, 3 of 5 at waves 2-3). Partial: video games only, and the index pools talking items with one item on checking a game's information before choosing it. The items change at wave 2, so standardise within wave. 'Discuss a videogame just played / about to play' (hb12, wave 1) is outside the study score and not used; co-playing (hb9, hb8_9; AIMcoview) stays on fam_coview_freq.",,
+fam_mediation_measure,inferred,wave,"if_else(
+  wave == ""1"",
+  ""Adult Involvement in Media Scale, items adapted for the study (child report; video games); restrictive: limits score, 3 items, 1-4 item scoring (range 1-4), mean; active: mediation score, 7 items, 1-4 item scoring (range 1-4), mean; none reversed; released only with at least half the items answered"",
+  ""Adult Involvement in Media Scale, items adapted for the study (child report; video games); restrictive: limits score, 5 items, 1-4 item scoring (range 1-4), mean; active: mediation score, 5 items, 1-4 item scoring (range 1-4), mean; none reversed; released only with at least half the items answered; items changed from wave 1""
+)","Describes fam_mediation_restrict and fam_mediation_active; one value for wave 1 and one for waves 2-3, where the item sets change.",,
+fam_parent_screentime,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+fam_readto_freq,unavailable,,,Not collected.,,
+fam_readto_time,unavailable,,,Not collected.,,
+fam_childbooks,unavailable,,,Not collected.,,
+school_grade,compatible,"education, wave","if_else(
+  wave == ""1"",
+  recode_values(as.numeric(education), 3 ~ ""Primary 3"", 4 ~ ""Primary 4"", 7 ~ ""Secondary 1"", 8 ~ ""Secondary 2""),
+  NA_character_
+)","Wave 1 only: the sampled grade ('your educational level in wave 1', education: P3, P4, s1, s2), fixed by sampling four classes each of Primary 3, Primary 4, Secondary 1 and Secondary 2 in each school (Choo et al. 2010). Waves 2-3 NA: education is not updated and no document names the later grades.",,
+school_sector,incompatible,school,,"Only the school (school: 12 school names); the study sampled public and private schools (Choo et al. 2010) but releases no sector, and schools are not classified from outside information.",,
+st_measure_type,inferred,,"""Categorical""","Hour codes from fixed response options (time-of-day gaming items, every wave).",,
+st_measure_name,inferred,,"""Custom""","Items adapted from the author's General Media Habits Questionnaire and reformatted for the study as six time-of-day hour items (Gentile et al. 2011, Appendix; Choo et al. 2010, Table 1).",,
+st_responder,inferred,,"""Self""","Child self-report questionnaire, administered in class, every wave.",,
+st_total_wd,unavailable,,,Not collected.,,
+st_total_we,unavailable,,,Not collected.,,
+st_total,unavailable,,,Not collected.,,
+st_watch_wd,unavailable,,,Not collected.,,
+st_watch_we,unavailable,,,Not collected.,,
+st_watch,unavailable,,,Not collected.,,
+st_game_wd,compatible,"timem, timea, timee, timewknm, timewkna, timewkne, oftenplay","local({
+  blank <- is.na(timem) & is.na(timea) & is.na(timee) & is.na(timewknm) & is.na(timewkna) & is.na(timewkne)
+  never <- blank & as.numeric(oftenplay) %in% c(8, 9)
+  hours <- c(0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5.5, 6)
+  wd <- cbind(as.numeric(timem), as.numeric(timea), as.numeric(timee))
+  we <- cbind(as.numeric(timewknm), as.numeric(timewkna), as.numeric(timewkne))
+  wd[wd == 6.5] <- 6
+  we[we == 6.5] <- 6
+  wd[!wd %in% hours] <- NA
+  we[!we %in% hours] <- NA
+  if_else(never, 0, rowSums(wd))
+})","Child self-report, every wave: 'On a usual school day, how many hours do you play computer/video games in the morning?' and the afternoon and evening items (Gentile et al. 2011, Appendix: response 'Hours'). Sum of timem, timea, timee (DR-0002). Codes are hours: 0 'none' = 0; codes 0.5-4 carry no label in the file and their wording is not documented, so they are read as hour bands at the value coded; 4.5 '4 to 5 hours' and 5.5 '5 to 6 hours' at their band midpoints; top band 'more than 6 hours' (coded 6.5) = 6 per daypart; an undefined code (5.6, three wave-3 weekend answers) = NA. 'computer/video games' gives no device list, so the items cover gaming on any device. Wave 1 releases no missing values on these items (waves 2-3: 9-11% missing); 22% of wave-1 children are 0 on all six against 8-10% later, so some wave-1 zeros may be unanswered. Waves 2-3: children answering never or no longer playing with the time items blank take 0 (non-users rule; 182 child-waves). The frequency item 'how often do you play video games' (oftenplay, waves 2-3) disagrees with the time items even for never-players, so the items are read as usual-day time and are not scaled by days played; oftenplay is otherwise unused. The study's capped sums (VG_weekday, VG_weekend, VG_WK) and the per-favourite-game times (timemf1-timemf3, timess1-timess3, eachtm1-eachtm3) are not used here; the per-game times feed the st_violent_game rows.",,
+st_game_we,compatible,"timewknm, timewkna, timewkne, timem, timea, timee, oftenplay","local({
+  blank <- is.na(timem) & is.na(timea) & is.na(timee) & is.na(timewknm) & is.na(timewkna) & is.na(timewkne)
+  never <- blank & as.numeric(oftenplay) %in% c(8, 9)
+  hours <- c(0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5.5, 6)
+  wd <- cbind(as.numeric(timem), as.numeric(timea), as.numeric(timee))
+  we <- cbind(as.numeric(timewknm), as.numeric(timewkna), as.numeric(timewkne))
+  wd[wd == 6.5] <- 6
+  we[we == 6.5] <- 6
+  wd[!wd %in% hours] <- NA
+  we[!we %in% hours] <- NA
+  if_else(never, 0, rowSums(we))
+})","Child self-report, every wave: the same three items for a usual weekend day (morning, afternoon, evening). Sum of timewknm, timewkna, timewkne (DR-0002). Codes are hours: 0 'none' = 0; codes 0.5-4 carry no label in the file and their wording is not documented, so they are read as hour bands at the value coded; 4.5 '4 to 5 hours' and 5.5 '5 to 6 hours' at their band midpoints; top band 'more than 6 hours' (coded 6.5) = 6 per daypart; an undefined code (5.6, three wave-3 weekend answers) = NA. 'computer/video games' gives no device list, so the items cover gaming on any device. Wave 1 releases no missing values on these items (waves 2-3: 9-11% missing); 22% of wave-1 children are 0 on all six against 8-10% later, so some wave-1 zeros may be unanswered. Waves 2-3: children answering never or no longer playing with the time items blank take 0 (non-users rule; 182 child-waves). The frequency item 'how often do you play video games' (oftenplay, waves 2-3) disagrees with the time items even for never-players, so the items are read as usual-day time and are not scaled by days played; oftenplay is otherwise unused. The study's capped sums (VG_weekday, VG_weekend, VG_WK) and the per-favourite-game times (timemf1-timemf3, timess1-timess3, eachtm1-eachtm3) are not used here; the per-game times feed the st_violent_game rows.",,
+st_game,compatible,"timem, timea, timee, timewknm, timewkna, timewkne, oftenplay","local({
+  blank <- is.na(timem) & is.na(timea) & is.na(timee) & is.na(timewknm) & is.na(timewkna) & is.na(timewkne)
+  never <- blank & as.numeric(oftenplay) %in% c(8, 9)
+  hours <- c(0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5.5, 6)
+  wd <- cbind(as.numeric(timem), as.numeric(timea), as.numeric(timee))
+  we <- cbind(as.numeric(timewknm), as.numeric(timewkna), as.numeric(timewkne))
+  wd[wd == 6.5] <- 6
+  we[we == 6.5] <- 6
+  wd[!wd %in% hours] <- NA
+  we[!we %in% hours] <- NA
+  school_day <- if_else(never, 0, rowSums(wd))
+  weekend <- if_else(never, 0, rowSums(we))
+  (5 * school_day + 2 * weekend) / 7
+})","(5 x st_game_wd + 2 x st_game_we) / 7 from the six time-of-day items, every wave; school-day and weekend sums as in those rows. Codes are hours: 0 'none' = 0; codes 0.5-4 carry no label in the file and their wording is not documented, so they are read as hour bands at the value coded; 4.5 '4 to 5 hours' and 5.5 '5 to 6 hours' at their band midpoints; top band 'more than 6 hours' (coded 6.5) = 6 per daypart; an undefined code (5.6, three wave-3 weekend answers) = NA. 'computer/video games' gives no device list, so the items cover gaming on any device. Wave 1 releases no missing values on these items (waves 2-3: 9-11% missing); 22% of wave-1 children are 0 on all six against 8-10% later, so some wave-1 zeros may be unanswered. Waves 2-3: children answering never or no longer playing with the time items blank take 0 (non-users rule; 182 child-waves). The frequency item 'how often do you play video games' (oftenplay, waves 2-3) disagrees with the time items even for never-players, so the items are read as usual-day time and are not scaled by days played; oftenplay is otherwise unused. The study's capped sums (VG_weekday, VG_weekend, VG_WK) and the per-favourite-game times (timemf1-timemf3, timess1-timess3, eachtm1-eachtm3) are not used here; the per-game times feed the st_violent_game rows.",,
+st_game_comp_wd,unavailable,,,No device split; see st_game.,,
+st_game_comp_we,unavailable,,,No device split; see st_game.,,
+st_game_comp,unavailable,,,No device split; see st_game.,,
+st_game_console_wd,unavailable,,,No device split; see st_game.,,
+st_game_console_we,unavailable,,,No device split; see st_game.,,
+st_game_console,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_wd,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_we,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole,unavailable,,,No device split; see st_game.,,
+st_game_active_wd,unavailable,,,Not collected.,,
+st_game_active_we,unavailable,,,Not collected.,,
+st_game_active,unavailable,,,Not collected.,,
+st_game_phone_wd,unavailable,,,No device split; see st_game.,,
+st_game_phone_we,unavailable,,,No device split; see st_game.,,
+st_game_phone,unavailable,,,No device split; see st_game.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_game.,,
+st_game_tablet_we,unavailable,,,No device split; see st_game.,,
+st_game_tablet,unavailable,,,No device split; see st_game.,,
+st_comp_nongaming_wd,unavailable,,,Not collected.,,
+st_comp_nongaming_we,unavailable,,,Not collected.,,
+st_comp_nongaming,unavailable,,,Not collected.,,
+st_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_we,unavailable,,,No weekday/weekend split.,,
+st_comp,incompatible,ab2,,"Only how often the child uses the computers at school (ab2, wave 1), a frequency with no hours; no other computer-use item.",,
+st_tablet_wd,unavailable,,,Not collected.,,
+st_tablet_we,unavailable,,,Not collected.,,
+st_tablet,unavailable,,,Not collected.,,
+st_phone_wd,unavailable,,,Not collected.,,
+st_phone_we,unavailable,,,Not collected.,,
+st_phone,unavailable,,,Not collected.,,
+st_socmedia_wd,unavailable,,,Not collected.,,
+st_socmedia_we,unavailable,,,Not collected.,,
+st_socmedia,unavailable,,,Not collected.,,
+st_educational_wd,incompatible,"fc6, fd6, fe6, EdGEz, EdGEsr",,"Only whether each of the child's three favourite games helps with studies ('How often does this game help you do better in your studies?', fc6, fd6, fe6) and study indices built from it (EdGEz, EdGEsr); educational gaming is identifiable only for those games, and the gaming time is on st_game.",,
+st_educational_we,incompatible,"fc6, fd6, fe6, EdGEz, EdGEsr",,"Only whether each of the child's three favourite games helps with studies ('How often does this game help you do better in your studies?', fc6, fd6, fe6) and study indices built from it (EdGEz, EdGEsr); educational gaming is identifiable only for those games, and the gaming time is on st_game.",,
+st_educational,incompatible,"fc6, fd6, fe6, EdGEz, EdGEsr",,"Only whether each of the child's three favourite games helps with studies ('How often does this game help you do better in your studies?', fc6, fd6, fe6) and study indices built from it (EdGEz, EdGEsr); educational gaming is identifiable only for those games, and the gaming time is on st_game.",,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,partial,"timemf1, timemf2, timemf3, gm1genre, gm2genre, gm3genre, oftenplay, wave","local({
+  shooter <- c(3, 4, 11, 13)
+  hours <- c(0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10)
+  answered <- !is.na(timemf1) | !is.na(timemf2) | !is.na(timemf3)
+  never <- !answered & as.numeric(oftenplay) %in% c(8, 9)
+  time <- cbind(as.numeric(timemf1), as.numeric(timemf2), as.numeric(timemf3))
+  time[time == 10.5] <- 10
+  time[!time %in% hours] <- NA
+  genre <- cbind(as.numeric(gm1genre), as.numeric(gm2genre), as.numeric(gm3genre))
+  part <- ifelse(matrix(genre %in% shooter, ncol = 3), time, 0)
+  case_when(wave == ""3"" ~ NA_real_, never ~ 0, !answered ~ NA_real_, .default = rowSums(part))
+})","Waves 1-2, child self-report: 'on a usual school day, how many hours do you play this game' for each of the three favourite games the child named (timemf1-timemf3), summed over the games the study's genre coding (gm1genre-gm3genre) places among shooters: first-person shooter, third-person shooter and the hybrids FPSTPG and FPSRPG (codes 3, 4, 11, 13); other and uncoded games count as non-violent (sum over titles, DR-0002). Codes are hours: 0 'none' = 0; codes 0.5-4 carry no label in the file and are read as hour bands at the value coded, as on the gaming-time items; labelled bands '4 to 5 hours' to '9 to 10 hours' (4.5-9.5) at their midpoints; top band 'more than 10 hours' (coded 10.5) = 10 per game. Partial: named favourite games only, classified by a violent genre (shooters). Wave 3 releases no game names or genre codes: NA. Wave 2: children answering never or no longer playing (oftenplay) with no per-game time take 0 (non-users rule). The per-game kill-frequency ratings and ESRB ratings do not classify games here; they feed st_violent_game_index.",,
+st_violent_game_we,partial,"timess1, timess2, timess3, gm1genre, gm2genre, gm3genre, oftenplay, wave","local({
+  shooter <- c(3, 4, 11, 13)
+  hours <- c(0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10)
+  answered <- !is.na(timess1) | !is.na(timess2) | !is.na(timess3)
+  never <- !answered & as.numeric(oftenplay) %in% c(8, 9)
+  time <- cbind(as.numeric(timess1), as.numeric(timess2), as.numeric(timess3))
+  time[time == 10.5] <- 10
+  time[!time %in% hours] <- NA
+  genre <- cbind(as.numeric(gm1genre), as.numeric(gm2genre), as.numeric(gm3genre))
+  part <- ifelse(matrix(genre %in% shooter, ncol = 3), time, 0)
+  case_when(wave == ""3"" ~ NA_real_, never ~ 0, !answered ~ NA_real_, .default = rowSums(part))
+})","Waves 1-2, child self-report: 'on a usual weekend, how many hours do you play this game' for each of the three favourite games (timess1-timess3), read per weekend day as the study's own weekly game time (5 x school day + 2 x weekend) reads it, summed over the games the study's genre coding (gm1genre-gm3genre) places among shooters: first-person shooter, third-person shooter and the hybrids FPSTPG and FPSRPG (codes 3, 4, 11, 13); other and uncoded games count as non-violent (sum over titles, DR-0002). Codes are hours: 0 'none' = 0; codes 0.5-4 carry no label in the file and are read as hour bands at the value coded, as on the gaming-time items; labelled bands '4 to 5 hours' to '9 to 10 hours' (4.5-9.5) at their midpoints; top band 'more than 10 hours' (coded 10.5) = 10 per game. Values above 24 hours are kept (one child-wave, 25.5). Partial: named favourite games only, classified by a violent genre (shooters). Wave 3 releases no game names or genre codes: NA. Wave 2: children answering never or no longer playing (oftenplay) with no per-game time take 0 (non-users rule). The per-game kill-frequency ratings and ESRB ratings do not classify games here; they feed st_violent_game_index.",,
+st_violent_game,partial,"timemf1, timemf2, timemf3, timess1, timess2, timess3, gm1genre, gm2genre, gm3genre, oftenplay, wave","local({
+  shooter <- c(3, 4, 11, 13)
+  hours <- c(0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10)
+  violent <- matrix(cbind(as.numeric(gm1genre), as.numeric(gm2genre), as.numeric(gm3genre)) %in% shooter, ncol = 3)
+  wd <- cbind(as.numeric(timemf1), as.numeric(timemf2), as.numeric(timemf3))
+  we <- cbind(as.numeric(timess1), as.numeric(timess2), as.numeric(timess3))
+  wd[wd == 10.5] <- 10
+  we[we == 10.5] <- 10
+  wd[!wd %in% hours] <- NA
+  we[!we %in% hours] <- NA
+  wd_answered <- !is.na(timemf1) | !is.na(timemf2) | !is.na(timemf3)
+  we_answered <- !is.na(timess1) | !is.na(timess2) | !is.na(timess3)
+  never <- as.numeric(oftenplay) %in% c(8, 9)
+  wd_hours <- case_when(
+    wave == ""3"" ~ NA_real_,
+    never & !wd_answered ~ 0,
+    !wd_answered ~ NA_real_,
+    .default = rowSums(ifelse(violent, wd, 0))
+  )
+  we_hours <- case_when(
+    wave == ""3"" ~ NA_real_,
+    never & !we_answered ~ 0,
+    !we_answered ~ NA_real_,
+    .default = rowSums(ifelse(violent, we, 0))
+  )
+  (5 * wd_hours + 2 * we_hours) / 7
+})","(5 x st_violent_game_wd + 2 x st_violent_game_we) / 7, waves 1-2: hours per usual school day and weekend day in the child's three favourite games (timemf1-timemf3, timess1-timess3), summed over the games the study's genre coding (gm1genre-gm3genre) places among shooters: first-person shooter, third-person shooter and the hybrids FPSTPG and FPSRPG (codes 3, 4, 11, 13); other and uncoded games count as non-violent (sum over titles, DR-0002). Codes are hours: 0 'none' = 0; codes 0.5-4 carry no label in the file and are read as hour bands at the value coded, as on the gaming-time items; labelled bands '4 to 5 hours' to '9 to 10 hours' (4.5-9.5) at their midpoints; top band 'more than 10 hours' (coded 10.5) = 10 per game. Partial: named favourite games only, classified by a violent genre (shooters). Wave 3 releases no game names or genre codes: NA. Wave 2: children answering never or no longer playing (oftenplay) with no per-game time take 0 (non-users rule). The per-game kill-frequency ratings and ESRB ratings do not classify games here; they feed st_violent_game_index.",,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,compatible,"VGEsr, timemf1, timemf2, timemf3, timess1, timess2, timess3, fc3, fc4, fd3, fd4, fe3, fe4, oftenplay","local({
+  answered <- cbind(
+    !is.na(timemf1) | !is.na(timess1) | !is.na(fc3) | !is.na(fc4),
+    !is.na(timemf2) | !is.na(timess2) | !is.na(fd3) | !is.na(fd4),
+    !is.na(timemf3) | !is.na(timess3) | !is.na(fe3) | !is.na(fe4)
+  )
+  timed <- cbind(
+    !is.na(timemf1) | !is.na(timess1),
+    !is.na(timemf2) | !is.na(timess2),
+    !is.na(timemf3) | !is.na(timess3)
+  )
+  rated <- cbind(!is.na(fc3) | !is.na(fc4), !is.na(fd3) | !is.na(fd4), !is.na(fe3) | !is.na(fe4))
+  none <- cbind(
+    as.numeric(timemf1) %in% 0 & as.numeric(timess1) %in% 0,
+    as.numeric(timemf2) %in% 0 & as.numeric(timess2) %in% 0,
+    as.numeric(timemf3) %in% 0 & as.numeric(timess3) %in% 0
+  )
+  scored <- none | (timed & rated)
+  never <- rowSums(answered) == 0 & as.numeric(oftenplay) %in% c(8, 9)
+  case_when(never ~ 0, 2 * rowSums(scored) >= rowSums(answered) ~ as.numeric(VGEsr), .default = NA_real_)
+})","Every wave, child self-report: the study's violent video game exposure index (VGEsr, 'VG Viol Exp overall (SRtime x creatures and players)', the 'violent video game play' score of Gentile et al. 2014, Table 1): for each of up to three favourite games, the square root of weekly hours played (5 x school-day + 2 x weekend hours; timemf1-timemf3, timess1-timess3) times the mean of how often the child shoots or kills creatures and other players in it (fc3-fc4, fd3-fd4, fe3-fe4; never 0 to almost always 3), combined over games by the study (range 0-25.7), used as released, higher = more exposure. Used only where at least half of the games the child answered about (any per-game time or rating) could be scored: a game is scored where both its times are 'none' (no exposure whatever its rating) or where it has a time and a kill rating (34 values set NA: 17 / 13 / 4 at waves 1-3). Waves 2-3: children answering never or no longer playing (oftenplay) who answered about no game take 0, the index's no-exposure value (non-users rule; 373 child-waves). Other versions (VGEz, VGEcreatureSR, VGEplayerSR, VGEesrbSR, VGEesrbSRC and their z forms, VGE1sr, VGviol) are not used.",,
+st_violent_measure,inferred,wave,"if_else(
+  wave == ""3"",
+  ""st_violent_game_index: 3 named titles (favourite games), square-root weekly hours, self-rated 0-3 (mean of how often the player shoots or kills creatures and other players), product per title combined over titles (range 0-25.7); Gentile et al. 2014 violent video game play, used where at least half the games answered about could be scored (both times none, or a time and a kill rating)"",
+  ""st_violent_game_wd, st_violent_game_we, st_violent_game: 3 named titles (favourite games), hours per day (school-day and weekend-day hours per game), genre (study-coded shooters), sum over titles (range 0-30); st_violent_game_index: 3 named titles (favourite games), square-root weekly hours, self-rated 0-3 (mean of how often the player shoots or kills creatures and other players), product per title combined over titles (range 0-25.7); Gentile et al. 2014 violent video game play, used where at least half the games answered about could be scored (both times none, or a time and a kill rating)""
+)","Describes the violent-gaming rows: the hours rows at waves 1-2 (no game names or genre codes at wave 3) and the index at every wave. The attitude items 'Killing other players is violent' and 'It is ok to kill other players' (fb2, fb5) are not used.",,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,unavailable,,,Not collected.,,
+st_internet_we,unavailable,,,Not collected.,,
+st_internet,unavailable,,,Not collected.,,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,unavailable,,,Not collected.,,
+st_messaging_we,unavailable,,,Not collected.,,
+st_messaging,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,incompatible,ab2,,"Only 'how often do you use the computers in your school?' (ab2, wave 1), a frequency with no hours.",,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,incompatible,"lstexam1, lstexam2, lstexam3, lstexam4",,"Only the child's reported subject marks (lstexam1-lstexam4), which the schema sends to the grade rows (acc_academachment_numgrades); no rating of overall performance or class standing.",,
+acc_academachment_lettergrades,incompatible,"lstexam1, lstexam2, lstexam3, lstexam4",,"Only banded percentage marks in four subjects (lstexam1-lstexam4), not letter grades; mapped to acc_academachment_numgrades.",,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
+acc_schoolengage_caresschool,unavailable,,,Not collected.,,
+acc_schoolengage_homework,unavailable,,,Not collected.,,
+acc_homework_time,unavailable,,,Not collected.,,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,partial,"lstexam1, lstexam2, lstexam3, lstexam4","local({
+  midpoint <- c(45, 55, 65, 75, 85, 95)
+  (midpoint[as.numeric(lstexam1)] +
+    midpoint[as.numeric(lstexam2)] +
+    midpoint[as.numeric(lstexam3)] +
+    midpoint[as.numeric(lstexam4)]) /
+    4
+})","Child report, every wave: 'what marks did you get for your last exam' in English, maths, science and second language (lstexam1-lstexam4), percentage marks in six bands (below 50, 50-59, 60-69, 70-79, 80-89, over 90), each at its midpoint in percent (55, 65, 75, 85), the open bands half a band beyond their bound (below 50 = 45, over 90 = 95); mean of the four subjects (range 45-95, higher better), all four required. Partial: banded subject marks, not an overall grade. The study's 'Overall Grade' (grades) averages only English, maths and science and is not used.",,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
+acc_academachment_parentrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,unavailable,,,Not collected.,,
+acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered.,,
+acc_literacy_stdtest,unavailable,,,Not collected.,,
+acc_literacy_bas_wordreading,unavailable,,,BAS II not administered.,,
+acc_learningdisab_diagnosed,unavailable,,,Not collected.,,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not collected.,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_atten_self.,,
+beh_atten_self,compatible,"ADHDatt, ka1, ka3, ka5, ka7, ka9, ka11, ka13, ka15, ka17",as.numeric(ADHDatt),"Waves 2-3 only. The study's attention-problems score (ADHDatt) from the UMass ADHD self-report screen (Gentile et al. 2011, Appendix): mean of the nine DSM inattention items (ka1, ka3, ..., ka17), never or rarely (1) to very often (4), used as released (mean of answered items; released only with at most 2 of the 9 missing). The hyperactivity-impulsivity score (ADHDhi) is on beh_hyper_self and the total (ADHD) is derived at analysis; ADHDimp is not used.",,
+beh_hyper_self,compatible,"ADHDhi, ka2, ka4, ka6, ka8, ka10, ka12, ka14, ka16, ka18",as.numeric(ADHDhi),"Waves 2-3 only, child self-report. The study's hyperactivity-impulsivity score (ADHDhi) from the UMass ADHD self-report screen (Gentile et al. 2011, Appendix): mean of the nine DSM hyperactivity-impulsivity items (ka2, ka4, ..., ka18, e.g. 'Fidget with hands or feet or squirm in seat', 'Interrupt or intrude on others'), never or rarely (1) to very often (4), used as released (mean of answered items; released only with at least 7 of 9 answered). The impulsiveness score (ADHDimp), part of it, is not used; the total (ADHD) is derived at analysis (beh_adhdsymp_self).",,
+beh_adhdsymp_self,unavailable,,,"Derive at analysis from beh_atten_self, beh_hyper_self.",,
+beh_atten_measure,inferred,wave,"if_else(
+  wave %in% c(""2"", ""3""),
+  ""attention: UMass ADHD self-report, inattention subscale, 9 of 18 items, 1-4 item scoring (range 1-4), mean of answered items; hyperactivity-impulsivity: UMass ADHD self-report, hyperactivity-impulsivity subscale, 9 of 18 items, 1-4 item scoring (range 1-4), mean of answered items; none reversed"",
+  NA_character_
+)",Describes beh_atten_self and beh_hyper_self; waves 2-3 only.,,
+beh_atten_singleitem_teacher,unavailable,,,Not collected.,,
+beh_impulsivity_self,compatible,"Impulse, ja1, ja2, ja3, ja4, ja5, ja6, ja7, ja8, ja9, ja10, ja11, ja12, ja13, ja14",as.numeric(Impulse),"Every wave. The study's impulsivity score (Impulse, 'Mean Impulsivity (14 items)'), from the Barratt Impulsiveness Scale items as given in the study (Gentile et al. 2011, Appendix: 14 items, e.g. 'I talk even when I know I shouldn't'), strongly disagree (1) to strongly agree (4), ja1-ja5 reversed; mean of answered items, used as released (released only with at most 4 of 14 missing). The 10-item version (Impulse10) is not used.",,
+beh_impulsivity_measure,inferred,,"""Barratt Impulsiveness Scale as adapted for the study, 14 items, 1-4 item scoring (range 1-4), mean of answered items; ja1-ja5 reversed (supplied already keyed)""",Describes beh_impulsivity_self; every wave.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_selfreg_parent,unavailable,,,Not collected.,,
+beh_emotdysreg_parent,unavailable,,,Not collected.,,
+beh_emotreg_parent,unavailable,,,Not collected.,,
+beh_selfreg_self,partial,"B2.SfCtl, ba8, ba9, ba14, ba20, ba26, ba2_0, ba6_8, ba7_9, ba11_14, ba17_20, ba20_26",as.numeric(B2.SfCtl),"Every wave, child self-report: the study's self-control score (B2.SfCtl, 'Pers Strgths: Self-Control') from the Personal Strengths Inventory II (Gentile et al. 2011, Appendix): 'I calm myself down when I get angry', 'I know how to handle problems when they happen', 'I lose my temper easily', 'I can control my anger', 'I get upset easily' (ba8, ba9, ba14, ba20, ba26; renumbered at waves 2-3), with 'I know how to deal with stress' added at waves 2-3 (ba2_0); strongly disagree (1) to strongly agree (4), lose temper and get upset reversed; mean of answered items, used as released (released only with at least 3 of 5 answered at wave 1, 4 of 6 at waves 2-3). Partial: self-control joined with problem-handling and stress-coping items. The item set changes at wave 2, so standardise within wave.",,
+beh_emotreg_self,incompatible,"B2.SfCtl, ba8, ba20, da1, da2, da3, da4, da5, da6, da7",,"Only the calm-down and anger-control items 'I calm myself down when I get angry' and 'I can control my anger' (ba8, ba20) inside the Personal Strengths Inventory II self-control score (B2.SfCtl), mapped to beh_selfreg_self, and the wave-3 Buss-Perry anger items (da1-da7), an anger scale; no scale presented as emotion regulation.",,
+beh_emotdysreg_self,incompatible,"B2.SfCtl, ba14, ba26, da1, da2, da3, da4, da5, da6, da7",,"Only 'I lose my temper easily' and 'I get upset easily' (ba14, ba26), reversed inside the Personal Strengths Inventory II self-control score (B2.SfCtl) on beh_selfreg_self, and the wave-3 Buss-Perry anger items (da1-da7), an anger scale; no emotion dysregulation scale.",,
+beh_emotreg_suppression_self,unavailable,,,Not collected.,,
+beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
+beh_emotaware_self,compatible,"B2.Aware, ba1, ba7, ba13, ba19, ba25, ba5_7, ba10_13, ba16_19, ba19_25",as.numeric(B2.Aware),"Every wave, child self-report: the study's emotional awareness score (B2.Aware, 'Pers Strgths: Emotional Awareness') from the Personal Strengths Inventory II (Gentile et al. 2011, Appendix): 'I know when I am getting angry', 'I know what makes me sad', 'I know when my mood is changing', 'I know what makes me happy', 'I'm able to tell what my feelings are' (ba1, ba7, ba13, ba19, ba25; renumbered at waves 2-3), strongly disagree (1) to strongly agree (4), none reversed; mean of answered items, used as released (released only with at least 3 of 5 answered). The empathy subscale (B2.Empat) is not used here; see beh_empathy_self.",,
+beh_selfreg_measure,inferred,wave,"if_else(
+  wave == ""1"",
+  ""Personal Strengths Inventory II (self-report); self-control: self-control subscale, 5 items, 1-4 item scoring (range 1-4), mean; emotional awareness: emotional awareness subscale, 5 items, 1-4 item scoring (range 1-4), mean; self-control items ba14, ba26 reversed (supplied already keyed); released only with at least 3 of 5 items answered"",
+  ""Personal Strengths Inventory II (self-report); self-control: self-control subscale, 6 items (adds 'I know how to deal with stress'), 1-4 item scoring (range 1-4), mean; emotional awareness: emotional awareness subscale, 5 items, 1-4 item scoring (range 1-4), mean; self-control items ba11_14, ba20_26 reversed (supplied already keyed); released only with at least 4 of 6 (self-control) and 3 of 5 (emotional awareness) items answered""
+)","Describes beh_selfreg_self and beh_emotaware_self; one value for wave 1 and one for waves 2-3, where the self-control item set changes.",,
+beh_bullied,incompatible,"dc31, dc32, dc33, db1, db2, db3, db4, db5, db6, db7, db8, db9, db10, db11, db12",,"Wave 3's 'Made rude comments or mean comments to anyone', 'Spread rumors about someone' and 'Made aggressive or threatening comments to anyone' (dc31-dc33, past year) form a general aggression checklist with no bullying framing; the SIS aggression items (db1-db12) are truth-rated and scored in beh_aggphys_self and beh_aggrel_self.",,
+beh_beenbullied,partial,"dc41, dc42, dc43","local({
+  items <- cbind(as.numeric(dc41), as.numeric(dc42), as.numeric(dc43))
+  case_when(rowSums(items >= 2, na.rm = TRUE) > 0 ~ ""TRUE"", rowSums(!is.na(items)) > 0 ~ ""FALSE"")
+})","Wave 3 only, child self-report, past year: 'Someone made rude or mean comments to you', 'Someone spread rumors about you, whether they were true or not', 'Someone made a threatening or aggressive comment to you' (dc41-dc43; the items without 'online'), never to every day or almost every day; TRUE if any occurred, FALSE if all never. Partial: hurtful acts not framed as bullying, by anyone. The SIS victimisation items (db13-db18; sisPV, sisRV, waves 2-3) are truth-rated and not used.",,
+beh_beenbullied_online,partial,"dc21, dc22, dc23","local({
+  items <- cbind(as.numeric(dc21), as.numeric(dc22), as.numeric(dc23))
+  case_when(rowSums(items >= 2, na.rm = TRUE) > 0 ~ ""TRUE"", rowSums(!is.na(items)) > 0 ~ ""FALSE"")
+})","Wave 3 only, child self-report, past year, online block: someone made rude or mean comments to you, spread rumours about you, made a threatening or aggressive comment to you when they were online (dc21-dc23; only dc23 names online, the block placement and the matching perpetration block dc11-dc13 place the other two online), never to every day or almost every day; TRUE if any occurred, FALSE if all never. Partial: hostile experiences not framed as bullying.",,
+beh_bullied_online,partial,"dc11, dc12, dc13","local({
+  items <- cbind(as.numeric(dc11), as.numeric(dc12), as.numeric(dc13))
+  case_when(rowSums(items >= 2, na.rm = TRUE) > 0 ~ ""TRUE"", rowSums(!is.na(items)) > 0 ~ ""FALSE"")
+})","Wave 3 only, child self-report, past year, online block: made rude or mean comments to anyone online, spread rumours about someone, made aggressive or threatening comments to anyone online (dc11-dc13), never to every day or almost every day; TRUE if any occurred, FALSE if all never. Partial: hostile acts not framed as bullying.",,
+beh_fight,incompatible,"e21, e18_21",,"Only 'have you ever hit anyone or damaged anything at home during an argument about your computer/video game playing?' (e21, wave 1; e18_21, waves 2-3), which pools hitting with damaging things, so it does not establish a fight.",,
+beh_truancy,partial,"e14, e12_14","recode_values(coalesce(as.numeric(e14), as.numeric(e12_14)), c(1, 3) ~ ""TRUE"", 2 ~ ""FALSE"")","Every wave, child self-report: 'In the past year, have you ever skipped school to play computer/video games?' (e14, wave 1; e12_14, waves 2-3); yes or sometimes = TRUE, no = FALSE; past year. Partial: skipping school to play games only. All children were enrolled (school sample).",,
+beh_stealing,partial,e8,"recode_values(as.numeric(e8), c(1, 3) ~ ""TRUE"", 2 ~ ""FALSE"")","Every wave, child self-report: 'In the past year, have you ever stolen a video game from a store or a friend, or stolen money so you could buy or play a video game?' (e8); yes or sometimes = TRUE, no = FALSE; past year. Partial: theft of games or of money for games only. Also scored in beh_problematicuse_self.",,
+beh_vandalism,incompatible,"e21, e18_21",,"Only 'have you ever hit anyone or damaged anything at home during an argument about your computer/video game playing?' (e21, wave 1; e18_21, waves 2-3), which pools damage with hitting and does not say the property was someone else's.",,
+beh_alcohol_self,unavailable,,,Not collected.,,
+beh_tobacco_self,unavailable,,,Not collected.,,
+beh_cannabis_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_aggphys_self.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agganger_bpaq_self,incompatible,"da1, da2, da3, da4, da5, da6, da7",,"Wave 3 only: the seven Buss-Perry anger items in adapted wording ('lose my temper' for 'fly off the handle', 'a bomb ready to explode' for 'a powder keg') on a 1-7 uncharacteristic-to-characteristic scale (da1-da7); the BPAQ-SF anger items were not given as published, and no generic anger row exists.",,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agg_self,incompatible,"sisPagg, sisRagg, db1, db2, db3, db4, db5, db6, db7, db8, db9, db10, db11, db12",,"Only the SIS physical and relational aggression subscales (sisPagg, sisRagg; db1-db12, waves 2-3), mapped to beh_aggphys_self and beh_aggrel_self; the study releases no total across forms.",,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,compatible,"sisPagg, db1, db3, db5, db7, db8, db12",as.numeric(sisPagg),"Waves 2-3 only, child self-report. The study's physical aggression score (sisPagg, 'SIS Physical Aggression') from the Self-Report of Aggression and Social Behavior Measure (Linder, Crick & Collins 2002; Gentile et al. 2011, Appendix): mean of six proactive and reactive physical items (db1, db3, db5, db7, db8, db12, e.g. 'When someone has angered or provoked me in some way, I have reacted by hitting that person'), not true at all (1) to very true (4); used as released (mean of answered items; released only with at most 1 of 6 missing). Proactive and reactive scores (sisPaggPro, sisPaggRe) not used.",,
+beh_aggphys_measure,inferred,wave,"if_else(
+  wave %in% c(""2"", ""3""),
+  ""Self-Report of Aggression and Social Behavior Measure, physical aggression, 6 items (proactive and reactive), 1-4 item scoring (range 1-4), mean of answered items; none reversed"",
+  NA_character_
+)",Describes beh_aggphys_self; waves 2-3 only.,,
+beh_aggrel_self,compatible,"sisRagg, db2, db4, db6, db9, db10, db11",as.numeric(sisRagg),"Waves 2-3 only, child self-report. The study's relational aggression score (sisRagg, 'SIS Relational Aggression') from the Self-Report of Aggression and Social Behavior Measure (Linder, Crick & Collins 2002): mean of six proactive and reactive relational items (db2, db4, db6, db9, db10, db11: excluding, embarrassing, threatening to share secrets, spreading rumours, ignoring), not true at all (1) to very true (4); used as released (mean of answered items; released only with at most 1 of 6 missing).",,
+beh_aggrel_measure,inferred,wave,"if_else(
+  wave %in% c(""2"", ""3""),
+  ""Self-Report of Aggression and Social Behavior Measure, relational aggression, 6 items (proactive and reactive), 1-4 item scoring (range 1-4), mean of answered items; none reversed"",
+  NA_character_
+)",Describes beh_aggrel_self; waves 2-3 only.,,
+beh_aggbeliefs_self,compatible,"D.TtApproval, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17, d18, d19, d20",as.numeric(D.TtApproval),"Every wave, child self-report: the study's total approval score (D.TtApproval, 'NOBAGS total approval of aggression') from the modified 20-item Normative Beliefs About Aggression Scale (Gentile et al. 2014), general and retaliation items together (d1-d20, e.g. 'do you think it is OK for John to hit him?'), perfectly OK (1) to really wrong (4), every item reversed so higher = more approval; mean of answered items, used as released (released only with at least 13 of 20 answered). The general-approval and retaliation subscores (D.GnApproval, D.AR and its parts) are not used.",,
+beh_agghostattrib_self,compatible,"HABtot, ds11, ds12, ds21, ds22, ds31, ds32, ds41, ds42, ds51, ds52, ds61, ds62",as.numeric(HABtot),"Every wave, child self-report: the study's hostile attribution total (HABtot) from six ambiguous-provocation stories (Gentile et al. 2014): for each, the reason chosen for the provocation (two accidental, two intentional) and whether the peer was trying to be cruel or wicked (ds11-ds62), scored as the proportion of hostile answers over the 12 intent questions (range 0-1), used as released (released only with at least 10 of 12 answered; wave 2 did not ask the shoes story's cruel question, ds52, so 11 questions there, at least 9 answered). The physical and relational story scores (HABphysagg, HABrelagg) are not used, and the upset-or-angry ratings (ds13-ds63; HABER) are not attributions and are not used.",,
+beh_aggfantasy_self,compatible,"J.fantasy, jb1, jb2, jb3, jb4, jb5, jb6",as.numeric(J.fantasy),"Every wave, child self-report: the study's aggressive fantasies score (J.fantasy) from the six-item Aggressive Fantasy Scale (Gentile et al. 2014; jb1-jb6, e.g. 'Do you sometimes imagine or have daydreams about hitting or hurting somebody that you don't like?'), never (1) to almost always (4); mean of answered items, used as released (released only with at least 4 of 6 answered).",,
+beh_aggcog_measure,inferred,wave,"if_else(
+  wave == ""2"",
+  ""normative beliefs: Normative Beliefs About Aggression Scale (modified), total approval, 20 items, 1-4 item scoring (range 1-4), mean; hostile attribution: ambiguous-provocation stories, 6 vignettes, 11 of 12 intent questions, proportion of hostile answers (range 0-1); aggressive fantasies: Aggressive Fantasy Scale, 6 items, 1-4 item scoring (range 1-4), mean; all normative-beliefs items reversed (supplied already keyed); released only with at least 13 of 20, 9 of 11 and 4 of 6 answered (the shoes story's cruel question not asked)"",
+  ""normative beliefs: Normative Beliefs About Aggression Scale (modified), total approval, 20 items, 1-4 item scoring (range 1-4), mean; hostile attribution: ambiguous-provocation stories, 6 vignettes, 12 of 12 intent questions, proportion of hostile answers (range 0-1); aggressive fantasies: Aggressive Fantasy Scale, 6 items, 1-4 item scoring (range 1-4), mean; all normative-beliefs items reversed (supplied already keyed); released only with at least 13 of 20, 10 of 12 and 4 of 6 answered""
+)","Describes beh_aggbeliefs_self, beh_agghostattrib_self and beh_aggfantasy_self; one value for wave 2, where one intent question was not asked, and one for waves 1 and 3.",,
+beh_agg_singleitem_teacher,unavailable,,,Not collected.,,
+beh_disrupt_singleitem_teacher,unavailable,,,Not collected.,,
+beh_aggphys_teacher,unavailable,,,Not collected.,,
+beh_aggrel_teacher,unavailable,,,Not collected.,,
+beh_agg_teacher,unavailable,,,Not collected.,,
+beh_victphys_teacher,unavailable,,,Not collected.,,
+beh_victrel_teacher,unavailable,,,Not collected.,,
+beh_vict_teacher,unavailable,,,Not collected.,,
+beh_atten_teacher,unavailable,,,Not collected.,,
+beh_hyper_teacher,unavailable,,,Not collected.,,
+beh_adhdsymp_teacher,unavailable,,,Not collected.,,
+beh_prosocial_teacher,unavailable,,,Not collected.,,
+beh_teacher_measure,unavailable,,,See beh_aggphys_teacher.,,
+beh_argues,incompatible,"le13, e11, e15",,"Only 'My friend and I argue a lot' (le13, wave 3, truth-rated, one friendship) and arguing or fighting with parents about gaming (e11; e15, wave 1), a triggered behaviour; no frequency item on arguing.",,
+beh_persistence_finishwork,incompatible,"ja4, ka7",,"Only 'I finish what I start' (ja4, agreement-rated, scored in beh_impulsivity_self) and the ADHD screen item 'Don't follow through on instructions and fail to finish work' (ka7, waves 2-3, scored in beh_atten_self), a negatively worded item that is not reversed onto this row.",,
+beh_emotreg_stayscalm,incompatible,"ba8, ja1",,"Only agreement-rated items 'I calm myself down when I get angry' (ba8, scored in beh_selfreg_self) and 'I keep my feelings under control' (ja1, scored in beh_impulsivity_self); no frequency item.",,
+beh_peerprob_makefriends,incompatible,ba12,,"Only the agreement-rated 'I find it easy to make friends' (ba12), scored in wb_selfconcept_social_self.",,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,unavailable,,,Not collected.,,
+beh_autism_diagnosed,unavailable,,,Not collected.,,
+beh_autism_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_self,unavailable,,,SDQ not administered; see beh_atten_self.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ not administered; see beh_prosocial_self.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_self,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,See beh_agg_cbcl_parent.,,
+beh_ext_self,unavailable,,,Not collected.,,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,unavailable,,,Not collected.,,
+beh_hyper_parent,unavailable,,,Not collected.,,
+beh_adhdsymp_parent,unavailable,,,Not collected.,,
+beh_opp_parent,unavailable,,,Not collected.,,
+beh_conduct_parent,unavailable,,,Not collected.,,
+beh_ext_parent,unavailable,,,Not collected.,,
+beh_parent_measure,unavailable,,,See beh_atten_parent.,,
+beh_prosocial_online_self,incompatible,"fc2, fd2, fe2",,"Only 'How often do you help others in this game?' asked for each of the child's three favourite games (fc2, fd2, fe2), single in-game items, not a scale of online prosocial acts.",,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,partial,"C, ca1, ca2, ca3, ca4, ca5, ca6, ca7, ca8, ca9, ca10, ca11, ca12, ca13, ca14, ca15, ca16, ca17, ca18",as.numeric(C),"Every wave, child self-report. The study's 'Mean score of helping, cooperation and sharing' (C): 18 items (ca1-ca18, e.g. 'I would spend time and money to help those in need', 'I feel happy when I share my things with others'), strongly disagree (1) to strongly agree (4), ca6, ca10, ca12, ca14, ca15 and ca17 reversed; mean of answered items, used as released (released only with at most 3 of 18 missing). Partial: mostly intentions ('I would help...') rather than reported acts. The helping (C.HlpBeh) and cooperation and sharing (C.CooSha) subscores are not used.",,
+beh_prosocial_measure,inferred,,"""Study helping, cooperation and sharing item set (instrument not named in the documents), 18 items, 1-4 item scoring (range 1-4), mean of answered items; ca6, ca10, ca12, ca14, ca15, ca17 reversed (supplied already keyed)""",Describes beh_prosocial_self; every wave.,,
+beh_prosocial_parent,unavailable,,,Not collected.,,
+beh_prosocial_singleitem_teacher,unavailable,,,Not collected.,,
+beh_empathy_self,compatible,"CEAQ, cb1, cb2, cb3, cb4, cb5, cb6, cb7, cb8, cb9, cb10, cb11, cb12, cb13, cb14, cb15",as.numeric(CEAQ),"Every wave, child self-report: the study's Children's Empathic Attitudes Questionnaire score (CEAQ), 15 of the 16 published items with wording adapted to the culture (Gentile et al. 2014; cb1-cb15, e.g. 'When I see a student who is upset, it really bothers me'), no (1), maybe (2), yes (3); mean of answered items, used as released (released only with at least 10 of 15 answered). An empathy total covering concern for and understanding of others' feelings. The Personal Strengths Inventory II empathy subscale (B2.Empat) is not used: the dedicated instrument comes first.",,
+beh_empathy_measure,inferred,,"""Children's Empathic Attitudes Questionnaire, 15 of 16 items, 1-3 item scoring (range 1-3), mean of answered items; none reversed; wording adapted to the culture (e.g. 'student' for the published wording), which item was left out is not documented; released only with at least 10 of 15 answered""",Describes beh_empathy_self; every wave.,,
+beh_problematicuse_self,compatible,"Path10.c, e1, e2, e3, e4, e5, e6, e7, e8, e9, e9rr, e10",as.numeric(Path10.c),"Every wave, child self-report, past year. The study's pathological video-gaming score (Path10.c): ten DSM-IV pathological-gambling criteria adapted to gaming (Gentile et al. 2011; Choo et al. 2010), e1-e8, e10 and the difficulty-cutting-back item derived from e9 and its follow-up (e9rr); yes 1, sometimes 0.5, no 0, summed (range 0-10); released where at least 8 of 10 items are answered, unanswered items counting 0. The yes-only and no-only versions (Path10.a, Path10.b, wave 1), cut-offs (Path10cuts.*) and the further problematic-gaming items (Problematic) are not used.",,
+beh_problematicuse_measure,inferred,,"""Pathological video-gaming scale (DSM-IV pathological-gambling criteria) (gaming), 10 of 10 items, 0, 0.5, 1 item scoring (no, sometimes, yes; range 0-10), sum of answered items (at least 8); none reversed""",Describes beh_problematicuse_self; every wave.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,NEPSY not administered; see cog_iq_fullscale.,,
+cog_phono_nepsy,unavailable,,,NEPSY not administered; see cog_iq_fullscale.,,
+cog_inhibcont_nepsy,unavailable,,,NEPSY not administered; see cog_iq_fullscale.,,
+cog_vismotor_nepsy,unavailable,,,NEPSY not administered; see cog_iq_fullscale.,,
+cog_verbalfluency_nepsy,unavailable,,,NEPSY not administered; see cog_iq_fullscale.,,
+cog_inhib_nihtb_flanker,unavailable,,,NIH Toolbox not administered; see cog_iq_fullscale.,,
+cog_flex_nihtb_dccs,unavailable,,,NIH Toolbox not administered; see cog_iq_fullscale.,,
+cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox not administered; see cog_iq_fullscale.,,
+cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox not administered; see cog_iq_fullscale.,,
+cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox not administered; see cog_iq_fullscale.,,
+cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox not administered; see cog_iq_fullscale.,,
+cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered; see cog_iq_fullscale.,,
+cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered; see cog_iq_fullscale.,,
+cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered; see cog_iq_fullscale.,,
+cog_atten_task,unavailable,,,Not collected.,,
+cog_atten_task_measure,unavailable,,,See cog_atten_task.,,
+cog_flex_task,unavailable,,,Not collected.,,
+cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
+cog_inhib_task,unavailable,,,Not collected.,,
+cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
+cog_wm_digitspan,unavailable,,,Digit Span not administered; see cog_iq_fullscale.,,
+cog_iq_fullscale,incompatible,"ITOTAL, IASUM, IBSUM, ICSUM, IDSUM, IESUM",,"Only Raven's Standard Progressive Matrices Plus (Choo et al. 2010), a single non-verbal reasoning test released as raw set sums and a raw total (ITOTAL; IASUM-IESUM; items ia1-ie12), not a battery's full-scale IQ; mapped to cog_nonverbalreason_task.",,
+cog_nonverbalreason_task,compatible,"ITOTAL, IASUM, IBSUM, ICSUM, IDSUM, IESUM","if_else(is.na(IASUM) & is.na(IBSUM) & is.na(ICSUM) & is.na(IDSUM) & is.na(IESUM), NA_real_, as.numeric(ITOTAL))","Child-performed Raven's Standard Progressive Matrices Plus (Choo et al. 2010), sets A-E of 12 items: the study's raw number correct (ITOTAL, 'raven's total score', observed 0-53), the sum of the set scores (IASUM-IESUM), used as released, except that the 4 wave-1 children with no set score, whose total is released as 0, are NA; 22 wave-1 children missing one or more later sets are totalled over the sets they answered, unanswered items counting as wrong as in a number-correct score; no age-normed score is released, so the raw score maps, compatible. Every child at wave 1, a subsample at waves 2-3 (2,647 / 652 / 424). Standardise within dataset and age band at analysis. The item columns (wave 2 and the unprefixed items whose wave is not documented) are not used.",,
+cog_nonverbalreason_task_measure,inferred,,"""Raven's Standard Progressive Matrices Plus (Choo et al. 2010), sets A-E, 60 of 60 items, raw number correct (observed 0-53), raw, as released""",Describes cog_nonverbalreason_task; every wave.,,
+cog_vocab_bpvs,unavailable,,,BPVS not administered.,,
+cog_vocab_ppvt,unavailable,,,PPVT not administered.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_vocab_bas_naming,unavailable,,,BAS II not administered; see cog_iq_fullscale.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,BAS II not administered; see cog_nonverbalreason_task.,,
+cog_spatial_bas_pattern,unavailable,,,BAS II not administered; see cog_iq_fullscale.,,
+cog_verbalreason_bas_versim,unavailable,,,BAS II not administered; see cog_iq_fullscale.,,
+cog_earlynumber_bas_enc,unavailable,,,BAS II not administered; see cog_iq_fullscale.,,
+cog_schoolread_bracken,unavailable,,,Bracken School Readiness Assessment not administered.,,
+cog_earlylang_parent,unavailable,,,Not collected.,,
+cog_earlylang_measure,unavailable,,,See cog_earlylang_parent.,,
+cog_creativethinking_stdtest,unavailable,,,Not collected.,,
+cog_speechlang_diagnosed,unavailable,,,Not collected.,,
+cog_speechlang_diagnosed_severity,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered; see mh_anx_self.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered; see mh_dep_self.,,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ not administered; see mh_dep_self.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_int_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_int_sdq_self,unavailable,,,SDQ not administered.,,
+mh_int_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered; see mh_dep_self.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered; see mh_dep_self.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered; see mh_dep_self.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered; see mh_dep_self.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered; see mh_dep_self.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered; see mh_dep_self.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered; see mh_dep_self.,,
+mh_distress_k6_self,unavailable,,,K6 not administered.,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered.,,
+mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered.,,
+mh_distress_self,incompatible,"pain, hc1, hc2, hc3, hc4, hc5, hc6, hc7, hc8, hc9, hc10",,"Only the somatic complaints checklist (hc1-hc10; pain), mapped to mh_somatic_self, beside the depression, anxiety and social phobia scales on their own rows; no general distress checklist.",,
+mh_distress_measure,unavailable,,,See mh_distress_self.,,
+mh_anx_masc_self,unavailable,,,MASC not administered; see mh_anx_self.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered; see mh_anx_self.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,incompatible,"Anxiety, kc1, kc2, kc3, kc4, kc5, kc6, kc7, kc8, kc9, kc10, kc11, kc12, kc13, kc14, kc15, kc16, kc17, kc18, kc19, kc20",,"Only 20 of the 41 SCARED items (kc1-kc20; Anxiety, waves 2-3), an item subset; mapped to mh_anx_self.",,
+mh_anx_scared_parent,unavailable,,,SCARED parent form not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered; see mh_anx_self.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered; see mh_anx_self.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered; see mh_anx_self.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,incompatible,Dep,,"Only the Asian Adolescent Depression Scale score (Dep, waves 2-3), mapped to mh_dep_self; no yes/no screening item.",,
+mh_dep_self,compatible,"Dep, kb1, kb2, kb3, kb4, kb5, kb6, kb7, kb8, kb9, kb10, kb11, kb12, kb13, kb14, kb15, kb16, kb17, kb18, kb19, kb20, kb21, kb22",as.numeric(Dep),"Waves 2-3 only, child self-report. The study's depression score (Dep) on the Asian Adolescent Depression Scale (Woo et al. 2004; Gentile et al. 2011, Appendix): 22 items (kb1-kb22, e.g. 'I often feel like crying'), strongly disagree (1) to strongly agree (5), none reversed; mean of answered items, used as released (released only with at most 3 of 22 missing).",,
+mh_dep_measure,inferred,wave,"if_else(
+  wave %in% c(""2"", ""3""),
+  ""Asian Adolescent Depression Scale, 22 items, 1-5 item scoring (range 1-5), mean of answered items; none reversed"",
+  NA_character_
+)",Describes mh_dep_self; waves 2-3 only.,,
+mh_anx_self,compatible,"Anxiety, kc1, kc2, kc3, kc4, kc5, kc6, kc7, kc8, kc9, kc10, kc11, kc12, kc13, kc14, kc15, kc16, kc17, kc18, kc19, kc20",as.numeric(Anxiety),"Waves 2-3 only, child self-report. The study's anxiety score (Anxiety): 20 SCARED items (Birmaher et al.; Gentile et al. 2011, Appendix), the generalized anxiety, social anxiety and school avoidance items (kc1-kc20), not true or hardly ever true (0) to very true or often true (2); mean of answered items, used as released (released only with at most 3 of 20 missing). The Social Phobia Inventory score (SocPhob), a social-anxiety-only scale given on the same occasion, is on mh_socanx_self and does not also fill this row, because the broader SCARED items were given.",,
+mh_anx_measure,inferred,wave,"if_else(
+  wave %in% c(""2"", ""3""),
+  ""SCARED, 20 of 41 items (generalized anxiety, social anxiety and school avoidance), 0-2 item scoring (range 0-2), mean of answered items; none reversed"",
+  NA_character_
+)",Describes mh_anx_self; waves 2-3 only.,,
+mh_socanx_self,compatible,"SocPhob, kd1, kd2, kd3, kd4, kd5, kd6, kd7, kd8, kd9, kd10, kd11, kd12, kd13, kd14, kd15, kd16, kd17",as.numeric(SocPhob),"Waves 2-3 only, child self-report. The study's social phobia score (SocPhob) from the Social Phobia Inventory (Connor et al. 2000; Gentile et al. 2011, Appendix): 17 items (kd1-kd17, e.g. 'I am afraid of people in authority'), not at all (1) to extremely (5); mean of answered items, used as released (released only with at least 14 of 17 answered). The SCARED social anxiety items inside the anxiety score (on mh_anx_self) are not used: the dedicated scale comes first.",,
+mh_socanx_measure,inferred,wave,"if_else(
+  wave %in% c(""2"", ""3""),
+  ""Social Phobia Inventory, 17 of 17 items, 1-5 item scoring (published 0-4; range 1-5), mean of answered items; none reversed; released only with at least 14 of 17 answered"",
+  NA_character_
+)",Describes mh_socanx_self; waves 2-3 only.,,
+mh_int_parent,unavailable,,,Not collected.,,
+mh_anx_parent,unavailable,,,Not collected.,,
+mh_dep_parent,unavailable,,,Not collected.,,
+mh_totalprob_parent,unavailable,,,Not collected.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,unavailable,,,Not collected.,,
+mh_stress_scale_self,unavailable,,,Not collected.,,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,unavailable,,,Not collected.,,
+mh_lonely_scale_self,unavailable,,,Not collected.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,incompatible,"kb9, kb21",,"Only the agreement-rated depression-scale items 'I feel sad most of the time' (kb9) and 'I often feel like crying' (kb21), scored in mh_dep_self; no frequency rating.",,
+mh_worry_self,incompatible,"kc10, kc12, kc14",,"Only truth-rated SCARED items ('I am a worrier', kc10; 'People tell me that I worry too much', kc12; 'I worry about what is going to happen in the future', kc14), scored in mh_anx_self; no frequency rating.",,
+mh_irritable_self,incompatible,"kb18, da5, da6, da7",,"Only the agreement-rated 'I am more bad tempered than before' (kb18, scored in mh_dep_self) and wave-3 anger items rated by how characteristic they are (da5-da7); no frequency rating.",,
+mh_nobodycares_self,incompatible,kb8,,"Only the agreement-rated 'I feel that I am not wanted' (kb8), scored in mh_dep_self; no frequency rating.",,
+mh_lifenotworth_self,incompatible,kb2,,"Only the agreement-rated 'I have thought about dying' (kb2), scored in mh_dep_self; no frequency rating.",,
+mh_suicide_ideation_self,incompatible,kb2,,"Only the agreement-rated 'I have thought about dying' (kb2), a passive death item scored in mh_dep_self, not suicidal ideation.",,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered; see mh_somatic_self.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,compatible,"pain, hc1, hc2, hc3, hc4, hc5, hc6, hc7, hc8, hc9, hc10",as.numeric(pain),"Every wave, child self-report, past month: the study's somatic complaints score (pain) from ten items adapted from a general mental health survey (Choo et al. 2010, Table 1): felt tired for no reason, headache, wrist pain, trouble sleeping, lost appetite, blurred vision, neck, shoulder and back pain, aches in hands and fingers (hc1-hc10), never (1) to every day or almost every day (4); mean of answered items, used as released (released only with at most 2 of 10 missing).",,
+mh_somatic_measure,inferred,,"""Study somatic complaints checklist (adapted from a general mental health survey), 10 items, 1-4 item scoring (range 1-4), mean of answered items; none reversed; past month""",Describes mh_somatic_self; every wave.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril Ladder not administered.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_dep_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_anx_self.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see mh_somatic_self.,,
+wb_bodyimage,unavailable,,,Not collected.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
+wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_lifesat_self,unavailable,,,Not collected.,,
+wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
+wb_happiness_singleitem_self,unavailable,,,Not collected.,,
+wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,partial,"ba39, ba40","local({
+  mother <- as.numeric(ba39)
+  father <- as.numeric(ba40)
+  if_else(is.na(mother) & is.na(father), NA_real_, rowMeans(cbind(mother, father), na.rm = TRUE))
+})","Waves 1 and 3, child self-report: 'I am happy with the relationship with my mother' (ba39) and '... with my father' (ba40), strongly disagree (1) to strongly agree (4); mean of the answered items. Partial: relationships with parents, not the family as a whole. Also scored in the study's parent-child relationship score (ParentRel).",,
+wb_domainsat_friends_self,partial,le27,as.numeric(le27),"Wave 3 only, child self-report: 'How happy are you with this friendship?' (le27, friendship quality items about one friend), very unhappy (0) to very happy (4). Partial: one friendship, not friends in general.",,
+wb_domainsat_school_self,unavailable,,,Not collected.,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered.,,
+wb_selfesteem_self,unavailable,,,Not collected.,,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
+wb_selfefficacy_self,partial,"B2.SfEff, ba4, ba10, ba15, ba16, ba33, ba3_4, ba8_10, ba12_15, ba13_16, ba23_33",as.numeric(B2.SfEff),"Every wave, child self-report: the study's 'Self-Efficacy' score (B2.SfEff) from the Personal Strengths Inventory II, which Gentile et al. 2011 (Appendix) call its goal-setting subscale: 'I set goals and plan how to reach those goals', 'I have high expectations and standards for success', 'I keep on trying when solving problems', 'I find it easy to try again when I fail', 'I believe I will succeed in everything I do' (ba4, ba10, ba15, ba16, ba33; renumbered at waves 2-3), strongly disagree (1) to strongly agree (4); mean of answered items, used as released (released only with at least 3 of 5 answered). Partial: goal-setting and persistence items with one efficacy belief, not a general self-efficacy scale.",,
+wb_selfefficacy_measure,inferred,,"""Personal Strengths Inventory II, self-efficacy (goal-setting) subscale, 5 items, 1-4 item scoring (range 1-4), mean of answered items; none reversed""",Describes wb_selfefficacy_self; every wave.,,
+wb_selfefficacy_academic_self,unavailable,,,Not collected.,,
+wb_selfefficacy_academic_measure,unavailable,,,See wb_selfefficacy_academic_self.,,
+wb_selfconcept_academic_self,unavailable,,,Not collected.,,
+wb_selfconcept_maths_self,unavailable,,,Not collected.,,
+wb_selfconcept_verbal_self,unavailable,,,Not collected.,,
+wb_selfconcept_science_self,unavailable,,,Not collected.,,
+wb_selfconcept_social_self,compatible,"B2.ScCom, ba6, ba12, ba18, ba32, ba4_6, ba9_12, ba15_18, ba22_32",as.numeric(B2.ScCom),"Every wave, child self-report. The study's social competence score (B2.ScCom) from the Personal Strengths Inventory II (Gentile et al. 2011, Appendix): 'I get along well with other people', 'I find it easy to make friends', 'I work well in a group', 'I know how to be accepted in a group' (ba6, ba12, ba18, ba32; renumbered at waves 2-3), strongly disagree (1) to strongly agree (4); mean of answered items, used as released (released only with at least 3 of 4 answered). A self-rated social-competence scale with no support or companionship items.",,
+wb_selfconcept_measure,inferred,,"""Personal Strengths Inventory II; social: social competence subscale, 4 items, 1-4 item scoring (range 1-4), mean of answered items; none reversed""","Describes wb_selfconcept_social_self, the only self-concept row mapped; every wave.",,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,Subjective Happiness Scale not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,unavailable,,,Not collected.,,
+wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,unavailable,,,Not collected.,,
+wb_posaffect_self,incompatible,G.PA,,"Only positive affect felt while gaming (G.PA, game-experience items for the child's favourite game); no general positive-affect scale.",,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_negaffect_self,incompatible,G.NA,,"Only negative affect felt while gaming (G.NA, game-experience items for the child's favourite game), affect during one activity.",,
+wb_negaffect_measure,unavailable,,,See wb_negaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,incompatible,"FamEnv, ha1, ha2, ha3, ha4, ha5, ha6, ParentRel, MaHelp, PaHelp",,"Only the family environment score (FamEnv; ha1-ha6: pleasant, accepted, uncomfortable, too many arguments at home, with one discussion item), a family-climate scale; parent-child closeness (ParentRel) and whether the child would ask mother or father for help (MaHelp, PaHelp, single choices); no family-support scale.",,
+wb_socsupport_friends_self,compatible,"ld1, ld2, ld3, ld4, ld5, ld6, ld7, ld8","as.numeric(ld1) +
+  as.numeric(ld2) +
+  as.numeric(ld3) +
+  as.numeric(ld4) +
+  as.numeric(ld5) +
+  as.numeric(ld6) +
+  as.numeric(ld7) +
+  as.numeric(ld8)","Wave 3 only, child self-report: eight Perceived Social Support from Friends items (Procidano & Heller 1983; ld1-ld8, e.g. 'My friend(s) give me the moral support I need', 'There is a friend I could go to if I were just feeling down'), no (0) or yes (1); sum, complete-case (range 0-8).",,
+wb_socsupport_measure,inferred,wave,"if_else(
+  wave == ""3"",
+  ""Perceived Social Support from Friends; friends: 8 of 20 items, 0-1 item scoring (no, yes; range 0-8), sum; none reversed; no don't-know option released"",
+  NA_character_
+)",Describes wb_socsupport_friends_self; wave 3 only. No family-support scale.,,
+hlth_sleep_wd,compatible,"slpwk.q, wakewk.q, nighthrs_wk, wave","local({
+  n <- length(slpwk.q)
+  s <- gsub("":"", ""."", gsub(""\\s+"", """", tolower(c(slpwk.q, wakewk.q))))
+  ok <- grepl(""^[0-9]{1,2}(\\.[0-9]{1,2})?(-[0-9]{1,2}(\\.[0-9]{1,2})?)?$"", s)
+  ends <- c(sub(""-.*$"", """", s), sub(""^.*-"", """", s))
+  h <- suppressWarnings(as.numeric(sub(""\\..*$"", """", ends)))
+  m <- ifelse(grepl(""."", ends, fixed = TRUE), sub(""^.*\\."", """", ends), ""0"")
+  m <- suppressWarnings(as.numeric(ifelse(nchar(m) == 1, paste0(m, ""0""), m)))
+  value <- ifelse(h <= 24 & m < 60, h + m / 60, NA_real_)
+  a <- value[seq_len(2 * n)]
+  b <- value[2 * n + seq_len(2 * n)]
+  b <- ifelse(b < a, b + 24, b)
+  clock <- ifelse(ok, ((a + b) / 2) %% 24, NA_real_)
+  parsed <- (clock[n + seq_len(n)] - clock[seq_len(n)]) %% 24
+  if_else(wave == ""2"", parsed, as.numeric(nighthrs_wk))
+})","Child self-report, waves 2-3; wave 1 did not ask. 'What time do you sleep on a normal weekday' to 'what time do you wake up on a normal weekday' (slpwk.q, wakewk.q), wake minus sleep across midnight. Wave 3 times are released as seconds after midnight, and the study's duration (nighthrs_wk) equals wake minus sleep on every row, so it is used. Wave 2 clock text is read as a 24-hour clock, as the study's wave-3 coding reads it: 'h' or 'h.mm' (one digit after the point is tens of minutes, '22.3' = 22:30), a range ('22-23') at its midpoint; text such as '24 plus', '1 or 2' or 'varies' is NA (under 2% of answers). About ten bedtimes per item written on a 12-hour clock ('9', '10.30') are read as morning times, as at wave 3, and give durations over 16 hours, kept for screening at analysis.",,
+hlth_sleep_we,compatible,"slpwkn.q, wakewkn.q, nighthrs_wkn, wave","local({
+  n <- length(slpwkn.q)
+  s <- gsub("":"", ""."", gsub(""\\s+"", """", tolower(c(slpwkn.q, wakewkn.q))))
+  ok <- grepl(""^[0-9]{1,2}(\\.[0-9]{1,2})?(-[0-9]{1,2}(\\.[0-9]{1,2})?)?$"", s)
+  ends <- c(sub(""-.*$"", """", s), sub(""^.*-"", """", s))
+  h <- suppressWarnings(as.numeric(sub(""\\..*$"", """", ends)))
+  m <- ifelse(grepl(""."", ends, fixed = TRUE), sub(""^.*\\."", """", ends), ""0"")
+  m <- suppressWarnings(as.numeric(ifelse(nchar(m) == 1, paste0(m, ""0""), m)))
+  value <- ifelse(h <= 24 & m < 60, h + m / 60, NA_real_)
+  a <- value[seq_len(2 * n)]
+  b <- value[2 * n + seq_len(2 * n)]
+  b <- ifelse(b < a, b + 24, b)
+  clock <- ifelse(ok, ((a + b) / 2) %% 24, NA_real_)
+  parsed <- (clock[n + seq_len(n)] - clock[seq_len(n)]) %% 24
+  if_else(wave == ""2"", parsed, as.numeric(nighthrs_wkn))
+})","Child self-report, waves 2-3; wave 1 did not ask. The same items for a normal weekend (slpwkn.q, wakewkn.q), wake minus sleep across midnight; wave 3 uses the study's duration (nighthrs_wkn), equal to wake minus sleep on every row. Wave 2 clock text is read as a 24-hour clock, as the study's wave-3 coding reads it: 'h' or 'h.mm' (one digit after the point is tens of minutes, '22.3' = 22:30), a range ('22-23') at its midpoint; text such as '24 plus', '1 or 2' or 'varies' is NA (under 2% of answers). About ten bedtimes per item written on a 12-hour clock ('9', '10.30') are read as morning times, as at wave 3, and give durations over 16 hours, kept for screening at analysis.",,
+hlth_sleep,compatible,"slpwk.q, wakewk.q, slpwkn.q, wakewkn.q, nighthrs_wk, nighthrs_wkn, wave","local({
+  n <- length(slpwk.q)
+  s <- gsub("":"", ""."", gsub(""\\s+"", """", tolower(c(slpwk.q, wakewk.q, slpwkn.q, wakewkn.q))))
+  ok <- grepl(""^[0-9]{1,2}(\\.[0-9]{1,2})?(-[0-9]{1,2}(\\.[0-9]{1,2})?)?$"", s)
+  ends <- c(sub(""-.*$"", """", s), sub(""^.*-"", """", s))
+  h <- suppressWarnings(as.numeric(sub(""\\..*$"", """", ends)))
+  m <- ifelse(grepl(""."", ends, fixed = TRUE), sub(""^.*\\."", """", ends), ""0"")
+  m <- suppressWarnings(as.numeric(ifelse(nchar(m) == 1, paste0(m, ""0""), m)))
+  value <- ifelse(h <= 24 & m < 60, h + m / 60, NA_real_)
+  a <- value[seq_len(4 * n)]
+  b <- value[4 * n + seq_len(4 * n)]
+  b <- ifelse(b < a, b + 24, b)
+  clock <- ifelse(ok, ((a + b) / 2) %% 24, NA_real_)
+  school_night <- (clock[n + seq_len(n)] - clock[seq_len(n)]) %% 24
+  weekend <- (clock[3 * n + seq_len(n)] - clock[2 * n + seq_len(n)]) %% 24
+  if_else(
+    wave == ""2"",
+    (5 * school_night + 2 * weekend) / 7,
+    (5 * as.numeric(nighthrs_wk) + 2 * as.numeric(nighthrs_wkn)) / 7
+  )
+})","Child self-report, waves 2-3; wave 1 did not ask. (5 x hlth_sleep_wd + 2 x hlth_sleep_we) / 7 from the weekday and weekend sleep and wake times, read as in those rows.",,
+hlth_sleepprob,incompatible,hc4,,"Only the single item 'had trouble sleeping' in the past month (hc4), scored in mh_somatic_self; no sleep-problems scale.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+hlth_bmi,compatible,"height.q, weight.q, height, weight","local({
+  height <- coalesce(
+    if_else(trimws(height.q) %in% ""180+"", 180, suppressWarnings(as.numeric(height.q))),
+    as.numeric(height)
+  )
+  weight <- coalesce(suppressWarnings(as.numeric(weight.q)), as.numeric(weight))
+  if_else(height > 0 & weight > 0, weight / (height / 100)^2, NA_real_)
+})","Every wave, child self-report of height (cm) and weight (kg): waves 1-2 as entered text (height.q, weight.q), wave 3 numeric (height, weight); BMI = weight / (height / 100)^2. 'Over 180' (one height, '180+') takes its bound; five weights entered as ranges ('28-30', '39-40' twice, '45-46', '60-70') are NA. Every other value kept as entered, including implausible ones, for screening at analysis.",,
+hlth_bmi_measure,inferred,,"""Self-reported""",Height and weight are the child's own report at every wave.,,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_pa_days60,unavailable,,,Not collected.,,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
