@@ -238,6 +238,11 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 138,ethnicity,Asian/Pacific Islander,Asian,proximate,NBQ11 code 4; merges Pacific Islanders with Asian (merge named); mother's race used for the child
 138,ethnicity,Other,Other,proximate,NBQ11 code 7; mother's race used for the child
 138,ethnicity,Missing,Unknown,proximate,NBQ11 code 9 or no newborn form
+176,ethnicity,chinese,Asian,compatible,race code 1; child self-report
+176,ethnicity,malay,Asian,compatible,race code 2
+176,ethnicity,indian,Asian,compatible,race code 3
+176,ethnicity,eurasian,Mixed,compatible,"race code 4; Eurasian, Singapore's group of mixed European and Asian parentage"
+176,ethnicity,others,Other,compatible,race code 5; residual group
 535,ethnicity,Caucasian,White,compatible,Race code 1
 535,ethnicity,AfricanAmerican,Black,compatible,Race code 2
 535,ethnicity,Hispanic,Hispanic,compatible,Race code 3: Hispanic stands in a US sample
