@@ -1,0 +1,114 @@
+---
+title: "Adding a summary"
+---
+
+This is the end-to-end workflow for a new evidence summary, from gathering the evidence to a published page.
+The detail for each step lives on its own page; this page is the checklist that ties them together.
+
+A summary is spread across five linked Airtable tables:
+
+| Table | One row per… | Holds |
+|-------|--------------|-------|
+| **Summaries** | summary | Title, status, overall rating, "What is it?", evidence statistics |
+| **Findings** | specific outcome (e.g. "Sleep (adolescents)") | Outcome domain, impact, evidence quality, plain-language summary, evidence detail |
+| **Moderators** | factor the effect differs by (e.g. Age) | The "How effects differ" section |
+| **Recommendations** | strategy | Audience, title, "What this looks like", "Why this works" |
+| **References** | citation | The full reference, plus an optional source note |
+
+Every field is explained in [Summary fields](summary-fields.qmd).
+
+## 1. Before you start
+
+1. **Check the exposure isn't already covered.** Look at the website's [Teachers page](https://motivation-and-behaviour.github.io/bigger-picture-platform/teachers/) and at the Summaries table in Airtable, including drafts.
+   There is one summary per exposure, so new research on an exposure that's already covered goes into the existing summary (see [Updating a summary](updating-a-summary.qmd)).
+2. **Check the exposure is in the *Exposure type* dropdown.**
+   If it isn't, ask the platform maintainer to add it.
+   It needs a change to the platform's code as well as to Airtable.
+3. **Don't combine exposures that pull in opposite directions** (for example violent and prosocial media) into one summary.
+   The overall rating would cancel out and hide both stories.
+4. **Gather the evidence.** Use meta-analyses and umbrella reviews of children and adolescents wherever they exist (see [Choosing sources](writing-guide.qmd#choosing-sources)).
+   Check the Bigger Picture umbrella review's [complete effects data](https://github.com/Motivation-and-Behaviour/screen_umbrella/tree/main/supplementary_files) (Supplementary File 6) for child- and adolescent-specific estimates of the reviews you plan to use.
+
+::: {.callout-tip}
+## Plan the ratings first
+
+It is often easiest to list the outcomes, effect sizes and proposed ratings in a table before you open Airtable.
+Rate each outcome with [the rubric](rating-the-evidence.qmd), and you will know how many findings rows you need and what the overall rating should be.
+:::
+
+## 2. Create the summary as a draft
+
+In the **Summaries** table, add a row and set:
+
+- **Status**: *Draft*. Drafts never appear on the website, so you can work on it over several days.
+- **Title**: the display name, usually the same as the exposure type.
+- **Slug**: leave it blank. The sync fills it in, and it becomes the page's web address.
+- **Exposure type**, **Screen content** and **Audiences**.
+  Choose *Teachers* in Audiences, and add *Parents* or *Students* only if you will also write recommendations for them.
+
+## 3. Add the findings
+
+Add one row in **Findings** for each specific outcome, linked to your summary.
+The easiest way is to open the summary (expand the row) and add new records from its **Findings** field.
+
+For each row, set the **Domain**, write the **Outcome**, choose **Impact** and **Evidence quality**, and write the **Plain-language summary** and **Evidence detail**.
+
+- Findings with the same domain are grouped under one heading on the website automatically.
+- The order of the summary's Findings list is the order on the website. Drag rows to reorder them.
+- If the evidence goes in different directions within a domain, add separate rows (e.g. "Language skills: amount of screen time" at −1 and "Language skills: educational programmes" at +1) rather than averaging them.
+- Subgroup differences (by age, sex, dose and so on) are not findings. They go in the next step.
+
+## 4. Add "How effects differ"
+
+If the evidence shows the effect differs by a factor such as age, sex or dose, add a row in **Moderators** for each factor, linked to your summary.
+
+- Choose the factor from the **Moderator** dropdown. Each factor can appear only once per summary.
+- Reporting that an effect *didn't* differ is useful too (e.g. "Neither meta-analysis found that the links differed by age").
+- If you need a factor that isn't in the list, ask the platform maintainer to add it.
+
+## 5. Add recommendations
+
+Add rows in **Recommendations** for the strategies teachers can use, linked to your summary, with **Audience** set to *Teachers*.
+Put one strategy per line in **What this looks like**; the website adds the bullets.
+Use **Why this works** to link the strategy back to a finding, and only claim what the evidence shows (see [Recommendations](writing-guide.qmd#recommendations)).
+
+## 6. Add references
+
+Add each source to the **References** table and link it to your summary.
+
+- **Search the References table first.** Many reviews are cited in several summaries. If the reference is already there, link the existing record to your summary instead of creating a duplicate.
+- Write the **Citation** in APA 7 style, with the DOI as a link.
+- Keep the summary's References list in **alphabetical order by first author**. A reference's position in the list is its number on the website.
+- Use **Source note** for a short description shown next to the reference in "About the evidence", e.g. "Meta-analysis: 62 studies, 451,229 adolescents and adults".
+- Put sources that have no citation, such as an unpublished analysis, in **Unpublished sources** on the summary, one per line.
+
+## 7. Finish the summary row
+
+Back in **Summaries**, fill in:
+
+- **What is it?**: a one- to three-sentence definition of the exposure.
+- **Meta-analyses**, **Primary studies** and **Participants**, where you know them, and **About the evidence**: two or three sentences on what kind of evidence this is.
+- **Overall impact** and **Overall confidence**: your judgement of the bottom line across all the findings (see [The overall rating](rating-the-evidence.qmd#the-overall-rating)). Do this last, once the findings are settled.
+- **Short summary**: one sentence of at most 160 characters, shown on the overview card. If the findings are mixed, say so.
+- **Last reviewed**: today's date.
+
+## 8. Check it
+
+1. Work through the [checklist before publishing](writing-guide.qmd#checklist-before-publishing).
+2. Check the **Sync status** and **Sync message** fields after the next sync run (overnight, or when anyone presses Publish).
+   Drafts aren't published, but the sync still checks them: a draft shows *Draft (not published)*, and the Sync message lists anything that would stop it being published.
+   Fix everything listed there.
+
+## 9. Publish it as preliminary
+
+1. Set **Status** to *Preliminary*.
+2. Press **Publish** in the summary row, then **Run workflow** on the GitHub page that opens. Or wait for the overnight run.
+3. After a few minutes, check that **Sync status** says *Published*, then find the summary on the website.
+
+[Publishing and fixing problems](publishing.qmd) explains every Sync status and the most common Sync messages.
+
+## 10. Review
+
+A preliminary summary is live, but readers see a banner saying it hasn't been checked yet.
+Let the review team know it's ready.
+Leave Status on *Preliminary*: the review team sets it to *Reviewed* once they have checked the ratings and text.

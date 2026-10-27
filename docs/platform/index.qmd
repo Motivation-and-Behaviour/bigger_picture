@@ -1,0 +1,75 @@
+---
+title: "The evidence platform"
+---
+
+The [Bigger Picture evidence platform](https://motivation-and-behaviour.github.io/bigger-picture-platform/) is the public website that presents the project's research as short, plain-language **evidence summaries** for teachers.
+This section is for research assistants who write and update those summaries.
+
+You write summaries in **Airtable**.
+You never need to touch code, Markdown files or the platform's GitHub repository, apart from pressing a button to publish.
+
+## What a summary is
+
+Each summary covers **one type of screen use**, called an *exposure* (for example "Social media" or "Educational TV & video"), and brings together all the research we have on it.
+On the website, a summary has these parts:
+
+| Part | What it shows |
+|------|---------------|
+| Overall rating | One impact rating and one confidence rating for the exposure as a whole. This is the headline on the overview card and at the top of the page. |
+| What is it? | A short definition of the exposure. |
+| Key findings | The evidence grouped by **outcome domain** (e.g. Mental health). Each specific outcome in a domain has its own impact and evidence-quality rating. |
+| How effects differ | How the effect varies with age, sex, dose and so on. |
+| What can I do? | Practical strategies for teachers, each linked back to the evidence. |
+| About the evidence | How many meta-analyses, studies and participants the summary draws on, and which sources. |
+| References | Full citations, numbered. |
+
+Read a published summary, such as [Social media](https://motivation-and-behaviour.github.io/bigger-picture-platform/evidence/social-media/), before you write your first one.
+
+## The two ratings
+
+Every finding gets two ratings:
+
+- **Impact**, from −3 (strong harmful relationship) through 0 (no clear relationship) to +3 (strong beneficial relationship).
+- **Evidence quality**, from 1 (very low confidence) to 5 (very high confidence), or 0 when there isn't enough evidence to rate.
+
+How to choose them is set out in [Rating the evidence](rating-the-evidence.qmd).
+The website explains the scales to its readers on its [How we rate](https://motivation-and-behaviour.github.io/bigger-picture-platform/how-we-rate/) page.
+
+## How your work reaches the website
+
+```{mermaid}
+flowchart LR
+  A[You edit in Airtable] --> B[Publish button<br/>or nightly run]
+  B --> C{The sync checks<br/>each summary}
+  C -- valid --> D[Website updated]
+  C -- problem --> E[Sync status:<br/>Needs fixing]
+```
+
+- **Airtable is the only place to edit.** The website's files are generated from it, so anything changed elsewhere is overwritten.
+- **The Status field controls what is published.**
+  - *Draft* summaries never leave Airtable.
+  - *Preliminary* summaries are published with a "Preliminary summary" banner, which tells readers the summary hasn't yet been checked by the review team.
+  - *Reviewed* summaries are published without the banner.
+- **A problem in one summary never blocks the others.** If a published summary develops a problem, its last good version stays live until you fix it.
+- **The sync reports back.** After each run, every summary's *Sync status* and *Sync message* fields in Airtable say whether it was published and, if not, exactly what to fix.
+
+## What you need access to
+
+- **Airtable**: an invitation to edit the *Bigger Picture summaries* base. Editor places are limited, so ask the platform maintainer.
+- **GitHub** (optional): to publish straight away with the Publish button, you need a GitHub account with write access to the [`bigger-picture-platform`](https://github.com/Motivation-and-Behaviour/bigger-picture-platform) repository, which is private: ask the platform maintainer. Without it, your work still publishes automatically overnight.
+- **The umbrella review data**: the Bigger Picture umbrella review's complete effects data ([Supplementary File 6](https://github.com/Motivation-and-Behaviour/screen_umbrella/tree/main/supplementary_files) in the `screen_umbrella` repository) has child- and adolescent-specific estimates for most of the reviews you will use.
+
+## Where to start
+
+1. [Adding a summary](adding-a-summary.qmd): the end-to-end checklist for a new summary.
+2. [Summary fields](summary-fields.qmd): every Airtable table and field, explained.
+3. [Rating the evidence](rating-the-evidence.qmd): how to choose the impact and evidence-quality ratings.
+4. [Writing guide](writing-guide.qmd): how to write for teachers, and a checklist to run before you publish.
+5. [Publishing and fixing problems](publishing.qmd): pressing Publish, and what each Sync status and Sync message means.
+6. [Updating a summary](updating-a-summary.qmd): adding new evidence, re-rating, and taking a summary off the site.
+
+::: {.callout-note}
+## For the platform maintainer
+
+Setting up the Airtable base, the sync workflow and its GitHub secrets, and rebuilding the base after a structural change are documented in the (private) platform repository: [`docs/airtable-setup.md`](https://github.com/Motivation-and-Behaviour/bigger-picture-platform/blob/main/docs/airtable-setup.md).
+:::
