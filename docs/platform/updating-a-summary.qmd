@@ -1,0 +1,79 @@
+---
+title: "Updating a summary"
+---
+
+Summaries change when new research is published, when a reviewer asks for changes, or when you spot a mistake.
+All changes are made in Airtable, in the same tables you use to [add a summary](adding-a-summary.qmd).
+
+## Editing a published summary
+
+Changes to a *Preliminary* or *Reviewed* summary go live at the next sync run, which is overnight or whenever anyone presses Publish.
+
+- **Half-finished edits can go live.**
+  If your edits are valid when the overnight run happens, they are published, even if you haven't finished.
+  For a big rewrite, prepare the new text and ratings elsewhere first (e.g. in a Word document or your rating table), then enter them in one sitting.
+- **Mistakes don't take the page down.**
+  If an edit leaves the summary invalid (e.g. a required field is blank), the last good version stays live and the summary shows *Needs fixing* until you fix it.
+- **Never change the Slug** of a published summary.
+  It is the page's web address, and old links would stop working.
+
+## Small corrections
+
+For typos, wording and broken links, edit the field and publish.
+Don't change **Last reviewed**: it records when the *ratings* were last checked, not when the text was last touched.
+
+## Adding new evidence
+
+When a new meta-analysis or umbrella review covers an exposure:
+
+1. **Add the reference.**
+   Search the References table first; if it isn't there, add it.
+   Link it to the summary, then drag it into alphabetical order in the summary's References field.
+2. **Update the findings.**
+   - If it reports an outcome the summary already has, update that row's Evidence detail, and re-rate it with [the rubric](rating-the-evidence.qmd).
+     Agreement between independent meta-analyses can raise the evidence quality.
+   - If it reports a new outcome, add a Findings row.
+   - If it shows the effect differs by a factor, add or update a How effects differ row.
+3. **Check the recommendations** still follow from the findings.
+   Update or remove any Why this works that no longer holds.
+4. **Update the evidence statistics** (Meta-analyses, Primary studies, Participants) and **About the evidence**.
+5. **Review the overall rating** and the **Short summary** in the light of the new findings.
+6. **Set Last reviewed** to today's date.
+7. **Set Status back to *Preliminary*** if the summary was *Reviewed*, so the review team checks the changes.
+   Let them know it's ready.
+8. Run the [checklist before publishing](writing-guide.qmd#checklist-before-publishing), then publish.
+
+## Removing something
+
+- **A finding, How effects differ row or recommendation** belongs to one summary only, so you can delete the row.
+- **A reference** may be shared with other summaries.
+  **Unlink** it from this summary instead of deleting the row; deleting it removes it from every summary that cites it.
+
+## Taking a summary off the website
+
+Set its **Status** to *Draft*.
+It is removed from the website at the next sync run, and nothing in Airtable is lost.
+Check with the platform maintainer first, and don't delete the summary's row.
+
+Take summaries off one or two at a time.
+A run that would remove more than a fifth of the pages at once stops without publishing anything (see [When a whole run stops](publishing.qmd#when-a-whole-run-stops)).
+
+## Undoing a change
+
+Airtable keeps a revision history for each row: expand the row and look at its activity.
+On the current plan this goes back two weeks.
+
+## Bigger changes
+
+Talk to the platform maintainer and the review team before you:
+
+- merge two summaries, or split one;
+- need a new exposure type, outcome domain or moderator in a dropdown;
+- want a field that doesn't exist yet.
+
+These change the structure of the base or the platform's code.
+When the structure changes, the maintainer rebuilds the Airtable base and will ask everyone to **pause editing** for a while.
+Before a rebuild, publish any changes you have made to a published summary and check its Sync status says *Published*.
+The rebuild starts from the published version, so unpublished edits to it would be left behind.
+Drafts are copied across.
+After a rebuild the tables are new copies: Airtable comments and revision history stay with the old tables, which are kept for a while as a safety net.

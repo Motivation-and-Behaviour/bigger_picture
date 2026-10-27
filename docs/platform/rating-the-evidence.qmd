@@ -1,0 +1,149 @@
+---
+title: "Rating the evidence"
+---
+
+Every finding gets two ratings, and every summary gets an overall pair:
+
+- **Impact**: the direction and size of the relationship, from −3 to +3.
+- **Evidence quality**: how confident we are in that impact rating, from 0 to 5.
+
+This page is the rubric for choosing them.
+Use it for every finding, so that a −1 means the same thing in every summary.
+
+::: {.callout-warning}
+## Provisional rubric
+
+This rubric was used for the first set of published ratings (October 2026) and is awaiting the team's sign-off.
+If it changes, this page will be updated; follow the version here.
+:::
+
+## Impact
+
+Impact answers two questions in turn: **which way** does the relationship go for the child, and **how big** is it?
+
+### Direction: is it good or bad for the child?
+
+The sign of the rating says whether the relationship is **harmful (−)** or **beneficial (+)** for the child.
+It is **not** the sign of the correlation.
+
+This is the most common mistake in rating.
+A positive correlation between screen use and a *harm*, such as depression, is a **harmful** relationship, so it gets a **negative** impact rating.
+
+| Finding | Correlation | Impact |
+|---------|-------------|--------|
+| More social media use goes with more depressive symptoms | positive | **negative** (harmful) |
+| More cyberbullying goes with more school attendance problems | positive | **negative** (harmful) |
+| More screen time goes with shorter sleep | negative | **negative** (harmful) |
+| More TV goes with lower achievement | negative | **negative** (harmful) |
+| Educational programmes go with better language skills | positive | **positive** (beneficial) |
+
+For an intervention or comparison, check which group did better.
+If children learning with a maths game did better than those taught as usual, the impact is positive.
+If children reading on screen understood *less* than those reading on paper, the impact is negative.
+
+### Size: how big is it?
+
+Take the size from the pooled effect size (or, when the only source is a single study, from that study's effect size), using these bands:
+
+| Impact | Meaning | d, g or SMD | r |
+|--------|---------|-------------|---|
+| 0 | No clear relationship | below 0.10, or not statistically significant | below 0.05, or not statistically significant |
+| ±1 | Small | 0.10 to 0.39 | 0.05 to 0.19 |
+| ±2 | Moderate | 0.40 to 0.69 | 0.20 to 0.34 |
+| ±3 | Strong | 0.70 or more | 0.35 or more |
+
+Most pooled effects in screen-time research are small (r below 0.2, d below 0.4), so most findings will be ±1.
+A result that is statistically significant is not necessarily large: use the band, not the wording in the paper.
+
+If the review reports a different statistic, such as an odds ratio or a percentage, ask the review team how to rate it.
+
+### Which estimate to use
+
+Reviews often report several estimates.
+Choose in this order:
+
+1. **Children and adolescents first.**
+   Use a child- or adolescent-specific estimate over one that includes adults.
+   The Bigger Picture umbrella review's [complete effects data](https://github.com/Motivation-and-Behaviour/screen_umbrella/tree/main/supplementary_files) (Supplementary File 6) has re-analysed, child- and adolescent-specific estimates for most reviews; cite the umbrella review (Sanders et al., 2024) when you use one.
+2. **Take the lower band** when:
+   - a bias-adjusted, randomised-only or re-analysed estimate falls in it; or
+   - the authors themselves describe the effect as smaller than the headline figure suggests.
+3. **Not statistically significant scores 0**, whatever its size.
+
+Note which estimate you used in the finding's **Evidence detail**, so a reviewer can check it.
+
+### Worked example: social media and depressive symptoms
+
+| Outcome | Evidence | Impact |
+|---------|----------|--------|
+| Depressive symptoms: time spent on social media | r = 0.11 across all ages, but r = 0.02 to 0.06 and not significant in adolescent samples | **0** (the adolescent estimate is not significant) |
+| Depressive symptoms: problematic (compulsive) use | r = 0.29 | **−2** (moderate band; harmful) |
+
+### When there's no usable estimate
+
+If no source gives an effect size you can rate, set **Evidence quality** to **0**.
+This is the case when the only sources are narrative reviews, or systematic reviews that didn't pool their results.
+The website then shows "Not enough evidence to rate yet" instead of an impact rating.
+Airtable still needs an Impact, so choose "0 · No clear relationship"; it isn't shown.
+
+Don't leave Impact blank: a blank stops the whole summary publishing.
+
+## Evidence quality
+
+Evidence quality is a GRADE-style judgement of how much to trust the impact rating.
+
+### Start from the design
+
+| Starting score | Evidence |
+|----------------|----------|
+| 4 | A meta-analysis of mostly randomised controlled trials or experiments |
+| 3 | A meta-analysis of mostly longitudinal studies, or of mixed designs |
+| 2 | A meta-analysis of mostly cross-sectional studies, or a single randomised controlled trial |
+| 1 | A single observational study |
+
+A systematic review that didn't pool its results has no starting score: rate it 0 (see [When there's no usable estimate](#when-theres-no-usable-estimate)).
+
+### Then adjust
+
+- **Take off 1** for each of these (but not below 1):
+  - serious risk of bias, or publication bias;
+  - large inconsistency between studies that the review can't explain;
+  - imprecision: few studies, or a wide confidence interval;
+  - indirectness: mostly adults or university students, mostly non-screen interventions, or very old exposure data (for example, software from the 1980s).
+- **Add 1** when independent meta-analyses agree.
+
+The top score of 5 is only reached by adding 1 to a 4: a meta-analysis of mostly randomised trials with nothing taken off, backed by an independent meta-analysis that agrees.
+
+### When the review has rated its own evidence
+
+Some reviews, such as Cochrane reviews, rate the certainty of their evidence with GRADE.
+When a review reports a GRADE rating for the outcome you are rating, use it as the evidence quality instead of working one out above: high = 4, moderate = 3, low = 2, very low = 1.
+
+### Worked example
+
+A meta-analysis of mostly randomised experiments starts at **4**.
+It reports publication bias (−1), and most participants were university students (−1).
+Its evidence quality is **2**.
+
+## The overall rating
+
+Each summary also has an **Overall impact** and **Overall confidence**, shown on the overview card and at the top of the page.
+
+- **Overall impact** is your judgement of the bottom line for teachers across all the findings.
+  It is **not an average**.
+  Give more weight to findings with higher evidence quality and to the outcomes teachers care most about.
+- **Overall confidence** is how confident you are in that bottom line.
+  It is usually the evidence quality of the findings that drive the overall impact.
+- **Mixed evidence.**
+  When the rated findings include both harmful and beneficial ratings, the website automatically flags the summary as mixed evidence ("helps some outcomes, harms others"), so readers know to look at the detail.
+  Say so in the **Short summary** too.
+  Findings with evidence quality 0 don't count towards this.
+
+For example, the social media summary has findings rated 0, −2, −1 and 0, all with evidence quality 2.
+Its overall rating is **−1** with confidence **2**: problematic use matters, but time spent on its own is only weakly linked.
+
+## Record your reasoning
+
+The finding's **Evidence detail** is shown on the website, so write it for teachers, but make it complete enough to check the rating.
+Include the effect size, which estimate it is (e.g. "in adolescent samples"), the number of studies and participants, and the main caveats behind any downgrade (e.g. "mostly cross-sectional studies", "most participants were university students").
+A reviewer should be able to check every rating from the Evidence detail and the cited source alone.

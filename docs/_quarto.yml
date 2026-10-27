@@ -6,6 +6,7 @@ project:
     - index.qmd
     - guides/*.qmd
     - reference/*.qmd
+    - platform/*.qmd
     - decisions/*.md
     - decisions/README.md
     - "!prereg/"
@@ -24,6 +25,8 @@ website:
         href: guides/getting-started.qmd
       - text: Reference
         href: reference/dataschema.qmd
+      - text: Evidence platform
+        href: platform/index.qmd
       - text: Decisions
         href: decisions/README.md
     right:
@@ -46,6 +49,15 @@ website:
         contents:
           - reference/dataschema.qmd
           - reference/progress.qmd
+      - section: Evidence platform
+        href: platform/index.qmd
+        contents:
+          - platform/adding-a-summary.qmd
+          - platform/summary-fields.qmd
+          - platform/rating-the-evidence.qmd
+          - platform/writing-guide.qmd
+          - platform/publishing.qmd
+          - platform/updating-a-summary.qmd
       - section: Decisions
         contents:
           - decisions/README.md
