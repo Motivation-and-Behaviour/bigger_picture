@@ -43,7 +43,7 @@ If children reading on screen understood *less* than those reading on paper, the
 
 ### Size: how big is it?
 
-Take the size from the pooled effect size, using these bands:
+Take the size from the pooled effect size (or, when the only source is a single study, from that study's effect size), using these bands:
 
 | Impact | Meaning | d, g or SMD | r |
 |--------|---------|-------------|---|
@@ -52,7 +52,7 @@ Take the size from the pooled effect size, using these bands:
 | ±2 | Moderate | 0.40 to 0.69 | 0.20 to 0.34 |
 | ±3 | Strong | 0.70 or more | 0.35 or more |
 
-Most pooled effects in screen-time research are small (r of about 0.1 to 0.2, d of about 0.2 to 0.4), so most findings will be ±1.
+Most pooled effects in screen-time research are small (r below 0.2, d below 0.4), so most findings will be ±1.
 A result that is statistically significant is not necessarily large: use the band, not the wording in the paper.
 
 If the review reports a different statistic, such as an odds ratio or a percentage, ask the review team how to rate it.
@@ -62,7 +62,8 @@ If the review reports a different statistic, such as an odds ratio or a percenta
 Reviews often report several estimates.
 Choose in this order:
 
-1. **Children and adolescents first.** Use a child- or adolescent-specific estimate over one that includes adults.
+1. **Children and adolescents first.**
+   Use a child- or adolescent-specific estimate over one that includes adults.
    The Bigger Picture umbrella review's [complete effects data](https://github.com/Motivation-and-Behaviour/screen_umbrella/tree/main/supplementary_files) (Supplementary File 6) has re-analysed, child- and adolescent-specific estimates for most reviews; cite the umbrella review (Sanders et al., 2024) when you use one.
 2. **Take the lower band** when:
    - a bias-adjusted, randomised-only or re-analysed estimate falls in it; or
@@ -80,7 +81,8 @@ Note which estimate you used in the finding's **Evidence detail**, so a reviewer
 
 ### When there's no usable estimate
 
-If no review gives a pooled estimate (for example, the only source is a narrative review), set **Evidence quality** to **0**.
+If no source gives an effect size you can rate, set **Evidence quality** to **0**.
+This is the case when the only sources are narrative reviews, or systematic reviews that didn't pool their results.
 The website then shows "Not enough evidence to rate yet" instead of an impact rating.
 Airtable still needs an Impact, so choose "0 · No clear relationship"; it isn't shown.
 
@@ -96,8 +98,10 @@ Evidence quality is a GRADE-style judgement of how much to trust the impact rati
 |----------------|----------|
 | 4 | A meta-analysis of mostly randomised controlled trials or experiments |
 | 3 | A meta-analysis of mostly longitudinal studies, or of mixed designs |
-| 2 | A meta-analysis of mostly cross-sectional studies, a systematic review without pooling, or a single randomised controlled trial |
+| 2 | A meta-analysis of mostly cross-sectional studies, or a single randomised controlled trial |
 | 1 | A single observational study |
+
+A systematic review that didn't pool its results has no starting score: rate it 0 (see [When there's no usable estimate](#when-theres-no-usable-estimate)).
 
 ### Then adjust
 
@@ -107,8 +111,13 @@ Evidence quality is a GRADE-style judgement of how much to trust the impact rati
   - imprecision: few studies, or a wide confidence interval;
   - indirectness: mostly adults or university students, mostly non-screen interventions, or very old exposure data (for example, software from the 1980s).
 - **Add 1** when independent meta-analyses agree.
-- **The review's own GRADE rating takes precedence** where it reports one: high = 4, moderate = 3, low = 2, very low = 1.
-- **0** means there is no usable estimate (see [above](#when-theres-no-usable-estimate)).
+
+The top score of 5 is only reached by adding 1 to a 4: a meta-analysis of mostly randomised trials with nothing taken off, backed by an independent meta-analysis that agrees.
+
+### When the review has rated its own evidence
+
+Some reviews, such as Cochrane reviews, rate the certainty of their evidence with GRADE.
+When a review reports a GRADE rating for the outcome you are rating, use it as the evidence quality instead of working one out above: high = 4, moderate = 3, low = 2, very low = 1.
 
 ### Worked example
 
@@ -120,10 +129,13 @@ Its evidence quality is **2**.
 
 Each summary also has an **Overall impact** and **Overall confidence**, shown on the overview card and at the top of the page.
 
-- **Overall impact** is your judgement of the bottom line for teachers across all the findings. It is **not an average**.
+- **Overall impact** is your judgement of the bottom line for teachers across all the findings.
+  It is **not an average**.
   Give more weight to findings with higher evidence quality and to the outcomes teachers care most about.
-- **Overall confidence** is how confident you are in that bottom line. It is usually the evidence quality of the findings that drive the overall impact.
-- **Mixed evidence.** When the rated findings include both harmful and beneficial ratings, the website automatically adds a "Mixed — see breakdown" note to the overall rating, so readers know to look at the detail.
+- **Overall confidence** is how confident you are in that bottom line.
+  It is usually the evidence quality of the findings that drive the overall impact.
+- **Mixed evidence.**
+  When the rated findings include both harmful and beneficial ratings, the website automatically flags the summary as mixed evidence ("helps some outcomes, harms others"), so readers know to look at the detail.
   Say so in the **Short summary** too.
   Findings with evidence quality 0 don't count towards this.
 

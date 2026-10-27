@@ -5,7 +5,7 @@ title: "The evidence platform"
 The [Bigger Picture evidence platform](https://motivation-and-behaviour.github.io/bigger-picture-platform/) is the public website that presents the project's research as short, plain-language **evidence summaries** for teachers.
 This section is for research assistants who write and update those summaries.
 
-You write summaries in **Airtable**.
+Summaries are writen in **Airtable**.
 You never need to touch code, Markdown files or the platform's GitHub repository, apart from pressing a button to publish.
 
 ## What a summary is
@@ -45,19 +45,37 @@ flowchart LR
   C -- problem --> E[Sync status:<br/>Needs fixing]
 ```
 
-- **Airtable is the only place to edit.** The website's files are generated from it, so anything changed elsewhere is overwritten.
+- **Airtable is the only place to edit.**
+  The website's files are generated from it, so anything changed elsewhere is overwritten.
 - **The Status field controls what is published.**
   - *Draft* summaries never leave Airtable.
   - *Preliminary* summaries are published with a "Preliminary summary" banner, which tells readers the summary hasn't yet been checked by the review team.
   - *Reviewed* summaries are published without the banner.
-- **A problem in one summary never blocks the others.** If a published summary develops a problem, its last good version stays live until you fix it.
-- **The sync reports back.** After each run, every summary's *Sync status* and *Sync message* fields in Airtable say whether it was published and, if not, exactly what to fix.
+- **A content problem in one summary never blocks the others.**
+  If a published summary develops a problem, its last good version stays live until you fix it.
+- **The sync reports back.**
+  After each run, every summary's *Sync status* and *Sync message* fields in Airtable say whether it was published and, if not, exactly what to fix.
+- **Leave the base's structure alone.**
+  Don't rename or delete a table or field, or change a field's type.
+  The sync checks the structure before it reads anything, so a change like this stops it publishing every summary until the platform maintainer puts it right.
+  Don't add or rename dropdown options either (see [Controlled lists](summary-fields.qmd#controlled-lists)).
 
 ## What you need access to
 
-- **Airtable**: an invitation to edit the *Bigger Picture summaries* base. Editor places are limited, so ask the platform maintainer.
-- **GitHub** (optional): to publish straight away with the Publish button, you need a GitHub account with write access to the [`bigger-picture-platform`](https://github.com/Motivation-and-Behaviour/bigger-picture-platform) repository, which is private: ask the platform maintainer. Without it, your work still publishes automatically overnight.
+- **Airtable**: an invitation to edit the *Bigger Picture summaries* base.
+  Editor places are limited, so ask the platform maintainer.
+- **GitHub** (optional): to publish straight away with the Publish button, you need a GitHub account with write access to the [`bigger-picture-platform`](https://github.com/Motivation-and-Behaviour/bigger-picture-platform) repository, which is private: ask the platform maintainer.
+  Without it, your work still publishes automatically overnight.
 - **The umbrella review data**: the Bigger Picture umbrella review's complete effects data ([Supplementary File 6](https://github.com/Motivation-and-Behaviour/screen_umbrella/tree/main/supplementary_files) in the `screen_umbrella` repository) has child- and adolescent-specific estimates for most of the reviews you will use.
+
+## Who to ask
+
+These pages refer to two roles:
+
+- **The platform maintainer** looks after the Airtable base, the website and the publishing workflow.
+  Ask them for access, for a new dropdown option or field, and about any Sync message you can't resolve.
+- **The review team** checks preliminary summaries and sets them to *Reviewed*.
+  Tell them when a summary is ready for review, and ask them how to rate anything the rubric doesn't cover.
 
 ## Where to start
 

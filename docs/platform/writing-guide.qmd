@@ -7,24 +7,35 @@ This page covers how to write for them, what evidence to use, what goes where, a
 
 ## Write for teachers
 
-- **Plain, active sentences.** "Problematic use is linked with more depressive symptoms", not "A significant positive association was observed between problematic use and depressive symptomatology".
+- **Plain, active sentences.**
+  "Problematic use is linked with more depressive symptoms", not "A significant positive association was observed between problematic use and depressive symptomatology".
 - **Sentence case** for titles and headings: "Help students recognise unhealthy social media use".
 - **Australian English**: behaviour, organise, colour, analyse, centre.
-- **Spell things out.** Write "active video games", not "AVGs". Explain a technical term the first time you use it.
-- **Short.** Most fields are one to three sentences. If a field is getting long, the extra detail probably belongs in Evidence detail or About the evidence.
+- **Spell things out.**
+  Write "active video games", not "AVGs".
+  Explain a technical term the first time you use it.
+- **Short.**
+  Most fields are one to three sentences, shown as a single paragraph.
+  If a field is getting long, the extra detail probably belongs in Evidence detail or About the evidence.
 
 ## Say what the evidence shows, and no more
 
-- **Match the language to the design.** Most of this research is observational, so it shows that two things go together, not that one causes the other.
+- **Match the language to the design.**
+  Most of this research is observational, so it shows that two things go together, not that one causes the other.
   - For observational evidence, write "is linked with" or "goes with".
   - Only write "improves", "reduces" or "leads to" when the evidence comes from randomised trials or experiments.
-- **Don't use "significant"** in plain-language text. To researchers it means statistically significant; to teachers it means large. Describe the size instead ("small", "moderate").
-- **Report null results.** "Time spent on social media is not clearly linked with depressive symptoms in adolescents" is a finding teachers need to know.
-- **Check every claim against the paper itself**, not just its abstract or another summary of it. In particular, check:
+- **Don't use "significant"** in plain-language text.
+  To researchers it means statistically significant; to teachers it means large.
+  Describe the size instead ("small", "moderate").
+- **Report null results.**
+  "Time spent on social media is not clearly linked with depressive symptoms in adolescents" is a finding teachers need to know.
+- **Check every claim against the paper itself**, not just its abstract or another summary of it.
+  In particular, check:
   - the direction of the effect (see [Direction](rating-the-evidence.qmd#direction-is-it-good-or-bad-for-the-child));
   - every number: effect sizes, study counts, participant counts and percentages;
   - claims about who it works best for: these are often the opposite of what people expect.
-- **Don't import figures from somewhere else.** If a number comes from a different study than the one you're summarising, cite that study, or leave the number out.
+- **Don't import figures from somewhere else.**
+  If a number comes from a different study than the one you're summarising, cite that study, or leave the number out.
 
 ## Choosing sources
 
@@ -32,12 +43,13 @@ In order of preference, use:
 
 1. umbrella reviews and meta-analyses of children and adolescents (18 and under);
 2. meta-analyses that include children and adolescents, ideally with a separate estimate for them;
-3. systematic reviews without a pooled estimate;
+3. systematic reviews without a pooled estimate, which can inform the text but are rated evidence quality 0 (see [When there's no usable estimate](rating-the-evidence.qmd#when-theres-no-usable-estimate));
 4. single studies, only when nothing better exists, and rated accordingly.
 
 Also:
 
-- **Use the latest version.** If a review has been updated (for example, a Cochrane review), cite the update.
+- **Use the latest version.**
+  If a review has been updated (for example, a Cochrane review), cite the update.
 - **Cite the published version** in a journal, not a preprint or university repository copy, when one exists.
 - **Leave out sources that don't measure outcomes in children**, such as content analyses of social media posts.
 - **Keep sources with mostly adult or university samples only if nothing better exists**, and downgrade their [evidence quality](rating-the-evidence.qmd#then-adjust) for indirectness.
@@ -69,7 +81,8 @@ Each finding has two text fields that appear together on the website.
 - **Plain-language summary**: the finding in one or two sentences, with no statistics.
   > Problematic, compulsive use of social media is linked with more depressive symptoms.
 - **Evidence detail**: the numbers and the caveats.
-  > Problematic use (feeling unable to stop, using social media to escape negative feelings, or use that interferes with daily life) was more strongly linked with depressive symptoms (r = 0.29; about 20 cross-sectional studies) than time spent was. These studies can't show which comes first.
+  > Problematic use (feeling unable to stop, using social media to escape negative feelings, or use that interferes with daily life) was more strongly linked with depressive symptoms (r = 0.29; about 20 cross-sectional studies) than time spent was.
+  > These studies can't show which comes first.
 
 ### How effects differ
 
@@ -82,7 +95,8 @@ Name the factor with the dropdown, and say how the effect differed in one or two
 - **Title**: an action, starting with a verb: "Support students' wellbeing and coping skills".
 - **What this looks like**: concrete things a teacher could do this week, one per line.
 - **Why this works**: one or two sentences linking the strategy back to a finding or moderator in this summary.
-  - Only claim what the evidence shows. Don't add durations ("10–20 minutes, three times a week"), mechanisms or "research shows…" statements that the cited reviews don't support.
+  - Only claim what the evidence shows.
+    Don't add durations ("10–20 minutes, three times a week"), mechanisms or "research shows…" statements that the cited reviews don't support.
   - If a strategy is sensible practice advice rather than something the evidence tested, leave **Why this works** blank, or say plainly that it's practice advice.
 
 > **Why this works:** Problematic use was much more strongly linked with depressive symptoms than time spent on social media.
@@ -94,7 +108,7 @@ Name the factor with the dropdown, and say how the effect differed in one or two
 - **Large numbers** take commas: 451,229 participants.
 - **Meta-analysis**, with a hyphen; plural **meta-analyses**.
 - **No apostrophes in plurals**: "RCTs", not "RCT's".
-- **References** follow APA 7, with the DOI as a link (`https://doi.org/…`).
+- **References** follow APA 7 as plain text, ending with the DOI as a web address (`https://doi.org/…`).
   Check the authors, year, journal, volume, issue and pages against the DOI record: wrong journals, years and page numbers are common in copied references.
   List them alphabetically by first author.
 

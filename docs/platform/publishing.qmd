@@ -13,12 +13,15 @@ Everything publishes automatically **overnight** (at about 2–3 am Sydney time)
 To publish sooner:
 
 1. Press **Publish** in the summary's row in Airtable.
-   It opens the workflow's page on GitHub. You need to be signed in to a GitHub account with write access to the platform repository.
-2. Click **Run workflow**. A small form opens.
+   It opens the workflow's page on GitHub.
+   You need to be signed in to a GitHub account with write access to the platform repository.
+2. Click **Run workflow**.
+   A small form opens.
 3. Leave both boxes unticked, and click the green **Run workflow** button.
-4. Wait a few minutes. The run reads the base, builds the website and then deploys it.
+4. Wait a few minutes.
+   The run reads the base, builds the website and then deploys it.
 5. Check the summary's **Sync status** in Airtable, then look at the page on the [website](https://motivation-and-behaviour.github.io/bigger-picture-platform/teachers/).
-   If the page hasn't changed yet, wait a minute and reload it.
+   The website updates a few minutes after Sync status changes, so if the page hasn't changed yet, wait a minute and reload it.
 
 Publish runs every summary, not just yours, so you don't need to press it more than once for several edits.
 If someone else's run is already going, yours waits for it to finish.
@@ -26,26 +29,38 @@ If someone else's run is already going, yours waits for it to finish.
 The two boxes on the form are for the platform maintainer:
 
 - **Dry run** checks everything and reports, but publishes nothing.
-- **Allow deletions** lets one run take several pages off the website at once. Without it, a run that would remove more than a fifth of the pages stops, as a safety net against accidents.
+- **Allow deletions** lets one run take several pages off the website at once.
+  Without it, a run that would remove more than a fifth of the pages stops, as a safety net against accidents.
 
 ## Sync status
 
 | Sync status | Meaning | What to do |
 |-------------|---------|------------|
-| **Published** | The summary is live. The Sync message gives its web address and any notes. | Check the notes, e.g. an audience with no recommendations. |
+| **Published** | The summary has been published, and the website shows it within a few minutes. The Sync message gives its web address and any notes. | Check the notes, e.g. an audience with no recommendations. |
 | **Needs fixing** | Something is missing or invalid, so the summary wasn't published. If an earlier version was live, it **stays live** until you fix this. | Read the Sync message: it says exactly what to fix and where. |
 | **Draft (not published)** | Status is Draft, so the summary isn't on the website. Any problems that would stop it being published are listed. | Fix anything listed before you set it to Preliminary. |
 | **Sync failed** | The website couldn't be rebuilt. This is **not caused by your text**, and the last published version is still live. | Tell the platform maintainer. |
 
-The **Needs fixing** view in the Summaries table lists every summary waiting on a fix.
+To see every summary waiting on a fix, filter the Summaries table by Sync status.
+
+### When a whole run stops
+
+A few problems stop the run for every summary, not just one:
+
+- the base's structure has changed (a table or field renamed, deleted or given a different type);
+- the run would take more than a fifth of the pages off the website at once.
+
+The run then publishes nothing and doesn't update any Sync status, so the fields still show the previous run's result.
+When a change does go live, the summary's **Last published** time updates.
+If a change you made hasn't reached the website after a run, and neither Last published nor the Sync message has changed, tell the platform maintainer.
 
 ## Common Sync messages
 
 Each message names the table row and field to fix, using the row's name.
 For example, `Finding "Life satisfaction" → Evidence quality: is empty.` means the Findings row called "Life satisfaction" has no Evidence quality.
 
-| Message ends with… | What it means | Fix |
-|--------------------|---------------|-----|
+| Message contains… | What it means | Fix |
+|-------------------|---------------|-----|
 | `is empty.` | A required field is blank. | Fill it in. |
 | `needs at least one entry.` | A required list, such as Findings or References, has nothing linked. | Link at least one row. |
 | `is too long (at most 160 characters).` | The Short summary is over the limit. | Shorten it. |
@@ -60,6 +75,10 @@ If a message doesn't make sense, or a problem won't go away, ask the platform ma
 
 ## Things to know
 
-- **Text is tidied for you.** Extra spaces and line breaks from text pasted from Word are cleaned up.
-- **Half-finished edits can go live.** The overnight run publishes whatever is in Airtable, as long as it's valid. For a big rewrite of a published summary, see [Updating a summary](updating-a-summary.qmd#editing-a-published-summary).
-- **The website never reads Airtable directly.** If Airtable is unavailable, the website keeps showing the last published version.
+- **Text is tidied for you.**
+  Extra spaces and line breaks, including those in text pasted from Word, are removed, so each text field appears as one paragraph (see [Summary fields](summary-fields.qmd)).
+- **Half-finished edits can go live.**
+  The overnight run publishes whatever is in Airtable, as long as it's valid.
+  For a big rewrite of a published summary, see [Updating a summary](updating-a-summary.qmd#editing-a-published-summary).
+- **The website never reads Airtable directly.**
+  If Airtable is unavailable, the website keeps showing the last published version.

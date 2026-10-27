@@ -11,6 +11,10 @@ Hover over a field's name in Airtable to see a short description of it.
 **Required** fields must be filled in before a summary can be published.
 If one is empty, the summary shows *Needs fixing* and the Sync message names the field.
 
+Each text field appears on the website as a single paragraph: line breaks are removed, so you can't split a field into paragraphs.
+The exceptions are **What this looks like** and **Unpublished sources**, where each line becomes a separate item.
+In those two fields, any bullet or number you type at the start of a line is removed, because the website adds its own.
+
 ## Summaries
 
 One row per summary.
@@ -28,22 +32,23 @@ One row per summary.
 | **Overall confidence** | Yes | Your confidence in that overall judgement, 0 to 5. |
 | **Last reviewed** | Yes | The date the ratings were last checked against the evidence. |
 | **What is it?** | Yes | A definition of the exposure in one to three sentences. |
-| **Meta-analyses** | Optional | Number of meta-analyses (and umbrella reviews) the summary draws on. |
+| **Meta-analyses** | Optional | Number of meta-analyses the summary draws on, including systematic reviews that pooled their results. Don't count umbrella reviews, or systematic reviews that didn't pool. |
 | **Primary studies** | Optional | Number of underlying studies, where the reviews report it. |
 | **Participants** | Optional | Total participants, where the reviews report it. |
 | **About the evidence** | Optional | Two or three sentences on the evidence base: the kinds of study, who took part, and any important caveat. |
 | **Unpublished sources** | Optional | Sources with no formal citation (e.g. an unpublished analysis), one per line. |
-| **Findings** | Yes, at least one | The linked Findings rows. Their order here is their order on the website. |
+| **Findings** | Yes, at least one | The linked Findings rows. Domains appear on the website in the order of their first finding in this list, and findings within a domain keep their list order. |
 | **How effects differ** | Optional | The linked Moderators rows, in display order. |
-| **Recommendations** | At least one per audience listed | The linked Recommendations rows, in display order. If an audience in Audiences has no recommendations, the summary still publishes but the Sync message warns you. |
-| **References** | Yes, at least one | The linked References rows. Their order here is their numbering on the website. |
+| **Recommendations** | Expected for each audience listed | The linked Recommendations rows, in display order. If an audience in Audiences has no recommendations, the summary still publishes but the Sync message warns you. |
+| **References** | Yes, at least one | The linked References rows. Their order here is their numbering on the website. A newly linked reference goes to the end, so drag it into place. |
 | **Publish** | — | A button that opens the publishing page on GitHub ([how to publish](publishing.qmd)). |
 | **Sync status**, **Sync message**, **Published slug**, **Last published** | Written by the sync | Read these after each run; never edit them. See [Publishing and fixing problems](publishing.qmd). |
 
 ## Findings
 
 One row per **specific outcome**.
-On the website, findings are grouped under their domain heading, in the order of the summary's Findings list.
+On the website, findings are grouped under their domain heading.
+Domains appear in the order of their first finding in the summary's Findings list, and findings within a domain keep their list order.
 
 | Field | Required? | Notes |
 |-------|-----------|-------|
@@ -51,10 +56,10 @@ On the website, findings are grouped under their domain heading, in the order of
 | **Evidence summary** | Yes | The one summary this finding belongs to. |
 | **Domain** | Yes | One of the five [outcome domains](#outcome-domains). |
 | **Impact** | Yes | −3 to +3, shown as e.g. "−2 · Moderate harmful" ([how to rate](rating-the-evidence.qmd#impact)). Required even when Evidence quality is 0: choose "0 · No clear relationship". |
-| **Evidence quality** | Yes | 0 to 5, shown as e.g. "3 · Moderate confidence" ([how to rate](rating-the-evidence.qmd#evidence-quality)). **0** means not enough evidence to rate: the website then shows "Not enough evidence to rate yet" instead of an impact rating. |
+| **Evidence quality** | Yes | 0 to 5, shown as e.g. "3 · Moderate confidence" ([how to rate](rating-the-evidence.qmd#evidence-quality)). **0** ("0 · Insufficient evidence") means not enough evidence to rate: the website then shows "Not enough evidence to rate yet" instead of an impact rating. |
 | **Plain-language summary** | Yes | The finding in one or two plain sentences, with no statistics. |
 | **Evidence detail** | Yes | The supporting detail: effect sizes, number of studies and participants, study designs and caveats. |
-| **Order** | Optional | Leave blank to use the order of the summary's Findings list. |
+| **Order** | Optional | Leave blank to use the order of the summary's Findings list. If you number some rows, those come first (lowest number first), then the blank rows in list order. |
 
 ## Moderators
 
@@ -66,7 +71,7 @@ These make up the "How effects differ" section.
 | **What the evidence shows** | Yes | How the effect differs, in plain language, e.g. "Links with poorer mental health were stronger in samples with a higher proportion of girls and women." |
 | **Evidence summary** | Yes | The one summary this row belongs to. |
 | **Moderator** | Yes | One of the [moderators below](#moderator-list). Each can appear only once per summary. |
-| **Order** | Optional | Leave blank to use the order of the summary's "How effects differ" list. |
+| **Order** | Optional | Leave blank to use the order of the summary's "How effects differ" list. If you number some rows, those come first (lowest number first), then the blank rows in list order. |
 
 ## Recommendations
 
@@ -80,7 +85,7 @@ These make up the "What can I do?" section.
 | **Audience** | Yes | Teachers, Parents or Students. |
 | **What this looks like** | Yes | Specific things to do, **one per line**. The website adds the bullets. |
 | **Why this works** | Optional | One or two sentences linking the strategy to a finding or moderator. Leave it blank if there is no clear link to the evidence. |
-| **Order** | Optional | Leave blank to use the order of the summary's Recommendations list. |
+| **Order** | Optional | Leave blank to use the order of the summary's Recommendations list. If you number some rows, those come first (lowest number first), then the blank rows in list order. |
 
 ## References
 
@@ -89,7 +94,7 @@ This is the only table whose rows can be shared: a reference cited in several su
 
 | Field | Required? | Notes |
 |-------|-----------|-------|
-| **Citation** | Yes | The full reference in APA 7 style, with the DOI as a link (`https://doi.org/…`). |
+| **Citation** | Yes | The full reference in APA 7 style, ending with the DOI as a web address (`https://doi.org/…`). Write it as plain text: the website can't show italics or other formatting. |
 | **Evidence summaries** | Yes | Every summary that cites this reference. |
 | **Source note** | Optional | A short description shown next to the reference in "About the evidence", e.g. "Meta-analysis: 63 studies, 144 effect sizes" or "Umbrella review: re-analysed estimates for children and adolescents". |
 
@@ -98,12 +103,12 @@ Deleting the row removes it from every summary that cites it.
 
 ## Controlled lists
 
-The dropdowns in Airtable only offer values the website accepts.
-They are the current lists; the lists on this page are for orientation and were last checked in October 2026.
+The dropdowns in Airtable only offer values the website accepts, so treat them as the current lists.
+The lists on this page are for orientation, and were last checked in October 2026.
 
 If you need a value that isn't offered, ask the platform maintainer.
 Adding one needs a change to the platform's code as well as to Airtable.
-Don't type a new option into a dropdown yourself: the summary will show *Needs fixing* until the code knows about it.
+Don't type a new option into a dropdown or rename an existing one yourself: every summary that uses it will show *Needs fixing* until the code knows about it.
 
 ### Exposure types
 
