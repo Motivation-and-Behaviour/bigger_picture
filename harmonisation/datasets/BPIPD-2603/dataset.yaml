@@ -1,0 +1,9 @@
+dataset_id: "2603"
+dataset_name: "Pouwels, 2021"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Data set belonging to Pouwels et al.csv"
+    reader: "csv"
