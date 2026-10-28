@@ -1,0 +1,12 @@
+dataset_id: "2266"
+dataset_name: "Valkenburg (SEM)"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Data set belonging to Valkenburg et al (2021) Social Media Browsing and Adolescent Well-Being.csv"
+    reader: "csv"
+  - name: "Notification scheme"
+    role: "docs"
+    glob: "ESM 1 - notification scheme .pdf"
