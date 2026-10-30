@@ -15,9 +15,9 @@ On the website, a summary has these parts:
 
 | Part | What it shows |
 |------|---------------|
-| Overall rating | One impact rating and one confidence rating for the exposure as a whole. This is the headline on the overview card and at the top of the page. |
+| Overall rating | One impact rating and one confidence rating for the exposure as a whole. This is the headline on the overview card and at the top of the page, with the school stages the evidence comes from. |
 | What is it? | A short definition of the exposure. |
-| Key findings | The evidence grouped by **outcome domain** (e.g. Mental health). Each specific outcome in a domain has its own impact and evidence-quality rating. |
+| Key findings | The evidence grouped by **outcome domain** (e.g. Mental health). Each specific outcome in a domain has its own impact and evidence-quality rating. A finding that comes from a narrower age group is marked with its school stages. |
 | How effects differ | How the effect varies with age, sex, dose and so on. |
 | What can I do? | Practical strategies for teachers, each linked back to the evidence. |
 | About the evidence | How many meta-analyses, studies and participants the summary draws on, and which sources. |
