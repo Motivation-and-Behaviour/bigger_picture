@@ -9,10 +9,10 @@ A summary is spread across five linked Airtable tables:
 
 | Table | One row per… | Holds |
 |-------|--------------|-------|
-| **Summaries** | summary | Title, status, overall rating, "What is it?", evidence statistics |
-| **Findings** | specific outcome (e.g. "Sleep (adolescents)") | Outcome domain, impact, evidence quality, plain-language summary, evidence detail |
+| **Summaries** | summary | Title, status, school stages, overall rating, "What is it?", evidence statistics |
+| **Findings** | specific outcome (e.g. "Sleep (adolescents)") | Outcome domain, impact, evidence quality, plain-language summary, evidence detail, school stages |
 | **Moderators** | factor the effect differs by (e.g. Age) | The "How effects differ" section |
-| **Recommendations** | strategy | Audience, title, "What this looks like", "Why this works" |
+| **Recommendations** | strategy | Audience, title, "What this looks like", "Why this works", school stages |
 | **References** | citation | The full reference, plus an optional source note |
 
 Every field is explained in [Summary fields](summary-fields.qmd).
@@ -49,6 +49,7 @@ In the **Summaries** table, add a row and set:
   The sync fills it in, and it becomes the page's web address.
 - **Exposure type**, **Screen content** and **Audiences**.
   Choose *Teachers* in Audiences, and add *Parents* or *Students* only if you will also write recommendations for them.
+- **School stages**: every stage the evidence comes from, using the ages in your sources (see [On the summary](writing-guide.qmd#on-the-summary)).
 
 ## 3. Add the findings
 
@@ -61,7 +62,9 @@ For each row, set the **Domain**, write the **Outcome**, choose **Impact** and *
 - The domains appear in the order of their first finding in the summary's Findings list, and the findings within each domain keep their list order.
   To change the order, drag the rows within the summary's **Findings** field.
 - If the evidence goes in different directions within a domain, add separate rows (e.g. "Language skills: amount of screen time" at −1 and "Language skills: educational programmes" at +1) rather than averaging them.
-- Subgroup differences (by age, sex, dose and so on) are not findings.
+- If the evidence reports a result separately for a narrower age group, such as a meta-analysis of adolescents only, give it its own row and tick its **School stages** (see [On a finding](writing-guide.qmd#on-a-finding)).
+  Leave School stages blank on every other row.
+- Comparisons between groups (an effect that differs by age, sex, dose and so on) are not findings.
   They go in the next step.
 
 ## 4. Add "How effects differ"
@@ -78,6 +81,7 @@ If the evidence shows the effect differs by a factor such as age, sex or dose, a
 Add rows in **Recommendations** for the strategies teachers can use, linked to your summary, with **Audience** set to *Teachers*.
 Put one strategy per line in **What this looks like**; the website adds the bullets.
 Use **Why this works** to link the strategy back to a finding, and only claim what the evidence shows (see [Recommendations](writing-guide.qmd#recommendations)).
+Leave **School stages** blank unless a strategy is only for some stages.
 
 ## 6. Add references
 

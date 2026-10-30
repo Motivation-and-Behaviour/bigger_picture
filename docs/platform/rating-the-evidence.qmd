@@ -72,6 +72,8 @@ Choose in this order:
 
 Note which estimate you used in the finding's **Evidence detail**, so a reviewer can check it.
 
+If a review gives a separate estimate for an age group that would get a different rating from its overall estimate, you can rate that age group as a finding of its own, with its school stages ticked (see [On a finding](writing-guide.qmd#on-a-finding)).
+
 ### Worked example: social media and depressive symptoms
 
 | Outcome | Evidence | Impact |
