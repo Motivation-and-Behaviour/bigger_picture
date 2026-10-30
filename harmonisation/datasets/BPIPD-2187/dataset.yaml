@@ -1,0 +1,34 @@
+dataset_id: "2187"
+dataset_name: "Rodman"
+status: "in_progress"
+
+resources:
+  - name: "App Category Labels"
+    role: "data"
+    reader: "csv"
+    glob: "App_Category_Labels.csv"
+  - name: "Data Dictionary"
+    role: "codebook"
+    glob: "Data Dictionary.xlsx"
+    sheet: "Sheet1"
+  - name: "Datacite Metadata"
+    role: "docs"
+    glob: "pcd2b-datacite.json"
+  - name: "SMU Notification"
+    role: "data"
+    reader: "csv"
+    glob: "SMU_Notification.csv"
+  - name: "SMU Pickups"
+    role: "data"
+    reader: "csv"
+    glob: "SMU_Pickups.csv"
+  - name: "SMU Screentime"
+    role: "data"
+    reader: "csv"
+    glob: "SMU_Screentime.csv"
+
+notes: |
+  Dataset contains smartphone usage metrics split across screen time, device pickups, 
+  and app notification logs (CSV files). App categories are defined in a separate mapping CSV file, 
+  data definitions are documented in an Excel data dictionary, and descriptive metadata is stored in 
+  a JSON file.
