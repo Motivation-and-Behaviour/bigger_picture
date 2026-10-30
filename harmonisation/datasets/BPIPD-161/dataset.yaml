@@ -1,0 +1,16 @@
+dataset_id: "161"
+dataset_name: "Taylor"
+status: "in_progress"
+
+resources:
+  - name: "BMQ Clean Data"
+    role: "data"
+    glob: "BMQ_CleanData_ForAnalysis.csv"
+    reader: "csv"
+  - name: "Questionnaire Script"
+    role: "docs"
+    glob: "Questionnaire script.R"
+
+notes: |
+  Data is a single cleaned CSV file.
+  Documentation is a single R script covering the questionnaire.
