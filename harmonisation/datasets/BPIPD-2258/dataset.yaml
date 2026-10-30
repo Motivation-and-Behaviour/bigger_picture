@@ -1,0 +1,34 @@
+dataset_id: "2258"
+dataset_name: "Beyens"
+status: "in_progress"
+
+resources:
+  - name: "beyens_dataset"
+    role: "data"
+    glob: "Data set belonging to Beyens et al (2021).csv"
+    reader: "csv"
+
+  - name: "beyens_codebook"
+    role: "codebook"
+    glob:
+      - "Codebook.xlsx"
+      - "Analyses/Codebook.xlsx"
+
+  - name: "beyens_r_analysis_script"
+    role: "docs"
+    glob: "Analyses/Analyses/Data Preparation, Descriptive Statistics, Graphical Presentations - R/Data Preparation, Descriptive Statistics, Graphical Presentations.R"
+
+  - name: "beyens_mplus_input_files"
+    role: "docs"
+    glob:
+      - "Analyses/Analyses/Assumption Checks, Main Analyses, Sensitivity Analyses - Mplus/**/*.inp"
+      - "Two-Level Autoregressive Lag-1 Model_Active Private Social Media Use.inp"
+
+notes: |
+  Dataset consists of a single CSV data file, two Excel codebooks, one R
+  analysis script, and multiple Mplus input (.inp) files used for assumption
+  checks, main analyses, and sensitivity analyses. The .inp files are treated
+  as documentation because the BPIPD schema does not include a reader for Mplus
+  input files. The two Codebook.xlsx files appear to be duplicates located in
+  different directories and are therefore grouped into a single codebook
+  resource. The analytical data are contained in the CSV file.
