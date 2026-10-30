@@ -28,6 +28,7 @@ This page covers the one-time setup you need before preparing datasets for the B
 ## Developers: devcontainer
 
 If you are working on the pipeline itself (rather than preparing datasets), the repository includes a devcontainer (`.devcontainer/devcontainer.json`) that ships with all packages installed and mounts the data directory automatically.
+The automated checks on GitHub run in the same base image, so code that passes in the devcontainer should pass in CI.
 The rest of this page assumes the plain RStudio setup used for dataset preparation.
 :::
 
