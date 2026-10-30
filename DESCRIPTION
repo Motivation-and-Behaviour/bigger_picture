@@ -5,8 +5,9 @@ Authors@R:
     person("Taren", "Sanders", email = "taren.sanders@acu.edu.au", role = c("aut", "cre"))
 Description: Dependency manifest for the Bigger Picture targets pipeline.
     This repository is not an R package; this file declares the packages
-    required by the pipeline so that CI workflows and the devcontainer can
-    install them with pak or r-lib/actions/setup-r-dependencies.
+    required by the pipeline so they can be installed with pak. CI runs in
+    the devcontainer's base image and installs any listed package the image
+    lacks.
 License: GPL-3
 Encoding: UTF-8
 Imports:
