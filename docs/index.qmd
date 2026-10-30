@@ -3,7 +3,7 @@ title: "Bigger Picture documentation"
 ---
 
 Bigger Picture is an individual participant data (IPD) meta-analysis of the relationship between screen use and child and adolescent outcomes.
-This site documents the data pipeline that ingests, tidies, and harmonises the contributing datasets.
+This site documents the data pipeline that ingests, tidies, and harmonises the contributing datasets, and the [evidence platform](platform/index.qmd) that presents the project's findings to teachers.
 The pipeline itself lives in the [`bigger_picture` repository](https://github.com/Motivation-and-Behaviour/bigger_picture); the scientific background and planned analyses are in the [preregistration](prereg/bigger_picture_preregistration.pdf).
 
 ## Where to start
@@ -16,6 +16,17 @@ If you are preparing a dataset for the project, work through the guides in order
 4. [Spec cookbook](guides/spec-cookbook.qmd) — copy-paste patterns for common dataset layouts (multiple files, waves, nested folders, and every reader).
 5. [Tidy scripts](guides/tidy-scripts.qmd) — turning raw resources into one tidy table.
 6. [Harmonising variables](guides/harmonisation.qmd) — mapping a tidied dataset onto the project dataschema.
+
+## Writing evidence summaries
+
+If you are writing or updating evidence summaries for the [Bigger Picture evidence platform](https://motivation-and-behaviour.github.io/bigger-picture-platform/), start with [The evidence platform](platform/index.qmd), then work through:
+
+1. [Adding a summary](platform/adding-a-summary.qmd) — the end-to-end checklist, from gathering the evidence to a published page.
+2. [Summary fields](platform/summary-fields.qmd) — every Airtable table and field, explained.
+3. [Rating the evidence](platform/rating-the-evidence.qmd) — the rubric for the impact and evidence-quality ratings.
+4. [Writing guide](platform/writing-guide.qmd) — writing for teachers, choosing sources, and a checklist to run before publishing.
+5. [Publishing and fixing problems](platform/publishing.qmd) — the Publish button, and what each Sync status and Sync message means.
+6. [Updating a summary](platform/updating-a-summary.qmd) — adding new evidence, re-rating, and taking a summary off the site.
 
 ## Reference
 
