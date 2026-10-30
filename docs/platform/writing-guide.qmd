@@ -60,10 +60,78 @@ Also:
 |-----------|------------|
 | An outcome in children, with an effect size | A **Findings** row |
 | Results going in different directions for the same domain | **Separate Findings rows**, one per outcome, not an average |
-| A difference by age, sex, dose, setting, content and so on | A **How effects differ** (Moderators) row, not a finding |
+| A result reported separately for a narrower age group, e.g. a meta-analysis of under-5s only | **Its own Findings row**, with **School stages** ticked (see [On a finding](#on-a-finding)) |
+| A comparison between groups: the effect is stronger or weaker by age, sex, dose, setting, content and so on | A **How effects differ** (Moderators) row, not a finding |
 | A finding that the effect *didn't* differ by a factor | A **How effects differ** row too |
 | Something that isn't an outcome, such as feasibility, preferences, or cost | The **Evidence detail** or **About the evidence** text, not a finding of its own |
 | A source with no citation, such as an unpublished analysis | **Unpublished sources** on the summary |
+| A strategy that only suits some school stages | **Its own Recommendations row**, with **School stages** ticked (see [On a recommendation](#on-a-recommendation)) |
+
+## Ages and school stages
+
+Teachers want to know whether the evidence applies to the children they teach.
+Summaries record this with **School stages**: the NSW stages, from Early Stage 1 (Kindergarten) to Stage 6 (Years 11 and 12), plus *Before school* for children under 5.
+
+Research is rarely reported one stage at a time.
+A review usually covers a broad band, such as under-5s, "12 and under" or 12 to 18.
+So most findings and recommendations won't have stages ticked, and that's expected: a row without stages applies across all the stages the summary covers.
+
+### On the summary
+
+Tick every stage the evidence comes from.
+This records who took part in the studies, not who the advice might suit.
+
+- Include every stage the samples span: a review of 12- to 18-year-olds covers Stage 4, Stage 5 and Stage 6.
+- Evidence from adults or university students adds no stage.
+  Mention it in **About the evidence** instead.
+- If a source doesn't give ages, go by how it describes the sample, and say so in **About the evidence**.
+
+Use the ages in the paper where it gives them.
+Otherwise, this table matches common descriptions to stages:
+
+| The paper says… | Tick |
+|-----------------|------|
+| Preschool, early childhood, under 5 | Before school |
+| Kindergarten, ages 5–6 | Early Stage 1 |
+| Primary or elementary school | Early Stage 1 to Stage 3 |
+| Middle school (US grades 6–8) | Stage 3 and Stage 4 |
+| Secondary or high school | Stage 4 to Stage 6 |
+| Adolescents | Depends on the ages: 12 to 18 is Stage 4 to Stage 6; 10 to 19 also covers Stage 3 |
+| Children and adolescents, 18 and under | Every stage the samples include: check whether any were under 5 |
+
+### On a finding
+
+Leave **School stages** blank when the result comes from the whole evidence base.
+
+Give a result its own row, with **School stages** ticked, when the evidence reports it for a narrower age group than the summary covers:
+
+- a meta-analysis of only that age group, such as a review of preschoolers' sleep; or
+- a separate pooled estimate that a review gives for that age group, when it would get a different rating from the review's overall estimate.
+
+Rate each row on its own, with [the rubric](rating-the-evidence.qmd).
+
+> **Sleep (adolescents)**, from a meta-analysis of 12- to 18-year-olds: School stages are Stage 4, Stage 5 and Stage 6.
+>
+> **Sleep (under 5s)**, from a meta-analysis of preschoolers: School stages are Before school.
+
+- A finding's stages must be within the summary's School stages.
+- Keep the age group in the **Outcome** and the **Plain-language summary**, e.g. "Sleep (adolescents)" and "In teenagers, …".
+  The stages aren't shown everywhere the text is, for example in the breakdown at the top of the page.
+- List rows for different age groups next to each other in the summary's **Findings** field.
+
+When the evidence *compares* age groups, without a usable separate estimate for each, use the **Age** row in How effects differ instead of ticking stages.
+For example, the effect may be stronger in younger children, grow steadily with age, or not differ by age.
+This covers most reviews that test age as a moderator: a meta-analysis of 12- to 18-year-olds that found larger effects in older students keeps one finding without stages, and the age difference goes in How effects differ.
+
+### On a recommendation
+
+Leave **School stages** blank for a strategy that suits every stage.
+Tick stages for a strategy meant only for some, such as one for younger students.
+If only one line of a strategy is stage-specific, move that line into a recommendation of its own.
+
+A recommendation's stages can go beyond the evidence.
+An example is advice for Stage 3 before students start using social media, when the evidence comes from older students.
+Treat that as practice advice (see [Recommendations](#recommendations)).
 
 ## Field by field
 
@@ -94,6 +162,7 @@ Name the factor with the dropdown, and say how the effect differed in one or two
 
 - **Title**: an action, starting with a verb: "Support students' wellbeing and coping skills".
 - **What this looks like**: concrete things a teacher could do this week, one per line.
+- **School stages**: blank unless the strategy is only for some stages (see [On a recommendation](#on-a-recommendation)).
 - **Why this works**: one or two sentences linking the strategy back to a finding or moderator in this summary.
   - Only claim what the evidence shows.
     Don't add durations ("10–20 minutes, three times a week"), mechanisms or "research shows…" statements that the cited reviews don't support.
@@ -129,7 +198,10 @@ Go through this before you change a summary's Status from *Draft* to *Preliminar
 
 - [ ] Every number and claim has been checked against the paper it cites.
 - [ ] Observational findings use "linked with", not causal language.
-- [ ] Subgroup differences are in How effects differ, not in Findings.
+- [ ] Comparisons between groups (by age, sex, dose and so on) are in How effects differ.
+  A Findings row has School stages ticked only when the evidence reports a result for that age group separately.
+- [ ] **School stages** on the summary match the ages in the sources, and every finding's stages are within them.
+- [ ] The Outcome and Plain-language summary of each finding with stages ticked name its age group.
 - [ ] Every Why this works says only what the evidence supports.
 
 **Mechanics**

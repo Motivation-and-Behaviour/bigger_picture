@@ -27,6 +27,7 @@ One row per summary.
 | **Exposure type** | Yes | One value from the [list below](#exposure-types). |
 | **Screen content** | Yes, at least one | Tags for the kind of content: Educational, Entertainment, Social, Creative, Passive, Interactive. They drive the website's content filter. |
 | **Audiences** | Yes, at least one | Teachers, Parents or Students. The website currently has teacher pages only; parent and student recommendations are stored for later. Only list an audience you have written recommendations for. |
+| **School stages** | Expected | The [school stages](#school-stages) the evidence comes from: every stage the studies' samples span (see [On the summary](writing-guide.qmd#on-the-summary)). Shown on the overview card and at the top of the page as "Evidence covers: …". The website's School stage filter appears only once every published summary has this filled in. |
 | **Short summary** | Yes | One plain-language sentence of **at most 160 characters**, shown on the overview card. If the evidence is mixed, say so here. |
 | **Overall impact** | Yes | Your judgement of the overall harm or benefit, −3 to +3. Not an average ([guidance](rating-the-evidence.qmd#the-overall-rating)). |
 | **Overall confidence** | Yes | Your confidence in that overall judgement, 0 to 5. |
@@ -49,6 +50,7 @@ One row per summary.
 One row per **specific outcome**.
 On the website, findings are grouped under their domain heading.
 Domains appear in the order of their first finding in the summary's Findings list, and findings within a domain keep their list order.
+A result the evidence reports for a narrower age group can have its own row, tagged with its school stages (see [On a finding](writing-guide.qmd#on-a-finding)).
 
 | Field | Required? | Notes |
 |-------|-----------|-------|
@@ -59,6 +61,7 @@ Domains appear in the order of their first finding in the summary's Findings lis
 | **Evidence quality** | Yes | 0 to 5, shown as e.g. "3 · Moderate confidence" ([how to rate](rating-the-evidence.qmd#evidence-quality)). **0** ("0 · Insufficient evidence") means not enough evidence to rate: the website then shows "Not enough evidence to rate yet" instead of an impact rating. |
 | **Plain-language summary** | Yes | The finding in one or two plain sentences, with no statistics. |
 | **Evidence detail** | Yes | The supporting detail: effect sizes, number of studies and participants, study designs and caveats. |
+| **School stages** | Optional | Leave blank when the result comes from the whole evidence base: it then applies across all the summary's stages. Tick stages only when the result comes from a narrower age group, e.g. "Sleep (under 5s)" → Before school ([guidance](writing-guide.qmd#on-a-finding)). They must be within the summary's School stages. The website shows them under the outcome as "Applies to: …". |
 | **Order** | Optional | Leave blank to use the order of the summary's Findings list. If you number some rows, those come first (lowest number first), then the blank rows in list order. |
 
 ## Moderators
@@ -85,6 +88,7 @@ These make up the "What can I do?" section.
 | **Audience** | Yes | Teachers, Parents or Students. |
 | **What this looks like** | Yes | Specific things to do, **one per line**. The website adds the bullets. |
 | **Why this works** | Optional | One or two sentences linking the strategy to a finding or moderator. Leave it blank if there is no clear link to the evidence. |
+| **School stages** | Optional | Leave blank for a strategy that suits every stage. Tick stages for one meant only for some ([guidance](writing-guide.qmd#on-a-recommendation)). The website shows them under the title as "Applies to: …". |
 | **Order** | Optional | Leave blank to use the order of the summary's Recommendations list. If you number some rows, those come first (lowest number first), then the blank rows in list order. |
 
 ## References
@@ -144,3 +148,20 @@ A new exposure type also needs a group.
 ### Moderators {#moderator-list}
 
 Age; Sex; Socioeconomic status; Setting; Dose / duration; Type of activity or content; Subject area; Learner needs; Ethnicity or culture; Adult involvement.
+
+### School stages
+
+The NSW school stages, plus *Before school* for children under 5.
+Each option shows the year levels and typical ages, to help you match a study's sample to stages:
+
+- Before school · under 5
+- Early Stage 1 · Kindergarten · ages 5–6
+- Stage 1 · Years 1–2 · ages 6–8
+- Stage 2 · Years 3–4 · ages 8–10
+- Stage 3 · Years 5–6 · ages 10–12
+- Stage 4 · Years 7–8 · ages 12–14
+- Stage 5 · Years 9–10 · ages 14–16
+- Stage 6 · Years 11–12 · ages 16–18
+
+The order you tick them in doesn't matter.
+The website lists them youngest first and joins neighbouring stages, e.g. "Stages 4–6 (Years 7–12)".
