@@ -1,0 +1,10 @@
+dataset_id: "663"
+dataset_name: "Șipos"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Database.xlsx"
+    reader: "excel"
+    sheet: "Sheet1"
