@@ -22,3 +22,8 @@ linters: linters_with_defaults(
     # shorten. Air's line-width is a soft target, not a hard limit.
     line_length_linter = NULL
   )
+exclusions: list(
+    # lintr parses any chunk whose engine knitr doesn't know as R, including
+    # Quarto's {mermaid} diagrams. The platform pages are prose with no R code.
+    "docs/platform"
+  )
