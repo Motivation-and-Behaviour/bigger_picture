@@ -1,0 +1,9 @@
+dataset_id: "1714"
+dataset_name: "Alloway"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "TVData.sav"
+    reader: "spss"
