@@ -1,0 +1,110 @@
+dataset_id: "278"
+dataset_name: "PSKC (Panel Study on Korean Children)"
+status: "in_progress"
+
+resources:
+  - name: "pskc_codebook"
+    role: "codebook"
+    glob: "[한국아동패널] 업로드용 코드북_251226.xlsx"
+
+  - name: "pskc_wave1_2008"
+    role: "data"
+    glob: "w1_2008_data_220324.csv"
+    reader: "csv"
+
+  - name: "pskc_wave2_2009_part1"
+    role: "data"
+    glob: "w2_2009_data1_220324.csv"
+    reader: "csv"
+
+  - name: "pskc_wave2_2009_part2"
+    role: "data"
+    glob: "w2_2009_data2_220324.csv"
+    reader: "csv"
+
+  - name: "pskc_wave3_2010"
+    role: "data"
+    glob: "w3_2010_data_220603.csv"
+    reader: "csv"
+
+  - name: "pskc_wave4_2011"
+    role: "data"
+    glob: "w4_2011_data_230411.csv"
+    reader: "csv"
+
+  - name: "pskc_wave5_2012"
+    role: "data"
+    glob: "w5_2012_data_230411.csv"
+    reader: "csv"
+
+  - name: "pskc_wave6_2013_part1"
+    role: "data"
+    glob: "w6_2013_data(ÀÏ¹Ý)_230411.csv"
+    reader: "csv"
+
+  - name: "pskc_wave6_2013_part2"
+    role: "data"
+    glob: "w6_2013_data2_220324.csv"
+    reader: "csv"
+
+  - name: "pskc_wave7_2014"
+    role: "data"
+    glob: "w7_2014_data_230411.csv"
+    reader: "csv"
+
+  - name: "pskc_wave8_2015"
+    role: "data"
+    glob: "w8_2015_data_250211.csv"
+    reader: "csv"
+
+  - name: "pskc_wave9_2016"
+    role: "data"
+    glob: "w9_2016_data_250211.csv"
+    reader: "csv"
+
+  - name: "pskc_wave10_2017"
+    role: "data"
+    glob: "w10_2017_data_250211.csv"
+    reader: "csv"
+
+  - name: "pskc_wave11_2018"
+    role: "data"
+    glob: "w11_2018_data_250211.csv"
+    reader: "csv"
+
+  - name: "pskc_wave12_2019"
+    role: "data"
+    glob: "w12_2019_data(°ø°³¿ë)_250211.csv"
+    reader: "csv"
+
+  - name: "pskc_wave13_2020_part1"
+    role: "data"
+    glob: "w13_2020_data(½ÉÃþ, °ø°³¿ë)_230131.csv"
+    reader: "csv"
+
+  - name: "pskc_wave13_2020_part2"
+    role: "data"
+    glob: "w13_2020_data(ÀÏ¹Ý, °ø°³¿ë)_250211.csv"
+    reader: "csv"
+
+  - name: "pskc_wave14_2021"
+    role: "data"
+    glob: "w14_2021_data(°ø°³¿ë)_250609"
+    reader: "csv"
+
+  - name: "pskc_wave15_2022"
+    role: "data"
+    glob: "w15_2022_data(°ø°³¿ë)_250909"
+    reader: "csv"
+
+  - name: "pskc_wave16_2023"
+    role: "data"
+    glob: "w16_2023_data(°ø°³¿ë)_251230.csv"
+    reader: "csv"
+
+notes: |
+  Panel Study on Korean Children (PSKC). Dataset consists of CSV files for
+  survey waves 1 through 16 (2008–2023) and a Microsoft Excel codebook.
+  Most waves are represented by a single CSV file, while Wave 2 (2009),
+  Wave 6 (2013), and Wave 13 (2020) are split across multiple files. 
+
