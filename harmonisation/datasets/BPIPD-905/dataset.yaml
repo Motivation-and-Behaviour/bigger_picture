@@ -1,0 +1,13 @@
+dataset_id: "905"
+dataset_name: "Mandic"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "bigger picture_matrix & abbrevation meaning.xlsx"
+    sheet: "MATRIX-CLEAN"
+    reader: "excel"
+  - name: "questionnaire"
+    role: "codebook"
+    glob: "bigger picture_questionnaire_english.docx"
