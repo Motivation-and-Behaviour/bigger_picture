@@ -1,0 +1,50 @@
+dataset_id: "871"
+dataset_name: "Positive Body & Sex Project"
+status: "in_progress"
+resources:
+  # --- DATA ---
+  - name: "Analytical Dataset (Flat Format)"
+    role: "data"
+    glob: "analytical_dataset.dat"
+    reader: "csv" # PLACEHOLDER: confirmed via screenshot that this is space-delimited free-format text (no commas). Column names/order need to come from the corresponding .inp file's VARIABLE: section, since Mplus .dat files have no header row. 
+  # --- CODEBOOKS, SCRIPTS & MODEL SPECIFICATIONS ---
+  - name: "Mediations Model Mplus Input"
+    role: "docs"
+    glob: "bopo-mediations.inp" # This is a model/analysis syntax file
+  - name: "Random Intercept Cross-Lagged Panel Model Mplus Input"
+    role: "docs"
+    glob: "bopo-riclpm.inp"
+  - name: "Longitudinal Configural Invariance Mplus Input"
+    role: "docs"
+    glob: "invariance-longi-config.inp"
+  - name: "Longitudinal Metric Invariance Mplus Input"
+    role: "docs"
+    glob: "invariance-longi-metric.inp"
+  - name: "Longitudinal Scalar Invariance Mplus Input"
+    role: "docs"
+    glob: "invariance-longi-scalar.inp"
+  # --- DOCUMENTATION & MODEL OUTPUTS ---
+  - name: "Mediations Analysis HTML Report"
+    role: "docs"
+    glob: "bopo-mediations.htm"
+  - name: "Random Intercept Cross-Lagged Panel Model Mplus Output"
+    role: "docs"
+    glob: "bopo-riclpm.out"
+  - name: "Longitudinal Configural Invariance Mplus Output"
+    role: "docs"
+    glob: "invariance-longi-config.out"
+  - name: "Longitudinal Metric Invariance Mplus Output"
+    role: "docs"
+    glob: "invariance-longi-metric.out"
+  # NOTE: no "Longitudinal Scalar Invariance Mplus Output" (.out) entry exists - every other
+  # model (Configural, Metric, Mediations, RI-CLPM) has both an input and an output/report file, but
+  # Scalar only has an input.
+
+notes: |
+  Includes a flat data file (analytical_dataset.dat) alongside several Mplus structural
+  equation modeling (SEM) files. These files cover longitudinal measurement invariance testing
+  (configural, metric, and scalar stages), mediation models, and a Random Intercept
+  Cross-Lagged Panel Model (RI-CLPM). Model configuration/syntax files (.inp) are classified as
+  docs since they specify the analysis, not the variables. Model run outputs
+  (.out, .htm) are also docs.
+  
