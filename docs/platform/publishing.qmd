@@ -68,6 +68,8 @@ For example, `Finding "Life satisfaction" → Evidence quality: is empty.` means
 | `is empty or not a valid date.` | Last reviewed is blank or not a date. | Choose a date. |
 | `it must belong to exactly one.` | A Findings, Moderators or Recommendations row is linked to more than one summary. Only references can be shared. | Remove the extra link. If both summaries need the row, make a copy for the second one. |
 | `Each moderator may appear at most once.` | Two How effects differ rows use the same Moderator. | Merge them into one row. |
+| `isn't in the summary's school stages.` | A finding has a School stage ticked that the summary's School stages don't include. A finding's stages must be within the summary's. | Tick that stage on the summary if its evidence covers it, or correct the finding's stages. |
+| `Set the summary's school stages first` | A finding has School stages ticked, but the summary has none. | Tick School stages on the summary. |
 | `Slug "…" is also used by …` | Two summaries would have the same web address, usually because they have the same title. | Give one a different title, or ask the platform maintainer. |
 | `Listed for Parents but has no Parents recommendations.` | A note, not an error: the summary is still published. | Add recommendations for that audience, or remove it from Audiences. |
 

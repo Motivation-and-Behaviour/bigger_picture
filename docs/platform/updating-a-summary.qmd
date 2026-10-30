@@ -33,15 +33,30 @@ When a new meta-analysis or umbrella review covers an exposure:
    - If it reports an outcome the summary already has, update that row's Evidence detail, and re-rate it with [the rubric](rating-the-evidence.qmd).
      Agreement between independent meta-analyses can raise the evidence quality.
    - If it reports a new outcome, add a Findings row.
+   - If it reports a result separately for a narrower age group, add a Findings row with its **School stages** ticked (see [On a finding](writing-guide.qmd#on-a-finding)).
    - If it shows the effect differs by a factor, add or update a How effects differ row.
 3. **Check the recommendations** still follow from the findings.
    Update or remove any Why this works that no longer holds.
-4. **Update the evidence statistics** (Meta-analyses, Primary studies, Participants) and **About the evidence**.
+4. **Update the evidence statistics** (Meta-analyses, Primary studies, Participants) and **About the evidence**, and tick any new **School stages** the new evidence covers.
 5. **Review the overall rating** and the **Short summary** in the light of the new findings.
 6. **Set Last reviewed** to today's date.
 7. **Set Status back to *Preliminary*** if the summary was *Reviewed*, so the review team checks the changes.
    Let them know it's ready.
 8. Run the [checklist before publishing](writing-guide.qmd#checklist-before-publishing), then publish.
+
+## Adding school stages to an existing summary
+
+Summaries written before the School stages fields were added have none.
+To add them:
+
+1. Tick **School stages** on the summary: every stage its sources cover (see [On the summary](writing-guide.qmd#on-the-summary)).
+2. Look for findings that already name an age group, such as "Sleep (under 5s)", and tick their stages.
+3. Check whether any recommendation suits only some stages.
+   Tick its stages, or move the stage-specific line into a recommendation of its own.
+4. Publish.
+
+Nothing else needs to change: findings and recommendations without stages apply across all the summary's stages.
+This doesn't change the ratings, so leave **Last reviewed** as it is.
 
 ## Removing something
 
