@@ -1,0 +1,9 @@
+dataset_id: "901"
+dataset_name: "Kurt"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "deprem_medya_veriseti_1 (29.08.2023) (1).sav"
+    reader: "spss"
