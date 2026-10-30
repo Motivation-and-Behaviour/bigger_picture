@@ -1,0 +1,107 @@
+dataset_id: "1336"
+dataset_name: "Liu"
+status: "in_progress"
+
+resources:
+  - name: "between_blw"
+    role: "data"
+    glob: "between_level/between_blw.csv"
+    reader: "csv"
+
+  - name: "between_corr_results"
+    role: "data"
+    glob: "between_level/between_corr_res.csv"
+    reader: "csv"
+
+  - name: "user_activation_app_metrics"
+    role: "data"
+    glob: "between_level/user_activation_app_metric.csv"
+    reader: "csv"
+
+  - name: "user_notifications_app_metrics"
+    role: "data"
+    glob: "between_level/user_notifications_app_metric.csv"
+    reader: "csv"
+
+  - name: "user_screentime_app_metrics"
+    role: "data"
+    glob: "between_level/user_screentime_app_metric.csv"
+    reader: "csv"
+
+  - name: "activation_app_wellbeing"
+    role: "data"
+    glob: "within_level/activation_app_wellbeing.csv"
+    reader: "csv"
+
+  - name: "within_app_results"
+    role: "data"
+    glob: "within_level/mlm_within_app_res_with_std.csv"
+    reader: "csv"
+
+  - name: "notification_app_wellbeing"
+    role: "data"
+    glob: "within_level/notification_app_wellbeing.csv"
+    reader: "csv"
+
+  - name: "time_app_wellbeing"
+    role: "data"
+    glob: "within_level/time_app_wellbeing.csv"
+    reader: "csv"
+
+  - name: "between_level_replication_code"
+    role: "docs"
+    glob: "between_level/replicate_code_between_level.py"
+
+  - name: "within_level_replication_code"
+    role: "docs"
+    glob: "within_level/replicate_code_within_level.R"
+
+  - name: "between_activation_by_app_figure"
+    role: "docs"
+    glob: "between_level/corr_well-being__mean_Activation by APP.jpg"
+
+  - name: "between_activation_by_app_aggregated_figure"
+    role: "docs"
+    glob: "between_level/corr_well-being__mean_Activation by APP_agg.jpg"
+
+  - name: "between_notification_by_app_figure"
+    role: "docs"
+    glob: "between_level/corr_well-being__mean_Notification by APP.jpg"
+
+  - name: "between_notification_by_app_aggregated_figure"
+    role: "docs"
+    glob: "between_level/corr_well-being__mean_Notification by APP_agg.jpg"
+
+  - name: "between_timeuse_by_app_figure"
+    role: "docs"
+    glob: "between_level/corr_well-being__mean_Time Use by APP.jpg"
+
+  - name: "between_timeuse_by_app_aggregated_figure"
+    role: "docs"
+    glob: "between_level/corr_well-being__mean_Time Use by APP_agg.jpg"
+
+  - name: "within_fig4_sameday_results"
+    role: "docs"
+    glob: "within_level/fig4_mlm_result_sameday_tiktok_whatsapp_instagram.html"
+
+  - name: "within_fig5_lag_results"
+    role: "docs"
+    glob: "within_level/fig5_mlm_result_lag_tiktok_whatsapp_instagram.html"
+
+  - name: "within_sfig1_sameday_results"
+    role: "docs"
+    glob: "within_level/sfig1_mlm_result_sameday_youtube_game_snapchat.html"
+
+  - name: "within_sfig2_lag_results"
+    role: "docs"
+    glob: "within_level/sfig2_mlm_result_lag_youtube_game_snapchat.html"
+
+notes: |
+  Dataset is organised into two subdirectories: 'between_level' and 
+  'within_level'. The primary data files are supplied as CSV files containing 
+  between-person and within-person analyses, app usage metrics, wellbeing 
+  measures, and modelling results. Replication code is provided in both Python 
+  (.py) and R (.R) formats. Additional outputs include JPG figures illustrating
+  correlations between wellbeing and app activity metrics, and HTML files 
+  containing model results and interactive visualisations. No separate codebook 
+  files were identified in the folder structure.
