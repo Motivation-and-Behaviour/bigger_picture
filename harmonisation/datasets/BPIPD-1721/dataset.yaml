@@ -1,0 +1,15 @@
+dataset_id: "1721"
+dataset_name: "Cyr"
+status: "in_progress"
+
+resources:
+  - name: "Cyr Data"
+    role: "data"
+    glob: "megan.sav"
+    reader: "spss"
+  - name: "Cyr Scoring Syntax"
+    role: "docs"
+    glob: "Info_Tech_Scoring_Prgm[1].SPS"
+  - name: "Cyr Survey Documentation"
+    role: "docs"
+    glob: "Survey.doc"
