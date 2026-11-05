@@ -269,6 +269,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+1645,maternal_education,No HS,Secondary school or less,compatible,"educ code 1, ISCED 0-2"
+1645,maternal_education,High school graduate,Secondary school or less,compatible,"educ code 2, ISCED 3"
+1645,maternal_education,Some college,Post-secondary,compatible,educ code 3: tertiary study begun but not completed
+1645,maternal_education,2-year,Post-secondary,compatible,"educ code 4: two-year degree, ISCED 5"
+1645,maternal_education,4-year,Bachelor degree or higher,compatible,"educ code 5, ISCED 6"
+1645,maternal_education,Post-grad,Bachelor degree or higher,compatible,"educ code 6, ISCED 7-8"
 1711,maternal_education,nonschooling,Secondary school or less,compatible,HERMES 3 highest_gua_edu_g. ISCED 0; level not observed in the extract.
 1711,maternal_education,compulsory,Secondary school or less,compatible,HERMES 3 highest_gua_edu_g. Compulsory schooling (ISCED 1-2).
 1711,maternal_education,apprenticeship,Secondary school or less,compatible,HERMES 3 highest_gua_edu_g. Upper-secondary apprenticeship (ISCED 3).

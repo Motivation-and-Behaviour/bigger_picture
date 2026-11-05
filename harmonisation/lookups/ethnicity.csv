@@ -258,6 +258,13 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2296,ethnicity,Non-Hispanic Black alone,Black,compatible,TETHRAC_RC code 2: Black or African American as the only race among non-Hispanic teens
 2296,ethnicity,Non-Hispanic White alone,White,compatible,TETHRAC_RC code 3: White as the only race among non-Hispanic teens
 2296,ethnicity,Other,Other,proximate,"TETHRAC_RC code 4 pools non-Hispanic Asian, American Indian/Alaska Native, Native Hawaiian/Pacific Islander and two or more races; Asian and Mixed cannot be separated"
+1645,ethnicity,"Hispanic origin, any race",Hispanic,compatible,"child_hispanic = 1 (parent report), taken ahead of race"
+1645,ethnicity,"Non-Hispanic, two or more races",Mixed,compatible,Two or more of the child_race items ticked among non-Hispanic children
+1645,ethnicity,"Non-Hispanic, White alone",White,compatible,child_race_1 is the only race ticked among non-Hispanic children
+1645,ethnicity,"Non-Hispanic, Black or African American alone",Black,compatible,child_race_2 is the only race ticked among non-Hispanic children
+1645,ethnicity,"Non-Hispanic, Asian or Asian American alone",Asian,compatible,child_race_3 is the only race ticked among non-Hispanic children
+1645,ethnicity,"Non-Hispanic, Native American or Alaskan native alone",Other,proximate,child_race_4 is the only race ticked; US group with no schema category
+1645,ethnicity,"Non-Hispanic, Native Hawaiian or other Pacific Islander alone",Other,proximate,child_race_5 is the only race ticked; US group with no schema category
 2303,ethnicity,1,White,compatible,"Central European (e.g. Germany, Austria, Slovenia, Poland, Hungary)"
 2303,ethnicity,2,White,compatible,West European
 2303,ethnicity,3,White,compatible,East European
