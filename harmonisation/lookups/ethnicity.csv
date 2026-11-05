@@ -258,3 +258,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2296,ethnicity,Non-Hispanic Black alone,Black,compatible,TETHRAC_RC code 2: Black or African American as the only race among non-Hispanic teens
 2296,ethnicity,Non-Hispanic White alone,White,compatible,TETHRAC_RC code 3: White as the only race among non-Hispanic teens
 2296,ethnicity,Other,Other,proximate,"TETHRAC_RC code 4 pools non-Hispanic Asian, American Indian/Alaska Native, Native Hawaiian/Pacific Islander and two or more races; Asian and Mixed cannot be separated"
+871,ethnicity,Western European background,White,compatible,Code 1; label from the paper's percentages
+871,ethnicity,Eastern European background,White,compatible,Code 2; label from the paper's percentages
+871,ethnicity,African background,Black,proximate,Code 3; label from the paper's percentages; a regional label that may include North African backgrounds
+871,ethnicity,North American background,Unknown,proximate,"Code 4; label from the paper's percentages; names a place, not a racial group"
+871,ethnicity,Asian background,Asian,compatible,Code 6; label from the paper's percentages
+871,ethnicity,Mixed background,Mixed,compatible,Code 8; label from the paper's percentages

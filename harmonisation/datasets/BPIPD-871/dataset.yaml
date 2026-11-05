@@ -6,7 +6,8 @@ resources:
   - name: "Analytical Dataset (Flat Format)"
     role: "data"
     glob: "analytical_dataset.dat"
-    reader: "csv" # PLACEHOLDER: confirmed via screenshot that this is space-delimited free-format text (no commas). Column names/order need to come from the corresponding .inp file's VARIABLE: section, since Mplus .dat files have no header row. 
+    reader: "tsv"
+    col_names: false # Mplus free-format .dat: tab-delimited, no header row; the 75 column names come from the .inp files' VARIABLE: NAMES section and are set in the tidier.
   # --- CODEBOOKS, SCRIPTS & MODEL SPECIFICATIONS ---
   - name: "Mediations Model Mplus Input"
     role: "docs"
@@ -47,4 +48,11 @@ notes: |
   Cross-Lagged Panel Model (RI-CLPM). Model configuration/syntax files (.inp) are classified as
   docs since they specify the analysis, not the variables. Model run outputs
   (.out, .htm) are also docs.
+
+  analytical_dataset.dat is a headerless Mplus free-format file: UTF-8 with a BOM, CRLF
+  line endings, 496 rows of 75 tab-separated fields, and 999 as the missing code
+  throughout (`missing = all (999)` in every .inp). It is read with reader: "tsv" and
+  col_names: false; the 75 column names come from the NAMES section of the .inp files,
+  which all declare the same names in the same order, and are applied in the tidier.
+  There is no codebook anywhere in the folder or on the study's OSF project.
   
