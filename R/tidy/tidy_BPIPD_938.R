@@ -1,22 +1,32 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-938 (Kasap)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One cross-sectional SPSS extract in which `case_number` already identifies a
+#' row, so nothing is joined, stacked or constructed here.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per adolescent
 tidy_BPIPD_938 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
+  df <- tibble::as_tibble(raw_dataset$data$`IAT Prosocial Data`)
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  bp938_label_time_columns(df)
+}
+
+#' Label the daily-use columns with the units the paper reports
+bp938_label_time_columns <- function(df) {
+  # The parents' columns are hours/day, not minutes as their names say: only
+  # then do their means match Kasap et al. 2023, J Curr Pediatr 21:162-70, p.165.
+  labels <- c(
+    Total_internet_time_of_the_child_minute = "Adolescent's daily internet use (minutes/day)",
+    Total_online_gaming_time_of_the_child_minute = "Adolescent's daily online gaming (minutes/day)",
+    Total_internet_time_of_the_mother_minute = "Mother's daily internet use (hours/day)",
+    Total_internet_time_of_the_father_minute = "Father's daily internet use (hours/day)"
+  )
+  for (nm in names(labels)) {
+    attr(df[[nm]], "label") <- unname(labels[[nm]])
+  }
+  df
 }

@@ -10,4 +10,3 @@ resources:
   - name: "Variable List"
     role: "docs"
     glob: "variable list.docx"
-    
