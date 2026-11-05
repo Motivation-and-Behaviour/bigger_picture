@@ -269,6 +269,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+845,maternal_education,Below high school,Secondary school or less,compatible,Guardian_Education code 0: the responding guardian's education below high school (ISCED 0-2).
+845,maternal_education,High school,Secondary school or less,proximate,"Guardian_Education code 1: high school (ISCED 3); the source has no post-secondary band, so that level is not separated."
+845,maternal_education,Bachelor's degree and above,Bachelor degree or higher,compatible,Guardian_Education code 2: bachelor's degree and above (ISCED 6-8).
 666,maternal_education,1,Secondary school or less,compatible,parent_edu code 1: Year 7 to 10
 666,maternal_education,2,Secondary school or less,compatible,parent_edu code 2: Year 11
 666,maternal_education,3,Secondary school or less,compatible,parent_edu code 3: Year 12
