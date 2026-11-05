@@ -269,3 +269,13 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+1439,maternal_education,Geen,Secondary school or less,compatible,No schooling (ISCED 0).
+1439,maternal_education,Lager,Secondary school or less,compatible,Primary school (ISCED 1).
+1439,maternal_education,ASO,Secondary school or less,compatible,Flemish general secondary education (ISCED 3).
+1439,maternal_education,KSO,Secondary school or less,compatible,Flemish arts secondary education (ISCED 3).
+1439,maternal_education,TSO,Secondary school or less,compatible,Flemish technical secondary education (ISCED 3).
+1439,maternal_education,BSO,Secondary school or less,compatible,Flemish vocational secondary education (ISCED 3).
+1439,maternal_education,Hogeschool,Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
+1439,maternal_education,Universiteit,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
+1439,maternal_education,"Anders, namelijk:",Unknown,incompatible,Other qualification; the written answer is not released.
+1439,maternal_education,Niet van toepassing,Unknown,incompatible,Not applicable.
