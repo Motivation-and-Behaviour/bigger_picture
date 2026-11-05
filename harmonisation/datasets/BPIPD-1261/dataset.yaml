@@ -13,11 +13,6 @@ resources:
     glob: "0004/0004_haha.dta"
     reader: "stata"
 
-  - name: "haha_spss"
-    role: "data"
-    glob: "0004/0004_haha.sav"
-    reader: "spss"
-
   - name: "jikan9_csv"
     role: "data"
     glob: "0004/0004_jikan9.csv"
@@ -27,11 +22,6 @@ resources:
     role: "data"
     glob: "0004/0004_jikan9.dta"
     reader: "stata"
-
-  - name: "jikan9_spss"
-    role: "data"
-    glob: "0004/0004_jikan9.sav"
-    reader: "spss"
 
   - name: "jikan10_csv"
     role: "data"
@@ -43,11 +33,6 @@ resources:
     glob: "0004/0004_jikan10.dta"
     reader: "stata"
 
-  - name: "jikan10_spss"
-    role: "data"
-    glob: "0004/0004_jikan10.sav"
-    reader: "spss"
-
   - name: "jikan13_csv"
     role: "data"
     glob: "0004/0004_jikan13.csv"
@@ -58,11 +43,6 @@ resources:
     glob: "0004/0004_jikan13.dta"
     reader: "stata"
 
-  - name: "jikan13_spss"
-    role: "data"
-    glob: "0004/0004_jikan13.sav"
-    reader: "spss"
-
   - name: "kodomo_csv"
     role: "data"
     glob: "0004/0004_kodomo.csv"
@@ -72,11 +52,6 @@ resources:
     role: "data"
     glob: "0004/0004_kodomo.dta"
     reader: "stata"
-
-  - name: "kodomo_spss"
-    role: "data"
-    glob: "0004/0004_kodomo.sav"
-    reader: "spss"
 
   - name: "haha_labels"
     role: "codebook"
@@ -109,4 +84,8 @@ notes: |
   formats representing equivalent versions of the same data. 
   Associated label text files provide variable labels/codebook information for 
   each component. A dataset-level README text file provides additional 
-  documentation."
+  documentation.
+  The '.sav' copies are not declared: they are Shift-JIS encoded and
+  haven::read_sav() cannot read them without an `encoding` argument, which the
+  reader does not accept. The '.dta' copies hold the same data with the same
+  variable and value labels, so nothing is lost.
