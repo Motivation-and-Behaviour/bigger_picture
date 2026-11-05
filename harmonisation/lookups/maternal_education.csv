@@ -269,6 +269,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+1711,maternal_education,nonschooling,Secondary school or less,compatible,HERMES 3 highest_gua_edu_g. ISCED 0; level not observed in the extract.
+1711,maternal_education,compulsory,Secondary school or less,compatible,HERMES 3 highest_gua_edu_g. Compulsory schooling (ISCED 1-2).
+1711,maternal_education,apprenticeship,Secondary school or less,compatible,HERMES 3 highest_gua_edu_g. Upper-secondary apprenticeship (ISCED 3).
+1711,maternal_education,gymnasium,Secondary school or less,compatible,HERMES 3 highest_gua_edu_g. Upper-secondary gymnasium (ISCED 3).
+1711,maternal_education,higher,Post-secondary,proximate,"HERMES 3 highest_gua_edu_g. The codebook's 'technical college' level, read as higher vocational education below a degree; may include universities of applied sciences."
+1711,maternal_education,university,Bachelor degree or higher,compatible,HERMES 3 highest_gua_edu_g. The codebook's 'university' level (ISCED 6-8).
 2303,maternal_education,1,Secondary school or less,compatible,EduMum/EduDad code 1: unfinished primary education (Appendix A questions 8-9; value label 'No diploma')
 2303,maternal_education,2,Secondary school or less,compatible,Code 2: primary education
 2303,maternal_education,3,Secondary school or less,compatible,"Code 3: secondary education, ISCED 3"
