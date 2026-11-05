@@ -269,3 +269,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+2303,maternal_education,1,Secondary school or less,compatible,EduMum/EduDad code 1: unfinished primary education (Appendix A questions 8-9; value label 'No diploma')
+2303,maternal_education,2,Secondary school or less,compatible,Code 2: primary education
+2303,maternal_education,3,Secondary school or less,compatible,"Code 3: secondary education, ISCED 3"
+2303,maternal_education,4,Post-secondary,compatible,"Code 4: higher vocational education (visjesolska), short-cycle tertiary, ISCED 5; unlabelled in the file, wording from Appendix A"
+2303,maternal_education,5,Bachelor degree or higher,compatible,"Code 5: professional higher education and university (Bachelor, Master's, PhD), ISCED 6-8; unlabelled in the file, wording from Appendix A"
+2303,maternal_education,6,Unknown,compatible,"Code 6: 'I don't know, but my mom/dad works as ___'; an occupation gives no education level"
