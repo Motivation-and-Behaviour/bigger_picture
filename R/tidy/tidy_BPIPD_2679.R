@@ -1,22 +1,27 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-2679 (Donthu)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One CSV from a single cross-sectional survey in which a parent reports on
+#' one index child aged 5-15; the file has no participant id.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per index child (parent report)
 tidy_BPIPD_2679 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
+  df <- tibble::as_tibble(raw_dataset$data$`Screen Time Datasheet`)
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  # The commas in this header would split it in the comma-separated
+  # `source_columns`, so they are dropped and the header kept as its label.
+  df <- dplyr::rename(
+    df,
+    `fixed boundaries for movies youtube TV shows entertainment prog` = `fixed boundaries for movies , youtube, TV shows, entertainment prog`
+  )
+  attr(
+    df$`fixed boundaries for movies youtube TV shows entertainment prog`,
+    "label"
+  ) <- "fixed boundaries for movies , youtube, TV shows, entertainment prog"
+
+  df
 }

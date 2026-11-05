@@ -269,3 +269,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+2679,maternal_education,Illeterate,Secondary school or less,compatible,"education (free text in the form), spelt so in the file: illiterate, no schooling (ISCED 0)"
+2679,maternal_education,Primary school (1- 5 class),Secondary school or less,compatible,education: classes 1-5 (ISCED 1)
+2679,maternal_education,Middle school ( 6-8 class),Secondary school or less,compatible,education: classes 6-8 (ISCED 2)
+2679,maternal_education,High school (9-10 class),Secondary school or less,compatible,"education: classes 9-10, at most ISCED 3"
+2679,maternal_education,Intermediate,Secondary school or less,proximate,"education: read as Class XI-XII (ISCED 3), the level between High school and PG/Graduate; undefined in the study documents and may hold post-school diplomas, placed by the majority rule"
+2679,maternal_education,PG/Graduate,Bachelor degree or higher,compatible,education: graduate or postgraduate (ISCED 6-8)
