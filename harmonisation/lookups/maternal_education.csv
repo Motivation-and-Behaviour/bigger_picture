@@ -269,3 +269,11 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+1598,parental_education,1,Secondary school or less,compatible,EducationScores code 1 Primary school (ceiling of the parents' mean).
+1598,parental_education,2,Secondary school or less,compatible,"EducationScores code 2 Secondary school (GCSEs, O-Levels or equivalent) (ceiling of the parents' mean)."
+1598,parental_education,3,Secondary school or less,compatible,EducationScores code 3 Sixth Form/College (A Levels or equivalent) (ceiling of the parents' mean).
+1598,parental_education,4,Secondary school or less,proximate,"EducationScores code 4 Vocational College (Apprenticeships, NVQs or equivalent) (ceiling of the parents' mean): spans two levels and goes to the level holding most of its members."
+1598,parental_education,5,Bachelor degree or higher,compatible,EducationScores code 5 Undergraduate (Bachelors or equivalent) (ceiling of the parents' mean).
+1598,parental_education,6,Bachelor degree or higher,compatible,EducationScores code 6 Postgraduate (Masters or equivalent) (ceiling of the parents' mean).
+1598,parental_education,7,Bachelor degree or higher,compatible,EducationScores code 7 MBA (ceiling of the parents' mean).
+1598,parental_education,8,Bachelor degree or higher,compatible,EducationScores code 8 Doctoral degree (PhD) (ceiling of the parents' mean).
