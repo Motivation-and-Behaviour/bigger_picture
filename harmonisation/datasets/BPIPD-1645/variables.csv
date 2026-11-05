@@ -8,6 +8,7 @@ survey_strata,unavailable,,,"No stratum variable released: an opt-in panel sampl
 survey_cluster,unavailable,,,Not a cluster sample: an opt-in panel sample matched to an ACS-based frame (codebook p. 1).,,
 family_id,unavailable,,,One participant per family.,,
 sample_component,unavailable,,,Single sample.,,
+sample_population,inferred,,"""General population""","YouGov opt-in online panel of US parent-child dyads matched to ACS-based frames, fielded for a hospital but not recruited through it (project codebook p. 1).",,
 parent_respondent,proximate,gender,"recode_values(as.numeric(gender), 2 ~ ""Mother"", 1 ~ ""Father"", default = ""Unknown"")","Sex of the adult who answered the parent questionnaire (gender), both cohorts: Female = Mother, Male = Father. Proximate: the item records only the respondent's sex; relationship to the child is not recorded.",,
 age_years,compatible,"cohort, child_age_a, child_age_b, CS2_child","if_else(cohort == ""6-10"", coalesce(as.numeric(child_age_a), as.numeric(child_age_b)), as.numeric(CS2_child)) + 0.5","Completed years + 0.5. 11-17 rows: the age the child gave in the child survey (CS2_child). 6-10 rows: parent report, the 6-10 child with the most recent birthday (child_age_a) else the only one (child_age_b), child_age_a first for the 6 dyads with both. oldchild_age_a and oldchild_age_b unused: the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",,
 sex,compatible,"cohort, child_gender_a, child_gender_b, CS1_child","recode_values(

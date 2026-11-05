@@ -8,6 +8,7 @@ survey_strata,partial,"region, school_type","paste(region, school_type, sep = ""
 survey_cluster,unavailable,,,Not in the supplied extract.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Stratified cluster random sample of Czech primary and secondary schools across all 14 regions (Sucha et al., nationally representative study of internet gaming disorder).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,age,as.numeric(age),"'Age (derived from date of birth)', decimal years as derived by the study, as is; reference date undocumented, but floor(age) equals the self-reported completed age (reported_age, not used) in 3,815 of 3,950 rows, and age exceeds it by 0.50 on average, as for age at the survey. 274 values above 19 kept (max 20.07).",,
 sex,compatible,sex,"recode_values(sex, ""Male"" ~ ""Male"", ""Female"" ~ ""Female"", default = ""Unknown"")","Self-reported sex (Male/Female; no other option offered), complete.",,

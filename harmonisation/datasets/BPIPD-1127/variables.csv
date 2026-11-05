@@ -8,6 +8,7 @@ survey_strata,partial,"cohort, sampling_urban3, sampling_priv, sampling_pgrm","p
 survey_cluster,unavailable,,,Not in the supplied extract.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Nationally representative samples of Taiwanese students from the 1984/85 and 1988/89 birth cohorts, sampled in schools (TEPS English overview).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,"birth_year, .wave","recode_values(.wave, ""1"" ~ 2001.916, ""2"" ~ 2003.270, ""3"" ~ 2005.916, ""4"" ~ 2007.371) - (birth_year + 0.5)","Survey year minus birth year, plus the fieldwork midpoint as a year fraction minus 0.5: midpoint as a decimal year (2001-12-01, 2003-04-09, 2005-12-01, 2007-05-16 from the user guides) minus mid-birth-year. birth_year comes from the tidier: the ROC-year labels of w1s501 (J, S and core panel, carried from W1) or w3s479 (NP, carried to W4) + 1911. w3s479's codes 1-5 are relabelled ROC 75-79 in the tidier: the released labels (ROC 71-75) would make 2005 grade-11 students 20-21, and the codes match the core panel's ROC 77-78 four codes down (NP mean age 16.85 at W3, core panel 16.80).",,
 sex,compatible,"w1s502, w2s445, w3s480, participant_id","coalesce(
