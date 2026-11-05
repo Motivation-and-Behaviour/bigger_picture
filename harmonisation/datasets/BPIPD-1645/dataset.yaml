@@ -19,6 +19,9 @@ resources:
     role: "codebook"
     glob: "SCRI0001_02_codebook_stacked.pdf"
     reader: "spss"
+  - name: "note-regarding-files"
+    role: "docs"
+    glob: "Note regarding files (AJohnson).pdf"
 
 notes: |
   SCRI0001 contains child-parent dyads 11-17 years old.
