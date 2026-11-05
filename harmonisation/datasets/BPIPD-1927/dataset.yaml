@@ -5,12 +5,12 @@ status: "in_progress"
 resources:
   - name: "activebrains_genobex_data"
     role: "data"
-    glob: "AB+GENOBEX_datarequest_Anonymized_ACU.sav"
+    glob: "AB?GENOBEX_datarequest_Anonymized_ACU.sav"
     reader: "spss"
 
   - name: "activebrains_genobex_codebook"
     role: "codebook"
-    glob: "Codebook AB+GENOBEX.xlsx"
+    glob: "Codebook AB?GENOBEX.xlsx"
 
 notes: |
   Dataset consists of a single anonymized SPSS data file (.sav) and a single

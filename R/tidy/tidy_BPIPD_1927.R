@@ -1,22 +1,25 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-1927 (ActiveBrains and GENOBEX)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One SPSS file holds the pre-intervention assessment of the ActiveBrains
+#' (overweight/obesity) and GENOBEX (normal-weight) children, told apart by `Project`.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per child at the single pre-intervention occasion
 tidy_BPIPD_1927 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
+  df <- tibble::as_tibble(raw_dataset$data$activebrains_genobex_data)
+
+  if (anyDuplicated(df$ID2) > 0) {
     stop(
-      "Replace the template tidier with study-specific code",
+      "BPIPD-1927: `ID2` does not uniquely identify children.",
       call. = FALSE
     )
   }
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  # Rows holding only `ID2` and `Project` carry no observation.
+  measured <- setdiff(names(df), c("ID2", "Project"))
+  df[rowSums(!is.na(df[measured])) > 0L, , drop = FALSE]
 }
