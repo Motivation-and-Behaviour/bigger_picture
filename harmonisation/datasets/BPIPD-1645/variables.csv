@@ -1,0 +1,952 @@
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,caseid,"sprintf(""%.0f"", caseid)","YouGov case ID (caseid), unique across all 1,000 parent-child dyads.",,
+wave,unavailable,,,Single collection occasion.,,
+data_year,compatible,starttime,"as.numeric(format(starttime, ""%Y""))","Year of the questionnaire start time (starttime): 2020 in all 1,000 rows, inside the codebook's field period of 22 October to 5 November 2020.",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,compatible,weight_stacked,as.numeric(weight_stacked),"Stacked Weight (weight_stacked), the release's weight to US parents of children 6-17 covering all 1,000 cases (codebook p. 1), not rescaled. Propensity-score and post-stratification weight on a matched opt-in panel sample. The per-cohort weights weight_6_to_10 and weight_11_to_17 are unused.",,
+survey_strata,unavailable,,,"No stratum variable released: an opt-in panel sample matched to an ACS-based frame, whose strata were used only for matching (codebook p. 1).",,
+survey_cluster,unavailable,,,Not a cluster sample: an opt-in panel sample matched to an ACS-based frame (codebook p. 1).,,
+family_id,unavailable,,,One participant per family.,,
+sample_component,unavailable,,,Single sample.,,
+parent_respondent,proximate,gender,"recode_values(as.numeric(gender), 2 ~ ""Mother"", 1 ~ ""Father"", default = ""Unknown"")","Sex of the adult who answered the parent questionnaire (gender), both cohorts: Female = Mother, Male = Father. Proximate: the item records only the respondent's sex; relationship to the child is not recorded.",,
+age_years,compatible,"cohort, child_age_a, child_age_b, CS2_child","if_else(cohort == ""6-10"", coalesce(as.numeric(child_age_a), as.numeric(child_age_b)), as.numeric(CS2_child)) + 0.5","Completed years + 0.5. 11-17 rows: the age the child gave in the child survey (CS2_child). 6-10 rows: parent report, the 6-10 child with the most recent birthday (child_age_a) else the only one (child_age_b), child_age_a first for the 6 dyads with both. oldchild_age_a and oldchild_age_b unused: the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",,
+sex,compatible,"cohort, child_gender_a, child_gender_b, CS1_child","recode_values(
+  if_else(cohort == ""6-10"", coalesce(as.numeric(child_gender_a), as.numeric(child_gender_b)), as.numeric(CS1_child)),
+  1 ~ ""Male"",
+  2 ~ ""Female"",
+  3 ~ ""Other"",
+  4 ~ ""Unknown"",
+  default = ""Unknown""
+)","Gender item (Male, Female, Non-binary = Other, Prefer not to answer = Unknown). 11-17 rows: the child's own report (CS1_child). 6-10 rows: parent report, child_gender_a first, else child_gender_b. oldchild_gender_a and oldchild_gender_b unused: the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",,
+country,inferred,,"""USA""",Constant: US parents and children sampled against ACS-based US frames (codebook p. 1; doi:10.1001/jamanetworkopen.2021.27892).,,
+state,unavailable,,,Not an Australian dataset.,,
+region,compatible,inputstate,"lookup_values(haven::as_factor(inputstate), lookup_region_iso, default = ""Unknown"")","State of residence (inputstate, labelled with state names; 50 states and the District of Columbia) as ISO 3166-2 codes through the dataset lookup region_iso. The census region column (region) and the ZIP code (inputzip) are unused.",region_iso,
+ethnicity,proximate,"child_hispanic, child_race_1, child_race_2, child_race_3, child_race_4, child_race_5, child_race_6, child_race_other","local({
+  white <- as.numeric(child_race_1) == 1
+  black <- as.numeric(child_race_2) == 1
+  asian <- as.numeric(child_race_3) == 1
+  aian <- as.numeric(child_race_4) == 1
+  nhpi <- as.numeric(child_race_5) == 1
+  other <- as.numeric(child_race_6) == 1
+  n_races <- white + black + asian + aian + nhpi + other
+  ethnicity <- coalesce(
+    lookup_values(
+      case_when(
+        as.numeric(child_hispanic) == 1 ~ ""Hispanic origin, any race"",
+        n_races >= 2 ~ ""Non-Hispanic, two or more races"",
+        white ~ ""Non-Hispanic, White alone"",
+        black ~ ""Non-Hispanic, Black or African American alone"",
+        asian ~ ""Non-Hispanic, Asian or Asian American alone"",
+        aian ~ ""Non-Hispanic, Native American or Alaskan native alone"",
+        nhpi ~ ""Non-Hispanic, Native Hawaiian or other Pacific Islander alone"",
+        .default = NA_character_
+      ),
+      lookup_ethnicity,
+      dataset_id = spec$dataset_id,
+      target_variable = ""ethnicity""
+    ),
+    if_else(other, lookup_values(trimws(child_race_other), lookup_ethnicity_other, default = ""Unknown""), NA_character_),
+    ""Unknown""
+  )
+  ethnicity
+})","Parent report of the child: Hispanic origin (child_hispanic, 'Is your child of Hispanic, Mexican, or Latin American ethnicity?') first, then the multi-select race items: one race = that race alone, two or more = Mixed. Non-Hispanic 'Other' alone (19 rows) is resolved from child_race_other through ethnicity_other: mixed answers = Mixed, Middle Eastern = Other, bare nationalities, 'human' and religion = Unknown. Shared lookup. Proximate: Native American or Alaskan native and Native Hawaiian or Pacific Islander alone fold into Other. At 11-17 the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year). The parent's own hisp_acs, race_acs_1 to race_acs_6 and race are unused.",ethnicity_other,
+indigenous,partial,"child_race_1, child_race_2, child_race_3, child_race_4, child_race_5, child_race_6","case_when(
+  as.numeric(child_race_4) == 1 &
+    (as.numeric(child_race_1) == 1) +
+      (as.numeric(child_race_2) == 1) +
+      (as.numeric(child_race_3) == 1) +
+      (as.numeric(child_race_5) == 1) +
+      (as.numeric(child_race_6) == 1) ==
+      0 ~ ""Indigenous"",
+  as.numeric(child_race_4) %in% c(1, 2) ~ ""Non-Indigenous"",
+  .default = ""Unknown""
+)","Parent report of the child, multi-select race items: Native American or Alaskan native named as the only race, whatever the Hispanic origin, = Indigenous (19 rows); every other answer = Non-Indigenous. Partial: Native American or Alaskan native with another race (27 rows) counts as Non-Indigenous. At 11-17 the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",,
+minority,compatible,"child_hispanic, child_race_1, child_race_2, child_race_3, child_race_4, child_race_5, child_race_6, child_race_other","local({
+  white <- as.numeric(child_race_1) == 1
+  black <- as.numeric(child_race_2) == 1
+  asian <- as.numeric(child_race_3) == 1
+  aian <- as.numeric(child_race_4) == 1
+  nhpi <- as.numeric(child_race_5) == 1
+  other <- as.numeric(child_race_6) == 1
+  n_races <- white + black + asian + aian + nhpi + other
+  ethnicity <- coalesce(
+    lookup_values(
+      case_when(
+        as.numeric(child_hispanic) == 1 ~ ""Hispanic origin, any race"",
+        n_races >= 2 ~ ""Non-Hispanic, two or more races"",
+        white ~ ""Non-Hispanic, White alone"",
+        black ~ ""Non-Hispanic, Black or African American alone"",
+        asian ~ ""Non-Hispanic, Asian or Asian American alone"",
+        aian ~ ""Non-Hispanic, Native American or Alaskan native alone"",
+        nhpi ~ ""Non-Hispanic, Native Hawaiian or other Pacific Islander alone"",
+        .default = NA_character_
+      ),
+      lookup_ethnicity,
+      dataset_id = spec$dataset_id,
+      target_variable = ""ethnicity""
+    ),
+    if_else(other, lookup_values(trimws(child_race_other), lookup_ethnicity_other, default = ""Unknown""), NA_character_),
+    ""Unknown""
+  )
+  recode_values(ethnicity, ""White"" ~ ""Non-minority"", ""Unknown"" ~ ""Unknown"", default = ""Minority"")
+})","Same items and free-text resolution as ethnicity: non-Hispanic White alone = Non-minority, the US majority; Hispanic, every other race and two or more races = Minority; unresolved free text = Unknown. At 11-17 the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",ethnicity,
+immigrant_background,incompatible,Born_OutSide,,"Only whether the responding parent was born outside the US (Born_OutSide; paper's Methods, doi:10.1001/jamanetworkopen.2021.27892): one parent and no child birthplace, so the row could emit only Native and Unknown.",,
+born_in_country,incompatible,Born_OutSide,,"Only the responding parent's birthplace (Born_OutSide; paper's Methods, doi:10.1001/jamanetworkopen.2021.27892), not the child's.",,
+home_language,incompatible,"mylanguage, langpref",,"Only mylanguage (en or es) and langpref ('English or Spanish', 87 rows), with no question text and by their form the survey language; no item on languages spoken at home.",,
+ses_area,unavailable,,,Not collected.,,
+ses_household,incompatible,"insurtype, healthinsur_srg_4, acsownrent, Q1_7",,"No income, asset, occupational or composite SES measure: only health-insurance type (insurtype, Medicaid or government-assistance tick healthinsur_srg_4), home tenure (acsownrent) and whether family income decreased in the pandemic (Q1_7), a change, not a level.",,
+ses_household_measure,unavailable,,,See ses_household.,,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,proximate,"educ, gender","if_else(
+  as.numeric(gender) %in% 2,
+  lookup_values(
+    haven::as_factor(educ),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education"",
+    default = ""Unknown""
+  ),
+  ""Unknown""
+)","Responding parent's own education (educ) where that respondent is female (gender = 2, 560 rows); male respondents = Unknown. Shared education lookup: no high school and high school graduate = Secondary school or less; some college and 2-year = Post-secondary; 4-year and post-grad = Bachelor degree or higher. Proximate: relationship to the child is not recorded, and the mother is unobserved where the father responded.",maternal_education,
+paternal_education,proximate,"educ, gender","if_else(
+  as.numeric(gender) %in% 1,
+  lookup_values(
+    haven::as_factor(educ),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education"",
+    default = ""Unknown""
+  ),
+  ""Unknown""
+)","As maternal_education, for a male respondent (gender = 1, 440 rows); female respondents = Unknown. Proximate: relationship to the child is not recorded, so the father is inferred from the respondent's sex.",maternal_education,
+parental_education,incompatible,educ,,Only the responding parent's own education (educ; see maternal_education and paternal_education); the other parent is never asked.,,
+maternal_employment,proximate,"gender, parent_working, spouse_working","recode_values(
+  if_else(as.numeric(gender) == 2, as.numeric(parent_working), as.numeric(spouse_working)),
+  c(1, 2) ~ ""Employed"",
+  3 ~ ""Not employed"",
+  default = ""Unknown""
+)","A female respondent's 'Are you currently working?' (parent_working) and a male respondent's 'Is your spouse currently working?' (spouse_working): full or part time = Employed, not working = Not employed; a male respondent's Not applicable = Unknown (50 rows). Proximate: the spouse of a male respondent is taken as the mother figure; the spouse's sex is not recorded; a female respondent's relationship to the child is not recorded either.",,
+maternal_age,partial,"birthyr, gender","if_else(as.numeric(gender) %in% 2, 2020 - as.numeric(birthyr) + (303 / 366 - 0.5), NA_real_)","Female respondent's age from her birth year (birthyr): survey year 2020 minus birth year, plus the fieldwork midpoint (29 October 2020, day 303 of 366) as a fraction of the year minus 0.5. Partial: relationship to the child is not recorded. Male respondents NA; the father's age from birthyr is unused.",,
+urbanicity,proximate,urbanicity2,"recode_values(as.numeric(urbanicity2), c(1, 2) ~ ""Urban"", c(3, 4) ~ ""Suburban"", 5 ~ ""Rural"", default = ""Unknown"")","Self-described residence (urbanicity2, 'Residence'; no question text): big city and smaller city = Urban; suburban area and small town = Suburban (a town level between suburb and rural); rural area = Rural; 1 missing = Unknown. Proximate: a five-level self-description, not a national typology.",,
+family_structure,proximate,marstat,"recode_values(
+  as.numeric(marstat),
+  c(1, 6) ~ ""Two biological/adoptive parents"",
+  c(2, 3, 4, 5) ~ ""Single parent"",
+  default = ""Unknown""
+)","Responding parent's marital status (marstat): married or domestic/civil partnership = Two biological/adoptive parents; separated, divorced, widowed or never married = Single parent. Proximate: step-parents and partners who are not the child's parent cannot be separated. spouse_working is unused, though 90 respondents classed Single parent report a spouse's work status and 10 partnered respondents say Not applicable.",,
+fam_siblings_n,partial,"cohort, child6_10_num, child11_17_num","if_else(cohort == ""6-10"", as.numeric(child6_10_num), as.numeric(child11_17_num)) - 1","Parent report: number of the respondent's children in the child's own cohort band (child6_10_num 6-10; child11_17_num 11-17), minus the child. Partial: limited by age. Entered counts kept, including 9 on two 11-17 rows and 7 or 8 on twelve 6-10 rows. child_ages_1 to child_ages_6 (ticks for other age bands) are unused.",,
+fam_siblings_any,unavailable,,,Derive at analysis from fam_siblings_n.,,
+fam_screenrules,partial,"cohort, kids_media_rules_child, Q14_1, Q14_2, Q14_3, Q14_4, Q14_5, Q14_6, Q14_7, Q14_8","case_when(
+  cohort == ""11-17"" & as.numeric(kids_media_rules_child) == 1 ~ ""TRUE"",
+  cohort == ""11-17"" & as.numeric(kids_media_rules_child) == 2 ~ ""FALSE"",
+  cohort == ""6-10"" & (as.numeric(Q14_4) == 1 | as.numeric(Q14_6) == 1 | as.numeric(Q14_7) == 1) ~ ""TRUE"",
+  cohort == ""6-10"" &
+    rowSums(
+      cbind(
+        as.numeric(Q14_1),
+        as.numeric(Q14_2),
+        as.numeric(Q14_3),
+        as.numeric(Q14_4),
+        as.numeric(Q14_5),
+        as.numeric(Q14_6),
+        as.numeric(Q14_7),
+        as.numeric(Q14_8)
+      ) ==
+        1
+    ) >
+      0 ~ ""FALSE"",
+  .default = NA_character_
+)","11-17 rows: the child's report, the screen-time respondent, 'Does your family have rules about the amount of time you can use screen media (TV, computer, videos, video games, tablets, smartphone, or other)' (kids_media_rules_child), yes/no; the parent's ticks are unused there. 6-10 rows: parent report, ticks for 'My child turns off screens at least one hour before bedtime' (Q14_4) and rules on 'how much screen time my child is allowed' on weekdays and weekends (Q14_6, Q14_7). Unticked in an answered list = FALSE; nothing ticked at all = NA. All screens; current during COVID-19; the pre-COVID ticks Q13_1 to Q13_8 are unused. Partial: the child's item asks about amount only, so timing-only rules are not seen at 11-17. Meal-time, bedroom and charging ticks (Q14_3, Q14_1, Q14_2) are unused.",,
+fam_contentrules,partial,"Q14_1, Q14_2, Q14_3, Q14_4, Q14_5, Q14_6, Q14_7, Q14_8","case_when(
+  as.numeric(Q14_5) == 1 ~ ""TRUE"",
+  rowSums(
+    cbind(
+      as.numeric(Q14_1),
+      as.numeric(Q14_2),
+      as.numeric(Q14_3),
+      as.numeric(Q14_4),
+      as.numeric(Q14_5),
+      as.numeric(Q14_6),
+      as.numeric(Q14_7),
+      as.numeric(Q14_8)
+    ) ==
+      1
+  ) >
+    0 ~ ""FALSE"",
+  .default = NA_character_
+)","Parent report, both cohorts, current during COVID-19: tick for 'We restricted what shows and apps children have access to' (Q14_5). Unticked in an answered list = FALSE; nothing ticked at all (1 row) = NA. Partial: a household item answered once for 'children'. The retrospective pre-COVID tick Q13_5 is unused.",,
+fam_bedroomscreen,incompatible,"Q14_1, Q14_2, Q13_1, Q13_2",,"Only rules that screens are not allowed in, or devices are charged outside, the child's bedroom (Q14_1, Q14_2; before COVID-19 Q13_1, Q13_2); no item on whether a device is kept there.",,
+fam_firstphone_age,unavailable,,,Not collected.,,
+fam_firstscreen_age,unavailable,,,Not collected.,,
+fam_coview_freq,incompatible,"Q11, Q12",,"Hours with the child; the matching totals are another responder at 11-17 (C11_child, C12_child) and of undocumented device scope at 6-10 (Y2, Y3).",,
+fam_mediation_restrict,incompatible,"C21b_1_c, C21b_2_c, C21b_3_c, C21b_4_c, C21b_5_c, media_rules_decides_child",,"Only the child's report of how parents involve the child when setting time rules (C21b_1_c to C21b_5_c, the style of rule-setting without its extent) and who decides (media_rules_decides_child, asked only where a rule exists). The yes/no rule items are on fam_screenrules and fam_contentrules; the daily limits Q14_6_open and Q14_7_open are unused.",,
+fam_mediation_active,unavailable,,,Not collected.,,
+fam_mediation_monitor,unavailable,,,Not collected.,,
+fam_mediation_technical,unavailable,,,Not collected.,,
+fam_mediation_measure,unavailable,,,See fam_mediation_restrict.,,
+fam_parent_screentime,incompatible,"Q11, Q12",,"Filed as parent report of co-viewing screen time: hours with the child, not the parent's own use (wording unconfirmed).",,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+fam_parent_dep,compatible,"cohort, S20_3, S20_4, Q8_3, Q8_4","if_else(
+  cohort == ""6-10"",
+  (as.numeric(S20_3) - 1) + (as.numeric(S20_4) - 1),
+  (as.numeric(Q8_3) - 1) + (as.numeric(Q8_4) - 1)
+)","PHQ-4 depression items (PHQ-2), the responding parent about themselves, last two weeks: 'Feeling down, depressed or hopeless', 'Little interest or pleasure in doing things' (S20_3, S20_4 on 6-10 rows; Q8_3, Q8_4 on 11-17 rows). 1-4 rebased to 0-3, complete-case sum, range 0-6. The PHQ-4 total is unused.",,
+fam_parent_anx,compatible,"cohort, S20_1, S20_2, Q8_1, Q8_2","if_else(
+  cohort == ""6-10"",
+  (as.numeric(S20_1) - 1) + (as.numeric(S20_2) - 1),
+  (as.numeric(Q8_1) - 1) + (as.numeric(Q8_2) - 1)
+)","PHQ-4 anxiety items (GAD-2), the responding parent about themselves, last two weeks: 'Feeling nervous, anxious or on edge', 'Not being able to stop or control worrying' (S20_1, S20_2 on 6-10 rows; Q8_1, Q8_2 on 11-17 rows). 1-4 rebased to 0-3, complete-case sum, range 0-6. The PHQ-4 total is unused.",,
+fam_parent_distress,incompatible,Q3_1,,"Only the single CEFIS item on the respondent's own COVID-19 distress (Q3_1, 1-10); the PHQ-4 gives its depression and anxiety subscales to fam_parent_dep and fam_parent_anx.",,
+fam_parent_mh_measure,inferred,,"""depression: PHQ-4 (PHQ-2 items), 2 of 4 items, 0-3 item scoring (range 0-6), sum, responding parent; anxiety: PHQ-4 (GAD-2 items), 2 of 4 items, 0-3 item scoring (range 0-6), sum, responding parent; items recoded from 1-4, complete-case, last two weeks""",Describes fam_parent_dep and fam_parent_anx; the responding parent's relationship to the child is not recorded (sex only).,,
+fam_parenting_warmth_parent,unavailable,,,Not collected.,,
+fam_parenting_harsh_parent,unavailable,,,Not collected.,,
+fam_parenting_inconsistent_parent,unavailable,,,Not collected.,,
+fam_monitoring_parent,unavailable,,,Not collected.,,
+fam_monitoring_self,unavailable,,,Not collected.,,
+fam_parenting_measure,unavailable,,,See fam_parenting_warmth_parent.,,
+fam_physpunish,unavailable,,,Not collected.,,
+fam_parentchild_rel_self,unavailable,,,Not collected.,,
+fam_parentchild_rel_parent,unavailable,,,Not collected.,,
+fam_parentchild_conflict_parent,unavailable,,,Not collected.,,
+fam_parentchild_measure,unavailable,,,See fam_parentchild_rel_self.,,
+fam_functioning_parent,partial,"Q35_1, Q35_2, Q35_3",((5 - as.numeric(Q35_1)) + as.numeric(Q35_2) + (5 - as.numeric(Q35_3))) / 3,"11-17 cohort only (the 6-10 form did not ask). Responding parent, 'Family Functioning': 'We can express feelings to each other' (Q35_1, reversed), 'We don't get along well together' (Q35_2), 'Share thoughts and feelings' (Q35_3, reversed), 1 strongly agree to 4 strongly disagree; higher = healthier, range 1-4. Partial: complete-case mean of the study's own three items, no published scoring.",,
+fam_functioning_self,partial,"Q41_1_c, Q41_2_c, Q41_3_c",((5 - as.numeric(Q41_1_c)) + as.numeric(Q41_2_c) + (5 - as.numeric(Q41_3_c))) / 3,"11-17 cohort only. Child report, 'When thinking about your family': 'We can express feelings to each other' (Q41_1_c, reversed), 'We don't get along well together' (Q41_2_c), 'Share thoughts and feeling' (Q41_3_c, reversed), 1 strongly agree to 4 strongly disagree; higher = healthier, range 1-4. Partial: complete-case mean of the study's own three items, no published scoring.",,
+fam_conflict_parent,unavailable,,,Not collected.,,
+fam_conflict_self,unavailable,,,Not collected.,,
+fam_functioning_measure,inferred,cohort,"if_else(
+  cohort == ""11-17"",
+  ""functioning (parent): study items (responding parent), 3 items, 1-4 item scoring (range 1-4), mean; functioning (self): study items (child), 3 items, 1-4 item scoring (range 1-4), mean; items 1 and 3 reversed, complete-case, study items, no published scoring"",
+  NA_character_
+)",Describes fam_functioning_parent and fam_functioning_self; 11-17 cohort only.,,
+fam_readto_freq,unavailable,,,Not collected.,,
+fam_readto_time,unavailable,,,Not collected.,,
+fam_childbooks,unavailable,,,Not collected.,,
+fam_home_total,unavailable,,,HOME Inventory not administered.,,
+fam_home_cogstim,unavailable,,,HOME Inventory not administered.,,
+fam_home_emotsupport,unavailable,,,HOME Inventory not administered.,,
+fam_home_measure,unavailable,,,See fam_home_total.,,
+school_grade,unavailable,,,Not collected.,,
+school_sector,unavailable,,,Not collected.,,
+school_track,unavailable,,,Not collected.,,
+st_measure_type,inferred,"Y2, Y3, C11_child, C12_child","""Categorical""",All four core items are hour bands scored as hours.,,
+st_measure_name,inferred,"Y2, Y3, C11_child, C12_child","""Custom""","Youth Risk Behavior Survey / Healthy Youth Survey items, adapted for parent response for younger children (paper's Methods, doi:10.1001/jamanetworkopen.2021.27892; codebook labels); no standalone instrument.",,
+st_responder,inferred,cohort,"if_else(cohort == ""6-10"", ""Parent or carer"", ""Self"")","Cut by questionnaire form (cohort): at 6-10 the parent reported the child's screen items (Y2, Y3); at 11-17 the child self-reported (C11_child, C12_child), per the paper's Methods (doi:10.1001/jamanetworkopen.2021.27892). No dyad has both reports.",,
+st_total_wd,unavailable,,,No weekday/weekend split.,,
+st_total_we,unavailable,,,No weekday/weekend split.,,
+st_total,incompatible,"Y2, Y3, C11_child, C12_child",,"Only separately asked watching items (Y2, C11_child, on st_watch) and gaming or computer items (Y3, C12_child, on st_leisure); the paper's total is a sum of them, not an all-screen item (DR-0002, DR-0004).",,
+st_watch_wd,unavailable,,,No weekday/weekend split.,,
+st_watch_we,unavailable,,,No weekday/weekend split.,,
+st_watch,partial,"cohort, Y2, C11_child","recode_values(
+  if_else(cohort == ""6-10"", as.numeric(Y2), as.numeric(C11_child)),
+  1 ~ 0,
+  2 ~ 0.5,
+  3 ~ 1,
+  4 ~ 2,
+  5 ~ 3,
+  6 ~ 4,
+  7 ~ 5
+)","6-10 rows: parent report, Y2 'how many hours of TV did your child watch' (response 1 'They did not watch TV or movies'; device scope undocumented). 11-17 rows: child report, C11_child, TV shows, movies or streamed videos on any device (first-person response options; its label's 'you and your child CO-VIEW' is the parent stem, and the paper treats it as the child's own viewing). None = 0, less than 1 hour = 0.5, point labels at their value, top band 5 or more = 5. Partial: C11_child's stem asks about yesterday, one recalled day rather than a usual day (its response 1 says 'average school day'); Y2's label gives no reference period.",,
+st_game_wd,unavailable,,,No weekday/weekend split.,,
+st_game_we,unavailable,,,No weekday/weekend split.,,
+st_game,incompatible,"Y3, C12_child",,Examples name social media; see st_leisure.,,
+st_game_comp_wd,unavailable,,,No device split; see st_leisure.,,
+st_game_comp_we,unavailable,,,No device split; see st_leisure.,,
+st_game_comp,unavailable,,,No device split; see st_leisure.,,
+st_game_console_wd,unavailable,,,No device split; see st_leisure.,,
+st_game_console_we,unavailable,,,No device split; see st_leisure.,,
+st_game_console,unavailable,,,No device split; see st_leisure.,,
+st_game_handheldconsole_wd,unavailable,,,No device split; see st_leisure.,,
+st_game_handheldconsole_we,unavailable,,,No device split; see st_leisure.,,
+st_game_handheldconsole,unavailable,,,No device split; see st_leisure.,,
+st_game_active_wd,unavailable,,,No device split; see st_leisure.,,
+st_game_active_we,unavailable,,,No device split; see st_leisure.,,
+st_game_active,unavailable,,,No device split; see st_leisure.,,
+st_game_phone_wd,unavailable,,,No device split; see st_leisure.,,
+st_game_phone_we,unavailable,,,No device split; see st_leisure.,,
+st_game_phone,unavailable,,,No device split; see st_leisure.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_leisure.,,
+st_game_tablet_we,unavailable,,,No device split; see st_leisure.,,
+st_game_tablet,unavailable,,,No device split; see st_leisure.,,
+st_comp_nongaming_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming_we,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming,incompatible,"Y3, C12_child",,Computer use pooled with gaming and other devices; see st_leisure.,,
+st_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_we,unavailable,,,No weekday/weekend split.,,
+st_comp,incompatible,"Y3, C12_child",,Examples name social media; see st_leisure.,,
+st_tablet_wd,unavailable,,,No device split; see st_leisure.,,
+st_tablet_we,unavailable,,,No device split; see st_leisure.,,
+st_tablet,unavailable,,,No device split; see st_leisure.,,
+st_phone_wd,unavailable,,,No device split; see st_leisure.,,
+st_phone_we,unavailable,,,No device split; see st_leisure.,,
+st_phone,unavailable,,,No device split; see st_leisure.,,
+st_socmedia_wd,unavailable,,,No weekday/weekend split.,,
+st_socmedia_we,unavailable,,,No weekday/weekend split.,,
+st_socmedia,incompatible,C12_child,,Social media is only an example inside the bundled item C12_child; see st_leisure.,,
+st_educational_wd,unavailable,,,Not collected.,,
+st_educational_we,unavailable,,,Not collected.,,
+st_educational,unavailable,,,Not collected.,,
+st_leisure_wd,unavailable,,,No weekday/weekend split.,,
+st_leisure_we,unavailable,,,No weekday/weekend split.,,
+st_leisure,partial,"cohort, Y3, C12_child","if_else(
+  cohort == ""6-10"",
+  recode_values(as.numeric(Y3), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5),
+  recode_values(as.numeric(C12_child), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 3, 5 ~ 4, 6 ~ 5)
+)","6-10 rows: parent report, Y3 (response 1 'They did not play video games or use a computer for something that is not school work'; 1=0, 2=0.5, 3=1, 4=2, 5=3, 6=4, 7=5). 11-17 rows: child report, C12_child 'Thinking about yesterday, how many hours did you play video or computer games, or use a computer for something that is not school work? (Count time spent on things such as Xbox, PlayStation, tablet or smartphone, social media)' (1=0, 2=0.5, 3=2, 4=3, 5=4, 6=5). Y3 taken as the parent form of C12_child (paper: YRBS items adapted for parent report; doi:10.1001/jamanetworkopen.2021.27892). Six options; the labels give no 1 hour per day option (contributor asked); top band 5 or more = 5. Partial: leaves out TV; C12_child's stem asks about yesterday, one recalled day rather than a usual day; Y3's label gives no reference period.",,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,unavailable,,,Not collected.,,
+st_internet_we,unavailable,,,Not collected.,,
+st_internet,unavailable,,,Not collected.,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,unavailable,,,Not collected.,,
+st_messaging_we,unavailable,,,Not collected.,,
+st_messaging,unavailable,,,Not collected.,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
+st_email,unavailable,,,Not collected.,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,unavailable,,,Not collected.,,
+acc_academachment_lettergrades,unavailable,,,Not collected.,,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
+acc_schoolengage_caresschool,unavailable,,,Not collected.,,
+acc_schoolengage_homework,unavailable,,,Not collected.,,
+acc_schoolengage_self,unavailable,,,Not collected.,,
+acc_schoolengage_teacher,unavailable,,,Not collected.,,
+acc_schoolengage_measure,unavailable,,,See acc_schoolengage_self.,,
+acc_homework_time,unavailable,,,Not collected.,,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolstress_self,unavailable,,,Not collected.,,
+acc_schoolstress_measure,unavailable,,,See acc_schoolstress_self.,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
+acc_academachment_parentrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,unavailable,,,Not collected.,,
+acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered.,,
+acc_literacy_stdtest,unavailable,,,Not collected.,,
+acc_literacy_bas_wordreading,unavailable,,,BAS II not administered.,,
+acc_learningdisab_diagnosed,partial,"cohort, S19_5, Q7_5","recode_values(
+  if_else(cohort == ""6-10"", as.numeric(S19_5), as.numeric(Q7_5)),
+  1 ~ ""Currently diagnosed"",
+  2 ~ ""Never diagnosed"",
+  default = NA_character_
+)","Parent report. 6-10 rows: S19_5 'Has your child ever been diagnosed with... -- Learning disabilities'; 11-17 rows: Q7_5, the same block (label 'Parent report of child mental health diagnosis -- Learning disabilities', stem not printed). Told = Currently diagnosed, not told = Never diagnosed, prefer not to respond = NA. Partial: ever-told item with no current or previous split; no professional named; diagnosed read as a clinician's diagnosis (the paper's Methods say 'diagnosed or evaluated', doi:10.1001/jamanetworkopen.2021.27892). At 11-17 the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not collected.,,
+acc_graderepeated,unavailable,,,Not collected.,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_self,incompatible,"C1_2_c, C1_10_c, C1_15_c, C1_21_c, C1_25_c",,"No attention scale; only the self-report SDQ hyperactivity/inattention items (mixed content), scored on beh_hyper_sdq_self.",,
+beh_hyper_self,incompatible,"C1_2_c, C1_10_c, C1_15_c, C1_21_c, C1_25_c",,"No hyperactivity-impulsivity scale; only the self-report SDQ hyperactivity/inattention items, scored on beh_hyper_sdq_self.",,
+beh_adhdsymp_self,incompatible,"C1_2_c, C1_10_c, C1_15_c, C1_21_c, C1_25_c",,"No ADHD symptom scale; only the self-report SDQ hyperactivity/inattention items, scored on beh_hyper_sdq_self.",,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_atten_singleitem_teacher,unavailable,,,Not collected.,,
+beh_impulsivity_self,incompatible,C1_21_c,,"No impulsivity scale; only SDQ item 21 'I think before I do things', a truth rating scored in beh_hyper_sdq_self.",,
+beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_selfreg_parent,incompatible,"Y1_2, Y1_10, Y1_15, Y1_21, Y1_25, Y1_5, Y1_7, Y1_12, Y1_18, Y1_22",,"Only parent SDQ problem scales (hyperactivity/inattention, conduct problems), which stay on beh_hyper_sdq_parent and beh_conduct_sdq_parent; no self-regulation scale.",,
+beh_emotdysreg_parent,incompatible,"Y1_2, Y1_10, Y1_15, Y1_21, Y1_25, Y1_5, Y1_7, Y1_12, Y1_18, Y1_22, Y1_3, Y1_8, Y1_13, Y1_16, Y1_24",,"Only parent SDQ problem scales, which stay on beh_hyper_sdq_parent, beh_conduct_sdq_parent and mh_emotsymp_sdq_parent; no emotion-dysregulation scale.",,
+beh_emotreg_parent,incompatible,"Y1_2, Y1_10, Y1_15, Y1_21, Y1_25, Y1_5, Y1_7, Y1_12, Y1_18, Y1_22, Y1_3, Y1_8, Y1_13, Y1_16, Y1_24",,"Only parent SDQ problem scales, which stay on beh_hyper_sdq_parent, beh_conduct_sdq_parent and mh_emotsymp_sdq_parent; no emotion regulation scale.",,
+beh_selfreg_self,incompatible,"C1_2_c, C1_10_c, C1_15_c, C1_21_c, C1_25_c, C1_5_c, C1_7_c, C1_12_c, C1_18_c, C1_22_c",,"Only self-report SDQ problem scales (hyperactivity/inattention, conduct problems), which stay on beh_hyper_sdq_self and beh_conduct_sdq_self; no self-control scale.",,
+beh_emotreg_self,incompatible,"C1_2_c, C1_10_c, C1_15_c, C1_21_c, C1_25_c, C1_5_c, C1_7_c, C1_12_c, C1_18_c, C1_22_c, C1_3_c, C1_8_c, C1_13_c, C1_16_c, C1_24_c",,"Only self-report SDQ problem scales, which stay on beh_hyper_sdq_self, beh_conduct_sdq_self and mh_emotsymp_sdq_self; no emotion regulation scale.",,
+beh_emotdysreg_self,incompatible,"C1_2_c, C1_10_c, C1_15_c, C1_21_c, C1_25_c, C1_5_c, C1_7_c, C1_12_c, C1_18_c, C1_22_c, C1_3_c, C1_8_c, C1_13_c, C1_16_c, C1_24_c",,"Only self-report SDQ problem scales, which stay on beh_hyper_sdq_self, beh_conduct_sdq_self and mh_emotsymp_sdq_self; no emotion dysregulation scale.",,
+beh_emotreg_suppression_self,unavailable,,,Not collected.,,
+beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
+beh_emotaware_self,unavailable,,,Not collected.,,
+beh_selfreg_measure,unavailable,,,See beh_selfreg_self.,,
+beh_temp_negaffect_parent,unavailable,,,Not collected.,,
+beh_temp_surgency_parent,unavailable,,,Not collected.,,
+beh_temp_measure,unavailable,,,See beh_temp_negaffect_parent.,,
+beh_bullied,incompatible,"Y1_12, C1_12_c",,"Only SDQ item 12 (parent: 'Often fights with other children or bullies them'; self: 'I fight a lot. I can make other people do what I want'), truth ratings scored in beh_conduct_sdq_*.",,
+beh_beenbullied,incompatible,"Y1_19, C1_19_c",,"Only SDQ item 19 'picked on or bullied' (parent and self), a truth rating scored in beh_peerprob_sdq_*.",,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,incompatible,"Y1_12, C1_12_c",,"Only SDQ item 12 (fights; parent and self), a truth rating scored in beh_conduct_sdq_*.",,
+beh_truancy,unavailable,,,Not collected.,,
+beh_suspended,unavailable,,,Not collected.,,
+beh_stealing,incompatible,"Y1_22, C1_22_c",,"Only SDQ item 22 'steals from home, school or elsewhere' (parent and self), a truth rating scored in beh_conduct_sdq_*.",,
+beh_vandalism,unavailable,,,Not collected.,,
+beh_alcohol_self,unavailable,,,Not collected.,,
+beh_tobacco_self,unavailable,,,Not collected.,,
+beh_vaping_self,unavailable,,,Not collected.,,
+beh_cannabis_self,unavailable,,,Not collected.,,
+beh_drugs_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,compatible,"Y1_5, Y1_7, Y1_12, Y1_18, Y1_22","local({
+  m <- cbind(
+    as.numeric(Y1_5) - 1,
+    3 - as.numeric(Y1_7),
+    as.numeric(Y1_12) - 1,
+    as.numeric(Y1_18) - 1,
+    as.numeric(Y1_22) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","6-10 cohort only (11-17 rows are self-report on the _self row). SDQ conduct problems, parent report: items 5, 7 (reversed), 12, 18, 22. 1-3 rebased to 0-2; SDQ rule (mean of answered items x 5, rounded half up; NA under 3 of 5). Range 0-10; no subscale is released, so scored from the items.",,
+beh_hyper_sdq_parent,compatible,"Y1_2, Y1_10, Y1_15, Y1_21, Y1_25","local({
+  m <- cbind(
+    as.numeric(Y1_2) - 1,
+    as.numeric(Y1_10) - 1,
+    as.numeric(Y1_15) - 1,
+    3 - as.numeric(Y1_21),
+    3 - as.numeric(Y1_25)
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","6-10 cohort only (11-17 rows are self-report on the _self row). SDQ hyperactivity/inattention, parent report: items 2, 10, 15, 21 and 25 (21 and 25 reversed). 1-3 rebased to 0-2; SDQ rule (mean of answered items x 5, rounded half up; NA under 3 of 5). Range 0-10; no subscale is released, so scored from the items.",,
+beh_peerprob_sdq_parent,compatible,"Y1_6, Y1_11, Y1_14, Y1_19, Y1_23","local({
+  m <- cbind(
+    as.numeric(Y1_6) - 1,
+    3 - as.numeric(Y1_11),
+    3 - as.numeric(Y1_14),
+    as.numeric(Y1_19) - 1,
+    as.numeric(Y1_23) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","6-10 cohort only (11-17 rows are self-report on the _self row). SDQ peer problems, parent report: items 6, 11 (reversed), 14 (reversed), 19, 23. 1-3 rebased to 0-2; SDQ rule (mean of answered items x 5, rounded half up; NA under 3 of 5). Range 0-10; no subscale is released, so scored from the items.",,
+beh_prosocial_sdq_parent,compatible,"Y1_1, Y1_4, Y1_9, Y1_17, Y1_20","local({
+  m <- cbind(
+    as.numeric(Y1_1) - 1,
+    as.numeric(Y1_4) - 1,
+    as.numeric(Y1_9) - 1,
+    as.numeric(Y1_17) - 1,
+    as.numeric(Y1_20) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","6-10 cohort only (11-17 rows are self-report on the _self row). SDQ prosocial, parent report: items 1, 4, 9, 17, 20, none reversed. 1-3 rebased to 0-2; SDQ rule (mean of answered items x 5, rounded half up; NA under 3 of 5). Range 0-10; no subscale is released, so scored from the items.",,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
+beh_agg_self,incompatible,"C1_5_c, C1_7_c, C1_12_c, C1_18_c, C1_22_c",,"No aggression scale; only the self-report SDQ conduct problems items, scored on beh_conduct_sdq_self.",,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,incompatible,C1_12_c,,"No physical aggression scale; only SDQ item 12 'I fight a lot. I can make other people do what I want', a truth rating scored in beh_conduct_sdq_self.",,
+beh_aggphys_measure,unavailable,,,See beh_aggphys_self.,,
+beh_aggrel_self,unavailable,,,Not collected.,,
+beh_aggrel_measure,unavailable,,,See beh_aggrel_self.,,
+beh_anger_self,incompatible,C1_5_c,,"No anger scale; only SDQ item 5 'I get very angry and often lose my temper', a truth rating scored in beh_conduct_sdq_self.",,
+beh_anger_measure,unavailable,,,See beh_anger_self.,,
+beh_aggbeliefs_self,unavailable,,,Not collected.,,
+beh_agghostattrib_self,unavailable,,,Not collected.,,
+beh_aggfantasy_self,unavailable,,,Not collected.,,
+beh_aggcog_measure,unavailable,,,See beh_aggbeliefs_self.,,
+beh_agg_singleitem_teacher,unavailable,,,Not collected.,,
+beh_disrupt_singleitem_teacher,unavailable,,,Not collected.,,
+beh_aggphys_teacher,unavailable,,,Not collected.,,
+beh_aggrel_teacher,unavailable,,,Not collected.,,
+beh_agg_teacher,unavailable,,,Not collected.,,
+beh_victphys_teacher,unavailable,,,Not collected.,,
+beh_victrel_teacher,unavailable,,,Not collected.,,
+beh_vict_teacher,unavailable,,,Not collected.,,
+beh_atten_teacher,unavailable,,,Not collected.,,
+beh_hyper_teacher,unavailable,,,Not collected.,,
+beh_adhdsymp_teacher,unavailable,,,Not collected.,,
+beh_ext_teacher,unavailable,,,Not collected.,,
+beh_prosocial_teacher,unavailable,,,Not collected.,,
+beh_socialskills_teacher,unavailable,,,Not collected.,,
+beh_teacher_measure,unavailable,,,See beh_aggphys_teacher.,,
+beh_argues,unavailable,,,Not collected.,,
+beh_persistence_finishwork,incompatible,"Y1_25, C1_25_c",,"Only SDQ item 25 (parent 'Good attention span, sees chores or homework through to the end'; self 'I finish the work I'm doing'), a truth rating scored in beh_hyper_sdq_*.",,
+beh_emotreg_stayscalm,incompatible,"Y1_5, C1_5_c",,"Only SDQ item 5 (parent 'Often loses temper'; self 'I get very angry and often lose my temper'), problem-worded truth ratings scored in beh_conduct_sdq_*.",,
+beh_peerprob_makefriends,incompatible,"Y1_11, Y1_14, C1_11_c, C1_14_c",,"Only SDQ items 11 and 14 (has a good friend, generally liked; parent and self), truth ratings scored in beh_peerprob_sdq_*.",,
+beh_conduct_diagnosed,partial,"cohort, S19_6, Q7_6","recode_values(
+  if_else(cohort == ""6-10"", as.numeric(S19_6), as.numeric(Q7_6)),
+  1 ~ ""Currently diagnosed"",
+  2 ~ ""Never diagnosed"",
+  default = NA_character_
+)","Parent report. 6-10 rows: S19_6 'Has your child ever been diagnosed with... -- Behavioral problems'; 11-17 rows: Q7_6, the same block (label 'Parent report of child mental health diagnosis -- Behavioral problems', stem not printed). Told = Currently diagnosed, not told = Never diagnosed, prefer not to respond = NA. Partial: ever-told item with no current or previous split; no professional named; diagnosed read as a clinician's diagnosis (the paper's Methods say 'diagnosed or evaluated', doi:10.1001/jamanetworkopen.2021.27892). At 11-17 the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,partial,"cohort, S19_3, Q7_3","recode_values(
+  if_else(cohort == ""6-10"", as.numeric(S19_3), as.numeric(Q7_3)),
+  1 ~ ""Currently diagnosed"",
+  2 ~ ""Never diagnosed"",
+  default = NA_character_
+)","Parent report. 6-10 rows: S19_3 'Has your child ever been diagnosed with... -- ADHD'; 11-17 rows: Q7_3, the same block (label 'Parent report of child mental health diagnosis -- ADHD', stem not printed). Told = Currently diagnosed, not told = Never diagnosed, prefer not to respond = NA. Partial: ever-told item with no current or previous split; no professional named; diagnosed read as a clinician's diagnosis (the paper's Methods say 'diagnosed or evaluated', doi:10.1001/jamanetworkopen.2021.27892). At 11-17 the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",,
+beh_autism_diagnosed,partial,"cohort, S19_4, Q7_4","recode_values(
+  if_else(cohort == ""6-10"", as.numeric(S19_4), as.numeric(Q7_4)),
+  1 ~ ""Currently diagnosed"",
+  2 ~ ""Never diagnosed"",
+  default = NA_character_
+)","Parent report. 6-10 rows: S19_4 'Has your child ever been diagnosed with... -- Autism'; 11-17 rows: Q7_4, the same block (label 'Parent report of child mental health diagnosis -- Autism', stem not printed). Told = Currently diagnosed, not told = Never diagnosed, prefer not to respond = NA. Partial: ever-told item with no current or previous split; no professional named; diagnosed read as a clinician's diagnosis (the paper's Methods say 'diagnosed or evaluated', doi:10.1001/jamanetworkopen.2021.27892). At 11-17 the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",,
+beh_autism_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,compatible,"C1_5_c, C1_7_c, C1_12_c, C1_18_c, C1_22_c","local({
+  m <- cbind(
+    as.numeric(C1_5_c) - 1,
+    3 - as.numeric(C1_7_c),
+    as.numeric(C1_12_c) - 1,
+    as.numeric(C1_18_c) - 1,
+    as.numeric(C1_22_c) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","11-17 cohort only (6-10 rows are parent report on the _parent row). SDQ conduct problems, child self-report, ages 11-17 with none under 11: items 5, 7 (reversed), 12, 18, 22. 1-3 rebased to 0-2; SDQ rule (mean of answered items x 5, rounded half up; NA under 3 of 5). Range 0-10; no subscale is released, so scored from the items.",,
+beh_hyper_sdq_self,compatible,"C1_2_c, C1_10_c, C1_15_c, C1_21_c, C1_25_c","local({
+  m <- cbind(
+    as.numeric(C1_2_c) - 1,
+    as.numeric(C1_10_c) - 1,
+    as.numeric(C1_15_c) - 1,
+    3 - as.numeric(C1_21_c),
+    3 - as.numeric(C1_25_c)
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","11-17 cohort only (6-10 rows are parent report on the _parent row). SDQ hyperactivity/inattention, child self-report, ages 11-17 with none under 11: items 2, 10, 15, 21 and 25 (21 and 25 reversed). 1-3 rebased to 0-2; SDQ rule (mean of answered items x 5, rounded half up; NA under 3 of 5). Range 0-10; no subscale is released, so scored from the items.",,
+beh_peerprob_sdq_self,compatible,"C1_6_c, C1_11_c, C1_14_c, C1_19_c, C1_23_c","local({
+  m <- cbind(
+    as.numeric(C1_6_c) - 1,
+    3 - as.numeric(C1_11_c),
+    3 - as.numeric(C1_14_c),
+    as.numeric(C1_19_c) - 1,
+    as.numeric(C1_23_c) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","11-17 cohort only (6-10 rows are parent report on the _parent row). SDQ peer problems, child self-report, ages 11-17 with none under 11: items 6, 11 (reversed), 14 (reversed), 19, 23. 1-3 rebased to 0-2; SDQ rule (mean of answered items x 5, rounded half up; NA under 3 of 5). Range 0-10; no subscale is released, so scored from the items.",,
+beh_prosocial_sdq_self,compatible,"C1_1_c, C1_4_c, C1_9_c, C1_17_c, C1_20_c","local({
+  m <- cbind(
+    as.numeric(C1_1_c) - 1,
+    as.numeric(C1_4_c) - 1,
+    as.numeric(C1_9_c) - 1,
+    as.numeric(C1_17_c) - 1,
+    as.numeric(C1_20_c) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","11-17 cohort only (6-10 rows are parent report on the _parent row). SDQ prosocial, child self-report, ages 11-17 with none under 11: items 1, 4, 9, 17, 20, none reversed. 1-3 rebased to 0-2; SDQ rule (mean of answered items x 5, rounded half up; NA under 3 of 5). Range 0-10; no subscale is released, so scored from the items.",,
+beh_conduct_sdq_teacher,unavailable,,,SDQ teacher form not administered.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ teacher form not administered.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ teacher form not administered.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ teacher form not administered.,,
+beh_ext_sdq_parent,unavailable,,,Derive at analysis from the subscale rows.,,
+beh_ext_sdq_self,unavailable,,,Derive at analysis from the subscale rows.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ teacher form not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_socprob_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_ext_self,incompatible,"C1_5_c, C1_7_c, C1_12_c, C1_18_c, C1_22_c, C1_2_c, C1_10_c, C1_15_c, C1_21_c, C1_25_c",,"Only the self-report SDQ conduct and hyperactivity/inattention items, which stay with the SDQ rows (beh_ext_sdq_self, derived at analysis).",,
+beh_opp_self,incompatible,"C1_5_c, C1_7_c, C1_12_c, C1_18_c, C1_22_c",,"No oppositional scale; only the self-report SDQ conduct problems items, which stay on beh_conduct_sdq_self.",,
+beh_conduct_self,incompatible,"C1_5_c, C1_7_c, C1_12_c, C1_18_c, C1_22_c",,"Only the self-report SDQ conduct problems items, which stay on beh_conduct_sdq_self.",,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,incompatible,"Y1_2, Y1_10, Y1_15, Y1_21, Y1_25",,"Only the parent SDQ hyperactivity/inattention items, which stay on beh_hyper_sdq_parent.",,
+beh_hyper_parent,incompatible,"Y1_2, Y1_10, Y1_15, Y1_21, Y1_25",,"Only the parent SDQ hyperactivity/inattention items, which stay on beh_hyper_sdq_parent.",,
+beh_adhdsymp_parent,incompatible,"Y1_2, Y1_10, Y1_15, Y1_21, Y1_25",,"Only the parent SDQ hyperactivity/inattention items, which stay on beh_hyper_sdq_parent.",,
+beh_opp_parent,incompatible,"Y1_5, Y1_7, Y1_12, Y1_18, Y1_22",,"Only the parent SDQ conduct problems items, which stay on beh_conduct_sdq_parent.",,
+beh_conduct_parent,incompatible,"Y1_5, Y1_7, Y1_12, Y1_18, Y1_22",,"Only the parent SDQ conduct problems items, which stay on beh_conduct_sdq_parent.",,
+beh_ext_parent,incompatible,"Y1_5, Y1_7, Y1_12, Y1_18, Y1_22, Y1_2, Y1_10, Y1_15, Y1_21, Y1_25",,"Only the parent SDQ conduct and hyperactivity/inattention items, which stay with the SDQ rows (beh_ext_sdq_parent, derived at analysis).",,
+beh_parent_measure,inferred,cohort,"if_else(
+  cohort == ""6-10"",
+  ""Strengths and Difficulties Questionnaire, parent form (responding parent, ages 6-10 by design); prosocial: prosocial subscale, 5 of 5 items, 0-2 item scoring (range 0-10), sum; none reversed; items recoded from 1-3; SDQ rule (mean of answered items x 5, rounded half up; NA with fewer than 3 of 5 answered)"",
+  NA_character_
+)","Describes beh_prosocial_parent, the only generic parent row mapped; 6-10 cohort only.",,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,compatible,"C1_1_c, C1_4_c, C1_9_c, C1_17_c, C1_20_c","local({
+  m <- cbind(
+    as.numeric(C1_1_c) - 1,
+    as.numeric(C1_4_c) - 1,
+    as.numeric(C1_9_c) - 1,
+    as.numeric(C1_17_c) - 1,
+    as.numeric(C1_20_c) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","11-17 cohort only. Repeats beh_prosocial_sdq_self: SDQ prosocial subscale, child self-report (items 1, 4, 9, 17, 20), 0-2 items, SDQ rule, range 0-10.",,
+beh_prosocial_measure,inferred,cohort,"if_else(
+  cohort == ""11-17"",
+  ""Strengths and Difficulties Questionnaire prosocial subscale (self-report), 5 of 5 items, 0-2 item scoring (range 0-10), sum; none reversed; items recoded from 1-3; SDQ rule (mean of answered items x 5, rounded half up; NA with fewer than 3 of 5 answered)"",
+  NA_character_
+)",Describes beh_prosocial_self; 11-17 cohort only.,,
+beh_prosocial_parent,compatible,"Y1_1, Y1_4, Y1_9, Y1_17, Y1_20","local({
+  m <- cbind(
+    as.numeric(Y1_1) - 1,
+    as.numeric(Y1_4) - 1,
+    as.numeric(Y1_9) - 1,
+    as.numeric(Y1_17) - 1,
+    as.numeric(Y1_20) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","6-10 cohort only. Repeats beh_prosocial_sdq_parent: SDQ prosocial subscale, parent report (items 1, 4, 9, 17, 20), 0-2 items, SDQ rule, range 0-10.",,
+beh_socialskills_self,unavailable,,,Not collected.,,
+beh_socialskills_measure,unavailable,,,See beh_socialskills_self.,,
+beh_socialskills_parent,unavailable,,,Not collected.,,
+beh_prosocial_singleitem_teacher,unavailable,,,Not collected.,,
+beh_empathy_self,unavailable,,,Not collected.,,
+beh_empathy_measure,unavailable,,,See beh_empathy_self.,,
+beh_problematicuse_self,incompatible,"Q10_1, Q10_2, Q10_3, Q10_4, Q10_5, Q10_6, Q10_7, Q10_8, Q10_9",,"No self-report scale; only the parent-rated Problematic Media Use Measure items, scored on beh_problematicuse_parent.",,
+beh_problematicuse_parent,compatible,"Q10_1, Q10_2, Q10_3, Q10_4, Q10_5, Q10_6, Q10_7, Q10_8, Q10_9","(as.numeric(Q10_1) +
+  as.numeric(Q10_2) +
+  as.numeric(Q10_3) +
+  as.numeric(Q10_4) +
+  as.numeric(Q10_5) +
+  as.numeric(Q10_6) +
+  as.numeric(Q10_7) +
+  as.numeric(Q10_8) +
+  as.numeric(Q10_9)) /
+  9","Problematic Media Use Measure short form (Q10_1 to Q10_9, 'My child sneaks using screen media' ...), the responding parent about the child, both cohorts; 1 never to 5 always, complete-case mean, range 1-5, higher = more problematic use. At 11-17 the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",,
+beh_problematicuse_measure,inferred,,"""Problematic Media Use Measure short form (screen media), 9 of 9 items, 1-5 item scoring (range 1-5), mean; responding parent; complete-case""","Describes beh_problematicuse_parent, both cohorts.",,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,No cognitive testing.,,
+cog_phono_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhibcont_nepsy,unavailable,,,No cognitive testing.,,
+cog_vismotor_nepsy,unavailable,,,No cognitive testing.,,
+cog_verbalfluency_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhib_nihtb_flanker,unavailable,,,No cognitive testing.,,
+cog_flex_nihtb_dccs,unavailable,,,No cognitive testing.,,
+cog_wm_nihtb_listsort,unavailable,,,No cognitive testing.,,
+cog_speed_nihtb_pattern,unavailable,,,No cognitive testing.,,
+cog_epimem_nihtb_picseq,unavailable,,,No cognitive testing.,,
+cog_vocab_nihtb_picvocab,unavailable,,,No cognitive testing.,,
+cog_fluidcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_crystcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_totalcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_atten_task,unavailable,,,No cognitive testing.,,
+cog_atten_task_measure,unavailable,,,See cog_atten_task.,,
+cog_flex_task,unavailable,,,No cognitive testing.,,
+cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
+cog_inhib_task,unavailable,,,No cognitive testing.,,
+cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
+cog_wm_task,unavailable,,,No cognitive testing.,,
+cog_wm_task_measure,unavailable,,,See cog_wm_task.,,
+cog_speed_task,unavailable,,,No cognitive testing.,,
+cog_speed_task_measure,unavailable,,,See cog_speed_task.,,
+cog_wm_digitspan,unavailable,,,No cognitive testing.,,
+cog_iq_fullscale,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_task,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_task_measure,unavailable,,,See cog_nonverbalreason_task.,,
+cog_vocab_bpvs,unavailable,,,No cognitive testing.,,
+cog_vocab_ppvt,unavailable,,,No cognitive testing.,,
+cog_vocab_receptive_task,unavailable,,,No cognitive testing.,,
+cog_vocab_expressive_task,unavailable,,,No cognitive testing.,,
+cog_vocab_task_measure,unavailable,,,See cog_vocab_receptive_task.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_execfunc_parent,unavailable,,,Not collected.,,
+cog_execfunc_teacher,unavailable,,,Not collected.,,
+cog_execfunc_self,unavailable,,,Not collected.,,
+cog_execfunc_measure,unavailable,,,See cog_execfunc_parent.,,
+cog_vocab_bas_naming,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,No cognitive testing.,,
+cog_spatial_bas_pattern,unavailable,,,No cognitive testing.,,
+cog_verbalreason_bas_versim,unavailable,,,No cognitive testing.,,
+cog_earlynumber_bas_enc,unavailable,,,No cognitive testing.,,
+cog_schoolread_bracken,unavailable,,,No cognitive testing.,,
+cog_earlylang_parent,unavailable,,,Not collected.,,
+cog_earlylang_measure,unavailable,,,See cog_earlylang_parent.,,
+cog_creativethinking_stdtest,unavailable,,,No cognitive testing.,,
+cog_speechlang_diagnosed,unavailable,,,Not collected.,,
+cog_speechlang_diagnosed_severity,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
+mh_emotsymp_sdq_parent,compatible,"Y1_3, Y1_8, Y1_13, Y1_16, Y1_24","local({
+  m <- cbind(
+    as.numeric(Y1_3) - 1,
+    as.numeric(Y1_8) - 1,
+    as.numeric(Y1_13) - 1,
+    as.numeric(Y1_16) - 1,
+    as.numeric(Y1_24) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","6-10 cohort only (11-17 rows are self-report on the _self row). SDQ emotional symptoms, parent report: items 3, 8, 13, 16, 24, none reversed. 1-3 rebased to 0-2; SDQ rule (mean of answered items x 5, rounded half up; NA under 3 of 5). Range 0-10; no subscale is released, so scored from the items.",,
+mh_totaldiff_sdq_parent,compatible,"Y1_3, Y1_8, Y1_13, Y1_16, Y1_24, Y1_5, Y1_7, Y1_12, Y1_18, Y1_22, Y1_2, Y1_10, Y1_15, Y1_21, Y1_25, Y1_6, Y1_11, Y1_14, Y1_19, Y1_23","local({
+  m <- cbind(
+    as.numeric(Y1_3) - 1,
+    as.numeric(Y1_8) - 1,
+    as.numeric(Y1_13) - 1,
+    as.numeric(Y1_16) - 1,
+    as.numeric(Y1_24) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+}) +
+  local({
+    m <- cbind(
+      as.numeric(Y1_5) - 1,
+      3 - as.numeric(Y1_7),
+      as.numeric(Y1_12) - 1,
+      as.numeric(Y1_18) - 1,
+      as.numeric(Y1_22) - 1
+    )
+    m[!m %in% 0:2] <- NA
+    ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  }) +
+  local({
+    m <- cbind(
+      as.numeric(Y1_2) - 1,
+      as.numeric(Y1_10) - 1,
+      as.numeric(Y1_15) - 1,
+      3 - as.numeric(Y1_21),
+      3 - as.numeric(Y1_25)
+    )
+    m[!m %in% 0:2] <- NA
+    ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  }) +
+  local({
+    m <- cbind(
+      as.numeric(Y1_6) - 1,
+      3 - as.numeric(Y1_11),
+      3 - as.numeric(Y1_14),
+      as.numeric(Y1_19) - 1,
+      as.numeric(Y1_23) - 1
+    )
+    m[!m %in% 0:2] <- NA
+    ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  })","6-10 cohort only (11-17 rows are self-report on the _self row). Sum of the four SDQ difficulty subscales, parent report, each scored by the SDQ rule as on its own row; NA unless all four are scored. Range 0-40.",,
+mh_anx_diagnosed,partial,"cohort, S19_1, Q7_1","recode_values(
+  if_else(cohort == ""6-10"", as.numeric(S19_1), as.numeric(Q7_1)),
+  1 ~ ""Currently diagnosed"",
+  2 ~ ""Never diagnosed"",
+  default = NA_character_
+)","Parent report. 6-10 rows: S19_1 'Has your child ever been diagnosed with... -- Anxiety disorder'; 11-17 rows: Q7_1, the same block (label 'Parent report of child mental health diagnosis -- Anxiety disorder', stem not printed). Told = Currently diagnosed, not told = Never diagnosed, prefer not to respond = NA. Partial: ever-told item with no current or previous split; no professional named; diagnosed read as a clinician's diagnosis (the paper's Methods say 'diagnosed or evaluated', doi:10.1001/jamanetworkopen.2021.27892). At 11-17 the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,partial,"cohort, S19_2, Q7_2","recode_values(
+  if_else(cohort == ""6-10"", as.numeric(S19_2), as.numeric(Q7_2)),
+  1 ~ ""Currently diagnosed"",
+  2 ~ ""Never diagnosed"",
+  default = NA_character_
+)","Parent report. 6-10 rows: S19_2 'Has your child ever been diagnosed with... -- Depression'; 11-17 rows: Q7_2, the same block (label 'Parent report of child mental health diagnosis -- Depression', stem not printed). Told = Currently diagnosed, not told = Never diagnosed, prefer not to respond = NA. Partial: ever-told item with no current or previous split; no professional named; diagnosed read as a clinician's diagnosis (the paper's Methods say 'diagnosed or evaluated', doi:10.1001/jamanetworkopen.2021.27892). At 11-17 the parent may have described a sibling in multi-child families (26 dyads' ages differ by more than a year).",,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,compatible,"C1_3_c, C1_8_c, C1_13_c, C1_16_c, C1_24_c","local({
+  m <- cbind(
+    as.numeric(C1_3_c) - 1,
+    as.numeric(C1_8_c) - 1,
+    as.numeric(C1_13_c) - 1,
+    as.numeric(C1_16_c) - 1,
+    as.numeric(C1_24_c) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","11-17 cohort only (6-10 rows are parent report on the _parent row). SDQ emotional symptoms, child self-report, ages 11-17 with none under 11: items 3, 8, 13, 16, 24, none reversed. 1-3 rebased to 0-2; SDQ rule (mean of answered items x 5, rounded half up; NA under 3 of 5). Range 0-10; no subscale is released, so scored from the items.",,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ teacher form not administered.,,
+mh_totaldiff_sdq_self,compatible,"C1_3_c, C1_8_c, C1_13_c, C1_16_c, C1_24_c, C1_5_c, C1_7_c, C1_12_c, C1_18_c, C1_22_c, C1_2_c, C1_10_c, C1_15_c, C1_21_c, C1_25_c, C1_6_c, C1_11_c, C1_14_c, C1_19_c, C1_23_c","local({
+  m <- cbind(
+    as.numeric(C1_3_c) - 1,
+    as.numeric(C1_8_c) - 1,
+    as.numeric(C1_13_c) - 1,
+    as.numeric(C1_16_c) - 1,
+    as.numeric(C1_24_c) - 1
+  )
+  m[!m %in% 0:2] <- NA
+  ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+}) +
+  local({
+    m <- cbind(
+      as.numeric(C1_5_c) - 1,
+      3 - as.numeric(C1_7_c),
+      as.numeric(C1_12_c) - 1,
+      as.numeric(C1_18_c) - 1,
+      as.numeric(C1_22_c) - 1
+    )
+    m[!m %in% 0:2] <- NA
+    ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  }) +
+  local({
+    m <- cbind(
+      as.numeric(C1_2_c) - 1,
+      as.numeric(C1_10_c) - 1,
+      as.numeric(C1_15_c) - 1,
+      3 - as.numeric(C1_21_c),
+      3 - as.numeric(C1_25_c)
+    )
+    m[!m %in% 0:2] <- NA
+    ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  }) +
+  local({
+    m <- cbind(
+      as.numeric(C1_6_c) - 1,
+      3 - as.numeric(C1_11_c),
+      3 - as.numeric(C1_14_c),
+      as.numeric(C1_19_c) - 1,
+      as.numeric(C1_23_c) - 1
+    )
+    m[!m %in% 0:2] <- NA
+    ifelse(rowSums(!is.na(m)) >= 3, floor(rowMeans(m, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  })","11-17 cohort only (6-10 rows are parent report on the _parent row). Sum of the four SDQ difficulty subscales, child self-report, ages 11-17 with none under 11, each scored by the SDQ rule as on its own row; NA unless all four are scored. Range 0-40.",,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ teacher form not administered.,,
+mh_int_sdq_parent,unavailable,,,Derive at analysis from the subscale rows.,,
+mh_int_sdq_self,unavailable,,,Derive at analysis from the subscale rows.,,
+mh_int_sdq_teacher,unavailable,,,SDQ teacher form not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered.,,
+mh_distress_k6_self,unavailable,,,K6 not administered.,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered.,,
+mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered.,,
+mh_distress_self,incompatible,Q4_1,,"Only a parent's single rating of distress across all their children (Q4_1, CEFIS, 1-10); single items and parent-rated checklists never map here.",,
+mh_distress_measure,unavailable,,,See mh_distress_self.,,
+mh_anx_masc_self,unavailable,,,MASC not administered.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_withdrawn_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_somatic_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_emotreact_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,unavailable,,,Not collected.,,
+mh_dep_self,incompatible,"C1_3_c, C1_8_c, C1_13_c, C1_16_c, C1_24_c",,"No depression scale; only the self-report SDQ emotional symptoms items (mixed content), scored on mh_emotsymp_sdq_self.",,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,incompatible,"C1_3_c, C1_8_c, C1_13_c, C1_16_c, C1_24_c",,"No anxiety scale; only the self-report SDQ emotional symptoms items (mixed content), scored on mh_emotsymp_sdq_self.",,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_socanx_self,unavailable,,,Not collected.,,
+mh_socanx_measure,unavailable,,,See mh_socanx_self.,,
+mh_int_parent,incompatible,"Y1_3, Y1_8, Y1_13, Y1_16, Y1_24, Y1_6, Y1_11, Y1_14, Y1_19, Y1_23",,"Only the parent SDQ emotional symptoms and peer problems items, which stay with the SDQ rows (mh_int_sdq_parent, derived at analysis).",,
+mh_anx_parent,incompatible,"Y1_3, Y1_8, Y1_13, Y1_16, Y1_24, S20_1, S20_2, Q8_1, Q8_2",,"No parent-rated anxiety scale of the child; only the parent SDQ emotional symptoms items (mixed content, on mh_emotsymp_sdq_parent) and the parent's own anxiety items (on fam_parent_anx).",,
+mh_dep_parent,incompatible,"Y1_3, Y1_8, Y1_13, Y1_16, Y1_24, S20_3, S20_4, Q8_3, Q8_4",,"No parent-rated depression scale of the child; only the parent SDQ emotional symptoms items (mixed content, on mh_emotsymp_sdq_parent) and the parent's own depression items (on fam_parent_dep).",,
+mh_totalprob_parent,incompatible,"Y1_3, Y1_8, Y1_13, Y1_16, Y1_24, Y1_5, Y1_7, Y1_12, Y1_18, Y1_22, Y1_2, Y1_10, Y1_15, Y1_21, Y1_25, Y1_6, Y1_11, Y1_14, Y1_19, Y1_23",,"Only the parent SDQ difficulty items, whose total stays on mh_totaldiff_sdq_parent.",,
+mh_int_teacher,unavailable,,,Not collected.,,
+mh_anx_teacher,unavailable,,,Not collected.,,
+mh_dep_teacher,unavailable,,,Not collected.,,
+mh_totalprob_teacher,unavailable,,,Not collected.,,
+mh_depanx_diagnosed,incompatible,"S19_1, S19_2, Q7_1, Q7_2",,"Anxiety and depression are asked as separate items (S19_1, S19_2, Q7_1, Q7_2), mapped to mh_anx_diagnosed and mh_dep_diagnosed.",,
+mh_stress_self,incompatible,Q4_1,,"Only a parent's single rating of distress across all their children (Q4_1, CEFIS, 1-10), not the child's own report.",,
+mh_stress_scale_self,unavailable,,,Not collected.,,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,unavailable,,,Not collected.,,
+mh_lonely_scale_self,unavailable,,,Not collected.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,incompatible,C1_13_c,,"Only SDQ item 13 'I am often unhappy, depressed or tearful', a truth rating scored in mh_emotsymp_sdq_self.",,
+mh_worry_self,incompatible,"C1_8_c, C2_1_c, C2_2_c",,"Only SDQ item 8 'I worry a lot' (C1_8_c), a truth rating scored in mh_emotsymp_sdq_self, and single-topic COVID-19 worries (C2_1_c, C2_2_c).",,
+mh_irritable_self,incompatible,C1_5_c,,"Only SDQ item 5 'I get very angry and often lose my temper', a truth rating scored in beh_conduct_sdq_self.",,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_unhealthywtctrl_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,incompatible,C1_3_c,,"Only SDQ item 3 'I get a lot of headaches, stomach-aches or sickness', a truth rating scored in mh_emotsymp_sdq_self.",,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered.,,
+wb_bodyimage,unavailable,,,Not collected.,,
+wb_bodyesteem_self,unavailable,,,Not collected.,,
+wb_bodyesteem_measure,unavailable,,,See wb_bodyesteem_self.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
+wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_lifesat_self,unavailable,,,Not collected.,,
+wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
+wb_happiness_singleitem_self,incompatible,C1_13_c,,"Only SDQ item 13 'I am often unhappy, depressed or tearful', a truth rating scored in mh_emotsymp_sdq_self, not a happiness rating.",,
+wb_happiness_singleitem_parent,incompatible,Y1_13,,"Only parent SDQ item 13 'Often unhappy, depressed, or tearful', a truth rating scored in mh_emotsymp_sdq_parent, not a happiness rating.",,
+wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,unavailable,,,Not collected.,,
+wb_domainsat_friends_self,unavailable,,,Not collected.,,
+wb_domainsat_school_self,unavailable,,,Not collected.,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered.,,
+wb_selfesteem_singleitem_self,unavailable,,,Not collected.,,
+wb_selfesteem_self,unavailable,,,Not collected.,,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_selfefficacy_academic_self,unavailable,,,Not collected.,,
+wb_selfefficacy_academic_measure,unavailable,,,See wb_selfefficacy_academic_self.,,
+wb_control_self,unavailable,,,Not collected.,,
+wb_control_measure,unavailable,,,See wb_control_self.,,
+wb_selfconcept_academic_self,unavailable,,,Not collected.,,
+wb_selfconcept_maths_self,unavailable,,,Not collected.,,
+wb_selfconcept_verbal_self,unavailable,,,Not collected.,,
+wb_selfconcept_science_self,unavailable,,,Not collected.,,
+wb_selfconcept_social_self,unavailable,,,Not collected.,,
+wb_selfconcept_measure,unavailable,,,See wb_selfconcept_academic_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,SHS not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,unavailable,,,Not collected.,,
+wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,incompatible,genhealth,,"Only genhealth ('General health condition', Excellent to Poor), answered for all 1,000 rows with no question text; its subject is undocumented and it sits among the respondent's own profile items, so most likely the respondent's own health, not a rating of the child.",,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_negaffect_self,unavailable,,,Not collected.,,
+wb_negaffect_measure,unavailable,,,See wb_negaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,incompatible,"Q41_1_c, Q41_2_c, Q41_3_c",,"Only family-functioning items (express feelings, get along, share thoughts), on fam_functioning_self; not support the child receives.",,
+wb_socsupport_friends_self,unavailable,,,Not collected.,,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,unavailable,,,Not collected.,,
+hlth_sleep_we,unavailable,,,Not collected.,,
+hlth_sleep,unavailable,,,Not collected.,,
+hlth_sleepprob,unavailable,,,Not collected.,,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not collected.,,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,unavailable,,,Not collected.,,
+hlth_bmi_measure,unavailable,,,See hlth_bmi.,,
+hlth_bmi_z,unavailable,,,Not collected.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,compatible,"cohort, Y4, C3_child","if_else(cohort == ""6-10"", as.numeric(Y4), as.numeric(C3_child)) - 1","Days in the past week the child was physically active for at least 60 minutes a day (paper's Methods, doi:10.1001/jamanetworkopen.2021.27892). 6-10 rows: parent report (Y4); 11-17 rows: child self-report (C3_child). Codes 1-8 = 0-7 days, value minus 1.",,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,incompatible,Q5,,Only whether the respondent or someone they live with has a chronic health problem (Q5); not the child and no diagnosis.,,
+hlth_disability,unavailable,,,Not collected.,,
