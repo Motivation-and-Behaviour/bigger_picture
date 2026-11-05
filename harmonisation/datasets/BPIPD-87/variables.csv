@@ -8,6 +8,7 @@ survey_strata,unavailable,,,Not collected.,,
 survey_cluster,partial,Colegio,Colegio,"School code (`Colegio`, the third field of the student code): 56 codes against the 52 schools the study reports, 10 of them with one student (probably typing slips). Partial: schools were the recruitment units, but how they were chosen is not documented and the codes are undocumented.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","School survey of adolescents at the morning shift of 52 urban and suburban Argentine schools (Perez-Chada et al. 2023, doi:10.1371/journal.pone.0281379).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,"`Fecha de nacimiento`, `Submission Date`","local({
   days <- difftime(`Submission Date`, `Fecha de nacimiento`, units = ""days"")

@@ -8,6 +8,7 @@ survey_strata,partial,"LACODE, Genderg","paste0(LACODE, ""_"", recode_values(as.
 survey_cluster,unavailable,,,No cluster stage: pupils sampled individually within gender-by-local-authority strata.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","England-only postal and web survey of 15-year-olds sampled from the National Pupil Database (What About YOUth 2014, HSCIC technical report).",,
 parent_respondent,in_progress,,,,,
 age_years,inferred,,15.7,No age item. Sample born 1 Sep 1998 to 31 Aug 1999 (WAY 2014 technical report); cohort centre at the fieldwork midpoint (mid-Nov 2014) = 15.7.,,
 sex,proximate,Genderg,"recode_values(haven::as_factor(Genderg), ""Female or unknown"" ~ ""Female"", ""Male"" ~ ""Male"", default = ""Unknown"")","Self-reported gender, study-derived Genderg; Genderg merges unknown into Female.",,

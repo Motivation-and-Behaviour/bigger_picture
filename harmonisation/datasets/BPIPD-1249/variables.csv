@@ -8,6 +8,7 @@ survey_strata,partial,q430,as.character(as.numeric(q430)),"q430 ('Q430 - BTS - H
 survey_cluster,unavailable,,,Not collected.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Stratified random sample of the Harris Interactive online panel of US youth, invited by email (Gentile 2009, Psychological Science 20(5)).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,q105,as.numeric(q105) + 0.553,"q105 'Age Computed From Birth Year' (youth self-report, whole years 8-18, none missing). Derivation undocumented; read as 2006 minus birth year, because the grade reported at each age (q616) fits that reading and not 2007 minus birth year (age 12: 61% in 7th grade). Survey year minus birth year with reference year 2006 and fieldwork midpoint 20 January 2007 (2007.053): + 1.053 - 0.5 = + 0.553.",,
 sex,compatible,q102,"recode_values(as.numeric(q102), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","q102 'Gender.', youth self-report, male or female (no other option offered); none missing.",,
