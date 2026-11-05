@@ -28,6 +28,7 @@ survey_strata,compatible,"BDPTY200, participant_id, .wave","carry_within(
 survey_cluster,unavailable,,,Not in the supplied extract.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","UK birth cohort sampled from families eligible for child benefit, a stratified clustered random sample (MCS user guide).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,"BHCAGE00, CHCAGE00, DCMCS4AGE, EMCS5AGE, ECAGE0000, FCMCS6AG, GCMCS7AG","coalesce(
   as.numeric(BHCAGE00) / 365.25,

@@ -531,6 +531,8 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - The weight is the study's core release weight, and schools in a randomised trial are not survey clusters.
 - `rct_arm` takes the allocated arm in any controlled trial, randomised or not (whole classes or schools assigned by the investigators included), with the allocation design in notes, and datasets that are not trials keep 'Not a randomised trial.'
 - `family_id` takes the study's own family unit (a family, household, questionnaire or mother id) and `sample_component` the separately recruited sample a participant belongs to; both are constant within participant, NA where the dataset holds one participant per family or one sample, and neither is a stratum, cluster, wave or trial arm.
+- `sample_population` records how a participant was recruited: Clinical for recruitment because of a diagnosed or treated condition or through a specialist clinic, General population otherwise, well-child and vaccination clinics included.
+- A dataset recruited wholly from one population takes `sample_population` as a constant, inferred, from its design documentation, and a selection on a non-clinical characteristic such as weight status is not Clinical.
 - Wave coverage alone never lowers a status; list the waves in notes.
 - A second report on the same occasion is a tagged measure block, never a wave.
 - A `*_measure` string appears only in waves where its scale was given.
