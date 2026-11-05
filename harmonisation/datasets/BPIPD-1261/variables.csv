@@ -1,0 +1,792 @@
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,inferred,,as.character(seq_len(nrow(tbl))),"No identifier in the release: rows keyed by row position. The five files (kodomo, haha, jikan9, jikan10, jikan13) are bound by row position; grade by school type and mother's employment by diary activity support the alignment.",,
+wave,unavailable,,,Single collection occasion.,,
+data_year,inferred,,1995,Fieldwork September 1995 per the SSJDA catalogue record for survey 0004 (doi:10.34500/SSJDA.0004).,,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,unavailable,,,Not a survey sample.,,
+survey_strata,unavailable,,,Not a survey sample.,,
+survey_cluster,unavailable,,,Not a survey sample.,,
+family_id,unavailable,,,One participant per family.,,
+sample_component,unavailable,,,Single sample.,,
+parent_respondent,compatible,haha_Q21,"recode_values(as.numeric(haha_Q21), 1 ~ ""Mother"", 2 ~ ""Father"", 3 ~ ""Other carer"", default = ""Unknown"")","haha_Q21 who completed the parent questionnaire: child's mother 722, child's father 57, other 1 (relationship not named) = Other carer; no answer 4 = Unknown.",,
+age_years,inferred,kodomo_F2,"recode_values(as.numeric(kodomo_F2), 1 ~ 10.95, 2 ~ 11.95, 3 ~ 13.95, 4 ~ 14.95, default = NA_real_)","No age item. Design-assigned from grade (kodomo_F2): the centre of each grade's birth cohort at the September 1995 diary dates under the April school-year rule (School Education Act, Article 17; grade 5 in 1995 was born 2 April 1984 to 1 April 1985, centre 1 October 1984, 10.95 at 11 September 1995). Japanese grades 5, 6, 8, 9. Grade no answer (4) = NA.",,
+sex,compatible,kodomo_F1,"recode_values(as.numeric(kodomo_F1), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","kodomo_F1 sex item, child self-report: boy, girl; none missing.",,
+country,inferred,,"""Japan""","Constant: fieldwork in seven prefectures of Japan (SSJDA catalogue record for survey 0004, doi:10.34500/SSJDA.0004).",,
+state,unavailable,,,Not an Australian dataset.,,
+region,proximate,haha_F12A,"recode_values(
+  as.numeric(haha_F12A),
+  1 ~ ""JP-01"",
+  2 ~ ""JP: Tohoku"",
+  3 ~ ""JP: Kanto"",
+  4 ~ ""JP: Shinetsu"",
+  5 ~ ""JP: Hokuriku"",
+  6 ~ ""JP: Tokai"",
+  7 ~ ""JP: Kinki"",
+  8 ~ ""JP: Chugoku"",
+  9 ~ ""JP: Shikoku"",
+  10 ~ ""JP: Kyushu"",
+  default = ""Unknown""
+)","haha_F12A residence A, parent report: the study's ten regional blocks. Hokkaido is itself a first-level unit (JP-01); the other nine are groupings of prefectures, the finest grouping released, hence proximate. No answer (99) = Unknown.",,
+ethnicity,unavailable,,,Not collected.,,
+indigenous,unavailable,,,Not collected.,,
+minority,unavailable,,,Not collected.,,
+immigrant_background,unavailable,,,Not collected.,,
+born_in_country,unavailable,,,Not collected.,,
+home_language,unavailable,,,Not collected.,,
+ses_area,unavailable,,,Not collected.,,
+ses_household,incompatible,"haha_F4_1, haha_F4_2",,"No income, assets or subjective-standing item; parents' five-group occupation list has no class scheme or managerial level.",,
+ses_household_measure,unavailable,,,See ses_household.,,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,compatible,haha_F11_2,"lookup_values(
+  recode_values(
+    as.numeric(haha_F11_2),
+    1 ~ ""Junior high school graduate"",
+    2 ~ ""High school graduate"",
+    3 ~ ""Specialised training college graduate"",
+    4 ~ ""College of technology graduate"",
+    5 ~ ""Junior college graduate"",
+    6 ~ ""University graduate or above"",
+    default = ""No answer""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education""
+)","haha_F11_2 mother's highest education, parent report. Junior high and high school = Secondary school or less; specialised training college, college of technology and junior college (ISCED 5) = Post-secondary; university or above = Bachelor degree or higher; no answer (55) = Unknown. Shared education lookup.",maternal_education,
+paternal_education,compatible,haha_F11_1,"lookup_values(
+  recode_values(
+    as.numeric(haha_F11_1),
+    1 ~ ""Junior high school graduate"",
+    2 ~ ""High school graduate"",
+    3 ~ ""Specialised training college graduate"",
+    4 ~ ""College of technology graduate"",
+    5 ~ ""Junior college graduate"",
+    6 ~ ""University graduate or above"",
+    default = ""No answer""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education""
+)","haha_F11_1 father's highest education, parent report; levels as maternal_education; no answer (31) = Unknown. Shared education lookup.",maternal_education,
+parental_education,compatible,"haha_F11_1, haha_F11_2","lookup_values(
+  recode_values(
+    pmax(na_if(as.numeric(haha_F11_1), 9), na_if(as.numeric(haha_F11_2), 9), na.rm = TRUE),
+    1 ~ ""Junior high school graduate"",
+    2 ~ ""High school graduate"",
+    3 ~ ""Specialised training college graduate"",
+    4 ~ ""College of technology graduate"",
+    5 ~ ""Junior college graduate"",
+    6 ~ ""University graduate or above"",
+    default = ""No answer""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education""
+)","Highest of haha_F11_1 (father) and haha_F11_2 (mother) after dropping no-answer codes, so one known parent suffices; neither known = Unknown. Levels as maternal_education; shared education lookup.",maternal_education,
+maternal_employment,compatible,"haha_F1, haha_F13A, haha_Q21","case_when(
+  as.numeric(haha_F13A) == 3 & as.numeric(haha_Q21) == 2 ~ ""Unknown"",
+  as.numeric(haha_F1) %in% 1:4 ~ ""Employed"",
+  as.numeric(haha_F1) == 5 ~ ""Not employed"",
+  .default = ""Unknown""
+)","haha_F1 the child's mother's employment status now, parent report: regular employee, part-time work, paid home piecework and family business = Employed; full-time housewife = Not employed; no answer (3) = Unknown, as is the one father-completed form from a divorced or widowed household (haha_F13A, haha_Q21), read as a father-only household.",,
+maternal_age,incompatible,haha_F10,,"haha_F10 is the father's age, not the mother's; no mother's-age item and no row holds it.",,
+urbanicity,proximate,haha_F12B,"recode_values(as.numeric(haha_F12B), c(1, 2, 3, 4) ~ ""Urban"", 5 ~ ""Suburban"", default = ""Unknown"")","haha_F12B residence B, parent report: Tokyo metropolitan area, Keihanshin metropolitan area, other cities of 1,000,000 or more and their surroundings, and other cities of 100,000 or more = Urban; other municipalities (smaller cities, towns and villages) = Suburban, the band where most of that population lies; no answer (56) = Unknown. Proximate: the study's size bands, Rural not emitted.",,
+family_structure,proximate,haha_F13A,"recode_values(
+  as.numeric(haha_F13A),
+  1 ~ ""Two biological/adoptive parents"",
+  c(2, 3) ~ ""Single parent"",
+  default = ""Unknown""
+)","haha_F13A does the responding parent live with their spouse: yes = Two biological/adoptive parents; spouse posted away for work (13), one resident parental figure, and divorced or widowed (12) = Single parent; no answer (5) = Unknown. Proximate: step-parents cannot be separated from parents.",,
+fam_siblings_n,compatible,haha_F13C,as.numeric(haha_F13C) - 1,"haha_F13C how many children the responding parent has, the target child included (birth order haha_F13D never exceeds it), minus one. Entered count 1-6, no top code; missing 4 = NA. haha_F13D unused.",,
+fam_siblings_any,unavailable,,,Derive at analysis from fam_siblings_n.,,
+fam_screenrules,unavailable,,,Not collected.,,
+fam_contentrules,unavailable,,,Not collected.,,
+fam_bedroomscreen,incompatible,haha_F14,,"haha_F14 asks whether the child has a TV for their own (or siblings') use, not whether one is in the bedroom; ownership rows deferred.",,
+fam_firstphone_age,unavailable,,,Not collected.,,
+fam_firstscreen_age,unavailable,,,Not collected.,,
+fam_coview_freq,partial,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033, jikan9_Q1, jikan10_Q1","local({
+  slot_ids <- sub(""^jikan13_Q7_"", """", grep(""^jikan13_Q7_[0-9]{3}$"", names(tbl), value = TRUE))
+  by_medium <- sapply(list(c(20, 3), 19), function(codes) {
+    tallies <- Map(
+      function(day, off_days) {
+        counted <- with_parent <- has_coded <- numeric(nrow(tbl))
+        episode_parent <- rep(NA, nrow(tbl))
+        previous <- rep(NA_real_, nrow(tbl))
+        for (id in slot_ids) {
+          code <- as.numeric(tbl[[paste0(day, ""_Q7_"", id)]])
+          companions <- sapply(tbl[paste0(day, ""_Q7_"", id, ""_"", 1:4)], as.numeric)
+          named <- rowSums(companions >= 1 & companions <= 6, na.rm = TRUE) > 0
+          parent <- rowSums(companions == 2 | companions == 3, na.rm = TRUE) > 0
+          episode_parent <- ifelse(named, parent, ifelse(code == previous, episode_parent, NA))
+          active <- code %in% codes
+          counted <- counted + (active & !is.na(episode_parent))
+          with_parent <- with_parent + (active & episode_parent %in% TRUE)
+          has_coded <- has_coded + (code != 99)
+          previous <- code
+        }
+        kept <- has_coded > 0 & !as.numeric(tbl[[paste0(day, ""_Q1"")]]) %in% off_days
+        cbind(counted = ifelse(kept, counted, NA), with_parent = ifelse(kept, with_parent, NA))
+      },
+      c(""jikan13"", ""jikan9"", ""jikan10""),
+      list(numeric(), 26, c(11, 12, 27))
+    )
+    weighted <- sapply(c(""counted"", ""with_parent""), function(part) {
+      we <- rowMeans(cbind(tallies$jikan9[, part], tallies$jikan10[, part]), na.rm = TRUE)
+      5 * tallies$jikan13[, part] + 2 * replace(we, is.nan(we), NA)
+    })
+    share <- ifelse(weighted[, ""counted""] > 0, weighted[, ""with_parent""] / weighted[, ""counted""], NA)
+    as.integer(cut(share, c(-Inf, 0, 0.1, 0.35, 0.7, 1)))
+  })
+  c(""Never"", ""Rarely"", ""Sometimes"", ""Often"", ""Always"")[pmax(by_medium[, 1], by_medium[, 2], na.rm = TRUE)]
+})","Diary companions, child report: share of screen time with a parent (companion 2 mother or 3 father among up to four named), by the day-share cuts (0 Never, up to 10% Rarely, up to 35% Sometimes, up to 70% Often, above 70% Always), with TV (codes 20 and 3) and TV games (code 19) cut separately and the more frequent level taken. Slots weighted 5:2 over the Wednesday diary and the mean of the weekend diaries, diaries counted as in st_watch; a companion written at an episode's first slot holds across the episode. Episodes with no companion recorded (15-24% of TV slots) are left out of the share; NA where no screen slot has a companion recorded. Partial: hours with a parent beside other hours from a diary, not a frequency item. Companions other than parents unused. Each slot's companion columns (slot name plus _1 to _4) are read too and not listed in source_columns.",,
+fam_mediation_restrict,unavailable,,,Not collected.,,
+fam_mediation_active,unavailable,,,Not collected.,,
+fam_mediation_monitor,unavailable,,,Not collected.,,
+fam_mediation_technical,unavailable,,,Not collected.,,
+fam_mediation_measure,unavailable,,,See fam_mediation_restrict.,,
+fam_parent_screentime,partial,haha_Q14,"recode_values(as.numeric(haha_Q14), 1 ~ 0.5, 2 ~ 1.5, 3 ~ 3, 4 ~ 5, 5 ~ 7, 6 ~ 8, 7 ~ 0, default = NA_real_)","haha_Q14 'how many hours a day do you yourself usually watch TV', the responding parent's own usual day (see parent_respondent). Bands: under 1 h 0.5, 1-2 h 1.5, 2-4 h 3, 4-6 h 5, 6-8 h 7, top band '8 hours or more' = 8; does not watch TV = 0; no answer = NA. Partial: TV only.",,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+fam_parent_dep,unavailable,,,Not collected.,,
+fam_parent_anx,unavailable,,,Not collected.,,
+fam_parent_distress,unavailable,,,Not collected.,,
+fam_parent_mh_measure,unavailable,,,See fam_parent_dep.,,
+fam_parenting_warmth_parent,incompatible,"haha_Q11_2, haha_Q11_4, haha_Q11_5",,"Two-point agree/disagree self-descriptions (understands the child's feelings, talks with the child, warm and gentle), not graded items; no row holds them. haha_Q12 is action on grades and is unused.",,
+fam_parenting_harsh_parent,incompatible,"haha_Q11_1, haha_Q11_3",,"Two-point agree/disagree self-descriptions (strict with the child, nags about study and grades), not graded items; no row holds them.",,
+fam_parenting_inconsistent_parent,unavailable,,,Not collected.,,
+fam_monitoring_parent,unavailable,,,Not collected.,,
+fam_monitoring_self,unavailable,,,Not collected.,,
+fam_parenting_measure,unavailable,,,See fam_parenting_warmth_parent.,,
+fam_physpunish,unavailable,,,Not collected.,,
+fam_parentchild_rel_self,incompatible,"kodomo_Q6_1, kodomo_Q6_2",,"One yes/no item per parent (father, mother understands my feelings); single items, even averaged over parents, do not fill this row and no other row holds them.",,
+fam_parentchild_rel_parent,incompatible,"haha_Q11_2, haha_Q11_4",,"Two-point agree/disagree self-descriptions (understands the child's feelings, talks with the child), not graded items; no row holds them.",,
+fam_parentchild_conflict_parent,unavailable,,,Not collected.,,
+fam_parentchild_measure,unavailable,,,See fam_parentchild_rel_self.,,
+fam_functioning_parent,unavailable,,,Not collected.,,
+fam_functioning_self,unavailable,,,Not collected.,,
+fam_conflict_parent,unavailable,,,Not collected.,,
+fam_conflict_self,unavailable,,,Not collected.,,
+fam_functioning_measure,unavailable,,,See fam_functioning_parent.,,
+fam_readto_freq,incompatible,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033",,"Diary code 18 is the child's own reading, not being read to; no row holds it.",,
+fam_readto_time,incompatible,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033",,"Diary code 18 is the child's own reading, not being read to; no row holds it.",,
+fam_childbooks,unavailable,,,Not collected.,,
+fam_home_total,unavailable,,,HOME Inventory not administered.,,
+fam_home_cogstim,unavailable,,,HOME Inventory not administered.,,
+fam_home_emotsupport,unavailable,,,HOME Inventory not administered.,,
+fam_home_measure,unavailable,,,See fam_home_total.,,
+school_grade,compatible,kodomo_F2,"recode_values(
+  as.numeric(kodomo_F2),
+  1 ~ ""Elementary School 5th Grade"",
+  2 ~ ""Elementary School 6th Grade"",
+  3 ~ ""Junior High School 2nd Grade"",
+  4 ~ ""Junior High School 3rd Grade"",
+  default = NA_character_
+)","kodomo_F2 grade, child report: elementary 5th and 6th and lower-secondary 2nd and 3rd grades, keeping the Japanese system terms; no answer (4) = NA.",,
+school_sector,compatible,haha_F17,"recode_values(as.numeric(haha_F17), c(1, 3, 4, 8) ~ ""Public"", c(2, 5, 6, 7) ~ ""Private"", default = ""Unknown"")","haha_F17 the child's school, parent report: public and national (managed by the national government) elementary and lower-secondary schools = Public; private schools, integrated and university-affiliated included, = Private; no answer (13) = Unknown.",,
+school_track,inferred,,"""Not tracked""","Constant: the design places every child in elementary grades 5-6 or lower-secondary grades 2-3 (SSJDA catalogue record for survey 0004, doi:10.34500/SSJDA.0004), and Japan's nine-year compulsory stage has a common curriculum with no tracks (MEXT white paper, https://www.mext.go.jp/b_menu/hakusho/html/hpae197101/hpae197101_2_036.html). The 19 children at private lower-secondary schools (haha_F17) are at selective schools, not on a track.",,
+st_measure_type,inferred,,"""Continuous""","Time-use diary: 96 fixed 15-minute activity slots per diary day, 04:00 to 04:00.",,
+st_measure_name,inferred,,"""Time use diary""","Three one-day child diaries: Saturday 9, Sunday 10 and Wednesday 13 September 1995 (jikan9, jikan10, jikan13).",,
+st_responder,inferred,,"""Self""",Diaries completed by the child.,,
+st_total_wd,incompatible,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033",,"The diary records separate activities; no all-screen item, and a sum of diary codes 20, 3 and 19 is not a total (DR-0002, DR-0004).",,
+st_total_we,incompatible,"jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033",,"The diary records separate activities; no all-screen item, and a sum of diary codes 20, 3 and 19 is not a total (DR-0002, DR-0004).",,
+st_total,incompatible,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033",,"The diary records separate activities; no all-screen item, and a sum of diary codes 20, 3 and 19 is not a total (DR-0002, DR-0004).",,
+st_watch_wd,partial,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033","local({
+  slots <- sapply(tbl[grep(""^jikan13_Q7_[0-9]{3}$"", names(tbl))], as.numeric)
+  hours <- rowSums(matrix(slots %in% c(20, 3), nrow = nrow(slots))) * 15 / 60
+  if_else(rowSums(slots != 99) > 0, hours, NA_real_)
+})","Sum of diary codes 20 TV/video and 3 eating at home while watching TV (DR-0002); partial: TV set only. Wednesday 13 September diary (jikan13; every date in its Q1 is a weekday), slots x 15 / 60. A diary counts where at least one slot is coded; uncoded (99) and unknown activity (53) slots count as not this activity; the 26 diaries with no coded slot are NA. kodomo_Q1_1, _2 and _3 (most-used after-school activities) give no hours and are unused.",,
+st_watch_we,partial,"jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033, jikan9_Q1, jikan10_Q1","local({
+  days <- mapply(
+    function(day, off_days) {
+      slots <- sapply(tbl[grep(paste0(""^"", day, ""_Q7_[0-9]{3}$""), names(tbl))], as.numeric)
+      hours <- rowSums(matrix(slots %in% c(20, 3), nrow = nrow(slots))) * 15 / 60
+      kept <- rowSums(slots != 99) > 0 & !as.numeric(tbl[[paste0(day, ""_Q1"")]]) %in% off_days
+      if_else(kept, hours, NA_real_)
+    },
+    c(""jikan9"", ""jikan10""),
+    list(26, c(11, 12, 27))
+  )
+  we <- rowMeans(days[, c(""jikan9"", ""jikan10"")], na.rm = TRUE)
+  we <- replace(we, is.nan(we), NA)
+  we
+})","Sum of diary codes 20 TV/video and 3 eating at home while watching TV (DR-0002); partial: TV set only. Mean of the Saturday 9 and Sunday 10 September diaries (jikan9, jikan10), slots x 15 / 60 per diary. A diary counts where at least one slot is coded; uncoded (99) and unknown activity (53) slots count as not this activity; the 25 jikan9 and 26 jikan10 diaries with no coded slot are NA; the 13 diaries whose Q1 date is a weekday (jikan9 1, jikan10 12) are left out and the child's other weekend diary stands alone; a missing Q1 keeps the file's day. kodomo_Q1_1, _2 and _3 (most-used after-school activities) give no hours and are unused.",,
+st_watch,partial,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033, jikan9_Q1, jikan10_Q1","local({
+  days <- mapply(
+    function(day, off_days) {
+      slots <- sapply(tbl[grep(paste0(""^"", day, ""_Q7_[0-9]{3}$""), names(tbl))], as.numeric)
+      hours <- rowSums(matrix(slots %in% c(20, 3), nrow = nrow(slots))) * 15 / 60
+      kept <- rowSums(slots != 99) > 0 & !as.numeric(tbl[[paste0(day, ""_Q1"")]]) %in% off_days
+      if_else(kept, hours, NA_real_)
+    },
+    c(""jikan13"", ""jikan9"", ""jikan10""),
+    list(numeric(), 26, c(11, 12, 27))
+  )
+  we <- rowMeans(days[, c(""jikan9"", ""jikan10"")], na.rm = TRUE)
+  we <- replace(we, is.nan(we), NA)
+  (5 * days[, ""jikan13""] + 2 * we) / 7
+})","Sum of diary codes 20 TV/video and 3 eating at home while watching TV (DR-0002); partial: TV set only. (5 x weekday + 2 x weekend) / 7 over the Wednesday diary and the mean of the Saturday and Sunday diaries, slots x 15 / 60, diaries counted as in the _wd and _we rows; NA where either day type is missing. kodomo_Q1_1, _2 and _3 (most-used after-school activities) give no hours and are unused.",,
+st_game_wd,partial,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033","local({
+  slots <- sapply(tbl[grep(""^jikan13_Q7_[0-9]{3}$"", names(tbl))], as.numeric)
+  hours <- rowSums(matrix(slots %in% 19, nrow = nrow(slots))) * 15 / 60
+  if_else(rowSums(slots != 99) > 0, hours, NA_real_)
+})","Diary code 19 TV games (console games at the TV set); partial: names a device and leaves out phones, tablets and computers. Game arcades (code 32) not counted. Wednesday 13 September diary (jikan13; every date in its Q1 is a weekday), slots x 15 / 60. A diary counts where at least one slot is coded; uncoded (99) and unknown activity (53) slots count as not this activity; the 26 diaries with no coded slot are NA. kodomo_Q1_1, _2 and _3 (most-used after-school activities) give no hours and are unused.",,
+st_game_we,partial,"jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033, jikan9_Q1, jikan10_Q1","local({
+  days <- mapply(
+    function(day, off_days) {
+      slots <- sapply(tbl[grep(paste0(""^"", day, ""_Q7_[0-9]{3}$""), names(tbl))], as.numeric)
+      hours <- rowSums(matrix(slots %in% 19, nrow = nrow(slots))) * 15 / 60
+      kept <- rowSums(slots != 99) > 0 & !as.numeric(tbl[[paste0(day, ""_Q1"")]]) %in% off_days
+      if_else(kept, hours, NA_real_)
+    },
+    c(""jikan9"", ""jikan10""),
+    list(26, c(11, 12, 27))
+  )
+  we <- rowMeans(days[, c(""jikan9"", ""jikan10"")], na.rm = TRUE)
+  we <- replace(we, is.nan(we), NA)
+  we
+})","Diary code 19 TV games (console games at the TV set); partial: names a device and leaves out phones, tablets and computers. Game arcades (code 32) not counted. Mean of the Saturday 9 and Sunday 10 September diaries (jikan9, jikan10), slots x 15 / 60 per diary. A diary counts where at least one slot is coded; uncoded (99) and unknown activity (53) slots count as not this activity; the 25 jikan9 and 26 jikan10 diaries with no coded slot are NA; the 13 diaries whose Q1 date is a weekday (jikan9 1, jikan10 12) are left out and the child's other weekend diary stands alone; a missing Q1 keeps the file's day. kodomo_Q1_1, _2 and _3 (most-used after-school activities) give no hours and are unused.",,
+st_game,partial,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033, jikan9_Q1, jikan10_Q1","local({
+  days <- mapply(
+    function(day, off_days) {
+      slots <- sapply(tbl[grep(paste0(""^"", day, ""_Q7_[0-9]{3}$""), names(tbl))], as.numeric)
+      hours <- rowSums(matrix(slots %in% 19, nrow = nrow(slots))) * 15 / 60
+      kept <- rowSums(slots != 99) > 0 & !as.numeric(tbl[[paste0(day, ""_Q1"")]]) %in% off_days
+      if_else(kept, hours, NA_real_)
+    },
+    c(""jikan13"", ""jikan9"", ""jikan10""),
+    list(numeric(), 26, c(11, 12, 27))
+  )
+  we <- rowMeans(days[, c(""jikan9"", ""jikan10"")], na.rm = TRUE)
+  we <- replace(we, is.nan(we), NA)
+  (5 * days[, ""jikan13""] + 2 * we) / 7
+})","Diary code 19 TV games (console games at the TV set); partial: names a device and leaves out phones, tablets and computers. Game arcades (code 32) not counted. (5 x weekday + 2 x weekend) / 7 over the Wednesday diary and the mean of the Saturday and Sunday diaries, slots x 15 / 60, diaries counted as in the _wd and _we rows; NA where either day type is missing. kodomo_Q1_1, _2 and _3 (most-used after-school activities) give no hours and are unused.",,
+st_game_comp_wd,unavailable,,,No device split; see st_game.,,
+st_game_comp_we,unavailable,,,No device split; see st_game.,,
+st_game_comp,unavailable,,,No device split; see st_game.,,
+st_game_console_wd,partial,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033","local({
+  slots <- sapply(tbl[grep(""^jikan13_Q7_[0-9]{3}$"", names(tbl))], as.numeric)
+  hours <- rowSums(matrix(slots %in% 19, nrow = nrow(slots))) * 15 / 60
+  if_else(rowSums(slots != 99) > 0, hours, NA_real_)
+})","Diary code 19 TV games; partial: names home consoles (the child questionnaire's matching option reads 'Famicom and the like') but may include handhelds, which have no diary code. Also fills st_game. Wednesday 13 September diary (jikan13; every date in its Q1 is a weekday), slots x 15 / 60. A diary counts where at least one slot is coded; uncoded (99) and unknown activity (53) slots count as not this activity; the 26 diaries with no coded slot are NA.",,
+st_game_console_we,partial,"jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033, jikan9_Q1, jikan10_Q1","local({
+  days <- mapply(
+    function(day, off_days) {
+      slots <- sapply(tbl[grep(paste0(""^"", day, ""_Q7_[0-9]{3}$""), names(tbl))], as.numeric)
+      hours <- rowSums(matrix(slots %in% 19, nrow = nrow(slots))) * 15 / 60
+      kept <- rowSums(slots != 99) > 0 & !as.numeric(tbl[[paste0(day, ""_Q1"")]]) %in% off_days
+      if_else(kept, hours, NA_real_)
+    },
+    c(""jikan9"", ""jikan10""),
+    list(26, c(11, 12, 27))
+  )
+  we <- rowMeans(days[, c(""jikan9"", ""jikan10"")], na.rm = TRUE)
+  we <- replace(we, is.nan(we), NA)
+  we
+})","Diary code 19 TV games; partial: names home consoles (the child questionnaire's matching option reads 'Famicom and the like') but may include handhelds, which have no diary code. Also fills st_game. Mean of the Saturday 9 and Sunday 10 September diaries (jikan9, jikan10), slots x 15 / 60 per diary. A diary counts where at least one slot is coded; uncoded (99) and unknown activity (53) slots count as not this activity; the 25 jikan9 and 26 jikan10 diaries with no coded slot are NA; the 13 diaries whose Q1 date is a weekday (jikan9 1, jikan10 12) are left out and the child's other weekend diary stands alone; a missing Q1 keeps the file's day.",,
+st_game_console,partial,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033, jikan9_Q1, jikan10_Q1","local({
+  days <- mapply(
+    function(day, off_days) {
+      slots <- sapply(tbl[grep(paste0(""^"", day, ""_Q7_[0-9]{3}$""), names(tbl))], as.numeric)
+      hours <- rowSums(matrix(slots %in% 19, nrow = nrow(slots))) * 15 / 60
+      kept <- rowSums(slots != 99) > 0 & !as.numeric(tbl[[paste0(day, ""_Q1"")]]) %in% off_days
+      if_else(kept, hours, NA_real_)
+    },
+    c(""jikan13"", ""jikan9"", ""jikan10""),
+    list(numeric(), 26, c(11, 12, 27))
+  )
+  we <- rowMeans(days[, c(""jikan9"", ""jikan10"")], na.rm = TRUE)
+  we <- replace(we, is.nan(we), NA)
+  (5 * days[, ""jikan13""] + 2 * we) / 7
+})","Diary code 19 TV games; partial: names home consoles (the child questionnaire's matching option reads 'Famicom and the like') but may include handhelds, which have no diary code. Also fills st_game. (5 x weekday + 2 x weekend) / 7 over the Wednesday diary and the mean of the Saturday and Sunday diaries, slots x 15 / 60, diaries counted as in the _wd and _we rows; NA where either day type is missing.",,
+st_game_handheldconsole_wd,incompatible,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033",,"Diary code 19 TV games may include handhelds, which have no diary code; it went to st_game_console (partial).",,
+st_game_handheldconsole_we,incompatible,"jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033",,"Diary code 19 TV games may include handhelds, which have no diary code; it went to st_game_console (partial).",,
+st_game_handheldconsole,incompatible,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033",,"Diary code 19 TV games may include handhelds, which have no diary code; it went to st_game_console (partial).",,
+st_game_active_wd,unavailable,,,No device split; see st_game.,,
+st_game_active_we,unavailable,,,No device split; see st_game.,,
+st_game_active,unavailable,,,No device split; see st_game.,,
+st_game_phone_wd,unavailable,,,No device split; see st_game.,,
+st_game_phone_we,unavailable,,,No device split; see st_game.,,
+st_game_phone,unavailable,,,No device split; see st_game.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_game.,,
+st_game_tablet_we,unavailable,,,No device split; see st_game.,,
+st_game_tablet,unavailable,,,No device split; see st_game.,,
+st_comp_nongaming_wd,unavailable,,,Not collected.,,
+st_comp_nongaming_we,unavailable,,,Not collected.,,
+st_comp_nongaming,unavailable,,,Not collected.,,
+st_comp_wd,unavailable,,,Not collected.,,
+st_comp_we,unavailable,,,Not collected.,,
+st_comp,unavailable,,,Not collected.,,
+st_tablet_wd,unavailable,,,Not collected.,,
+st_tablet_we,unavailable,,,Not collected.,,
+st_tablet,unavailable,,,Not collected.,,
+st_phone_wd,unavailable,,,Not collected.,,
+st_phone_we,unavailable,,,Not collected.,,
+st_phone,unavailable,,,Not collected.,,
+st_socmedia_wd,unavailable,,,Not collected.,,
+st_socmedia_we,unavailable,,,Not collected.,,
+st_socmedia,unavailable,,,Not collected.,,
+st_educational_wd,incompatible,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033",,Diary codes 23 study and 24 studying while doing something else name no screen; they went to acc_homework_time.,,
+st_educational_we,incompatible,"jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033",,Diary codes 23 study and 24 studying while doing something else name no screen; they went to acc_homework_time.,,
+st_educational,incompatible,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033",,Diary codes 23 study and 24 studying while doing something else name no screen; they went to acc_homework_time.,,
+st_leisure_wd,incompatible,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033",,"No all-device leisure item; diary codes 20, 3 and 19 are single activities on st_watch and st_game, never summed (DR-0004).",,
+st_leisure_we,incompatible,"jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033",,"No all-device leisure item; diary codes 20, 3 and 19 are single activities on st_watch and st_game, never summed (DR-0004).",,
+st_leisure,incompatible,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033",,"No all-device leisure item; diary codes 20, 3 and 19 are single activities on st_watch and st_game, never summed (DR-0004).",,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,unavailable,,,Not collected.,,
+st_internet_we,unavailable,,,Not collected.,,
+st_internet,unavailable,,,Not collected.,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,unavailable,,,Not collected.,,
+st_messaging_we,unavailable,,,Not collected.,,
+st_messaging,unavailable,,,Not collected.,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
+st_email,unavailable,,,Not collected.,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,unavailable,,,Not collected.,,
+acc_academachment_lettergrades,unavailable,,,Not collected.,,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
+acc_schoolengage_caresschool,incompatible,kodomo_Q7,,"kodomo_Q7 rates how interesting school study is, a degree rating, not how often the child cares about doing well; no row holds it.",,
+acc_schoolengage_homework,incompatible,kodomo_Q18,,"kodomo_Q18 is how much homework the teacher sets, not how often the child completes it; no row holds it.",,
+acc_schoolengage_self,incompatible,"kodomo_Q7, kodomo_Q8",,"Single items only (how interesting school study is, pace of lessons), never a scale; no row holds them.",,
+acc_schoolengage_teacher,unavailable,,,Not collected.,,
+acc_schoolengage_measure,unavailable,,,See acc_schoolengage_self.,,
+acc_homework_time,partial,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033, jikan9_Q1, jikan10_Q1","local({
+  days <- mapply(
+    function(day, off_days) {
+      slots <- sapply(tbl[grep(paste0(""^"", day, ""_Q7_[0-9]{3}$""), names(tbl))], as.numeric)
+      hours <- rowSums(matrix(slots %in% c(23, 24), nrow = nrow(slots))) * 15 / 60
+      kept <- rowSums(slots != 99) > 0 & !as.numeric(tbl[[paste0(day, ""_Q1"")]]) %in% off_days
+      if_else(kept, hours, NA_real_)
+    },
+    c(""jikan13"", ""jikan9"", ""jikan10""),
+    list(numeric(), 26, c(11, 12, 27))
+  )
+  we <- rowMeans(days[, c(""jikan9"", ""jikan10"")], na.rm = TRUE)
+  we <- replace(we, is.nan(we), NA)
+  (5 * days[, ""jikan13""] + 2 * we) / 7
+})","Sum of diary codes 23 study and 24 studying while doing something else; partial: pools revision and exam study, and one named diary day per day type. (5 x weekday + 2 x weekend) / 7 over the Wednesday diary and the mean of the Saturday and Sunday diaries, slots x 15 / 60, diaries counted as in st_watch_wd and st_watch_we (no coded slot NA: jikan13 26, jikan9 25, jikan10 26; the 13 weekend-file diaries whose Q1 date is a weekday left out; uncoded and unknown activity slots count as not study); NA where either day type is missing. Home tutor (25), lessons practice (26), getting ready for school (27) and cram school (28) not counted. Child report.",,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolstress_self,unavailable,,,Not collected.,,
+acc_schoolstress_measure,unavailable,,,See acc_schoolstress_self.,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
+acc_academachment_parentrated,proximate,haha_Q4,"recode_values(
+  as.numeric(haha_Q4),
+  1 ~ ""Very good"",
+  2 ~ ""Good"",
+  3 ~ ""Average"",
+  c(4, 5) ~ ""Below average"",
+  default = NA_character_
+)","haha_Q4 the child's school grades, parent report: top, upper-middle, middle, lower-middle, bottom, by the five-level collapse; no answer (36) = NA.",,
+acc_numeracy_stdtest,unavailable,,,Not collected.,,
+acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered; see acc_numeracy_stdtest.,,
+acc_literacy_stdtest,unavailable,,,Not collected.,,
+acc_literacy_bas_wordreading,unavailable,,,BAS II not administered; see acc_literacy_stdtest.,,
+acc_learningdisab_diagnosed,unavailable,,,Not collected.,,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not collected.,,
+acc_graderepeated,unavailable,,,Not collected.,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_self,unavailable,,,Not collected.,,
+beh_hyper_self,unavailable,,,Not collected.,,
+beh_adhdsymp_self,unavailable,,,Not collected.,,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_atten_singleitem_teacher,unavailable,,,Not collected.,,
+beh_impulsivity_self,unavailable,,,Not collected.,,
+beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_selfreg_parent,unavailable,,,Not collected.,,
+beh_emotdysreg_parent,unavailable,,,Not collected.,,
+beh_emotreg_parent,unavailable,,,Not collected.,,
+beh_selfreg_self,incompatible,"kodomo_Q3_1, kodomo_Q3_2, kodomo_Q3_3, kodomo_Q3_4",,"Four yes/no self-management items (gets up alone, tidies own room, chooses TV programmes, plans own study) with no published scoring, not a self-control scale; no row holds them.",,
+beh_emotreg_self,unavailable,,,Not collected.,,
+beh_emotdysreg_self,unavailable,,,Not collected.,,
+beh_emotreg_suppression_self,unavailable,,,Not collected.,,
+beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
+beh_emotaware_self,unavailable,,,Not collected.,,
+beh_selfreg_measure,unavailable,,,See beh_selfreg_self.,,
+beh_temp_negaffect_parent,unavailable,,,Not collected.,,
+beh_temp_surgency_parent,unavailable,,,Not collected.,,
+beh_temp_measure,unavailable,,,See beh_temp_negaffect_parent.,,
+beh_bullied,unavailable,,,Not collected.,,
+beh_beenbullied,unavailable,,,Not collected.,,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,unavailable,,,Not collected.,,
+beh_truancy,unavailable,,,Not collected.,,
+beh_suspended,unavailable,,,Not collected.,,
+beh_stealing,unavailable,,,Not collected.,,
+beh_vandalism,unavailable,,,Not collected.,,
+beh_alcohol_self,unavailable,,,Not collected.,,
+beh_tobacco_self,unavailable,,,Not collected.,,
+beh_vaping_self,unavailable,,,Not collected.,,
+beh_cannabis_self,unavailable,,,Not collected.,,
+beh_drugs_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ not administered.,,
+beh_agg_self,unavailable,,,Not collected.,,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,unavailable,,,Not collected.,,
+beh_aggphys_measure,unavailable,,,See beh_aggphys_self.,,
+beh_aggrel_self,unavailable,,,Not collected.,,
+beh_aggrel_measure,unavailable,,,See beh_aggrel_self.,,
+beh_anger_self,unavailable,,,Not collected.,,
+beh_anger_measure,unavailable,,,See beh_anger_self.,,
+beh_aggbeliefs_self,unavailable,,,Not collected.,,
+beh_agghostattrib_self,unavailable,,,Not collected.,,
+beh_aggfantasy_self,unavailable,,,Not collected.,,
+beh_aggcog_measure,unavailable,,,See beh_aggbeliefs_self.,,
+beh_agg_singleitem_teacher,unavailable,,,Not collected.,,
+beh_disrupt_singleitem_teacher,unavailable,,,Not collected.,,
+beh_aggphys_teacher,unavailable,,,Not collected.,,
+beh_aggrel_teacher,unavailable,,,Not collected.,,
+beh_agg_teacher,unavailable,,,Not collected.,,
+beh_victphys_teacher,unavailable,,,Not collected.,,
+beh_victrel_teacher,unavailable,,,Not collected.,,
+beh_vict_teacher,unavailable,,,Not collected.,,
+beh_atten_teacher,unavailable,,,Not collected.,,
+beh_hyper_teacher,unavailable,,,Not collected.,,
+beh_adhdsymp_teacher,unavailable,,,Not collected.,,
+beh_ext_teacher,unavailable,,,Not collected.,,
+beh_prosocial_teacher,unavailable,,,Not collected.,,
+beh_socialskills_teacher,unavailable,,,Not collected.,,
+beh_teacher_measure,unavailable,,,See beh_aggphys_teacher.,,
+beh_argues,unavailable,,,Not collected.,,
+beh_persistence_finishwork,unavailable,,,Not collected.,,
+beh_emotreg_stayscalm,unavailable,,,Not collected.,,
+beh_peerprob_makefriends,unavailable,,,Not collected.,,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,unavailable,,,Not collected.,,
+beh_autism_diagnosed,unavailable,,,Not collected.,,
+beh_autism_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ not administered.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_self,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_socprob_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_ext_self,incompatible,"kodomo_Q14_3, kodomo_Q14_7",,"Two yes/no items of the study symptom checklist (want to run wild, want to shout), an item subset of a broader list; see mh_distress_self.",,
+beh_opp_self,unavailable,,,Not collected.,,
+beh_conduct_self,unavailable,,,Not collected.,,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,unavailable,,,Not collected.,,
+beh_hyper_parent,unavailable,,,Not collected.,,
+beh_adhdsymp_parent,unavailable,,,Not collected.,,
+beh_opp_parent,unavailable,,,Not collected.,,
+beh_conduct_parent,unavailable,,,Not collected.,,
+beh_ext_parent,unavailable,,,Not collected.,,
+beh_parent_measure,unavailable,,,See beh_atten_parent.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,unavailable,,,Not collected.,,
+beh_prosocial_measure,unavailable,,,See beh_prosocial_self.,,
+beh_prosocial_parent,unavailable,,,Not collected.,,
+beh_socialskills_self,unavailable,,,Not collected.,,
+beh_socialskills_measure,unavailable,,,See beh_socialskills_self.,,
+beh_socialskills_parent,unavailable,,,Not collected.,,
+beh_prosocial_singleitem_teacher,unavailable,,,Not collected.,,
+beh_empathy_self,unavailable,,,Not collected.,,
+beh_empathy_measure,unavailable,,,See beh_empathy_self.,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_parent,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,No cognitive testing.,,
+cog_phono_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhibcont_nepsy,unavailable,,,No cognitive testing.,,
+cog_vismotor_nepsy,unavailable,,,No cognitive testing.,,
+cog_verbalfluency_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhib_nihtb_flanker,unavailable,,,No cognitive testing.,,
+cog_flex_nihtb_dccs,unavailable,,,No cognitive testing.,,
+cog_wm_nihtb_listsort,unavailable,,,No cognitive testing.,,
+cog_speed_nihtb_pattern,unavailable,,,No cognitive testing.,,
+cog_epimem_nihtb_picseq,unavailable,,,No cognitive testing.,,
+cog_vocab_nihtb_picvocab,unavailable,,,No cognitive testing.,,
+cog_fluidcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_crystcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_totalcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_atten_task,unavailable,,,No cognitive testing.,,
+cog_atten_task_measure,unavailable,,,See cog_atten_task.,,
+cog_flex_task,unavailable,,,No cognitive testing.,,
+cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
+cog_inhib_task,unavailable,,,No cognitive testing.,,
+cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
+cog_wm_task,unavailable,,,No cognitive testing.,,
+cog_wm_task_measure,unavailable,,,See cog_wm_task.,,
+cog_speed_task,unavailable,,,No cognitive testing.,,
+cog_speed_task_measure,unavailable,,,See cog_speed_task.,,
+cog_wm_digitspan,unavailable,,,No cognitive testing.,,
+cog_iq_fullscale,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_task,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_task_measure,unavailable,,,See cog_nonverbalreason_task.,,
+cog_vocab_bpvs,unavailable,,,No cognitive testing.,,
+cog_vocab_ppvt,unavailable,,,No cognitive testing.,,
+cog_vocab_receptive_task,unavailable,,,No cognitive testing.,,
+cog_vocab_expressive_task,unavailable,,,No cognitive testing.,,
+cog_vocab_task_measure,unavailable,,,See cog_vocab_receptive_task.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_execfunc_parent,unavailable,,,Not collected.,,
+cog_execfunc_teacher,unavailable,,,Not collected.,,
+cog_execfunc_self,unavailable,,,Not collected.,,
+cog_execfunc_measure,unavailable,,,See cog_execfunc_parent.,,
+cog_vocab_bas_naming,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,No cognitive testing.,,
+cog_spatial_bas_pattern,unavailable,,,No cognitive testing.,,
+cog_verbalreason_bas_versim,unavailable,,,No cognitive testing.,,
+cog_earlynumber_bas_enc,unavailable,,,No cognitive testing.,,
+cog_schoolread_bracken,unavailable,,,No cognitive testing.,,
+cog_earlylang_parent,unavailable,,,Not collected.,,
+cog_earlylang_measure,unavailable,,,See cog_earlylang_parent.,,
+cog_creativethinking_stdtest,unavailable,,,No cognitive testing.,,
+cog_speechlang_diagnosed,unavailable,,,Not collected.,,
+cog_speechlang_diagnosed_severity,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ not administered.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_int_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_int_sdq_self,unavailable,,,SDQ not administered.,,
+mh_int_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered.,,
+mh_distress_k6_self,unavailable,,,K6 not administered; see mh_distress_self.,,
+mh_distress_k10_self,unavailable,,,K10 not administered; see mh_distress_self.,,
+mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered; see mh_distress_self.,,
+mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered; see mh_distress_self.,,
+mh_distress_self,partial,"kodomo_Q14_1, kodomo_Q14_2, kodomo_Q14_3, kodomo_Q14_4, kodomo_Q14_5, kodomo_Q14_6, kodomo_Q14_7, kodomo_Q14_8, kodomo_Q14_9, kodomo_Q14_10, kodomo_Q14_11, kodomo_Q14_12, kodomo_Q14_13, kodomo_Q14_14","local({
+  items <- sapply(tbl[paste0(""kodomo_Q14_"", 1:14)], as.numeric)
+  rowSums(2 - replace(items, items == 9, NA))
+})","Study symptom checklist with no published scoring, 'do you have any of the following', child report, no recall period stated: can't sleep at night, tire easily, want to run wild, no appetite in the morning, irritable for no reason, stomach ache, want to shout, stiff shoulders, easily anxious, dizziness, don't feel like going to school, headache, no motivation, no interest. Yes 1, no 0, no answer NA; sum of all 14, complete-case (range 0-14). Partial: study's own checklist.",,
+mh_distress_measure,inferred,,"""Study symptom checklist (kodomo Q14), 14 of 14 items, 0-1 item scoring (range 0-14), sum""","Yes/no presence items, no reverse-scored items, no recall period stated, complete-case.",,
+mh_anx_masc_self,unavailable,,,MASC not administered.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_withdrawn_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_somatic_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_emotreact_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,unavailable,,,Not collected.,,
+mh_dep_self,incompatible,"kodomo_Q14_13, kodomo_Q14_14",,"Two yes/no items of the study symptom checklist (no motivation, no interest), no depression scale; scored in mh_distress_self.",,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,incompatible,kodomo_Q14_9,,"Single yes/no item of the study symptom checklist (easily anxious), no anxiety scale; scored in mh_distress_self.",,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_socanx_self,unavailable,,,Not collected.,,
+mh_socanx_measure,unavailable,,,See mh_socanx_self.,,
+mh_int_parent,unavailable,,,Not collected.,,
+mh_anx_parent,unavailable,,,Not collected.,,
+mh_dep_parent,unavailable,,,Not collected.,,
+mh_totalprob_parent,unavailable,,,Not collected.,,
+mh_int_teacher,unavailable,,,Not collected.,,
+mh_anx_teacher,unavailable,,,Not collected.,,
+mh_dep_teacher,unavailable,,,Not collected.,,
+mh_totalprob_teacher,unavailable,,,Not collected.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,unavailable,,,Not collected.,,
+mh_stress_scale_self,unavailable,,,Not collected.,,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,unavailable,,,Not collected.,,
+mh_lonely_scale_self,unavailable,,,Not collected.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,unavailable,,,Not collected.,,
+mh_worry_self,incompatible,kodomo_Q14_9,,"kodomo_Q14_9 is yes/no 'easily anxious', neither a frequency rating nor worry; scored in mh_distress_self.",,
+mh_irritable_self,incompatible,kodomo_Q14_5,,"kodomo_Q14_5 (irritable for no reason) is yes/no presence, not a frequency rating; scored in mh_distress_self.",,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_unhealthywtctrl_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,incompatible,"kodomo_Q14_2, kodomo_Q14_4, kodomo_Q14_6, kodomo_Q14_8, kodomo_Q14_10, kodomo_Q14_12",,"Somatic items of the study symptom checklist, an item subset with no published scoring; scored in mh_distress_self.",,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
+wb_bodyimage,unavailable,,,Not collected.,,
+wb_bodyesteem_self,unavailable,,,Not collected.,,
+wb_bodyesteem_measure,unavailable,,,See wb_bodyesteem_self.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
+wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_lifesat_self,unavailable,,,Not collected.,,
+wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
+wb_happiness_singleitem_self,incompatible,"jikan9_Q4C, jikan10_Q4C, jikan13_Q4C",,"Diary Q4C asks whether one diary day was enjoyable, not a general happiness rating; no row holds it.",,
+wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,incompatible,kodomo_Q7,,"kodomo_Q7 rates how interesting school study is, with no satisfaction anchors; no row holds it.",,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,incompatible,"kodomo_Q6_1, kodomo_Q6_2",,"Yes/no items on whether father and mother understand my feelings: support, not satisfaction; no row holds them.",,
+wb_domainsat_friends_self,unavailable,,,Not collected.,,
+wb_domainsat_school_self,unavailable,,,Not collected.,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered.,,
+wb_selfesteem_singleitem_self,unavailable,,,Not collected.,,
+wb_selfesteem_self,unavailable,,,Not collected.,,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_selfefficacy_academic_self,unavailable,,,Not collected.,,
+wb_selfefficacy_academic_measure,unavailable,,,See wb_selfefficacy_academic_self.,,
+wb_control_self,unavailable,,,Not collected.,,
+wb_control_measure,unavailable,,,See wb_control_self.,,
+wb_selfconcept_academic_self,unavailable,,,Not collected.,,
+wb_selfconcept_maths_self,unavailable,,,Not collected.,,
+wb_selfconcept_verbal_self,unavailable,,,Not collected.,,
+wb_selfconcept_science_self,unavailable,,,Not collected.,,
+wb_selfconcept_social_self,unavailable,,,Not collected.,,
+wb_selfconcept_measure,unavailable,,,See wb_selfconcept_academic_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,Subjective Happiness Scale not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,unavailable,,,Not collected.,,
+wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,unavailable,,,Not collected.,,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_negaffect_self,incompatible,"kodomo_Q14_5, kodomo_Q14_9, kodomo_Q14_13, kodomo_Q14_14",,"Feeling items of the study symptom checklist, no published scoring and no negative-affect scale; scored in mh_distress_self.",,
+wb_negaffect_measure,unavailable,,,See wb_negaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,incompatible,"kodomo_Q6_1, kodomo_Q6_2, kodomo_Q16",,"Single items only (father, mother understands my feelings; the one person the child consults), never a scale; no row holds them.",,
+wb_socsupport_friends_self,incompatible,kodomo_Q16,,"kodomo_Q16 is a single choice of the person the child consults (friends one option), never a scale; no row holds it.",,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,partial,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033","local({
+  slots <- sapply(tbl[grep(""^jikan13_Q7_[0-9]{3}$"", names(tbl))], as.numeric)
+  hours <- rowSums(matrix(slots %in% 8, nrow = nrow(slots))) * 15 / 60
+  if_else(rowSums(slots == 99) == 0, hours, NA_real_)
+})","Diary code 8 sleep, child report; partial: counts naps and the end and start of two nights rather than one night (diary days run 04:00 to 04:00). Wednesday 13 September diary (jikan13), slots x 15 / 60; NA for a diary with any uncoded (99) slot (46 of 784, 26 of them blank); unknown activity (53) slots count as not asleep.",,
+hlth_sleep_we,partial,"jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033, jikan9_Q1, jikan10_Q1","local({
+  days <- mapply(
+    function(day, off_days) {
+      slots <- sapply(tbl[grep(paste0(""^"", day, ""_Q7_[0-9]{3}$""), names(tbl))], as.numeric)
+      hours <- rowSums(matrix(slots %in% 8, nrow = nrow(slots))) * 15 / 60
+      kept <- rowSums(slots == 99) == 0 & !as.numeric(tbl[[paste0(day, ""_Q1"")]]) %in% off_days
+      if_else(kept, hours, NA_real_)
+    },
+    c(""jikan9"", ""jikan10""),
+    list(26, c(11, 12, 27))
+  )
+  we <- rowMeans(days[, c(""jikan9"", ""jikan10"")], na.rm = TRUE)
+  we <- replace(we, is.nan(we), NA)
+  we
+})","Diary code 8 sleep, child report; partial: counts naps and the end and start of two nights rather than one night (diary days run 04:00 to 04:00). Mean of the Saturday 9 and Sunday 10 September diaries (jikan9, jikan10), slots x 15 / 60 per diary; NA for a diary with any uncoded (99) slot (jikan9 36 of 784, 25 of them blank; jikan10 40, 26 of them blank), and for the 13 weekend-file diaries whose Q1 date is a weekday, the other diary standing alone; unknown activity (53) slots count as not asleep.",,
+hlth_sleep,partial,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033, jikan9_Q1, jikan10_Q1","local({
+  days <- mapply(
+    function(day, off_days) {
+      slots <- sapply(tbl[grep(paste0(""^"", day, ""_Q7_[0-9]{3}$""), names(tbl))], as.numeric)
+      hours <- rowSums(matrix(slots %in% 8, nrow = nrow(slots))) * 15 / 60
+      kept <- rowSums(slots == 99) == 0 & !as.numeric(tbl[[paste0(day, ""_Q1"")]]) %in% off_days
+      if_else(kept, hours, NA_real_)
+    },
+    c(""jikan13"", ""jikan9"", ""jikan10""),
+    list(numeric(), 26, c(11, 12, 27))
+  )
+  we <- rowMeans(days[, c(""jikan9"", ""jikan10"")], na.rm = TRUE)
+  we <- replace(we, is.nan(we), NA)
+  (5 * days[, ""jikan13""] + 2 * we) / 7
+})","Diary code 8 sleep, child report; partial: counts naps and the end and start of two nights rather than one night (diary days run 04:00 to 04:00). (5 x weekday + 2 x weekend) / 7 of hlth_sleep_wd and hlth_sleep_we, diaries counted as in those rows; NA where either day type is missing.",,
+hlth_sleepprob,incompatible,kodomo_Q14_1,,"Single yes/no item (can't sleep at night), never a scale; also scored in mh_distress_self.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+hlth_sleepprob_singleitem_self,incompatible,kodomo_Q14_1,,"kodomo_Q14_1 (can't sleep at night) is yes/no, not a frequency rating; also scored in mh_distress_self.",,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,unavailable,,,Not collected.,,
+hlth_bmi_measure,unavailable,,,See hlth_bmi.,,
+hlth_bmi_z,unavailable,,,Not collected.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,incompatible,"jikan13_Q7_040, jikan13_Q7_041, jikan13_Q7_042, jikan13_Q7_043, jikan13_Q7_050, jikan13_Q7_051, jikan13_Q7_052, jikan13_Q7_053, jikan13_Q7_060, jikan13_Q7_061, jikan13_Q7_062, jikan13_Q7_063, jikan13_Q7_070, jikan13_Q7_071, jikan13_Q7_072, jikan13_Q7_073, jikan13_Q7_080, jikan13_Q7_081, jikan13_Q7_082, jikan13_Q7_083, jikan13_Q7_090, jikan13_Q7_091, jikan13_Q7_092, jikan13_Q7_093, jikan13_Q7_100, jikan13_Q7_101, jikan13_Q7_102, jikan13_Q7_103, jikan13_Q7_110, jikan13_Q7_111, jikan13_Q7_112, jikan13_Q7_113, jikan13_Q7_120, jikan13_Q7_121, jikan13_Q7_122, jikan13_Q7_123, jikan13_Q7_130, jikan13_Q7_131, jikan13_Q7_132, jikan13_Q7_133, jikan13_Q7_140, jikan13_Q7_141, jikan13_Q7_142, jikan13_Q7_143, jikan13_Q7_150, jikan13_Q7_151, jikan13_Q7_152, jikan13_Q7_153, jikan13_Q7_160, jikan13_Q7_161, jikan13_Q7_162, jikan13_Q7_163, jikan13_Q7_170, jikan13_Q7_171, jikan13_Q7_172, jikan13_Q7_173, jikan13_Q7_180, jikan13_Q7_181, jikan13_Q7_182, jikan13_Q7_183, jikan13_Q7_190, jikan13_Q7_191, jikan13_Q7_192, jikan13_Q7_193, jikan13_Q7_200, jikan13_Q7_201, jikan13_Q7_202, jikan13_Q7_203, jikan13_Q7_210, jikan13_Q7_211, jikan13_Q7_212, jikan13_Q7_213, jikan13_Q7_220, jikan13_Q7_221, jikan13_Q7_222, jikan13_Q7_223, jikan13_Q7_230, jikan13_Q7_231, jikan13_Q7_232, jikan13_Q7_233, jikan13_Q7_000, jikan13_Q7_001, jikan13_Q7_002, jikan13_Q7_003, jikan13_Q7_010, jikan13_Q7_011, jikan13_Q7_012, jikan13_Q7_013, jikan13_Q7_020, jikan13_Q7_021, jikan13_Q7_022, jikan13_Q7_023, jikan13_Q7_030, jikan13_Q7_031, jikan13_Q7_032, jikan13_Q7_033, jikan9_Q7_040, jikan9_Q7_041, jikan9_Q7_042, jikan9_Q7_043, jikan9_Q7_050, jikan9_Q7_051, jikan9_Q7_052, jikan9_Q7_053, jikan9_Q7_060, jikan9_Q7_061, jikan9_Q7_062, jikan9_Q7_063, jikan9_Q7_070, jikan9_Q7_071, jikan9_Q7_072, jikan9_Q7_073, jikan9_Q7_080, jikan9_Q7_081, jikan9_Q7_082, jikan9_Q7_083, jikan9_Q7_090, jikan9_Q7_091, jikan9_Q7_092, jikan9_Q7_093, jikan9_Q7_100, jikan9_Q7_101, jikan9_Q7_102, jikan9_Q7_103, jikan9_Q7_110, jikan9_Q7_111, jikan9_Q7_112, jikan9_Q7_113, jikan9_Q7_120, jikan9_Q7_121, jikan9_Q7_122, jikan9_Q7_123, jikan9_Q7_130, jikan9_Q7_131, jikan9_Q7_132, jikan9_Q7_133, jikan9_Q7_140, jikan9_Q7_141, jikan9_Q7_142, jikan9_Q7_143, jikan9_Q7_150, jikan9_Q7_151, jikan9_Q7_152, jikan9_Q7_153, jikan9_Q7_160, jikan9_Q7_161, jikan9_Q7_162, jikan9_Q7_163, jikan9_Q7_170, jikan9_Q7_171, jikan9_Q7_172, jikan9_Q7_173, jikan9_Q7_180, jikan9_Q7_181, jikan9_Q7_182, jikan9_Q7_183, jikan9_Q7_190, jikan9_Q7_191, jikan9_Q7_192, jikan9_Q7_193, jikan9_Q7_200, jikan9_Q7_201, jikan9_Q7_202, jikan9_Q7_203, jikan9_Q7_210, jikan9_Q7_211, jikan9_Q7_212, jikan9_Q7_213, jikan9_Q7_220, jikan9_Q7_221, jikan9_Q7_222, jikan9_Q7_223, jikan9_Q7_230, jikan9_Q7_231, jikan9_Q7_232, jikan9_Q7_233, jikan9_Q7_000, jikan9_Q7_001, jikan9_Q7_002, jikan9_Q7_003, jikan9_Q7_010, jikan9_Q7_011, jikan9_Q7_012, jikan9_Q7_013, jikan9_Q7_020, jikan9_Q7_021, jikan9_Q7_022, jikan9_Q7_023, jikan9_Q7_030, jikan9_Q7_031, jikan9_Q7_032, jikan9_Q7_033, jikan10_Q7_040, jikan10_Q7_041, jikan10_Q7_042, jikan10_Q7_043, jikan10_Q7_050, jikan10_Q7_051, jikan10_Q7_052, jikan10_Q7_053, jikan10_Q7_060, jikan10_Q7_061, jikan10_Q7_062, jikan10_Q7_063, jikan10_Q7_070, jikan10_Q7_071, jikan10_Q7_072, jikan10_Q7_073, jikan10_Q7_080, jikan10_Q7_081, jikan10_Q7_082, jikan10_Q7_083, jikan10_Q7_090, jikan10_Q7_091, jikan10_Q7_092, jikan10_Q7_093, jikan10_Q7_100, jikan10_Q7_101, jikan10_Q7_102, jikan10_Q7_103, jikan10_Q7_110, jikan10_Q7_111, jikan10_Q7_112, jikan10_Q7_113, jikan10_Q7_120, jikan10_Q7_121, jikan10_Q7_122, jikan10_Q7_123, jikan10_Q7_130, jikan10_Q7_131, jikan10_Q7_132, jikan10_Q7_133, jikan10_Q7_140, jikan10_Q7_141, jikan10_Q7_142, jikan10_Q7_143, jikan10_Q7_150, jikan10_Q7_151, jikan10_Q7_152, jikan10_Q7_153, jikan10_Q7_160, jikan10_Q7_161, jikan10_Q7_162, jikan10_Q7_163, jikan10_Q7_170, jikan10_Q7_171, jikan10_Q7_172, jikan10_Q7_173, jikan10_Q7_180, jikan10_Q7_181, jikan10_Q7_182, jikan10_Q7_183, jikan10_Q7_190, jikan10_Q7_191, jikan10_Q7_192, jikan10_Q7_193, jikan10_Q7_200, jikan10_Q7_201, jikan10_Q7_202, jikan10_Q7_203, jikan10_Q7_210, jikan10_Q7_211, jikan10_Q7_212, jikan10_Q7_213, jikan10_Q7_220, jikan10_Q7_221, jikan10_Q7_222, jikan10_Q7_223, jikan10_Q7_230, jikan10_Q7_231, jikan10_Q7_232, jikan10_Q7_233, jikan10_Q7_000, jikan10_Q7_001, jikan10_Q7_002, jikan10_Q7_003, jikan10_Q7_010, jikan10_Q7_011, jikan10_Q7_012, jikan10_Q7_013, jikan10_Q7_020, jikan10_Q7_021, jikan10_Q7_022, jikan10_Q7_023, jikan10_Q7_030, jikan10_Q7_031, jikan10_Q7_032, jikan10_Q7_033",,"Diary codes 30 training or exercise and 37 sports team are minutes on named days, not days of 60 minutes; no row holds them.",,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,unavailable,,,Not collected.,,
+hlth_disability,unavailable,,,Not collected.,,
