@@ -269,3 +269,10 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+2319,maternal_education,uni,Bachelor degree or higher,proximate,"Haskoli: university; no separate Post-secondary level, so placed at the level taken to hold most of its members; tick-boxes Q8_mothered_uni and Q5_fathered_uni"
+2319,maternal_education,apprent,Secondary school or less,compatible,"Idnrettindi: trade certificate, upper-secondary vocational, tick-boxes Q8_mothered_apprent and Q5_fathered_apprent"
+2319,maternal_education,juncoll,Secondary school or less,compatible,"Studentsprof: upper-secondary matriculation exam, tick-boxes Q8_mothered_juncoll and Q5_fathered_juncoll"
+2319,maternal_education,elem,Secondary school or less,compatible,"Grunnskoli: compulsory school, tick-boxes Q8_mothered_elem and Q5_fathered_elem"
+2319,maternal_education,other,Unknown,incompatible,"Annad: other, not rankable, used only where no level is ticked"
+2319,maternal_education,dontkn,Unknown,compatible,"Veit ekki: don't know, used only where no level is ticked"
+2319,maternal_education,noreply,Unknown,compatible,"Vil ekki svara: prefer not to answer, used only where no level is ticked"

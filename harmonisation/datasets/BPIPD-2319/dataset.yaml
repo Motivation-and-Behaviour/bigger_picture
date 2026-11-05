@@ -134,7 +134,7 @@ resources:
     glob: "MANIFEST.TXT"
 
 notes: |
-  Single-wave datase. The study covers two cohorts: "Heilsuhegðun" (HH, files 01-09) and
+  Longitudinal dataset. The study covers two cohorts: "Heilsuhegðun" (HH, files 01-09) and
   "Atgervi" (ATG, files 10-16), each with participant, anthropometrics, blood/fitness, questionnaire, and
   (for HH only) actigraphy tables, each xlsx file containing a single sheet named "data".
   "00_variable_dictionary.xlsx" is a shared codebook with 2 sheets, one per cohort ("Heilsuhegðun", "Atgervi").
