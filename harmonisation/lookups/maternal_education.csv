@@ -269,3 +269,10 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+666,maternal_education,1,Secondary school or less,compatible,parent_edu code 1: Year 7 to 10
+666,maternal_education,2,Secondary school or less,compatible,parent_edu code 2: Year 11
+666,maternal_education,3,Secondary school or less,compatible,parent_edu code 3: Year 12
+666,maternal_education,4,Post-secondary,proximate,"parent_edu code 4: TAFE, 'Trade Certificate/ Diploma' in the study's table; certificates and diplomas below degree, mostly ISCED 4-5, with lower certificates not separated"
+666,maternal_education,5,Bachelor degree or higher,compatible,parent_edu code 5: undergraduate
+666,maternal_education,6,Bachelor degree or higher,compatible,parent_edu code 6: postgraduate
+666,maternal_education,7,Unknown,compatible,parent_edu code 7: other or prefer not to answer; no such answers in the data
