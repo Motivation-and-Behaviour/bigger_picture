@@ -381,3 +381,7 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 989,maternal_education,Four-year degree,Bachelor degree or higher,compatible,v124 code 5: four-year (bachelor's) degree (ISCED 6)
 989,maternal_education,Graduate/professional degree,Bachelor degree or higher,compatible,v124 code 6: graduate or professional degree (ISCED 7-8)
 989,maternal_education,9,Unknown,incompatible,v124 code 9 is undefined
+160,maternal_education,only elementary school,Secondary school or less,compatible,"mother_ed, father_ed code 1, no higher than ISCED 2"
+160,maternal_education,only high school,Secondary school or less,compatible,"mother_ed, father_ed code 2, ISCED 3"
+160,maternal_education,college or higher education,Bachelor degree or higher,proximate,"mother_ed, father_ed code 3; reads as pooling short-cycle college (ISCED 5) with degrees (ISCED 6-8), placed at the level taken to hold most of the band"
+160,maternal_education,5,Unknown,incompatible,"mother_ed code 5 (1 row) has no value label, and no document defines it"
