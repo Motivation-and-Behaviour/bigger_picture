@@ -1,22 +1,14 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-2395 (Tardif-Grenier)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One SPSS file from a single April 2020 online survey, already one row per
+#' adolescent with a unique `id`.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per adolescent (single cross-section)
 tidy_BPIPD_2395 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
-
-  tibble::as_tibble(raw_dataset$data[[1]])
+  tibble::as_tibble(raw_dataset$data$data)
 }
