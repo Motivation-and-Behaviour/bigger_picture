@@ -18,6 +18,7 @@ survey_cluster,compatible,"ID, UPA, escola, ESTRATO, ESTRATO_EXP, ESCOLA, .wave"
 )","Primary sampling unit for the edition, prefixed with wave: school ID (2009), UPA (2012), escola (2015, both samples; the released UPA), and stratum plus ESCOLA in 2019 (ESTRATO) and 2024 (ESTRATO_EXP), since ESCOLA is numbered 1-69 within stratum.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Sample of schools and classes of Brazilian school students, public and private (IBGE, PeNSE technical notes).",,
 parent_respondent,in_progress,,,,,
 age_years,partial,"B01P03, B01003_2012, VB01003, B01003_2019, B01004, B01005, IDADE_AGREG, .wave","local({
   wave <- as.character(.wave)

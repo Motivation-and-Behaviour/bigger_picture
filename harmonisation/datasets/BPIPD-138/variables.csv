@@ -8,6 +8,7 @@ survey_strata,unavailable,,,Not a survey sample.,,
 survey_cluster,unavailable,,,Not a survey sample.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Newborns under 4 weeks who were patients at 15 US primary paediatric practices, with no selection on a condition; children too ill to attend were excluded (Healthy Steps national evaluation user guide vol. 1).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,T2Q_BAGE,"na_if(as.numeric(T2Q_BAGE), 999) / 12","Child's age in months at the 30-33 month interview (T2Q_BAGE, created by the producer from the birth and interview dates; 30-33), / 12 as is; 999 = missing (2 rows).",,
 sex,compatible,"NBQ4, MRBSEX, T1A13S1, T2A15R1, T2A15S1, T2A15R2, T2A15S2, T2A15R3, T2A15S3, T2A15R4, T2A15S4, T2A15R5, T2A15S5, T2A15R6, T2A15S6, T2A15R7, T2A15S7, T2A15R8, T2A15S8, T2A15R9, T2A15S9, T2A15R10, T2A15S10, T2A15R11, T2A15S11, T2A15R12, T2A15S12, T2A15R13, T2A15S13","local({
