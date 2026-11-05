@@ -269,6 +269,11 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+1380,maternal_education,0,Secondary school or less,compatible,B_Titolo_Studio code 0 (Nessun titolo); code order read from the questionnaire options
+1380,maternal_education,1,Secondary school or less,compatible,B_Titolo_Studio code 1 (Licenza elementare); code order read from the questionnaire options
+1380,maternal_education,2,Secondary school or less,compatible,B_Titolo_Studio code 2 (Licenza di scuola media); code order read from the questionnaire options
+1380,maternal_education,3,Secondary school or less,compatible,B_Titolo_Studio code 3 (Diploma o qualifica di scuola media superiore); code order read from the questionnaire options
+1380,maternal_education,4,Bachelor degree or higher,proximate,B_Titolo_Studio code 4 (Laurea/Diploma universitario o titolo superiore); pools the short university diploma with degrees; code order read from the questionnaire options
 1598,parental_education,1,Secondary school or less,compatible,EducationScores code 1 Primary school (ceiling of the parents' mean).
 1598,parental_education,2,Secondary school or less,compatible,"EducationScores code 2 Secondary school (GCSEs, O-Levels or equivalent) (ceiling of the parents' mean)."
 1598,parental_education,3,Secondary school or less,compatible,EducationScores code 3 Sixth Form/College (A Levels or equivalent) (ceiling of the parents' mean).
