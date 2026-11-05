@@ -1,0 +1,16 @@
+dataset_id: "1440"
+dataset_name: "Coksan"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "AggressionAndBeh.csv"
+    reader: "csv"
+  - name: "codebook"
+    role: "codebook"
+    glob: "AggressionAndBeh_Codebook.xlsx"
+
+notes: |
+  One csv data file and one excel codebook. Data file was originally .omv,
+  exported as csv. Original .omv file still in data file.
