@@ -269,6 +269,11 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+1927,maternal_education,None,Secondary school or less,compatible,No education (code 0); ISCED 0.
+1927,maternal_education,Primary,Secondary school or less,compatible,Primary education (code 1); ISCED 1.
+1927,maternal_education,Secondary,Secondary school or less,compatible,Secondary education (code 2); no higher than ISCED 3.
+1927,maternal_education,Upper secondary or VET,Secondary school or less,proximate,'Upper secondary education or vocational training (VET)' (code 3): the VET level is not stated; placed at the upper secondary level the label names.
+1927,maternal_education,University,Bachelor degree or higher,compatible,University education (code 4); ISCED 6-8.
 1261,maternal_education,Junior high school graduate,Secondary school or less,compatible,haha_F11_1 or haha_F11_2 code 1 (中卒); ISCED 2.
 1261,maternal_education,High school graduate,Secondary school or less,compatible,haha_F11_1 or haha_F11_2 code 2 (高卒); ISCED 3.
 1261,maternal_education,Specialised training college graduate,Post-secondary,compatible,haha_F11_1 or haha_F11_2 code 3 (専門学校卒); post-secondary specialised training course; ISCED 5.
