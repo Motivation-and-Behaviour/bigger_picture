@@ -1,0 +1,26 @@
+source_value,harmonised_value,notes
+Masters,Bachelor degree or higher,ISCED 7.
+master educational leadership,Bachelor degree or higher,ISCED 7.
+Master In Socail work,Bachelor degree or higher,ISCED 7.
+Masters in Business Administration,Bachelor degree or higher,ISCED 7.
+Bachelor degree,Bachelor degree or higher,ISCED 6.
+University degree holder,Bachelor degree or higher,A completed university degree.
+Graduate Diploma,Bachelor degree or higher,"Postgraduate award, as a graduate diploma in other Australian education scales."
+post grad diploma midwifery,Bachelor degree or higher,Postgraduate award.
+Postgraduate certificate,Bachelor degree or higher,Postgraduate award.
+Postgraduate university diploma,Bachelor degree or higher,Postgraduate award.
+OPst graduate with Industry qualification Chartered Accountant,Bachelor degree or higher,States a postgraduate award.
+Business College Certificate,Post-secondary,"A post-school certificate, as the TAFE band."
+diploma of applied science,Post-secondary,"A diploma, as the TAFE band."
+currently studying Undergrad Uni degree,Post-secondary,Tertiary study begun but not completed.
+COLLEGE,Unknown,No level stated.
+CPA,Unknown,A professional designation; no level stated.
+Bachelor information technology,Bachelor degree or higher,ISCED 6.
+bachelors degree equivalency,Bachelor degree or higher,States a bachelor's equivalent.
+Phd,Bachelor degree or higher,ISCED 8.
+PhD,Bachelor degree or higher,ISCED 8.
+Post Graduate plus Actuarial institute Qualification,Bachelor degree or higher,States a postgraduate award.
+SIA diploma,Post-secondary,"A diploma, as the TAFE band."
+Year 11,Secondary school or less,ISCED 3 not completed.
+CA,Unknown,A professional designation; no level stated.
+Nil,Unknown,No level stated.
