@@ -269,3 +269,10 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+989,maternal_education,Some high school,Secondary school or less,compatible,"v124 code 1: some high school, no diploma (ISCED 0-2)"
+989,maternal_education,High school/equivalent,Secondary school or less,compatible,v124 code 2: high school or equivalent (ISCED 3)
+989,maternal_education,Some college,Post-secondary,compatible,v124 code 3: college begun but not completed (tertiary study begun)
+989,maternal_education,Two-year degree,Post-secondary,compatible,v124 code 4: two-year (associate) degree (ISCED 5)
+989,maternal_education,Four-year degree,Bachelor degree or higher,compatible,v124 code 5: four-year (bachelor's) degree (ISCED 6)
+989,maternal_education,Graduate/professional degree,Bachelor degree or higher,compatible,v124 code 6: graduate or professional degree (ISCED 7-8)
+989,maternal_education,9,Unknown,incompatible,v124 code 9 is undefined
