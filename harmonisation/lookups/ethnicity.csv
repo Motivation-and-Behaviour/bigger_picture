@@ -258,3 +258,11 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2296,ethnicity,Non-Hispanic Black alone,Black,compatible,TETHRAC_RC code 2: Black or African American as the only race among non-Hispanic teens
 2296,ethnicity,Non-Hispanic White alone,White,compatible,TETHRAC_RC code 3: White as the only race among non-Hispanic teens
 2296,ethnicity,Other,Other,proximate,"TETHRAC_RC code 4 pools non-Hispanic Asian, American Indian/Alaska Native, Native Hawaiian/Pacific Islander and two or more races; Asian and Mixed cannot be separated"
+1721,ethnicity,White,White,compatible,"Code 0: White, non-Hispanic"
+1721,ethnicity,Black,Black,compatible,"Code 1: Black, non-Hispanic"
+1721,ethnicity,Hispanic,Hispanic,compatible,Code 2: Hispanic origin in a US sample
+1721,ethnicity,Asian,Asian,proximate,"Code 3: one option merging Asian with Pacific Islander (Other in the schema); mapped to the real value, merge named"
+1721,ethnicity,Native,Other,proximate,Code 4: Native American or Alaskan Native; no schema category; reported separately in indigenous; no respondents
+1721,ethnicity,Mixed,Mixed,compatible,Code 5: Mixed ethnicity
+1721,ethnicity,Other,Other,compatible,Code 6: residual category
+1721,ethnicity,9,Unknown,compatible,Code 9 occurs once and no document defines it

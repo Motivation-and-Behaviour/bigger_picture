@@ -1,22 +1,17 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-1721 (Cyr)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One cross-sectional classroom survey of US high-school students, delivered on
+#' a bubble sheet and keyed into a single SPSS file that already carries the
+#' study's computed scale scores.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per participant
 tidy_BPIPD_1721 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
-
-  tibble::as_tibble(raw_dataset$data[[1]])
+  # The scoring syntax (`Info_Tech_Scoring_Prgm[1].SPS`) skips the bubble-sheet
+  # columns holding birth date and identification number, so the file has no id.
+  tibble::as_tibble(raw_dataset$data$`Cyr Data`)
 }
