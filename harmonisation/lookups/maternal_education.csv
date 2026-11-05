@@ -269,6 +269,13 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+262,maternal_education,Year 10 or less,Secondary school or less,compatible,T1P_P_Educ and T1P_OP_Educ code 1 (ISCED 0-2).
+262,maternal_education,Year 12,Secondary school or less,compatible,Code 2 (ISCED 3).
+262,maternal_education,TAFE certificate or diploma (or equivalent),Post-secondary,proximate,"Code 3: vocational certificates and diplomas, a band spanning upper-secondary and post-secondary levels."
+262,maternal_education,Undergraduate university degree,Bachelor degree or higher,compatible,Code 4 (ISCED 6).
+262,maternal_education,Postgraduate university degree,Bachelor degree or higher,compatible,Code 5 (ISCED 7-8).
+262,maternal_education,Other (please type),Unknown,compatible,Code 6 with no resolved text; other qualifications are Unknown.
+262,maternal_education,Unsure/ NA,Unknown,compatible,"T1P_OP_Educ code -99; declared missing, so it reaches the table as NA."
 1927,maternal_education,None,Secondary school or less,compatible,No education (code 0); ISCED 0.
 1927,maternal_education,Primary,Secondary school or less,compatible,Primary education (code 1); ISCED 1.
 1927,maternal_education,Secondary,Secondary school or less,compatible,Secondary education (code 2); no higher than ISCED 3.
