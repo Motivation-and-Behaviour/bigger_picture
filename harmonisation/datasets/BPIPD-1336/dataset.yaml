@@ -90,7 +90,7 @@ resources:
 
   - name: "within_sfig1_sameday_results"
     role: "docs"
-    glob: "within_level/sfig1_mlm_result_sameday_youtube_game_snapchat.html"
+    glob: "within_level/sfig1_mlm_result_sameday_youtube_game_sanpchat.html"
 
   - name: "within_sfig2_lag_results"
     role: "docs"
