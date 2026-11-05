@@ -8,6 +8,7 @@ survey_strata,unavailable,,,Not in the supplied extract.,,
 survey_cluster,unavailable,,,Not in the supplied extract.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""",Korean national survey of school students in grades 4 to 12 run by the Korea Communications Commission and NIA (2020-2023 survey releases and codebook).,,
 parent_respondent,in_progress,,,,,
 age_years,partial,"students_2020_SQ3, students_2020_SQ3_1, students_2021_SQ6, adolescents_2023_DQ2_2","coalesce(
   case_when(

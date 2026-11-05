@@ -37,6 +37,7 @@ survey_cluster,compatible,"psu, pid, wave","local({
 })","CFPS primary sampling unit (county-level, fixed by the original sample). 2014 and 2016 do not release it, so they take the participant's value from another wave. Fixed at sampling, not wave-prefixed.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Multi-stage probability sample of families from 25 Chinese provinces (Xie & Lu 2015, doi:10.1177/2057150X15614535).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,"interview_year_self, interview_month_self, interview_year_parent, interview_month_parent, birth_year, birth_month, age_reported, tv_wd_hours_self, tv_we_hours_self, tv_week_hours_self, internet_wd_hours_self, internet_we_hours_self, internet_day_hours_self, internet_week_hours_self, internet_mobile_day_mins_self, internet_pc_day_mins_self, learning_online_day_mins_self, internet_any_self, internet_mobile_user, internet_pc_user, learning_online_user_self","local({
   self <- rowSums(
