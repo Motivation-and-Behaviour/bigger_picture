@@ -1,22 +1,19 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-262 (Risks to Adolescent Wellbeing (RAW) Project)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One SPSS file holds the Time 1 (Grade 6) child (`T1C_`) and parent (`T1P_`)
+#' questionnaires side by side; the later annual waves are not in the extract.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per child at Time 1
 tidy_BPIPD_262 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
+  df <- tibble::as_tibble(raw_dataset$data$data)
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  if (anyDuplicated(df$RAW_ID) > 0) {
+    stop("BPIPD-262: `RAW_ID` does not uniquely identify rows.", call. = FALSE)
+  }
+  df
 }

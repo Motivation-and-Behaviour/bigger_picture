@@ -258,3 +258,8 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2296,ethnicity,Non-Hispanic Black alone,Black,compatible,TETHRAC_RC code 2: Black or African American as the only race among non-Hispanic teens
 2296,ethnicity,Non-Hispanic White alone,White,compatible,TETHRAC_RC code 3: White as the only race among non-Hispanic teens
 2296,ethnicity,Other,Other,proximate,"TETHRAC_RC code 4 pools non-Hispanic Asian, American Indian/Alaska Native, Native Hawaiian/Pacific Islander and two or more races; Asian and Mixed cannot be separated"
+262,ethnicity,Caucasian,White,compatible,T1P_C_Ethnicity code 1; parent report.
+262,ethnicity,Asian,Asian,compatible,Code 2.
+262,ethnicity,Aboriginal and/or Torres Strait Islander,Other,proximate,Code 3 (none chosen); dataschema has no Indigenous category.
+262,ethnicity,Middle Eastern,Other,proximate,Code 4; dataschema has no Middle Eastern category.
+262,ethnicity,Other (please type),Other,proximate,Code 5; the typed text is resolved first through the dataset's ethnicity_other lookup.
