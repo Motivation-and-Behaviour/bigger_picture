@@ -1,22 +1,26 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-663 (Șipoș)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One Excel sheet: adolescent self-report (`C_*`, `MASC *`, `YSR *`) and the
+#' caregiver's report on the same child (`P_*`, `ADHD-RS *`, `CBCL *`) share a row.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per adolescent (single occasion), keyed on `#`
 tidy_BPIPD_663 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
+  db <- tibble::as_tibble(raw_dataset$data$data)
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  # `Date` holds two encodings: Excel serials (41 rows) and dd.mm.yyyy text (56).
+  is_serial <- grepl("^[0-9]+$", db$Date)
+  parsed <- as.Date(db$Date, format = "%d.%m.%Y")
+  parsed[is_serial] <- as.Date(
+    as.numeric(db$Date[is_serial]),
+    origin = "1899-12-30"
+  )
+  attr(parsed, "label") <- "Assessment date, parsed from `Date`"
+
+  db$assessment_date <- parsed
+  dplyr::relocate(db, "assessment_date", .after = "Date")
 }
