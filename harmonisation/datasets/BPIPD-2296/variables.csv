@@ -8,6 +8,7 @@ survey_strata,incompatible,"QUOTA_T_tpa, QUOTA_P_tpa",,Only the sample-selection
 survey_cluster,unavailable,,,Not a cluster sample: a non-probability quota sample from a survey panel (user guide p. 4).,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""",Non-probability sample of parent-teen dyads from the Ipsos survey panel (FLASHE data users guide p. 4).,,
 parent_respondent,in_progress,,,,,
 age_years,compatible,TAGE,"if_else(as.numeric(TAGE) > 0, as.numeric(TAGE) + 10.5, NA_real_)","Teen-reported age in completed years (TAGE, codes 1-8 = 11-18 years; 11 and 18 were removed from the public file, so 12-17 are observed), + 0.5: code + 10.5, as the study's own BMI-z syntax converts it. -9 (55) = NA.",,
 sex,compatible,TSEX,"recode_values(as.numeric(TSEX), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","Teen self-report, 'Are you male or female?' (TSEX). -9 not ascertained (59) = Unknown.",,

@@ -8,6 +8,7 @@ survey_strata,unavailable,,,Not a survey sample.,,
 survey_cluster,unavailable,,,Not a survey sample.,,
 family_id,unavailable,,,Not collected.,,
 sample_component,unavailable,,,Single sample.,,
+sample_population,inferred,,"""General population""","Students from public, voucher and private schools in Valparaiso, Chile, recruited by open invitation to schools (Cogni-Action protocol, Solis-Urra et al.).",,
 parent_respondent,compatible,"PQ0_Relationship, PQ0_Age_Parent, PQ0_Number_Adults_Home, PQ0_Number_Chils_Home, PQ3_Birt_Weight, PQ3_Birt_Length, PQ17_Income, PQ18_Property","case_when(
   as.numeric(haven::zap_labels(PQ0_Relationship)) == 0 ~ ""Mother"",
   as.numeric(haven::zap_labels(PQ0_Relationship)) == 1 ~ ""Father"",
