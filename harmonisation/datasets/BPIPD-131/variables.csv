@@ -8,6 +8,7 @@ survey_strata,compatible,"PSTRATUM, RSTRATUM","as.character(coalesce(PSTRATUM, R
 survey_cluster,compatible,"PPSU, RPSU","as.character(coalesce(PPSU, RPSU))","Taylor-series variance PSU of the child's component (PPSU for PFI, RPSU for SR); 6,204 PSUs of 1-4 children. No component prefix: the 1,315 households with a child in each file carry the same PSU in both.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Random-digit-dial telephone survey of US households with a screener for eligible children (NHES:2007 Data File User's Manual, Vol. III).",,
 parent_respondent,in_progress,,,,,
 age_years,partial,"CDOBYY, CDOBMM",(2007 + 63.5 / 365) - (CDOBYY + (CDOBMM - 0.5) / 12),"Decimal age at the fieldwork midpoint (5 March 2007; fieldwork 2 January to 6 May 2007) from the child's birth year and month (CDOBYY, CDOBMM; 258 and 332 values imputed by NCES). Partial: a birth date against an assumed reference date, as no interview date is released. AGE2006 (completed years at 31 December 2006) is not used.",,
 sex,compatible,SEX,"recode_values(SEX, 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","Household screener roster: 'Is this (CHILD) male or female?' (SEX), reported by the adult screener respondent; male or female only; 5 values imputed by NCES.",,

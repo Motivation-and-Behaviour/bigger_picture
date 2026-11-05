@@ -250,6 +250,7 @@ bp31_wave_columns <- function() {
       "CBCL Anxious/Depressed syndrome scale, caregiver report, mean item score",
       y3 = "BP31CBCL_Y3_ANXDEP",
       y5 = "BP31CBCL_Y5_ANXDEP",
+      y9 = "BP31CBCL_Y9_ANXDEP",
       y15 = "BP31CBCL_Y15_ANXDEP"
     ),
     cbcl_withdrawn = bp31_entry(
@@ -262,29 +263,34 @@ bp31_wave_columns <- function() {
       "CBCL Attention Problems syndrome scale, caregiver report, mean item score",
       y3 = "BP31CBCL_Y3_ATTENTION",
       y5 = "BP31CBCL_Y5_ATTENTION",
+      y9 = "BP31CBCL_Y9_ATTENTION",
       y15 = "BP31CBCL_Y15_ATTENTION"
     ),
     cbcl_aggressive = bp31_entry(
       "CBCL Aggressive Behavior syndrome scale, caregiver report, mean item score",
       y3 = "BP31CBCL_Y3_AGGRESSIVE",
       y5 = "BP31CBCL_Y5_AGGRESSIVE",
+      y9 = "BP31CBCL_Y9_AGGRESSIVE",
       y15 = "BP31CBCL_Y15_AGGRESSIVE"
     ),
     cbcl_rulebreak = bp31_entry(
       "CBCL Rule-Breaking (Delinquent) syndrome scale, caregiver report, mean item score",
       y5 = "BP31CBCL_Y5_RULEBREAK",
+      y9 = "BP31CBCL_Y9_RULEBREAK",
       y15 = "BP31CBCL_Y15_RULEBREAK"
     ),
     cbcl_internalising = bp31_entry(
-      "CBCL internalising score, caregiver report, mean item score across the anxious/depressed and withdrawn items",
+      "CBCL internalising score, caregiver report, mean item score across the anxious/depressed and withdrawn items (Year 9: and somatic complaints items)",
       y3 = "BP31CBCL_Y3_INTERNALISING",
       y5 = "BP31CBCL_Y5_INTERNALISING",
+      y9 = "BP31CBCL_Y9_INTERNALISING",
       y15 = "BP31CBCL_Y15_INTERNALISING"
     ),
     cbcl_externalising = bp31_entry(
       "CBCL externalising score, caregiver report, mean item score across the aggressive and rule-breaking items (Year 3: aggressive and attention items)",
       y3 = "BP31CBCL_Y3_EXTERNALISING",
       y5 = "BP31CBCL_Y5_EXTERNALISING",
+      y9 = "BP31CBCL_Y9_EXTERNALISING",
       y15 = "BP31CBCL_Y15_EXTERNALISING"
     ),
     # --- Year 15 teen BSI-18 anxiety (1 strongly agree - 4 strongly disagree)
@@ -1094,11 +1100,11 @@ bp31_label_column <- function(x, label, value_labels) {
 #' CBCL items making up each subscale, by wave
 #'
 #' Item tables from the user guides: Year 3 Table 27 (CBCL/1.5-5, 2000), Year
-#' 5 Table 27 (CBCL/4-18, 1991), Year 15 Table 18 (CBCL/6-18). Year 9
-#' administered the most CBCL items (111) but its user guide prints only
-#' three example items per subscale and points researchers to
-#' FFData@princeton.edu for the full list, so it's deliberately absent here
-#' rather than guessed at.
+#' 5 Table 27 (CBCL/4-18, 1991), Year 15 Table 18 (CBCL/6-18). Year 9 asked
+#' 111 of the CBCL/6-18's 120 items, every syndrome item included, but its
+#' user guide prints only example items, so its lists are ASEBA's CBCL/6-18
+#' sample profile (aseba.org/wp-content/uploads/cbclprofile.pdf), matched to
+#' the P5Q3 items by wording.
 #'
 #' Subscales available differ by age form: the Year 3 preschool form has no
 #' rule-breaking scale, and FFCWS asked 3 of its 5 attention problems items
@@ -1225,6 +1231,99 @@ bp31_cbcl_items <- function() {
         "P4L64"
       )
     ),
+    # Somatic complaints are scored only here, for the CBCL/6-18 internalising
+    # grouping; item 105 (P5Q3CX) also asks about alcohol, unlike the form.
+    y9 = list(
+      anxdep = c(
+        "P5Q3M",
+        "P5Q3AB",
+        "P5Q3AC",
+        "P5Q3AD",
+        "P5Q3AE",
+        "P5Q3AF",
+        "P5Q3AH",
+        "P5Q3AQ",
+        "P5Q3AV",
+        "P5Q3AX",
+        "P5Q3BQ",
+        "P5Q3CK",
+        "P5Q3DB"
+      ),
+      withdrawn = c(
+        "P5Q3E",
+        "P5Q3AO",
+        "P5Q3BK",
+        "P5Q3BO",
+        "P5Q3BU",
+        "P5Q3CU",
+        "P5Q3CV",
+        "P5Q3DA"
+      ),
+      somatic = c(
+        "P5Q3AS",
+        "P5Q3AU",
+        "P5Q3AW",
+        "P5Q3AZ",
+        "P5Q3BB1",
+        "P5Q3BB2",
+        "P5Q3BB3",
+        "P5Q3BB4",
+        "P5Q3BB5",
+        "P5Q3BB6",
+        "P5Q3BB7"
+      ),
+      attention = c(
+        "P5Q3A",
+        "P5Q3D",
+        "P5Q3G",
+        "P5Q3I",
+        "P5Q3L",
+        "P5Q3P",
+        "P5Q3AN",
+        "P5Q3BG",
+        "P5Q3BW",
+        "P5Q3BY"
+      ),
+      aggressive = c(
+        "P5Q3C",
+        "P5Q3O",
+        "P5Q3R",
+        "P5Q3S",
+        "P5Q3T",
+        "P5Q3U",
+        "P5Q3V",
+        "P5Q3AJ",
+        "P5Q3BC",
+        "P5Q3BN",
+        "P5Q3CF",
+        "P5Q3CG",
+        "P5Q3CH",
+        "P5Q3CI",
+        "P5Q3CN",
+        "P5Q3CO",
+        "P5Q3CQ",
+        "P5Q3CW"
+      ),
+      rulebreak = c(
+        "P5Q3B",
+        "P5Q3X",
+        "P5Q3AA",
+        "P5Q3AL",
+        "P5Q3AP",
+        "P5Q3BI",
+        "P5Q3BM",
+        "P5Q3BR",
+        "P5Q3BS",
+        "P5Q3BZ",
+        "P5Q3CA",
+        "P5Q3CJ",
+        "P5Q3CP",
+        "P5Q3CR",
+        "P5Q3CT",
+        "P5Q3CX",
+        "P5Q3CY"
+      )
+    ),
     y15 = list(
       anxdep = c("P6B36", "P6B40", "P6B52", "P6B53", "P6B54", "P6B68"),
       withdrawn = c("P6B65", "P6B66"),
@@ -1270,7 +1369,8 @@ bp31_cbcl_single_items <- function() {
 #'
 #' Externalising follows the form's grouping: aggressive with rule-breaking,
 #' or with attention problems on the preschool form, which has no
-#' rule-breaking scale.
+#' rule-breaking scale. Internalising adds somatic complaints only where a
+#' wave's lists score them (Year 9).
 bp31_cbcl_composites <- function(subscales) {
   externalising <- if (is.null(subscales$rulebreak)) {
     c("aggressive", "attention")
@@ -1278,7 +1378,10 @@ bp31_cbcl_composites <- function(subscales) {
     c("aggressive", "rulebreak")
   }
   list(
-    internalising = c("anxdep", "withdrawn"),
+    internalising = intersect(
+      c("anxdep", "withdrawn", "somatic"),
+      names(subscales)
+    ),
     externalising = externalising
   )
 }

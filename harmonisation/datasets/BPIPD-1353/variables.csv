@@ -8,6 +8,7 @@ survey_strata,compatible,STRATA,as.character(STRATA),"Merged design stratum STRA
 survey_cluster,compatible,cluster_id,cluster_id,"Primary sampling unit CLUSTER (the sampled school), prefixed with the survey year in the tidier.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Annual stratified cluster sample of Korean middle and high school students, by schools and then classes (KYRBS user guidelines).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,"AGE_M, AGE","coalesce(as.numeric(AGE_M) / 12, as.numeric(AGE) + 0.5)",AGE_M (age in completed months) / 12; AGE (completed years) + 0.5 where AGE_M is missing (no such rows from 2008).,,
 sex,compatible,SEX,"recode_values(as.numeric(SEX), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","Coded 1/2; direction (male/female) inferred from height and weight, not labelled in source.",,
