@@ -332,3 +332,13 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 989,ethnicity,Other: Indian & French,Mixed,proximate,v122 code 7 with v123 code 3: two heritages named
 989,ethnicity,Other: European American,White,proximate,v122 code 7 with v123 code 7
 989,ethnicity,9,Unknown,incompatible,v122 code 9 is undefined
+1760,ethnicity,1,White,proximate,Q4 code 1: NZ European; the responding parent's own group.
+1760,ethnicity,2,Other,proximate,"Q4 code 2: Maori; no schema category, status on indigenous; the responding parent's own group."
+1760,ethnicity,3,Other,proximate,"Q4 code 3: Samoan; Pacific peoples, no schema category; the responding parent's own group."
+1760,ethnicity,4,Other,proximate,"Q4 code 4: Cook Island Maori; Pacific peoples, no schema category; the responding parent's own group."
+1760,ethnicity,5,Other,proximate,"Q4 code 5: Tongan; Pacific peoples, no schema category; the responding parent's own group."
+1760,ethnicity,6,Other,proximate,"Q4 code 6: Niuean; Pacific peoples, no schema category; the responding parent's own group."
+1760,ethnicity,7,Asian,proximate,Q4 code 7: Chinese; the responding parent's own group.
+1760,ethnicity,8,Asian,proximate,Q4 code 8: Indian; the responding parent's own group.
+1760,ethnicity,9,Asian,proximate,Q4 code 9: Filipino; the responding parent's own group.
+1760,ethnicity,10,Other,proximate,"Q4 code 10: Other, resolved first through the dataset's ethnicity_other lookup; the responding parent's own group."
