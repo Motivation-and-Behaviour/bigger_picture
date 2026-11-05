@@ -385,3 +385,22 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 160,maternal_education,only high school,Secondary school or less,compatible,"mother_ed, father_ed code 2, ISCED 3"
 160,maternal_education,college or higher education,Bachelor degree or higher,proximate,"mother_ed, father_ed code 3; reads as pooling short-cycle college (ISCED 5) with degrees (ISCED 6-8), placed at the level taken to hold most of the band"
 160,maternal_education,5,Unknown,incompatible,"mother_ed code 5 (1 row) has no value label, and no document defines it"
+706,maternal_education,1,Secondary school or less,compatible,Mother_Education code 1 Primary.
+706,maternal_education,2,Secondary school or less,compatible,Mother_Education code 2 Middle school.
+706,maternal_education,3,Secondary school or less,compatible,Mother_Education code 3 High school.
+706,maternal_education,4,Bachelor degree or higher,compatible,Mother_Education code 4 Bachelor's.
+706,maternal_education,5,Bachelor degree or higher,compatible,Mother_Education code 5 Master's.
+706,maternal_education,6,Bachelor degree or higher,compatible,Mother_Education code 6 Post-graduate.
+706,paternal_education,1,Secondary school or less,compatible,Father_Education code 1 Primary.
+706,paternal_education,2,Secondary school or less,compatible,Father_Education code 2 Middle school.
+706,paternal_education,3,Secondary school or less,compatible,Father_Education code 3 High school.
+706,paternal_education,4,Bachelor degree or higher,compatible,Father_Education code 4 Bachelor's.
+706,paternal_education,5,Bachelor degree or higher,compatible,Father_Education code 5 Master's.
+706,paternal_education,6,Bachelor degree or higher,compatible,Father_Education code 6 Post-graduate.
+706,parental_education,1,Secondary school or less,compatible,highest of Mother_Education and Father_Education code 1 Primary.
+706,parental_education,2,Secondary school or less,compatible,highest of Mother_Education and Father_Education code 2 Middle school.
+706,parental_education,3,Secondary school or less,compatible,highest of Mother_Education and Father_Education code 3 High school.
+706,parental_education,4,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 4 Bachelor's.
+706,parental_education,5,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 5 Master's.
+706,parental_education,6,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 6 Post-graduate.
+706,paternal_education,999,Unknown,incompatible,Father_Education code 999 is in no document.
