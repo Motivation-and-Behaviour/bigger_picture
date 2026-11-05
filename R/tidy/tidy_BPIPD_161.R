@@ -1,22 +1,18 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-161 (Taylor)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One cross-sectional parent-report survey of UK children aged 6-36 months,
+#' released as a single cleaned CSV, so there is nothing to join or stack.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per child, keyed on the Qualtrics response id `V1`
 tidy_BPIPD_161 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
+  df <- tibble::as_tibble(raw_dataset$data[["BMQ Clean Data"]])
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  # The reader names the CSV's unnamed exported row-name column `...1`. `V1` is
+  # the Qualtrics response id, already unique, so no `participant_id` is built.
+  dplyr::rename(df, source_row = "...1")
 }
