@@ -275,3 +275,33 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2303,maternal_education,4,Post-secondary,compatible,"Code 4: higher vocational education (visjesolska), short-cycle tertiary, ISCED 5; unlabelled in the file, wording from Appendix A"
 2303,maternal_education,5,Bachelor degree or higher,compatible,"Code 5: professional higher education and university (Bachelor, Master's, PhD), ISCED 6-8; unlabelled in the file, wording from Appendix A"
 2303,maternal_education,6,Unknown,compatible,"Code 6: 'I don't know, but my mom/dad works as ___'; an occupation gives no education level"
+86,maternal_education,1,Secondary school or less,compatible,"ID_Mother_Edu_3Cat code 1, labelled Primary: up to complete secondary, by cross-tabulation against ID_Parents_Edu_Max; study asked to confirm"
+86,maternal_education,2,Post-secondary,compatible,"ID_Mother_Edu_3Cat code 2, labelled Secondary: never occurs below TecProf incomplete in ID_Parents_Edu_Max, so technical-professional tertiary or incomplete university; study asked to confirm"
+86,maternal_education,3,Bachelor degree or higher,compatible,"ID_Mother_Edu_3Cat code 3, labelled University: never occurs below University complete in ID_Parents_Edu_Max; study asked to confirm"
+86,paternal_education,1,Secondary school or less,compatible,"ID_Father_Edu_3Cat code 1, labelled Primary: up to complete secondary, by cross-tabulation against ID_Parents_Edu_Max; study asked to confirm"
+86,paternal_education,2,Post-secondary,compatible,"ID_Father_Edu_3Cat code 2, labelled Secondary: never occurs below TecProf incomplete in ID_Parents_Edu_Max, so technical-professional tertiary or incomplete university; study asked to confirm"
+86,paternal_education,3,Bachelor degree or higher,compatible,"ID_Father_Edu_3Cat code 3, labelled University: never occurs below University complete in ID_Parents_Edu_Max; study asked to confirm"
+86,parental_education,1,Secondary school or less,compatible,"ID_Parents_Edu_Max level 1, Primary incomplete"
+86,parental_education,2,Secondary school or less,compatible,"ID_Parents_Edu_Max level 2, Primary complete"
+86,parental_education,3,Secondary school or less,compatible,"ID_Parents_Edu_Max level 3, Secondary incomplete"
+86,parental_education,4,Secondary school or less,compatible,"ID_Parents_Edu_Max level 4, Secondary complete"
+86,parental_education,5,Post-secondary,compatible,"ID_Parents_Edu_Max level 5, TecProf incomplete"
+86,parental_education,6,Post-secondary,compatible,"ID_Parents_Edu_Max level 6, TecProf complete"
+86,parental_education,7,Post-secondary,compatible,"ID_Parents_Edu_Max level 7, University incomplete"
+86,parental_education,8,Bachelor degree or higher,compatible,"ID_Parents_Edu_Max level 8, University complete"
+86,parental_education,9,Bachelor degree or higher,compatible,"ID_Parents_Edu_Max level 9, Postgraduate incomplete"
+86,parental_education,10,Bachelor degree or higher,compatible,"ID_Parents_Edu_Max level 10, Postgraduate complete"
+2319,maternal_education,uni,Bachelor degree or higher,proximate,"Haskoli: university; no separate Post-secondary level, so placed at the level taken to hold most of its members; tick-boxes Q8_mothered_uni and Q5_fathered_uni"
+2319,maternal_education,apprent,Secondary school or less,compatible,"Idnrettindi: trade certificate, upper-secondary vocational, tick-boxes Q8_mothered_apprent and Q5_fathered_apprent"
+2319,maternal_education,juncoll,Secondary school or less,compatible,"Studentsprof: upper-secondary matriculation exam, tick-boxes Q8_mothered_juncoll and Q5_fathered_juncoll"
+2319,maternal_education,elem,Secondary school or less,compatible,"Grunnskoli: compulsory school, tick-boxes Q8_mothered_elem and Q5_fathered_elem"
+2319,maternal_education,other,Unknown,incompatible,"Annad: other, not rankable, used only where no level is ticked"
+2319,maternal_education,dontkn,Unknown,compatible,"Veit ekki: don't know, used only where no level is ticked"
+2319,maternal_education,noreply,Unknown,compatible,"Vil ekki svara: prefer not to answer, used only where no level is ticked"
+989,maternal_education,Some high school,Secondary school or less,compatible,"v124 code 1: some high school, no diploma (ISCED 0-2)"
+989,maternal_education,High school/equivalent,Secondary school or less,compatible,v124 code 2: high school or equivalent (ISCED 3)
+989,maternal_education,Some college,Post-secondary,compatible,v124 code 3: college begun but not completed (tertiary study begun)
+989,maternal_education,Two-year degree,Post-secondary,compatible,v124 code 4: two-year (associate) degree (ISCED 5)
+989,maternal_education,Four-year degree,Bachelor degree or higher,compatible,v124 code 5: four-year (bachelor's) degree (ISCED 6)
+989,maternal_education,Graduate/professional degree,Bachelor degree or higher,compatible,v124 code 6: graduate or professional degree (ISCED 7-8)
+989,maternal_education,9,Unknown,incompatible,v124 code 9 is undefined

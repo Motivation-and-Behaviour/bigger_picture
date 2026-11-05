@@ -291,3 +291,14 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2303,ethnicity,"1,8",White,proximate,"Multi-select: a European group with North American, which adds nothing"
 2303,ethnicity,"1,5,8",White,proximate,"Multi-select: European groups with North American, which adds nothing"
 2303,ethnicity,"1,6,8",White,proximate,"Multi-select: European groups with North American, which adds nothing"
+989,ethnicity,African American,Black,compatible,v122 code 1; parent's classification of the family
+989,ethnicity,Asian/Pacific Islander,Asian,proximate,v122 code 2: Asian merged with Pacific Islander (merge named)
+989,ethnicity,Caucasian,White,compatible,v122 code 3
+989,ethnicity,Hispanic or Latino,Hispanic,compatible,v122 code 4: Hispanic stands in a US sample
+989,ethnicity,Multi-Racial,Mixed,compatible,v122 code 5
+989,ethnicity,Native American,Other,proximate,v122 code 6: American Indian or Alaska Native folds into Other
+989,ethnicity,Other,Other,proximate,v122 code 7; also the undefined v123 codes 4 and 6 and 8
+989,ethnicity,Other: Persian,Other,proximate,v122 code 7 with v123 code 2: Middle Eastern group with no schema category
+989,ethnicity,Other: Indian & French,Mixed,proximate,v122 code 7 with v123 code 3: two heritages named
+989,ethnicity,Other: European American,White,proximate,v122 code 7 with v123 code 7
+989,ethnicity,9,Unknown,incompatible,v122 code 9 is undefined
