@@ -1,0 +1,10 @@
+dataset_id: "1356"
+dataset_name: "Vazquez-Cano"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "GAUBI_students_video_games.xlsx"
+    reader: "excel"
+    sheet: "Class Level"
