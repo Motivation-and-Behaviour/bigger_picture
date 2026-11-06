@@ -1,0 +1,12 @@
+dataset_id: "1713"
+dataset_name: "Antoniadou"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "ANTONIADOU KOKKINOS DATA.sav"
+    reader: "spss"
+  - name: "codebook"
+    role: "codebook"
+    glob: "ANTONIADOU KOKKINOS_Codebook_variable list.docx"

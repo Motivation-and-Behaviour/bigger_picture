@@ -23,6 +23,7 @@ survey_strata,unavailable,,,Not a survey sample.,,
 survey_cluster,unavailable,,,Not a survey sample.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Nationally representative birth cohort of people born in Britain in one week of 1970, and their children in the 2004 Parent and Child survey (BCS70 user guides).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,"dob86, fdoc_yr, fdoc_mt, gdoc_yr, gdoc_mt, hdoc_yr, hdoc_mt, qdoc_yr, qdoc_mt, odoc_yr, odoc_mt, pdoc_yr, pdoc_mt, tdoc_yr, tdoc_mt, rdoc_yr, rdoc_mt, ldoc_yr, ldoc_mt, b7age, b7nmonth, wave","case_when(
   wave == ""age16"" ~ 1900 +
