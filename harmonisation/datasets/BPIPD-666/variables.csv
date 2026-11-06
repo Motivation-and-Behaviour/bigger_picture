@@ -1,0 +1,839 @@
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,id,"sprintf(""%.0f"", id)","Study id (numeric, 536 distinct); the same id links a child's two waves.",,
+wave,compatible,wave,wave,"Constructed by the tidier: baseline, or follow_up (the one-year follow-up of 169 children).",,
+data_year,inferred,wave,"if_else(wave == ""baseline"", 2021, 2022)","No interview dates in the folder. Baseline 2021: the investigators announced the survey's launch in April 2021 (The Sector, 15 April 2021, reporting Deakin's media release) and interviewed survey participants in June-August 2021 (BMC Public Health 2022, 22:2011, PMC9629764). Follow-up 2022: the documented '1 year follow-up' (Quant_Tables v1.docx, Table 3) and the author's file 2022data_Fup.csv, merged by 12 August 2022.",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,unavailable,,,Not a survey sample.,,
+survey_strata,unavailable,,,Not a survey sample.,,
+survey_cluster,unavailable,,,Not a survey sample.,,
+family_id,unavailable,,,One participant per family.,,
+sample_component,unavailable,,,Single sample.,,
+sample_population,inferred,,"""General population""","Australian parents recruited through Facebook and Reddit advertisements, media coverage and snowball sampling (Mallawaarachchi et al. 2022, doi:10.1186/s12889-022-14459-0, on the same online survey).",,
+parent_respondent,proximate,"parent_gender, parent_wave2, wave","case_when(
+  wave == ""follow_up"" ~ ""Unknown"",
+  as.numeric(parent_gender) == 2 ~ ""Mother"",
+  as.numeric(parent_gender) == 1 ~ ""Father"",
+  .default = ""Unknown""
+)","Baseline: only the respondent's sex is recorded (parent_gender): female = Mother (474), male = Father (26); trans, genderqueer (2) and no parent block (34) = Unknown. Follow-up: no item records who answered (parent_wave2 = 'No' on 4 rows has no documented meaning) and the value is never carried, so Unknown on all 169.",,
+age_years,partial,"child_age_y, child_age_m",child_age_y + (child_age_m - 1) / 12,"Parent report of completed years and months (code 1 = 0 months), the study's own decimal formula (2. Total sample descriptives.Rmd). Follow-up has no age item: baseline age + 1 year, the documented '1 year follow-up', filled in the tidier; so partial at follow-up, and the row takes the weaker status. age_y_wave2 and age_m_wave2 echo baseline and are not used.",,
+sex,compatible,"child_gender, id","coalesce(
+  modal_within(
+    recode_values(as.numeric(child_gender), 1 ~ ""Male"", 2 ~ ""Female"", 3 ~ ""Other"", default = NA_character_),
+    id
+  ),
+  ""Unknown""
+)","Child sex or gender reported by the parent at baseline (child_gender; quant_meta_07Oct22.xls): 1 male, 2 female, 3 other, -9 prefer not to answer = Unknown; carried to follow-up. gender_wave2 echoes baseline and is not used.",,
+country,inferred,"country, australia, id, wave","if_else(is.na(carry_within(country, id, order = wave)), ""Australia"", ""Unknown"")","Australia: the investigators describe 'an online longitudinal survey of young children's smartphone and tablet use in Australia' (Mallawaarachchi et al. 2022, BMC Public Health 22:2011, PMC9629764). Unknown at both waves for the 65 participants who wrote a non-Australian country in the free-text country column (USA, Canada and others). The coding of australia (0-4) and what country asked are undocumented.",,
+state,inferred,,"""Unknown""","Australian survey with no state or territory item, so Unknown on every row.",,
+region,inferred,,"""Unknown""","No state, territory or region item, so Unknown on every row.",,
+ethnicity,unavailable,,,Not collected.,,
+indigenous,unavailable,,,Not collected.,,
+minority,unavailable,,,Not collected.,,
+immigrant_background,unavailable,,,Not collected.,,
+born_in_country,unavailable,,,Not collected.,,
+home_language,unavailable,,,Not collected.,,
+ses_area,unavailable,,,Not collected.,,
+ses_household,proximate,household_income,"recode_values(
+  as.numeric(household_income),
+  c(1, 2, 3, 4, 5, 6) ~ ""Low"",
+  7 ~ ""Medium"",
+  c(8, 9, 10) ~ ""High"",
+  default = ""Unknown""
+)","Parent-reported annual household income in 10 bands (household_income; quant_meta_07Oct22.xls), asked at baseline and carried to follow-up in the tidier on the documented one-year interval. Bands placed by within-wave ridit: up to $115k (band 6, ridit 0.32 at baseline, 0.24 at follow-up) Low; $115-140k (0.46; 0.39, the band nearest 0.5) Medium; $140k or more (0.69; 0.66) High. Shares 38/16/46 at baseline, 30/19/52 at follow-up, so follow-up lies outside 10 points of 40/20/40: proximate. Don't know (0), prefer not to answer (-9) and missing = Unknown.",,
+ses_household_measure,inferred,household_income,"""Income: annual household income, 10 bands""","Banded annual household income from the parent, baseline, carried to follow-up; the cut rule is in ses_household.",,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,proximate,"parent_edu, parent_gender, id, wave","coalesce(
+  if_else(
+    as.numeric(carry_within(parent_gender, id, order = wave)) == 2,
+    lookup_values(
+      as.numeric(parent_edu),
+      lookup_maternal_education,
+      dataset_id = spec$dataset_id,
+      target_variable = ""maternal_education""
+    ),
+    NA_character_
+  ),
+  ""Unknown""
+)","The responding parent's own highest education (parent_edu; Table 1 'Highest level of education completed') where that parent is female (parent_gender = 2, carried from baseline), read as the mother figure; other rows Unknown. Through the shared education lookup: Year 7-10, 11, 12 = Secondary school or less; TAFE ('Trade Certificate/ Diploma', Table 1) = Post-secondary, a band that may span levels (proximate); undergraduate and postgraduate = Bachelor degree or higher. Asked at baseline, always carried in the tidier.",maternal_education,
+paternal_education,proximate,"parent_edu, parent_gender, id, wave","coalesce(
+  if_else(
+    as.numeric(carry_within(parent_gender, id, order = wave)) == 1,
+    lookup_values(
+      as.numeric(parent_edu),
+      lookup_maternal_education,
+      dataset_id = spec$dataset_id,
+      target_variable = ""maternal_education""
+    ),
+    NA_character_
+  ),
+  ""Unknown""
+)","The responding parent's own highest education (parent_edu) where that parent is male (parent_gender = 1, carried from baseline), read as the father figure; other rows Unknown. Levels and TAFE placement as maternal_education. Asked at baseline, always carried in the tidier.",maternal_education,
+parental_education,incompatible,parent_edu,,"Only the responding parent's own education (parent_edu); no other parent is asked, so the highest level across parents cannot be formed. See maternal_education and paternal_education.",,
+maternal_employment,proximate,"parent_employ, parent_gender, id, parent_employment_631_wave2, parent_employment_2_wave2, wave","if_else(
+  as.numeric(carry_within(parent_gender, id, order = wave)) %in% 2,
+  recode_values(as.numeric(parent_employ), c(1, 2, 3) ~ ""Employed"", 4 ~ ""Not employed"", default = ""Unknown""),
+  ""Unknown""
+)","The responding parent's own employment (parent_employ; quant_meta_07Oct22.xls: 1 full-time, 2 part-time, 3 casual = Employed; 4 no = Not employed; 5 other, prefer not to answer or unclear = Unknown) where that parent is female (parent_gender = 2, carried), read as the mother; proximate. Question wording and reference period not stated. Follow-up: carried in the tidier for the 127 parents reporting no change; the 42 who re-recorded it (parent_employment_631_wave2, parent_employment_2_wave2) have no code list, so Unknown. employment_wave2 echoes baseline and is not used.",,
+maternal_age,partial,"parent_age, parent_gender, id, wave","local({
+  female <- as.numeric(carry_within(parent_gender, id, order = wave)) %in% 2
+  age <- carry_within(as.numeric(parent_age), id, order = wave) + 0.5
+  if_else(female, age + (wave == ""follow_up""), NA_real_)
+})","The responding parent's age in completed years + 0.5 where that parent is female (parent_gender = 2), read as the mother: partial, sex recorded only. Asked at baseline; follow-up is that age plus the one-year change in age_years (projection, partial). Fathers and other respondents are NA.",,
+urbanicity,unavailable,,,Not collected.,,
+family_structure,proximate,living,"recode_values(
+  as.numeric(living),
+  2 ~ ""Two biological/adoptive parents"",
+  c(1, 3, 4) ~ ""Single parent"",
+  default = ""Unknown""
+)","The responding parent's marital status (living; quant_meta_07Oct22.xls, Table 1 'Married/de facto'): married or de facto = Two biological/adoptive parents, the category its structure forces, since step-families cannot be separated (proximate); single, separated and widowed = Single parent; other and missing = Unknown. Carried to follow-up in the tidier on the documented one-year interval, except the 9 rows that re-recorded it (living_628_wave2, parent_living_wave2), whose codes no document defines, so Unknown.",,
+fam_siblings_n,compatible,no_of_children,no_of_children - 1,"The responding parent's number of children (no_of_children; Table 1 'Number of Children'), the child included, minus one; parent report at baseline, carried to follow-up in the tidier on the documented one-year interval. birth_order_1 to birth_order_6 are named unused.",,
+fam_siblings_any,unavailable,,,Derive at analysis from fam_siblings_n.,,
+fam_screenrules,incompatible,"parental_control, control_options, control_options_text",,"Parental-control item (parental_control, 0/1, wording not in the folder): technical controls, mapped to fam_mediation_technical. Its options (control_options) have no code list and only 2 free-text answers name a timer or screen-time setting, so no time limit can be shown.",,
+fam_contentrules,incompatible,"parental_control, control_options, control_options_text",,"Parental-control item (parental_control): filters and device or app controls, not rules set by the parent; mapped to fam_mediation_technical.",,
+fam_bedroomscreen,incompatible,"freq_bedtime, otherscreen_bedtime, otherscreen_bedtime_wave2",,"Use at bedtime (freq_bedtime, otherscreen_bedtime, otherscreen_bedtime_wave2); wording not in the folder, and nothing places a device in the bedroom. Named unused.",,
+fam_firstphone_age,incompatible,"firstuse_y, firstuse_m, age_firstuse",,"Age at first use pools smartphones with tablets and asks about use, not ownership (firstuse_y, firstuse_m); mapped to fam_firstscreen_age.",,
+fam_firstscreen_age,partial,"firstuse_y, firstuse_m, child_access, child_age_y, child_age_m, id, wave","local({
+  first <- if_else(is.na(firstuse_m), firstuse_y + 0.5, firstuse_y + firstuse_m / 12)
+  carried <- carry_within(first, id, order = wave)
+  age <- child_age_y + (child_age_m - 1) / 12
+  if_else(child_access %in% 0 | (is.na(first) & carried > age), NA_real_, carried)
+})","Parent report of the age at first use of a smartphone or tablet, years and months (firstuse_y, firstuse_m; follow-up: the children who started after baseline); partial, some devices. Years + months / 12; completed years + 0.5 where months are blank. Carried within child, except to a wave at which the child had not started (child_access = 0 at baseline, or a carried age above the child's age), which stays NA; NA for children who have not started. The author's age_firstuse is not used.",,
+fam_coview_freq,partial,"usewithparent_weekday, usewithparent_weekend, aloneuse_weekday, aloneuse_weekend, usewithothers_weekday, usewithothers_weekend, child_access, child_access_wave2, child_freq_parent_wave2, child_freq_alone_wave2, childfreq_others_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  parent <- 5 *
+    if_else(is.na(usewithparent_weekday) & (nonuser | child_freq_parent_wave2 %in% 1), 0, usewithparent_weekday) +
+    2 * if_else(is.na(usewithparent_weekend) & (nonuser | child_freq_parent_wave2 %in% 1), 0, usewithparent_weekend)
+  alone <- 5 *
+    if_else(is.na(aloneuse_weekday) & (nonuser | child_freq_alone_wave2 %in% 1), 0, aloneuse_weekday) +
+    2 * if_else(is.na(aloneuse_weekend) & (nonuser | child_freq_alone_wave2 %in% 1), 0, aloneuse_weekend)
+  others <- 5 *
+    if_else(is.na(usewithothers_weekday) & (nonuser | childfreq_others_wave2 %in% 1), 0, usewithothers_weekday) +
+    2 * if_else(is.na(usewithothers_weekend) & (nonuser | childfreq_others_wave2 %in% 1), 0, usewithothers_weekend)
+  all <- parent + alone + others
+  share <- parent / all
+  case_when(
+    is.na(all) | all == 0 ~ NA_character_,
+    share == 0 ~ ""Never"",
+    share <= 0.1 ~ ""Rarely"",
+    share <= 0.35 ~ ""Sometimes"",
+    share <= 0.7 ~ ""Often"",
+    .default = ""Always""
+  )
+})","Parent report, smartphone and tablet use only, both waves, typical weekday and weekend day: share of use with a parent, 'Use with parents' over that plus 'Solo use' and 'Use with siblings or others' (Table 2), weighted 5:2, cut at the day shares (0 Never, up to 10% Rarely, up to 35% Sometimes, up to 70% Often, above 70% Always). Partial: hours beside hours, one medium. Parts routed past are 0 (child_access = 0, child_access_wave2 = 0, or that part's frequency item = 1, never); no mobile use at all is NA. child_freq_parent_wave2 (codes 2-7 undocumented), child_unsupervised and child_supervision_wave2 (no wording or code list) are named unused.",,
+fam_mediation_restrict,incompatible,"parental_control, control_options, control_options_text, x1_parent_attitudes_wave2, x2_parent_attitudes_wave2, x3_parent_attitudes_wave2, x4_parent_attitudes_wave2, attitudes_passive, attitudes_intentertain, attitudes_intedu, attitudes_social",,"No restrictive mediation scale: parental_control is a technical control (see fam_mediation_technical), and the attitude items (attitudes_*, x1-x4_parent_attitudes_wave2) rate use, not limits; named unused.",,
+fam_mediation_active,unavailable,,,Not collected.,,
+fam_mediation_monitor,unavailable,,,Not collected.,,
+fam_mediation_technical,partial,"parental_control, control_options_text","recode_values(as.numeric(parental_control), 1 ~ ""TRUE"", 0 ~ ""FALSE"", default = NA_character_)","Baseline: the 169 children followed up only (Data_Longit2022.csv); follow-up: not asked. Parent report, children who use a smartphone or tablet: parental_control 1 = TRUE (47), 0 = FALSE (62), -3 undocumented = NA (3). Wording not in the folder; the free text (control_options_text: app locking, guided access, YouTube Kids and in-app controls) shows device and app controls. Partial: the child's mobile device only. control_options has no code list and is named unused.",,
+fam_mediation_measure,unavailable,,,See fam_mediation_restrict.,,
+fam_parent_screentime,partial,"parent_social_use, parent_social_use_wave2","coalesce(as.numeric(parent_social_use), as.numeric(parent_social_use_wave2)) / 60","Baseline: the 169 children followed up only (Data_Longit2022.csv); follow-up: all. The responding parent's own social use of screens (parent_social_use, parent_social_use_wave2), minutes / 60; wording and units not in the folder, answers on the study's fixed response list, top code 450 minutes = 7.5 h. Partial: excludes work use. parent_work_use (baseline only) and parent_use_wave2 (4 rows, wording not documented) are named unused.",,
+fam_parentstress,incompatible,"dass_3, dass_5, dass_10, dass_13, dass_16, dass_17, dass_21, dass_1, dass_6, dass_8, dass_11, dass_12, dass_14, dass_18, x3_parent_stress_wave2, x5_parent_stress_wave2, x10_parent_stress_wave2, x13_parent_stress_wave2, x16_parent_stress_wave2, x17_parent_stress_wave2, x21_parent_stress_wave2, x1_parent_stress_wave2, x6_parent_stress_wave2, x8_parent_stress_wave2, x11_parent_stress_wave2, x12_parent_stress_wave2, x14_parent_stress_wave2, x18_parent_stress_wave2",,"Parent's own DASS-21 Depression and Stress items (dass_*, x<n>_parent_stress_wave2), not a parenting-stress scale; Depression is mapped to fam_parent_dep and Stress is named unused.",,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+fam_parent_dep,compatible,"dass_3, dass_5, dass_10, dass_13, dass_16, dass_17, dass_21, x3_parent_stress_wave2, x5_parent_stress_wave2, x10_parent_stress_wave2, x13_parent_stress_wave2, x16_parent_stress_wave2, x17_parent_stress_wave2, x21_parent_stress_wave2","coalesce(
+  dass_3 + dass_5 + dass_10 + dass_13 + dass_16 + dass_17 + dass_21,
+  x3_parent_stress_wave2 +
+    x5_parent_stress_wave2 +
+    x10_parent_stress_wave2 +
+    x13_parent_stress_wave2 +
+    x16_parent_stress_wave2 +
+    x17_parent_stress_wave2 +
+    x21_parent_stress_wave2
+)","Baseline: the 169 children followed up only (Data_Longit2022.csv); follow-up: all. The responding parent's own DASS-21 Depression subscale (items 3, 5, 10, 13, 16, 17, 21; 0-3; sum 0-21, complete-case), completed at each occasion and never carried. The Stress items (dass_1, 6, 8, 11, 12, 14, 18 and their follow-up twins) are named unused; the Anxiety items were not given.",,
+fam_parent_anx,unavailable,,,Not collected.,,
+fam_parent_distress,incompatible,"dass_1, dass_6, dass_8, dass_11, dass_12, dass_14, dass_18, x1_parent_stress_wave2, x6_parent_stress_wave2, x8_parent_stress_wave2, x11_parent_stress_wave2, x12_parent_stress_wave2, x14_parent_stress_wave2, x18_parent_stress_wave2",,"DASS-21 Stress items only (dass_1, 6, 8, 11, 12, 14, 18; x<n>_parent_stress_wave2), not a distress inventory; named unused.",,
+fam_parent_mh_measure,inferred,"dass_3, dass_5, dass_10, dass_13, dass_16, dass_17, dass_21, x3_parent_stress_wave2, x5_parent_stress_wave2, x10_parent_stress_wave2, x13_parent_stress_wave2, x16_parent_stress_wave2, x17_parent_stress_wave2, x21_parent_stress_wave2","""depression: DASS-21 Depression, 7 of 7 items, 0-3 item scoring (range 0-21), sum, the responding parent (mother for most); complete-case""",Baseline: the 169 children followed up only (Data_Longit2022.csv); follow-up: all. Responding parent's own DASS-21; the 14 items asked hold Depression and Stress only.,,
+fam_parenting_warmth_parent,unavailable,,,Not collected.,,
+fam_parenting_harsh_parent,unavailable,,,Not collected.,,
+fam_parenting_inconsistent_parent,unavailable,,,Not collected.,,
+fam_monitoring_parent,unavailable,,,Not collected.,,
+fam_monitoring_self,unavailable,,,Not collected.,,
+fam_parenting_measure,unavailable,,,See fam_parenting_warmth_parent.,,
+fam_physpunish,unavailable,,,Not collected.,,
+fam_parentchild_rel_self,unavailable,,,Not collected.,,
+fam_parentchild_rel_parent,unavailable,,,Not collected.,,
+fam_parentchild_conflict_parent,unavailable,,,Not collected.,,
+fam_parentchild_measure,unavailable,,,See fam_parentchild_rel_self.,,
+fam_functioning_parent,unavailable,,,Not collected.,,
+fam_functioning_self,unavailable,,,Not collected.,,
+fam_conflict_parent,unavailable,,,Not collected.,,
+fam_conflict_self,unavailable,,,Not collected.,,
+fam_functioning_measure,unavailable,,,See fam_functioning_parent.,,
+fam_readto_freq,incompatible,"t_read_weekday, t_read_weekend, p_read_weekday, p_read_weekend",,"Minutes of 'reading', not a frequency (t_read_*, p_read_*); wording not documented, see fam_readto_time.",,
+fam_readto_time,incompatible,"t_read_weekday, t_read_weekend, p_read_weekday, p_read_weekend",,Wording not documented: may pool the child's own reading with being read to.,,
+fam_childbooks,unavailable,,,Not collected.,,
+fam_home_total,unavailable,,,HOME Inventory not administered.,,
+fam_home_cogstim,unavailable,,,HOME Inventory not administered.,,
+fam_home_emotsupport,unavailable,,,HOME Inventory not administered.,,
+fam_home_measure,unavailable,,,See fam_home_total.,,
+school_grade,incompatible,school_screening,,"school_screening (0 no, 1 yes prep, 2 yes primary; baseline only) is a school-attendance item: 'primary' gives no year level and most children are not at school.",,
+school_sector,unavailable,,,Not collected.,,
+school_track,unavailable,,,Not collected.,,
+st_measure_type,inferred,"tv_weekday, tv_weekend, passive_weekday, passive_weekend","""Categorical""","Duration items at both waves take only the values of a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450), never open entry; wording and labels are not in the folder.",,
+st_measure_name,inferred,,"""Custom""",Items of the study's own online parent survey; no document names a source instrument.,,
+st_responder,inferred,,"""Parent or carer""","The parent answers at both waves, including the filters child_access, child_access_wave2 and the follow-up frequency items.",,
+st_total_wd,incompatible,"totaluse_weekday, totaluse_weekend",,"Smartphone and tablet total only (totaluse_weekday, totaluse_weekend), no all-screen item (DR-0002, DR-0004); mapped to st_phone. Separately asked TV, laptop, gaming and mobile items are never summed here.",,
+st_total_we,incompatible,"totaluse_weekday, totaluse_weekend",,"Smartphone and tablet total only (totaluse_weekday, totaluse_weekend), no all-screen item (DR-0002, DR-0004); mapped to st_phone. Separately asked TV, laptop, gaming and mobile items are never summed here.",,
+st_total,incompatible,"totaluse_weekday, totaluse_weekend",,"Smartphone and tablet total only (totaluse_weekday, totaluse_weekend), no all-screen item (DR-0002, DR-0004); mapped to st_phone. Separately asked TV, laptop, gaming and mobile items are never summed here.",,
+st_watch_wd,partial,"tv_weekday, passive_weekday, child_access, child_access_wave2, childfreq_passive_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  (tv_weekday + if_else(is.na(passive_weekday) & (nonuser | childfreq_passive_wave2 %in% 1), 0, passive_weekday)) / 60
+})","Both waves, parent report, typical weekday: sum of tv_weekday (TV) and passive_weekday (smartphone or tablet 'Passive use (e.g., watching video)', Table 2) (DR-0002). Passive part 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_passive_wave2 = 1 (never). Partial: video on a computer is left out. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_watch_we,partial,"tv_weekend, passive_weekend, child_access, child_access_wave2, childfreq_passive_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  (tv_weekend + if_else(is.na(passive_weekend) & (nonuser | childfreq_passive_wave2 %in% 1), 0, passive_weekend)) / 60
+})","Both waves, parent report, typical weekend day: sum of tv_weekend (TV) and passive_weekend (smartphone or tablet 'Passive use (e.g., watching video)', Table 2) (DR-0002). Passive part 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_passive_wave2 = 1 (never). Partial: video on a computer is left out. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_watch,partial,"tv_weekday, passive_weekday, child_access, child_access_wave2, childfreq_passive_wave2, tv_weekend, passive_weekend","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  (5 *
+    (tv_weekday + if_else(is.na(passive_weekday) & (nonuser | childfreq_passive_wave2 %in% 1), 0, passive_weekday)) +
+    2 *
+      (tv_weekend + if_else(is.na(passive_weekend) & (nonuser | childfreq_passive_wave2 %in% 1), 0, passive_weekend))) /
+    7 /
+    60
+})","(5 x st_watch_wd + 2 x st_watch_we) / 7. Sum of tv_*, passive_* (DR-0002); partial as those rows; top code 450 minutes = 7.5 h.",,
+st_game_wd,partial,"gaming_weekday, intentertain_weekday, child_access, child_access_wave2, childfreq_entertain_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  (gaming_weekday +
+    if_else(is.na(intentertain_weekday) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekday)) /
+    60
+})","Both waves, parent report, typical weekday: sum of gaming_weekday and intentertain_weekday (smartphone or tablet 'Interactive entertainment (e.g., game)', Table 2) (DR-0002). The gaming item's wording is not in the folder; it is asked of all children beside the TV and laptop items, and at baseline only 14 of the 79 users with interactive entertainment time report any gaming, so it is not mainly phone and tablet games; but 10 of those 14 give the same minutes on both, so the sum may count some play twice (one child holds the top code on both, 15 h). Mobile part 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_entertain_wave2 = 1 (never). Partial: computer games are left out and interactive entertainment may hold more than games. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_game_we,partial,"gaming_weekend, intentertain_weekend, child_access, child_access_wave2, childfreq_entertain_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  (gaming_weekend +
+    if_else(is.na(intentertain_weekend) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekend)) /
+    60
+})","Both waves, parent report, typical weekend day: sum of gaming_weekend and intentertain_weekend (smartphone or tablet 'Interactive entertainment (e.g., game)', Table 2) (DR-0002). The gaming item's wording is not in the folder; it is asked of all children beside the TV and laptop items, and at baseline only 24 of the 98 users with weekend interactive entertainment time report any weekend gaming, so it is not mainly phone and tablet games; but 7 of those 24 give the same minutes on both, so the sum may count some play twice (one child holds the top code on both, 15 h). Mobile part 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_entertain_wave2 = 1 (never). Partial: computer games are left out and interactive entertainment may hold more than games. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_game,partial,"gaming_weekday, intentertain_weekday, child_access, child_access_wave2, childfreq_entertain_wave2, gaming_weekend, intentertain_weekend","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  (5 *
+    (gaming_weekday +
+      if_else(is.na(intentertain_weekday) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekday)) +
+    2 *
+      (gaming_weekend +
+        if_else(is.na(intentertain_weekend) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekend))) /
+    7 /
+    60
+})","(5 x st_game_wd + 2 x st_game_we) / 7. Sum of gaming_*, intentertain_* (DR-0002); partial as those rows; top code 450 minutes = 7.5 h.",,
+st_game_comp_wd,unavailable,,,Not collected.,,
+st_game_comp_we,unavailable,,,Not collected.,,
+st_game_comp,unavailable,,,Not collected.,,
+st_game_console_wd,incompatible,"gaming_weekday, gaming_weekend",,"The gaming item's device is not documented (gaming_weekday, gaming_weekend), so it cannot be placed on the console row; fed to st_game.",,
+st_game_console_we,incompatible,"gaming_weekday, gaming_weekend",,"The gaming item's device is not documented (gaming_weekday, gaming_weekend), so it cannot be placed on the console row; fed to st_game.",,
+st_game_console,incompatible,"gaming_weekday, gaming_weekend",,"The gaming item's device is not documented (gaming_weekday, gaming_weekend), so it cannot be placed on the console row; fed to st_game.",,
+st_game_handheldconsole_wd,incompatible,"gaming_weekday, gaming_weekend",,"The gaming item's device is not documented (gaming_weekday, gaming_weekend), so it cannot be placed on the handheld row; fed to st_game.",,
+st_game_handheldconsole_we,incompatible,"gaming_weekday, gaming_weekend",,"The gaming item's device is not documented (gaming_weekday, gaming_weekend), so it cannot be placed on the handheld row; fed to st_game.",,
+st_game_handheldconsole,incompatible,"gaming_weekday, gaming_weekend",,"The gaming item's device is not documented (gaming_weekday, gaming_weekend), so it cannot be placed on the handheld row; fed to st_game.",,
+st_game_active_wd,unavailable,,,Not collected.,,
+st_game_active_we,unavailable,,,Not collected.,,
+st_game_active,unavailable,,,Not collected.,,
+st_game_phone_wd,partial,"intentertain_weekday, child_access, child_access_wave2, childfreq_entertain_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  if_else(is.na(intentertain_weekday) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekday) / 60
+})","Both waves, parent report, typical weekday: intentertain_weekday, 'Interactive entertainment (e.g., game)' on a smartphone or tablet (Table 2). 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_entertain_wave2 = 1 (never). Partial: phone and tablet pooled, and the item may hold more than games. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_game_phone_we,partial,"intentertain_weekend, child_access, child_access_wave2, childfreq_entertain_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  if_else(is.na(intentertain_weekend) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekend) / 60
+})","Both waves, parent report, typical weekend day: intentertain_weekend, 'Interactive entertainment (e.g., game)' on a smartphone or tablet (Table 2). 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_entertain_wave2 = 1 (never). Partial: phone and tablet pooled, and the item may hold more than games. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_game_phone,partial,"intentertain_weekday, child_access, child_access_wave2, childfreq_entertain_wave2, intentertain_weekend","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  (5 *
+    if_else(is.na(intentertain_weekday) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekday) +
+    2 * if_else(is.na(intentertain_weekend) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekend)) /
+    7 /
+    60
+})",(5 x st_game_phone_wd + 2 x st_game_phone_we) / 7; partial as those rows; top code 450 minutes = 7.5 h.,,
+st_game_tablet_wd,incompatible,"intentertain_weekday, intentertain_weekend",,"Phone and tablet pooled (intentertain_weekday, intentertain_weekend); mapped to st_game_phone.",,
+st_game_tablet_we,incompatible,"intentertain_weekday, intentertain_weekend",,"Phone and tablet pooled (intentertain_weekday, intentertain_weekend); mapped to st_game_phone.",,
+st_game_tablet,incompatible,"intentertain_weekday, intentertain_weekend",,"Phone and tablet pooled (intentertain_weekday, intentertain_weekend); mapped to st_game_phone.",,
+st_comp_nongaming_wd,incompatible,"laptop_weekday, laptop_weekend",,laptop_weekday and laptop_weekend carry no purpose restriction and can include games; mapped to st_comp.,,
+st_comp_nongaming_we,incompatible,"laptop_weekday, laptop_weekend",,laptop_weekday and laptop_weekend carry no purpose restriction and can include games; mapped to st_comp.,,
+st_comp_nongaming,incompatible,"laptop_weekday, laptop_weekend",,laptop_weekday and laptop_weekend carry no purpose restriction and can include games; mapped to st_comp.,,
+st_comp_wd,partial,laptop_weekday,laptop_weekday / 60,"Both waves, parent report, typical weekday: laptop_weekday, asked of all children; wording not in the folder, no purpose restriction shown. Partial: the source name says laptop, so a desktop may be left out. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_comp_we,partial,laptop_weekend,laptop_weekend / 60,"Both waves, parent report, typical weekend day: laptop_weekend, asked of all children; wording not in the folder, no purpose restriction shown. Partial: the source name says laptop, so a desktop may be left out. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_comp,partial,"laptop_weekday, laptop_weekend",((5 * laptop_weekday) + (2 * laptop_weekend)) / 7 / 60,(5 x st_comp_wd + 2 x st_comp_we) / 7; partial as those rows; top code 450 minutes = 7.5 h.,,
+st_tablet_wd,incompatible,"totaluse_weekday, totaluse_weekend, aloneuse_weekday, aloneuse_weekend, usewithparent_weekday, usewithparent_weekend, usewithothers_weekday, usewithothers_weekend",,"Phone and tablet pooled in every mobile item (totaluse_*, the social-context items); mapped to st_phone.",,
+st_tablet_we,incompatible,"totaluse_weekday, totaluse_weekend, aloneuse_weekday, aloneuse_weekend, usewithparent_weekday, usewithparent_weekend, usewithothers_weekday, usewithothers_weekend",,"Phone and tablet pooled in every mobile item (totaluse_*, the social-context items); mapped to st_phone.",,
+st_tablet,incompatible,"totaluse_weekday, totaluse_weekend, aloneuse_weekday, aloneuse_weekend, usewithparent_weekday, usewithparent_weekend, usewithothers_weekday, usewithothers_weekend",,"Phone and tablet pooled in every mobile item (totaluse_*, the social-context items); mapped to st_phone.",,
+st_phone_wd,partial,"totaluse_weekday, aloneuse_weekday, usewithparent_weekday, usewithothers_weekday, child_access, child_access_wave2, child_freq_alone_wave2, child_freq_parent_wave2, childfreq_others_wave2, wave","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  if_else(
+    wave == ""baseline"",
+    if_else(is.na(totaluse_weekday) & nonuser, 0, totaluse_weekday),
+    if_else(is.na(aloneuse_weekday) & (nonuser | child_freq_alone_wave2 %in% 1), 0, aloneuse_weekday) +
+      if_else(is.na(usewithparent_weekday) & (nonuser | child_freq_parent_wave2 %in% 1), 0, usewithparent_weekday) +
+      if_else(is.na(usewithothers_weekday) & (nonuser | childfreq_others_wave2 %in% 1), 0, usewithothers_weekday)
+  ) /
+    60
+})","Follow-up: sum of aloneuse, usewithparent, usewithothers (DR-0002); baseline: single total item; splice across waves. Parent report, typical weekday: baseline totaluse_weekday ('Total use', smartphone and tablet, Table 2). Partial: phone and tablet pooled, and the splice. Parts 0 where child_access_wave2 = 0 (follow-up, 22) or that part's follow-up frequency item = 1 (never); baseline 0 where child_access = 0. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_phone_we,partial,"totaluse_weekend, aloneuse_weekend, usewithparent_weekend, usewithothers_weekend, child_access, child_access_wave2, child_freq_alone_wave2, child_freq_parent_wave2, childfreq_others_wave2, wave","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  if_else(
+    wave == ""baseline"",
+    if_else(is.na(totaluse_weekend) & nonuser, 0, totaluse_weekend),
+    if_else(is.na(aloneuse_weekend) & (nonuser | child_freq_alone_wave2 %in% 1), 0, aloneuse_weekend) +
+      if_else(is.na(usewithparent_weekend) & (nonuser | child_freq_parent_wave2 %in% 1), 0, usewithparent_weekend) +
+      if_else(is.na(usewithothers_weekend) & (nonuser | childfreq_others_wave2 %in% 1), 0, usewithothers_weekend)
+  ) /
+    60
+})","Follow-up: sum of aloneuse, usewithparent, usewithothers (DR-0002); baseline: single total item; splice across waves. Parent report, typical weekend day: baseline totaluse_weekend ('Total use', smartphone and tablet, Table 2). Partial: phone and tablet pooled, and the splice. Parts 0 where child_access_wave2 = 0 (follow-up, 22) or that part's follow-up frequency item = 1 (never); baseline 0 where child_access = 0. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_phone,partial,"totaluse_weekday, aloneuse_weekday, usewithparent_weekday, usewithothers_weekday, child_access, child_access_wave2, child_freq_alone_wave2, child_freq_parent_wave2, childfreq_others_wave2, wave, totaluse_weekend, aloneuse_weekend, usewithparent_weekend, usewithothers_weekend","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  wd <- if_else(
+    wave == ""baseline"",
+    if_else(is.na(totaluse_weekday) & nonuser, 0, totaluse_weekday),
+    if_else(is.na(aloneuse_weekday) & (nonuser | child_freq_alone_wave2 %in% 1), 0, aloneuse_weekday) +
+      if_else(is.na(usewithparent_weekday) & (nonuser | child_freq_parent_wave2 %in% 1), 0, usewithparent_weekday) +
+      if_else(is.na(usewithothers_weekday) & (nonuser | childfreq_others_wave2 %in% 1), 0, usewithothers_weekday)
+  )
+  we <- if_else(
+    wave == ""baseline"",
+    if_else(is.na(totaluse_weekend) & nonuser, 0, totaluse_weekend),
+    if_else(is.na(aloneuse_weekend) & (nonuser | child_freq_alone_wave2 %in% 1), 0, aloneuse_weekend) +
+      if_else(is.na(usewithparent_weekend) & (nonuser | child_freq_parent_wave2 %in% 1), 0, usewithparent_weekend) +
+      if_else(is.na(usewithothers_weekend) & (nonuser | childfreq_others_wave2 %in% 1), 0, usewithothers_weekend)
+  )
+  (5 * wd + 2 * we) / 7 / 60
+})","(5 x st_phone_wd + 2 x st_phone_we) / 7. Follow-up: sum of aloneuse, usewithparent, usewithothers (DR-0002); baseline: single total item; splice across waves. Partial as those rows; top code 450 minutes = 7.5 h. obj_and_1 to obj_and_7, and_duration_obj_number_2_1 to _7, onj_ios_hr and obj_ios_min (device readings, whose device and period are undocumented) are named unused. reg_use, freq_devicetype, child_owndevice and the location items (freq_home to freq_shopping) give no hours and are named unused.",,
+st_socmedia_wd,partial,"socialmedia_weekday, child_access","if_else(is.na(socialmedia_weekday) & child_access %in% 0, 0, socialmedia_weekday) / 60","Baseline only; not asked at follow-up. Parent report, typical weekday: socialmedia_weekday, in the mobile-use block of the survey; wording not in the folder. 0 where child_access = 0 (non-users of a smartphone or tablet, 180). Partial: scope limited to mobile devices. Minutes / 60; response list as the other screen items, top observed 30 minutes.",,
+st_socmedia_we,partial,"socialmedia_weekend, child_access","if_else(is.na(socialmedia_weekend) & child_access %in% 0, 0, socialmedia_weekend) / 60","Baseline only; not asked at follow-up. Parent report, typical weekend day: socialmedia_weekend, in the mobile-use block of the survey; wording not in the folder. 0 where child_access = 0 (non-users of a smartphone or tablet, 180). Partial: scope limited to mobile devices. Minutes / 60; response list as the other screen items, top observed 60 minutes.",,
+st_socmedia,partial,"socialmedia_weekday, child_access, socialmedia_weekend","(5 *
+  if_else(is.na(socialmedia_weekday) & child_access %in% 0, 0, socialmedia_weekday) +
+  2 * if_else(is.na(socialmedia_weekend) & child_access %in% 0, 0, socialmedia_weekend)) /
+  7 /
+  60",Baseline only. (5 x st_socmedia_wd + 2 x st_socmedia_we) / 7; partial as those rows. own_socialmedia and socialmedia_accounts give no hours and are named unused.,,
+st_educational_wd,partial,"edu_weekday, child_access, child_access_wave2, childfreq_edu_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  if_else(is.na(edu_weekday) & (nonuser | childfreq_edu_wave2 %in% 1), 0, edu_weekday) / 60
+})","Both waves, parent report, typical weekday: edu_weekday, smartphone or tablet 'Interactive education (e.g., literacy app)' (Table 2). 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_edu_wave2 = 1 (never). Partial: mobile devices only, and app learning rather than study, homework or online lessons. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top observed 240 minutes.",,
+st_educational_we,partial,"edu_weekend, child_access, child_access_wave2, childfreq_edu_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  if_else(is.na(edu_weekend) & (nonuser | childfreq_edu_wave2 %in% 1), 0, edu_weekend) / 60
+})","Both waves, parent report, typical weekend day: edu_weekend, smartphone or tablet 'Interactive education (e.g., literacy app)' (Table 2). 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_edu_wave2 = 1 (never). Partial: mobile devices only, and app learning rather than study, homework or online lessons. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top observed 270 minutes.",,
+st_educational,partial,"edu_weekday, edu_weekend, child_access, child_access_wave2, childfreq_edu_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  (5 *
+    if_else(is.na(edu_weekday) & (nonuser | childfreq_edu_wave2 %in% 1), 0, edu_weekday) +
+    2 * if_else(is.na(edu_weekend) & (nonuser | childfreq_edu_wave2 %in% 1), 0, edu_weekend)) /
+    7 /
+    60
+})",(5 x st_educational_wd + 2 x st_educational_we) / 7; partial as those rows.,,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,incompatible,"edu_weekday, edu_weekend",,"Interactive education items (edu_weekday, edu_weekend; e.g. a literacy app): educational apps, not programmes or videos made to educate children.",,
+st_educontent_watch_we,incompatible,"edu_weekday, edu_weekend",,"Interactive education items (edu_weekday, edu_weekend; e.g. a literacy app): educational apps, not programmes or videos made to educate children.",,
+st_educontent_watch,incompatible,"edu_weekday, edu_weekend",,"Interactive education items (edu_weekday, edu_weekend; e.g. a literacy app): educational apps, not programmes or videos made to educate children.",,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,unavailable,,,Not collected.,,
+st_internet_we,unavailable,,,Not collected.,,
+st_internet,unavailable,,,Not collected.,,
+st_videochat_wd,partial,"social_weekday, child_access, child_access_wave2, childfreq_social_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  if_else(is.na(social_weekday) & (nonuser | childfreq_social_wave2 %in% 1), 0, social_weekday) / 60
+})","Both waves, parent report, typical weekday: social_weekday, smartphone or tablet 'Social communication (e.g., FaceTime)' (Table 2). 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_social_wave2 = 1 (never). Partial: mobile devices only, and social communication may hold more than video calls. Minutes / 60; response list as the other screen items, top observed 180 minutes.",,
+st_videochat_we,partial,"social_weekend, child_access, child_access_wave2, childfreq_social_wave2","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  if_else(is.na(social_weekend) & (nonuser | childfreq_social_wave2 %in% 1), 0, social_weekend) / 60
+})","Both waves, parent report, typical weekend day: social_weekend, smartphone or tablet 'Social communication (e.g., FaceTime)' (Table 2). 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_social_wave2 = 1 (never). Partial: mobile devices only, and social communication may hold more than video calls. Minutes / 60; response list as the other screen items, top observed 120 minutes.",,
+st_videochat,partial,"social_weekday, child_access, child_access_wave2, childfreq_social_wave2, social_weekend","local({
+  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
+  (5 *
+    if_else(is.na(social_weekday) & (nonuser | childfreq_social_wave2 %in% 1), 0, social_weekday) +
+    2 * if_else(is.na(social_weekend) & (nonuser | childfreq_social_wave2 %in% 1), 0, social_weekend)) /
+    7 /
+    60
+})",(5 x st_videochat_wd + 2 x st_videochat_we) / 7; partial as those rows.,,
+st_messaging_wd,unavailable,,,Not collected.,,
+st_messaging_we,unavailable,,,Not collected.,,
+st_messaging,unavailable,,,Not collected.,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
+st_email,unavailable,,,Not collected.,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,unavailable,,,Not collected.,,
+acc_academachment_lettergrades,unavailable,,,Not collected.,,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
+acc_schoolengage_caresschool,unavailable,,,Not collected.,,
+acc_schoolengage_homework,unavailable,,,Not collected.,,
+acc_schoolengage_self,unavailable,,,Not collected.,,
+acc_schoolengage_teacher,unavailable,,,Not collected.,,
+acc_schoolengage_measure,unavailable,,,See acc_schoolengage_self.,,
+acc_homework_time,unavailable,,,Not collected.,,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolstress_self,unavailable,,,Not collected.,,
+acc_schoolstress_measure,unavailable,,,See acc_schoolstress_self.,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
+acc_academachment_parentrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,unavailable,,,Not collected.,,
+acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered.,,
+acc_literacy_stdtest,unavailable,,,Not collected.,,
+acc_literacy_bas_wordreading,unavailable,,,BAS II not administered.,,
+acc_learningdisab_diagnosed,incompatible,"childdev_screening_wave2, childdev_screening_1_text_wave2, childdev_screening_2_text_wave2",,"Only the follow-up developmental screening item (childdev_screening_wave2), with no wording or code list, not attributed to a health professional; no free-text answer names a learning disability.",,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not collected.,,
+acc_graderepeated,unavailable,,,Not collected.,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_self,incompatible,"sdq_2, sdq_10, sdq_15, sdq_21, sdq_25",,"Only the parent-rated SDQ hyperactivity/inattention items, which stay on beh_hyper_sdq_parent; no self-report scale.",,
+beh_hyper_self,incompatible,"sdq_2, sdq_10, sdq_15, sdq_21, sdq_25",,"Only the parent-rated SDQ hyperactivity/inattention items, which stay on beh_hyper_sdq_parent; no self-report scale.",,
+beh_adhdsymp_self,incompatible,"sdq_2, sdq_10, sdq_15, sdq_21, sdq_25",,"Only the parent-rated SDQ hyperactivity/inattention items, which stay on beh_hyper_sdq_parent; no self-report scale.",,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_atten_singleitem_teacher,unavailable,,,Not collected.,,
+beh_impulsivity_self,unavailable,,,Not collected.,,
+beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_selfreg_parent,partial,"ecbq_5, ecbq_7, ecbq_8, ecbq_12, ecbq_14, ecbq_15, ecbq_21, ecbq_29, ecbq_30, ecbq_31, ecbq_33, ecbq_38, cbq_3, cbq_6, cbq_9, cbq_12, cbq_15, cbq_18, cbq_21, cbq_24, cbq_27, cbq_30, cbq_33, cbq_36","local({
+  ecbq <- sapply(
+    list(ecbq_5, ecbq_7, ecbq_8, ecbq_12, ecbq_14, ecbq_15, ecbq_21, ecbq_29, ecbq_30, ecbq_31, ecbq_33, ecbq_38),
+    function(x) na_if(as.numeric(x), -3)
+  )
+  ecbq[, c(4, 5)] <- 4 - ecbq[, c(4, 5)]
+  cbq <- sapply(
+    list(cbq_3, cbq_6, cbq_9, cbq_12, cbq_15, cbq_18, cbq_21, cbq_24, cbq_27, cbq_30, cbq_33, cbq_36),
+    function(x) na_if(as.numeric(x), -3)
+  )
+  scored <- sapply(list(ecbq, cbq), function(items) {
+    score <- rowMeans(items, na.rm = TRUE)
+    score[rowSums(!is.na(items)) < ncol(items) / 2] <- NA
+    score
+  })
+  coalesce(scored[, 1], scored[, 2])
+})","Temperament effortful control, parent report, both waves, the form changing with the age group: toddlers ECBQ (the study's 12 effortful-control items 5, 7, 8, 12r, 14r, 15, 21, 29, 30, 31, 33, 38; 3. Toddler recoding and corr.Rmd), preschoolers CBQ (12 effortful-control items, all positively keyed in the data). Mean of answered items, NA under half answered; -3 ('does not apply') = NA. Items are 0-4 here, not the published 1-7, so 12 and 14 reverse as 4 - x, not the author's 8 - x. Partial. ECBQ items 24, 25, 35, 36 and 37 are named unused. Standardise within dataset and age group.",,
+beh_emotdysreg_parent,incompatible,"sdq_2, sdq_3, sdq_5, sdq_6, sdq_7, sdq_8, sdq_10, sdq_11, sdq_12, sdq_13, sdq_14, sdq_15, sdq_16, sdq_18, sdq_19, sdq_21, sdq_22, sdq_23, sdq_24, sdq_25, bitsea_2, bitsea_4, bitsea_13, bitsea_19, bitsea_20, bitsea_22, bitsea_25, bitsea_3, bitsea_6, bitsea_7, bitsea_9, bitsea_10, bitsea_17, bitsea_24, bitsea_26",,"Only parent problem scales in hand: SDQ (beh_conduct_sdq_parent, beh_hyper_sdq_parent, beh_peerprob_sdq_parent, mh_emotsymp_sdq_parent) and BITSEA (beh_ext_parent, mh_int_parent).",,
+beh_emotreg_parent,incompatible,"sdq_2, sdq_3, sdq_5, sdq_6, sdq_7, sdq_8, sdq_10, sdq_11, sdq_12, sdq_13, sdq_14, sdq_15, sdq_16, sdq_18, sdq_19, sdq_21, sdq_22, sdq_23, sdq_24, sdq_25, bitsea_2, bitsea_4, bitsea_13, bitsea_19, bitsea_20, bitsea_22, bitsea_25, bitsea_3, bitsea_6, bitsea_7, bitsea_9, bitsea_10, bitsea_17, bitsea_24, bitsea_26",,"Only parent problem scales in hand: SDQ (beh_conduct_sdq_parent, beh_hyper_sdq_parent, beh_peerprob_sdq_parent, mh_emotsymp_sdq_parent) and BITSEA (beh_ext_parent, mh_int_parent).",,
+beh_selfreg_self,incompatible,"ecbq_5, ecbq_7, ecbq_8, ecbq_12, ecbq_14, ecbq_15, ecbq_21, ecbq_29, ecbq_30, ecbq_31, ecbq_33, ecbq_38, cbq_3, cbq_6, cbq_9, cbq_12, cbq_15, cbq_18, cbq_21, cbq_24, cbq_27, cbq_30, cbq_33, cbq_36",,"Only parent-rated temperament effortful control (ECBQ, CBQ), mapped to beh_selfreg_parent; no self-report scale.",,
+beh_emotreg_self,incompatible,"sdq_2, sdq_3, sdq_5, sdq_6, sdq_7, sdq_8, sdq_10, sdq_11, sdq_12, sdq_13, sdq_14, sdq_15, sdq_16, sdq_18, sdq_19, sdq_21, sdq_22, sdq_23, sdq_24, sdq_25, bitsea_2, bitsea_4, bitsea_13, bitsea_19, bitsea_20, bitsea_22, bitsea_25, bitsea_3, bitsea_6, bitsea_7, bitsea_9, bitsea_10, bitsea_17, bitsea_24, bitsea_26",,"Only parent problem scales in hand: SDQ (beh_conduct_sdq_parent, beh_hyper_sdq_parent, beh_peerprob_sdq_parent, mh_emotsymp_sdq_parent) and BITSEA (beh_ext_parent, mh_int_parent). No self-report scale.",,
+beh_emotdysreg_self,incompatible,"sdq_2, sdq_3, sdq_5, sdq_6, sdq_7, sdq_8, sdq_10, sdq_11, sdq_12, sdq_13, sdq_14, sdq_15, sdq_16, sdq_18, sdq_19, sdq_21, sdq_22, sdq_23, sdq_24, sdq_25, bitsea_2, bitsea_4, bitsea_13, bitsea_19, bitsea_20, bitsea_22, bitsea_25, bitsea_3, bitsea_6, bitsea_7, bitsea_9, bitsea_10, bitsea_17, bitsea_24, bitsea_26",,"Only parent problem scales in hand: SDQ (beh_conduct_sdq_parent, beh_hyper_sdq_parent, beh_peerprob_sdq_parent, mh_emotsymp_sdq_parent) and BITSEA (beh_ext_parent, mh_int_parent). No self-report scale.",,
+beh_emotreg_suppression_self,unavailable,,,Not collected.,,
+beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
+beh_emotaware_self,unavailable,,,Not collected.,,
+beh_selfreg_measure,unavailable,,,See beh_selfreg_self.,,
+beh_temp_negaffect_parent,unavailable,,,Not collected.,,
+beh_temp_surgency_parent,unavailable,,,Not collected.,,
+beh_temp_measure,unavailable,,,See beh_temp_negaffect_parent.,,
+beh_bullied,incompatible,sdq_12,,Parent's truth rating of SDQ item 12 ('Often fights with other children'); scored in beh_conduct_sdq_parent.,,
+beh_beenbullied,incompatible,sdq_19,,Parent's truth rating of SDQ item 19 ('Picked on or bullied'); scored in beh_peerprob_sdq_parent.,,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,incompatible,"sdq_12, bitsea_19, bitsea_22",,"Parent's truth ratings only: SDQ item 12 ('Often fights with other children'), BITSEA 19 and 22 (hits, shoves, kicks or bites); scored in beh_conduct_sdq_parent and beh_ext_parent.",,
+beh_truancy,unavailable,,,Not collected.,,
+beh_suspended,unavailable,,,Not collected.,,
+beh_stealing,unavailable,,,Not collected.,,
+beh_vandalism,incompatible,bitsea_20,,Parent's truth rating of BITSEA 20 ('Is destructive. Breaks or ruins things on purpose.'); scored in beh_ext_parent.,,
+beh_alcohol_self,unavailable,,,Not collected.,,
+beh_tobacco_self,unavailable,,,Not collected.,,
+beh_vaping_self,unavailable,,,Not collected.,,
+beh_cannabis_self,unavailable,,,Not collected.,,
+beh_drugs_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,compatible,"sdq_5, sdq_7, sdq_12, sdq_18, sdq_22","local({
+  items <- cbind(sdq_5, 2 - sdq_7, sdq_12, sdq_18, sdq_22)
+  if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","Preschooler form (baseline ages 3-5; follow-up the same children), parent report, both waves. SDQ parent 2-4 form wording in quant_meta_07Oct22.xls (items 18, 21, 22). SDQ rule: mean of answered items x 5, floor(x + 0.5), NA under 3 of 5. Items 5, 7r, 12, 18, 22.",,
+beh_hyper_sdq_parent,compatible,"sdq_2, sdq_10, sdq_15, sdq_21, sdq_25","local({
+  items <- cbind(sdq_2, sdq_10, sdq_15, 2 - sdq_21, 2 - sdq_25)
+  if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","Preschooler form (baseline ages 3-5; follow-up the same children), parent report, both waves. SDQ parent 2-4 form wording in quant_meta_07Oct22.xls (items 18, 21, 22). SDQ rule: mean of answered items x 5, floor(x + 0.5), NA under 3 of 5. Items 2, 10, 15, 21r, 25r.",,
+beh_peerprob_sdq_parent,compatible,"sdq_6, sdq_11, sdq_14, sdq_19, sdq_23","local({
+  items <- cbind(sdq_6, 2 - sdq_11, 2 - sdq_14, sdq_19, sdq_23)
+  if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","Preschooler form (baseline ages 3-5; follow-up the same children), parent report, both waves. SDQ parent 2-4 form wording in quant_meta_07Oct22.xls (items 18, 21, 22). SDQ rule: mean of answered items x 5, floor(x + 0.5), NA under 3 of 5. Items 6, 11r, 14r, 19, 23.",,
+beh_prosocial_sdq_parent,incompatible,"sdq_2, sdq_3, sdq_5, sdq_6, sdq_7, sdq_8, sdq_10, sdq_11, sdq_12, sdq_13, sdq_14, sdq_15, sdq_16, sdq_18, sdq_19, sdq_21, sdq_22, sdq_23, sdq_24, sdq_25",,"SDQ given as the 20 difficulty items with no prosocial item (items 1, 4, 9, 17, 20 not in the data).",,
+beh_aggphys_bpaq_self,unavailable,,,Not collected.,,
+beh_aggverb_bpaq_self,unavailable,,,Not collected.,,
+beh_agganger_bpaq_self,unavailable,,,Not collected.,,
+beh_agghostility_bpaq_self,unavailable,,,Not collected.,,
+beh_agg_self,incompatible,"sdq_5, sdq_7, sdq_12, sdq_18, sdq_22, bitsea_2, bitsea_4, bitsea_13, bitsea_19, bitsea_20, bitsea_22, bitsea_25",,Only parent-rated scales: SDQ conduct (beh_conduct_sdq_parent) and BITSEA Externalizing (beh_ext_parent); no self-report scale.,,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,unavailable,,,Not collected.,,
+beh_aggphys_measure,unavailable,,,See beh_aggphys_self.,,
+beh_aggrel_self,unavailable,,,Not collected.,,
+beh_aggrel_measure,unavailable,,,See beh_aggrel_self.,,
+beh_anger_self,unavailable,,,Not collected.,,
+beh_anger_measure,unavailable,,,See beh_anger_self.,,
+beh_aggbeliefs_self,unavailable,,,Not collected.,,
+beh_agghostattrib_self,unavailable,,,Not collected.,,
+beh_aggfantasy_self,unavailable,,,Not collected.,,
+beh_aggcog_measure,unavailable,,,See beh_aggbeliefs_self.,,
+beh_agg_singleitem_teacher,unavailable,,,Not collected.,,
+beh_disrupt_singleitem_teacher,unavailable,,,Not collected.,,
+beh_aggphys_teacher,unavailable,,,Not collected.,,
+beh_aggrel_teacher,unavailable,,,Not collected.,,
+beh_agg_teacher,unavailable,,,Not collected.,,
+beh_victphys_teacher,unavailable,,,Not collected.,,
+beh_victrel_teacher,unavailable,,,Not collected.,,
+beh_vict_teacher,unavailable,,,Not collected.,,
+beh_atten_teacher,unavailable,,,Not collected.,,
+beh_hyper_teacher,unavailable,,,Not collected.,,
+beh_adhdsymp_teacher,unavailable,,,Not collected.,,
+beh_ext_teacher,unavailable,,,Not collected.,,
+beh_prosocial_teacher,unavailable,,,Not collected.,,
+beh_socialskills_teacher,unavailable,,,Not collected.,,
+beh_teacher_measure,unavailable,,,See beh_aggphys_teacher.,,
+beh_argues,incompatible,sdq_18,,Parent's truth rating of SDQ 2-4 item 18 ('Often argumentative with adults'); scored in beh_conduct_sdq_parent.,,
+beh_persistence_finishwork,incompatible,sdq_25,,Parent's truth rating of SDQ item 25 ('Sees tasks through to the end'); scored in beh_hyper_sdq_parent.,,
+beh_emotreg_stayscalm,incompatible,sdq_5,,"Parent's truth rating of SDQ item 5 ('Often has temper tantrums or hot tempers'), problem-worded; scored in beh_conduct_sdq_parent.",,
+beh_peerprob_makefriends,incompatible,"sdq_11, sdq_14",,Parent's truth ratings of SDQ items 11 ('Has at least one good friend') and 14 ('Generally liked by other children'); scored in beh_peerprob_sdq_parent.,,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,incompatible,"childdev_screening_wave2, childdev_screening_1_text_wave2, childdev_screening_2_text_wave2",,"Follow-up free text only ('Possible adhd', 'assessed for ADHD'): childdev_screening_wave2 has no wording or code list and the answers are not attributed to a health professional.",,
+beh_autism_diagnosed,incompatible,"childdev_screening_wave2, childdev_screening_1_text_wave2, childdev_screening_2_text_wave2",,"Follow-up free text only ('ASD', 'Autism Spectrum Disorder', 'in the process of having him assessed'): childdev_screening_wave2 has no wording or code list and the answers are not attributed to a health professional.",,
+beh_autism_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,unavailable,,,SDQ not administered; see beh_conduct_sdq_parent.,,
+beh_hyper_sdq_self,unavailable,,,SDQ not administered; see beh_hyper_sdq_parent.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ not administered; see beh_peerprob_sdq_parent.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ not administered.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ not administered; see beh_conduct_sdq_parent.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ not administered; see beh_hyper_sdq_parent.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered; see beh_peerprob_sdq_parent.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_parent,unavailable,,,Derive at analysis from the subscale rows.,,
+beh_ext_sdq_self,unavailable,,,"SDQ not administered; see beh_conduct_sdq_parent, beh_hyper_sdq_parent.",,
+beh_ext_sdq_teacher,unavailable,,,"SDQ not administered; see beh_conduct_sdq_parent, beh_hyper_sdq_parent.",,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_socprob_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_ext_self,incompatible,"bitsea_2, bitsea_4, bitsea_13, bitsea_19, bitsea_20, bitsea_22, bitsea_25, sdq_5, sdq_7, sdq_12, sdq_18, sdq_22, sdq_2, sdq_10, sdq_15, sdq_21, sdq_25",,"Only parent-rated scales: BITSEA Externalizing (beh_ext_parent) and SDQ conduct and hyperactivity (beh_conduct_sdq_parent, beh_hyper_sdq_parent); no self-report scale.",,
+beh_opp_self,incompatible,"sdq_5, sdq_7, sdq_12, sdq_18, sdq_22",,"Only the parent-rated SDQ conduct items, which stay on beh_conduct_sdq_parent; no self-report scale.",,
+beh_conduct_self,incompatible,"sdq_5, sdq_7, sdq_12, sdq_18, sdq_22",,"Only the parent-rated SDQ conduct items, which stay on beh_conduct_sdq_parent; no self-report scale.",,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,incompatible,"sdq_2, sdq_10, sdq_15, sdq_21, sdq_25",,"Only the parent-rated SDQ hyperactivity/inattention items, which stay on beh_hyper_sdq_parent.",,
+beh_hyper_parent,incompatible,"sdq_2, sdq_10, sdq_15, sdq_21, sdq_25",,"Only the parent-rated SDQ hyperactivity/inattention items, which stay on beh_hyper_sdq_parent.",,
+beh_adhdsymp_parent,incompatible,"sdq_2, sdq_10, sdq_15, sdq_21, sdq_25",,"Only the parent-rated SDQ hyperactivity/inattention items, which stay on beh_hyper_sdq_parent.",,
+beh_opp_parent,incompatible,"sdq_5, sdq_7, sdq_12, sdq_18, sdq_22",,"Only the parent-rated SDQ conduct items, which stay on beh_conduct_sdq_parent.",,
+beh_conduct_parent,incompatible,"sdq_5, sdq_7, sdq_12, sdq_18, sdq_22",,"Only the parent-rated SDQ conduct items, which stay on beh_conduct_sdq_parent.",,
+beh_ext_parent,compatible,"bitsea_2, bitsea_4, bitsea_13, bitsea_19, bitsea_20, bitsea_22, bitsea_25",bitsea_2 + bitsea_4 + bitsea_13 + bitsea_19 + bitsea_20 + bitsea_22 + bitsea_25,"Toddler form only (baseline ages 1-2, n = 261 scored; follow-up the same children, n = 74). BITSEA Externalizing as the study keys it: items 2+4+13+19+20+22+25, 0-2, sum 0-14, complete-case, higher = more problems (quant_meta_07Oct22.xls, sheet BITSEA). Parent report; both waves. Standardise within dataset and age group (see beh_parent_measure). Preschoolers took the SDQ, which stays on its own rows.",,
+beh_parent_measure,inferred,"bitsea_2, bitsea_4, bitsea_13, bitsea_19, bitsea_20, bitsea_22, bitsea_25, bitsea_3, bitsea_6, bitsea_7, bitsea_9, bitsea_10, bitsea_17, bitsea_24, bitsea_26, bitsea_1, bitsea_5, bitsea_8, bitsea_11, bitsea_12, bitsea_14, bitsea_15, bitsea_16, bitsea_18, bitsea_21, bitsea_23, ecbq_5, ecbq_7, ecbq_8, ecbq_12, ecbq_14, ecbq_15, ecbq_21, ecbq_29, ecbq_30, ecbq_31, ecbq_33, ecbq_38, cbq_3, cbq_6, cbq_9, cbq_12, cbq_15, cbq_18, cbq_21, cbq_24, cbq_27, cbq_30, cbq_33, cbq_36, ssis_1, ssis_2, ssis_3, ssis_4, ssis_5, ssis_6, ssis_7, ssis_8, ssis_9, ssis_10, ssis_11, ssis_12, ssis_13, ssis_14, ssis_15, ssis_16, ssis_17, ssis_18, ssis_19, ssis_20, x1_ssis_wave2, x2_ssis_wave2, x3_ssis_wave2, x4_ssis_wave2, x5_ssis_wave2, x6_ssis_wave2, x7_ssis_wave2, x8_ssis_wave2, x9_ssis_wave2, x10_ssis_wave2, x11_ssis_wave2, x12_ssis_wave2, x13_ssis_wave2, x14_ssis_wave2, x15_ssis_wave2, x16_ssis_wave2, x17_ssis_wave2, x18_ssis_wave2, x19_ssis_wave2, x20_ssis_wave2","""Parent report; forms by baseline age group: toddlers (1-2) BITSEA and ECBQ, preschoolers (3-5) SSIS and CBQ. externalising: BITSEA Externalizing (the study's 26-item BITSEA selection), 7 items, 0-2 item scoring (range 0-14), sum; internalising: BITSEA Internalizing, 8 items, 0-2 item scoring (range 0-16), sum; self-regulation: ECBQ effortful control, 12 items, or CBQ effortful control, 12 items, 0-4 item scoring (range 0-4), mean; social skills: BITSEA Competence, 11 items, 0-2 item scoring (range 0-22), sum, or SSIS total (form not documented), 20 items, 0-3 item scoring (range 0-60), sum. ECBQ items 12 and 14 reversed; -3 set to NA; means over answered items, NA under half answered; sums complete-case. ECBQ and CBQ use a 0-4 response scale, not the published 1-7.""",Baseline: the 169 children followed up only (Data_Longit2022.csv); follow-up: all. This applies to the SSIS only. Constant: both waves used the same forms for the same children. Standardise within dataset and age group at analysis.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,unavailable,,,Not collected.,,
+beh_prosocial_measure,unavailable,,,See beh_prosocial_self.,,
+beh_prosocial_parent,incompatible,"bitsea_1, bitsea_5, bitsea_8, bitsea_11, bitsea_12, bitsea_14, bitsea_15, bitsea_16, bitsea_18, bitsea_21, bitsea_23, ssis_1, ssis_2, ssis_3, ssis_4, ssis_5, ssis_6, ssis_7, ssis_8, ssis_9, ssis_10, ssis_11, ssis_12, ssis_13, ssis_14, ssis_15, ssis_16, ssis_17, ssis_18, ssis_19, ssis_20, x1_ssis_wave2, x2_ssis_wave2, x3_ssis_wave2, x4_ssis_wave2, x5_ssis_wave2, x6_ssis_wave2, x7_ssis_wave2, x8_ssis_wave2, x9_ssis_wave2, x10_ssis_wave2, x11_ssis_wave2, x12_ssis_wave2, x13_ssis_wave2, x14_ssis_wave2, x15_ssis_wave2, x16_ssis_wave2, x17_ssis_wave2, x18_ssis_wave2, x19_ssis_wave2, x20_ssis_wave2",,"BITSEA Competence and the SSIS total are broad social-skills scores, mapped to beh_socialskills_parent; no prosocial scale.",,
+beh_socialskills_self,incompatible,"bitsea_1, bitsea_5, bitsea_8, bitsea_11, bitsea_12, bitsea_14, bitsea_15, bitsea_16, bitsea_18, bitsea_21, bitsea_23, ssis_1, ssis_2, ssis_3, ssis_4, ssis_5, ssis_6, ssis_7, ssis_8, ssis_9, ssis_10, ssis_11, ssis_12, ssis_13, ssis_14, ssis_15, ssis_16, ssis_17, ssis_18, ssis_19, ssis_20, x1_ssis_wave2, x2_ssis_wave2, x3_ssis_wave2, x4_ssis_wave2, x5_ssis_wave2, x6_ssis_wave2, x7_ssis_wave2, x8_ssis_wave2, x9_ssis_wave2, x10_ssis_wave2, x11_ssis_wave2, x12_ssis_wave2, x13_ssis_wave2, x14_ssis_wave2, x15_ssis_wave2, x16_ssis_wave2, x17_ssis_wave2, x18_ssis_wave2, x19_ssis_wave2, x20_ssis_wave2",,"Only parent-rated scales (BITSEA Competence, SSIS total), mapped to beh_socialskills_parent; no self-report scale.",,
+beh_socialskills_measure,unavailable,,,See beh_socialskills_self.,,
+beh_socialskills_parent,partial,"bitsea_1, bitsea_5, bitsea_8, bitsea_11, bitsea_12, bitsea_14, bitsea_15, bitsea_16, bitsea_18, bitsea_21, bitsea_23, ssis_1, ssis_2, ssis_3, ssis_4, ssis_5, ssis_6, ssis_7, ssis_8, ssis_9, ssis_10, ssis_11, ssis_12, ssis_13, ssis_14, ssis_15, ssis_16, ssis_17, ssis_18, ssis_19, ssis_20, x1_ssis_wave2, x2_ssis_wave2, x3_ssis_wave2, x4_ssis_wave2, x5_ssis_wave2, x6_ssis_wave2, x7_ssis_wave2, x8_ssis_wave2, x9_ssis_wave2, x10_ssis_wave2, x11_ssis_wave2, x12_ssis_wave2, x13_ssis_wave2, x14_ssis_wave2, x15_ssis_wave2, x16_ssis_wave2, x17_ssis_wave2, x18_ssis_wave2, x19_ssis_wave2, x20_ssis_wave2","coalesce(
+  bitsea_1 +
+    bitsea_5 +
+    bitsea_8 +
+    bitsea_11 +
+    bitsea_12 +
+    bitsea_14 +
+    bitsea_15 +
+    bitsea_16 +
+    bitsea_18 +
+    bitsea_21 +
+    bitsea_23,
+  ssis_1 +
+    ssis_2 +
+    ssis_3 +
+    ssis_4 +
+    ssis_5 +
+    ssis_6 +
+    ssis_7 +
+    ssis_8 +
+    ssis_9 +
+    ssis_10 +
+    ssis_11 +
+    ssis_12 +
+    ssis_13 +
+    ssis_14 +
+    ssis_15 +
+    ssis_16 +
+    ssis_17 +
+    ssis_18 +
+    ssis_19 +
+    ssis_20,
+  x1_ssis_wave2 +
+    x2_ssis_wave2 +
+    x3_ssis_wave2 +
+    x4_ssis_wave2 +
+    x5_ssis_wave2 +
+    x6_ssis_wave2 +
+    x7_ssis_wave2 +
+    x8_ssis_wave2 +
+    x9_ssis_wave2 +
+    x10_ssis_wave2 +
+    x11_ssis_wave2 +
+    x12_ssis_wave2 +
+    x13_ssis_wave2 +
+    x14_ssis_wave2 +
+    x15_ssis_wave2 +
+    x16_ssis_wave2 +
+    x17_ssis_wave2 +
+    x18_ssis_wave2 +
+    x19_ssis_wave2 +
+    x20_ssis_wave2
+)","Baseline: the 169 children followed up only (Data_Longit2022.csv); follow-up: all. This applies to the SSIS; the BITSEA went to all toddlers at both waves. Parent report. Toddlers: BITSEA Competence, 11 items, 0-2, sum 0-22 (a scale mixing social skills with mastery and compliance items: partial). Preschoolers: SSIS total, 20 items, 0-3, sum 0-60, all positively keyed in the data, form and subscale keys not in the folder. Complete-case. Standardise within dataset and age group.",,
+beh_prosocial_singleitem_teacher,unavailable,,,Not collected.,,
+beh_empathy_self,unavailable,,,Not collected.,,
+beh_empathy_measure,unavailable,,,See beh_empathy_self.,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_parent,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,No cognitive testing.,,
+cog_phono_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhibcont_nepsy,unavailable,,,No cognitive testing.,,
+cog_vismotor_nepsy,unavailable,,,No cognitive testing.,,
+cog_verbalfluency_nepsy,unavailable,,,No cognitive testing.,,
+cog_inhib_nihtb_flanker,unavailable,,,No cognitive testing.,,
+cog_flex_nihtb_dccs,unavailable,,,No cognitive testing.,,
+cog_wm_nihtb_listsort,unavailable,,,No cognitive testing.,,
+cog_speed_nihtb_pattern,unavailable,,,No cognitive testing.,,
+cog_epimem_nihtb_picseq,unavailable,,,No cognitive testing.,,
+cog_vocab_nihtb_picvocab,unavailable,,,No cognitive testing.,,
+cog_fluidcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_crystcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_totalcomp_nihtb,unavailable,,,No cognitive testing.,,
+cog_atten_task,unavailable,,,No cognitive testing.,,
+cog_atten_task_measure,unavailable,,,See cog_atten_task.,,
+cog_flex_task,unavailable,,,No cognitive testing.,,
+cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
+cog_inhib_task,unavailable,,,No cognitive testing.,,
+cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
+cog_wm_task,unavailable,,,No cognitive testing.,,
+cog_wm_task_measure,unavailable,,,See cog_wm_task.,,
+cog_speed_task,unavailable,,,No cognitive testing.,,
+cog_speed_task_measure,unavailable,,,See cog_speed_task.,,
+cog_wm_digitspan,unavailable,,,No cognitive testing.,,
+cog_iq_fullscale,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_task,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_task_measure,unavailable,,,See cog_nonverbalreason_task.,,
+cog_vocab_bpvs,unavailable,,,No cognitive testing.,,
+cog_vocab_ppvt,unavailable,,,No cognitive testing.,,
+cog_vocab_receptive_task,unavailable,,,No cognitive testing.,,
+cog_vocab_expressive_task,unavailable,,,No cognitive testing.,,
+cog_vocab_task_measure,unavailable,,,See cog_vocab_receptive_task.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_execfunc_parent,unavailable,,,Not collected.,,
+cog_execfunc_teacher,unavailable,,,Not collected.,,
+cog_execfunc_self,unavailable,,,Not collected.,,
+cog_execfunc_measure,unavailable,,,See cog_execfunc_parent.,,
+cog_vocab_bas_naming,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,No cognitive testing.,,
+cog_spatial_bas_pattern,unavailable,,,No cognitive testing.,,
+cog_verbalreason_bas_versim,unavailable,,,No cognitive testing.,,
+cog_earlynumber_bas_enc,unavailable,,,No cognitive testing.,,
+cog_schoolread_bracken,unavailable,,,No cognitive testing.,,
+cog_earlylang_parent,unavailable,,,Not collected.,,
+cog_earlylang_measure,unavailable,,,See cog_earlylang_parent.,,
+cog_creativethinking_stdtest,unavailable,,,No cognitive testing.,,
+cog_speechlang_diagnosed,incompatible,"childdev_screening_wave2, childdev_screening_1_text_wave2, childdev_screening_2_text_wave2",,"Follow-up free text only ('Speech delay', 'not clinically diagnosed'): childdev_screening_wave2 has no wording or code list and the answers are not attributed to a health professional.",,
+cog_speechlang_diagnosed_severity,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
+mh_emotsymp_sdq_parent,compatible,"sdq_3, sdq_8, sdq_13, sdq_16, sdq_24","local({
+  items <- cbind(sdq_3, sdq_8, sdq_13, sdq_16, sdq_24)
+  if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+})","Preschooler form (baseline ages 3-5; follow-up the same children), parent report, both waves. SDQ parent 2-4 form wording in quant_meta_07Oct22.xls (items 18, 21, 22). SDQ rule: mean of answered items x 5, floor(x + 0.5), NA under 3 of 5. Items 3, 8, 13, 16, 24.",,
+mh_totaldiff_sdq_parent,compatible,"sdq_2, sdq_3, sdq_5, sdq_6, sdq_7, sdq_8, sdq_10, sdq_11, sdq_12, sdq_13, sdq_14, sdq_15, sdq_16, sdq_18, sdq_19, sdq_21, sdq_22, sdq_23, sdq_24, sdq_25","local({
+  scored <- sapply(
+    list(
+      cbind(sdq_3, sdq_8, sdq_13, sdq_16, sdq_24),
+      cbind(sdq_5, 2 - sdq_7, sdq_12, sdq_18, sdq_22),
+      cbind(sdq_2, sdq_10, sdq_15, 2 - sdq_21, 2 - sdq_25),
+      cbind(sdq_6, 2 - sdq_11, 2 - sdq_14, sdq_19, sdq_23)
+    ),
+    function(items) {
+      if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+    }
+  )
+  rowSums(scored)
+})","Sum of the four parent difficulty subscales, each scored as in its own row, NA unless all four are scored. SDQ parent 2-4 form wording; preschooler form, both waves.",,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ not administered; see mh_emotsymp_sdq_parent.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered; see mh_emotsymp_sdq_parent.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ not administered; see mh_totaldiff_sdq_parent.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered; see mh_totaldiff_sdq_parent.,,
+mh_int_sdq_parent,unavailable,,,Derive at analysis from the subscale rows.,,
+mh_int_sdq_self,unavailable,,,"SDQ not administered; see mh_emotsymp_sdq_parent, beh_peerprob_sdq_parent.",,
+mh_int_sdq_teacher,unavailable,,,"SDQ not administered; see mh_emotsymp_sdq_parent, beh_peerprob_sdq_parent.",,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered to the child; see fam_parent_dep.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered.,,
+mh_distress_k6_self,unavailable,,,K6 not administered.,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered.,,
+mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered.,,
+mh_distress_self,incompatible,"sdq_3, sdq_8, sdq_13, sdq_16, sdq_24",,"Only the parent-rated SDQ emotional symptoms items (mixed content), which stay on mh_emotsymp_sdq_parent; no self-report scale.",,
+mh_distress_measure,unavailable,,,See mh_distress_self.,,
+mh_anx_masc_self,unavailable,,,MASC not administered.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered to the child; see fam_parent_dep.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_withdrawn_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_somatic_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_emotreact_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,incompatible,"sdq_13, bitsea_24",,"Parent's truth ratings of SDQ item 13 ('Often unhappy, downhearted') and BITSEA 24 ('Seems very unhappy, sad, depressed, or withdrawn'); scored in mh_emotsymp_sdq_parent and mh_int_parent.",,
+mh_dep_self,incompatible,"sdq_3, sdq_8, sdq_13, sdq_16, sdq_24",,"Only the parent-rated SDQ emotional symptoms items (mixed content), which stay on mh_emotsymp_sdq_parent; no self-report scale.",,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,incompatible,"sdq_3, sdq_8, sdq_13, sdq_16, sdq_24",,"Only the parent-rated SDQ emotional symptoms items (mixed content), which stay on mh_emotsymp_sdq_parent; no self-report scale.",,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_socanx_self,unavailable,,,Not collected.,,
+mh_socanx_measure,unavailable,,,See mh_socanx_self.,,
+mh_int_parent,compatible,"bitsea_3, bitsea_6, bitsea_7, bitsea_9, bitsea_10, bitsea_17, bitsea_24, bitsea_26",bitsea_3 + bitsea_6 + bitsea_7 + bitsea_9 + bitsea_10 + bitsea_17 + bitsea_24 + bitsea_26,"Toddler form only (baseline ages 1-2, n = 261 scored; follow-up the same children, n = 74). BITSEA Internalizing as the study keys it: items 3+6+7+9+10+17+24+26, 0-2, sum 0-16, complete-case, higher = more problems (quant_meta_07Oct22.xls, sheet BITSEA). Parent report; both waves. Standardise within dataset and age group (see beh_parent_measure). Preschoolers took the SDQ, which stays on its own rows.",,
+mh_anx_parent,incompatible,"sdq_3, sdq_8, sdq_13, sdq_16, sdq_24",,"Only the parent-rated SDQ emotional symptoms items (mixed content), which stay on mh_emotsymp_sdq_parent.",,
+mh_dep_parent,incompatible,"sdq_3, sdq_8, sdq_13, sdq_16, sdq_24",,"Only the parent-rated SDQ emotional symptoms items (mixed content), which stay on mh_emotsymp_sdq_parent.",,
+mh_totalprob_parent,unavailable,,,"Derive at analysis from beh_ext_parent, mh_int_parent.",,
+mh_int_teacher,unavailable,,,Not collected.,,
+mh_anx_teacher,unavailable,,,Not collected.,,
+mh_dep_teacher,unavailable,,,Not collected.,,
+mh_totalprob_teacher,unavailable,,,Not collected.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,unavailable,,,Not collected.,,
+mh_stress_scale_self,unavailable,,,Not collected.,,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,unavailable,,,Not collected.,,
+mh_lonely_scale_self,unavailable,,,Not collected.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,incompatible,"sdq_13, bitsea_24",,"Parent's truth ratings of SDQ item 13 ('Often unhappy, downhearted') and BITSEA 24 ('Seems very unhappy, sad, depressed, or withdrawn'); scored in mh_emotsymp_sdq_parent and mh_int_parent.",,
+mh_worry_self,incompatible,"sdq_8, bitsea_10",,Parent's truth ratings of SDQ item 8 ('Many worries') and BITSEA 10 ('Worries a lot or is very serious'); scored in mh_emotsymp_sdq_parent and mh_int_parent.,,
+mh_irritable_self,incompatible,sdq_5,,Parent's truth rating of SDQ item 5 ('Often has temper tantrums or hot tempers'); scored in beh_conduct_sdq_parent.,,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_unhealthywtctrl_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,incompatible,sdq_3,,"Parent's truth rating of SDQ item 3 ('Often complains of headaches'), a single item; scored in mh_emotsymp_sdq_parent.",,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered.,,
+wb_bodyimage,unavailable,,,Not collected.,,
+wb_bodyesteem_self,unavailable,,,Not collected.,,
+wb_bodyesteem_measure,unavailable,,,See wb_bodyesteem_self.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
+wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_lifesat_self,unavailable,,,Not collected.,,
+wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
+wb_happiness_singleitem_self,unavailable,,,Not collected.,,
+wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,unavailable,,,Not collected.,,
+wb_domainsat_friends_self,unavailable,,,Not collected.,,
+wb_domainsat_school_self,unavailable,,,Not collected.,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered.,,
+wb_selfesteem_singleitem_self,unavailable,,,Not collected.,,
+wb_selfesteem_self,unavailable,,,Not collected.,,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_selfefficacy_academic_self,unavailable,,,Not collected.,,
+wb_selfefficacy_academic_measure,unavailable,,,See wb_selfefficacy_academic_self.,,
+wb_control_self,unavailable,,,Not collected.,,
+wb_control_measure,unavailable,,,See wb_control_self.,,
+wb_selfconcept_academic_self,unavailable,,,Not collected.,,
+wb_selfconcept_maths_self,unavailable,,,Not collected.,,
+wb_selfconcept_verbal_self,unavailable,,,Not collected.,,
+wb_selfconcept_science_self,unavailable,,,Not collected.,,
+wb_selfconcept_social_self,unavailable,,,Not collected.,,
+wb_selfconcept_measure,unavailable,,,See wb_selfconcept_academic_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,Subjective Happiness Scale not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,unavailable,,,Not collected.,,
+wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,unavailable,,,Not collected.,,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_negaffect_self,unavailable,,,Not collected.,,
+wb_negaffect_measure,unavailable,,,See wb_negaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,unavailable,,,Not collected.,,
+wb_socsupport_friends_self,incompatible,sdq_11,,"Parent's truth rating of SDQ item 11 ('Has at least one good friend'), not perceived support; scored in beh_peerprob_sdq_parent.",,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self and wb_socsupport_friends_self.,,
+hlth_sleep_wd,unavailable,,,No weekday/weekend split.,,
+hlth_sleep_we,unavailable,,,No weekday/weekend split.,,
+hlth_sleep,partial,"sleep_nighttime, sleep_nighttime_wave2","coalesce(as.numeric(sleep_nighttime), as.numeric(sleep_nighttime_wave2))","Baseline: the 169 children followed up only (Data_Longit2022.csv); follow-up: all. Parent report of the child's night-time sleep in hours (sleep_nighttime, sleep_nighttime_wave2). Wording not in the folder, and answers fall on half-hour steps (baseline 8-12.5, follow-up 3.5-12.5), so a response list and bedtime-to-waking cannot be ruled out: partial. Daytime sleep (sleep_day, sleep_day_wave2) is not added and is named unused.",,
+hlth_sleepprob,incompatible,"night_awakenings, night_awakenings_wave2, bedtime_resistance, bedtime_resistance_wave2, sleep_onset, sleep_onset_wave2",,"Single items only: night_awakenings (anchors not documented), bedtime_resistance (a routine item) and sleep_onset (latency, in minutes); no sleep-problems scale.",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+hlth_sleepprob_singleitem_self,incompatible,"night_awakenings, night_awakenings_wave2",,Only the parent's night_awakenings item (anchors not documented); the child never reports.,,
+hlth_sleepprob_singleitem_parent,incompatible,"night_awakenings, night_awakenings_wave2, bedtime_resistance, bedtime_resistance_wave2, sleep_onset, sleep_onset_wave2",,"night_awakenings (0-5) has no documented anchors and reads as wakings per night, not a frequency; bedtime_resistance is a routine item and sleep_onset is latency in minutes. Named unused.",,
+hlth_bmi,partial,"bmi_height, bmi_weight, bmi_height_wave2, bmi_weight_wave2","local({
+  height <- coalesce(na_if(as.numeric(bmi_height), -3), na_if(as.numeric(bmi_height_wave2), -3))
+  weight <- coalesce(na_if(as.numeric(bmi_weight), -3), na_if(as.numeric(bmi_weight_wave2), -3))
+  weight / (height / 100)^2
+})","Both waves, parent report, never carried: kg / (cm / 100)^2 after clearing -3 (baseline 94 heights, 33 weights; follow-up 8, 7). Partial: height and weight come from fixed response lists (e.g. 73, 78, 83 cm; 11.8, 12.3 kg; labels not in the folder), and the top weight code, 23 kg, holds 6.8% of follow-up weights. Extreme values kept. The author's child_bmi (computed over the -3 codes) and bmi_height_m are named unused.",,
+hlth_bmi_measure,inferred,,"""Parent-reported""",Height and weight reported by the parent at both waves.,,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,unavailable,,,Not collected.,,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,partial,"child_gestationalage, id, wave","carry_within(
+  recode_values(as.numeric(child_gestationalage), c(1, 2, 3) ~ ""TRUE"", c(4, 5) ~ ""FALSE"", default = NA_character_),
+  id,
+  order = wave
+)","Parent recall at baseline, carried to follow-up (child_gestationalage; quant_meta_07Oct22.xls): extremely, very and moderate preterm = TRUE; full term and post term = FALSE. Partial: the labels state no weeks.",,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,incompatible,"childdev_screening_wave2, childdev_screening_1_text_wave2, childdev_screening_2_text_wave2",,"Only the follow-up developmental screening item (childdev_screening_wave2; free text includes 'Chronic constipation'), with no wording or code list, not attributed to a health professional.",,
+hlth_disability,unavailable,,,Not collected.,,

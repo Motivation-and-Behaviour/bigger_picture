@@ -1,0 +1,30 @@
+dataset_id: "1520"
+dataset_name: "Yilmaz"
+status: "in_progress"
+
+resources:
+  - name: "data_british_sample"
+    role: "data"
+    glob: "British Sample.xlsx"
+    reader: "excel"
+    sheet: "Sayfa1"
+  - name: "data_british_sample_updated"
+    role: "data"
+    glob: "British Sample_Updated.xlsx"
+    reader: "excel"
+    sheet: "Sayfa1"
+  - name: "data_turkish_sample"
+    role: "data"
+    glob: "Turkish Sample.xlsx"
+    reader: "excel"
+    sheet: "Sayfa1"
+  - name: "data_turkish_sample_updated"
+    role: "data"
+    glob: "Turkish Sample_Updated.xlsx"
+    reader: "excel"
+    sheet: "Sayfa1"
+
+notes: |
+  Two samples: British and Turkish, with 2 datasets each: original and updated.
+  All excel files.
+
