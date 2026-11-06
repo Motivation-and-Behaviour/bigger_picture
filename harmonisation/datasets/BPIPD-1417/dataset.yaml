@@ -1,0 +1,13 @@
+dataset_id: "1417"
+dataset_name: "Ciacchini"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Social Media Addiction dataset/social media addiction 14_10_22.xlsx"
+    reader: "excel"
+    sheet: "Foglio1"
+
+notes: |
+  One excel dataset, no codebook
