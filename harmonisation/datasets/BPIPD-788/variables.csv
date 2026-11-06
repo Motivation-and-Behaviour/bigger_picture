@@ -8,6 +8,7 @@ survey_strata,unavailable,,,Not released; the design specifies sample-point clus
 survey_cluster,compatible,ppoint,as.character(ppoint),"Pseudonymised sample point (municipality, 167 points), the cluster variable in the RKI design file wQS.csaplan. Single wave, so no prefix.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""",Newly drawn representative sample of children and adolescents resident in Germany (KiGGS Wave 2 data set description).,,
 parent_respondent,in_progress,,,,,
 age_years,partial,age2,"recode_values(age2, 1 ~ 1, 2 ~ 3, 3 ~ 5, 4 ~ 7, 5 ~ 9, 6 ~ 11, 7 ~ 13, 8 ~ 15, 9 ~ 17)","Two-year completed-age bands only (age2; exact age withheld in the SUF), scored (a + b + 1) / 2: 0-1 -> 1, 16-17 -> 17.",,
 sex,compatible,sex,"recode_values(sex, 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","Two categories, none missing; the Unknown default is a guard only. sexa duplicates sex (boy/girl labels).",,

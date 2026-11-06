@@ -16,6 +16,7 @@ survey_strata,compatible,strata,"if_else(as.numeric(strata) > 0, as.character(st
 survey_cluster,compatible,psu,"if_else(as.numeric(psu) > 0, as.character(psu), NA_character_)","UKHLS youth files carry psu directly; BHPS rows take it from the household sample-design file (b*_hhsamp), coded on the same UKHLS scheme. Unlabelled -9 (no PSU assigned; 731 BHPS rows, waves 8-11) is NA. Codes are stable across waves in this panel, so not wave-prefixed.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""",Youth in UK household probability samples: the Understanding Society general population sample and the BHPS households (Understanding Society main survey user guide).,,
 parent_respondent,in_progress,,,,,
 age_years,compatible,"dvage, age_dv, age","coalesce(as.numeric(dvage), as.numeric(age_dv), as.numeric(age)) + 0.5","Completed years at interview + 0.5 (no birth month in the release). UKHLS: dvage, falling back to age_dv. BHPS: age at interview from the household roster (indall), joined in the tidier. Ages 10-16.",,
 sex,compatible,"sex_dv, ypsex, pidp","coalesce(
