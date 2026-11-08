@@ -1,7 +1,8 @@
 #' Tidier for BPIPD-2488 (Arango)
 #'
 #' Single cross-sectional Excel sheet; variable labels come from the
-#' workbook's `Codebook` sheet, since the Excel reader carries none.
+#' workbook's `Codebook` sheet, since the Excel reader carries none, and
+#' from the contributor's reply for the two screen columns it lacks.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -29,6 +30,12 @@ bp2488_add_codebook_labels <- function(df, path) {
 
   # The codebook abbreviates the one name the data sheet spells out.
   names(labels)[names(labels) == "Low-HRQL-PH"] <- "Low-HRQL-Physical Health"
+
+  # Supplied later without Codebook entries; described in the contributor's reply.
+  labels[c("Hours_PC_VG", "Screen_Time")] <- c(
+    "Hours on computer/video games",
+    "Screen time: TV_Hoursperday + Hours_PC_VG, summed by the study"
+  )
 
   for (column in intersect(names(df), names(labels))) {
     attr(df[[column]], "label") <- labels[[column]]
