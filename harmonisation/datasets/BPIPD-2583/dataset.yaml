@@ -3,9 +3,81 @@ dataset_name: "CSTADS"
 status: "in_progress"
 
 waves:
+  - wave: "2002"
+    label: "YSS 2002"
+    wave_dir: "YSS/2002"
+    resources:
+      - name: "YSS 2002 Data"
+        role: "data"
+        glob: "yss-82M0011-E-2002_F1.sav"
+        reader: "spss"
+      - name: "YSS 2002 Codebook"
+        role: "codebook"
+        glob: "Survey documentation/yss2002cbk.pdf"
+      - name: "YSS 2002 Variable List"
+        role: "codebook"
+        glob: "Survey documentation/yss2002var.pdf"
+      - name: "YSS 2002 User Guide"
+        role: "docs"
+        glob: "Survey documentation/yss2002gid.pdf"
+      - name: "YSS 2002 Questionnaires"
+        role: "docs"
+        glob:
+          - "Survey documentation/yss2002g5t6que.pdf"
+          - "Survey documentation/yss2002g7t9que.pdf"
+          - "Survey documentation/yss2002parque.pdf"
+  - wave: "2006-07"
+    label: "YSS 2006-07"
+    wave_dir: "YSS/2006"
+    resources:
+      - name: "YSS 2006-07 Data"
+        role: "data"
+        glob: "yss-82M0011XCB-E-2006-supplemental_F1.sav"
+        reader: "spss"
+      - name: "YSS 2006-07 Codebook"
+        role: "codebook"
+        glob:
+          - "Survey documentation/yss06_student_codebook_supplemental.pdf"
+          - "Survey documentation/yss06_student_microdata_pub_supplemental.pdf"
+      - name: "YSS 2006-07 User Guide"
+        role: "docs"
+        glob: "Survey documentation/yss06_user_guide_supplemental*.pdf"
+      - name: "YSS 2006-07 Questionnaires"
+        role: "docs"
+        glob: "Survey documentation/yss06_english_survey_*.pdf"
+  - wave: "2014-15"
+    label: "CSTADS 2014-15"
+    wave_dir: "CSADS/2015"
+    resources:
+      - name: "CSTADS 2014-15 Data"
+        role: "data"
+        glob: "cst14_data_EN_PU_v2_20151210.sav"
+        reader: "spss"
+      - name: "CSTADS 2014-15 Codebook"
+        role: "codebook"
+        glob: "Survey Documentation/cst14_data_codebook_EN_v3_20160119.pdf"
+      - name: "CSTADS 2014-15 User Guide"
+        role: "docs"
+        glob: "Survey Documentation/cst14_user_guide_EN_final 20160620.pdf"
+  - wave: "2016-17"
+    label: "CSTADS 2016-17"
+    wave_dir: "CSADS/2017"
+    resources:
+      - name: "CSTADS 2016-17 Data"
+        role: "data"
+        glob: "cst16_studentdata_en_pu_20171211.sav"
+        reader: "spss"
+      - name: "CSTADS 2016-17 Codebook"
+        role: "codebook"
+        glob:
+          - "Survey Documentation/cst16_data_codebook_EN_20180102.pdf"
+          - "Survey Documentation/cstads16_student_data_r_frequencies_EN_20180129.pdf"
+      - name: "CSTADS 2016-17 User Guide"
+        role: "docs"
+        glob: "Survey Documentation/cst16_CSTADS_final_userguide_20180116.pdf"
   - wave: "2021-22"
-    label: "2021-22"
-    wave_dir: "."
+    label: "CSTADS 2021-22"
+    wave_dir: "CSADS/2021"
     resources:
       - name: "CSTADS 2021-22 Data"
         role: "data"
@@ -15,20 +87,39 @@ waves:
         role: "docs"
         glob: "202122-cstads-pumf-user-guide.docx"
   - wave: "2023-24"
-    label: "2023-24"
-    wave_dir: "."
+    label: "CSADS 2023-24"
+    wave_dir: "CSADS/2023"
     resources:
-      - name: "CSTADS 2023-24 Data"
+      - name: "CSADS 2023-24 Data"
         role: "data"
         glob: "202324-csads-ecade-pumf-fmgd-data-donnees.csv"
         reader: "csv"
-      - name: "CSTADS 2023-24 User Guide"
+      - name: "CSADS 2023-24 User Guide"
         role: "docs"
         glob: "202324-csads-pumf-user-guide.docx"
 notes: |
-  2 waves: 2021-22 and 2023-24. Each wave has one CSV data file and one Word user guide.
-  Filenames are bilingual (English/French combined) 
-  Statistics Canada PUMF naming: pumf/fmgd = Public Use Microdata File / Fichier de microdonnees a grande diffusion; 
-  ectade/ecade = French CSTADS acronym variants; data-donnees = data (EN/FR).
-  Note: file naming is inconsistent between waves - the 2021-22 files use "cstads" while the 2023-24 files use 
-  "csads" (missing the "t"), and the 2021-22 data filename has a trailing hyphen before ".csv". 
+  6 cycles of Health Canada's school survey series: the Youth Smoking Survey
+  (YSS) 2002 and 2006-07, the Canadian Student Tobacco, Alcohol and Drugs
+  Survey (CSTADS) 2014-15, 2016-17 and 2021-22, and the Canadian Student
+  Alcohol and Drugs Survey (CSADS) 2023-24. Independent samples each cycle
+  (repeated cross-section); no student is linked across cycles.
+  Folder layout: YSS/<year>/ and CSADS/<year>/, one folder per cycle. The
+  CSADS/ folder holds all four CSTADS/CSADS cycles, and its year folders are
+  named inconsistently: 2015 and 2017 are the 2014-15 and 2016-17 cycles (year
+  of release), 2021 and 2023 the 2021-22 and 2023-24 cycles (first year).
+  Each cycle's data are read once, from the labelled .sav where one exists
+  (YSS and 2014-15/2016-17) or from the CSV (2021-22/2023-24, the only
+  format supplied). Not read: the CSV/, SAS/, SPSS/, STATA/ and STATA7/
+  subfolders (the same data in other formats, several zipped), the zipped
+  bootstrap weight files (cst14_bstrap, cst16_bstrap), the SAS/SPSS
+  value-label command files (the .sav carries the labels), the .doc twins of
+  the YSS 2002 PDFs, readstep.html, yss2002.sas, and the 2014-15/2016-17
+  summary-of-results leaflets.
+  YSS/2006/ also holds byte-identical copies of the 2002 files (the .sav,
+  CSV, SAS, SPSS and Stata data and the 2002 documentation) that are not
+  in the 2006 MANIFEST.TXT; only the 2006-07 supplemental file is read.
+  The 2006-07 "supplemental" file is the full YSS 2006-07 student sample
+  (71,003 students, modules A, B1 and B2) with every item; the "main" file
+  it supplements is not supplied.
+  The tidier keeps only the two YSS cycles: the CSTADS/CSADS cycles field no
+  screen-use item, so they are dropped under the screen-wave rule.
