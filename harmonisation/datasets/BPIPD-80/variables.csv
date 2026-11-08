@@ -8,6 +8,7 @@ survey_strata,partial,SITE_ID,as.character(as.integer(SITE_ID)),"Study site code
 survey_cluster,compatible,school_ID,as.character(as.integer(school_ID)),"School ID (256 schools, unique across sites); schools were the primary sampling unit within each site.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Schools were the primary sampling unit and classes of 10-year-olds the secondary unit at each of 12 sites (ISCOLE design paper, Katzmarzyk et al. 2013, doi:10.1186/1471-2458-13-900).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,Age_Year,as.numeric(Age_Year),Age at the anthropometric visit (= AgeAtAnthroMos / 12). Sample restricted to 9.0-11.99 years by design; complete.,,
 sex,compatible,Gender,"recode_values(as.integer(Gender), 1L ~ ""Male"", 2L ~ ""Female"", default = ""Unknown"")",Parent-reported child gender.,,

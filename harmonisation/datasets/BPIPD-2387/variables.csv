@@ -8,6 +8,7 @@ survey_strata,unavailable,,,Not in the supplied extract; the public-use files wi
 survey_cluster,unavailable,,,Not in the supplied extract; the public-use files withhold the geographic design variables.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Population-based telephone survey of California households (CHIS data dictionaries, section 2.1).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,"srage, srage_p","coalesce(as.numeric(srage), as.numeric(srage_p)) + 0.5","Completed years + 0.5: srage (2001), srage_p (2005-2009). Child file 0-11 (MKA-reported; 2001 code 0 = under 1 year), adolescent file 12-17 (self-reported).",,
 sex,compatible,srsex,"recode_values(as.numeric(srsex), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","Gender item, male or female (srsex), all cycles; reported by the adult most knowledgeable about the child (MKA) in the child file and by the adolescent in the adolescent file.",,

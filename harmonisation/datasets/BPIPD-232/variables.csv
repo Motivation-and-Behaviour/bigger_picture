@@ -8,6 +8,7 @@ survey_strata,compatible,"year, fipsst, stratum","paste(year, fipsst, stratum, s
 survey_cluster,compatible,hhid,"sprintf(""%.0f"", as.numeric(hhid))",HHID: the household is the NSCH sampling unit (one sampled child per household); IDs are unique across years.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Randomly selected US household addresses screened for children, one child sampled per household (NSCH sampling and administration documentation).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,sc_age_years,as.numeric(sc_age_years) + 0.5,"Caregiver-reported age of the sampled child in completed years (0-17), + 0.5.",,
 sex,compatible,sc_sex,"recode_values(as.numeric(sc_sex), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")",Caregiver-reported sex of the sampled child.,,

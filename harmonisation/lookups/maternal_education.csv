@@ -255,11 +255,6 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 535,maternal_education,Two-Year Degree,Post-secondary,compatible,q162 code 4: two-year (associate) degree (ISCED 5)
 535,maternal_education,Four-Year Degree,Bachelor degree or higher,compatible,q162 code 5: four-year (bachelor's) degree (ISCED 6)
 535,maternal_education,Graduate or Professional Degree,Bachelor degree or higher,compatible,q162 code 6: graduate or professional degree (ISCED 7-8)
-2296,maternal_education,Less than a high school degree,Secondary school or less,compatible,"PHIGHED code 1, ISCED 0-2"
-2296,maternal_education,A high school degree or GED,Secondary school or less,compatible,"PHIGHED code 2, ISCED 3"
-2296,maternal_education,Some college but not a college degree,Post-secondary,compatible,PHIGHED code 3: tertiary study begun but no 4-year degree
-2296,maternal_education,A 4-year college degree or higher,Bachelor degree or higher,compatible,"PHIGHED code 4, ISCED 6-8"
-2296,maternal_education,Unknown,Unknown,compatible,"PHIGHED -9, a respondent of the other sex, or no parent record"
 64,maternal_education,nicht beantwortet,Unknown,unavailable,Not answered.
 64,maternal_education,"Keinen Abschluss, noch in beruflicher Ausbildung (z.B. Student/in, AZUBI, BVJ)",Secondary school or less,compatible,"No vocational qualification yet, still in training (students, apprentices, pre-vocational year); school level only, and most hold no Abitur."
 64,maternal_education,Keinen Berufsabschluss und nicht in Ausbildung,Secondary school or less,compatible,No vocational qualification and not in training; school level only.
@@ -269,6 +264,63 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 64,maternal_education,"Fachhochschule, Ingenieurschule",Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
 64,maternal_education,Universität oder Hochschule,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
 64,maternal_education,Anderen Ausbildungsabschluss (z.B. im Ausland erworben),Unknown,incompatible,"Other qualification, e.g. obtained abroad; not rankable against the German levels."
+161,maternal_education,Degree or higher,Bachelor degree or higher,compatible,V18 the answering parent's own highest qualification; ISCED 6-8
+161,maternal_education,A-Levels,Secondary school or less,compatible,V18; A-levels are ISCED 3
+161,maternal_education,GCSEs,Secondary school or less,compatible,V18; GCSEs are at or below ISCED 3
+161,maternal_education,Vocational qualifications,Secondary school or less,proximate,V18 names no level; a band spanning ISCED 3-4 goes to the level holding most of its members (upper-secondary vocational qualifications)
+161,maternal_education,btec 1st diploma,Secondary school or less,compatible,"V19 typed answer for 'Other, please specify'; a BTEC First Diploma is below ISCED 4"
+161,maternal_education,Dip HE,Post-secondary,compatible,"V19 typed answer for 'Other, please specify'; a Diploma of Higher Education is ISCED 5"
+1439,maternal_education,Geen,Secondary school or less,compatible,No schooling (ISCED 0).
+1439,maternal_education,Lager,Secondary school or less,compatible,Primary school (ISCED 1).
+1439,maternal_education,ASO,Secondary school or less,compatible,Flemish general secondary education (ISCED 3).
+1439,maternal_education,KSO,Secondary school or less,compatible,Flemish arts secondary education (ISCED 3).
+1439,maternal_education,TSO,Secondary school or less,compatible,Flemish technical secondary education (ISCED 3).
+1439,maternal_education,BSO,Secondary school or less,compatible,Flemish vocational secondary education (ISCED 3).
+1439,maternal_education,Hogeschool,Bachelor degree or higher,compatible,University of applied sciences degree; bachelor-equivalent (ISCED 6).
+1439,maternal_education,Universiteit,Bachelor degree or higher,compatible,University degree (ISCED 6-8).
+1439,maternal_education,"Anders, namelijk:",Unknown,incompatible,Other qualification; the written answer is not released.
+1439,maternal_education,Niet van toepassing,Unknown,incompatible,Not applicable.
+2679,maternal_education,Illeterate,Secondary school or less,compatible,"education (free text in the form), spelt so in the file: illiterate, no schooling (ISCED 0)"
+2679,maternal_education,Primary school (1- 5 class),Secondary school or less,compatible,education: classes 1-5 (ISCED 1)
+2679,maternal_education,Middle school ( 6-8 class),Secondary school or less,compatible,education: classes 6-8 (ISCED 2)
+2679,maternal_education,High school (9-10 class),Secondary school or less,compatible,"education: classes 9-10, at most ISCED 3"
+2679,maternal_education,Intermediate,Secondary school or less,proximate,"education: read as Class XI-XII (ISCED 3), the level between High school and PG/Graduate; undefined in the study documents and may hold post-school diplomas, placed by the majority rule"
+2679,maternal_education,PG/Graduate,Bachelor degree or higher,compatible,education: graduate or postgraduate (ISCED 6-8)
+1380,maternal_education,0,Secondary school or less,compatible,B_Titolo_Studio code 0 (Nessun titolo); code order read from the questionnaire options
+1380,maternal_education,1,Secondary school or less,compatible,B_Titolo_Studio code 1 (Licenza elementare); code order read from the questionnaire options
+1380,maternal_education,2,Secondary school or less,compatible,B_Titolo_Studio code 2 (Licenza di scuola media); code order read from the questionnaire options
+1380,maternal_education,3,Secondary school or less,compatible,B_Titolo_Studio code 3 (Diploma o qualifica di scuola media superiore); code order read from the questionnaire options
+1380,maternal_education,4,Bachelor degree or higher,proximate,B_Titolo_Studio code 4 (Laurea/Diploma universitario o titolo superiore); pools the short university diploma with degrees; code order read from the questionnaire options
+1598,parental_education,1,Secondary school or less,compatible,EducationScores code 1 Primary school (ceiling of the parents' mean).
+1598,parental_education,2,Secondary school or less,compatible,"EducationScores code 2 Secondary school (GCSEs, O-Levels or equivalent) (ceiling of the parents' mean)."
+1598,parental_education,3,Secondary school or less,compatible,EducationScores code 3 Sixth Form/College (A Levels or equivalent) (ceiling of the parents' mean).
+1598,parental_education,4,Secondary school or less,proximate,"EducationScores code 4 Vocational College (Apprenticeships, NVQs or equivalent) (ceiling of the parents' mean): spans two levels and goes to the level holding most of its members."
+1598,parental_education,5,Bachelor degree or higher,compatible,EducationScores code 5 Undergraduate (Bachelors or equivalent) (ceiling of the parents' mean).
+1598,parental_education,6,Bachelor degree or higher,compatible,EducationScores code 6 Postgraduate (Masters or equivalent) (ceiling of the parents' mean).
+1598,parental_education,7,Bachelor degree or higher,compatible,EducationScores code 7 MBA (ceiling of the parents' mean).
+1598,parental_education,8,Bachelor degree or higher,compatible,EducationScores code 8 Doctoral degree (PhD) (ceiling of the parents' mean).
+845,maternal_education,Below high school,Secondary school or less,compatible,Guardian_Education code 0: the responding guardian's education below high school (ISCED 0-2).
+845,maternal_education,High school,Secondary school or less,proximate,"Guardian_Education code 1: high school (ISCED 3); the source has no post-secondary band, so that level is not separated."
+845,maternal_education,Bachelor's degree and above,Bachelor degree or higher,compatible,Guardian_Education code 2: bachelor's degree and above (ISCED 6-8).
+666,maternal_education,1,Secondary school or less,compatible,parent_edu code 1: Year 7 to 10
+666,maternal_education,2,Secondary school or less,compatible,parent_edu code 2: Year 11
+666,maternal_education,3,Secondary school or less,compatible,parent_edu code 3: Year 12
+666,maternal_education,4,Post-secondary,proximate,"parent_edu code 4: TAFE, 'Trade Certificate/ Diploma' in the study's table; certificates and diplomas below degree, mostly ISCED 4-5, with lower certificates not separated"
+666,maternal_education,5,Bachelor degree or higher,compatible,parent_edu code 5: undergraduate
+666,maternal_education,6,Bachelor degree or higher,compatible,parent_edu code 6: postgraduate
+666,maternal_education,7,Unknown,compatible,parent_edu code 7: other or prefer not to answer; no such answers in the data
+262,maternal_education,Year 10 or less,Secondary school or less,compatible,T1P_P_Educ and T1P_OP_Educ code 1 (ISCED 0-2).
+262,maternal_education,Year 12,Secondary school or less,compatible,Code 2 (ISCED 3).
+262,maternal_education,TAFE certificate or diploma (or equivalent),Post-secondary,proximate,"Code 3: vocational certificates and diplomas, a band spanning upper-secondary and post-secondary levels."
+262,maternal_education,Undergraduate university degree,Bachelor degree or higher,compatible,Code 4 (ISCED 6).
+262,maternal_education,Postgraduate university degree,Bachelor degree or higher,compatible,Code 5 (ISCED 7-8).
+262,maternal_education,Other (please type),Unknown,compatible,Code 6 with no resolved text; other qualifications are Unknown.
+262,maternal_education,Unsure/ NA,Unknown,compatible,"T1P_OP_Educ code -99; declared missing, so it reaches the table as NA."
+1927,maternal_education,None,Secondary school or less,compatible,No education (code 0); ISCED 0.
+1927,maternal_education,Primary,Secondary school or less,compatible,Primary education (code 1); ISCED 1.
+1927,maternal_education,Secondary,Secondary school or less,compatible,Secondary education (code 2); no higher than ISCED 3.
+1927,maternal_education,Upper secondary or VET,Secondary school or less,proximate,'Upper secondary education or vocational training (VET)' (code 3): the VET level is not stated; placed at the upper secondary level the label names.
+1927,maternal_education,University,Bachelor degree or higher,compatible,University education (code 4); ISCED 6-8.
 1261,maternal_education,Junior high school graduate,Secondary school or less,compatible,haha_F11_1 or haha_F11_2 code 1 (中卒); ISCED 2.
 1261,maternal_education,High school graduate,Secondary school or less,compatible,haha_F11_1 or haha_F11_2 code 2 (高卒); ISCED 3.
 1261,maternal_education,Specialised training college graduate,Post-secondary,compatible,haha_F11_1 or haha_F11_2 code 3 (専門学校卒); post-secondary specialised training course; ISCED 5.
@@ -324,3 +376,31 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 989,maternal_education,Four-year degree,Bachelor degree or higher,compatible,v124 code 5: four-year (bachelor's) degree (ISCED 6)
 989,maternal_education,Graduate/professional degree,Bachelor degree or higher,compatible,v124 code 6: graduate or professional degree (ISCED 7-8)
 989,maternal_education,9,Unknown,incompatible,v124 code 9 is undefined
+160,maternal_education,only elementary school,Secondary school or less,compatible,"mother_ed, father_ed code 1, no higher than ISCED 2"
+160,maternal_education,only high school,Secondary school or less,compatible,"mother_ed, father_ed code 2, ISCED 3"
+160,maternal_education,college or higher education,Bachelor degree or higher,proximate,"mother_ed, father_ed code 3; reads as pooling short-cycle college (ISCED 5) with degrees (ISCED 6-8), placed at the level taken to hold most of the band"
+160,maternal_education,5,Unknown,incompatible,"mother_ed code 5 (1 row) has no value label, and no document defines it"
+2329,maternal_education,lower secondary education / grundskola,Secondary school or less,compatible,Code 2: ISCED-97 level 2 (Swedish compulsory school).
+2329,maternal_education,secondary education / gymnasium,Secondary school or less,compatible,Code 3: ISCED-97 level 3 (upper secondary).
+2329,maternal_education,Post-secondary non tertiary education / postgymnasiala yrkesutbildningar,Post-secondary,compatible,Code 4: ISCED-97 level 4.
+2329,maternal_education,First stage of tertiary education / kandidatexaminen etc,Bachelor degree or higher,proximate,"Code 5: ISCED-97 level 5 bundles the academic (5A) and short-cycle vocational (5B) tracks, so it goes to the level holding most members; the study's factor twin reads Bachelor or Master's Degree."
+2329,maternal_education,Second stage of tertiary education / lic & doktor,Bachelor degree or higher,compatible,Code 6: ISCED-97 level 6 (licentiate and doctorate).
+706,maternal_education,1,Secondary school or less,compatible,Mother_Education code 1 Primary.
+706,maternal_education,2,Secondary school or less,compatible,Mother_Education code 2 Middle school.
+706,maternal_education,3,Secondary school or less,compatible,Mother_Education code 3 High school.
+706,maternal_education,4,Bachelor degree or higher,compatible,Mother_Education code 4 Bachelor's.
+706,maternal_education,5,Bachelor degree or higher,compatible,Mother_Education code 5 Master's.
+706,maternal_education,6,Bachelor degree or higher,compatible,Mother_Education code 6 Post-graduate.
+706,paternal_education,1,Secondary school or less,compatible,Father_Education code 1 Primary.
+706,paternal_education,2,Secondary school or less,compatible,Father_Education code 2 Middle school.
+706,paternal_education,3,Secondary school or less,compatible,Father_Education code 3 High school.
+706,paternal_education,4,Bachelor degree or higher,compatible,Father_Education code 4 Bachelor's.
+706,paternal_education,5,Bachelor degree or higher,compatible,Father_Education code 5 Master's.
+706,paternal_education,6,Bachelor degree or higher,compatible,Father_Education code 6 Post-graduate.
+706,parental_education,1,Secondary school or less,compatible,highest of Mother_Education and Father_Education code 1 Primary.
+706,parental_education,2,Secondary school or less,compatible,highest of Mother_Education and Father_Education code 2 Middle school.
+706,parental_education,3,Secondary school or less,compatible,highest of Mother_Education and Father_Education code 3 High school.
+706,parental_education,4,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 4 Bachelor's.
+706,parental_education,5,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 5 Master's.
+706,parental_education,6,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 6 Post-graduate.
+706,paternal_education,999,Unknown,incompatible,Father_Education code 999 is in no document.

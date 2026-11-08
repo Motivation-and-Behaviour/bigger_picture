@@ -254,10 +254,29 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 535,ethnicity,AfricanAmerican,Black,compatible,Race code 2
 535,ethnicity,Hispanic,Hispanic,compatible,Race code 3: Hispanic stands in a US sample
 535,ethnicity,Other,Other,proximate,"Race code 4: lumps Asian, multiracial and Native American children"
-2296,ethnicity,Hispanic,Hispanic,compatible,"TETHRAC_RC code 1: Hispanic, Latino/a or Spanish origin, taken ahead of race"
-2296,ethnicity,Non-Hispanic Black alone,Black,compatible,TETHRAC_RC code 2: Black or African American as the only race among non-Hispanic teens
-2296,ethnicity,Non-Hispanic White alone,White,compatible,TETHRAC_RC code 3: White as the only race among non-Hispanic teens
-2296,ethnicity,Other,Other,proximate,"TETHRAC_RC code 4 pools non-Hispanic Asian, American Indian/Alaska Native, Native Hawaiian/Pacific Islander and two or more races; Asian and Mixed cannot be separated"
+161,ethnicity,White - British,White,compatible,V26 the child's ethnicity; parent report
+161,ethnicity,White - Other*,White,compatible,V26 the child's ethnicity; parent report
+161,ethnicity,Asian - British,Asian,compatible,V26 the child's ethnicity; parent report
+161,ethnicity,Mixed*,Mixed,compatible,V26 the child's ethnicity; parent report
+871,ethnicity,Western European background,White,compatible,Code 1; label from the paper's percentages
+871,ethnicity,Eastern European background,White,compatible,Code 2; label from the paper's percentages
+871,ethnicity,African background,Black,proximate,Code 3; label from the paper's percentages; a regional label that may include North African backgrounds
+871,ethnicity,North American background,Unknown,proximate,"Code 4; label from the paper's percentages; names a place, not a racial group"
+871,ethnicity,Asian background,Asian,compatible,Code 6; label from the paper's percentages
+871,ethnicity,Mixed background,Mixed,compatible,Code 8; label from the paper's percentages
+262,ethnicity,Caucasian,White,compatible,T1P_C_Ethnicity code 1; parent report.
+262,ethnicity,Asian,Asian,compatible,Code 2.
+262,ethnicity,Aboriginal and/or Torres Strait Islander,Other,proximate,Code 3 (none chosen); dataschema has no Indigenous category.
+262,ethnicity,Middle Eastern,Other,proximate,Code 4; dataschema has no Middle Eastern category.
+262,ethnicity,Other (please type),Other,proximate,Code 5; the typed text is resolved first through the dataset's ethnicity_other lookup.
+1721,ethnicity,White,White,compatible,"Code 0: White, non-Hispanic"
+1721,ethnicity,Black,Black,compatible,"Code 1: Black, non-Hispanic"
+1721,ethnicity,Hispanic,Hispanic,compatible,Code 2: Hispanic origin in a US sample
+1721,ethnicity,Asian,Asian,proximate,"Code 3: one option merging Asian with Pacific Islander (Other in the schema); mapped to the real value, merge named"
+1721,ethnicity,Native,Other,proximate,Code 4: Native American or Alaskan Native; no schema category; reported separately in indigenous; no respondents
+1721,ethnicity,Mixed,Mixed,compatible,Code 5: Mixed ethnicity
+1721,ethnicity,Other,Other,compatible,Code 6: residual category
+1721,ethnicity,9,Unknown,compatible,Code 9 occurs once and no document defines it
 1645,ethnicity,"Hispanic origin, any race",Hispanic,compatible,"child_hispanic = 1 (parent report), taken ahead of race"
 1645,ethnicity,"Non-Hispanic, two or more races",Mixed,compatible,Two or more of the child_race items ticked among non-Hispanic children
 1645,ethnicity,"Non-Hispanic, White alone",White,compatible,child_race_1 is the only race ticked among non-Hispanic children
@@ -309,3 +328,13 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 989,ethnicity,Other: Indian & French,Mixed,proximate,v122 code 7 with v123 code 3: two heritages named
 989,ethnicity,Other: European American,White,proximate,v122 code 7 with v123 code 7
 989,ethnicity,9,Unknown,incompatible,v122 code 9 is undefined
+1760,ethnicity,1,White,proximate,Q4 code 1: NZ European; the responding parent's own group.
+1760,ethnicity,2,Other,proximate,"Q4 code 2: Maori; no schema category, status on indigenous; the responding parent's own group."
+1760,ethnicity,3,Other,proximate,"Q4 code 3: Samoan; Pacific peoples, no schema category; the responding parent's own group."
+1760,ethnicity,4,Other,proximate,"Q4 code 4: Cook Island Maori; Pacific peoples, no schema category; the responding parent's own group."
+1760,ethnicity,5,Other,proximate,"Q4 code 5: Tongan; Pacific peoples, no schema category; the responding parent's own group."
+1760,ethnicity,6,Other,proximate,"Q4 code 6: Niuean; Pacific peoples, no schema category; the responding parent's own group."
+1760,ethnicity,7,Asian,proximate,Q4 code 7: Chinese; the responding parent's own group.
+1760,ethnicity,8,Asian,proximate,Q4 code 8: Indian; the responding parent's own group.
+1760,ethnicity,9,Asian,proximate,Q4 code 9: Filipino; the responding parent's own group.
+1760,ethnicity,10,Other,proximate,"Q4 code 10: Other, resolved first through the dataset's ethnicity_other lookup; the responding parent's own group."

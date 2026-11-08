@@ -1,0 +1,19 @@
+source_value,harmonised_value,notes
+African,Black,"Regional 'African' label, read as Black; possible North African participants."
+African and NZ European,Mixed,Black and White.
+British,White,European national origin.
+"Chile, NZ European",Mixed,Latin American and White; Hispanic is US/Canada only.
+European,White,European origin.
+Fiji,Other,"Fijian: Pacific peoples, no schema category."
+Fijian,Other,"Pacific peoples, no schema category."
+Fijian Indian,Asian,Indo-Fijian: Indian origin.
+Korean,Asian,Korean origin.
+Maori pakeha,Mixed,Maori and NZ European.
+Mori and tongan,Other,"Maori and Tongan: Pacific peoples, no schema category."
+Mori NZ European,Mixed,Maori and NZ European.
+Nepalese,Asian,Nepalese origin.
+New Zealander,Unknown,Bare site nationality.
+NZ and Maori,Other,Maori; site nationality uninformative.
+NZ European and Mori,Mixed,Maori and NZ European.
+Pakeha Maori,Mixed,Maori and NZ European.
+Pakistani,Asian,Pakistani origin.
