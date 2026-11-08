@@ -19,6 +19,7 @@ flatten_spec_resources <- function(dataset_dir, spec) {
           object = res$object %||% NULL,
           col_names = res$col_names %||% NULL,
           col_positions = resolve_col_positions(res$col_positions, spec),
+          lines_per_record = res$lines_per_record %||% NULL,
           encoding = res$encoding %||% NULL,
           columns = res$columns %||% NULL
         ),
