@@ -8,6 +8,7 @@ survey_strata,unavailable,,,Not a survey sample.,,
 survey_cluster,unavailable,,,Not a survey sample.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","US parents of children aged 3-17 recruited through Amazon Mechanical Turk, a community sample with no clinical screening (Rojo-Wissar et al. 2024, doi:10.1111/camh.12665).",,
 parent_respondent,in_progress,,,,,
 age_years,partial,"agechild_1, FID, wave","agechild_1 + if_else(FID %in% FID[wave == ""1"" & agechild_1 %% 1 != 0], 0, 0.5)","Parent report 'How old is child in years' (agechild_1): completed years at baseline (3-17), + 0.5; one child's baseline entry of 4.5, a decimal age, is taken as entered at every wave (no + 0.5). Waves 4, 8 and 12 hold baseline age + months since baseline / 12, filled in the tidier because no follow-up asked age, so the row is partial.",,
 sex,compatible,"genderC_1, FID","coalesce(

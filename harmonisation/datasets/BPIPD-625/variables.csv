@@ -8,6 +8,7 @@ survey_strata,compatible,"stratum, .wave","if_else(is.na(stratum), NA_character_
 survey_cluster,compatible,"psu, .wave","if_else(is.na(psu), NA_character_, paste0(.wave, ""_"", sprintf(""%.0f"", psu)))","CDC PSU of the student's school (a county, group of adjacent counties or sub-area of a large county), 52-61 per wave; codes recur across waves, so prefixed with the survey year.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""",Three-stage cluster sample of 9th to 12th grade students in US public and private schools (YRBS 2019 National User Guide).,,
 parent_respondent,in_progress,,,,,
 age_years,partial,age_band,"recode_values(as.numeric(age_band), 1 ~ 12.5, 2 ~ 13.5, 3 ~ 14.5, 4 ~ 15.5, 5 ~ 16.5, 6 ~ 17.5, 7 ~ 18.5)","Q1 age in single completed years (12 or younger ... 18 or older): +0.5 (13 -> 13.5); open bands at bound + 0.5 (12.5, 18.5). Partial: 15% of rows sit in the open 18-or-older band.",,
 sex,compatible,sex,"recode_values(as.numeric(sex), 1 ~ ""Female"", 2 ~ ""Male"", default = ""Unknown"")","Q2, 1 = Female, 2 = Male, unchanged across waves; missing -> Unknown.",,
