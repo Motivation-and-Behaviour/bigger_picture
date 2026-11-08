@@ -25,6 +25,7 @@ survey_cluster,compatible,"VARSTRAT, VARPSU","if_else(
 )","Variance-estimation PSU (VARPSU), numbered 1-2 within stratum, so prefixed with VARSTRAT; coverage and carry as survey_strata.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""",Household probability sample of youth aged 12-17 from the US civilian noninstitutionalized population (PATH user guide).,,
 parent_respondent,in_progress,,,,,
 age_years,partial,R_Y_AGECAT2,"recode_values(readr::parse_number(as.character(R_Y_AGECAT2)), 1 ~ 13.5, 2 ~ 16.5)","Age at interview in two completed-year bands only (R_Y_AGECAT2: 12-14, 15-17; exact age is withheld from the public-use files), scored (a + b + 1) / 2 = 13.5 and 16.5; 3 wave-1 rows missing. Partial: three-year bands.",,
 sex,compatible,"R_Y_SEX, PERSONID","coalesce(

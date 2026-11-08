@@ -1,0 +1,947 @@
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,inferred,participant_id,as.character(participant_id),"Neither file releases an id: row position in the source file (H12-nnnn, H3-nnnn, built in the tidier), all waves. Each wide source row holds one adolescent's baseline and follow-up answers.",,
+wave,compatible,wave,wave,"baseline or follow_up, from each source column's questionnaire prefix (HERMES 1+2) or suffix (HERMES 3). Follow-up about one year after baseline in all three cohorts.",,
+data_year,inferred,"cohort, wave, jdatjjjj","case_when(
+  cohort == ""HERMES3"" & wave == ""baseline"" ~ 2024,
+  cohort == ""HERMES3"" ~ 2025,
+  jdatjjjj < 2012 ~ 2015,
+  .default = jdatjjjj
+)","HERMES 1+2: per-row questionnaire year (jdatjjjj, 'date of questionnaire'), both waves; one follow-up entry of 2002 (H12-0862, equal to the child's birth month and year) is not a fieldwork date and takes the wave's modal year, 2015 (HERMES 2 follow-up, 301 of 418 rows). HERMES 3 releases no date, so each wave is assigned the midpoint of its documented window (inferred, the row's status): baseline 2024 (recruitment 2023-2024), follow-up 2025 (one year after baseline, completed end of November 2025; HERMES 3 protocol, PMC13098621).",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,unavailable,,,Not a survey sample.,,
+survey_strata,unavailable,,,Not a survey sample.,,
+survey_cluster,unavailable,,,Not in the supplied extract.,,
+family_id,unavailable,,,Not in the supplied extract.,,
+sample_component,compatible,cohort,cohort,"The study's own cohort labels. HERMES1: school classes, grades 7-9, baseline 2012-2013. HERMES2: same protocol and questionnaires, recruited separately, baseline 2014-2015; both in one file, split in the tidier by baseline year, which reproduces the published per-period follow-up counts (425, 418). HERMES3: separate cohort in its own file, grades 7-8, baseline 2023-2024, GOLIAT questionnaire items.",,
+sample_population,inferred,,"""General population""",School samples of Swiss adolescents across three HERMES cohorts (Foerster et al.; HERMES 3 cohort description).,,
+parent_respondent,inferred,"highest_gua_edu_g, wave","if_else(wave == ""baseline"" & !is.na(highest_gua_edu_g), ""Unknown"", NA_character_)","HERMES 3 baseline only: the primary guardian fills in the guardian questionnaire (protocol, PMC13098621) and no variable records who answered, so Unknown where its parental education is present. NA on follow-up rows (no guardian questionnaire on that occasion; never carried) and on HERMES 1+2 rows (no parent questionnaire).",,
+age_years,partial,"cohort, jdatjjjj, jdatmm, jq2a2, jq2a3, age_at_wave","if_else(
+  cohort == ""HERMES3"",
+  as.numeric(age_at_wave),
+  if_else(jdatmm %in% 1:12 & jdatjjjj >= 2012, (jdatjjjj + jdatmm / 12) - (jq2a3 + jq2a2 / 12), NA_real_)
+)","HERMES 1+2: decimal age from birth month and year to the questionnaire month and year, both waves (range 10.3-17.8); NA on 2 follow-up rows whose questionnaire date is impossible, so age cannot be derived (H12-0711 month 15; H12-0862 date equal to the birth date). HERMES 3: age_at_wave, baseline age_bl_log 'rounded to nearest full digit' (codebook; no + 0.5), follow-up baseline + 1 from the protocol's one-year interval, filled in the tidier. Partial because of that assigned HERMES 3 follow-up wave.",,
+sex,compatible,"jq3, sex, participant_id","local({
+  value <- coalesce(
+    recode_values(as.numeric(haven::zap_labels(jq3)), 1 ~ ""Male"", 2 ~ ""Female""),
+    recode_values(as.character(sex), ""male"" ~ ""Male"", ""female"" ~ ""Female"", ""other"" ~ ""Other"")
+  )
+  coalesce(modal_within(value, participant_id), ""Unknown"")
+})","Adolescent self-report, asked at baseline only: 'sex' (jq3, HERMES 1+2) and 'biological sex' (sex, HERMES 3; its 'other' option is not observed). Taken as the modal value within participant, so follow-up rows carry it.",,
+country,inferred,,"""Switzerland""","No country variable; all three cohorts are Swiss school samples (Foerster et al. 2019, PMC6388165; HERMES 3 protocol, PMC13098621).",,
+state,unavailable,,,Not an Australian dataset.,,
+region,unavailable,,,Not in the supplied extract.,,
+ethnicity,unavailable,,,Not collected.,,
+indigenous,unavailable,,,Not collected.,,
+minority,unavailable,,,Not in the supplied extract.,,
+immigrant_background,unavailable,,,Not in the supplied extract.,,
+born_in_country,unavailable,,,Not in the supplied extract.,,
+home_language,unavailable,,,Not collected.,,
+ses_area,incompatible,"schoollevel, lvl_school_log",,"Only school track (schoollevel, lvl_school_log), a school-level indicator that maps to neither SES row; see school_track. No area-SES index.",,
+ses_household,incompatible,"schoollevel, lvl_school_log, highest_gua_edu_g",,"Only school track (schoollevel, lvl_school_log; see school_track) and parental education (highest_gua_edu_g; see parental_education), neither of which maps here. The HERMES 3 guardian questionnaire's socioeconomic items are not in the supplied extract.",,
+ses_household_measure,unavailable,,,See ses_household.,,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,incompatible,highest_gua_edu_g,,"Only the highest level of either parent (highest_gua_edu_g, HERMES 3), which cannot be attributed to one parent; mapped to parental_education.",,
+paternal_education,incompatible,highest_gua_edu_g,,"Only the highest level of either parent (highest_gua_edu_g, HERMES 3), which cannot be attributed to one parent; mapped to parental_education.",,
+parental_education,proximate,highest_gua_edu_g,"coalesce(
+  lookup_values(
+    as.character(highest_gua_edu_g),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","HERMES 3 only: the study's own highest-parent variable (highest_gua_edu_g, 'highest level of either parent'), guardian questionnaire at baseline, carried to follow-up in the tidier, via the shared education lookup: nonschooling, compulsory, apprenticeship and gymnasium = Secondary school or less; higher = Post-secondary; university = Bachelor degree or higher. Proximate: 'higher' is read as the codebook's 'technical college' (higher vocational education), which may include universities of applied sciences. HERMES 1+2 (not asked) and guardian non-response = Unknown.",maternal_education,
+maternal_employment,unavailable,,,Not collected.,,
+maternal_age,unavailable,,,Not collected.,,
+urbanicity,unavailable,,,Not in the supplied extract.,,
+family_structure,unavailable,,,Not in the supplied extract.,,
+fam_siblings_n,unavailable,,,Not collected.,,
+fam_siblings_any,unavailable,,,Not collected.,,
+fam_screenrules,unavailable,,,Not in the supplied extract.,,
+fam_contentrules,unavailable,,,Not in the supplied extract.,,
+fam_bedroomscreen,unavailable,,,Not in the supplied extract.,,
+fam_firstphone_age,partial,"cohort, participant_id, wave, jq8a1, jq8a2, jq9a1, jq9a2, jq2a2, jq2a3, jdatjjjj, jdatmm, sp_own_age_sbl, age_at_wave","local({
+  age <- if_else(
+    cohort == ""HERMES3"",
+    as.numeric(age_at_wave),
+    if_else(jdatmm %in% 1:12 & jdatjjjj >= 2012, (jdatjjjj + jdatmm / 12) - (jq2a3 + jq2a2 / 12), NA_real_)
+  )
+  birth <- jq2a3 + jq2a2 / 12
+  phone <- if_else(jq8a1 %in% 1:12 & jq8a2 < 9999, (jq8a2 + jq8a1 / 12) - birth, NA_real_)
+  phone[which(phone < 0 | phone > age)] <- NA
+  entry <- as.numeric(sp_own_age_sbl)
+  entry[which(entry < 0 | entry > age)] <- NA
+  smart <- if_else(jq9a1 %in% 1:12 & jq9a2 < 9999 & jq9a2 > 0, (jq9a2 + jq9a1 / 12) - birth, NA_real_)
+  smart[which(smart < 0 | smart > age)] <- NA
+  order <- as.numeric(wave == ""follow_up"")
+  any_phone <- if_else(cohort == ""HERMES3"", entry + 0.5, phone)
+  any_carried <- carry_within(any_phone, participant_id, order = order)
+  any_carried[which(is.na(any_phone) & (jq8a2 %in% 9999 | any_carried > age))] <- NA
+  observed <- coalesce(any_carried, smart)
+  carried <- carry_within(observed, participant_id, order = order)
+  carried[which(is.na(observed) & (jq8a2 %in% 9999 | carried > age))] <- NA
+  carried
+})","HERMES 1+2: first mobile phone 'gekauft / geschenkt bekommen' (jq8a1 month, jq8a2 year) minus birth month and year, compatible, asked at both waves and each wave keeps its own report. A wave where that is unanswered or not an age takes the participant's any-phone age from the other wave (48 rows carried), and keeps NA where the wave's code is 9999, no phone (58 rows). Only where no any-phone age can be used, the smartphone date of that wave (jq9a1, jq9a2; 6 rows, 5 participants, partial); the smartphone items are otherwise unused. HERMES 3: sp_own_age_sbl, 'age in years when receiving/buying first smartphone', asked at baseline, + 0.5, smartphone only, so the row is partial. Entries that cannot be the child's age are NA: 3 any-phone (negative or above the age at that wave), 4 smartphone above that age, the smartphone year 0 (jq9a2), 4 month codes outside 1-12, and 17 HERMES 3 rows (9 participants) holding 2015-2022 calendar years. HERMES 3 entries compare with the rounded age before + 0.5.",,
+fam_firstscreen_age,incompatible,"jq8a1, jq8a2, jq9a1, jq9a2, sp_own_age_sbl",,"Only the age at a first own mobile phone or smartphone, which is ownership onset, not first use of a screen; mapped to fam_firstphone_age.",,
+fam_coview_freq,unavailable,,,Not collected.,,
+fam_mediation_restrict,unavailable,,,Not in the supplied extract.,,
+fam_mediation_active,unavailable,,,Not in the supplied extract.,,
+fam_mediation_monitor,unavailable,,,Not in the supplied extract.,,
+fam_mediation_technical,unavailable,,,Not in the supplied extract.,,
+fam_mediation_measure,unavailable,,,See fam_mediation_restrict.,,
+fam_parent_screentime,unavailable,,,Not in the supplied extract.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+fam_parent_dep,unavailable,,,Not collected.,,
+fam_parent_anx,unavailable,,,Not collected.,,
+fam_parent_distress,unavailable,,,Not collected.,,
+fam_parent_mh_measure,unavailable,,,See fam_parent_dep.,,
+fam_parenting_warmth_parent,unavailable,,,Not collected.,,
+fam_parenting_harsh_parent,unavailable,,,Not collected.,,
+fam_parenting_inconsistent_parent,unavailable,,,Not collected.,,
+fam_monitoring_parent,unavailable,,,Not collected.,,
+fam_monitoring_self,unavailable,,,Not collected.,,
+fam_parenting_measure,unavailable,,,See fam_parenting_warmth_parent.,,
+fam_physpunish,unavailable,,,Not collected.,,
+fam_parentchild_rel_self,unavailable,,,Not collected.,,
+fam_parentchild_rel_parent,unavailable,,,Not collected.,,
+fam_parentchild_conflict_parent,unavailable,,,Not collected.,,
+fam_parentchild_measure,unavailable,,,See fam_parentchild_rel_self.,,
+fam_functioning_parent,unavailable,,,Not collected.,,
+fam_functioning_self,unavailable,,,Not collected.,,
+fam_conflict_parent,unavailable,,,Not collected.,,
+fam_conflict_self,unavailable,,,Not collected.,,
+fam_functioning_measure,unavailable,,,See fam_functioning_self.,,
+fam_readto_freq,unavailable,,,Not collected.,,
+fam_readto_time,unavailable,,,Not collected.,,
+fam_childbooks,unavailable,,,Not collected.,,
+fam_home_total,unavailable,,,Not collected.,,
+fam_home_cogstim,unavailable,,,Not collected.,,
+fam_home_emotsupport,unavailable,,,Not collected.,,
+fam_home_measure,unavailable,,,See fam_home_total.,,
+school_grade,unavailable,,,Not in the supplied extract.,,
+school_sector,proximate,lvl_school_log,"case_when(
+  lvl_school_log == ""Private"" ~ ""Private"",
+  lvl_school_log %in% c(""High"", ""Medium"", ""Low"") ~ ""Public"",
+  .default = ""Unknown""
+)","HERMES 3 only. 'Private' level of lvl_school_log (25 baseline, 23 follow-up rows; undocumented in the codebook) = Private, and the canton levels High, Medium and Low = Public: the protocol recruited 'all the public schools and private schools' of the region (PMC13098621). School level recorded at baseline, kept at follow-up because participants stay in lower secondary. Proximate: read from a track variable. HERMES 1+2 = Unknown.",,
+school_track,proximate,"schoollevel, lvl_school_log","local({
+  level <- as.numeric(haven::zap_labels(schoollevel))
+  case_when(
+    level == 4 | lvl_school_log == ""High"" ~ ""Academic"",
+    level == 3 | lvl_school_log == ""Medium"" ~ ""Intermediate"",
+    level %in% 1:2 | lvl_school_log == ""Low"" ~ ""Vocational"",
+    .default = ""Unknown""
+  )
+})","Lower-secondary level recorded once at baseline and kept at follow-up. HERMES 1+2 schoollevel, four levels folded: Gym = Academic, Sek A = Intermediate, Sek B and Sek C = Vocational. HERMES 3 lvl_school_log, levels relative to the canton, in order: High = Academic, Medium = Intermediate, Low (third-highest or lower) = Vocational; the undocumented 'Private' level = Unknown. 52 of 843 HERMES 1+2 participants (6.2%, Foerster et al. 2019 Table 1) were in grade 9 at baseline and had left lower secondary by follow-up, so they carry a lower-secondary track into upper secondary; the grade is not released.",,
+st_measure_type,inferred,cohort,"if_else(cohort == ""HERMES3"", ""Categorical"", ""Continuous"")","HERMES 1+2: open minutes (TV, gaming, computer, laptop, tablet), with the mobile-internet items jq22a and jq22b in bands. HERMES 3: response bands (activity items), with the smartphone item screen_time in open minutes.",,
+st_measure_name,inferred,,"""Custom""","HERMES 1+2: the study's own questionnaire. HERMES 3: items from the GOLIAT project's questionnaire (codebook 'Question Source'), shared by that project's cohorts; no published standalone instrument is documented.",,
+st_responder,inferred,,"""Self""","Adolescent self-report in every cohort and wave (school questionnaire in HERMES 3); the filter items jq8b, jq9 and dev_sp are the adolescent's too.",,
+st_total_wd,incompatible,"jq34a, jq32a, jq22a, vids_dur_week, game_dur_week, socm_dur_week, text_dur_week, tl_hw_week",,"No all-screen item: only TV, gaming, computer, laptop, tablet and phone items, each on its own row; not summed (DR-0002, DR-0004).",,
+st_total_we,incompatible,"jq34b, jq32b, jq22b, vids_dur_wend, game_dur_wend, socm_dur_wend, text_dur_wend, tl_hw_wend",,"No all-screen item: only TV, gaming, computer, laptop, tablet and phone items, each on its own row; not summed (DR-0002, DR-0004).",,
+st_total,incompatible,"jq34a, jq34b, jq32a, jq32b, jq30a3, jq30b3, jq30c3, jq22a, jq22b, screen_time",,"No all-screen item: only TV, gaming, computer, laptop, tablet and phone items, each on its own row; not summed (DR-0002, DR-0004).",,
+st_watch_wd,partial,"jq34a, vids_dur_week, tl_vids_week","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  h3 <- unname(band[as.character(vids_dur_week)]) + unname(band[as.character(tl_vids_week)])
+  if_else(cohort == ""HERMES3"", h3, jq34a / 60)
+})","School-week day, adolescent report, both waves. Partial: HERMES 1+2 asks about the TV set only ('Ich verbringe ... Minuten pro Tag vor dem Fernseher'; open minutes / 60, entries never above 300, 63 weekend answers exactly 300), and HERMES 3 about video streaming on smartphone and tablet/laptop only (sum of vids_dur, tl_vids; DR-0002), with no TV item. Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_watch_we,partial,"jq34b, vids_dur_wend, tl_vids_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  h3 <- unname(band[as.character(vids_dur_wend)]) + unname(band[as.character(tl_vids_wend)])
+  if_else(cohort == ""HERMES3"", h3, jq34b / 60)
+})","Weekend day, adolescent report, both waves. Partial: HERMES 1+2 asks about the TV set only ('Ich verbringe ... Minuten pro Tag vor dem Fernseher'; open minutes / 60, entries never above 300, 63 weekend answers exactly 300), and HERMES 3 about video streaming on smartphone and tablet/laptop only (sum of vids_dur, tl_vids; DR-0002), with no TV item. Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_watch,partial,"jq34a, jq34b, vids_dur_week, vids_dur_wend, tl_vids_week, tl_vids_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  wd <- unname(band[as.character(vids_dur_week)]) + unname(band[as.character(tl_vids_week)])
+  we <- unname(band[as.character(vids_dur_wend)]) + unname(band[as.character(tl_vids_wend)])
+  if_else(cohort == ""HERMES3"", (5 * wd + 2 * we) / 7, (5 * jq34a + 2 * jq34b) / 7 / 60)
+})","(5 x st_watch_wd + 2 x st_watch_we) / 7; items, sum (DR-0002) and top band (more than 4 hours = 4) as st_watch_wd.",,
+st_game_wd,partial,"jq32a, game_dur_week, tl_game_week","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  h3 <- unname(band[as.character(game_dur_week)]) + unname(band[as.character(tl_game_week)])
+  if_else(cohort == ""HERMES3"", h3, jq32a / 60)
+})","School-week day, adolescent report, both waves. Partial: consoles and, in HERMES 1+2, phones left out. HERMES 1+2 'gamen am Computer / Laptop / Tablet PC' (open minutes / 60; the baseline label's 'TV/' is not in the German question at either wave; entries kept and screened at analysis, one of 999). HERMES 3: sum of game_dur (smartphone), tl_game (tablet/laptop) (DR-0002). Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_game_we,partial,"jq32b, game_dur_wend, tl_game_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  h3 <- unname(band[as.character(game_dur_wend)]) + unname(band[as.character(tl_game_wend)])
+  if_else(cohort == ""HERMES3"", h3, jq32b / 60)
+})","Weekend day, adolescent report, both waves. Partial: consoles and, in HERMES 1+2, phones left out. HERMES 1+2 'gamen am Computer / Laptop / Tablet PC' (open minutes / 60; the baseline label's 'TV/' is not in the German question at either wave; entries kept and screened at analysis, one of 999). HERMES 3: sum of game_dur (smartphone), tl_game (tablet/laptop) (DR-0002). Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_game,partial,"jq32a, jq32b, game_dur_week, game_dur_wend, tl_game_week, tl_game_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  wd <- unname(band[as.character(game_dur_week)]) + unname(band[as.character(tl_game_week)])
+  we <- unname(band[as.character(game_dur_wend)]) + unname(band[as.character(tl_game_wend)])
+  if_else(cohort == ""HERMES3"", (5 * wd + 2 * we) / 7, (5 * jq32a + 2 * jq32b) / 7 / 60)
+})","(5 x st_game_wd + 2 x st_game_we) / 7; items, sum (DR-0002) and top band (more than 4 hours = 4) as st_game_wd.",,
+st_game_comp_wd,incompatible,"jq32a, tl_game_week",,"Computer pooled with tablet in one response (jq32, tl_game); mapped to st_game_tablet.",,
+st_game_comp_we,incompatible,"jq32b, tl_game_wend",,"Computer pooled with tablet in one response (jq32, tl_game); mapped to st_game_tablet.",,
+st_game_comp,incompatible,"jq32a, jq32b, tl_game_week, tl_game_wend",,"Computer pooled with tablet in one response (jq32, tl_game); mapped to st_game_tablet.",,
+st_game_console_wd,unavailable,,,Not collected.,,
+st_game_console_we,unavailable,,,Not collected.,,
+st_game_console,unavailable,,,Not collected.,,
+st_game_handheldconsole_wd,unavailable,,,Not collected.,,
+st_game_handheldconsole_we,unavailable,,,Not collected.,,
+st_game_handheldconsole,unavailable,,,Not collected.,,
+st_game_active_wd,unavailable,,,Not collected.,,
+st_game_active_we,unavailable,,,Not collected.,,
+st_game_active,unavailable,,,Not collected.,,
+st_game_phone_wd,compatible,game_dur_week,"local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  unname(band[as.character(game_dur_week)])
+})","HERMES 3 only. 'Average daily duration of gaming on school days using smartphone', adolescent report, both waves. Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_game_phone_we,compatible,game_dur_wend,"local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  unname(band[as.character(game_dur_wend)])
+})","HERMES 3 only. 'Average daily duration of gaming on weekends using smartphone', adolescent report, both waves. Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_game_phone,compatible,"game_dur_week, game_dur_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  wd <- unname(band[as.character(game_dur_week)])
+  we <- unname(band[as.character(game_dur_wend)])
+  (5 * wd + 2 * we) / 7
+})",HERMES 3 only. (5 x st_game_phone_wd + 2 x st_game_phone_we) / 7; top band (more than 4 hours = 4) as st_game_phone_wd.,,
+st_game_tablet_wd,partial,"jq32a, tl_game_week","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  h3 <- unname(band[as.character(tl_game_week)])
+  if_else(cohort == ""HERMES3"", h3, jq32a / 60)
+})","School-week day, adolescent report, both waves. Partial: computer or laptop pooled with tablet in one response. HERMES 1+2 'gamen am Computer / Laptop / Tablet PC' (open minutes / 60); HERMES 3 tablet/laptop gaming. Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_game_tablet_we,partial,"jq32b, tl_game_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  h3 <- unname(band[as.character(tl_game_wend)])
+  if_else(cohort == ""HERMES3"", h3, jq32b / 60)
+})","Weekend day, adolescent report, both waves. Partial: computer or laptop pooled with tablet in one response. HERMES 1+2 'gamen am Computer / Laptop / Tablet PC' (open minutes / 60); HERMES 3 tablet/laptop gaming. Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_game_tablet,partial,"jq32a, jq32b, tl_game_week, tl_game_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  wd <- unname(band[as.character(tl_game_week)])
+  we <- unname(band[as.character(tl_game_wend)])
+  if_else(cohort == ""HERMES3"", (5 * wd + 2 * we) / 7, (5 * jq32a + 2 * jq32b) / 7 / 60)
+})",(5 x st_game_tablet_wd + 2 x st_game_tablet_we) / 7; items and top band (more than 4 hours = 4) as st_game_tablet_wd.,,
+st_comp_nongaming_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming_we,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming,incompatible,"jq30a3, jq30b3",,"Computer and laptop minutes (jq30a3, jq30b3) carry no purpose restriction, so they can include games; mapped to st_comp.",,
+st_comp_wd,incompatible,"tl_hw_week, tl_text_week, tl_socm_week, tl_vids_week, tl_game_week",,HERMES 3 tablet/laptop items pool laptop with tablet in one response and go to st_tablet; the HERMES 1+2 computer and laptop minutes have no weekday/weekend split.,,
+st_comp_we,incompatible,"tl_hw_wend, tl_text_wend, tl_socm_wend, tl_vids_wend, tl_game_wend",,HERMES 3 tablet/laptop items pool laptop with tablet in one response and go to st_tablet; the HERMES 1+2 computer and laptop minutes have no weekday/weekend split.,,
+st_comp,partial,"jq30a3, jq30b3",(jq30a3 + jq30b3) / 60,"HERMES 1+2 only. Sum of computer (jq30a3) and laptop (jq30b3) minutes per day (DR-0002) from 'Wie lange benutzt du einen Computer / Laptop / Tablet PC ... ausserhalb der Schulzeit?', adolescent report, both waves; one value per device, no day split; 0 already recorded where the use filters (jq30, jq30a, jq30b) are no; entries kept, one of 999. Partial: use outside school hours only. HERMES 3's tablet/laptop items (tl_*) pool laptop with tablet and go to st_tablet.",,
+st_tablet_wd,partial,"tl_hw_week, tl_text_week, tl_socm_week, tl_vids_week, tl_game_week","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  unname(band[as.character(tl_hw_week)]) +
+    unname(band[as.character(tl_text_week)]) +
+    unname(band[as.character(tl_socm_week)]) +
+    unname(band[as.character(tl_vids_week)]) +
+    unname(band[as.character(tl_game_week)])
+})","HERMES 3 only (HERMES 1+2 tablet minutes have no day split). School days, adolescent report, both waves. Partial: laptop pooled with tablet in one response. Sum of homework, texting/browsing/e-mail, social media, video streaming and gaming on tablet/laptop (DR-0002). Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_tablet_we,partial,"tl_hw_wend, tl_text_wend, tl_socm_wend, tl_vids_wend, tl_game_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  unname(band[as.character(tl_hw_wend)]) +
+    unname(band[as.character(tl_text_wend)]) +
+    unname(band[as.character(tl_socm_wend)]) +
+    unname(band[as.character(tl_vids_wend)]) +
+    unname(band[as.character(tl_game_wend)])
+})","HERMES 3 only (HERMES 1+2 tablet minutes have no day split). Weekends, adolescent report, both waves. Partial: laptop pooled with tablet in one response. Sum of homework, texting/browsing/e-mail, social media, video streaming and gaming on tablet/laptop (DR-0002). Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_tablet,partial,"jq30c3, tl_hw_week, tl_text_week, tl_socm_week, tl_vids_week, tl_game_week, tl_hw_wend, tl_text_wend, tl_socm_wend, tl_vids_wend, tl_game_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  wd <- unname(band[as.character(tl_hw_week)]) +
+    unname(band[as.character(tl_text_week)]) +
+    unname(band[as.character(tl_socm_week)]) +
+    unname(band[as.character(tl_vids_week)]) +
+    unname(band[as.character(tl_game_week)])
+  we <- unname(band[as.character(tl_hw_wend)]) +
+    unname(band[as.character(tl_text_wend)]) +
+    unname(band[as.character(tl_socm_wend)]) +
+    unname(band[as.character(tl_vids_wend)]) +
+    unname(band[as.character(tl_game_wend)])
+  if_else(cohort == ""HERMES3"", (5 * wd + 2 * we) / 7, jq30c3 / 60)
+})","HERMES 1+2: tablet minutes per day (jq30c3) from 'Wie lange benutzt du einen Computer / Laptop / Tablet PC ... ausserhalb der Schulzeit?', partial for use outside school hours only. HERMES 3: (5 x st_tablet_wd + 2 x st_tablet_we) / 7, partial for laptop pooled with tablet; top band (more than 4 hours = 4) as st_tablet_wd. Adolescent report, both waves.",,
+st_phone_wd,partial,"jq22a, jq8b, jq9","local({
+  band <- c(`1` = 5 / 60, `2` = 20 / 60, `3` = 45 / 60, `4` = 1.25, `5` = 1.5)
+  answer <- as.numeric(haven::zap_labels(jq22a))
+  no_device <- as.numeric(haven::zap_labels(jq8b)) %in% 0 | as.numeric(haven::zap_labels(jq9)) %in% c(0, 9999)
+  case_when(answer %in% 1:5 ~ unname(band[as.character(answer)]), no_device ~ 0, .default = NA_real_)
+})","'Wie viel Zeit verbringst du auf deinem Mobiltelefon durchschnittlich pro Tag aktiv im Internet (whatsapp, Google, Facebook, 20min, youtube ...)?' (Wochentag). HERMES 1+2 only; adolescent report, both waves. Partial: internet on the phone only. Bands: 0-<10 min 5 min (the follow-up file label '1-10min' is the same code, and the codebook gives 0-<10min at both waves), 10-30 min 20 min, 31-59 min 45 min, 1-1.5 h 1.25, top band >1.5 h = 1.5. Code 9999 'not relevant' (291 rows) follows the mobile-connection filter (fjq17 at follow-up; the baseline filter is not released): 0 where the participant has no phone or no smartphone (jq8b == 0, or jq9 0 or 9999; 155 rows), NA where a smartphone owner was routed past it (jq9 == 1 or missing; 136 rows), because they may still use WiFi. No smartphone with the item unanswered (3 rows) is also 0; a reported duration is never overridden by the filter. HERMES 3's activity bands (text_dur, socm_dur, vids_dur, game_dur) are not summed: its direct item fills st_phone, so this row has no HERMES 3 values.",,
+st_phone_we,partial,"jq22b, jq8b, jq9","local({
+  band <- c(`1` = 5 / 60, `2` = 20 / 60, `3` = 45 / 60, `4` = 1.25, `5` = 1.5)
+  answer <- as.numeric(haven::zap_labels(jq22b))
+  no_device <- as.numeric(haven::zap_labels(jq8b)) %in% 0 | as.numeric(haven::zap_labels(jq9)) %in% c(0, 9999)
+  case_when(answer %in% 1:5 ~ unname(band[as.character(answer)]), no_device ~ 0, .default = NA_real_)
+})","'Wie viel Zeit verbringst du auf deinem Mobiltelefon durchschnittlich pro Tag aktiv im Internet (whatsapp, Google, Facebook, 20min, youtube ...)?' (Wochenende). HERMES 1+2 only; adolescent report, both waves. Partial: internet on the phone only. Bands: 0-<10 min 5 min (the follow-up file label '1-10min' is the same code, and the codebook gives 0-<10min at both waves), 10-30 min 20 min, 31-59 min 45 min, 1-1.5 h 1.25, top band >1.5 h = 1.5. Code 9999 'not relevant' (291 rows) follows the mobile-connection filter (fjq17 at follow-up; the baseline filter is not released): 0 where the participant has no phone or no smartphone (jq8b == 0, or jq9 0 or 9999; 155 rows), NA where a smartphone owner was routed past it (jq9 == 1 or missing; 136 rows), because they may still use WiFi. No smartphone with the item unanswered (3 rows) is also 0; a reported duration is never overridden by the filter. HERMES 3's activity bands (text_dur, socm_dur, vids_dur, game_dur) are not summed: its direct item fills st_phone, so this row has no HERMES 3 values.",,
+st_phone,partial,"cohort, screen_time, dev_sp, jq22a, jq22b, jq8b, jq9","local({
+  band <- c(`1` = 5 / 60, `2` = 20 / 60, `3` = 45 / 60, `4` = 1.25, `5` = 1.5)
+  no_device <- as.numeric(haven::zap_labels(jq8b)) %in% 0 | as.numeric(haven::zap_labels(jq9)) %in% c(0, 9999)
+  a <- as.numeric(haven::zap_labels(jq22a))
+  b <- as.numeric(haven::zap_labels(jq22b))
+  wd <- case_when(a %in% 1:5 ~ unname(band[as.character(a)]), no_device ~ 0, .default = NA_real_)
+  we <- case_when(b %in% 1:5 ~ unname(band[as.character(b)]), no_device ~ 0, .default = NA_real_)
+  h3 <- if_else(dev_sp %in% 0 & is.na(screen_time), 0, screen_time / 60)
+  if_else(cohort == ""HERMES3"", h3, (5 * wd + 2 * we) / 7)
+})","HERMES 3: screen_time / 60, the adolescent's own 'average daily smartphone screen time (minutes)' (school questionnaire, both waves), used before the activity bands because it is a whole-phone estimate in continuous minutes; 0 where dev_sp == 0 and screen_time is missing (no regular smartphone use, 34 rows). HERMES 1+2: (5 x st_phone_wd + 2 x st_phone_we) / 7; zeros, NA and top band (>1.5 h = 1.5) as st_phone_wd. Partial because the HERMES 1+2 series is internet-only. Unused: voice-call time (jq18a, jq18b, voic_week, voic_wend), one phone activity; music on the phone (jq19, jq19a); call and message counts (jq17a, jq17b, jq20a, jq20b, fjq16a, fjq16b).",,
+st_socmedia_wd,partial,"socm_dur_week, tl_socm_week","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  unname(band[as.character(socm_dur_week)]) + unname(band[as.character(tl_socm_week)])
+})","HERMES 3 only. 'Average daily duration of social media use on school days', adolescent report, both waves. Partial: smartphone and tablet/laptop only (a desktop computer is not asked). Sum of socm_dur, tl_socm (DR-0002). Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_socmedia_we,partial,"socm_dur_wend, tl_socm_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  unname(band[as.character(socm_dur_wend)]) + unname(band[as.character(tl_socm_wend)])
+})","HERMES 3 only. 'Average daily duration of social media use on weekends', adolescent report, both waves. Partial: smartphone and tablet/laptop only (a desktop computer is not asked). Sum of socm_dur, tl_socm (DR-0002). Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_socmedia,partial,"socm_dur_week, socm_dur_wend, tl_socm_week, tl_socm_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  wd <- unname(band[as.character(socm_dur_week)]) + unname(band[as.character(tl_socm_week)])
+  we <- unname(band[as.character(socm_dur_wend)]) + unname(band[as.character(tl_socm_wend)])
+  (5 * wd + 2 * we) / 7
+})",HERMES 3 only. (5 x st_socmedia_wd + 2 x st_socmedia_we) / 7; sum (DR-0002) and top band (more than 4 hours = 4) as st_socmedia_wd.,,
+st_educational_wd,partial,tl_hw_week,"local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  unname(band[as.character(tl_hw_week)])
+})","HERMES 3 only. 'Average daily duration of tablet/laptop use for homework on school days', adolescent report, both waves. Partial: tablet/laptop only (phone and desktop computer not asked). Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_educational_we,partial,tl_hw_wend,"local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  unname(band[as.character(tl_hw_wend)])
+})","HERMES 3 only. 'Average daily duration of tablet/laptop use for homework on weekends', adolescent report, both waves. Partial: tablet/laptop only (phone and desktop computer not asked). Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_educational,partial,"tl_hw_week, tl_hw_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  wd <- unname(band[as.character(tl_hw_week)])
+  we <- unname(band[as.character(tl_hw_wend)])
+  (5 * wd + 2 * we) / 7
+})",HERMES 3 only. (5 x st_educational_wd + 2 x st_educational_we) / 7; top band (more than 4 hours = 4) as st_educational_wd.,,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,partial,"text_dur_week, tl_text_week","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  unname(band[as.character(text_dur_week)]) + unname(band[as.character(tl_text_week)])
+})","HERMES 3 only, school days, adolescent report, both waves. Bundled item: 'average daily duration of texting, browsing, e-mails' on smartphone (text_dur) and tablet/laptop (tl_text), sum (DR-0002); partial because texting and e-mail are pooled with browsing, and st_messaging and st_email are incompatible for it. HERMES 1+2 time online on the phone (jq22a, jq22b) goes to st_phone. Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_internet_we,partial,"text_dur_wend, tl_text_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  unname(band[as.character(text_dur_wend)]) + unname(band[as.character(tl_text_wend)])
+})","HERMES 3 only, weekends, adolescent report, both waves. Bundled item: 'average daily duration of texting, browsing, e-mails' on smartphone (text_dur) and tablet/laptop (tl_text), sum (DR-0002); partial because texting and e-mail are pooled with browsing, and st_messaging and st_email are incompatible for it. HERMES 1+2 time online on the phone (jq22a, jq22b) goes to st_phone. Bands: no_use (does not regularly do this activity) 0, less than 10 min 5 min, 11-30 min 20.5 min, 31-60 min 45.5 min, 1-2 h 1.5, 2-4 h 3, top band 'more than 4 hours' = 4.",,
+st_internet,partial,"text_dur_week, text_dur_wend, tl_text_week, tl_text_wend","local({
+  band <- c(
+    no_use = 0,
+    less_than_10_minutes_per_day = 5 / 60,
+    `11_30_minutes_per_day` = 20.5 / 60,
+    `31_60_minutes_per_day` = 45.5 / 60,
+    `1_2_hours_per_day` = 1.5,
+    `2_4_hours_per_day` = 3,
+    more_than_4_hours_per_day = 4
+  )
+  wd <- unname(band[as.character(text_dur_week)]) + unname(band[as.character(tl_text_week)])
+  we <- unname(band[as.character(text_dur_wend)]) + unname(band[as.character(tl_text_wend)])
+  (5 * wd + 2 * we) / 7
+})","HERMES 3 only. (5 x st_internet_wd + 2 x st_internet_we) / 7; bundled item, sum (DR-0002) and top band (more than 4 hours = 4) as st_internet_wd.",,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,incompatible,"text_dur_week, tl_text_week, jq20a, fjq16a",,"Texting only inside the bundled texting, browsing, e-mail items, mapped to st_internet_wd; HERMES 1+2 has message counts only (jq20a, fjq16a), which give no hours.",,
+st_messaging_we,incompatible,"text_dur_wend, tl_text_wend, jq20b, fjq16b",,"Texting only inside the bundled texting, browsing, e-mail items, mapped to st_internet_we; HERMES 1+2 has message counts only (jq20b, fjq16b), which give no hours.",,
+st_messaging,incompatible,"text_dur_week, text_dur_wend, tl_text_week, tl_text_wend, jq20a, jq20b, fjq16a, fjq16b",,"Texting only inside the bundled texting, browsing, e-mail items, mapped to st_internet; HERMES 1+2 has message counts only, which give no hours.",,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email_wd,incompatible,"text_dur_week, tl_text_week",,"E-mail only inside the bundled texting, browsing, e-mail items, mapped to st_internet_wd.",,
+st_email_we,incompatible,"text_dur_wend, tl_text_wend",,"E-mail only inside the bundled texting, browsing, e-mail items, mapped to st_internet_we.",,
+st_email,incompatible,"text_dur_week, text_dur_wend, tl_text_week, tl_text_wend",,"E-mail only inside the bundled texting, browsing, e-mail items, mapped to st_internet.",,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,unavailable,,,Not collected.,,
+acc_academachment_lettergrades,unavailable,,,Not collected.,,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
+acc_schoolengage_caresschool,unavailable,,,Not collected.,,
+acc_schoolengage_homework,unavailable,,,Not collected.,,
+acc_schoolengage_self,unavailable,,,Not collected.,,
+acc_schoolengage_teacher,unavailable,,,Not collected.,,
+acc_schoolengage_measure,unavailable,,,See acc_schoolengage_self.,,
+acc_homework_time,incompatible,"tl_hw_week, tl_hw_wend",,"Only homework time that names screens (tablet/laptop use for homework, tl_hw_week, tl_hw_wend), mapped to st_educational; no non-screen homework item.",,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolstress_self,unavailable,,,Not collected.,,
+acc_schoolstress_measure,unavailable,,,See acc_schoolstress_self.,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
+acc_academachment_teacherrated,unavailable,,,Not collected.,,
+acc_academachment_parentrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,unavailable,,,Not collected.,,
+acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered.,,
+acc_literacy_stdtest,unavailable,,,Not collected.,,
+acc_literacy_bas_wordreading,unavailable,,,BAS II not administered.,,
+acc_learningdisab_diagnosed,unavailable,,,Not in the supplied extract.,,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not collected.,,
+acc_graderepeated,unavailable,,,Not collected.,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_self.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_self.,,
+beh_atten_self,incompatible,jshyper,,"Only the self-report SDQ hyperactivity/inattention subscale (jshyper, sdq items), which stays on beh_hyper_sdq_self.",,
+beh_hyper_self,incompatible,jshyper,,"Only the self-report SDQ hyperactivity/inattention subscale (jshyper, sdq items), which stays on beh_hyper_sdq_self.",,
+beh_adhdsymp_self,incompatible,jshyper,,"Only the self-report SDQ hyperactivity/inattention subscale (jshyper, sdq items), which stays on beh_hyper_sdq_self.",,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_atten_singleitem_teacher,unavailable,,,Not collected.,,
+beh_impulsivity_self,incompatible,"jq40u, sdq_u",,"Only the SDQ item 'I think before I do things', a truth rating scored in beh_hyper_sdq_self; no impulsivity scale.",,
+beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_selfreg_parent,unavailable,,,Not collected.,,
+beh_emotdysreg_parent,unavailable,,,Not collected.,,
+beh_emotreg_parent,unavailable,,,Not collected.,,
+beh_selfreg_self,incompatible,"jshyper, jsconduct, jsemotion",,"Only self-report SDQ problem scales, which stay on beh_hyper_sdq_self, beh_conduct_sdq_self and mh_emotsymp_sdq_self.",,
+beh_emotreg_self,incompatible,"jshyper, jsconduct, jsemotion",,"Only self-report SDQ problem scales, which stay on beh_hyper_sdq_self, beh_conduct_sdq_self and mh_emotsymp_sdq_self.",,
+beh_emotdysreg_self,incompatible,"jshyper, jsconduct, jsemotion",,"Only self-report SDQ problem scales, which stay on beh_hyper_sdq_self, beh_conduct_sdq_self and mh_emotsymp_sdq_self.",,
+beh_emotreg_suppression_self,unavailable,,,Not collected.,,
+beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
+beh_emotaware_self,unavailable,,,Not collected.,,
+beh_selfreg_measure,unavailable,,,See beh_selfreg_self.,,
+beh_temp_negaffect_parent,unavailable,,,Not collected.,,
+beh_temp_surgency_parent,unavailable,,,Not collected.,,
+beh_temp_measure,unavailable,,,See beh_temp_negaffect_parent.,,
+beh_bullied,incompatible,"jq40l, sdq_l",,"Only SDQ item 12 'I fight a lot; I can make other people do what I want', a truth rating scored in beh_conduct_sdq_self.",,
+beh_beenbullied,incompatible,"jq40s, sdq_s",,"Only SDQ item 19 'Other children or young people pick on me or bully me', a truth rating scored in beh_peerprob_sdq_self.",,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,incompatible,"jq40l, sdq_l",,"Only SDQ item 12 'I fight a lot; I can make other people do what I want', a truth rating scored in beh_conduct_sdq_self.",,
+beh_truancy,unavailable,,,Not collected.,,
+beh_suspended,unavailable,,,Not collected.,,
+beh_stealing,incompatible,"jq40v, sdq_v",,"Only SDQ item 22 'I take things that are not mine', a truth rating scored in beh_conduct_sdq_self.",,
+beh_vandalism,unavailable,,,Not collected.,,
+beh_alcohol_self,unavailable,,,Not in the supplied extract.,,
+beh_tobacco_self,unavailable,,,Not in the supplied extract.,,
+beh_vaping_self,unavailable,,,Not in the supplied extract.,,
+beh_cannabis_self,unavailable,,,Not in the supplied extract.,,
+beh_drugs_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,unavailable,,,SDQ parent form not administered; see beh_conduct_sdq_self.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ parent form not administered; see beh_conduct_sdq_self.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ parent form not administered; see beh_conduct_sdq_self.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ parent form not administered; see beh_conduct_sdq_self.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_conduct_sdq_self.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_conduct_sdq_self.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_conduct_sdq_self.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_conduct_sdq_self.,,
+beh_agg_self,incompatible,jsconduct,,"No aggression scale; only the SDQ conduct problems subscale (jsconduct, sdq items), which stays on beh_conduct_sdq_self.",,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,incompatible,"jq40l, sdq_l",,"No physical aggression scale; only SDQ item 12 'I fight a lot; I can make other people do what I want', a truth rating scored in beh_conduct_sdq_self.",,
+beh_aggphys_measure,unavailable,,,See beh_aggphys_self.,,
+beh_aggrel_self,unavailable,,,Not collected.,,
+beh_aggrel_measure,unavailable,,,See beh_aggrel_self.,,
+beh_anger_self,unavailable,,,Not collected.,,
+beh_anger_measure,unavailable,,,See beh_anger_self.,,
+beh_aggbeliefs_self,unavailable,,,Not collected.,,
+beh_agghostattrib_self,unavailable,,,Not collected.,,
+beh_aggfantasy_self,unavailable,,,Not collected.,,
+beh_aggcog_measure,unavailable,,,See beh_aggbeliefs_self.,,
+beh_agg_singleitem_teacher,unavailable,,,Not collected.,,
+beh_disrupt_singleitem_teacher,unavailable,,,Not collected.,,
+beh_aggphys_teacher,unavailable,,,Not collected.,,
+beh_aggrel_teacher,unavailable,,,Not collected.,,
+beh_agg_teacher,unavailable,,,Not collected.,,
+beh_victphys_teacher,unavailable,,,Not collected.,,
+beh_victrel_teacher,unavailable,,,Not collected.,,
+beh_vict_teacher,unavailable,,,Not collected.,,
+beh_atten_teacher,unavailable,,,Not collected.,,
+beh_hyper_teacher,unavailable,,,Not collected.,,
+beh_adhdsymp_teacher,unavailable,,,Not collected.,,
+beh_ext_teacher,unavailable,,,Not collected.,,
+beh_prosocial_teacher,unavailable,,,Not collected.,,
+beh_socialskills_teacher,unavailable,,,Not collected.,,
+beh_teacher_measure,unavailable,,,See beh_aggphys_teacher.,,
+beh_argues,unavailable,,,Not collected.,,
+beh_persistence_finishwork,incompatible,"jq40y, sdq_y",,"Only SDQ item 25 'I finish the work I'm doing', a truth rating scored in beh_hyper_sdq_self.",,
+beh_emotreg_stayscalm,incompatible,"jq40e, sdq_e",,"Only SDQ item 5 'I get very angry and often lose my temper', problem-worded and truth-rated; scored in beh_conduct_sdq_self.",,
+beh_peerprob_makefriends,incompatible,"jq40k, jq40n, sdq_k, sdq_n",,"Only SDQ items 11 'I have one good friend or more' and 14 'Other people my age generally like me', truth ratings scored in beh_peerprob_sdq_self.",,
+beh_conduct_diagnosed,unavailable,,,Not in the supplied extract.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,unavailable,,,Not in the supplied extract.,,
+beh_autism_diagnosed,unavailable,,,Not in the supplied extract.,,
+beh_autism_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,compatible,"cohort, jsconduct, jq40e, jq40g, jq40l, jq40r, jq40v, sdq_e, sdq_g, sdq_l, sdq_r, sdq_v","local({
+  items <- cbind(sdq_e, sdq_g, sdq_l, sdq_r, sdq_v)
+  scored <- if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  if_else(cohort == ""HERMES3"", scored, jsconduct)
+})","Conduct problems, self-report SDQ, both waves (items 5, 7, 12, 18, 22; 0-2 scoring; item 7 reversed). HERMES 1+2: the study's released jsconduct, which equals the SDQ rule on its items (jq40 items) on all 1,732 rows. HERMES 3: scored from sdq_e, sdq_g, sdq_l, sdq_r, sdq_v by the SDQ rule (mean of answered items x 5, floor(x + 0.5), at least 3 of 5), home questionnaire. The stored codes of reversed items are already reversed (HERMES 3 codebook 'inverted scoring!'; HERMES 1+2 subscales are plain sums of the stored codes), so they are not reversed again. Ages 10.3-17.8; 1 of 2,150 rows with SDQ values under 11 (0.05%).",,
+beh_hyper_sdq_self,compatible,"cohort, jshyper, jq40b, jq40j, jq40o, jq40u, jq40y, sdq_b, sdq_j, sdq_o, sdq_u, sdq_y","local({
+  items <- cbind(sdq_b, sdq_j, sdq_o, sdq_u, sdq_y)
+  scored <- if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  if_else(cohort == ""HERMES3"", scored, jshyper)
+})","Hyperactivity/inattention, self-report SDQ, both waves (items 2, 10, 15, 21, 25; 0-2 scoring; items 21 and 25 reversed). HERMES 1+2: the study's released jshyper, which equals the SDQ rule on its items (jq40 items) on all 1,733 rows. HERMES 3: scored from sdq_b, sdq_j, sdq_o, sdq_u, sdq_y by the SDQ rule (mean of answered items x 5, floor(x + 0.5), at least 3 of 5), home questionnaire. The stored codes of reversed items are already reversed (HERMES 3 codebook 'inverted scoring!'; HERMES 1+2 subscales are plain sums of the stored codes), so they are not reversed again. Ages 10.3-17.8; 1 of 2,150 rows with SDQ values under 11 (0.05%).",,
+beh_peerprob_sdq_self,compatible,"cohort, jspeer, jq40f, jq40k, jq40n, jq40s, jq40w, sdq_f, sdq_k, sdq_n, sdq_s, sdq_w","local({
+  items <- cbind(sdq_f, sdq_k, sdq_n, sdq_s, sdq_w)
+  scored <- if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  if_else(cohort == ""HERMES3"", scored, jspeer)
+})","Peer problems, self-report SDQ, both waves (items 6, 11, 14, 19, 23; 0-2 scoring; items 11 and 14 reversed). HERMES 1+2: the study's released jspeer, which equals the SDQ rule on its items (jq40 items) on all 1,732 rows. HERMES 3: scored from sdq_f, sdq_k, sdq_n, sdq_s, sdq_w by the SDQ rule (mean of answered items x 5, floor(x + 0.5), at least 3 of 5), home questionnaire. The stored codes of reversed items are already reversed (HERMES 3 codebook 'inverted scoring!'; HERMES 1+2 subscales are plain sums of the stored codes), so they are not reversed again. Ages 10.3-17.8; 1 of 2,150 rows with SDQ values under 11 (0.05%).",,
+beh_prosocial_sdq_self,compatible,"cohort, jsprosoc, jq40a, jq40d, jq40i, jq40q, jq40t, sdq_a, sdq_d, sdq_i, sdq_q, sdq_t","local({
+  items <- cbind(sdq_a, sdq_d, sdq_i, sdq_q, sdq_t)
+  scored <- if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  if_else(cohort == ""HERMES3"", scored, jsprosoc)
+})","Prosocial behaviour, self-report SDQ, both waves (items 1, 4, 9, 17, 20; 0-2 scoring; none reversed). HERMES 1+2: the study's released jsprosoc, which equals the SDQ rule on its items (jq40 items) on all 1,732 rows. HERMES 3: scored from sdq_a, sdq_d, sdq_i, sdq_q, sdq_t by the SDQ rule (mean of answered items x 5, floor(x + 0.5), at least 3 of 5), home questionnaire. The stored codes of reversed items are already reversed (HERMES 3 codebook 'inverted scoring!'; HERMES 1+2 subscales are plain sums of the stored codes), so they are not reversed again. Ages 10.3-17.8; 1 of 2,150 rows with SDQ values under 11 (0.05%).",,
+beh_conduct_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_conduct_sdq_self.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_conduct_sdq_self.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_conduct_sdq_self.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_conduct_sdq_self.,,
+beh_ext_sdq_parent,unavailable,,,SDQ parent form not administered; see beh_conduct_sdq_self.,,
+beh_ext_sdq_self,unavailable,,,Derive at analysis from the subscale rows.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_conduct_sdq_self.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_socprob_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_ext_self,incompatible,jsexternprob,,"Only the SDQ externalising composite (jsexternprob), which stays with the SDQ rows (derived at analysis from beh_conduct_sdq_self and beh_hyper_sdq_self).",,
+beh_opp_self,incompatible,jsconduct,,"Only the SDQ conduct problems subscale (jsconduct, sdq items), which stays on beh_conduct_sdq_self.",,
+beh_conduct_self,incompatible,jsconduct,,"Only the SDQ conduct problems subscale (jsconduct, sdq items), which stays on beh_conduct_sdq_self.",,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,unavailable,,,Not collected.,,
+beh_hyper_parent,unavailable,,,Not collected.,,
+beh_adhdsymp_parent,unavailable,,,Not collected.,,
+beh_opp_parent,unavailable,,,Not collected.,,
+beh_conduct_parent,unavailable,,,Not collected.,,
+beh_ext_parent,unavailable,,,Not collected.,,
+beh_parent_measure,unavailable,,,See beh_atten_parent.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,compatible,"cohort, jsprosoc, jq40a, jq40d, jq40i, jq40q, jq40t, sdq_a, sdq_d, sdq_i, sdq_q, sdq_t","local({
+  items <- cbind(sdq_a, sdq_d, sdq_i, sdq_q, sdq_t)
+  scored <- if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  if_else(cohort == ""HERMES3"", scored, jsprosoc)
+})","Repeats beh_prosocial_sdq_self: self-report SDQ prosocial subscale, both waves, all cohorts.",,
+beh_prosocial_measure,inferred,,"""SDQ self-report prosocial subscale, 5 of 5 items, 0-2 item scoring (range 0-10), sum; none reversed; mean of answered items x 5 with at least 3 of 5 answered""","Describes beh_prosocial_self; every cohort and wave. HERMES 1+2 released score, HERMES 3 scored from the items.",,
+beh_prosocial_parent,unavailable,,,Not collected.,,
+beh_socialskills_self,incompatible,jsprosoc,,"No social skills scale; the SDQ prosocial subscale (jsprosoc, sdq items) stays on beh_prosocial_sdq_self and beh_prosocial_self.",,
+beh_socialskills_measure,unavailable,,,See beh_socialskills_self.,,
+beh_socialskills_parent,unavailable,,,Not collected.,,
+beh_prosocial_singleitem_teacher,unavailable,,,Not collected.,,
+beh_empathy_self,unavailable,,,Not collected.,,
+beh_empathy_measure,unavailable,,,See beh_empathy_self.,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_parent,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,NEPSY not administered.,,
+cog_phono_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhibcont_nepsy,unavailable,,,NEPSY not administered.,,
+cog_vismotor_nepsy,unavailable,,,NEPSY not administered.,,
+cog_verbalfluency_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhib_nihtb_flanker,unavailable,,,NIH Toolbox not administered.,,
+cog_flex_nihtb_dccs,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox not administered.,,
+cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox not administered.,,
+cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox not administered.,,
+cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox not administered.,,
+cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_atten_task,unavailable,,,Not in the supplied extract.,,
+cog_atten_task_measure,unavailable,,,See cog_atten_task.,,
+cog_flex_task,unavailable,,,Not collected.,,
+cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
+cog_inhib_task,unavailable,,,Not in the supplied extract.,,
+cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
+cog_wm_task,unavailable,,,Not in the supplied extract.,,
+cog_wm_task_measure,unavailable,,,See cog_wm_task.,,
+cog_speed_task,unavailable,,,Not collected.,,
+cog_speed_task_measure,unavailable,,,See cog_speed_task.,,
+cog_wm_digitspan,unavailable,,,Not in the supplied extract.,,
+cog_iq_fullscale,unavailable,,,Not collected.,,
+cog_nonverbalreason_task,unavailable,,,Not in the supplied extract.,,
+cog_nonverbalreason_task_measure,unavailable,,,See cog_nonverbalreason_task.,,
+cog_vocab_bpvs,unavailable,,,BPVS not administered.,,
+cog_vocab_ppvt,unavailable,,,PPVT not administered.,,
+cog_vocab_receptive_task,unavailable,,,Not collected.,,
+cog_vocab_expressive_task,unavailable,,,Not collected.,,
+cog_vocab_task_measure,unavailable,,,See cog_vocab_receptive_task.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_execfunc_parent,unavailable,,,Not collected.,,
+cog_execfunc_teacher,unavailable,,,Not collected.,,
+cog_execfunc_self,unavailable,,,Not collected.,,
+cog_execfunc_measure,unavailable,,,See cog_execfunc_self.,,
+cog_vocab_bas_naming,unavailable,,,BAS II not administered.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,BAS II not administered.,,
+cog_spatial_bas_pattern,unavailable,,,BAS II not administered.,,
+cog_verbalreason_bas_versim,unavailable,,,BAS II not administered.,,
+cog_earlynumber_bas_enc,unavailable,,,BAS II not administered.,,
+cog_schoolread_bracken,unavailable,,,Bracken not administered.,,
+cog_earlylang_parent,unavailable,,,Not collected.,,
+cog_earlylang_measure,unavailable,,,See cog_earlylang_parent.,,
+cog_creativethinking_stdtest,unavailable,,,Not collected.,,
+cog_speechlang_diagnosed,unavailable,,,Not in the supplied extract.,,
+cog_speechlang_diagnosed_severity,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered; see mh_emotsymp_sdq_self.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered; see mh_emotsymp_sdq_self.,,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ parent form not administered; see beh_conduct_sdq_self.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ parent form not administered; see beh_conduct_sdq_self.,,
+mh_anx_diagnosed,unavailable,,,Not in the supplied extract.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not in the supplied extract.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,compatible,"cohort, jsemotion, jq40c, jq40h, jq40m, jq40p, jq40x, sdq_c, sdq_h, sdq_m, sdq_p, sdq_x","local({
+  items <- cbind(sdq_c, sdq_h, sdq_m, sdq_p, sdq_x)
+  scored <- if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  if_else(cohort == ""HERMES3"", scored, jsemotion)
+})","Emotional symptoms, self-report SDQ, both waves (items 3, 8, 13, 16, 24; 0-2 scoring; none reversed). HERMES 1+2: the study's released jsemotion, which equals the SDQ rule on its items (jq40 items) on all 1,732 rows. HERMES 3: scored from sdq_c, sdq_h, sdq_m, sdq_p, sdq_x by the SDQ rule (mean of answered items x 5, floor(x + 0.5), at least 3 of 5), home questionnaire. The stored codes of reversed items are already reversed (HERMES 3 codebook 'inverted scoring!'; HERMES 1+2 subscales are plain sums of the stored codes), so they are not reversed again. Ages 10.3-17.8; 1 of 2,150 rows with SDQ values under 11 (0.05%).",,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_conduct_sdq_self.,,
+mh_totaldiff_sdq_self,compatible,"cohort, jsebdtot, sdq_c, sdq_h, sdq_m, sdq_p, sdq_x, sdq_e, sdq_g, sdq_l, sdq_r, sdq_v, sdq_b, sdq_j, sdq_o, sdq_u, sdq_y, sdq_f, sdq_k, sdq_n, sdq_s, sdq_w","local({
+  scored <- lapply(
+    list(
+      cbind(sdq_c, sdq_h, sdq_m, sdq_p, sdq_x),
+      cbind(sdq_e, sdq_g, sdq_l, sdq_r, sdq_v),
+      cbind(sdq_b, sdq_j, sdq_o, sdq_u, sdq_y),
+      cbind(sdq_f, sdq_k, sdq_n, sdq_s, sdq_w)
+    ),
+    function(items) if_else(rowSums(!is.na(items)) >= 3, floor(rowMeans(items, na.rm = TRUE) * 5 + 0.5), NA_real_)
+  )
+  if_else(cohort == ""HERMES3"", scored[[1]] + scored[[2]] + scored[[3]] + scored[[4]], jsebdtot)
+})","Sum of the four difficulty subscales, self-report SDQ, both waves. HERMES 1+2: the study's released jsebdtot, which equals the sum of the released subscales on all 1,732 rows. HERMES 3: sum of the four subscales scored by the SDQ rule, NA unless all four are scored. The released internalising and externalising composites (jsinternprob, jsexternprob) are unused because the subscales are released. Ages 10.3-17.8; 1 of 2,150 rows with SDQ values under 11 (0.05%).",,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_conduct_sdq_self.,,
+mh_int_sdq_parent,unavailable,,,SDQ parent form not administered; see beh_conduct_sdq_self.,,
+mh_int_sdq_self,unavailable,,,Derive at analysis from the subscale rows.,,
+mh_int_sdq_teacher,unavailable,,,SDQ teacher form not administered; see beh_conduct_sdq_self.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered; see mh_emotsymp_sdq_self.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered; see mh_emotsymp_sdq_self.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered; see mh_emotsymp_sdq_self.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered; see mh_emotsymp_sdq_self.,,
+mh_dep_phq9_self,unavailable,,,Not in the supplied extract.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered; see mh_emotsymp_sdq_self.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered; see mh_emotsymp_sdq_self.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered; see mh_emotsymp_sdq_self.,,
+mh_distress_k6_self,unavailable,,,K6 not administered; see mh_emotsymp_sdq_self.,,
+mh_distress_k10_self,unavailable,,,K10 not administered; see mh_emotsymp_sdq_self.,,
+mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered; see mh_emotsymp_sdq_self.,,
+mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered; see mh_emotsymp_sdq_self.,,
+mh_distress_self,incompatible,jsemotion,,"No distress inventory or symptom checklist in the supplied extract; only the SDQ emotional symptoms subscale, which stays on mh_emotsymp_sdq_self.",,
+mh_distress_measure,unavailable,,,See mh_distress_self.,,
+mh_anx_masc_self,unavailable,,,MASC not administered; see mh_emotsymp_sdq_self.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered; see mh_emotsymp_sdq_self.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered; see mh_emotsymp_sdq_self.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered; see mh_emotsymp_sdq_self.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered; see mh_emotsymp_sdq_self.,,
+mh_anx_gad7_self,unavailable,,,Not in the supplied extract.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered; see mh_emotsymp_sdq_self.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered; see mh_emotsymp_sdq_self.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_withdrawn_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_somatic_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_emotreact_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,unavailable,,,Not collected.,,
+mh_dep_self,incompatible,"jsemotion, jq40m, sdq_m",,"No depression scale in the supplied extract; only the SDQ emotional symptoms subscale (mixed content), on mh_emotsymp_sdq_self, and SDQ item 13 'I am often unhappy', a truth rating.",,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,incompatible,"jsemotion, jq40h, sdq_h",,"No anxiety scale in the supplied extract; only the SDQ emotional symptoms subscale (mixed content), on mh_emotsymp_sdq_self, and SDQ item 8 'I worry a lot', a truth rating.",,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_socanx_self,unavailable,,,Not collected.,,
+mh_socanx_measure,unavailable,,,See mh_socanx_self.,,
+mh_int_parent,unavailable,,,Not collected.,,
+mh_anx_parent,unavailable,,,Not collected.,,
+mh_dep_parent,unavailable,,,Not collected.,,
+mh_totalprob_parent,unavailable,,,Not collected.,,
+mh_int_teacher,unavailable,,,Not collected.,,
+mh_anx_teacher,unavailable,,,Not collected.,,
+mh_dep_teacher,unavailable,,,Not collected.,,
+mh_totalprob_teacher,unavailable,,,Not collected.,,
+mh_depanx_diagnosed,unavailable,,,Not in the supplied extract.,,
+mh_stress_self,unavailable,,,Not collected.,,
+mh_stress_scale_self,unavailable,,,Not collected.,,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,incompatible,"jq40f, sdq_f",,"Only SDQ item 6 'I am usually on my own', an indirect truth rating scored in beh_peerprob_sdq_self; no item on feeling lonely.",,
+mh_lonely_scale_self,unavailable,,,Not collected.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,incompatible,"jq40m, sdq_m",,"Only SDQ item 13 'I am often unhappy, depressed or tearful', a truth rating scored in mh_emotsymp_sdq_self.",,
+mh_worry_self,incompatible,"jq40h, sdq_h",,"Only SDQ item 8 'I worry a lot', a truth rating scored in mh_emotsymp_sdq_self.",,
+mh_irritable_self,incompatible,"jq40e, sdq_e",,"Only SDQ item 5 'I get very angry and often lose my temper', a truth rating scored in beh_conduct_sdq_self.",,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not in the supplied extract.,,
+mh_unhealthywtctrl_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,incompatible,"jq40c, sdq_c",,"Only SDQ item 3 'I get a lot of headaches, stomach-aches or sickness', a truth-rated single item scored in mh_emotsymp_sdq_self.",,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_irritable_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered.,,
+wb_bodyimage,unavailable,,,Not collected.,,
+wb_bodyesteem_self,unavailable,,,Not in the supplied extract.,,
+wb_bodyesteem_measure,unavailable,,,See wb_bodyesteem_self.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
+wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_lifesat_self,unavailable,,,Not collected.,,
+wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
+wb_happiness_singleitem_self,unavailable,,,Not collected.,,
+wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,unavailable,,,Not collected.,,
+wb_domainsat_friends_self,unavailable,,,Not collected.,,
+wb_domainsat_school_self,unavailable,,,Not collected.,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,Not in the supplied extract.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 proxy version not administered.,,
+wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Not in the supplied extract.,,
+wb_selfesteem_singleitem_self,unavailable,,,Not collected.,,
+wb_selfesteem_self,unavailable,,,Not in the supplied extract.,,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_selfefficacy_academic_self,unavailable,,,Not collected.,,
+wb_selfefficacy_academic_measure,unavailable,,,See wb_selfefficacy_academic_self.,,
+wb_control_self,unavailable,,,Not collected.,,
+wb_control_measure,unavailable,,,See wb_control_self.,,
+wb_selfconcept_academic_self,unavailable,,,Not collected.,,
+wb_selfconcept_maths_self,unavailable,,,Not collected.,,
+wb_selfconcept_verbal_self,unavailable,,,Not collected.,,
+wb_selfconcept_science_self,unavailable,,,Not collected.,,
+wb_selfconcept_social_self,unavailable,,,Not collected.,,
+wb_selfconcept_measure,unavailable,,,See wb_selfconcept_academic_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,Subjective Happiness Scale not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,unavailable,,,Not collected.,,
+wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,unavailable,,,Not collected.,,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_negaffect_self,unavailable,,,Not collected.,,
+wb_negaffect_measure,unavailable,,,See wb_negaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,unavailable,,,Not collected.,,
+wb_socsupport_friends_self,unavailable,,,Not collected.,,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self.,,
+hlth_sleep_wd,unavailable,,,Not in the supplied extract.,,
+hlth_sleep_we,unavailable,,,Not in the supplied extract.,,
+hlth_sleep,unavailable,,,Not in the supplied extract.,,
+hlth_sleepprob,unavailable,,,Not in the supplied extract.,,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not in the supplied extract.,,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,unavailable,,,Not collected.,,
+hlth_bmi_measure,unavailable,,,See hlth_bmi.,,
+hlth_bmi_z,unavailable,,,Not collected.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not in the supplied extract.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,unavailable,,,Not in the supplied extract.,,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,unavailable,,,Not in the supplied extract.,,
+hlth_disability,unavailable,,,Not in the supplied extract.,,

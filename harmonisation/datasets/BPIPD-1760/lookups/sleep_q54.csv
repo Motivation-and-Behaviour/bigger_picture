@@ -1,0 +1,57 @@
+source_value,harmonised_value,notes
+11,11,Stated hours and minutes.
+12,12,Stated hours and minutes.
+10,10,Stated hours and minutes.
+9,9,Stated hours and minutes.
+6,6,Stated hours and minutes.
+0,0,Answer kept as entered; screened at analysis.
+12 hours,12,Stated hours and minutes.
+11 hours,11,Stated hours and minutes.
+10 hours,10,Stated hours and minutes.
+9 hours,9,Stated hours and minutes.
+13 hours,13,Stated hours and minutes.
+9 HOURS,9,Stated hours and minutes.
+12 HOURS,12,Stated hours and minutes.
+11 hrs,11,Stated hours and minutes.
+12 hrs,12,Stated hours and minutes.
+10 hrs,10,Stated hours and minutes.
+11hours,11,Stated hours and minutes.
+12hrs,12,Stated hours and minutes.
+12HOURS,12,Stated hours and minutes.
+10 hours.,10,Stated hours and minutes.
+11 hours.,11,Stated hours and minutes.
+11 hours sleep,11,Stated hours and minutes.
+11 hours 0 minutes,11,Stated hours and minutes.
+10 hours and 30 mins,10.5,Stated hours and minutes.
+11 and 30 mins,11.5,Stated hours and minutes.
+9 hours 30 minutes,9.5,Stated hours and minutes.
+"8 hours, 30 mins",8.5,Stated hours and minutes.
+"7hours, 30 mins",7.5,Stated hours and minutes.
+6 hours 45 minutes,6.75,Stated hours and minutes.
+11.5 hours,11.5,Stated hours and minutes.
+11.5 hrs,11.5,Stated hours and minutes.
+10.5 hours,10.5,Stated hours and minutes.
+10.5hrs,10.5,Stated hours and minutes.
+12.5 hours,12.5,Stated hours and minutes.
+9.5 hours,9.5,Stated hours and minutes.
+8.5 hours,8.5,Stated hours and minutes.
+11 1/2 hours,11.5,Stated hours and minutes.
+11.30,11.5,Read as 11 h 30 min: the item asks for hours and minutes.
+10-11,10.5,"Range, midpoint."
+9-10 hours,9.5,"Range, midpoint."
+10 to 12 hours,11,"Range, midpoint."
+10-12hours,11,"Range, midpoint."
+11-12 hours,11.5,"Range, midpoint."
+11-12 hrs,11.5,"Range, midpoint."
+11-12HOURS,11.5,"Range, midpoint."
+5-6 hours,5.5,"Range, midpoint."
+6-7 hours,6.5,"Range, midpoint."
+8 or 9 hours,8.5,"Range, midpoint."
+8-9 hours,8.5,"Range, midpoint."
+11.30-12,11.75,"Range from 11 h 30 min to 12 h, midpoint."
+11.30-12 hours,11.75,"Range from 11 h 30 min to 12 h, midpoint."
+44843,9.5,Excel date serial of 9 October 2022: '9-10' typed and turned into a date; range midpoint.
+44906,11.5,Excel date serial of 11 December 2022: '11-12' typed and turned into a date; range midpoint.
+9 but broken during night,9,Stated hours; the comment on waking is not a duration.
+"at least 8, but frequent waking",8,Open answer at the bound it states.
+Close to 11,11,Stated hours.
