@@ -8,6 +8,7 @@ survey_strata,unavailable,,,Not in the supplied extract.,,
 survey_cluster,unavailable,,,Not in the supplied extract.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Biological children of the NLSY79 women, a nationally representative US cohort aged 14-21 in 1978 (NLSY79 Child and Young Adult documentation, nlsinfo.org).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,"CYRB, wave, YAINTV","local({
   year <- seq(1990, 2016, by = 2)
