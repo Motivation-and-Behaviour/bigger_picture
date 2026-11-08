@@ -1,13 +1,13 @@
-dataset_id: "2329" 
+dataset_id: "2329"
 dataset_name: "Koch"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "koch_data"
     role: "data"
     glob: "Data memory and media.Rdata"
     reader: "rda"
-  - name: "koch_r_script_syntax"   # read/setup syntax
+  - name: "koch_r_script_syntax" # read/setup syntax
     role: "docs"
     glob: "Analyses Toddler Media and Memory 2nd revision.R"
   - name: "koch_rproj_docs"
