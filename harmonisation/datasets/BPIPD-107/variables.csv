@@ -11,6 +11,7 @@ survey_cluster,compatible,".wave, CNTSCHID","local({
 })",International school id (CNTSCHID); schools are PISA's first-stage sampling units. Prefixed with the cycle because ids recur across cycles. Placeholder ids ending 00000 (three 2015 US-state samples) and 2025 ids withheld in five countries are NA.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Two-stage sample of schools and then 15-year-old students within them, in each participating country (OECD PISA technical reports).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,AGE,as.numeric(AGE),OECD-derived age at testing in years with months as decimals.,,
 sex,proximate,"ST004D01T, MALE","coalesce(

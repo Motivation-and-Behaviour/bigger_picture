@@ -13,6 +13,7 @@ survey_cluster,partial,"SCLID, ID, wave","local({
 })","School code (SCLID) from each participant's earliest wave, carried within participant to every later wave, without a wave prefix. Partial: SCLID is the participant's current school, which changes when they move, and the sampled-school design is not documented in the supplied files.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Multi-stratified cluster sample of 4th grade elementary and 1st grade middle school students across South Korea in 2018 (KCYPS 2018, Atlas of Longitudinal Datasets entry).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,"YBRT1A, wave","recode_values(wave, ""w1"" ~ 2018, ""w2"" ~ 2019, ""w3"" ~ 2020, ""w4"" ~ 2021, ""w5"" ~ 2022, ""w6"" ~ 2023, ""w7"" ~ 2024) -
   as.numeric(YBRT1A)","Collection year minus birth year (YBRT1A); no interview date or documented fieldwork window, so no midpoint adjustment and no +0.5. w7 ages above 19 (m1 cohort, older siblings) are kept.",,
