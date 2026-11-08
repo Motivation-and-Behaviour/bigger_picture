@@ -1,0 +1,13 @@
+dataset_id: "1380"
+dataset_name: "Buja"
+
+status: "in_progress"
+resources:
+  - name: "database"
+    role: "data"
+    glob: "database.xlsx"
+    reader: "excel"
+    sheet: "Foglio1"
+  - name: "mother_questionnaire"
+    role: "docs"
+    glob: "Questionario as 2022-23 madre last[3].docx"

@@ -1,0 +1,58 @@
+dataset_id: "871"
+dataset_name: "Positive Body & Sex Project"
+status: "in_progress"
+resources:
+  # --- DATA ---
+  - name: "Analytical Dataset (Flat Format)"
+    role: "data"
+    glob: "analytical_dataset.dat"
+    reader: "tsv"
+    col_names: false # Mplus free-format .dat: tab-delimited, no header row; the 75 column names come from the .inp files' VARIABLE: NAMES section and are set in the tidier.
+  # --- CODEBOOKS, SCRIPTS & MODEL SPECIFICATIONS ---
+  - name: "Mediations Model Mplus Input"
+    role: "docs"
+    glob: "bopo-mediations.inp" # This is a model/analysis syntax file
+  - name: "Random Intercept Cross-Lagged Panel Model Mplus Input"
+    role: "docs"
+    glob: "bopo-riclpm.inp"
+  - name: "Longitudinal Configural Invariance Mplus Input"
+    role: "docs"
+    glob: "invariance-longi-config.inp"
+  - name: "Longitudinal Metric Invariance Mplus Input"
+    role: "docs"
+    glob: "invariance-longi-metric.inp"
+  - name: "Longitudinal Scalar Invariance Mplus Input"
+    role: "docs"
+    glob: "invariance-longi-scalar.inp"
+  # --- DOCUMENTATION & MODEL OUTPUTS ---
+  - name: "Mediations Analysis HTML Report"
+    role: "docs"
+    glob: "bopo-mediations.htm"
+  - name: "Random Intercept Cross-Lagged Panel Model Mplus Output"
+    role: "docs"
+    glob: "bopo-riclpm.out"
+  - name: "Longitudinal Configural Invariance Mplus Output"
+    role: "docs"
+    glob: "invariance-longi-config.out"
+  - name: "Longitudinal Metric Invariance Mplus Output"
+    role: "docs"
+    glob: "invariance-longi-metric.out"
+  # NOTE: no "Longitudinal Scalar Invariance Mplus Output" (.out) entry exists - every other
+  # model (Configural, Metric, Mediations, RI-CLPM) has both an input and an output/report file, but
+  # Scalar only has an input.
+
+notes: |
+  Includes a flat data file (analytical_dataset.dat) alongside several Mplus structural
+  equation modeling (SEM) files. These files cover longitudinal measurement invariance testing
+  (configural, metric, and scalar stages), mediation models, and a Random Intercept
+  Cross-Lagged Panel Model (RI-CLPM). Model configuration/syntax files (.inp) are classified as
+  docs since they specify the analysis, not the variables. Model run outputs
+  (.out, .htm) are also docs.
+
+  analytical_dataset.dat is a headerless Mplus free-format file: UTF-8 with a BOM, CRLF
+  line endings, 496 rows of 75 tab-separated fields, and 999 as the missing code
+  throughout (`missing = all (999)` in every .inp). It is read with reader: "tsv" and
+  col_names: false; the 75 column names come from the NAMES section of the .inp files,
+  which all declare the same names in the same order, and are applied in the tidier.
+  There is no codebook anywhere in the folder or on the study's OSF project.
+  
