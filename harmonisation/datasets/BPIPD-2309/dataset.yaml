@@ -1,9 +1,63 @@
 dataset_id: "2309"
-dataset_name: "Valkenburg"
+dataset_name: "Project AWeSome"
 status: "in_progress"
 
 resources:
-  - name: "valkenburg_2021_dataset"
+  # Burst 2 (June 2020), released with Valkenburg et al. (2021, TMB).
+  - name: "burst2_valkenburg"
     role: "data"
     glob: "Dataset belonging to Valkenburg et al (2021).csv"
     reader: "csv"
+
+  # Burst 1 (November-December 2019), released three times for three papers.
+  - name: "burst1_beyens"
+    role: "data"
+    glob: "Beyens/Data set belonging to Beyens et al (2021).csv"
+    reader: "csv"
+
+  - name: "burst1_pouwels"
+    role: "data"
+    glob: "Pouwells/Data set belonging to Pouwels et al.csv"
+    reader: "csv"
+
+  - name: "burst1_valkenburg_esm"
+    role: "data"
+    glob: "Valkenburg ESM/Valkenburg ESM.csv"
+    reader: "csv"
+
+  # Two copies with identical cell contents.
+  - name: "burst1_beyens_codebook"
+    role: "codebook"
+    glob:
+      - "Beyens/Codebook.xlsx"
+      - "Beyens/Analyses/Codebook.xlsx"
+
+  - name: "burst1_beyens_r_script"
+    role: "docs"
+    glob: "Beyens/Analyses/Analyses/Data Preparation, Descriptive Statistics, Graphical Presentations - R/Data Preparation, Descriptive Statistics, Graphical Presentations.R"
+
+  - name: "burst1_beyens_mplus_input_files"
+    role: "docs"
+    glob: "Beyens/**/*.inp"
+
+  - name: "burst1_pouwels_readme"
+    role: "docs"
+    glob: "Pouwells/Read me.txt"
+
+  # `?` stands for each `+` in the filename, which glob2rx() would read as a regex quantifier.
+  - name: "burst1_pouwels_r_script"
+    role: "docs"
+    glob: "Pouwells/R File Data Prep ? Assumptions ? Descr.R"
+
+  - name: "burst1_notification_scheme"
+    role: "docs"
+    glob: "Valkenburg ESM/ESM 1 - notification scheme .pdf"
+
+notes: |
+  Project AWeSome (University of Amsterdam): one cohort of adolescents from one
+  Dutch school, measured in two three-week experience sampling bursts. Burst 2
+  is the top-level CSV. Burst 1 was released three times (Beyens, Pouwels and
+  Valkenburg ESM subfolders), each a CSV of the same 48,762 scheduled surveys;
+  the Valkenburg ESM CSV was renamed from "Data set belonging to Valkenburg et
+  al (2021) Social Media Browsing and Adolescent Well-Being.csv". The Mplus
+  .inp files are model input and are declared as docs.
