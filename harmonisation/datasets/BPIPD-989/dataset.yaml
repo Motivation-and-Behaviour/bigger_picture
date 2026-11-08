@@ -1,0 +1,19 @@
+dataset_id: "989"
+dataset_name: "MediaQuotient"
+status: "in_progress"
+
+resources:
+  - name: "mq_all_data"
+    role: "data"
+    glob: "MQ All Data 10-09.sav"
+    reader: "spss"
+
+  - name: "mq_brtv_analysis_syntax"
+    role: "docs"
+    glob: "MQ BRTV Analysis (5.19.15).sps"
+
+notes: |
+  Dataset consists of a single SPSS data file (.sav) and a single SPSS syntax
+  file (.sps). The SPSS syntax file contains analysis and data processing code
+  and is therefore classified as documentation rather than a data resource.
+  The analytical dataset is contained in the SPSS (.sav) file.
