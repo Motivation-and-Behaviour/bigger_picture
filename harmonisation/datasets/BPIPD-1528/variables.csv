@@ -15,6 +15,7 @@ survey_cluster,partial,"surveyyear, countryno, cluster, schoolno, id1, id2","loc
 })","2006: the released class/school cluster variable (cluster); 2002 and 2010: school (schoolno); 2014: school within region (id2 within id1). The PSU was the class in some countries, so school clusters there are conservative. NA where no school is recorded (6,694 rows of 2002, 816 of 2010 coded 0, 330 of 2014).",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","School-based survey of 11-, 13- and 15-year-olds, sampling school classes in each country (HBSC open-access documentation).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,age,age,"Decimal age derived by HBSC, all waves.",,
 sex,compatible,sex,"recode_values(sex, 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","'Are you a boy or a girl?', self-report, all waves.",,

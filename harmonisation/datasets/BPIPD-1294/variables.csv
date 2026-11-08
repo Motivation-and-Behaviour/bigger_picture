@@ -8,6 +8,7 @@ survey_strata,compatible,STRAT_ID,as.character(STRAT_ID),"Taylor-series analysis
 survey_cluster,compatible,"STRAT_ID, PSU","paste(STRAT_ID, PSU, sep = ""_"")","Taylor-series analysis PSU, the base-year school: PSU (1-3) is numbered within stratum, so the cluster is STRAT_ID and PSU together (751 values); schools were the sampled units. Fixed at base-year sampling, the same on both rows.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""",Nationally representative school-based panel of spring 2002 US 10th graders (NCES ELS:2002).,,
 parent_respondent,in_progress,,,,,
 age_years,compatible,"birth_year_month, questionnaire_date","local({
   birth_ym <- as.numeric(birth_year_month)

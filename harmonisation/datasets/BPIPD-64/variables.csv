@@ -8,6 +8,7 @@ survey_strata,unavailable,,,Not collected; the protocol describes no explicit st
 survey_cluster,compatible,testort_gemeindeschluessel,as.character(testort_gemeindeschluessel),"Official municipality key (AGS) of the sampled test location, 171 values; municipalities were the first-stage units, drawn with probability proportional to the population aged 4-17 (Woll et al. 2025, BMJ Open 15:e094895, doi:10.1136/bmjopen-2024-094895). A city drawn for several sample points shares one key. Residence keys (ort_gemeindeschluessel, ort_regionalschluessel) not used. Single occasion, so no prefix.",,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Two-stage random sample of residents aged 4-17 from sampled German municipalities (MoMo 2.0 protocol, doi:10.1136/bmjopen-2024-094895).",,
 parent_respondent,in_progress,,,,,
 age_years,compatible,stamm_alter,as.numeric(stamm_alter),"Decimal age from date of birth and survey date (stamm_alter, codebook), 4.0-18.8; the 12 participants aged 18 or over are kept.",,
 sex,compatible,stamm_geschlecht,"recode_values(as.numeric(as.character(stamm_geschlecht)), 1 ~ ""Male"", 2 ~ ""Female"", 3 ~ ""Other"", default = ""Unknown"")","Biological sex from the study's core data (stamm_geschlecht: male, female, diverse); the 3 'diverse' rows -> Other. None missing; the Unknown default is a guard only.",,

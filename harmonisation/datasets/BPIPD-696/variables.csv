@@ -8,6 +8,7 @@ survey_strata,unavailable,,,Not a survey sample.,,
 survey_cluster,unavailable,,,Not a survey sample.,,
 family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
+sample_population,inferred,,"""General population""","Randomly enrolled families of children aged 2-5 from the community health survey register of a Chandigarh field practice area, with long-term illness excluded (PLUMS trial, doi:10.3389/fpubh.2024.1304861).",,
 parent_respondent,in_progress,,,,,
 age_years,partial,"dob, .wave","as.numeric(
   as.Date(recode_values(
