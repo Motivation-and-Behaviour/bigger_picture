@@ -38,6 +38,16 @@ rsconnect/
 # targets
 _targets/
 
+# Analysis outputs, and everything rendered beside a report source, stay out
+# of the public repo until the Department's review is done.
+analysis/outputs/
+analysis/reports/*
+!analysis/reports/*.qmd
+
+# Private funder report, its own repository. No trailing slash, so a symlink
+# is matched as well as a folder.
+/DoEreport
+
 # Quarto site build output
 docs/_site/
 docs/.quarto/

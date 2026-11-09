@@ -171,6 +171,8 @@ The [adding a dataset guide](https://motivation-and-behaviour.github.io/bigger_p
   It validates all harmonisation metadata (schema, `variables.csv` expressions, lookups) and unit-tests the harmonisation engine; it runs entirely from files in the repository and never needs the `/data` mount, so it also runs on CI for every pull request.
 - `DESCRIPTION` declares the R package dependencies for CI and the devcontainer; this repository is not an R package.
 - `_targets/` is generated runtime state and should not be edited manually.
+- The funder report's sources live in a separate private repository, cloned into the project as `DoEreport/` (gitignored).
+  When it is present, `R/analysis/private_report_targets.R` adds its render targets to the pipeline; public clones build without it.
 - Keep ingestion logic generic in `R/registry/`.
 - Keep study-specific tidying in `R/tidy/tidy_BPIPD_<id>.R`; it should return one tibble.
 - Keep study-specific harmonisation metadata in `harmonisation/datasets/BPIPD-<id>/`.
