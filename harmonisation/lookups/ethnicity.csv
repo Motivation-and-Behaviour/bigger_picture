@@ -384,6 +384,22 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1295,ethnicity,RACE2 3,Asian,proximate,"RACE2 code 3 Asian or Pacific Islander: merges Pacific Islanders with Asian, merge named"
 1295,ethnicity,RACE2 4,Black,compatible,RACE2 code 4 Black
 1295,ethnicity,RACE2 5,White,compatible,RACE2 code 5 White
+933,ethnicity,White British,White,proximate,profile_ethnicity code 1; the responding parent's or carer's own group from the panel profile
+933,ethnicity,Any other white background,White,proximate,profile_ethnicity code 2; the respondent's own group
+933,ethnicity,White and Black Caribbean,Mixed,proximate,profile_ethnicity code 3; the respondent's own group
+933,ethnicity,White and Black African,Mixed,proximate,profile_ethnicity code 4; the respondent's own group
+933,ethnicity,White and Asian,Mixed,proximate,profile_ethnicity code 5; the respondent's own group
+933,ethnicity,Any other mixed background,Mixed,proximate,profile_ethnicity code 6; the respondent's own group
+933,ethnicity,Indian,Asian,proximate,profile_ethnicity code 7; the respondent's own group
+933,ethnicity,Pakistani,Asian,proximate,profile_ethnicity code 8; the respondent's own group
+933,ethnicity,Bangladeshi,Asian,proximate,profile_ethnicity code 9; the respondent's own group
+933,ethnicity,Any other Asian background,Asian,proximate,profile_ethnicity code 10; the respondent's own group
+933,ethnicity,Black Caribbean,Black,proximate,profile_ethnicity code 11; the respondent's own group
+933,ethnicity,Black African,Black,proximate,profile_ethnicity code 12; the respondent's own group
+933,ethnicity,Any other black background,Black,proximate,profile_ethnicity code 13; the respondent's own group
+933,ethnicity,Chinese,Asian,proximate,"profile_ethnicity code 14; Chinese is a separate UK census group, collapsed into Asian; the respondent's own group"
+933,ethnicity,Other ethnic group,Other,proximate,profile_ethnicity code 15; the respondent's own group
+933,ethnicity,Prefer not to say,Unknown,compatible,profile_ethnicity code 16
 279,ethnicity,"Hispanic, any race",Hispanic,compatible,"I_HISP_K = 1 (imputed child Hispanic origin), taken ahead of race in a US sample"
 279,ethnicity,"Non-Hispanic, white",White,compatible,I_RACEKR = 1 among non-Hispanic children; multiracial children were coded to the race that best describes them
 279,ethnicity,"Non-Hispanic, black or African American",Black,compatible,I_RACEKR = 2 among non-Hispanic children
