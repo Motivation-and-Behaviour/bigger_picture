@@ -404,6 +404,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 706,parental_education,5,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 5 Master's.
 706,parental_education,6,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 6 Post-graduate.
 706,paternal_education,999,Unknown,incompatible,Father_Education code 999 is in no document.
+1714,maternal_education,School,Secondary school or less,compatible,"Code 1 'School' (no wording): school qualifications, ISCED 3 or below."
+1714,maternal_education,College,Post-secondary,proximate,"Code 2 'College' (no wording): UK college spans A-levels and level-3 vocational courses (ISCED 3) and HNC/HND (ISCED 5); placed as post-school study below degree level, its place between School and the degree codes."
+1714,maternal_education,General,Bachelor degree or higher,proximate,"Code 3 'General' (no wording), read as a general (ordinary) bachelor degree from its place between College and Honours."
+1714,maternal_education,Honours,Bachelor degree or higher,compatible,Code 4 'Honours': honours bachelor degree (ISCED 6).
+1714,maternal_education,Masters,Bachelor degree or higher,compatible,Code 5 'Masters' (ISCED 7).
+1714,maternal_education,Other,Unknown,incompatible,Code 6 'Other': other qualifications cannot be ranked and are Unknown.
 2187,parental_education,High school diploma or equivalency (GED),Secondary school or less,compatible,"Code 2 (parent 2 label), ISCED 3; never the higher parent's level"
 2187,parental_education,Some college / Technical or trade school,Post-secondary,compatible,"Code 3: tertiary study begun but not completed, or technical or trade school (ISCED 4-5)"
 2187,parental_education,Bachelor's degree,Bachelor degree or higher,compatible,"Code 5, ISCED 6"
