@@ -1,0 +1,40 @@
+dataset_id: "279"
+dataset_name: "National Survey of Early Childhood Health (NSECH)"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "datasech.rds"
+    reader: "rds"
+  - name: "variable_list"
+    role: "codebook"
+    glob: "List of variables.pdf"
+  - name: "frequency_counts"
+    role: "codebook"
+    glob: "Frequency counts.pdf"
+  - name: "sas_formats"
+    role: "codebook"
+    glob: "SAS input files.txt"
+  - name: "survey_instrument"
+    role: "docs"
+    glob: "Survey instrument.pdf"
+  - name: "methodology_report"
+    role: "docs"
+    glob: "Methodology report.pdf"
+  - name: "readme"
+    role: "docs"
+    glob: "Documentation.txt"
+
+notes: |
+  NCHS SLAITS National Survey of Early Childhood Health 2000, public use file: one cross-sectional table, one row per child (PSU, labelled "PRIMARY SAMPLING UNIT (CASEID)", is the case id).
+  The documented file holds 2,068 children and 298 variables (PROC CONTENTS in "List of variables.pdf").
+  NCHS distributes it only as datasech.sd2, a SAS version 6 Windows data set that no pipeline reader opens (haven fails with "Invalid file, or file has unsupported features").
+  The lead converted it with Stat/Transfer v17 (2026-11-09) to datasech.rds and datasech.dta; datasech.rds is declared (reader rds) because its column names match the documentation exactly.
+  INCOMPLETE: both conversions hold 1,939 of the 2,068 children; the same 129 are missing from both, so every frequency in "Frequency counts.pdf" is at or above the file's count, and the FINALRKW weights sum to 10,050,680 rather than to the full-sample total (the poststratification control total in the design report, Table D, is 10,726,319).
+  A complete file with the same columns can replace datasech.rds later.
+  The .rds has the 298 documented column names in the documented order, plain integer codes (COMPLETE is character, FINALRKW numeric) with variable labels but no value labels.
+  Not declared: datasech.dta (identical values in the same order, but 13 column names in lower case and no value labels) and datasech.sd2 (the unreadable original).
+  "SAS input files.txt" is the NCHS formats program format_sech00.txt (PROC FORMAT value labels plus a FORMAT statement assigning them), not an input layout; it is the value-label source for the tidier.
+  The frequency tables print formatted labels, not stored codes, and some labels carry a different number from the stored code (e.g. A6Q01X01 stores 6 and 7 for "96-DK" and "97-REF"; A7Q07 stores 96 and 97 for "6-DK" and "7-REF"), so read codes from the VALUE statements, not from the label text.
+  "Frequency counts.pdf" (freq_sech00.pdf) and "List of variables.pdf" (contents_sech00.pdf) are the codebook; the CATI questionnaire and the Series 1 No. 40 design report are docs.
