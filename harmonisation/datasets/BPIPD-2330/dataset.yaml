@@ -1,0 +1,44 @@
+dataset_id: "2330"
+dataset_name: "Holmboe"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Data/Touchscreen_Hot_Cool_IC_Data_081021 [ANONYMISED].sav"
+    reader: "spss"
+  - name: "data_note"
+    role: "codebook"
+    glob: "Data/Data_note .pdf"
+  - name: "tuq_questionnaire"
+    role: "codebook"
+    glob: "Supplementary Materials/SM1_TUQ.docx"
+  - name: "tuq_descriptives"
+    role: "codebook"
+    glob: "Supplementary Materials/SM2_TUQ_Descriptives.docx"
+  - name: "tuq_item_analysis"
+    role: "docs"
+    glob: "Supplementary Materials/SM3_Item_Level_Analysis_TUQ.docx"
+  - name: "ecitt_coding_protocol"
+    role: "docs"
+    glob: "Supplementary Materials/SM4_ECITT_Coding_Protocol.docx"
+  - name: "ecitt_template"
+    role: "docs"
+    glob: "Supplementary Materials/SM5_ECITT_Template.xlsx"
+  - name: "ecitt_accd_correlations"
+    role: "docs"
+    glob: "Supplementary Materials/SM7_Correlation_Analyses_ using_ECITT_AccD_Score.docx"
+  - name: "eefq_full_correlations"
+    role: "docs"
+    glob: "Supplementary Materials/SM8_Full_Correlation_Matrix_with_FX_WM.docx"
+  - name: "regression_tables"
+    role: "docs"
+    glob: "Supplementary Materials/SM9_Full_Hierarchical_Multiple_Regression_Tables.docx"
+
+notes: |
+  Lui et al. (2021), Infant Behavior and Development 65, 101649 (OSF https://osf.io/w8gs4/): a cross-sectional analysis of the first (10-month) lab visit of an Oxford BabyLab study, one row per infant.
+  The only data file is the SPSS .sav (163 rows, 39 columns, unique Random_ID); no other format of the data is supplied.
+  Per the data note, the 9 infants whose parents declined data sharing (Data_Sharing = 2) keep only their Random_ID; all other columns are empty for them.
+  The data note PDF, the Touchscreen Use Questionnaire (SM1, an embedded image) and the TUQ descriptive tables (SM2, n = 150 before the 9 withdrawals) are declared as codebooks.
+  The other supplementary files (item-level TUQ analysis, ECITT coding protocol, the ECITT trial-level Excel template with one placeholder participant, and the analysis tables SM7 to SM9) are declared as docs; SM5 is a blank template, not participant data.
+  Not declared: SM6_Assumption_and_Distribution_Checks .docx (distribution plots and assumption tests only, nothing for the project).
