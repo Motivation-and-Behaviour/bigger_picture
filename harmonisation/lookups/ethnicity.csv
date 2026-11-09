@@ -338,6 +338,11 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1760,ethnicity,8,Asian,proximate,Q4 code 8: Indian; the responding parent's own group.
 1760,ethnicity,9,Asian,proximate,Q4 code 9: Filipino; the responding parent's own group.
 1760,ethnicity,10,Other,proximate,"Q4 code 10: Other, resolved first through the dataset's ethnicity_other lookup; the responding parent's own group."
+2187,ethnicity,Hispanic or Latino,Hispanic,compatible,"Hispanic.or.Latino = Yes, taken ahead of race in this US sample"
+2187,ethnicity,Not Hispanic or Latino: White,White,compatible,Race_Coded White among non-Hispanic adolescents
+2187,ethnicity,Not Hispanic or Latino: Black,Black,compatible,Race_Coded Black among non-Hispanic adolescents
+2187,ethnicity,Not Hispanic or Latino: Asian,Asian,compatible,Race_Coded Asian among non-Hispanic adolescents
+2187,ethnicity,Not Hispanic or Latino: More than one race,Mixed,compatible,Race_Coded More than one race: two or more races = Mixed
 46,ethnicity,1,White,compatible,CHRACE code 1: White non-Hispanic (PCG report of the child's race and Hispanic origin in one item; 1997)
 46,ethnicity,2,Black,compatible,CHRACE code 2: Black non-Hispanic (1997)
 46,ethnicity,3,Hispanic,compatible,CHRACE code 3: Hispanic (1997)
