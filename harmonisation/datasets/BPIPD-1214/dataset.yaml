@@ -1,0 +1,56 @@
+dataset_id: "1214"
+dataset_name: "Canadian Community Health Survey 1.1"
+status: "in_progress"
+
+resources:
+  - name: "cchs_1_1_pumf"
+    role: "data"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/CCHS-82M0013-E-2000-2001-Cycle1.1_F1.csv"
+    reader: "csv"
+  - name: "cchs_1_1_data_dictionary"
+    role: "codebook"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/doc/doc/cchs_cycle1-1cbkv2.pdf"
+  - name: "cchs_1_1_derived_variables"
+    role: "codebook"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/doc/doc/cchs_cycle1-1dv.pdf"
+  - name: "cchs_1_1_record_layout"
+    role: "codebook"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/doc/doc/cchs_cycle1-1rcl.pdf"
+  - name: "cchs_1_1_sas_value_labels"
+    role: "codebook"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/data/cchs_cycle1-1pfe.sas"
+  - name: "cchs_1_1_sas_format_assignments"
+    role: "codebook"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/data/cchs_cycle1-1fmt.sas"
+  - name: "cchs_1_1_sas_variable_labels"
+    role: "codebook"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/data/cchs_cycle1-1lbe.sas"
+  - name: "cchs_1_1_user_guide"
+    role: "docs"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/doc/doc/cchs_cycle1-1gid.pdf"
+  - name: "cchs_1_1_questionnaire"
+    role: "docs"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/doc/doc/cchs_cycle1-1que.pdf"
+  - name: "cchs_errata_2000_2014"
+    role: "docs"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/doc/doc/CCHS_2000-2014-Errata.pdf"
+  - name: "cchs_1_1_sas_input_statements"
+    role: "docs"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/data/cchs_cycle1-1i.sas"
+  - name: "cchs_1_1_readme"
+    role: "docs"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/readcchs-cycle1-1.txt"
+  - name: "cchs_1_1_citation"
+    role: "docs"
+    glob: "2000-2001/3226_CCHS-Ann_ESCC_2000-01cycle1-1/How to cite CCHS2000-2001_Comment citer ESCC200-2001.pdf"
+
+notes: |
+  Scope: this spec declares CCHS Cycle 1.1 (2000-2001) only, the survey the dataset is registered as.
+  The study folder also holds the public-use files of 13 later CCHS cycles (2003 cycle 2.1, 2005 cycle 3.1, 2007-2008, 2009-2010, 2010, 2011-2012, 2012, 2013-2014, 2014, 2015-2016, 2017-2018, 2019-2020, 2022); none is declared, pending the project lead's decision on whether they belong to this dataset.
+  Data: the Cycle 1.1 Public Use Microdata File (PUMF) is read from Statistics Canada's CSV release (CCHS-82M0013-E-2000-2001-Cycle1.1_F1.csv): 130,880 rows (one per respondent) by 614 columns, header row, ASCII, no missing cells.
+  The same PUMF is also delivered as the fixed-width file HSv2.txt (841 characters per record plus CRLF, read with cchs_cycle1-1i.sas); read in full with the SAS input positions it matches the CSV value for value in every one of the 614 columns, so the CSV is used and no layout is needed.
+  Column names, order and positions agree across the CSV header, the SAS input statements and the data dictionary (614 variables each).
+  The CSV carries codes only, with no value labels: the dictionary (cchs_cycle1-1cbkv2.pdf, with weighted and unweighted frequencies) and the SAS proc format file (cchs_cycle1-1pfe.sas, ISO-8859-1, value labels) give the code meanings; cchs_cycle1-1fmt.sas assigns formats to variables and cchs_cycle1-1lbe.sas holds the variable labels.
+  Decimal fields (e.g. HWTAGWTK, HWTAGBMI, WTSAM) carry their decimal point in both files; nothing needs rescaling.
+  Reserve codes are listed per variable in the dictionary; they mostly fill the field's width with a final 6 (not applicable), 7 (don't know), 8 (refusal) or 9 (not stated), e.g. 96/97/98/99 for two-digit items and 999.6/999.9 in decimal fields, but some items also have a substantive "not applicable" answer (RACA_2B code 4), so check each item against the dictionary.
+  Not declared: the fixed-width PUMF in seven byte-identical copies (HSv2.txt under data/, data/cchs_cycle1-1datv2, data/data/cchs_cycle1-1datv2 and data 2/data/cchs_cycle1-1datv2; HS.txt in the three CD copies), all duplicates of the CSV; data.zip, doc.zip and the nested .zip files (archives of the extracted folders); the duplicate folders data/data and data 2/data; the Beyond 20/20 CD (data/cchs_cycle1-1v2cd, about 1,370 files of software, tutorials and pre-built tables); the SPSS syntax (cchs_cycle1-1v2.sps), SAS output statements (cchs_cycle1-1o.sas) and all French-language (escc_*) files; the summary report, topical and alphabetical indexes, variance (CV) tables and the 2015 errata.

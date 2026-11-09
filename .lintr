@@ -25,5 +25,7 @@ linters: linters_with_defaults(
 exclusions: list(
     # lintr parses any chunk whose engine knitr doesn't know as R, including
     # Quarto's {mermaid} diagrams. The platform pages are prose with no R code.
-    "docs/platform"
+    "docs/platform",
+    # The private report, when present; lint_dir() follows a symlink into it.
+    "DoEreport"
   )
