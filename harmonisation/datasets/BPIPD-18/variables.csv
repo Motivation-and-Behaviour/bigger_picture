@@ -1,0 +1,1798 @@
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,hicid,"sprintf(""%.0f"", as.numeric(hicid))","Study child id (hicid), assigned at selection and constant across files and waves (UG 5.6.1); B ids start with 1-4 and K ids with 5-8.",,
+wave,compatible,.wave,.wave,"Spec wave id, the study's own numbering: 1, 2, 2.5 (B cohort only), 3, 3.5, 4-8, 9C1, 10 (B and K cohort files of one wave share it, UG Table 2); K wave 2.5 and wave 9C2 are dropped in the tidier, because their only screen items are frequency ratings.",,
+data_year,inferred,datint,"local({
+  y <- as.numeric(format(datint, ""%Y""))
+  case_when(.wave == ""2.5"" ~ 2007, .wave == ""3.5"" ~ 2009, !is.na(y) ~ y, .default = as.numeric(modal_within(y, .wave)))
+})","Main waves: the year of the date of interview (datint); the 451 main-wave rows with no interview date (K wave 8: 329 rows in which the young person took no part; wave 10: 45 B and 72 K rows with no completed instrument; 5 diary-only rows at waves 2-3) take the wave's modal year. Mail-outs: 2007 at wave 2.5 and 2009 at wave 3.5, the years the questionnaires were sent (UG 1.3), as no completion date is released; inferred for those waves, so the row takes the weaker status.",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,compatible,weight,as.numeric(weight),"Each wave's cross-sectional population weight (weight, '<age> - Population weight'), not rescaled; the sample weight (weights) and longitudinal weights are unused. The mail-out rows (waves 2.5, 3.5) have no weight of their own and are NA.",,
+survey_strata,compatible,stratum,as.character(as.numeric(stratum)),"Selection stratum (stratum: state x capital city or rest of state x postcode size, UG 10.1), fixed at selection and present on every row.",,
+survey_cluster,compatible,pcodes,"if_else(is.na(pcodes) | pcodes == """", NA_character_, as.character(pcodes))","Selection postcode indicator (pcodes), the first-stage sampling unit of the two-stage clustered design (311 postcodes, UG 10.1); fixed at selection and present on every row.",,
+family_id,unavailable,,,Not in the supplied extract.,,
+sample_component,unavailable,,,Single sample.,,
+sample_population,inferred,,"""General population""","Both cohorts drawn from the Medicare Australia enrolment database by a two-stage clustered sample of postcodes and children (UG 1.4, 10.1).",,
+parent_respondent,proximate,"f08bp1, f08cp1, f08dp1, f08ep1, f08fp1, f08gp1, f08hp1, f08ip1, f08jp1, f08m2, zf02bp1, zf02cp1, zf02dp1, zf02ep1, zf02fp1, zf02gp1, zf02hp1, zf02ip1, zf02jp1, zf02m2, zf02i1p1, zf02k1p1, sc34a4","local({
+  rel <- coalesce(
+    as.numeric(f08m2),
+    as.numeric(f08bp1),
+    as.numeric(f08cp1),
+    as.numeric(f08dp1),
+    as.numeric(f08ep1),
+    as.numeric(f08fp1),
+    as.numeric(f08gp1),
+    as.numeric(f08hp1),
+    as.numeric(f08ip1),
+    as.numeric(f08jp1)
+  )
+  sx <- coalesce(
+    as.numeric(zf02m2),
+    as.numeric(zf02bp1),
+    as.numeric(zf02cp1),
+    as.numeric(zf02dp1),
+    as.numeric(zf02ep1),
+    as.numeric(zf02fp1),
+    as.numeric(zf02gp1),
+    as.numeric(zf02hp1),
+    as.numeric(zf02ip1),
+    as.numeric(zf02jp1),
+    as.numeric(zf02i1p1),
+    as.numeric(zf02k1p1)
+  )
+  parent <- rel %in% c(23, 24, 25, 26, 29)
+  covid <- .wave == ""9C1""
+  case_when(
+    .wave %in% c(""2.5"", ""3.5"") ~ ""Unknown"",
+    covid & !is.na(sc34a4) & as.numeric(sc34a4) >= 0 & sx == 2 ~ ""Mother"",
+    covid & !is.na(sc34a4) & as.numeric(sc34a4) >= 0 & sx == 1 ~ ""Father"",
+    covid & !is.na(sc34a4) & as.numeric(sc34a4) >= 0 ~ ""Unknown"",
+    covid ~ NA_character_,
+    is.na(rel) ~ NA_character_,
+    parent & sx == 2 ~ ""Mother"",
+    parent & sx == 1 ~ ""Father"",
+    parent ~ ""Unknown"",
+    .default = ""Other carer""
+  )
+})","Parent 1, the parent who knows the child best and answers the parent interview that reports the child's screen time (UG 1.5): relationship to the child (f08<age>p1, f08m2 at wave 1; biological, adoptive, step or foster parent, or parent) and sex (zf02<age>p1); grandparents, other relatives and unrelated carers = Other carer. Wave 9C1 records only P1's sex, read female = Mother and male = Father where P1 answered the parent CAWI (P1 loneliness item sc34a4 answered), hence proximate. Mail-outs (2.5, 3.5) do not record who completed them (Unknown); wave 10 has no parent questionnaire (NA). P2 and the parent living elsewhere are not used.",,
+age_years,partial,"datint, zf04m1, age_mailout","coalesce(as.numeric(datint - zf04m1 - 14) / 365.25, as.numeric(age_mailout) - 14 / 365.25)","Main waves: decimal age from the date of interview and the study child's date of birth, which is released as month and year only (every date is the 1st), so the birth date is taken at mid-month: (datint - zf04m1 - 14) / 365.25; the study's age in completed months (scagem) is unused. Mail-outs (waves 2.5, 3.5): mail-out sent in 2007/2009 (UG 1.3); no completion date; age at mid-year, 1 July of that year minus the date of birth carried within child (age_mailout, built in the tidier), less the same 14 days. Partial: the mail-out ages rest on an assumed reference date (error up to about six months). NA where no interview date is released (K wave 8 rows in which the young person took no part, wave 10 rows with no completed instrument, diary-only rows).",,
+sex,compatible,zf02m1,"coalesce(
+  modal_within(recode_values(as.numeric(zf02m1), 1 ~ ""Male"", 2 ~ ""Female"", default = NA_character_), hicid),
+  ""Unknown""
+)","Study child's sex (zf02m1, parent-reported at wave 1 and repeated in every main file); modal value within child, ties Unknown, which fills the mail-out rows.",,
+country,inferred,,"""Australia""",National sample of Australian children (UG 1.4).,,
+state,compatible,"state, statei","local({
+  s <- if_else(.wave %in% c(""2.5"", ""3.5""), as.numeric(statei), as.numeric(state))
+  recode_values(
+    s,
+    1 ~ ""NSW"",
+    2 ~ ""VIC"",
+    3 ~ ""QLD"",
+    4 ~ ""SA"",
+    5 ~ ""WA"",
+    6 ~ ""TAS"",
+    7 ~ ""NT"",
+    8 ~ ""ACT"",
+    default = ""Unknown""
+  )
+})","State of residence at the wave (state, derived from the address; statei at the 2.5 and 3.5 mail-outs, never on wave 1 rows, where statei is the wave 1.5 value). Missing or not released (some 9C1 and wave 10 rows) = Unknown; not carried.",,
+region,compatible,"state, statei","local({
+  s <- if_else(.wave %in% c(""2.5"", ""3.5""), as.numeric(statei), as.numeric(state))
+  recode_values(
+    s,
+    1 ~ ""AU-NSW"",
+    2 ~ ""AU-VIC"",
+    3 ~ ""AU-QLD"",
+    4 ~ ""AU-SA"",
+    5 ~ ""AU-WA"",
+    6 ~ ""AU-TAS"",
+    7 ~ ""AU-NT"",
+    8 ~ ""AU-ACT"",
+    default = ""Unknown""
+  )
+})","ISO 3166-2 code of the state of residence, from the source that fills state (state; statei at the mail-outs). Missing = Unknown; no carry across gaps of 12 months or less is built in the tidier.",,
+ethnicity,incompatible,"zf09m1, f11m1, zf12m1",,"No ethnic or racial group item; only the child's country of birth (zf09m1), main language at home (f11m1) and Indigenous status (zf12m1, see indigenous).",,
+indigenous,compatible,zf12m1,"coalesce(
+  carry_within(
+    recode_values(as.numeric(zf12m1), 1 ~ ""Non-Indigenous"", c(2, 3, 4) ~ ""Indigenous"", default = NA_character_),
+    hicid,
+    order = as.numeric(wave)
+  ),
+  ""Unknown""
+)","Study child's Indigenous status, parent report (zf12m1: No; Yes, Aboriginal; Yes, Torres Strait Islander; Yes, both); carried within child from the earliest wave (fills the mail-outs and wave 10).",,
+minority,proximate,"zf09m1, zf09am, zf09bm, zf09cm, zf09dm, zf09em, zf09fm, zf09gm, zf09hm, zf09im, zf09jm, zf09af, zf09bf, zf09cf, zf09df, zf09ef, zf09ff, zf09gf, zf09hf, zf09if, zf09jf","local({
+  aus <- c(1101, 1102, 1199)
+  ch <- case_when(as.numeric(zf09m1) %in% aus ~ 1, as.numeric(zf09m1) > 0 ~ 0, .default = NA_real_)
+  mo <- (coalesce(
+    as.numeric(zf09am),
+    as.numeric(zf09bm),
+    as.numeric(zf09cm),
+    as.numeric(zf09dm),
+    as.numeric(zf09em),
+    as.numeric(zf09fm),
+    as.numeric(zf09gm),
+    as.numeric(zf09hm),
+    as.numeric(zf09im),
+    as.numeric(zf09jm)
+  ))
+  mo <- case_when(mo %in% aus ~ 1, mo > 0 ~ 0, .default = NA_real_)
+  fa <- (coalesce(
+    as.numeric(zf09af),
+    as.numeric(zf09bf),
+    as.numeric(zf09cf),
+    as.numeric(zf09df),
+    as.numeric(zf09ef),
+    as.numeric(zf09ff),
+    as.numeric(zf09gf),
+    as.numeric(zf09hf),
+    as.numeric(zf09if),
+    as.numeric(zf09jf)
+  ))
+  fa <- case_when(fa %in% aus ~ 1, fa > 0 ~ 0, .default = NA_real_)
+  abroad <- (mo == 0 & fa == 0) | (mo == 0 & is.na(fa)) | (is.na(mo) & fa == 0)
+  v <- case_when(mo == 1 | fa == 1 ~ ""Non-minority"", abroad & !is.na(ch) ~ ""Minority"", .default = NA_character_)
+  coalesce(carry_within(v, hicid, order = as.numeric(wave)), ""Unknown"")
+})","No ethnicity item: derived from immigrant_background (First- or Second-generation = Minority, Native = Non-minority), same items and carry-forward.",,
+immigrant_background,partial,"zf09m1, zf09am, zf09bm, zf09cm, zf09dm, zf09em, zf09fm, zf09gm, zf09hm, zf09im, zf09jm, zf09af, zf09bf, zf09cf, zf09df, zf09ef, zf09ff, zf09gf, zf09hf, zf09if, zf09jf","local({
+  aus <- c(1101, 1102, 1199)
+  ch <- case_when(as.numeric(zf09m1) %in% aus ~ 1, as.numeric(zf09m1) > 0 ~ 0, .default = NA_real_)
+  mo <- (coalesce(
+    as.numeric(zf09am),
+    as.numeric(zf09bm),
+    as.numeric(zf09cm),
+    as.numeric(zf09dm),
+    as.numeric(zf09em),
+    as.numeric(zf09fm),
+    as.numeric(zf09gm),
+    as.numeric(zf09hm),
+    as.numeric(zf09im),
+    as.numeric(zf09jm)
+  ))
+  mo <- case_when(mo %in% aus ~ 1, mo > 0 ~ 0, .default = NA_real_)
+  fa <- (coalesce(
+    as.numeric(zf09af),
+    as.numeric(zf09bf),
+    as.numeric(zf09cf),
+    as.numeric(zf09df),
+    as.numeric(zf09ef),
+    as.numeric(zf09ff),
+    as.numeric(zf09gf),
+    as.numeric(zf09hf),
+    as.numeric(zf09if),
+    as.numeric(zf09jf)
+  ))
+  fa <- case_when(fa %in% aus ~ 1, fa > 0 ~ 0, .default = NA_real_)
+  abroad <- (mo == 0 & fa == 0) | (mo == 0 & is.na(fa)) | (is.na(mo) & fa == 0)
+  v <- case_when(
+    mo == 1 | fa == 1 ~ ""Native"",
+    abroad & ch == 1 ~ ""Second-generation"",
+    abroad & ch == 0 ~ ""First-generation"",
+    .default = NA_character_
+  )
+  coalesce(carry_within(v, hicid, order = as.numeric(wave)), ""Unknown"")
+})","Country of birth of the child (zf09m1) and of the mother and father figures in the home at the wave (zf09<age>m, zf09<age>f, SACC codes; Australia includes Norfolk Island and the external territories); one parent's birthplace unknown lets the other decide; 0 'Confidentialised' is unknown. Carried within child from the earliest wave with a value. Partial: the household's mother and father figures only, so a parent living elsewhere is never observed.",,
+born_in_country,compatible,zf09m1,"coalesce(
+  carry_within(
+    case_when(
+      as.numeric(zf09m1) %in% c(1101, 1102, 1199) ~ ""Yes"",
+      as.numeric(zf09m1) > 0 ~ ""No"",
+      .default = NA_character_
+    ),
+    hicid,
+    order = as.numeric(wave)
+  ),
+  ""Unknown""
+)","Study child's country of birth (zf09m1, SACC codes): Australia including Norfolk Island and the external territories = Yes, other countries = No, 0 'Confidentialised' = Unknown; carried within child.",,
+home_language,proximate,f11m1,"coalesce(
+  carry_within(
+    case_when(
+      as.numeric(f11m1) == 1201 ~ ""Country language only"",
+      as.numeric(f11m1) > 0 ~ ""Another language, country language not recorded"",
+      .default = NA_character_
+    ),
+    hicid,
+    order = as.numeric(wave)
+  ),
+  ""Unknown""
+)","Study child's main language spoken at home (f11m1, ASCL codes, parent report, waves 1-8): English = Country language only (which then includes bilingual homes whose main language is English), another language = Another language, country language not recorded; 0 'Confidentialised' = Unknown. English is the country language. Carried within child.",,
+ses_area,compatible,cnfsda2d,"recode_values(
+  as.numeric(cnfsda2d),
+  c(1, 2, 3, 4) ~ ""Low"",
+  c(5, 6) ~ ""Medium"",
+  c(7, 8, 9, 10) ~ ""High"",
+  default = ""Unknown""
+)","Waves 5-10 only. ABS SEIFA Index of Relative Socio-economic Disadvantage (IRSD, 2011) of the home SA2, national deciles (cnfsda2d; decile 1 most disadvantaged): 1-4 Low, 5-6 Medium, 7-10 High (national quintiles 1-2, 3, 4-5). Waves 1-4 and the mail-outs release IRSD scores only (cnfsda, cnisda) with no national deciles, so they are Unknown; -9 and -5 = Unknown.",,
+ses_household,compatible,"sep2, sep","local({
+  x <- coalesce(as.numeric(sep2), as.numeric(sep))
+  lo <- stats::ave(x, .wave, FUN = function(v) stats::quantile(v, 0.4, na.rm = TRUE, names = FALSE))
+  hi <- stats::ave(x, .wave, FUN = function(v) stats::quantile(v, 0.6, na.rm = TRUE, names = FALSE))
+  case_when(is.na(x) ~ ""Unknown"", x <= lo ~ ""Low"", x > hi ~ ""High"", .default = ""Medium"")
+})","Waves 1-8 only. The study's derived socioeconomic position score (sep2 'Socioeconomic position (Version 2)', waves 2-8; sep at wave 1, where sep2 is not released), a standardised composite. Cut 40/20/40 of the unweighted sample within wave (at or below the 40th percentile Low, above the 60th High). The mail-outs, 9C1 and wave 10 release no composite and are Unknown.",,
+ses_household_measure,inferred,"sep2, sep","case_when(
+  .wave == ""1"" ~ ""Composite SES index: LSAC socioeconomic position (sep)"",
+  .wave %in%
+    c(""2"", ""3"", ""4"", ""5"", ""6"", ""7"", ""8"") ~ ""Composite SES index: LSAC socioeconomic position, version 2 (sep2)"",
+  .default = NA_character_
+)","Waves 1-8, where ses_household is derived.",,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,proximate,"fd08m2a, fd08m3a, fd08m3b","local({
+  w1 <- .wave == ""1""
+  a <- as.numeric(fd08m3a)
+  b <- as.numeric(fd08m3b)
+  other <- as.numeric(fd08m2a)
+  q <- case_when(
+    w1 & a == 1 | !w1 & b == 1 ~ ""Postgraduate degree"",
+    w1 & a == 2 | !w1 & b == 2 ~ ""Graduate diploma or graduate certificate"",
+    w1 & a == 3 | !w1 & b == 3 ~ ""Bachelor degree"",
+    w1 & a == 4 | !w1 & b == 4 ~ ""Advanced diploma or diploma"",
+    !w1 & b == 5 ~ ""Certificate III/IV"",
+    w1 & a == 5 | !w1 & b == 5.5 ~ ""Certificate, level not stated"",
+    !w1 & b == 6 ~ ""Certificate I/II"",
+    w1 & a == 6 | !w1 & b == 7 ~ ""Other non-school qualification"",
+    other == 2 ~ ""No non-school qualification"",
+    .default = NA_character_
+  )
+  coalesce(
+    lookup_values(q, lookup_maternal_education, dataset_id = spec$dataset_id, target_variable = ""maternal_education""),
+    ""Unknown""
+  )
+})","Mother figure in the home (LSAC 'M' derived items), carried within child in the tidier: highest non-school qualification (fd08m3a at wave 1; fd08m3b, which adds later qualifications, from wave 2), else no non-school qualification (fd08m2a 'Completed other qual' = No) = Secondary school or less whatever the school year completed (fd08m1). Shared education lookup: degrees and graduate diplomas = Bachelor degree or higher; advanced diploma or diploma, Certificate III/IV and certificates of unstated level = Post-secondary; Certificate I/II = Secondary school or less; other non-school qualifications = Unknown. Proximate: Certificate III/IV spans ISCED 3 and 4, and certificates of unstated level (all of wave 1, code 5.5 'Certificate nfd' later) go to Post-secondary, where most stated certificates lie.",maternal_education,
+paternal_education,proximate,"fd08f2a, fd08f3a, fd08f3b","local({
+  w1 <- .wave == ""1""
+  a <- as.numeric(fd08f3a)
+  b <- as.numeric(fd08f3b)
+  other <- as.numeric(fd08f2a)
+  q <- case_when(
+    w1 & a == 1 | !w1 & b == 1 ~ ""Postgraduate degree"",
+    w1 & a == 2 | !w1 & b == 2 ~ ""Graduate diploma or graduate certificate"",
+    w1 & a == 3 | !w1 & b == 3 ~ ""Bachelor degree"",
+    w1 & a == 4 | !w1 & b == 4 ~ ""Advanced diploma or diploma"",
+    !w1 & b == 5 ~ ""Certificate III/IV"",
+    w1 & a == 5 | !w1 & b == 5.5 ~ ""Certificate, level not stated"",
+    !w1 & b == 6 ~ ""Certificate I/II"",
+    w1 & a == 6 | !w1 & b == 7 ~ ""Other non-school qualification"",
+    other == 2 ~ ""No non-school qualification"",
+    .default = NA_character_
+  )
+  coalesce(
+    lookup_values(q, lookup_maternal_education, dataset_id = spec$dataset_id, target_variable = ""maternal_education""),
+    ""Unknown""
+  )
+})","Father figure in the home (LSAC 'F' derived items), carried within child in the tidier; items, lookup and placements as maternal_education. Unknown where no father figure lives with the child.",maternal_education,
+parental_education,proximate,"fd08m2a, fd08m3a, fd08m3b, fd08f2a, fd08f3a, fd08f3b","local({
+  m <- local({
+    w1 <- .wave == ""1""
+    a <- as.numeric(fd08m3a)
+    b <- as.numeric(fd08m3b)
+    other <- as.numeric(fd08m2a)
+    q <- case_when(
+      w1 & a == 1 | !w1 & b == 1 ~ ""Postgraduate degree"",
+      w1 & a == 2 | !w1 & b == 2 ~ ""Graduate diploma or graduate certificate"",
+      w1 & a == 3 | !w1 & b == 3 ~ ""Bachelor degree"",
+      w1 & a == 4 | !w1 & b == 4 ~ ""Advanced diploma or diploma"",
+      !w1 & b == 5 ~ ""Certificate III/IV"",
+      w1 & a == 5 | !w1 & b == 5.5 ~ ""Certificate, level not stated"",
+      !w1 & b == 6 ~ ""Certificate I/II"",
+      w1 & a == 6 | !w1 & b == 7 ~ ""Other non-school qualification"",
+      other == 2 ~ ""No non-school qualification"",
+      .default = NA_character_
+    )
+    coalesce(
+      lookup_values(q, lookup_maternal_education, dataset_id = spec$dataset_id, target_variable = ""maternal_education""),
+      ""Unknown""
+    )
+  })
+  f <- local({
+    w1 <- .wave == ""1""
+    a <- as.numeric(fd08f3a)
+    b <- as.numeric(fd08f3b)
+    other <- as.numeric(fd08f2a)
+    q <- case_when(
+      w1 & a == 1 | !w1 & b == 1 ~ ""Postgraduate degree"",
+      w1 & a == 2 | !w1 & b == 2 ~ ""Graduate diploma or graduate certificate"",
+      w1 & a == 3 | !w1 & b == 3 ~ ""Bachelor degree"",
+      w1 & a == 4 | !w1 & b == 4 ~ ""Advanced diploma or diploma"",
+      !w1 & b == 5 ~ ""Certificate III/IV"",
+      w1 & a == 5 | !w1 & b == 5.5 ~ ""Certificate, level not stated"",
+      !w1 & b == 6 ~ ""Certificate I/II"",
+      w1 & a == 6 | !w1 & b == 7 ~ ""Other non-school qualification"",
+      other == 2 ~ ""No non-school qualification"",
+      .default = NA_character_
+    )
+    coalesce(
+      lookup_values(q, lookup_maternal_education, dataset_id = spec$dataset_id, target_variable = ""maternal_education""),
+      ""Unknown""
+    )
+  })
+  lv <- c(""Secondary school or less"", ""Post-secondary"", ""Bachelor degree or higher"")
+  r <- pmax(match(m, lv), match(f, lv), na.rm = TRUE)
+  coalesce(lv[r], ""Unknown"")
+})","Highest of the mother and father figures' levels (maternal_education, paternal_education), so one known parent suffices; items, lookup and placements as maternal_education.",maternal_education,
+maternal_employment,compatible,memp,"recode_values(as.numeric(memp), 1 ~ ""Employed"", c(2, 3) ~ ""Not employed"", default = ""Unknown"")","Waves 1-8 only. Mother figure's labour force status (memp, LSAC 'M - Employment status', derived from the parent interview): Employed; Unemployed and Not in labour force = Not employed; -9 or no mother figure = Unknown. The mail-outs, 9C1 and wave 10 ask no such item and nothing is carried (Unknown).",,
+maternal_age,compatible,"f03am, f03bm, f03cm, f03dm, f03em, f03fm, f03gm, f03hm, f03im, f03jm","local({
+  a <- coalesce(
+    as.numeric(f03am),
+    as.numeric(f03bm),
+    as.numeric(f03cm),
+    as.numeric(f03dm),
+    as.numeric(f03em),
+    as.numeric(f03fm),
+    as.numeric(f03gm),
+    as.numeric(f03hm),
+    as.numeric(f03im),
+    as.numeric(f03jm)
+  )
+  if_else(a > 0, a + 0.5, NA_real_)
+})","Waves 1-8 only. Age in completed years of the mother figure in the home at the wave (f03<age>m, household grid) + 0.5. No mother figure, the mail-outs, 9C1 and wave 10: NA.",,
+urbanicity,proximate,absra,"recode_values(as.numeric(absra), 0 ~ ""Urban"", 1 ~ ""Suburban"", c(2, 3, 4) ~ ""Rural"", default = ""Unknown"")","ABS Remoteness Area of the home address (absra): Major Cities = Urban, Inner Regional = Suburban, Outer Regional, Remote and Very Remote = Rural; -9, -5, offshore or no usual address = Unknown. Proximate: a remoteness classification, not an urban-rural typology.",,
+family_structure,compatible,"p2, bmoth, amoth, bfath, afath","local({
+  bio_m <- as.numeric(bmoth) == 1 | as.numeric(amoth) == 1
+  bio_f <- as.numeric(bfath) == 1 | as.numeric(afath) == 1
+  two <- as.numeric(p2)
+  case_when(
+    two == 1 & bio_m & bio_f ~ ""Two biological/adoptive parents"",
+    two == 1 & (bio_m | bio_f) ~ ""Step family"",
+    two == 0 & (bio_m | bio_f) ~ ""Single parent"",
+    two %in% c(0, 1) ~ ""Other"",
+    .default = ""Unknown""
+  )
+})","Waves 1-8 only, from the household grid: two parents in the home (p2) and whether the resident mother and father figures are biological or adoptive (bmoth, amoth, bfath, afath); two parents both biological or adoptive = Two biological/adoptive parents, two with one of them a step, foster or other parent figure = Step family, one parent who is biological or adoptive = Single parent, no biological or adoptive parent = Other. The mail-outs, 9C1 and wave 10 have no household grid and nothing is carried (Unknown).",,
+fam_siblings_n,partial,nsib,"if_else(as.numeric(nsib) >= 0, as.numeric(nsib), NA_real_)","Number of the study child's siblings living in the household (nsib, household grid; full, half, step, adoptive and foster), waves 1-8 and 10. Partial: resident siblings only. Negative codes NA.",,
+fam_siblings_any,unavailable,,,Derive at analysis from fam_siblings_n.,,
+fam_screenrules,compatible,"he06f, he17g2b, he07f1b, he07j1, he07a6a5, he06fi, he06e2i, he06e3i, he06e5i","local({
+  m <- cbind(
+    case_when(as.numeric(he06f) == 1 ~ 1, as.numeric(he06f) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he17g2b) == 1 ~ 1, as.numeric(he17g2b) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he07f1b) == 1 ~ 1, as.numeric(he07f1b) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he07j1) == 1 ~ 1, as.numeric(he07j1) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he07a6a5) == 1 ~ 1, as.numeric(he07a6a5) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06fi) == 1 ~ 1, as.numeric(he06fi) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06e2i) == 1 ~ 1, as.numeric(he06e2i) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06e3i) == 1 ~ 1, as.numeric(he06e3i) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06e5i) == 1 ~ 1, as.numeric(he06e5i) %in% c(0, 2) ~ 0, .default = NA_real_)
+  )
+  n <- rowSums(!is.na(m))
+  case_when(n == 0 ~ NA_character_, rowSums(m, na.rm = TRUE) > 0 ~ ""TRUE"", .default = ""FALSE"")
+})","Parent (P1) report of family rules on the amount or timing of screen use: quantity of TV (he06f, K waves 2-6, B waves 4-7; he06fi B 2.5; he06e2i 3.5), when the child can watch TV (he06e3i, 3.5), quantity of computer use (he06e5i, 3.5), time playing electronic games (he17g2b), time on the Internet (he07f1b), time on other activities on electronic devices (he07j1, waves 5-7) and the amount of screen time (he07a6a5, B wave 8). TRUE if any answered item is yes, FALSE if every answered one is no; 'Doesn't apply' (-1, 3.5) is unanswered. Content rules go to fam_contentrules; the B wave 8 rule on where screens can be used (he07a6a6) is named unused.",,
+fam_contentrules,partial,"he06e, he17g2a, he07f1a, he07a6a4, he06ei, he06e1i, he06e4i","local({
+  m <- cbind(
+    case_when(as.numeric(he06e) == 1 ~ 1, as.numeric(he06e) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he17g2a) == 1 ~ 1, as.numeric(he17g2a) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he07f1a) == 1 ~ 1, as.numeric(he07f1a) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he07a6a4) == 1 ~ 1, as.numeric(he07a6a4) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06ei) == 1 ~ 1, as.numeric(he06ei) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06e1i) == 1 ~ 1, as.numeric(he06e1i) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06e4i) == 1 ~ 1, as.numeric(he06e4i) %in% c(0, 2) ~ 0, .default = NA_real_)
+  )
+  n <- rowSums(!is.na(m))
+  case_when(n == 0 ~ NA_character_, rowSums(m, na.rm = TRUE) > 0 ~ ""TRUE"", .default = ""FALSE"")
+})","Parent (P1) report of family rules on content: which TV programs (he06e; he06ei B 2.5; he06e1i 3.5), which games can be played (he17g2a, waves 5-8), what is accessed on the Internet (he07f1a, waves 5-7), what the child does on the computer (he06e4i, 3.5) and what is posted or viewed on social media (he07a6a4, B wave 8). TRUE if any answered item is yes, FALSE if every answered one is no. Partial: K waves 2-4 and B wave 4 ask about TV programs only.",,
+fam_bedroomscreen,partial,"he06d, he06d1, he07e1, he17a1, he06d1i, he07d1i, he07e1i, he17a1i, he06k1i, he06l1i, he06m1i","local({
+  m <- cbind(
+    case_when(as.numeric(he06d) == 1 ~ 1, as.numeric(he06d) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06d1) == 1 ~ 1, as.numeric(he06d1) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he07e1) == 1 ~ 1, as.numeric(he07e1) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he17a1) == 1 ~ 1, as.numeric(he17a1) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06d1i) == 1 ~ 1, as.numeric(he06d1i) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he07d1i) == 1 ~ 1, as.numeric(he07d1i) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he07e1i) == 1 ~ 1, as.numeric(he07e1i) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he17a1i) == 1 ~ 1, as.numeric(he17a1i) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06k1i) == 1 ~ 1, as.numeric(he06k1i) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06l1i) == 1 ~ 1, as.numeric(he06l1i) %in% c(0, 2) ~ 0, .default = NA_real_),
+    case_when(as.numeric(he06m1i) == 1 ~ 1, as.numeric(he06m1i) %in% c(0, 2) ~ 0, .default = NA_real_)
+  )
+  n <- rowSums(!is.na(m))
+  case_when(n == 0 ~ NA_character_, rowSums(m, na.rm = TRUE) > 0 ~ ""TRUE"", .default = ""FALSE"")
+})","Parent (P1) report: TV in the bedroom (he06d, K waves 2-4, B waves 3-4), watches TV in the bedroom (he06d1, waves 5-7), Internet access in the bedroom (he07e1), access to electronic games in the bedroom (he17a1); mail-outs: TV, computer and Internet access in the bedroom (he06d1i, he07d1i, he07e1i), games system, Pay TV, DVD player and TV recorder in the bedroom (he17a1i, he06k1i, he06l1i, he06m1i, 3.5). TRUE if any answered item is yes, FALSE if every answered one is no. Partial: TV only at the early waves and a behaviour item (watches TV in the bedroom) at waves 5-7.",,
+fam_firstphone_age,unavailable,,,Not collected.,,
+fam_firstscreen_age,unavailable,,,Not collected.,,
+fam_coview_freq,partial,"he06i3i, he06a15, he17d","local({
+  tv <- recode_values(as.numeric(he06i3i), 1 ~ 5, 2 ~ 4, 3 ~ 3, 4 ~ 2, 5 ~ 1, default = NA_real_)
+  tv_days <- recode_values(as.numeric(he06a15), 0 ~ 1, 1 ~ 3, 2 ~ 4, 3 ~ 5, default = NA_real_)
+  games_days <- recode_values(as.numeric(he17d), 0 ~ 1, 1 ~ 3, 2 ~ 4, 3 ~ 5, default = NA_real_)
+  m <- cbind(tv, tv_days, games_days)
+  top <- suppressWarnings(apply(m, 1, max, na.rm = TRUE))
+  top[!is.finite(top)] <- NA
+  recode_values(top, 5 ~ ""Always"", 4 ~ ""Often"", 3 ~ ""Sometimes"", 2 ~ ""Rarely"", 1 ~ ""Never"", default = NA_character_)
+})","Parent (P1) report of screen use together: 'Do you watch TV with child' (he06i3i, B 2.5 mail-out; Always to Never, direct) and days in the past week the parent played electronic games with the child (he17d, K waves 4-6, B waves 4-8) or watched TV or movies with the child (he06a15, B wave 8), day bands mapped by the day-share cuts (none Never, 1-2 days Sometimes, 3-5 days Often, as most of the band lies at or below 70%, 6-7 days Always); the most frequent level across the media asked. Partial: one medium at most waves.",,
+fam_mediation_restrict,incompatible,"he06f, he06e, he17g2a, he17g2b, he07f1a, he07f1b",,"Only yes/no rule items, which go to fam_screenrules and fam_contentrules.",,
+fam_mediation_active,unavailable,,,Not collected.,,
+fam_mediation_monitor,unavailable,,,Not collected.,,
+fam_mediation_technical,unavailable,,,Not collected.,,
+fam_mediation_measure,unavailable,,,See fam_mediation_restrict.,,
+fam_parent_screentime,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+fam_parent_dep,incompatible,hs25a1,,Only a single item on Parent 1's depression for two weeks in the past year (hs25a1); the K6 goes to fam_parent_distress.,,
+fam_parent_anx,unavailable,,,Not collected.,,
+fam_parent_distress,compatible,mk6s,"if_else(as.numeric(mk6s) >= 6, as.numeric(mk6s) - 6, NA_real_)","Waves 1-8 only. Kessler K6 of the mother figure in the home (mk6s, LSAC 'M - K-6 Depression scale summed score', from P1 or P2 by who the mother is), released as the sum of six items scored 1-5 (6-30), rescaled to the published 0-4 scoring (0-24) by subtracting 6. The P1, P2 and father versions (ak6s, bk6s, fk6s) and the K6 group (mk6g) are named unused.",,
+fam_parent_mh_measure,inferred,mk6s,"if_else(
+  as.numeric(wave) <= 8 & !(.wave %in% c(""2.5"", ""3.5"")),
+  ""distress: Kessler K6, 6 of 6 items, 0-4 item scoring (range 0-24), sum, mother figure in the home (P1 or P2); released as 1-5 items (6-30), rescaled"",
+  NA_character_
+)","Waves 1-8 (not the mail-outs), where fam_parent_distress is mapped.",,
+fam_parenting_warmth_parent,compatible,awarm,"if_else(as.numeric(awarm) >= 1, as.numeric(awarm), NA_real_)","Waves 1-8 (B) and 1-6 (K). Parent 1's released warm parenting scale (awarm; items pa03a1-pa03a6 'display physical affection', 'hug', 'express happiness to SC', 'warm encounters', 'enjoy doing things with', 'close when happy or upset'), mean of items scored 1-5. P2 and mother/father versions named unused.",,
+fam_parenting_harsh_parent,compatible,"aanga, aang","local({
+  x <- coalesce(as.numeric(aanga), as.numeric(aang))
+  if_else(x >= 1, x, NA_real_)
+})","Parent 1's released angry parenting scale: version 2 (aanga, K waves 2-7, B waves 3-8) and version 1 at K wave 1 (aang), mean of items scored 1-5 (higher = more angry, harsh parenting). The infant hostile parenting scales (ahost, ahostb, ahostc, B waves 1-2) and P2 versions are named unused. Standardise within wave where the version changes.",,
+fam_parenting_inconsistent_parent,compatible,acons,"if_else(as.numeric(acons) >= 1, 6 - as.numeric(acons), NA_real_)","Parent 1's released consistency scale (acons, K waves 1-7, B waves 3-8; items pa11a1-pa11a5 such as 'SC gets away unpunished', 'SC ignores punishment'), mean of items scored 1-5, reversed as 6 - x so higher = more inconsistent.",,
+fam_monitoring_parent,compatible,"aparmon, aparmonb","local({
+  x <- coalesce(as.numeric(aparmon), as.numeric(aparmonb))
+  if_else(x >= 1, 6 - x, NA_real_)
+})","Parent 1's released parental monitoring scale, items scored 1 Always to 5 Never ('Know where child is', 'Know who child is with', 'Child goes out without telling'), mean, reversed as 6 - x so higher = more monitoring: version 1 (aparmon, four items with 'Talk with child about their life') at K waves 3-5 and B wave 5, version 2 (aparmonb, three items) at K wave 6 and B waves 6-8. Standardise within wave where the version changes.",,
+fam_monitoring_self,partial,"pa22a, pa22b, pa22c, pa22d, pa22d1","(if_else(as.numeric(pa22a) %in% 1:3, as.numeric(pa22a), NA_real_) +
+  if_else(as.numeric(pa22b) %in% 1:3, as.numeric(pa22b), NA_real_) +
+  if_else(as.numeric(pa22c) %in% 1:3, as.numeric(pa22c), NA_real_) +
+  if_else(
+    cohort == ""K"" & .wave == ""7"",
+    if_else(as.numeric(pa22d1) %in% 1:3, as.numeric(pa22d1), NA_real_),
+    if_else(as.numeric(pa22d) %in% 1:3, as.numeric(pa22d), NA_real_)
+  )) /
+  4","Young person's report of what their parents know: friends (pa22a), how they spend money (pa22b), what they do with free time (pa22c) and where they are most afternoons (pa22d; 'where you are when you are not at home', pa22d1, at K wave 7), K waves 4-7 and B waves 6-8, scored 1 Parents don't know, 2 know a little, 3 know a lot; 'I'm not sure' is NA. Mean of the four items, complete case, higher = more monitoring. Partial: the study's own graded items with no released score.",,
+fam_parenting_measure,inferred,"awarm, aanga, aang, acons, aparmon, aparmonb, pa22a, pa22b, pa22c, pa22d, pa22d1","local({
+  mon <- case_when(
+    (cohort == ""K"" & .wave %in% c(""3"", ""4"", ""5"")) |
+      (cohort == ""B"" &
+        .wave ==
+          ""5"") ~ ""; monitoring (parent): LSAC parental monitoring scale version 1, 4 items, 1-5 item scoring (range 1-5), mean, reversed (6 - x)"",
+    (cohort == ""K"" & .wave == ""6"") |
+      (cohort == ""B"" &
+        .wave %in%
+          c(
+            ""6"",
+            ""7"",
+            ""8""
+          )) ~ ""; monitoring (parent): LSAC parental monitoring scale version 2, 3 items, 1-5 item scoring (range 1-5), mean, reversed (6 - x)"",
+    .default = """"
+  )
+  monself <- if_else(
+    (cohort == ""K"" & .wave %in% c(""4"", ""5"", ""6"", ""7"")) | (cohort == ""B"" & .wave %in% c(""6"", ""7"", ""8"")),
+    ""; monitoring (self): young person's report of parental knowledge, 4 study items, 1-3 item scoring (range 1-3), mean, complete case"",
+    """"
+  )
+  base <- case_when(
+    .wave %in% c(""2.5"", ""3.5"", ""9C1"", ""10"") ~ NA_character_,
+    cohort == ""K"" & .wave == ""8"" ~ NA_character_,
+    cohort == ""K"" &
+      .wave ==
+        ""1"" ~ ""LSAC parenting scales (Parent 1); warmth: warm parenting, 6 items, 1-5 item scoring (range 1-5), mean; harsh: angry parenting version 1, 1-5 item scoring (range 1-5), mean; inconsistent: consistency scale, 5 items, 1-5 item scoring (range 1-5), mean, reversed (6 - x); supplied as released means"",
+    cohort == ""B"" &
+      .wave %in%
+        c(
+          ""1"",
+          ""2""
+        ) ~ ""LSAC parenting scales (Parent 1); warmth: warm parenting, 6 items, 1-5 item scoring (range 1-5), mean; supplied as released means"",
+    cohort == ""K"" &
+      .wave ==
+        ""7"" ~ ""LSAC parenting scales (Parent 1); harsh: angry parenting version 2, 1-5 item scoring (range 1-5), mean; inconsistent: consistency scale, 5 items, 1-5 item scoring (range 1-5), mean, reversed (6 - x); supplied as released means"",
+    .default = ""LSAC parenting scales (Parent 1); warmth: warm parenting, 6 items, 1-5 item scoring (range 1-5), mean; harsh: angry parenting version 2, 1-5 item scoring (range 1-5), mean; inconsistent: consistency scale, 5 items, 1-5 item scoring (range 1-5), mean, reversed (6 - x); supplied as released means""
+  )
+  if_else(is.na(base), NA_character_, paste0(base, mon, monself))
+})",One value per wave naming the scales mapped there; the angry parenting item count is not documented in the supplied files.,,
+fam_physpunish,unavailable,,,Not collected.,,
+fam_parentchild_rel_self,incompatible,"pa21a4, pa21b4",,"Only single items on feeling close to mum and to dad (pa21a4, pa21b4, young person, K waves 5-7, B waves 7-8).",,
+fam_parentchild_rel_parent,unavailable,,,Not collected.,,
+fam_parentchild_conflict_parent,unavailable,,,Not collected.,,
+fam_parentchild_measure,unavailable,,,See fam_parentchild_rel_self.,,
+fam_functioning_parent,unavailable,,,Not collected.,,
+fam_functioning_self,unavailable,,,Not collected.,,
+fam_conflict_parent,incompatible,aargb,,"Only Parent 1's argumentative relationship scale with the partner (aargb), a couple-relationship scale.",,
+fam_conflict_self,unavailable,,,Not collected.,,
+fam_functioning_measure,unavailable,,,See fam_functioning_parent.,,
+fam_readto_freq,proximate,"he02a1a, he02a1d","recode_values(
+  coalesce(as.numeric(he02a1a), as.numeric(he02a1d)),
+  0 ~ ""Less than once a week"",
+  1 ~ ""Once or twice a week"",
+  2 ~ ""Several times a week"",
+  3 ~ ""Every day"",
+  default = NA_character_
+)","Parent 1: days in the past week someone read to the child from a book (he02a1a K wave 1, B wave 2, K wave 2; he02a1d B waves 3-5, K waves 3-4): none Less than once a week, 1-2 days Once or twice a week, 3-5 days Several times a week, 6-7 days Every day (proximate: the band also holds 6 days).",,
+fam_readto_time,partial,"he21i, he19i","local({
+  m <- coalesce(as.numeric(he21i), as.numeric(he19i))
+  if_else(m >= 0, m / 60, NA_real_)
+})","B cohort mail-outs only, the parent completing the mail-out: 'Minutes per day child is read to' (he21i, wave 2.5, about age 3-4) and 'Average mins per day child is read to' (he19i, wave 3.5, about age 5-6), minutes as entered / 60, read as minutes on an average day; 0 minutes = 0. Partial: the questionnaire wording is not in the supplied documents, so who reads and where is not stated. Wave 2.5 answers stop at 99 minutes (3 rows), which may be the entry limit; wave 3.5 answers reach 700 minutes and are kept. The banded copies of he19i at wave 3.5 (he19i1, he19i2) and the wave 1.5 banded items on the wave 1 rows are unused.",,
+fam_childbooks,partial,he04,"recode_values(as.numeric(he04), 0 ~ 0, 1 ~ 5.5, 2 ~ 15.5, 3 ~ 25.5, 4 ~ 30, default = NA_real_)","Parent 1: number of children's books in the home (he04, K waves 1-4 and 7, B waves 2-7): none 0, bands at their midpoints (1-10 5.5, 11-20 15.5, 21-30 25.5), top band 'More than 30' = 30.",,
+fam_home_total,unavailable,,,HOME Inventory not administered; see fam_childbooks.,,
+fam_home_cogstim,unavailable,,,HOME Inventory not administered; see fam_childbooks.,,
+fam_home_emotsupport,unavailable,,,HOME Inventory not administered; see fam_childbooks.,,
+fam_home_measure,unavailable,,,See fam_home_total.,,
+school_grade,compatible,pc06a1,"recode_values(
+  as.numeric(pc06a1),
+  12 ~ ""Pre-Year 1"",
+  13 ~ ""Year 1"",
+  16 ~ ""Year 2"",
+  19 ~ ""Year 3"",
+  20 ~ ""Year 4"",
+  23 ~ ""Year 5"",
+  24 ~ ""Year 6"",
+  25 ~ ""Year 7"",
+  26 ~ ""Year 8"",
+  27 ~ ""Year 9"",
+  28 ~ ""Year 10"",
+  29 ~ ""Year 11"",
+  30 ~ ""Year 12"",
+  31 ~ ""Year 13"",
+  default = NA_character_
+)","Year level of the child's main program at the wave (pc06a1 'Program type', parent report): Pre-Year 1 (kindergarten, reception or preparatory year) and Year 1 to Year 13; childcare, preschool, ungraded programs and not at school are NA.",,
+school_sector,compatible,"pc37a1, pc37a2","local({
+  s <- coalesce(as.numeric(pc37a2), as.numeric(pc37a1))
+  recode_values(s, 1 ~ ""Public"", c(2, 3) ~ ""Private"", default = ""Unknown"")
+})","School type, parent report: pc37a2 'A government school / A Catholic school / An independent or private school / Not in school' (K waves 2-7, B waves 4-8) and the school sector of the child's main education at K wave 1 and B wave 3 (pc37a1 'Government / Catholic / Independent / Other'). Government = Public; Catholic and independent = Private; not in school, other and waves without the item = Unknown.",,
+school_track,unavailable,,,Not collected.,,
+st_measure_type,inferred,,"if_else(cohort == ""K"" & .wave == ""1"", ""Categorical"", ""Continuous"")",Hours and minutes entered at every wave (the study's total minutes); K wave 1 asks response bands only (Categorical).,,
+st_measure_name,inferred,,"""Custom""",The study's own parent and young-person questionnaire items.,,
+st_responder,inferred,,"if_else(
+  (cohort == ""K"" & .wave %in% c(""7"", ""8"", ""10"")) | .wave == ""9C1"" | (cohort == ""B"" & .wave == ""10""),
+  ""Self"",
+  ""Parent or carer""
+)","Parent 1 answers the screen items at K waves 1-5, B waves 2-8 and the mail-outs; the young person answers them at K waves 7-8, 9C1 and wave 10, where no parent screen item is asked (UG 1.5).",,
+st_total_wd,incompatible,"he06b2, he07b2, he17b2",,"No item on all screen use; the separate TV, computer and games items are not summed (DR-0004).",,
+st_total_we,incompatible,"he06c2, he07c2, he17c2",,"No item on all screen use; the separate TV, computer and games items are not summed (DR-0004).",,
+st_total,incompatible,"he06b2, he06c2, he07b2, he07c2, he17b2, he17c2",,"No item on all screen use; the separate TV, computer and games items are not summed (DR-0004).",,
+st_watch_wd,partial,"he06b2, he06b2a, he06b1, he06c2b_k16, he06j1i, he06g1i, he07b3a, he17b3a, he06j2i, he06g2i, he07c3a, he17c3a_b3","local({
+  blank <- cohort == ""B"" &
+    .wave == ""2.5"" &
+    as.numeric(he06j1i) %in% 0 &
+    as.numeric(he06g1i) %in% 0 &
+    as.numeric(he07b3a) %in% 0 &
+    as.numeric(he17b3a) %in% 0
+  x <- local({
+    main <- case_when(
+      as.numeric(he06b2) >= 0 ~ as.numeric(he06b2) / 60,
+      as.numeric(he06b2a) == 1 ~ 0,
+      .default = NA_real_
+    )
+    mailout <- (if_else(
+      as.numeric(he06j1i) == -1,
+      0,
+      if_else(as.numeric(he06j1i) >= 0, as.numeric(he06j1i), NA_real_)
+    ) +
+      if_else(as.numeric(he06g1i) == -1, 0, if_else(as.numeric(he06g1i) >= 0, as.numeric(he06g1i), NA_real_))) /
+      5 /
+      60
+    case_when(
+      cohort == ""K"" & .wave == ""1"" ~ recode_values(
+        as.numeric(he06b1),
+        1 ~ 0,
+        2 ~ 0.5,
+        3 ~ 2,
+        4 ~ 4,
+        5 ~ 5,
+        default = NA_real_
+      ),
+      cohort == ""K"" & .wave == ""7"" ~ if_else(as.numeric(he06c2b_k16) >= 0, as.numeric(he06c2b_k16) / 60, NA_real_),
+      .wave %in% c(""2.5"", ""3.5"") ~ mailout,
+      .default = main
+    )
+  })
+  if_else(blank, NA_real_, x)
+})","Weekday. Parent report (P1) at K waves 1-5, B waves 2-8 and the 2.5 and 3.5 mail-outs; the child's own report at K wave 7 (SC CAI D4). Main waves: 'Hours on weekday/weekend SC watches TV etc' (none = 'Does not watch TV or videos'), the study's total minutes (he06b2, he06c2) / 60, a none answer = 0, -9 NA; K wave 1 asks bands only (none 0, less than one hour 0.5, '1 up to 3' 2, '3 up to 5' 4, top band '5 or more hours' = 5). Mail-outs: sum of the TV and DVD/video totals (DR-0002), asked for all weekdays together and for the whole weekend (the weekly totals tvweek and dvdweek are their sums; DI 8.1: hours per week), so / 5 and / 2, then / 60; 'Doesn't apply' (-1) = 0. Weekend items are read per weekend day, as the e-games items label it. Partial: TV and videos, the TV set. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+st_watch_we,partial,"he06c2, he06c2a_b2, he06c2a_k6, he06c2a_b4, he06c2a_k8, he06c2a_b6, he06c2a_k10, he06c2a_b8, he06c2a_k12, he06c2a_b10, he06c2a_b12, he06c2a_b14, he06c1, he06c3b, he06j2i, he06g2i, he06j1i, he06g1i, he07b3a, he17b3a, he07c3a, he17c3a_b3","local({
+  blank <- cohort == ""B"" &
+    .wave == ""2.5"" &
+    as.numeric(he06j2i) %in% 0 &
+    as.numeric(he06g2i) %in% 0 &
+    as.numeric(he07c3a) %in% 0 &
+    as.numeric(he17c3a_b3) %in% 0
+  x <- local({
+    main <- case_when(
+      as.numeric(he06c2) >= 0 ~ as.numeric(he06c2) / 60,
+      coalesce(
+        as.numeric(he06c2a_b2),
+        as.numeric(he06c2a_k6),
+        as.numeric(he06c2a_b4),
+        as.numeric(he06c2a_k8),
+        as.numeric(he06c2a_b6),
+        as.numeric(he06c2a_k10),
+        as.numeric(he06c2a_b8),
+        as.numeric(he06c2a_k12),
+        as.numeric(he06c2a_b10),
+        as.numeric(he06c2a_b12),
+        as.numeric(he06c2a_b14)
+      ) ==
+        1 ~ 0,
+      .default = NA_real_
+    )
+    mailout <- (if_else(
+      as.numeric(he06j2i) == -1,
+      0,
+      if_else(as.numeric(he06j2i) >= 0, as.numeric(he06j2i), NA_real_)
+    ) +
+      if_else(as.numeric(he06g2i) == -1, 0, if_else(as.numeric(he06g2i) >= 0, as.numeric(he06g2i), NA_real_))) /
+      2 /
+      60
+    case_when(
+      cohort == ""K"" & .wave == ""1"" ~ recode_values(
+        as.numeric(he06c1),
+        1 ~ 0,
+        2 ~ 0.5,
+        3 ~ 2,
+        4 ~ 4,
+        5 ~ 5,
+        default = NA_real_
+      ),
+      cohort == ""K"" & .wave == ""7"" ~ if_else(as.numeric(he06c3b) >= 0, as.numeric(he06c3b) / 60, NA_real_),
+      .wave %in% c(""2.5"", ""3.5"") ~ mailout,
+      .default = main
+    )
+  })
+  if_else(blank, NA_real_, x)
+})","Weekend. Parent report (P1) at K waves 1-5, B waves 2-8 and the 2.5 and 3.5 mail-outs; the child's own report at K wave 7 (SC CAI D4). Main waves: 'Hours on weekday/weekend SC watches TV etc' (none = 'Does not watch TV or videos'), the study's total minutes (he06b2, he06c2) / 60, a none answer = 0, -9 NA; K wave 1 asks bands only (none 0, less than one hour 0.5, '1 up to 3' 2, '3 up to 5' 4, top band '5 or more hours' = 5). Mail-outs: sum of the TV and DVD/video totals (DR-0002), asked for all weekdays together and for the whole weekend (the weekly totals tvweek and dvdweek are their sums; DI 8.1: hours per week), so / 5 and / 2, then / 60; 'Doesn't apply' (-1) = 0. Weekend items are read per weekend day, as the e-games items label it. Partial: TV and videos, the TV set. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+st_watch,partial,"he06b2, he06b2a, he06b1, he06c2b_k16, he06j1i, he06g1i, he06c2, he06c2a_b2, he06c2a_k6, he06c2a_b4, he06c2a_k8, he06c2a_b6, he06c2a_k10, he06c2a_b8, he06c2a_k12, he06c2a_b10, he06c2a_b12, he06c2a_b14, he06c1, he06c3b, he06j2i, he06g2i, he07b3a, he17b3a, he07c3a, he17c3a_b3","local({
+  blank <- (cohort == ""B"" &
+    .wave == ""2.5"" &
+    as.numeric(he06j1i) %in% 0 &
+    as.numeric(he06g1i) %in% 0 &
+    as.numeric(he07b3a) %in% 0 &
+    as.numeric(he17b3a) %in% 0) |
+    (cohort == ""B"" &
+      .wave == ""2.5"" &
+      as.numeric(he06j2i) %in% 0 &
+      as.numeric(he06g2i) %in% 0 &
+      as.numeric(he07c3a) %in% 0 &
+      as.numeric(he17c3a_b3) %in% 0)
+  x <- local({
+    wd <- local({
+      main <- case_when(
+        as.numeric(he06b2) >= 0 ~ as.numeric(he06b2) / 60,
+        as.numeric(he06b2a) == 1 ~ 0,
+        .default = NA_real_
+      )
+      mailout <- (if_else(
+        as.numeric(he06j1i) == -1,
+        0,
+        if_else(as.numeric(he06j1i) >= 0, as.numeric(he06j1i), NA_real_)
+      ) +
+        if_else(as.numeric(he06g1i) == -1, 0, if_else(as.numeric(he06g1i) >= 0, as.numeric(he06g1i), NA_real_))) /
+        5 /
+        60
+      case_when(
+        cohort == ""K"" & .wave == ""1"" ~ recode_values(
+          as.numeric(he06b1),
+          1 ~ 0,
+          2 ~ 0.5,
+          3 ~ 2,
+          4 ~ 4,
+          5 ~ 5,
+          default = NA_real_
+        ),
+        cohort == ""K"" & .wave == ""7"" ~ if_else(as.numeric(he06c2b_k16) >= 0, as.numeric(he06c2b_k16) / 60, NA_real_),
+        .wave %in% c(""2.5"", ""3.5"") ~ mailout,
+        .default = main
+      )
+    })
+    we <- local({
+      main <- case_when(
+        as.numeric(he06c2) >= 0 ~ as.numeric(he06c2) / 60,
+        coalesce(
+          as.numeric(he06c2a_b2),
+          as.numeric(he06c2a_k6),
+          as.numeric(he06c2a_b4),
+          as.numeric(he06c2a_k8),
+          as.numeric(he06c2a_b6),
+          as.numeric(he06c2a_k10),
+          as.numeric(he06c2a_b8),
+          as.numeric(he06c2a_k12),
+          as.numeric(he06c2a_b10),
+          as.numeric(he06c2a_b12),
+          as.numeric(he06c2a_b14)
+        ) ==
+          1 ~ 0,
+        .default = NA_real_
+      )
+      mailout <- (if_else(
+        as.numeric(he06j2i) == -1,
+        0,
+        if_else(as.numeric(he06j2i) >= 0, as.numeric(he06j2i), NA_real_)
+      ) +
+        if_else(as.numeric(he06g2i) == -1, 0, if_else(as.numeric(he06g2i) >= 0, as.numeric(he06g2i), NA_real_))) /
+        2 /
+        60
+      case_when(
+        cohort == ""K"" & .wave == ""1"" ~ recode_values(
+          as.numeric(he06c1),
+          1 ~ 0,
+          2 ~ 0.5,
+          3 ~ 2,
+          4 ~ 4,
+          5 ~ 5,
+          default = NA_real_
+        ),
+        cohort == ""K"" & .wave == ""7"" ~ if_else(as.numeric(he06c3b) >= 0, as.numeric(he06c3b) / 60, NA_real_),
+        .wave %in% c(""2.5"", ""3.5"") ~ mailout,
+        .default = main
+      )
+    })
+    (5 * wd + 2 * we) / 7
+  })
+  if_else(blank, NA_real_, x)
+})","(5 x st_watch_wd + 2 x st_watch_we) / 7, same items and rules; top band '5 or more hours' = 5 at K wave 1. Partial: TV and videos, the TV set. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+st_game_wd,partial,"he17b2, he17b2a, he17a, he17c2b_k16, he17c2b_k18, he17c2b_b19, he17c2b_k23, he17b3a, he06j1i, he06g1i, he07b3a, he06j2i, he06g2i, he07c3a, he17c3a_b3","local({
+  blank <- cohort == ""B"" &
+    .wave == ""2.5"" &
+    as.numeric(he06j1i) %in% 0 &
+    as.numeric(he06g1i) %in% 0 &
+    as.numeric(he07b3a) %in% 0 &
+    as.numeric(he17b3a) %in% 0
+  x <- local({
+    main <- case_when(
+      as.numeric(he17b2) >= 0 ~ as.numeric(he17b2) / 60,
+      as.numeric(he17b2a) == 1 | as.numeric(he17a) == 2 ~ 0,
+      .default = NA_real_
+    )
+    case_when(
+      cohort == ""K"" & .wave == ""7"" ~ if_else(as.numeric(he17c2b_k16) >= 0, as.numeric(he17c2b_k16) / 60, NA_real_),
+      cohort == ""K"" & .wave == ""8"" ~ if_else(as.numeric(he17c2b_k18) >= 0, as.numeric(he17c2b_k18) / 60, NA_real_),
+      cohort == ""B"" & .wave == ""10"" ~ if_else(as.numeric(he17c2b_b19) >= 0, as.numeric(he17c2b_b19) / 60, NA_real_),
+      cohort == ""K"" & .wave == ""10"" ~ if_else(as.numeric(he17c2b_k23) >= 0, as.numeric(he17c2b_k23) / 60, NA_real_),
+      .wave %in% c(""2.5"", ""3.5"") ~ if_else(
+        as.numeric(he17b3a) == -1,
+        0,
+        if_else(as.numeric(he17b3a) >= 0, as.numeric(he17b3a), NA_real_)
+      ) /
+        5 /
+        60,
+      .default = main
+    )
+  })
+  if_else(blank, NA_real_, x)
+})","Weekday. Parent report at K waves 2-5, B waves 3-8 and the mail-outs: time playing electronic games (waves 2-4 filtered on 'Has electronic game system', waves 5-7 on 'access to electronic games'), the study's total minutes (he17b2, he17c2) / 60; no system or access, or 'does not play' = 0 (Non-users), -9 NA. The young person's own report at K wave 7 (SC CAI D5), K wave 8 (SC CASI J3) and wave 10 (SC CAWI I5), total minutes / 60; at K wave 7, 553 young people who answered the TV items were not asked the games items (NA). K wave 2's he17b1 is labelled 'Weekend' but is question G11.2, the weekday item. Mail-outs: weekday and whole-weekend totals / 5 and / 2, 'Doesn't apply' (-1) = 0. Weekend items per weekend day ('Weekend day time e-games'). Partial: the early items are filtered on owning an electronic game system and name no phone or tablet. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+st_game_we,partial,"he17c2, he17c2a_k6, he17c2a_b4, he17c2a_k8, he17c2a_b6, he17c2a_k10, he17c2a_b8, he17c2a_k12, he17c2a_b10, he17c2a_b12, he17c2a_b14, he17a, he17c3b_k16, he17c3b_k18, he17c3b_b19, he17c3b_k23, he17c3a_b3, he17c3a_b5, he17c3a_k9, he06j1i, he06g1i, he07b3a, he17b3a, he06j2i, he06g2i, he07c3a","local({
+  blank <- cohort == ""B"" &
+    .wave == ""2.5"" &
+    as.numeric(he06j2i) %in% 0 &
+    as.numeric(he06g2i) %in% 0 &
+    as.numeric(he07c3a) %in% 0 &
+    as.numeric(he17c3a_b3) %in% 0
+  x <- local({
+    main <- case_when(
+      as.numeric(he17c2) >= 0 ~ as.numeric(he17c2) / 60,
+      coalesce(
+        as.numeric(he17c2a_k6),
+        as.numeric(he17c2a_b4),
+        as.numeric(he17c2a_k8),
+        as.numeric(he17c2a_b6),
+        as.numeric(he17c2a_k10),
+        as.numeric(he17c2a_b8),
+        as.numeric(he17c2a_k12),
+        as.numeric(he17c2a_b10),
+        as.numeric(he17c2a_b12),
+        as.numeric(he17c2a_b14)
+      ) ==
+        1 |
+        as.numeric(he17a) == 2 ~ 0,
+      .default = NA_real_
+    )
+    mailout <- coalesce(
+      if_else(as.numeric(he17c3a_b3) == -1, 0, if_else(as.numeric(he17c3a_b3) >= 0, as.numeric(he17c3a_b3), NA_real_)),
+      if_else(as.numeric(he17c3a_b5) == -1, 0, if_else(as.numeric(he17c3a_b5) >= 0, as.numeric(he17c3a_b5), NA_real_)),
+      if_else(as.numeric(he17c3a_k9) == -1, 0, if_else(as.numeric(he17c3a_k9) >= 0, as.numeric(he17c3a_k9), NA_real_))
+    )
+    case_when(
+      cohort == ""K"" & .wave == ""7"" ~ if_else(as.numeric(he17c3b_k16) >= 0, as.numeric(he17c3b_k16) / 60, NA_real_),
+      cohort == ""K"" & .wave == ""8"" ~ if_else(as.numeric(he17c3b_k18) >= 0, as.numeric(he17c3b_k18) / 60, NA_real_),
+      cohort == ""B"" & .wave == ""10"" ~ if_else(as.numeric(he17c3b_b19) >= 0, as.numeric(he17c3b_b19) / 60, NA_real_),
+      cohort == ""K"" & .wave == ""10"" ~ if_else(as.numeric(he17c3b_k23) >= 0, as.numeric(he17c3b_k23) / 60, NA_real_),
+      .wave %in% c(""2.5"", ""3.5"") ~ mailout / 2 / 60,
+      .default = main
+    )
+  })
+  if_else(blank, NA_real_, x)
+})","Weekend. Parent report at K waves 2-5, B waves 3-8 and the mail-outs: time playing electronic games (waves 2-4 filtered on 'Has electronic game system', waves 5-7 on 'access to electronic games'), the study's total minutes (he17b2, he17c2) / 60; no system or access, or 'does not play' = 0 (Non-users), -9 NA. The young person's own report at K wave 7 (SC CAI D5), K wave 8 (SC CASI J3) and wave 10 (SC CAWI I5), total minutes / 60; at K wave 7, 553 young people who answered the TV items were not asked the games items (NA). K wave 2's he17b1 is labelled 'Weekend' but is question G11.2, the weekday item. Mail-outs: weekday and whole-weekend totals / 5 and / 2, 'Doesn't apply' (-1) = 0. Weekend items per weekend day ('Weekend day time e-games'). Partial: the early items are filtered on owning an electronic game system and name no phone or tablet. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+st_game,partial,"he17b2, he17b2a, he17a, he17c2b_k16, he17c2b_k18, he17c2b_b19, he17c2b_k23, he17b3a, he17c2, he17c2a_k6, he17c2a_b4, he17c2a_k8, he17c2a_b6, he17c2a_k10, he17c2a_b8, he17c2a_k12, he17c2a_b10, he17c2a_b12, he17c2a_b14, he17a, he17c3b_k16, he17c3b_k18, he17c3b_b19, he17c3b_k23, he17c3a_b3, he17c3a_b5, he17c3a_k9, he06j1i, he06g1i, he07b3a, he06j2i, he06g2i, he07c3a","local({
+  blank <- (cohort == ""B"" &
+    .wave == ""2.5"" &
+    as.numeric(he06j1i) %in% 0 &
+    as.numeric(he06g1i) %in% 0 &
+    as.numeric(he07b3a) %in% 0 &
+    as.numeric(he17b3a) %in% 0) |
+    (cohort == ""B"" &
+      .wave == ""2.5"" &
+      as.numeric(he06j2i) %in% 0 &
+      as.numeric(he06g2i) %in% 0 &
+      as.numeric(he07c3a) %in% 0 &
+      as.numeric(he17c3a_b3) %in% 0)
+  x <- local({
+    wd <- local({
+      main <- case_when(
+        as.numeric(he17b2) >= 0 ~ as.numeric(he17b2) / 60,
+        as.numeric(he17b2a) == 1 | as.numeric(he17a) == 2 ~ 0,
+        .default = NA_real_
+      )
+      case_when(
+        cohort == ""K"" & .wave == ""7"" ~ if_else(as.numeric(he17c2b_k16) >= 0, as.numeric(he17c2b_k16) / 60, NA_real_),
+        cohort == ""K"" & .wave == ""8"" ~ if_else(as.numeric(he17c2b_k18) >= 0, as.numeric(he17c2b_k18) / 60, NA_real_),
+        cohort == ""B"" & .wave == ""10"" ~ if_else(as.numeric(he17c2b_b19) >= 0, as.numeric(he17c2b_b19) / 60, NA_real_),
+        cohort == ""K"" & .wave == ""10"" ~ if_else(as.numeric(he17c2b_k23) >= 0, as.numeric(he17c2b_k23) / 60, NA_real_),
+        .wave %in% c(""2.5"", ""3.5"") ~ if_else(
+          as.numeric(he17b3a) == -1,
+          0,
+          if_else(as.numeric(he17b3a) >= 0, as.numeric(he17b3a), NA_real_)
+        ) /
+          5 /
+          60,
+        .default = main
+      )
+    })
+    we <- local({
+      main <- case_when(
+        as.numeric(he17c2) >= 0 ~ as.numeric(he17c2) / 60,
+        coalesce(
+          as.numeric(he17c2a_k6),
+          as.numeric(he17c2a_b4),
+          as.numeric(he17c2a_k8),
+          as.numeric(he17c2a_b6),
+          as.numeric(he17c2a_k10),
+          as.numeric(he17c2a_b8),
+          as.numeric(he17c2a_k12),
+          as.numeric(he17c2a_b10),
+          as.numeric(he17c2a_b12),
+          as.numeric(he17c2a_b14)
+        ) ==
+          1 |
+          as.numeric(he17a) == 2 ~ 0,
+        .default = NA_real_
+      )
+      mailout <- coalesce(
+        if_else(
+          as.numeric(he17c3a_b3) == -1,
+          0,
+          if_else(as.numeric(he17c3a_b3) >= 0, as.numeric(he17c3a_b3), NA_real_)
+        ),
+        if_else(
+          as.numeric(he17c3a_b5) == -1,
+          0,
+          if_else(as.numeric(he17c3a_b5) >= 0, as.numeric(he17c3a_b5), NA_real_)
+        ),
+        if_else(as.numeric(he17c3a_k9) == -1, 0, if_else(as.numeric(he17c3a_k9) >= 0, as.numeric(he17c3a_k9), NA_real_))
+      )
+      case_when(
+        cohort == ""K"" & .wave == ""7"" ~ if_else(as.numeric(he17c3b_k16) >= 0, as.numeric(he17c3b_k16) / 60, NA_real_),
+        cohort == ""K"" & .wave == ""8"" ~ if_else(as.numeric(he17c3b_k18) >= 0, as.numeric(he17c3b_k18) / 60, NA_real_),
+        cohort == ""B"" & .wave == ""10"" ~ if_else(as.numeric(he17c3b_b19) >= 0, as.numeric(he17c3b_b19) / 60, NA_real_),
+        cohort == ""K"" & .wave == ""10"" ~ if_else(as.numeric(he17c3b_k23) >= 0, as.numeric(he17c3b_k23) / 60, NA_real_),
+        .wave %in% c(""2.5"", ""3.5"") ~ mailout / 2 / 60,
+        .default = main
+      )
+    })
+    (5 * wd + 2 * we) / 7
+  })
+  if_else(blank, NA_real_, x)
+})","(5 x st_game_wd + 2 x st_game_we) / 7, same items and rules. Partial: the early items are filtered on owning an electronic game system and name no phone or tablet. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+st_game_comp_wd,unavailable,,,No device split; see st_game.,,
+st_game_comp_we,unavailable,,,No device split; see st_game.,,
+st_game_comp,unavailable,,,No device split; see st_game.,,
+st_game_console_wd,unavailable,,,No device split; see st_game.,,
+st_game_console_we,unavailable,,,No device split; see st_game.,,
+st_game_console,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_wd,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_we,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole,unavailable,,,No device split; see st_game.,,
+st_game_active_wd,unavailable,,,No device split; see st_game.,,
+st_game_active_we,unavailable,,,No device split; see st_game.,,
+st_game_active,unavailable,,,No device split; see st_game.,,
+st_game_phone_wd,unavailable,,,No device split; see st_game.,,
+st_game_phone_we,unavailable,,,No device split; see st_game.,,
+st_game_phone,unavailable,,,No device split; see st_game.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_game.,,
+st_game_tablet_we,unavailable,,,No device split; see st_game.,,
+st_game_tablet,unavailable,,,No device split; see st_game.,,
+st_comp_nongaming_wd,incompatible,"he07b2, he07c2, he07b1, he07c1",,The computer items state no purpose and are taken at face value on st_comp; see st_comp.,,
+st_comp_nongaming_we,incompatible,"he07b2, he07c2, he07b1, he07c1",,The computer items state no purpose and are taken at face value on st_comp; see st_comp.,,
+st_comp_nongaming,incompatible,"he07b2, he07c2, he07b1, he07c1",,The computer items state no purpose and are taken at face value on st_comp; see st_comp.,,
+st_comp_wd,compatible,"he07b2, he07b1, he07a, he07b3a, he06j1i, he06g1i, he17b3a, he06j2i, he06g2i, he07c3a, he17c3a_b3","local({
+  blank <- cohort == ""B"" &
+    .wave == ""2.5"" &
+    as.numeric(he06j1i) %in% 0 &
+    as.numeric(he06g1i) %in% 0 &
+    as.numeric(he07b3a) %in% 0 &
+    as.numeric(he17b3a) %in% 0
+  x <- local({
+    main <- if_else(as.numeric(he07b2) >= 0, as.numeric(he07b2) / 60, NA_real_)
+    case_when(
+      cohort == ""K"" & .wave == ""1"" & as.numeric(he07a) == 2 ~ 0,
+      cohort == ""K"" & .wave == ""1"" ~ recode_values(
+        as.numeric(he07b1),
+        1 ~ 0,
+        2 ~ 0.5,
+        3 ~ 2,
+        4 ~ 4,
+        5 ~ 5,
+        default = NA_real_
+      ),
+      .wave %in% c(""2.5"", ""3.5"") ~ if_else(
+        as.numeric(he07b3a) == -1,
+        0,
+        if_else(as.numeric(he07b3a) >= 0, as.numeric(he07b3a), NA_real_)
+      ) /
+        5 /
+        60,
+      .default = main
+    )
+  })
+  if_else(blank, NA_real_, x)
+})","Weekday. Parent report, K waves 1-4, B waves 3-4 and the mail-outs: 'Hours on weekday/weekend SC uses computer', no purpose stated, taken at face value. Waves 2-4: the study's total minutes (he07b2, he07c2), which hold 0 for children without computer access at home (he07a) or who do not use one; K wave 1 bands as st_watch (top band '5 or more hours' = 5), no access = 0. Mail-outs: weekday and whole-weekend totals / 5 and / 2 (as st_watch), 'Doesn't apply' (-1) = 0. Later waves ask about 'other activities on electronic devices' instead (see st_internet). B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+st_comp_we,compatible,"he07c2, he07c1, he07a, he07c3a, he06j1i, he06g1i, he07b3a, he17b3a, he06j2i, he06g2i, he17c3a_b3","local({
+  blank <- cohort == ""B"" &
+    .wave == ""2.5"" &
+    as.numeric(he06j2i) %in% 0 &
+    as.numeric(he06g2i) %in% 0 &
+    as.numeric(he07c3a) %in% 0 &
+    as.numeric(he17c3a_b3) %in% 0
+  x <- local({
+    main <- if_else(as.numeric(he07c2) >= 0, as.numeric(he07c2) / 60, NA_real_)
+    case_when(
+      cohort == ""K"" & .wave == ""1"" & as.numeric(he07a) == 2 ~ 0,
+      cohort == ""K"" & .wave == ""1"" ~ recode_values(
+        as.numeric(he07c1),
+        1 ~ 0,
+        2 ~ 0.5,
+        3 ~ 2,
+        4 ~ 4,
+        5 ~ 5,
+        default = NA_real_
+      ),
+      .wave %in% c(""2.5"", ""3.5"") ~ if_else(
+        as.numeric(he07c3a) == -1,
+        0,
+        if_else(as.numeric(he07c3a) >= 0, as.numeric(he07c3a), NA_real_)
+      ) /
+        2 /
+        60,
+      .default = main
+    )
+  })
+  if_else(blank, NA_real_, x)
+})","Weekend. Parent report, K waves 1-4, B waves 3-4 and the mail-outs: 'Hours on weekday/weekend SC uses computer', no purpose stated, taken at face value. Waves 2-4: the study's total minutes (he07b2, he07c2), which hold 0 for children without computer access at home (he07a) or who do not use one; K wave 1 bands as st_watch (top band '5 or more hours' = 5), no access = 0. Mail-outs: weekday and whole-weekend totals / 5 and / 2 (as st_watch), 'Doesn't apply' (-1) = 0. Later waves ask about 'other activities on electronic devices' instead (see st_internet). B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+st_comp,compatible,"he07b2, he07b1, he07a, he07b3a, he07c2, he07c1, he07c3a, he06j1i, he06g1i, he17b3a, he06j2i, he06g2i, he17c3a_b3","local({
+  blank <- (cohort == ""B"" &
+    .wave == ""2.5"" &
+    as.numeric(he06j1i) %in% 0 &
+    as.numeric(he06g1i) %in% 0 &
+    as.numeric(he07b3a) %in% 0 &
+    as.numeric(he17b3a) %in% 0) |
+    (cohort == ""B"" &
+      .wave == ""2.5"" &
+      as.numeric(he06j2i) %in% 0 &
+      as.numeric(he06g2i) %in% 0 &
+      as.numeric(he07c3a) %in% 0 &
+      as.numeric(he17c3a_b3) %in% 0)
+  x <- local({
+    wd <- local({
+      main <- if_else(as.numeric(he07b2) >= 0, as.numeric(he07b2) / 60, NA_real_)
+      case_when(
+        cohort == ""K"" & .wave == ""1"" & as.numeric(he07a) == 2 ~ 0,
+        cohort == ""K"" & .wave == ""1"" ~ recode_values(
+          as.numeric(he07b1),
+          1 ~ 0,
+          2 ~ 0.5,
+          3 ~ 2,
+          4 ~ 4,
+          5 ~ 5,
+          default = NA_real_
+        ),
+        .wave %in% c(""2.5"", ""3.5"") ~ if_else(
+          as.numeric(he07b3a) == -1,
+          0,
+          if_else(as.numeric(he07b3a) >= 0, as.numeric(he07b3a), NA_real_)
+        ) /
+          5 /
+          60,
+        .default = main
+      )
+    })
+    we <- local({
+      main <- if_else(as.numeric(he07c2) >= 0, as.numeric(he07c2) / 60, NA_real_)
+      case_when(
+        cohort == ""K"" & .wave == ""1"" & as.numeric(he07a) == 2 ~ 0,
+        cohort == ""K"" & .wave == ""1"" ~ recode_values(
+          as.numeric(he07c1),
+          1 ~ 0,
+          2 ~ 0.5,
+          3 ~ 2,
+          4 ~ 4,
+          5 ~ 5,
+          default = NA_real_
+        ),
+        .wave %in% c(""2.5"", ""3.5"") ~ if_else(
+          as.numeric(he07c3a) == -1,
+          0,
+          if_else(as.numeric(he07c3a) >= 0, as.numeric(he07c3a), NA_real_)
+        ) /
+          2 /
+          60,
+        .default = main
+      )
+    })
+    (5 * wd + 2 * we) / 7
+  })
+  if_else(blank, NA_real_, x)
+})","(5 x st_comp_wd + 2 x st_comp_we) / 7, same items and rules. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+st_tablet_wd,unavailable,,,Not collected.,,
+st_tablet_we,unavailable,,,Not collected.,,
+st_tablet,unavailable,,,Not collected.,,
+st_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_phone_we,unavailable,,,No weekday/weekend split.,,
+st_phone,incompatible,he25bi,,"Only the frequency of using a mobile phone to call friends (he25bi, K 3.5 mail-out); no hours.",,
+st_socmedia_wd,incompatible,"he24c16g, he24c16n, he24c11, he39c1, he39c2, he39c3",,"Only the share of internet time spent on social media (he24c16g, he24c16n, K wave 7) and frequency or count items (he24c11, he39c1, he39c2, he39c3); no hours of social media.",,
+st_socmedia_we,incompatible,"he24c16g, he24c16n, he24c11, he39c1, he39c2, he39c3",,"Only the share of internet time spent on social media (he24c16g, he24c16n, K wave 7) and frequency or count items (he24c11, he39c1, he39c2, he39c3); no hours of social media.",,
+st_socmedia,incompatible,"he24c16g, he24c16n, he24c11, he39c1, he39c2, he39c3",,"Only the share of internet time spent on social media (he24c16g, he24c16n, K wave 7) and frequency or count items (he24c11, he39c1, he39c2, he39c3); no hours of social media.",,
+st_educational_wd,unavailable,,,No weekday/weekend split.,,
+st_educational_we,unavailable,,,No weekday/weekend split.,,
+st_educational,incompatible,pc83c3,,"Wave 9C1 only: the young person's 'Weekly hours spent on online learning due to CRP' (pc83c3) refers to the coronavirus restriction period, not the time of the interview: restriction-period recall; see recall block.",,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,compatible,he24c16c,"if_else(as.numeric(he24c16c) >= 0, as.numeric(he24c16c) / 60, NA_real_)","Weekday. K wave 7 only: the young person's own report (SC CAI D6) of time accessing the Internet on a weekday / weekend day, total minutes (he24c16c, he24c16j) / 60, 'Do not access Internet' = 0, -9 NA. The parent items on 'other activities on electronic devices' at B waves 5-7 and K wave 5 (he07h2, he07i2) are a residual device item and are not spliced onto this row, which the direct internet item fills at K wave 7; they are named as unused.",,
+st_internet_we,compatible,he24c16j,"if_else(as.numeric(he24c16j) >= 0, as.numeric(he24c16j) / 60, NA_real_)","Weekend. K wave 7 only: the young person's own report (SC CAI D6) of time accessing the Internet on a weekday / weekend day, total minutes (he24c16c, he24c16j) / 60, 'Do not access Internet' = 0, -9 NA. The parent items on 'other activities on electronic devices' at B waves 5-7 and K wave 5 (he07h2, he07i2) are a residual device item and are not spliced onto this row, which the direct internet item fills at K wave 7; they are named as unused.",,
+st_internet,compatible,"he24c16c, he24c16j","(5 *
+  if_else(as.numeric(he24c16c) >= 0, as.numeric(he24c16c) / 60, NA_real_) +
+  2 * if_else(as.numeric(he24c16j) >= 0, as.numeric(he24c16j) / 60, NA_real_)) /
+  7","(5 x st_internet_wd + 2 x st_internet_we) / 7, K wave 7 only, same items and rules.",,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,unavailable,,,No weekday/weekend split.,,
+st_messaging_we,unavailable,,,No weekday/weekend split.,,
+st_messaging,incompatible,"he25ci, he25c1, he25c2",,"Only how often the child uses a mobile to text friends (he25ci, K 3.5 mail-out) and counts of texts received and sent (he25c1, he25c2, K waves 5-6, B wave 7); no time.",,
+st_creating_wd,unavailable,,,No weekday/weekend split.,,
+st_creating_we,unavailable,,,No weekday/weekend split.,,
+st_creating,incompatible,"he24c3, he24c12",,"Only how often the child uploads media or creates websites (he24c3, he24c12, young person, K waves 5-7, B wave 7); no time.",,
+st_email_wd,unavailable,,,No weekday/weekend split.,,
+st_email_we,unavailable,,,No weekday/weekend split.,,
+st_email,incompatible,he24a7b,,"Only how often the child uses a computer at home to send or receive emails (he24a7b, K 3.5 mail-out, Never to 5 or more times a week); no time.",,
+st_shopping_wd,unavailable,,,No weekday/weekend split.,,
+st_shopping_we,unavailable,,,No weekday/weekend split.,,
+st_shopping,incompatible,"he24c13, he24c6m",,"Only how often the young person buys or sells on the Internet (he24c13, he24c6m); no time.",,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,unavailable,,,Not collected.,,
+acc_academachment_lettergrades,unavailable,,,Not collected.,,
+acc_academachment_stdtest,compatible,"y3test, y3write, y5test, y5write, y7test, y7write, y9test, y9write","local({
+  w <- as.numeric(wave)
+  wy <- if_else(w %in% 1:8, 2002 + 2 * w, NA_real_)
+  coalesce(
+    if_else(as.numeric(y3test) == wy & as.numeric(y3write) > 0, as.numeric(y3write), NA_real_),
+    if_else(as.numeric(y5test) == wy & as.numeric(y5write) > 0, as.numeric(y5write), NA_real_),
+    if_else(as.numeric(y7test) == wy & as.numeric(y7write) > 0, as.numeric(y7write), NA_real_),
+    if_else(as.numeric(y9test) == wy & as.numeric(y9write) > 0, as.numeric(y9write), NA_real_)
+  )
+})","Writing, the subject other than reading and numeracy (spelling and grammar and punctuation named unused). Linked NAPLAN results (lsacnaplan, repeated on every row by the tidier): the Year 3, 5, 7 or 9 test whose test year (y*test) equals the main wave's fieldwork year (2004 + 2 x (wave - 1), waves 1-8); NAPLAN scale score, first sitting (repeat sittings ry* unused), year level in the test; -9 (did not sit) and absent, exempt or withdrawn = NA. Off-year tests (K: 2009, 2011, 2013; B: 2011-2019 odd years) match no row and are unused. Standardise within dataset and wave at analysis.",,
+acc_schoolengage_caresschool,unavailable,,,Not collected.,,
+acc_schoolengage_homework,unavailable,,,Not collected.,,
+acc_schoolengage_self,compatible,scheng,"if_else(as.numeric(scheng) >= 0, as.numeric(scheng), NA_real_)","Young person's school engagement scale as released (scheng 'School Engagement'), K waves 5-6 and B waves 7-8.",,
+acc_schoolengage_teacher,unavailable,,,Not collected.,,
+acc_schoolengage_measure,inferred,scheng,"if_else(
+  as.numeric(scheng) >= 0,
+  ""LSAC school engagement scale (self-report), released score; item count not documented in the supplied files"",
+  NA_character_
+)",Where the scale was given.,,
+acc_homework_time,compatible,he26b,"if_else(as.numeric(he26b) >= 0, as.numeric(he26b) / 7, NA_real_)","K waves 3-4 and B waves 5-6 only. Parent 1: 'Hours/week homework' (he26b) / 7. The young person's banded 'Hours spent on homework' (he26f, he26c6a, K waves 5-8, B waves 7-8) states no period in the supplied documentation and is named unused.",,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolstress_self,unavailable,,,Not collected.,,
+acc_schoolstress_measure,unavailable,,,See acc_schoolstress_self.,,
+acc_schoolbelonging_self,incompatible,pc58h5,,"Only the young person's school items such as 'I feel I don't belong' (pc58h5), with no released or documented belonging score.",,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
+acc_academachment_teacherrated,incompatible,"tlit, tmath",,"Only the teacher's Academic Rating Scale scores for language and literacy (tlit) and mathematical thinking (tmath), K wave 2 and B wave 4, scaled scores rather than an overall rating.",,
+acc_academachment_parentrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,compatible,"y3test, y3num, y5test, y5num, y7test, y7num, y9test, y9num","local({
+  w <- as.numeric(wave)
+  wy <- if_else(w %in% 1:8, 2002 + 2 * w, NA_real_)
+  coalesce(
+    if_else(as.numeric(y3test) == wy & as.numeric(y3num) > 0, as.numeric(y3num), NA_real_),
+    if_else(as.numeric(y5test) == wy & as.numeric(y5num) > 0, as.numeric(y5num), NA_real_),
+    if_else(as.numeric(y7test) == wy & as.numeric(y7num) > 0, as.numeric(y7num), NA_real_),
+    if_else(as.numeric(y9test) == wy & as.numeric(y9num) > 0, as.numeric(y9num), NA_real_)
+  )
+})","Numeracy. Linked NAPLAN results (lsacnaplan, repeated on every row by the tidier): the Year 3, 5, 7 or 9 test whose test year (y*test) equals the main wave's fieldwork year (2004 + 2 x (wave - 1), waves 1-8); NAPLAN scale score, first sitting (repeat sittings ry* unused), year level in the test; -9 (did not sit) and absent, exempt or withdrawn = NA. Off-year tests (K: 2009, 2011, 2013; B: 2011-2019 odd years) match no row and are unused. Standardise within dataset and wave at analysis.",,
+acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered; see acc_numeracy_stdtest.,,
+acc_literacy_stdtest,compatible,"y3test, y3read, y5test, y5read, y7test, y7read, y9test, y9read","local({
+  w <- as.numeric(wave)
+  wy <- if_else(w %in% 1:8, 2002 + 2 * w, NA_real_)
+  coalesce(
+    if_else(as.numeric(y3test) == wy & as.numeric(y3read) > 0, as.numeric(y3read), NA_real_),
+    if_else(as.numeric(y5test) == wy & as.numeric(y5read) > 0, as.numeric(y5read), NA_real_),
+    if_else(as.numeric(y7test) == wy & as.numeric(y7read) > 0, as.numeric(y7read), NA_real_),
+    if_else(as.numeric(y9test) == wy & as.numeric(y9read) > 0, as.numeric(y9read), NA_real_)
+  )
+})","Reading. Linked NAPLAN results (lsacnaplan, repeated on every row by the tidier): the Year 3, 5, 7 or 9 test whose test year (y*test) equals the main wave's fieldwork year (2004 + 2 x (wave - 1), waves 1-8); NAPLAN scale score, first sitting (repeat sittings ry* unused), year level in the test; -9 (did not sit) and absent, exempt or withdrawn = NA. Off-year tests (K: 2009, 2011, 2013; B: 2011-2019 odd years) match no row and are unused. Standardise within dataset and wave at analysis.",,
+acc_literacy_bas_wordreading,unavailable,,,BAS II not administered; see acc_literacy_stdtest.,,
+acc_learningdisab_diagnosed,unavailable,,,Not collected.,,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not collected.,,
+acc_graderepeated,partial,"graderepeated_carried, pc47a1, pc47a6, pc47c6","if_else(is.na(graderepeated_carried), NA_character_, if_else(graderepeated_carried, ""TRUE"", ""FALSE""))","'Ever repeated a grade level' (pc47a1: Parent 1 at K waves 2-7 and B waves 4-8, the young person at K wave 8 and B wave 10; at most waves the study's item adds earlier waves' answers), Parent 1's 'Repeated year since last wave' (pc47a6) and the young person's 'Repeated a grade level since last wave' (pc47c6, K wave 8, B wave 10): TRUE if any is yes, FALSE where pc47a1 is no; built in the tidier (graderepeated_carried), with an observed TRUE carried to every later wave the child attended, over a later FALSE too (423 carried values, 22 of them over a FALSE); NA before school entry. At K wave 7 the young person's pc47c6 has 7 answers, all No and all beside Parent 1's answer, so Parent 1's report stands there. Partial: recall-window items (since the last wave) feed it. NAPLAN repeated/ry*, the teacher item pc47t4 and the parents' own hs48*41 are named unused.",,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_parent.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_hyper_sdq_parent.,,
+beh_atten_self,incompatible,chypr,,"Only the SDQ self-report hyperactivity/inattention subscale (chypr), which stays on beh_hyper_sdq_self.",,
+beh_hyper_self,incompatible,chypr,,"Only the SDQ self-report hyperactivity/inattention subscale (chypr), which stays on beh_hyper_sdq_self.",,
+beh_adhdsymp_self,incompatible,chypr,,"Only the SDQ self-report hyperactivity/inattention subscale (chypr), which stays on beh_hyper_sdq_self.",,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_atten_singleitem_teacher,unavailable,,,Not collected.,,
+beh_impulsivity_self,unavailable,,,Not collected.,,
+beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
+beh_selfreg_htks,unavailable,,,Not collected.,,
+beh_selfreg_parent,partial,"ascont, ascont2","local({
+  x <- coalesce(as.numeric(ascont), as.numeric(ascont2))
+  if_else(x >= 0, x, NA_real_)
+})","Parent 1's Social Skills Improvement System (SSIS) Self Control subscale (ascont, ascont2), K waves 4-6 and B waves 6-8, as released. Partial: a social-skills facet. The temperament persistence scale (persisa) is named unused.",,
+beh_emotdysreg_parent,incompatible,"ahypr, acondb, aemot",,"Only parent problem scales (SDQ hyperactivity, conduct and emotional subscales, on the beh_*_sdq_parent and mh_emotsymp_sdq_parent rows).",,
+beh_emotreg_parent,incompatible,"ahypr, acondb, aemot",,"Only parent problem scales (SDQ hyperactivity, conduct and emotional subscales, on the beh_*_sdq_parent and mh_emotsymp_sdq_parent rows).",,
+beh_selfreg_self,incompatible,"chypr, ccondb, cemot",,"Only self-report problem scales (SDQ hyperactivity, conduct and emotional subscales, on their SDQ rows).",,
+beh_emotreg_self,incompatible,"chypr, ccondb, cemot",,"Only self-report problem scales (SDQ hyperactivity, conduct and emotional subscales, on their SDQ rows).",,
+beh_emotdysreg_self,incompatible,"chypr, ccondb, cemot",,"Only self-report problem scales (SDQ hyperactivity, conduct and emotional subscales, on their SDQ rows).",,
+beh_emotreg_suppression_self,unavailable,,,Not collected.,,
+beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
+beh_emotaware_self,unavailable,,,Not collected.,,
+beh_selfreg_measure,unavailable,,,See beh_selfreg_self.,,
+beh_temp_negaffect_parent,partial,reacta,"if_else(as.numeric(reacta) >= 1, as.numeric(reacta), NA_real_)","Parent 1's reactivity scale (reacta, version 1), K waves 1-2 and B waves 3-4, as released. Partial: a single facet of negative affectivity.",,
+beh_temp_surgency_parent,partial,social,"if_else(as.numeric(social) >= 1, as.numeric(social), NA_real_)","Parent 1's sociability scale (social), K waves 1-2 and B waves 3-4, as released. Partial: sociability alone.",,
+beh_temp_measure,inferred,"social, reacta","if_else(
+  !is.na(social) | !is.na(reacta),
+  ""LSAC short temperament scales (Parent 1); negative affectivity: reactivity (version 1), released mean; surgency: sociability, released mean; persistence named unused"",
+  NA_character_
+)",Where the temperament scales were given; item counts not documented in the supplied files.,,
+beh_bullied,compatible,"re22l, re22m, re22n, re22o, re22p, re22q, re22r, re22s, re22t, re22u, re22v","local({
+  m <- cbind(
+    if_else(as.numeric(re22l) == 1, 1, if_else(as.numeric(re22l) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22m) == 1, 1, if_else(as.numeric(re22m) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22n) == 1, 1, if_else(as.numeric(re22n) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22o) == 1, 1, if_else(as.numeric(re22o) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22p) == 1, 1, if_else(as.numeric(re22p) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22q) == 1, 1, if_else(as.numeric(re22q) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22r) == 1, 1, if_else(as.numeric(re22r) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22s) == 1, 1, if_else(as.numeric(re22s) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22t) == 1, 1, if_else(as.numeric(re22t) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22u) == 1, 1, if_else(as.numeric(re22u) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22v) == 1, 1, if_else(as.numeric(re22v) == 2, 0, NA_real_))
+  )
+  n <- rowSums(!is.na(m))
+  case_when(n == 0 ~ NA_character_, rowSums(m, na.rm = TRUE) > 0 ~ ""TRUE"", .default = ""FALSE"")
+})","Young person's own report, last 12 months, of a multi-type perpetration checklist (hit or kicked, grabbed or shoved, threatened, threatened to take things, said mean things, told others not to be someone's friend, stopped someone joining in, used force to steal, hurt with a weapon, stole things, forced someone; re22l-re22v, yes/no), B waves 6-8 and K waves 6-7 (B waves 7-8 and K wave 7 ask re22l-re22n and re22p-re22r); TRUE if any answered item is yes. The age 8-9 items (pc58f8-pc58f13) and SDQ item 12 (se03a4c, truth-rated) are named unused.",,
+beh_beenbullied,compatible,"re22a, re22b, re22c, re22d, re22e, re22f, re22g, re22h, re22i, re22j, re22k","local({
+  m <- cbind(
+    if_else(as.numeric(re22a) == 1, 1, if_else(as.numeric(re22a) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22b) == 1, 1, if_else(as.numeric(re22b) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22c) == 1, 1, if_else(as.numeric(re22c) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22d) == 1, 1, if_else(as.numeric(re22d) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22e) == 1, 1, if_else(as.numeric(re22e) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22f) == 1, 1, if_else(as.numeric(re22f) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22g) == 1, 1, if_else(as.numeric(re22g) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22h) == 1, 1, if_else(as.numeric(re22h) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22i) == 1, 1, if_else(as.numeric(re22i) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22j) == 1, 1, if_else(as.numeric(re22j) == 2, 0, NA_real_)),
+    if_else(as.numeric(re22k) == 1, 1, if_else(as.numeric(re22k) == 2, 0, NA_real_))
+  )
+  n <- rowSums(!is.na(m))
+  case_when(n == 0 ~ NA_character_, rowSums(m, na.rm = TRUE) > 0 ~ ""TRUE"", .default = ""FALSE"")
+})","Young person's own report, last 12 months, of a multi-type peer-victimisation checklist (kids hit or kicked, grabbed or shoved, threatened to hurt, threatened to take things, said mean things, stopped others being friends, stopped joining in, used force to steal, hurt with a weapon, stole things to be mean, forced to do something; re22a-re22k, yes/no), B waves 6-8 and K waves 6-7 (B wave 7-8 and K wave 7 ask re22a-re22c and re22e-re22g); TRUE if any answered item is yes. The 'someone' items (re22x-re22z), Parent 1's 'Child bullied at school in the last year' (pc46), the age 8-11 child items (pc58e1-pc58e8, pc58f1-pc58f6) and SDQ item 19 (se03a5d, truth-rated) are named unused.",,
+beh_beenbullied_online,partial,pc58f7,"recode_values(as.numeric(pc58f7), 1 ~ ""FALSE"", c(2, 3, 4) ~ ""TRUE"", default = NA_character_)","B wave 5 and K wave 5 only: the child's own report 'Kids sent mean texts or emails' (pc58f7, child self-report booklet; Never = FALSE, Once or twice, About once a week or Several times a week = TRUE). Partial: one act type, recall not stated in the supplied files. The young adults' 9C follow-up on how they were bullied (bl03c3a-bl03c3c) is named unused.",,
+beh_bullied_online,partial,pc58f14,"recode_values(as.numeric(pc58f14), 1 ~ ""FALSE"", c(2, 3, 4) ~ ""TRUE"", default = NA_character_)","B wave 5 and K wave 5 only: the child's own report 'I sent mean texts or emails' (pc58f14, child self-report booklet; Never = FALSE, Once or twice or more = TRUE). Partial: one act type, recall not stated in the supplied files. The young adults' 9C follow-up on how they bullied others (bl03c4a-bl03c4c) is named unused.",,
+beh_fight,partial,se20a1,"local({
+  m <- cbind(as.numeric(se20a1))
+  m[m < 0] <- NA
+  n <- rowSums(!is.na(m))
+  case_when(n == 0 ~ NA_character_, rowSums(m > 0, na.rm = TRUE) > 0 ~ ""TRUE"", .default = ""FALSE"")
+})","Young person's self-report delinquency list (ACASI/CASI), K waves 5-8, B waves 7-8 and 10, counted from 'Not at all' to 'Five or more times': 'Got into physical fights in public' (se20a1), once or more = TRUE. Partial: fights in public only, recall not stated in the supplied documentation.",,
+beh_truancy,partial,se20a2,"local({
+  m <- cbind(as.numeric(se20a2))
+  m[m < 0] <- NA
+  n <- rowSums(!is.na(m))
+  case_when(n == 0 ~ NA_character_, rowSums(m > 0, na.rm = TRUE) > 0 ~ ""TRUE"", .default = ""FALSE"")
+})","Young person's self-report delinquency list (ACASI/CASI), K waves 5-8, B waves 7-8 and 10, counted from 'Not at all' to 'Five or more times': 'Skipped school for a whole day' (se20a2), once or more = TRUE. Partial: recall not stated in the supplied documentation.",,
+beh_suspended,partial,se20a12,"case_when(as.numeric(se20a12) == 0 ~ ""FALSE"", as.numeric(se20a12) >= 1 ~ ""TRUE"", .default = NA_character_)","Young person: times 'Been suspended or expelled from school' (se20a12; not at all = FALSE, once or more = TRUE), K waves 5-7 and B waves 7-8. Partial: the recall period is not stated in the supplied documentation.",,
+beh_stealing,partial,"se20a3, se20a7, se20a14","local({
+  m <- cbind(as.numeric(se20a3), as.numeric(se20a7), as.numeric(se20a14))
+  m[m < 0] <- NA
+  n <- rowSums(!is.na(m))
+  case_when(n == 0 ~ NA_character_, rowSums(m > 0, na.rm = TRUE) > 0 ~ ""TRUE"", .default = ""FALSE"")
+})","Young person's self-report delinquency list (ACASI/CASI), K waves 5-8, B waves 7-8 and 10, counted from 'Not at all' to 'Five or more times': stolen something from a shop (se20a3), money or things from another person (se20a7) or out of a parked car (se20a14); TRUE if any is once or more (multi-item composite). Partial: recall not stated in the supplied documentation.",,
+beh_vandalism,partial,"se20a4, se20a9, se20a10","local({
+  m <- cbind(as.numeric(se20a4), as.numeric(se20a9), as.numeric(se20a10))
+  m[m < 0] <- NA
+  n <- rowSums(!is.na(m))
+  case_when(n == 0 ~ NA_character_, rowSums(m > 0, na.rm = TRUE) > 0 ~ ""TRUE"", .default = ""FALSE"")
+})","Young person's self-report delinquency list (ACASI/CASI), K waves 5-8, B waves 7-8 and 10, counted from 'Not at all' to 'Five or more times': drawn graffiti in public places (se20a4), purposely damaged others' property (se20a9) or damaged a parked car (se20a10); TRUE if any is once or more. Partial: recall not stated in the supplied documentation.",,
+beh_alcohol_self,compatible,"hb16c9, hb16c11","case_when(
+  as.numeric(hb16c9) == 1 ~ ""TRUE"",
+  as.numeric(hb16c9) == 2 ~ ""FALSE"",
+  as.numeric(hb16c11) == 1 & .wave != ""10"" ~ ""FALSE"",
+  .default = NA_character_
+)","Young person: alcohol consumption in the last four weeks (hb16c9, yes/no, K waves 5-8, B waves 7-8, 9C1); never had an alcoholic drink (hb16c11 = No) = FALSE (routed past). Those who had only a few sips and were not asked hb16c9 are NA. Wave 10 asks only the previous week's consumption (hb16c10), a different recall window named unused, so the row is NA there, the never-drinkers included.",,
+beh_tobacco_self,compatible,"hb15c12, hb15c11, hb15c9, hb15c9a","case_when(
+  as.numeric(hb15c12) == 1 ~ ""TRUE"",
+  as.numeric(hb15c12) == 2 ~ ""FALSE"",
+  as.numeric(hb15c11) == 2 ~ ""FALSE"",
+  as.numeric(hb15c9) == 1 | as.numeric(hb15c9a) == 2 ~ ""FALSE"",
+  .default = NA_character_
+)","Young person: 'Smoked in the last 4 weeks' (hb15c12, yes/no), K waves 5-8, B waves 7-8, 9C1 and wave 10, asked at the main waves of those who smoked in the last 12 months; not in the last 12 months (hb15c11 = No) or never smoked part of a cigarette (hb15c9 = No; hb15c9a = No, which adds earlier waves' answers) = FALSE (routed past). The lifetime item alone is not used.",,
+beh_vaping_self,compatible,"hb15c17, hb15c16, hb15c14","case_when(
+  as.numeric(hb15c17) == 1 ~ ""TRUE"",
+  as.numeric(hb15c17) == 2 ~ ""FALSE"",
+  as.numeric(hb15c16) == 2 | as.numeric(hb15c14) == 2 ~ ""FALSE"",
+  .default = NA_character_
+)","Wave 10 only. Young person: used a vaping product or e-cigarette in the last 4 weeks (hb15c17, asked of past-12-month users), any content; no use in the last 12 months (hb15c16) or never (hb15c14) = FALSE (routed past).",,
+beh_cannabis_self,compatible,"hb26c4, hb26c1, hb26c1a","case_when(
+  as.numeric(hb26c4) == 1 ~ ""TRUE"",
+  as.numeric(hb26c4) == 2 ~ ""FALSE"",
+  as.numeric(hb26c1) == 2 | as.numeric(hb26c1a) == 2 ~ ""FALSE"",
+  .default = NA_character_
+)","Young person: marijuana or cannabis in the last four weeks (hb26c4, yes/no, asked of ever users), K waves 5-8, B waves 7-8, 9C1 and wave 10; never used (hb26c1 or hb26c1a = No) = FALSE (routed past).",,
+beh_drugs_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,compatible,"acondb, aconda","coalesce(
+  if_else(as.numeric(acondb) >= 0, as.numeric(acondb), NA_real_),
+  if_else(as.numeric(aconda) >= 0, as.numeric(aconda), NA_real_)
+)","Conduct problems (acondb, aconda). Parent 1 (the parent who knows the child best), SDQ parent form, K waves 1-7 and B waves 3-8; the 2-4 form's conduct items at K wave 1 and B wave 3 (aconda, version 1), the 4-17 form elsewhere (acondb, version 2). The study's subscale matches the SDQ rule computed from the released items (se03a*) in every row, so it is used as released.",,
+beh_hyper_sdq_parent,compatible,ahypr,"if_else(as.numeric(ahypr) >= 0, as.numeric(ahypr), NA_real_)","Hyperactivity/inattention (ahypr). Parent 1 (the parent who knows the child best), SDQ parent form, K waves 1-7 and B waves 3-8; the 2-4 form's conduct items at K wave 1 and B wave 3 (aconda, version 1), the 4-17 form elsewhere (acondb, version 2). The study's subscale matches the SDQ rule computed from the released items (se03a*) in every row, so it is used as released.",,
+beh_peerprob_sdq_parent,compatible,apeer,"if_else(as.numeric(apeer) >= 0, as.numeric(apeer), NA_real_)","Peer problems (apeer). Parent 1 (the parent who knows the child best), SDQ parent form, K waves 1-7 and B waves 3-8; the 2-4 form's conduct items at K wave 1 and B wave 3 (aconda, version 1), the 4-17 form elsewhere (acondb, version 2). The study's subscale matches the SDQ rule computed from the released items (se03a*) in every row, so it is used as released.",,
+beh_prosocial_sdq_parent,compatible,apsoc,"if_else(as.numeric(apsoc) >= 0, as.numeric(apsoc), NA_real_)","Prosocial (apsoc). Parent 1 (the parent who knows the child best), SDQ parent form, K waves 1-7 and B waves 3-8; the 2-4 form's conduct items at K wave 1 and B wave 3 (aconda, version 1), the 4-17 form elsewhere (acondb, version 2). The study's subscale matches the SDQ rule computed from the released items (se03a*) in every row, so it is used as released.",,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ not administered; see beh_conduct_sdq_self.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ not administered; see beh_conduct_sdq_self.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ not administered; see beh_conduct_sdq_self.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ not administered; see beh_conduct_sdq_self.,,
+beh_agg_self,incompatible,"ccondb, se20a1",,"Only the SDQ self-report conduct subscale (ccondb, see beh_conduct_sdq_self) and the delinquency item on fights in public (se20a1, see beh_fight).",,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,unavailable,,,Not collected.,,
+beh_aggphys_measure,unavailable,,,See beh_aggphys_self.,,
+beh_aggrel_self,unavailable,,,Not collected.,,
+beh_aggrel_measure,unavailable,,,See beh_aggrel_self.,,
+beh_anger_self,unavailable,,,Not collected.,,
+beh_anger_measure,unavailable,,,See beh_anger_self.,,
+beh_aggbeliefs_self,unavailable,,,Not collected.,,
+beh_agghostattrib_self,unavailable,,,Not collected.,,
+beh_aggfantasy_self,unavailable,,,Not collected.,,
+beh_aggcog_measure,unavailable,,,See beh_aggbeliefs_self.,,
+beh_agg_singleitem_teacher,unavailable,,,Not collected.,,
+beh_disrupt_singleitem_teacher,unavailable,,,Not collected.,,
+beh_aggphys_teacher,unavailable,,,Not collected.,,
+beh_aggrel_teacher,unavailable,,,Not collected.,,
+beh_agg_teacher,incompatible,"tcondb, tconda",,"Only the SDQ teacher conduct problems subscale (tcondb, tconda), which stays on beh_conduct_sdq_teacher.",,
+beh_victphys_teacher,unavailable,,,Not collected.,,
+beh_victrel_teacher,unavailable,,,Not collected.,,
+beh_vict_teacher,unavailable,,,Not collected.,,
+beh_atten_teacher,incompatible,thypr,,"Only the SDQ teacher hyperactivity/inattention subscale (thypr), which stays on beh_hyper_sdq_teacher.",,
+beh_hyper_teacher,incompatible,thypr,,"Only the SDQ teacher hyperactivity/inattention subscale (thypr), which stays on beh_hyper_sdq_teacher.",,
+beh_adhdsymp_teacher,incompatible,thypr,,"Only the SDQ teacher hyperactivity/inattention subscale (thypr), which stays on beh_hyper_sdq_teacher.",,
+beh_ext_teacher,incompatible,"tcondb, tconda",,"Only the SDQ teacher conduct problems subscale (tcondb, tconda), which stays on beh_conduct_sdq_teacher.",,
+beh_prosocial_teacher,compatible,tpsoc,"if_else(as.numeric(tpsoc) >= 0, as.numeric(tpsoc), NA_real_)",Repeats beh_prosocial_sdq_teacher (SDQ teacher or carer prosocial subscale).,,
+beh_socialskills_teacher,incompatible,tscont,,"Only the teacher SSIS Self Control subscale (tscont), which fills no teacher row.",,
+beh_teacher_measure,inferred,tpsoc,"if_else(
+  as.numeric(tpsoc) >= 0,
+  if_else(
+    (cohort == ""K"" & .wave == ""1"") | (cohort == ""B"" & .wave == ""3""),
+    ""SDQ teacher form (child-care staff or preschool teacher); prosocial: SDQ prosocial, 5 of 5 items, 0-2 item scoring (range 0-10), sum (SDQ rule)"",
+    ""SDQ teacher form (class teacher); prosocial: SDQ prosocial, 5 of 5 items, 0-2 item scoring (range 0-10), sum (SDQ rule)""
+  ),
+  NA_character_
+)",Describes beh_prosocial_teacher on rows where a teacher or carer SDQ was returned; the rater is the child-care carer or preschool teacher at K wave 1 and B wave 3 and the class teacher later.,,
+beh_argues,incompatible,se03a4d,,"Only the truth-rated SDQ item 'Argumentative with adults' (se03a4d, 2-4 form).",,
+beh_persistence_finishwork,incompatible,se03a2e,,Only the truth-rated SDQ item on attention span (se03a2e).,,
+beh_emotreg_stayscalm,unavailable,,,Not collected.,,
+beh_peerprob_makefriends,incompatible,se03a5b,,Only the truth-rated SDQ item 'Has at least one good friend' (se03a5b).,,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,incompatible,hs17l,,"hs17l asks whether the child has ongoing ADD/ADHD, not whether it was diagnosed by a health professional.",,
+beh_autism_diagnosed,incompatible,hs17w,,"hs17w asks whether the child has autism, Asperger's or another autism spectrum disorder as an ongoing condition, not whether it was diagnosed by a health professional.",,
+beh_autism_diagnosed_severity,incompatible,hs37a23,,"Severity of an ongoing condition (hs37a23, B wave 8) not attributed to a health professional; see beh_autism_diagnosed.",,
+beh_conduct_sdq_self,compatible,ccondb,"if_else(as.numeric(ccondb) >= 0, as.numeric(ccondb), NA_real_)","Conduct problems (ccondb). Study child's self-report SDQ (11-17 form), K waves 4-7 and B waves 6-8 (ages 10-17; the age 10-11 waves, K wave 4 and B wave 6, hold 32% of values). The study's subscale matches the SDQ rule computed from the released items (se03c*) in every row but one, so it is used as released.",,
+beh_hyper_sdq_self,compatible,chypr,"if_else(as.numeric(chypr) >= 0, as.numeric(chypr), NA_real_)","Hyperactivity/inattention (chypr). Study child's self-report SDQ (11-17 form), K waves 4-7 and B waves 6-8 (ages 10-17; the age 10-11 waves, K wave 4 and B wave 6, hold 32% of values). The study's subscale matches the SDQ rule computed from the released items (se03c*) in every row but one, so it is used as released.",,
+beh_peerprob_sdq_self,compatible,cpeer,"if_else(as.numeric(cpeer) >= 0, as.numeric(cpeer), NA_real_)","Peer problems (cpeer). Study child's self-report SDQ (11-17 form), K waves 4-7 and B waves 6-8 (ages 10-17; the age 10-11 waves, K wave 4 and B wave 6, hold 32% of values). The study's subscale matches the SDQ rule computed from the released items (se03c*) in every row but one, so it is used as released.",,
+beh_prosocial_sdq_self,compatible,cpsoc,"if_else(as.numeric(cpsoc) >= 0, as.numeric(cpsoc), NA_real_)","Prosocial (cpsoc). Study child's self-report SDQ (11-17 form), K waves 4-7 and B waves 6-8 (ages 10-17; the age 10-11 waves, K wave 4 and B wave 6, hold 32% of values). The study's subscale matches the SDQ rule computed from the released items (se03c*) in every row but one, so it is used as released.",,
+beh_conduct_sdq_teacher,compatible,"tcondb, tconda","coalesce(
+  if_else(as.numeric(tcondb) >= 0, as.numeric(tcondb), NA_real_),
+  if_else(as.numeric(tconda) >= 0, as.numeric(tconda), NA_real_)
+)","Conduct problems (tcondb, tconda). Teacher or carer (T/C) SDQ, K waves 1-6 and B waves 3-8: child-care or preschool carers and teachers at K wave 1 and B wave 3, class teachers from school entry; the 2-4 form's conduct items at K wave 1 and B wave 3 (tconda), the 4-17 form elsewhere (tcondb). The study's subscale matches the SDQ rule computed from the released items (se03t*) in all but 7-25 rows per subscale, so it is used as released.",,
+beh_hyper_sdq_teacher,compatible,thypr,"if_else(as.numeric(thypr) >= 0, as.numeric(thypr), NA_real_)","Hyperactivity/inattention (thypr). Teacher or carer (T/C) SDQ, K waves 1-6 and B waves 3-8: child-care or preschool carers and teachers at K wave 1 and B wave 3, class teachers from school entry; the 2-4 form's conduct items at K wave 1 and B wave 3 (tconda), the 4-17 form elsewhere (tcondb). The study's subscale matches the SDQ rule computed from the released items (se03t*) in all but 7-25 rows per subscale, so it is used as released.",,
+beh_peerprob_sdq_teacher,compatible,tpeer,"if_else(as.numeric(tpeer) >= 0, as.numeric(tpeer), NA_real_)","Peer problems (tpeer). Teacher or carer (T/C) SDQ, K waves 1-6 and B waves 3-8: child-care or preschool carers and teachers at K wave 1 and B wave 3, class teachers from school entry; the 2-4 form's conduct items at K wave 1 and B wave 3 (tconda), the 4-17 form elsewhere (tcondb). The study's subscale matches the SDQ rule computed from the released items (se03t*) in all but 7-25 rows per subscale, so it is used as released.",,
+beh_prosocial_sdq_teacher,compatible,tpsoc,"if_else(as.numeric(tpsoc) >= 0, as.numeric(tpsoc), NA_real_)","Prosocial (tpsoc). Teacher or carer (T/C) SDQ, K waves 1-6 and B waves 3-8: child-care or preschool carers and teachers at K wave 1 and B wave 3, class teachers from school entry; the 2-4 form's conduct items at K wave 1 and B wave 3 (tconda), the 4-17 form elsewhere (tcondb). The study's subscale matches the SDQ rule computed from the released items (se03t*) in all but 7-25 rows per subscale, so it is used as released.",,
+beh_ext_sdq_parent,unavailable,,,Derive at analysis from the subscale rows.,,
+beh_ext_sdq_self,unavailable,,,Derive at analysis from the subscale rows.,,
+beh_ext_sdq_teacher,unavailable,,,Derive at analysis from the subscale rows.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
+beh_socprob_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered; see beh_conduct_sdq_parent.,,
+beh_cbcl_measure,unavailable,,,See beh_atten_cbcl_parent.,,
+beh_ext_self,incompatible,ccondb,,"Only the SDQ self-report conduct problems subscale (ccondb), which stays on beh_conduct_sdq_self.",,
+beh_opp_self,incompatible,ccondb,,"Only the SDQ self-report conduct problems subscale (ccondb), which stays on beh_conduct_sdq_self.",,
+beh_conduct_self,incompatible,ccondb,,"Only the SDQ self-report conduct problems subscale (ccondb), which stays on beh_conduct_sdq_self.",,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,incompatible,ahypr,,"Only the SDQ parent hyperactivity/inattention subscale (ahypr), which stays on beh_hyper_sdq_parent.",,
+beh_hyper_parent,incompatible,ahypr,,"Only the SDQ parent hyperactivity/inattention subscale (ahypr), which stays on beh_hyper_sdq_parent.",,
+beh_adhdsymp_parent,incompatible,ahypr,,"Only the SDQ parent hyperactivity/inattention subscale (ahypr), which stays on beh_hyper_sdq_parent.",,
+beh_opp_parent,incompatible,"acondb, aconda",,"Only the SDQ parent conduct problems subscale (acondb, aconda), which stays on beh_conduct_sdq_parent.",,
+beh_conduct_parent,incompatible,"acondb, aconda",,"Only the SDQ parent conduct problems subscale (acondb, aconda), which stays on beh_conduct_sdq_parent.",,
+beh_ext_parent,incompatible,"acondb, aconda",,"Only the SDQ parent conduct problems subscale (acondb, aconda), which stays on beh_conduct_sdq_parent.",,
+beh_parent_measure,inferred,"ascont, ascont2","if_else(
+  coalesce(as.numeric(ascont), as.numeric(ascont2)) >= 0,
+  ""self-regulation: SSIS Self Control subscale (Parent 1), released score"",
+  NA_character_
+)",Describes beh_selfreg_parent where it is mapped.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,compatible,cpsoc,"if_else(as.numeric(cpsoc) >= 0, as.numeric(cpsoc), NA_real_)",Repeats beh_prosocial_sdq_self (SDQ self-report prosocial subscale).,,
+beh_prosocial_measure,inferred,cpsoc,"if_else(
+  as.numeric(cpsoc) >= 0,
+  ""SDQ self-report prosocial subscale, 5 of 5 items, 0-2 item scoring (range 0-10), sum (SDQ rule)"",
+  NA_character_
+)",Describes beh_prosocial_self where the self-report SDQ was given.,,
+beh_prosocial_parent,compatible,apsoc,"if_else(as.numeric(apsoc) >= 0, as.numeric(apsoc), NA_real_)","Repeats beh_prosocial_sdq_parent (SDQ parent prosocial subscale, Parent 1).",,
+beh_socialskills_self,partial,"cempathy, cempathy2","local({
+  x <- coalesce(as.numeric(cempathy), as.numeric(cempathy2))
+  if_else(x >= 0, x, NA_real_)
+})","Only the SSIS Empathy facet is released for the child (cempathy, cempathy2), the one released facet other than self-control; partial.",,
+beh_socialskills_measure,inferred,"cempathy, cempathy2","if_else(
+  coalesce(as.numeric(cempathy), as.numeric(cempathy2)) >= 0,
+  ""self: SSIS Empathy subscale (self-report), released score, the only released facet"",
+  NA_character_
+)",Describes beh_socialskills_self.,,
+beh_socialskills_parent,incompatible,"ascont, ascont2",,Only the SSIS Self Control subscale is released for the parent; it goes to beh_selfreg_parent.,,
+beh_prosocial_singleitem_teacher,unavailable,,,Not collected.,,
+beh_empathy_self,partial,"cempathy, cempathy2","local({
+  x <- coalesce(as.numeric(cempathy), as.numeric(cempathy2))
+  if_else(x >= 0, x, NA_real_)
+})","Study child's SSIS Empathy scale (cempathy, cempathy2), K waves 4-6 and B waves 6-8, as released. Partial: one subscale of a social-skills instrument.",,
+beh_empathy_measure,inferred,"cempathy, cempathy2","if_else(
+  coalesce(as.numeric(cempathy), as.numeric(cempathy2)) >= 0,
+  ""SSIS Empathy subscale (self-report), released score"",
+  NA_character_
+)",Where the scale was given.,,
+beh_problematicuse_self,compatible,socmed,"if_else(as.numeric(socmed) >= 0, as.numeric(socmed), NA_real_)","Young person's Social Media Addiction Scale at 9C1 and wave 10 (socmed, released score of six items he42c1-he42c6, observed 2-30); it sums the answered items, so 68 rows with one to five of the six items answered hold a partial sum.",,
+beh_problematicuse_parent,unavailable,,,Not collected.,,
+beh_problematicuse_measure,inferred,socmed,"if_else(
+  as.numeric(socmed) >= 0,
+  ""Social Media Addiction Scale (social media), 6 of 6 items, released score (observed 2-30)"",
+  NA_character_
+)",Where the scale was given.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,NEPSY not administered.,,
+cog_phono_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhibcont_nepsy,unavailable,,,NEPSY not administered.,,
+cog_vismotor_nepsy,unavailable,,,NEPSY not administered.,,
+cog_verbalfluency_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhib_nihtb_flanker,unavailable,,,NIH Toolbox not administered; see cog_wm_task.,,
+cog_flex_nihtb_dccs,unavailable,,,NIH Toolbox not administered; see cog_wm_task.,,
+cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox not administered; see cog_wm_task.,,
+cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox not administered; see cog_wm_task.,,
+cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox not administered; see cog_wm_task.,,
+cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox not administered; see cog_vocab_receptive_task.,,
+cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered; see cog_wm_task.,,
+cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered; see cog_wm_task.,,
+cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered; see cog_wm_task.,,
+cog_atten_task,compatible,lc16c1a,"if_else(as.numeric(lc16c1a) > 0, -as.numeric(lc16c1a), NA_real_)","CogState Identification task (attention), child-performed, K wave 6 and B wave 8: performance speed (lc16c1a, log10 of mean reaction time in ms, observed 1.93-3.31), reversed (negated) so higher = faster; raw. Accuracy (lc16c1c) is named unused.",,
+cog_atten_task_measure,inferred,lc16c1a,"if_else(
+  as.numeric(lc16c1a) > 0,
+  ""CogState Identification (CogState computerised battery), speed: log10 mean reaction time in ms (observed 1.93-3.31), raw, reversed"",
+  NA_character_
+)",Where the CogState battery was given.,,
+cog_flex_task,unavailable,,,Not collected.,,
+cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
+cog_inhib_task,unavailable,,,Not collected.,,
+cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
+cog_wm_task,compatible,lc16c2c,"if_else(as.numeric(lc16c2c) >= 0, as.numeric(lc16c2c), NA_real_)","CogState One Back task, child-performed, K wave 6 and B wave 8 (lc16c2c 'ONB - Accuracy', the task's accuracy score, observed 0-1.57, raw, higher = better); n-back accuracy at the one load given. Speed (lc16c2a) and the Groton Maze Learning Task scores (lc16c3*, no row) are named unused.",,
+cog_wm_task_measure,inferred,lc16c2c,"if_else(
+  as.numeric(lc16c2c) >= 0,
+  ""CogState One Back (CogState computerised battery), one-back load, accuracy (observed 0-1.57), raw, as released"",
+  NA_character_
+)",Where the CogState battery was given.,,
+cog_speed_task,unavailable,,,Not collected.,,
+cog_speed_task_measure,unavailable,,,See cog_speed_task.,,
+cog_wm_digitspan,unavailable,,,Digit Span not administered; see cog_wm_task.,,
+cog_iq_fullscale,unavailable,,,Not collected.,,
+cog_nonverbalreason_task,compatible,matreas,"if_else(as.numeric(matreas) >= 1, as.numeric(matreas), NA_real_)","Matrix Reasoning, child-performed, K waves 2-4 and B waves 4-6 (matreas, age-scaled score, observed 1-19; the raw score mrraw, 0-35, is named unused; one age 10-11 file labels it 'Matrix reasoning imputed').",,
+cog_nonverbalreason_task_measure,inferred,matreas,"if_else(
+  as.numeric(matreas) >= 1,
+  ""Matrix Reasoning subtest, 35 items (raw 0-35), scaled score (observed 1-19), age-normed, as released"",
+  NA_character_
+)",Where Matrix Reasoning was given.,,
+cog_vocab_bpvs,unavailable,,,BPVS not administered; see cog_vocab_receptive_task.,,
+cog_vocab_ppvt,partial,ppvt,"if_else(as.numeric(ppvt) >= 0, as.numeric(ppvt), NA_real_)","Peabody Picture Vocabulary Test score (ppvt), child-performed, K waves 1-3 and B waves 3-5. The released score is not a standard score (observed 28-106 on one scale across ages); used as released. Partial: no standard score.",,
+cog_vocab_receptive_task,partial,ppvt,"if_else(as.numeric(ppvt) >= 0, as.numeric(ppvt), NA_real_)","Repeats cog_vocab_ppvt (PPVT score as released, not age-normed).",,
+cog_vocab_expressive_task,unavailable,,,Not collected.,,
+cog_vocab_task_measure,inferred,ppvt,"if_else(
+  as.numeric(ppvt) >= 0,
+  ""receptive: Peabody Picture Vocabulary Test (LSAC), English, released score (observed 28-106), ability"",
+  NA_character_
+)",Where the PPVT was given.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_execfunc_parent,unavailable,,,Not collected.,,
+cog_execfunc_teacher,unavailable,,,Not collected.,,
+cog_execfunc_self,unavailable,,,Not collected.,,
+cog_execfunc_measure,unavailable,,,See cog_execfunc_parent.,,
+cog_vocab_bas_naming,unavailable,,,BAS II not administered; see cog_vocab_receptive_task.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,BAS II not administered; see cog_nonverbalreason_task.,,
+cog_spatial_bas_pattern,unavailable,,,BAS II not administered; see cog_nonverbalreason_task.,,
+cog_verbalreason_bas_versim,unavailable,,,BAS II not administered; see cog_nonverbalreason_task.,,
+cog_earlynumber_bas_enc,unavailable,,,BAS II not administered; see cog_nonverbalreason_task.,,
+cog_schoolread_bracken,unavailable,,,Bracken not administered.,,
+cog_earlylang_parent,compatible,csbsspc,"if_else(as.numeric(csbsspc) >= 0, as.numeric(csbsspc), NA_real_)","B wave 1 only: the parent-completed CSBS speech composite raw score (csbsspc, observed 0-14), a published parent-completed communication scale for infants; the standard score and percentile (csbssps, csbsspp) are named unused.",,
+cog_earlylang_measure,inferred,csbsspc,"if_else(
+  as.numeric(csbsspc) >= 0,
+  ""CSBS speech composite (parent-completed), B cohort age 0-1, raw score"",
+  NA_character_
+)",B wave 1 only; item counts not documented in the supplied files.,,
+cog_creativethinking_stdtest,unavailable,,,Not collected.,,
+cog_speechlang_diagnosed,incompatible,f17cm1,,"f17cm1 asks whether the child has speech problems, not whether a speech or language disorder was diagnosed.",,
+cog_speechlang_diagnosed_severity,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered; see mh_emotsymp_sdq_parent.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered; see mh_emotsymp_sdq_parent.,,
+mh_emotsymp_sdq_parent,compatible,aemot,"if_else(as.numeric(aemot) >= 0, as.numeric(aemot), NA_real_)","Emotional symptoms (aemot). Parent 1 (the parent who knows the child best), SDQ parent form, K waves 1-7 and B waves 3-8; the 2-4 form's conduct items at K wave 1 and B wave 3 (aconda, version 1), the 4-17 form elsewhere (acondb, version 2). The study's subscale matches the SDQ rule computed from the released items (se03a*) in every row, so it is used as released.",,
+mh_totaldiff_sdq_parent,compatible,"aemot, acondb, aconda, ahypr, apeer","if_else(as.numeric(aemot) >= 0, as.numeric(aemot), NA_real_) +
+  coalesce(
+    if_else(as.numeric(acondb) >= 0, as.numeric(acondb), NA_real_),
+    if_else(as.numeric(aconda) >= 0, as.numeric(aconda), NA_real_)
+  ) +
+  if_else(as.numeric(ahypr) >= 0, as.numeric(ahypr), NA_real_) +
+  if_else(as.numeric(apeer) >= 0, as.numeric(apeer), NA_real_)","Sum of the four parent difficulty subscales (emotional, conduct, hyperactivity, peer), NA unless all four are scored. Parent 1, forms as the subscale rows.",,
+mh_anx_diagnosed,incompatible,hs17v1,,"hs17v1 asks whether the child has an anxiety disorder as an ongoing condition, not whether it was diagnosed.",,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,incompatible,hs17v,,Only the pooled anxiety disorder or depression ongoing-condition item (hs17v); not attributed to a health professional.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,compatible,cemot,"if_else(as.numeric(cemot) >= 0, as.numeric(cemot), NA_real_)","Emotional symptoms (cemot). Study child's self-report SDQ (11-17 form), K waves 4-7 and B waves 6-8 (ages 10-17; the age 10-11 waves, K wave 4 and B wave 6, hold 32% of values). The study's subscale matches the SDQ rule computed from the released items (se03c*) in every row but one, so it is used as released.",,
+mh_emotsymp_sdq_teacher,compatible,temot,"if_else(as.numeric(temot) >= 0, as.numeric(temot), NA_real_)","Emotional symptoms (temot). Teacher or carer (T/C) SDQ, K waves 1-6 and B waves 3-8: child-care or preschool carers and teachers at K wave 1 and B wave 3, class teachers from school entry; the 2-4 form's conduct items at K wave 1 and B wave 3 (tconda), the 4-17 form elsewhere (tcondb). The study's subscale matches the SDQ rule computed from the released items (se03t*) in all but 7-25 rows per subscale, so it is used as released.",,
+mh_totaldiff_sdq_self,compatible,"cemot, ccondb, chypr, cpeer","if_else(as.numeric(cemot) >= 0, as.numeric(cemot), NA_real_) +
+  if_else(as.numeric(ccondb) >= 0, as.numeric(ccondb), NA_real_) +
+  if_else(as.numeric(chypr) >= 0, as.numeric(chypr), NA_real_) +
+  if_else(as.numeric(cpeer) >= 0, as.numeric(cpeer), NA_real_)","Sum of the four self-report difficulty subscales, NA unless all four are scored.",,
+mh_totaldiff_sdq_teacher,compatible,"temot, tcondb, tconda, thypr, tpeer","if_else(as.numeric(temot) >= 0, as.numeric(temot), NA_real_) +
+  coalesce(
+    if_else(as.numeric(tcondb) >= 0, as.numeric(tcondb), NA_real_),
+    if_else(as.numeric(tconda) >= 0, as.numeric(tconda), NA_real_)
+  ) +
+  if_else(as.numeric(thypr) >= 0, as.numeric(thypr), NA_real_) +
+  if_else(as.numeric(tpeer) >= 0, as.numeric(tpeer), NA_real_)","Sum of the four teacher or carer difficulty subscales, NA unless all four are scored; forms as the subscale rows.",,
+mh_int_sdq_parent,unavailable,,,Derive at analysis from the subscale rows.,,
+mh_int_sdq_self,unavailable,,,Derive at analysis from the subscale rows.,,
+mh_int_sdq_teacher,unavailable,,,Derive at analysis from the subscale rows.,,
+mh_dep_smfq_self,compatible,smfq,"if_else(as.numeric(smfq) >= 0, as.numeric(smfq), NA_real_)","Short Mood and Feelings Questionnaire, self-report, K waves 5-7 and B waves 7-8 (smfq, released total of 13 items scored 0-2, range 0-26); it sums the answered items (15 rows with items missing).",,
+mh_dep_smfq_parent,unavailable,,,SMFQ parent form not administered; see mh_dep_smfq_self.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered; see mh_dep_self.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered; see mh_dep_self.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered; see mh_dep_self.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered; see mh_dep_self.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered; see mh_dep_self.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered; see mh_dep_self.,,
+mh_distress_k6_self,compatible,"hs24c1, hs24c2, hs24c3, hs24c4, hs24c5, hs24c6","if_else(as.numeric(hs24c1) %in% 1:5, 5 - as.numeric(hs24c1), NA_real_) +
+  if_else(as.numeric(hs24c2) %in% 1:5, 5 - as.numeric(hs24c2), NA_real_) +
+  if_else(as.numeric(hs24c3) %in% 1:5, 5 - as.numeric(hs24c3), NA_real_) +
+  if_else(as.numeric(hs24c4) %in% 1:5, 5 - as.numeric(hs24c4), NA_real_) +
+  if_else(as.numeric(hs24c5) %in% 1:5, 5 - as.numeric(hs24c5), NA_real_) +
+  if_else(as.numeric(hs24c6) %in% 1:5, 5 - as.numeric(hs24c6), NA_real_)","Kessler K6, young person, K wave 8, 9C1 and wave 10: the six K6 items (nervous, hopeless, restless, everything an effort, so sad nothing cheers up, worthless), coded 1 All of the time to 5 None of the time, rescored 0-4 (5 - x) and summed (0-24), complete case; asked inside the K10 at K wave 8 and 9C1. At wave 10 the sum equals the released ck6s - 6.",,
+mh_distress_k10_self,compatible,ck10s,"if_else(as.numeric(ck10s) >= 10, as.numeric(ck10s), NA_real_)","Kessler K10, young person, K wave 8 and 9C1 (ck10s, released sum of ten items scored 1-5, range 10-50, the standard Australian scoring); missing-item rule not documented.",,
+mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered; see mh_distress_self.,,
+mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered; see mh_distress_self.,,
+mh_distress_self,compatible,"hs24c1, hs24c2, hs24c3, hs24c4, hs24c5, hs24c6","if_else(as.numeric(hs24c1) %in% 1:5, 5 - as.numeric(hs24c1), NA_real_) +
+  if_else(as.numeric(hs24c2) %in% 1:5, 5 - as.numeric(hs24c2), NA_real_) +
+  if_else(as.numeric(hs24c3) %in% 1:5, 5 - as.numeric(hs24c3), NA_real_) +
+  if_else(as.numeric(hs24c4) %in% 1:5, 5 - as.numeric(hs24c4), NA_real_) +
+  if_else(as.numeric(hs24c5) %in% 1:5, 5 - as.numeric(hs24c5), NA_real_) +
+  if_else(as.numeric(hs24c6) %in% 1:5, 5 - as.numeric(hs24c6), NA_real_)","Repeats mh_distress_k6_self (Kessler K6, young person, K wave 8, 9C1 and wave 10), the one distress inventory given at every one of these waves; the K10 (ck10s, K wave 8, 9C1) stays on mh_distress_k10_self.",,
+mh_distress_measure,inferred,hs24c1,"if_else(
+  (cohort == ""K"" & .wave == ""8"") | .wave %in% c(""9C1"", ""10""),
+  ""Kessler K6, 6 of 6 items, 0-4 item scoring (range 0-24), sum"",
+  NA_character_
+)","K wave 8, 9C1 and wave 10, where mh_distress_self is mapped.",,
+mh_anx_masc_self,unavailable,,,MASC not administered; see mh_anx_self.,,
+mh_anx_scas_self,incompatible,spenceanx,,"The Spence anxiety score is a short form (released range 0-24, not the 38-item 0-114 total); see mh_anx_self.",,
+mh_anx_scas_parent,unavailable,,,SCAS parent form not administered; see mh_emotsymp_sdq_parent.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered; see mh_anx_self.,,
+mh_anx_scared_parent,unavailable,,,SCARED parent form not administered; see mh_emotsymp_sdq_parent.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered; see mh_anx_self.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered; see mh_anx_self.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered; see mh_anx_self.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_parent.,,
+mh_withdrawn_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_parent.,,
+mh_somatic_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_parent.,,
+mh_emotreact_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_parent.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_parent.,,
+mh_dep_binary_self,incompatible,smfqc,,"Only the SMFQ cut-off flag (smfqc), a scale total; see mh_dep_smfq_self.",,
+mh_dep_self,compatible,smfq,"if_else(as.numeric(smfq) >= 0, as.numeric(smfq), NA_real_)",Repeats mh_dep_smfq_self.,,
+mh_dep_measure,inferred,smfq,"if_else(
+  as.numeric(smfq) >= 0,
+  ""Short Mood and Feelings Questionnaire (self-report), 13 of 13 items, 0-2 item scoring (range 0-26), sum"",
+  NA_character_
+)",Where the SMFQ was given.,,
+mh_anx_self,compatible,spenceanx,"if_else(as.numeric(spenceanx) >= 0, as.numeric(spenceanx), NA_real_)","Spence Children's Anxiety Scale short form, self-report, K waves 5-7 and B waves 7-8 (spenceanx 'Spence Anxiety Scale', released sum, observed 0-24); missing-item rule not documented.",,
+mh_anx_measure,inferred,spenceanx,"if_else(
+  as.numeric(spenceanx) >= 0,
+  ""Spence Children's Anxiety Scale, short form (released range 0-24), 0-3 item scoring (range 0-24)"",
+  NA_character_
+)",Where the Spence short form was given; the item count is not documented in the supplied files (eight items scored 0-3 would give the released range).,,
+mh_socanx_self,unavailable,,,Not collected.,,
+mh_socanx_measure,unavailable,,,See mh_socanx_self.,,
+mh_int_parent,incompatible,aemot,,"Only the SDQ parent emotional symptoms subscale (aemot), which stays on mh_emotsymp_sdq_parent.",,
+mh_anx_parent,incompatible,aemot,,"Only the SDQ parent emotional symptoms subscale (aemot), which stays on mh_emotsymp_sdq_parent.",,
+mh_dep_parent,incompatible,aemot,,"Only the SDQ parent emotional symptoms subscale (aemot), which stays on mh_emotsymp_sdq_parent.",,
+mh_totalprob_parent,incompatible,"aemot, acondb, ahypr, apeer",,"Only the SDQ parent subscales, which stay on their own rows (total difficulties on mh_totaldiff_sdq_parent).",,
+mh_int_teacher,incompatible,temot,,"Only the SDQ teacher emotional symptoms subscale (temot), which stays on mh_emotsymp_sdq_teacher.",,
+mh_anx_teacher,incompatible,temot,,"Only the SDQ teacher emotional symptoms subscale (temot), which stays on mh_emotsymp_sdq_teacher.",,
+mh_dep_teacher,incompatible,temot,,"Only the SDQ teacher emotional symptoms subscale (temot), which stays on mh_emotsymp_sdq_teacher.",,
+mh_totalprob_teacher,incompatible,"temot, tcondb, thypr, tpeer",,"Only the SDQ teacher subscales, which stay on their own rows (total difficulties on mh_totaldiff_sdq_teacher).",,
+mh_depanx_diagnosed,incompatible,hs17v,,"hs17v asks whether the child has an anxiety disorder or depression as an ongoing condition, not whether it was diagnosed.",,
+mh_stress_self,unavailable,,,Not collected.,,
+mh_stress_scale_self,unavailable,,,Not collected.,,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,compatible,sc34c4,"recode_values(
+  as.numeric(sc34c4),
+  1 ~ ""Never"",
+  2 ~ ""Rarely"",
+  3 ~ ""Sometimes"",
+  4 ~ ""Often"",
+  5 ~ ""Always"",
+  default = NA_character_
+)","Young person: 'Felt lonely' (sc34c4, Never to Always, mapped by wording), 9C1 and wave 10; also scored in mh_lonely_scale_self. The truth-rated 'Lonely' item at K waves 5-7 and B waves 7-8 (se21c10) is incompatible and named unused.",,
+mh_lonely_scale_self,compatible,clone,"if_else(as.numeric(clone) >= 0, as.numeric(clone), NA_real_)","Young person's loneliness scale at 9C1 and wave 10 (clone, released score of four items sc34c1-sc34c4 scored 1 Never to 5 Always; observed 1-20; it sums the answered items, so 25 rows with one to three of the four items answered hold a partial sum); the restriction-period version (clonecrp) is named unused.",,
+mh_lonely_measure,inferred,clone,"if_else(
+  as.numeric(clone) >= 0,
+  ""LSAC loneliness scale (young person), 4 of 4 items, 1-5 item scoring (range 4-20)"",
+  NA_character_
+)","Where the scale was given (9C1, wave 10).",,
+mh_sad_self,incompatible,"se03c3c, smfq",,"Only the truth-rated SDQ item 'Often unhappy' (se03c3c) and the SMFQ score (smfq, see mh_dep_smfq_self).",,
+mh_worry_self,incompatible,se03c3b,,Only the truth-rated SDQ item 'Worry a lot' (se03c3b).,,
+mh_irritable_self,unavailable,,,Not collected.,,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,partial,hs54c,"recode_values(as.numeric(hs54c), 1 ~ ""Yes"", 2 ~ ""No"", default = NA_character_)","Young person: 'Consider attempting suicide' (hs54c, yes/no), K waves 6-8, B wave 8 and wave 10. Partial: the recall period is not stated in the supplied documentation.",,
+mh_suicide_attempt_self,partial,hs54e,"case_when(as.numeric(hs54e) == 0 ~ ""No"", as.numeric(hs54e) >= 1 ~ ""Yes"", .default = NA_character_)","Young person: 'Frequency attempting suicide' (hs54e: 0 times = No, 1 or more = Yes), K waves 6-8, B wave 8 and wave 10. Partial: the recall period is not stated in the supplied documentation.",,
+mh_selfharm_self,partial,hs54b,"recode_values(as.numeric(hs54b), 1 ~ ""Yes"", 2 ~ ""No"", default = NA_character_)","Young person: 'Have you hurt yourself on purpose in any way' (hs54b, yes/no), K waves 6-8, B wave 8 and wave 10. Partial: the recall period is not stated in the supplied documentation.",,
+mh_unhealthywtctrl_self,incompatible,hb30e,,"Only exercising to control weight in the last 4 weeks (hb30e), a healthy method.",,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,incompatible,se03c3a,,"Only the truth-rated SDQ item on headaches, stomach-aches or sickness (se03c3a), part of the SDQ emotional subscale.",,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered; see wb_lifesat_singleitem_self.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered; see mh_anx_self.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered; see mh_distress_self.,,
+wb_bodyimage,incompatible,hb25c1,,"Only a figure-rating choice of body image (hb25c1, Picture 1-7), not a too-thin to too-fat rating.",,
+wb_bodyesteem_self,unavailable,,,Not collected.,,
+wb_bodyesteem_measure,unavailable,,,See wb_bodyesteem_self.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_singleitem_self.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered; see wb_lifesat_singleitem_self.,,
+wb_lifesat_singleitem_self,partial,se21b1,"if_else(as.numeric(se21b1) %in% 1:5, as.numeric(se21b1), NA_real_)","Young person: 'I am happy with how things are for me in my life' (se21b1), 5-point agreement scale (1 Strongly disagree to 5 Strongly agree), K waves 5-8, B waves 7-8, 9C1 and wave 10. Partial: an agreement rating rather than a satisfaction rating. Standardise within dataset.",,
+wb_lifesat_self,unavailable,,,Not collected.,,
+wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
+wb_happiness_singleitem_self,unavailable,,,Not collected.,,
+wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,unavailable,,,Not collected.,,
+wb_domainsat_friends_self,unavailable,,,Not collected.,,
+wb_domainsat_school_self,unavailable,,,Not collected.,,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,compatible,"gd04a1, gd04a2, gd04a3, gd04a4, gd04a5, gd04a6, gd04a7, gd04a8, gd04b1a, gd04b1b, gd04b1c, gd04b1d, gd04b1e, gd04b2a, gd04b2b, gd04b2c, gd04b2d, gd04b2e, gd04b3a, gd04b3b, gd04b3c, gd04b3e, gd04b3f, gd04b3g","local({
+  m5 <- cbind(
+    if_else(as.numeric(gd04a1) %in% 1:5, (5 - as.numeric(gd04a1)) * 25, NA_real_),
+    if_else(as.numeric(gd04a2) %in% 1:5, (5 - as.numeric(gd04a2)) * 25, NA_real_),
+    if_else(as.numeric(gd04a3) %in% 1:5, (5 - as.numeric(gd04a3)) * 25, NA_real_),
+    if_else(as.numeric(gd04a4) %in% 1:5, (5 - as.numeric(gd04a4)) * 25, NA_real_),
+    if_else(as.numeric(gd04a5) %in% 1:5, (5 - as.numeric(gd04a5)) * 25, NA_real_),
+    if_else(as.numeric(gd04a6) %in% 1:5, (5 - as.numeric(gd04a6)) * 25, NA_real_),
+    if_else(as.numeric(gd04a7) %in% 1:5, (5 - as.numeric(gd04a7)) * 25, NA_real_),
+    if_else(as.numeric(gd04a8) %in% 1:5, (5 - as.numeric(gd04a8)) * 25, NA_real_),
+    if_else(as.numeric(gd04b1a) %in% 1:5, (5 - as.numeric(gd04b1a)) * 25, NA_real_),
+    if_else(as.numeric(gd04b1b) %in% 1:5, (5 - as.numeric(gd04b1b)) * 25, NA_real_),
+    if_else(as.numeric(gd04b1c) %in% 1:5, (5 - as.numeric(gd04b1c)) * 25, NA_real_),
+    if_else(as.numeric(gd04b1d) %in% 1:5, (5 - as.numeric(gd04b1d)) * 25, NA_real_),
+    if_else(as.numeric(gd04b1e) %in% 1:5, (5 - as.numeric(gd04b1e)) * 25, NA_real_),
+    if_else(as.numeric(gd04b2a) %in% 1:5, (5 - as.numeric(gd04b2a)) * 25, NA_real_),
+    if_else(as.numeric(gd04b2b) %in% 1:5, (5 - as.numeric(gd04b2b)) * 25, NA_real_),
+    if_else(as.numeric(gd04b2c) %in% 1:5, (5 - as.numeric(gd04b2c)) * 25, NA_real_),
+    if_else(as.numeric(gd04b2d) %in% 1:5, (5 - as.numeric(gd04b2d)) * 25, NA_real_),
+    if_else(as.numeric(gd04b2e) %in% 1:5, (5 - as.numeric(gd04b2e)) * 25, NA_real_),
+    if_else(as.numeric(gd04b3b) %in% 1:5, (5 - as.numeric(gd04b3b)) * 25, NA_real_),
+    if_else(as.numeric(gd04b3c) %in% 1:5, (5 - as.numeric(gd04b3c)) * 25, NA_real_),
+    if_else(as.numeric(gd04b3e) %in% 1:5, (5 - as.numeric(gd04b3e)) * 25, NA_real_),
+    if_else(as.numeric(gd04b3f) %in% 1:5, (5 - as.numeric(gd04b3f)) * 25, NA_real_),
+    if_else(as.numeric(gd04b3g) %in% 1:5, (5 - as.numeric(gd04b3g)) * 25, NA_real_)
+  )
+  m3 <- cbind(
+    if_else(as.numeric(gd04a1) %in% 1:5, (5 - as.numeric(gd04a1)) * 25, NA_real_),
+    if_else(as.numeric(gd04a2) %in% 1:5, (5 - as.numeric(gd04a2)) * 25, NA_real_),
+    if_else(as.numeric(gd04a3) %in% 1:5, (5 - as.numeric(gd04a3)) * 25, NA_real_),
+    if_else(as.numeric(gd04a4) %in% 1:5, (5 - as.numeric(gd04a4)) * 25, NA_real_),
+    if_else(as.numeric(gd04a5) %in% 1:5, (5 - as.numeric(gd04a5)) * 25, NA_real_),
+    if_else(as.numeric(gd04a6) %in% 1:5, (5 - as.numeric(gd04a6)) * 25, NA_real_),
+    if_else(as.numeric(gd04a7) %in% 1:5, (5 - as.numeric(gd04a7)) * 25, NA_real_),
+    if_else(as.numeric(gd04a8) %in% 1:5, (5 - as.numeric(gd04a8)) * 25, NA_real_),
+    if_else(as.numeric(gd04b1a) %in% 1:5, (5 - as.numeric(gd04b1a)) * 25, NA_real_),
+    if_else(as.numeric(gd04b1b) %in% 1:5, (5 - as.numeric(gd04b1b)) * 25, NA_real_),
+    if_else(as.numeric(gd04b1c) %in% 1:5, (5 - as.numeric(gd04b1c)) * 25, NA_real_),
+    if_else(as.numeric(gd04b1d) %in% 1:5, (5 - as.numeric(gd04b1d)) * 25, NA_real_),
+    if_else(as.numeric(gd04b1e) %in% 1:5, (5 - as.numeric(gd04b1e)) * 25, NA_real_),
+    if_else(as.numeric(gd04b2a) %in% 1:5, (5 - as.numeric(gd04b2a)) * 25, NA_real_),
+    if_else(as.numeric(gd04b2b) %in% 1:5, (5 - as.numeric(gd04b2b)) * 25, NA_real_),
+    if_else(as.numeric(gd04b2c) %in% 1:5, (5 - as.numeric(gd04b2c)) * 25, NA_real_),
+    if_else(as.numeric(gd04b2d) %in% 1:5, (5 - as.numeric(gd04b2d)) * 25, NA_real_),
+    if_else(as.numeric(gd04b2e) %in% 1:5, (5 - as.numeric(gd04b2e)) * 25, NA_real_),
+    if_else(as.numeric(gd04b3a) %in% 1:5, (5 - as.numeric(gd04b3a)) * 25, NA_real_),
+    if_else(as.numeric(gd04b3b) %in% 1:5, (5 - as.numeric(gd04b3b)) * 25, NA_real_),
+    if_else(as.numeric(gd04b3c) %in% 1:5, (5 - as.numeric(gd04b3c)) * 25, NA_real_)
+  )
+  older <- (cohort == ""K"" & .wave %in% c(""2"", ""3"", ""4"", ""5"", ""6"", ""7"")) |
+    (cohort == ""B"" & .wave %in% c(""4"", ""5"", ""6"", ""7"", ""8""))
+  young <- (cohort == ""K"" & .wave == ""1"") | (cohort == ""B"" & .wave == ""3"")
+  case_when(
+    older & rowSums(!is.na(m5)) >= 23 / 2 ~ rowMeans(m5, na.rm = TRUE),
+    young & rowSums(!is.na(m3)) >= 21 / 2 ~ rowMeans(m3, na.rm = TRUE),
+    .default = NA_real_
+  )
+})","Parent 1's PedsQL 4.0 Generic Core Scales report on the child (P1 self-complete questionnaire, gd04 items scored Never to Almost always; 'Not sure' is NA), B waves 3-8 and K waves 1-7; age forms and recall period not stated in the supplied files. Total scale score computed from the items (no released total): items transformed 0-4 to 100-0 and averaged over answered items, NA if fewer than half are answered; 23 items at K waves 2-7 and B waves 4-8, 21 items with the 3 young-child school items at K wave 1 and B wave 3. B wave 2 (one school item) is NA.",,
+wb_qol_pedsql_physical_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_parent,compatible,pedsphy,"if_else(as.numeric(pedsphy) >= 0, as.numeric(pedsphy), NA_real_)","Parent 1's PedsQL 4.0 Generic Core Scales report on the child (P1 self-complete questionnaire, gd04 items scored Never to Almost always; 'Not sure' is NA), B waves 2-8 and K waves 1-7; age forms and recall period not stated in the supplied files. Physical Functioning, 8 items (gd04a1-gd04a8), released score (pedsphy, 0-100); it equals the items transformed 0-4 to 100-0 and averaged over answered items, at least half answered, in every row. The teen physical score (pedsphyb, K waves 6-7, B wave 8) is named unused.",,
+wb_qol_pedsql_emotional_parent,compatible,pedsef,"if_else(as.numeric(pedsef) >= 0, as.numeric(pedsef), NA_real_)","Parent 1's PedsQL 4.0 Generic Core Scales report on the child (P1 self-complete questionnaire, gd04 items scored Never to Almost always; 'Not sure' is NA), B waves 2-8 and K waves 1-7; age forms and recall period not stated in the supplied files. Emotional Functioning, 5 items (gd04b1a-gd04b1e), released score (pedsef, 0-100); it equals the item scoring in every row where at least half the items are answered.",,
+wb_qol_pedsql_social_parent,compatible,pedssof,"if_else(as.numeric(pedssof) >= 0, as.numeric(pedssof), NA_real_)","Parent 1's PedsQL 4.0 Generic Core Scales report on the child (P1 self-complete questionnaire, gd04 items scored Never to Almost always; 'Not sure' is NA), B waves 2-8 and K waves 1-7; age forms and recall period not stated in the supplied files. Social Functioning, 5 items (gd04b2a-gd04b2e), released score (pedssof, 0-100); it equals the item scoring in every row where at least half the items are answered.",,
+wb_qol_pedsql_school_parent,partial,"pedsscc, pedssca","coalesce(
+  if_else(as.numeric(pedsscc) >= 0, as.numeric(pedsscc), NA_real_),
+  if_else(as.numeric(pedssca) >= 0, as.numeric(pedssca), NA_real_)
+)","Parent 1's PedsQL 4.0 Generic Core Scales report on the child (P1 self-complete questionnaire, gd04 items scored Never to Almost always; 'Not sure' is NA), B waves 3-8 and K waves 1-7; age forms and recall period not stated in the supplied files. School Functioning: 5 items (gd04b3b, gd04b3c, gd04b3e-gd04b3g; pedsscc) at K waves 2-7 and B waves 4-8, and the 3 young-child items (gd04b3a-gd04b3c; pedssca) at K wave 1 and B wave 3 (age 4-5), released scores equal to the item scoring in every row. Partial: the 3-item form at age 4-5. B wave 2 asks one school item and is NA; the other released school versions (pedsscd) are named unused.",,
+wb_qol_pedsql_psychosocial_parent,compatible,"pedspsc, pedspsa","coalesce(
+  if_else(as.numeric(pedspsc) >= 0, as.numeric(pedspsc), NA_real_),
+  if_else(as.numeric(pedspsa) >= 0, as.numeric(pedspsa), NA_real_)
+)","Parent 1's PedsQL 4.0 Generic Core Scales report on the child (P1 self-complete questionnaire, gd04 items scored Never to Almost always; 'Not sure' is NA), B waves 3-8 and K waves 1-7; age forms and recall period not stated in the supplied files. Psychosocial Health Summary: the 15 emotional, social and school items (pedspsc) at K waves 2-7 and B waves 4-8, and 13 items with the 3 young-child school items (pedspsa) at K wave 1 and B wave 3, released scores equal to the item scoring in every row. B wave 2 (one school item) is NA; the other released versions (pedspsb, pedspsd, pedspse) are named unused.",,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered; see wb_selfesteem_self.,,
+wb_selfesteem_singleitem_self,unavailable,,,Not collected.,,
+wb_selfesteem_self,compatible,marshgs,"if_else(as.numeric(marshgs) >= 0, as.numeric(marshgs), NA_real_)","Self Description Questionnaire general-self scale (marshgs 'Marsh General-Self Scale'), the child's own report, K waves 3-4 and B waves 5-6, as released.",,
+wb_selfesteem_measure,inferred,marshgs,"if_else(
+  as.numeric(marshgs) >= 0,
+  ""Self Description Questionnaire general-self scale (Marsh), released score"",
+  NA_character_
+)",Where the scale was given; item count and scoring not documented in the supplied files.,,
+wb_selfefficacy_gse_self,unavailable,,,General Self-Efficacy Scale not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_selfefficacy_academic_self,unavailable,,,Not collected.,,
+wb_selfefficacy_academic_measure,unavailable,,,See wb_selfefficacy_academic_self.,,
+wb_control_self,unavailable,,,Not collected.,,
+wb_control_measure,unavailable,,,See wb_control_self.,,
+wb_selfconcept_academic_self,compatible,academic,"if_else(as.numeric(academic) >= 0, as.numeric(academic), NA_real_)","General academic self-concept scale (academic), the young person's own report, K wave 6 and B wave 8, as released.",,
+wb_selfconcept_maths_self,unavailable,,,Not collected.,,
+wb_selfconcept_verbal_self,unavailable,,,Not collected.,,
+wb_selfconcept_science_self,unavailable,,,Not collected.,,
+wb_selfconcept_social_self,compatible,marshpr,"if_else(as.numeric(marshpr) >= 0, as.numeric(marshpr), NA_real_)","Self Description Questionnaire peer-relations scale (marshpr 'Marsh Peer Relations Scale'), the child's own report, K waves 3-4 and B waves 5-6, as released.",,
+wb_selfconcept_measure,inferred,"marshpr, academic","case_when(
+  as.numeric(marshpr) >= 0 ~ ""social: Self Description Questionnaire peer relations (Marsh), released score"",
+  as.numeric(academic) >= 0 ~ ""academic: LSAC general academic self-concept scale, released score"",
+  .default = NA_character_
+)",One segment per row where the scale was given; item counts not documented in the supplied files.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,Subjective Happiness Scale not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,compatible,hs13c1,"recode_values(
+  as.numeric(hs13c1),
+  1 ~ ""Excellent"",
+  2 ~ ""Very good"",
+  3 ~ ""Good"",
+  4 ~ ""Fair"",
+  5 ~ ""Poor"",
+  default = NA_character_
+)","Young person: 'How would you rate your general health?' (hs13c1, Excellent to Poor), K waves 6-8, B wave 8, 9C1 and wave 10.",,
+wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,unavailable,,,Not collected.,,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_negaffect_self,unavailable,,,Not collected.,,
+wb_negaffect_measure,unavailable,,,See wb_negaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,unavailable,,,Not collected.,,
+wb_socsupport_friends_self,unavailable,,,Not collected.,,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self.,,
+hlth_sleep_wd,compatible,"hs21c3a, hs21c4a",((as.numeric(hs21c4a) - as.numeric(hs21c3a)) %% 86400) / 3600,"Young person's own report, K waves 5-7 and B waves 6-8 (CSRK 7): from the time they fall asleep on a school night (hs21c3a) to waking on a school day (hs21c4a), hours, across midnight.",,
+hlth_sleep_we,compatible,"hs21c6a, hs21c7a",((as.numeric(hs21c7a) - as.numeric(hs21c6a)) %% 86400) / 3600,"Young person's own report, K waves 5-7 and B waves 6-8 (CSRK 7): from falling asleep when there is no school the next day (hs21c6a) to waking on a non-school day (hs21c7a), hours.",,
+hlth_sleep,compatible,"hs21c3a, hs21c4a, hs21c6a, hs21c7a, hs21c9a, hs21c10a, hs21c11","local({
+  wd <- ((as.numeric(hs21c4a) - as.numeric(hs21c3a)) %% 86400) / 3600
+  we <- ((as.numeric(hs21c7a) - as.numeric(hs21c6a)) %% 86400) / 3600
+  k4 <- ((as.numeric(hs21c10a) - as.numeric(hs21c9a)) %% 86400) / 3600
+  ya <- if_else(as.numeric(hs21c11) >= 0, as.numeric(hs21c11) / 60, NA_real_)
+  case_when(
+    !is.na(wd) & !is.na(we) ~ (5 * wd + 2 * we) / 7,
+    cohort == ""K"" & .wave == ""4"" ~ k4,
+    (cohort == ""K"" & .wave == ""8"") | .wave %in% c(""9C1"", ""10"") ~ ya,
+    .default = NA_real_
+  )
+})","(5 x hlth_sleep_wd + 2 x hlth_sleep_we) / 7 at K waves 5-7 and B waves 6-8; K wave 4: the child's fall-asleep (hs21c9a) to wake-up (hs21c10a) times, no day stated; K wave 8, 9C1 and wave 10: the young person's 'How much sleep' total minutes (hs21c11) / 60, -5 and -9 NA. The parent-reported bed, sleep and wake times at the 3.5 mail-out and B waves 4-5 (hs21a2*-hs21a7*) come in two sets whose days the supplied documentation does not label, and are named unused.",,
+hlth_sleepprob,incompatible,"hs20a, hs20b3, hs20b5",,"No sleep-problem scale; only Parent 1's rating of how much of a problem the child's sleep is (hs20a) and yes/no sleep-problem items (hs20b3 getting to sleep, hs20b5 waking during the night).",,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not collected.,,
+hlth_sleepprob_singleitem_parent,incompatible,"hs20b3, hs20b5, hs20a",,"Parent 1's sleep-problem items are yes/no (hs20b3, hs20b5) or a degree rating (hs20a), not frequency ratings.",,
+hlth_bmi,compatible,cbmi,"if_else(as.numeric(cbmi) > 0, as.numeric(cbmi), NA_real_)","Study child's BMI as released (cbmi), from height and weight measured by the interviewer at waves 1-8 (F2F and MEAS sections) and self-reported at wave 10 (CAWI 'Self-reported height/weight').",,
+hlth_bmi_measure,inferred,cbmi,"if_else(as.numeric(cbmi) > 0, if_else(.wave == ""10"", ""Self-reported"", ""Measured""), NA_character_)","Measured at waves 1-8 (interviewer measurement), self-reported at wave 10, by the height and weight item labels.",,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,compatible,"pubrtyb, pubrty, pubrtyc","local({
+  x <- coalesce(as.numeric(pubrtyb), as.numeric(pubrty), as.numeric(pubrtyc))
+  if_else(x >= 1, x, NA_real_)
+})","The study's released puberty scale (pubrtyb, K waves 3.5-8 and B waves 6-8; pubrty K wave 3, pubrtyc B wave 5), a mean score on 1-4 items (observed 1-4), higher = more advanced. Informant and items not documented in the supplied files.",,
+hlth_puberty_measure,inferred,"pubrtyb, pubrty, pubrtyc","if_else(
+  coalesce(as.numeric(pubrtyb), as.numeric(pubrty), as.numeric(pubrtyc)) >= 1,
+  ""LSAC puberty scale (informant not documented), 1-4 item scoring (range 1-4), mean"",
+  NA_character_
+)",Where a puberty score is released.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,compatible,hb14c2a,"if_else(as.numeric(hb14c2a) %in% 0:7, as.numeric(hb14c2a), NA_real_)","Young person (child self-report booklet): 'Days per week exercise (60 mins)' (hb14c2a, 0-7 days in a week), B waves 7-8, K waves 7-8 and wave 10; recall a usual week by the label; -9 and other negative codes NA.",,
+hlth_birthweight,compatible,zhs03a,"carry_within(if_else(as.numeric(zhs03a) > 0, as.numeric(zhs03a), NA_real_), hicid, order = as.numeric(wave))","Parent 1 at wave 1: the study child's weight at birth in grams (zhs03a), carried within child to every wave.",,
+hlth_preterm,compatible,zhs04a,"carry_within(
+  case_when(
+    as.numeric(zhs04a) > 0 & as.numeric(zhs04a) < 37 ~ ""TRUE"",
+    as.numeric(zhs04a) >= 37 ~ ""FALSE"",
+    .default = NA_character_
+  ),
+  hicid,
+  order = as.numeric(wave)
+)","Parent 1 at wave 1: number of weeks of gestation (zhs04a), under 37 = TRUE; carried within child.",,
+hlth_breastfed,compatible,zhb05a,"carry_within(
+  recode_values(as.numeric(zhb05a), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_),
+  hicid,
+  order = as.numeric(wave)
+)","Parent 1: whether the study child was ever breastfed (zhb05a, waves 1-2), carried within child.",,
+hlth_prenatalsmoking,compatible,"zhb18a2, zhb18a1","carry_within(
+  case_when(
+    as.numeric(zhb18a2) == 1 | as.numeric(zhb18a1) %in% c(1, 2) ~ ""TRUE"",
+    as.numeric(zhb18a2) == 2 | as.numeric(zhb18a1) == 3 ~ ""FALSE"",
+    .default = NA_character_
+  ),
+  hicid,
+  order = as.numeric(wave)
+)","Parent report at wave 1 of whether the mother smoked during the pregnancy (zhb18a2, B cohort, yes/no; zhb18a1, K cohort, yes occasionally or most days = TRUE), carried within child.",,
+hlth_chroniccond_diagnosed,incompatible,"f18fm1, hs17x, hs17y, hs17u",,"Ongoing-condition checklists (f18fm1 other long-term condition; hs17x diabetes, hs17y epilepsy, hs17u bone, joint or muscle problem) ask whether the child has the condition, not whether a health professional diagnosed it.",,
+hlth_disability,incompatible,f17m1,,f17m1 records a condition or disability lasting 6+ months with no limitation wording.,,
+st_measure_type,inferred,,"""Continuous""","Diary minutes (15-minute periods at waves 1-3, episode times at waves 4-8).",,diary
+st_measure_name,inferred,,"""Time use diary""",LSAC time-use diaries.,,diary
+st_responder,inferred,tud_diarist,"case_when(
+  tud_diarist == ""Parent (paper 15-minute diary)"" ~ ""Parent or carer"",
+  tud_diarist == ""Study child (activity-episode diary)"" ~ ""Self"",
+  .default = NA_character_
+)","Parent at waves 1-3 (paper diaries), the study child at waves 4-8 (episode diaries), by design (UG 4.2.4).",,diary
+st_watch_wd,partial,"tud_tv_any_mins_wd, tud_tv_any_mins_we",tud_tv_any_mins_wd / 60,"Watching TV, video, DVD or movies, weekday. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_watch_we,partial,"tud_tv_any_mins_wd, tud_tv_any_mins_we",tud_tv_any_mins_we / 60,"Watching TV, video, DVD or movies, weekend day. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_watch,partial,"tud_tv_any_mins_wd, tud_tv_any_mins_we",(5 * tud_tv_any_mins_wd + 2 * tud_tv_any_mins_we) / 7 / 60,"(5 x wd + 2 x we) / 7 of the diary watching rows, only where the child has both a weekday and a weekend diary (waves 1-3); partial.",,diary
+st_comp_wd,partial,tud_comp_any_mins_wd,tud_comp_any_mins_wd / 60,"Waves 1-3: 'Use computer/computer games', weekday; console games may be included. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_comp_we,partial,tud_comp_any_mins_we,tud_comp_any_mins_we / 60,"Waves 1-3: 'Use computer/computer games', weekend day. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_comp,partial,"tud_comp_any_mins_wd, tud_comp_any_mins_we",(5 * tud_comp_any_mins_wd + 2 * tud_comp_any_mins_we) / 7 / 60,"(5 x wd + 2 x we) / 7 of the waves 1-3 computer rows, where both day types were kept; partial.",,diary
+st_game_wd,partial,"tud_games_any_mins_wd, tud_games_any_mins_we",tud_games_any_mins_wd / 60,"Waves 4-8 only. Playing electronic or computer games (study codes 63-65, 61, 611-612), weekday. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_game_we,partial,"tud_games_any_mins_wd, tud_games_any_mins_we",tud_games_any_mins_we / 60,"Waves 4-8 only. Playing electronic or computer games (study codes 63-65, 61, 611-612), weekend day. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_educational_wd,partial,"tud_homework_device_any_mins_wd, tud_homework_device_any_mins_we",tud_homework_device_any_mins_wd / 60,"Waves 4-8 only. Homework on a computer or electronic device (codes 61-62, 60, 601), weekday. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_educational_we,partial,"tud_homework_device_any_mins_wd, tud_homework_device_any_mins_we",tud_homework_device_any_mins_we / 60,"Waves 4-8 only. Homework on a computer or electronic device (codes 61-62, 60, 601), weekend day. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_socmedia_wd,partial,"tud_socnet_any_mins_wd, tud_socnet_any_mins_we",tud_socnet_any_mins_wd / 60,"Waves 4-8 only. Social networking sites (63, 631; waves 5-8; wave 4 code 84 unused), weekday. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_socmedia_we,partial,"tud_socnet_any_mins_wd, tud_socnet_any_mins_we",tud_socnet_any_mins_we / 60,"Waves 4-8 only. Social networking sites (63, 631; waves 5-8; wave 4 code 84 unused), weekend day. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_videochat_wd,partial,"tud_videochat_any_mins_wd, tud_videochat_any_mins_we",tud_videochat_any_mins_wd / 60,"Waves 4-8 only. Video chatting (codes 85, 83, 831), weekday. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_videochat_we,partial,"tud_videochat_any_mins_wd, tud_videochat_any_mins_we",tud_videochat_any_mins_we / 60,"Waves 4-8 only. Video chatting (codes 85, 83, 831), weekend day. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_internet_wd,partial,"tud_browsing_any_mins_wd, tud_browsing_any_mins_we",tud_browsing_any_mins_wd / 60,"Waves 4-8 only. Internet browsing or use nec (codes 66, 661); residual other device use and wave 4 code 60 unused, weekday. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_internet_we,partial,"tud_browsing_any_mins_wd, tud_browsing_any_mins_we",tud_browsing_any_mins_we / 60,"Waves 4-8 only. Internet browsing or use nec (codes 66, 661); residual other device use and wave 4 code 60 unused, weekend day. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_messaging_wd,partial,"tud_texting_any_mins_wd, tud_texting_any_mins_we, tud_online_chat_any_mins_wd, tud_online_chat_any_mins_we",(tud_texting_any_mins_wd + tud_online_chat_any_mins_wd) / 60,"Waves 5-8 only. Sum of texting or emailing (84, 841) and online chatting or instant messaging (85, 851) (DR-0002), weekday; texting pools email. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_messaging_we,partial,"tud_texting_any_mins_wd, tud_texting_any_mins_we, tud_online_chat_any_mins_wd, tud_online_chat_any_mins_we",(tud_texting_any_mins_we + tud_online_chat_any_mins_we) / 60,"Waves 5-8 only. Sum of texting or emailing and online chatting (DR-0002), weekend day. Diary person mean minutes per diary day / 60; main or concurrent activity; parent paper diaries at waves 1-3, child episode diary of one day at waves 4-8. Partial: diary block.",,diary
+st_measure_type,inferred,,"""Continuous""",Whole weekly hours entered by the young person (pc83c3).,,recall
+st_measure_name,inferred,,"""Custom""",The study's own item in the young person's 9C1 online survey (CAWI I9).,,recall
+st_responder,inferred,,"""Self""",The young person answers the 9C1 online survey.,,recall
+st_educational,partial,"pc83c3, pc83c2","case_when(as.numeric(pc83c3) >= 0 ~ as.numeric(pc83c3) / 7, as.numeric(pc83c2) == 3 ~ 0, .default = NA_real_)","Wave 9C1 (October-December 2020), young person: 'Weekly hours spent on online learning due to CRP' (pc83c3), asked of those who learnt remotely during the coronavirus restrictions (pc83c2 'Remote learning due to CRP': every day, some days, or already learning remotely); weekly hours / 7. Still went to school, TAFE or university every day (pc83c2 = 3, routed past) = 0 under the Non-users rule; -5 and -9 NA. Whole hours as entered, observed 0-99 with no documented top code (99 in 2 rows). Partial: online learning due to the restrictions only, with the restriction period as the reference.",,recall

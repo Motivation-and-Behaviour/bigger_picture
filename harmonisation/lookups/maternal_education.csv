@@ -404,3 +404,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 706,parental_education,5,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 5 Master's.
 706,parental_education,6,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 6 Post-graduate.
 706,paternal_education,999,Unknown,incompatible,Father_Education code 999 is in no document.
+18,maternal_education,Postgraduate degree,Bachelor degree or higher,compatible,"fd08m3a/fd08m3b code 1 (and the f items): postgraduate degree (ISCED 7-8)"
+18,maternal_education,Graduate diploma or graduate certificate,Bachelor degree or higher,compatible,"Code 2: graduate diploma or graduate certificate, a postgraduate award above the bachelor degree (ISCED 7)"
+18,maternal_education,Bachelor degree,Bachelor degree or higher,compatible,"Code 3: bachelor degree with or without honours (ISCED 6)"
+18,maternal_education,Advanced diploma or diploma,Post-secondary,compatible,"Code 4: advanced diploma or diploma, short-cycle tertiary below the bachelor degree (ISCED 5)"
+18,maternal_education,Certificate III/IV,Post-secondary,proximate,"fd08m3b code 5: Certificate III/IV including trade certificates; vocational certificates spanning upper-secondary (Certificate III) and post-secondary non-tertiary (Certificate IV) levels, placed at Post-secondary"
+18,maternal_education,"Certificate, level not stated",Post-secondary,proximate,"fd08m3a code 5 'Certificate' (wave 1, no level asked) and fd08m3b code 5.5 'Certificate nfd'; placed with Certificate III/IV, which holds most certificates whose level is stated (e.g. 515 III/IV against 112 I/II among B wave 6 mothers)"
+18,maternal_education,Certificate I/II,Secondary school or less,compatible,"fd08m3b code 6: Certificate I/II, entry-level vocational certificates (ISCED 2-3)"
+18,maternal_education,Other non-school qualification,Unknown,compatible,"fd08m3a code 6, fd08m3b code 7: other non-school qualification, level not stated"
+18,maternal_education,No non-school qualification,Secondary school or less,compatible,"fd08m2a/fd08f2a 'Completed other qual' = No: school education only, whatever year was completed (ISCED 0-3)"
