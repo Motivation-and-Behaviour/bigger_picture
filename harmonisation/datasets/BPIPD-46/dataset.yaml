@@ -1,1661 +1,690 @@
-dataset_id: "46"  
+dataset_id: "46"
 dataset_name: "PSID-CDS"
 status: "in_progress"
 
+resources:
+  - name: "cdsind_2021"
+    role: "data"
+    glob: "2021/CDSIND2021.txt"
+    reader: "fwf"
+    col_positions: "layouts/cdsind_2021.csv"
+  - name: "cdsind_2021_codebook"
+    role: "codebook"
+    glob: "2021/CDSIND2021_codebook.pdf"
+
 waves:
   - wave: "1997"
-    label: "PSID-CDS 1997"
+    label: "CDS-I (1997)"
     wave_dir: "1997"
     resources:
-      - name: "1997_child97_data"
-        role: "data"
-        glob: "CHILD97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_child97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "CHILD97.do"
-      - name: "1997_child97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD97.sas"
-      - name: "1997_child97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD97.sps"
-      - name: "1997_child97_codebook"
-        role: "codebook"
-        glob: "CHILD97_codebook.pdf"
-      - name: "1997_demog1997_data"
+      - name: "demog_1997"
         role: "data"
         glob: "DEMOG1997.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_demog1997_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "DEMOG1997.do"
-      - name: "1997_demog1997_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG1997.sas"
-      - name: "1997_demog1997_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG1997.sps"
-      - name: "1997_demog1997_codebook"
+        reader: "fwf"
+        col_positions: "layouts/demog_1997.csv"
+      - name: "demog_1997_codebook"
         role: "codebook"
         glob: "DEMOG1997_codebook.pdf"
-      - name: "1997_emsadmin97_data"
-        role: "data"
-        glob: "EMSADMIN97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_emsadmin97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "EMSADMIN97.do"
-      - name: "1997_emsadmin97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "EMSADMIN97.sas"
-      - name: "1997_emsadmin97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "EMSADMIN97.sps"
-      - name: "1997_emsadmin97_codebook"
-        role: "codebook"
-        glob: "EMSADMIN97_codebook.pdf"
-      - name: "1997_emsteach97_data"
-        role: "data"
-        glob: "EMSTEACH97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_emsteach97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "EMSTEACH97.do"
-      - name: "1997_emsteach97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "EMSTEACH97.sas"
-      - name: "1997_emsteach97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "EMSTEACH97.sps"
-      - name: "1997_emsteach97_codebook"
-        role: "codebook"
-        glob: "EMSTEACH97_codebook.pdf"
-      - name: "1997_esdiary97_data"
-        role: "data"
-        glob: "ESDIARY97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_esdiary97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "ESDIARY97.do"
-      - name: "1997_esdiary97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "ESDIARY97.sas"
-      - name: "1997_esdiary97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "ESDIARY97.sps"
-      - name: "1997_esdiary97_codebook"
-        role: "codebook"
-        glob: "ESDIARY97_codebook.pdf"
-      - name: "1997_foh_chld97_data"
-        role: "data"
-        glob: "FOH_CHLD97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_foh_chld97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "FOH_CHLD97.do"
-      - name: "1997_foh_chld97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "FOH_CHLD97.sas"
-      - name: "1997_foh_chld97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "FOH_CHLD97.sps"
-      - name: "1997_foh_chld97_codebook"
-        role: "codebook"
-        glob: "FOH_CHLD97_codebook.pdf"
-      - name: "1997_foh_hhld97_data"
-        role: "data"
-        glob: "FOH_HHLD97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_foh_hhld97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "FOH_HHLD97.do"
-      - name: "1997_foh_hhld97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "FOH_HHLD97.sas"
-      - name: "1997_foh_hhld97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "FOH_HHLD97.sps"
-      - name: "1997_foh_hhld97_codebook"
-        role: "codebook"
-        glob: "FOH_HHLD97_codebook.pdf"
-      - name: "1997_hb_cprov97_data"
-        role: "data"
-        glob: "HB_CPROV97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_hb_cprov97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "HB_CPROV97.do"
-      - name: "1997_hb_cprov97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HB_CPROV97.sas"
-      - name: "1997_hb_cprov97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HB_CPROV97.sps"
-      - name: "1997_hb_cprov97_codebook"
-        role: "codebook"
-        glob: "HB_CPROV97_codebook.pdf"
-      - name: "1997_hcdiary97_data"
-        role: "data"
-        glob: "HCDIARY97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_hcdiary97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "HCDIARY97.do"
-      - name: "1997_hcdiary97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HCDIARY97.sas"
-      - name: "1997_hcdiary97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HCDIARY97.sps"
-      - name: "1997_hcdiary97_codebook"
-        role: "codebook"
-        glob: "HCDIARY97_codebook.pdf"
-      - name: "1997_idmap97_data"
+      - name: "id_map_1997"
         role: "data"
         glob: "IDMAP97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_idmap97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "IDMAP97.do"
-      - name: "1997_idmap97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "IDMAP97.sas"
-      - name: "1997_idmap97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "IDMAP97.sps"
-      - name: "1997_idmap97_codebook"
+        reader: "fwf"
+        col_positions: "layouts/id_map_1997.csv"
+      - name: "id_map_1997_codebook"
         role: "codebook"
         glob: "IDMAP97_codebook.pdf"
-      - name: "1997_msdiary97_data"
-        role: "data"
-        glob: "MSDIARY97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_msdiary97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "MSDIARY97.do"
-      - name: "1997_msdiary97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "MSDIARY97.sas"
-      - name: "1997_msdiary97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "MSDIARY97.sps"
-      - name: "1997_msdiary97_codebook"
-        role: "codebook"
-        glob: "MSDIARY97_codebook.pdf"
-      - name: "1997_ocg_chld97_data"
-        role: "data"
-        glob: "OCG_CHLD97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_ocg_chld97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "OCG_CHLD97.do"
-      - name: "1997_ocg_chld97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_CHLD97.sas"
-      - name: "1997_ocg_chld97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_CHLD97.sps"
-      - name: "1997_ocg_chld97_codebook"
-        role: "codebook"
-        glob: "OCG_CHLD97_codebook.pdf"
-      - name: "1997_ocg_hhld97_data"
-        role: "data"
-        glob: "OCG_HHLD97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_ocg_hhld97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "OCG_HHLD97.do"
-      - name: "1997_ocg_hhld97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_HHLD97.sas"
-      - name: "1997_ocg_hhld97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_HHLD97.sps"
-      - name: "1997_ocg_hhld97_codebook"
-        role: "codebook"
-        glob: "OCG_HHLD97_codebook.pdf"
-      - name: "1997_pcg97_chld_data"
+      - name: "pcg_child_1997"
         role: "data"
         glob: "PCG97_CHLD.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_pcg97_chld_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCG97_CHLD.do"
-      - name: "1997_pcg97_chld_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG97_CHLD.sas"
-      - name: "1997_pcg97_chld_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG97_CHLD.sps"
-      - name: "1997_pcg97_chld_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_child_1997.csv"
+      - name: "pcg_child_1997_codebook"
         role: "codebook"
         glob: "PCG97_CHLD_codebook.pdf"
-      - name: "1997_pcg97_hh_data"
+      - name: "pcg_hh_1997"
         role: "data"
         glob: "PCG97_HH.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_pcg97_hh_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCG97_HH.do"
-      - name: "1997_pcg97_hh_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG97_HH.sas"
-      - name: "1997_pcg97_hh_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG97_HH.sps"
-      - name: "1997_pcg97_hh_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_hh_1997.csv"
+      - name: "pcg_hh_1997_codebook"
         role: "codebook"
         glob: "PCG97_HH_codebook.pdf"
-      - name: "1997_pdadmin97_data"
+      - name: "child_1997"
         role: "data"
-        glob: "PDADMIN97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_pdadmin97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PDADMIN97.do"
-      - name: "1997_pdadmin97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PDADMIN97.sas"
-      - name: "1997_pdadmin97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PDADMIN97.sps"
-      - name: "1997_pdadmin97_codebook"
+        glob: "CHILD97.txt"
+        reader: "fwf"
+        col_positions: "layouts/child_1997.csv"
+      - name: "child_1997_codebook"
         role: "codebook"
-        glob: "PDADMIN97_codebook.pdf"
-      - name: "1997_pdteach97_data"
-        role: "data"
-        glob: "PDTEACH97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_pdteach97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PDTEACH97.do"
-      - name: "1997_pdteach97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PDTEACH97.sas"
-      - name: "1997_pdteach97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PDTEACH97.sps"
-      - name: "1997_pdteach97_codebook"
-        role: "codebook"
-        glob: "PDTEACH97_codebook.pdf"
-      - name: "1997_psdiary97_data"
-        role: "data"
-        glob: "PSDIARY97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_psdiary97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PSDIARY97.do"
-      - name: "1997_psdiary97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PSDIARY97.sas"
-      - name: "1997_psdiary97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PSDIARY97.sps"
-      - name: "1997_psdiary97_codebook"
-        role: "codebook"
-        glob: "PSDIARY97_codebook.pdf"
-      - name: "1997_td97_data"
-        role: "data"
-        glob: "TD97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_td97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD97.do"
-      - name: "1997_td97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD97.sas"
-      - name: "1997_td97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD97.sps"
-      - name: "1997_td97_codebook"
-        role: "codebook"
-        glob: "TD97_codebook.pdf"
-      - name: "1997_td97_act_agg_data"
+        glob: "CHILD97_codebook.pdf"
+      - name: "td_agg_1997"
         role: "data"
         glob: "TD97_ACT_AGG.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_td97_act_agg_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD97_ACT_AGG.do"
-      - name: "1997_td97_act_agg_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD97_ACT_AGG.sas"
-      - name: "1997_td97_act_agg_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD97_ACT_AGG.sps"
-      - name: "1997_td97_act_agg_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_agg_1997.csv"
+      - name: "td_agg_1997_codebook"
         role: "codebook"
         glob: "TD97_ACT_AGG_codebook.pdf"
-      - name: "1997_td97media_data"
+      - name: "td_media_1997"
         role: "data"
         glob: "TD97MEDIA.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_td97media_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD97MEDIA.do"
-      - name: "1997_td97media_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD97MEDIA.sas"
-      - name: "1997_td97media_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD97MEDIA.sps"
-      - name: "1997_td97media_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_media_1997.csv"
+      - name: "td_media_1997_codebook"
         role: "codebook"
         glob: "TD97MEDIA_codebook.pdf"
-      - name: "1997_tdfup97_data"
+      - name: "td_activity_1997"
+        role: "data"
+        glob: "TD97.txt"
+        reader: "fwf"
+        col_positions: "layouts/td_activity_1997.csv"
+      - name: "td_activity_1997_codebook"
+        role: "codebook"
+        glob: "TD97_codebook.pdf"
+      - name: "td_followup_1997"
         role: "data"
         glob: "TDFUP97.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "1997_tdfup97_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TDFUP97.do"
-      - name: "1997_tdfup97_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TDFUP97.sas"
-      - name: "1997_tdfup97_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TDFUP97.sps"
-      - name: "1997_tdfup97_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_followup_1997.csv"
+      - name: "td_followup_1997_codebook"
         role: "codebook"
         glob: "TDFUP97_codebook.pdf"
-      - name: "1997_doc_absdadch"
+      - name: "teacher_ems_1997"
+        role: "data"
+        glob: "EMSTEACH97.txt"
+        reader: "fwf"
+        col_positions: "layouts/teacher_ems_1997.csv"
+      - name: "teacher_ems_1997_codebook"
+        role: "codebook"
+        glob: "EMSTEACH97_codebook.pdf"
+      - name: "teacher_pd_1997"
+        role: "data"
+        glob: "PDTEACH97.txt"
+        reader: "fwf"
+        col_positions: "layouts/teacher_pd_1997.csv"
+      - name: "teacher_pd_1997_codebook"
+        role: "codebook"
+        glob: "PDTEACH97_codebook.pdf"
+      - name: "school_diary_es_1997"
+        role: "data"
+        glob: "ESDIARY97.txt"
+        reader: "fwf"
+        col_positions: "layouts/school_diary_es_1997.csv"
+      - name: "school_diary_es_1997_codebook"
+        role: "codebook"
+        glob: "ESDIARY97_codebook.pdf"
+      - name: "school_diary_ms_1997"
+        role: "data"
+        glob: "MSDIARY97.txt"
+        reader: "fwf"
+        col_positions: "layouts/school_diary_ms_1997.csv"
+      - name: "school_diary_ms_1997_codebook"
+        role: "codebook"
+        glob: "MSDIARY97_codebook.pdf"
+      - name: "school_diary_pd_1997"
+        role: "data"
+        glob: "PSDIARY97.txt"
+        reader: "fwf"
+        col_positions: "layouts/school_diary_pd_1997.csv"
+      - name: "school_diary_pd_1997_codebook"
+        role: "codebook"
+        glob: "PSDIARY97_codebook.pdf"
+      - name: "setup_files_1997"
         role: "docs"
-        glob: "doc/absdadch.pdf"
-      - name: "1997_doc_absdadhh"
+        glob: "*.{sps,do,sas}"
+      - name: "documentation_1997"
         role: "docs"
-        glob: "doc/absdadhh.pdf"
-      - name: "1997_doc_cds1_user_guide_2019"
+        glob: "doc/*"
+      - name: "not_read_1997"
         role: "docs"
-        glob: "doc/CDS1 User Guide 2019.pdf"
-      - name: "1997_doc_child"
-        role: "docs"
-        glob: "doc/child.pdf"
-      - name: "1997_doc_emadmin"
-        role: "docs"
-        glob: "doc/EMadmin.pdf"
-      - name: "1997_doc_emteach"
-        role: "docs"
-        glob: "doc/EMteach.pdf"
-      - name: "1997_doc_hbcare"
-        role: "docs"
-        glob: "doc/HBcare.pdf"
-      - name: "1997_doc_may_2019_cds_releasehighlights"
-        role: "docs"
-        glob: "doc/May_2019_CDS_ReleaseHighlights.docx"
-      - name: "1997_doc_ocgchild"
-        role: "docs"
-        glob: "doc/OCGchild.pdf"
-      - name: "1997_doc_ocghhld"
-        role: "docs"
-        glob: "doc/OCGhhld.pdf"
-      - name: "1997_doc_pcgchild"
-        role: "docs"
-        glob: "doc/PCGchild.pdf"
-      - name: "1997_doc_pcghhld"
-        role: "docs"
-        glob: "doc/PCGhhld.pdf"
-      - name: "1997_doc_pdadmin"
-        role: "docs"
-        glob: "doc/PDadmin.pdf"
-      - name: "1997_doc_pdteach"
-        role: "docs"
-        glob: "doc/PDteach.pdf"
-      - name: "1997_doc_tdiary"
-        role: "docs"
-        glob: "doc/Tdiary.pdf"
+        glob:
+          - "EMSADMIN97.txt"
+          - "PDADMIN97.txt"
+          - "FOH_CHLD97.txt"
+          - "FOH_HHLD97.txt"
+          - "HB_CPROV97.txt"
+          - "HCDIARY97.txt"
+          - "OCG_CHLD97.txt"
+          - "OCG_HHLD97.txt"
+          - "EMSADMIN97_codebook.pdf"
+          - "PDADMIN97_codebook.pdf"
+          - "FOH_CHLD97_codebook.pdf"
+          - "FOH_HHLD97_codebook.pdf"
+          - "HB_CPROV97_codebook.pdf"
+          - "HCDIARY97_codebook.pdf"
+          - "OCG_CHLD97_codebook.pdf"
+          - "OCG_HHLD97_codebook.pdf"
 
   - wave: "2002"
-    label: "PSID-CDS 2002"
+    label: "CDS-II (2002)"
     wave_dir: "2002"
     resources:
-      - name: "2002_assessmt_data"
-        role: "data"
-        glob: "ASSESSMT.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_assessmt_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "ASSESSMT.do"
-      - name: "2002_assessmt_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "ASSESSMT.sas"
-      - name: "2002_assessmt_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "ASSESSMT.sps"
-      - name: "2002_assessmt_codebook"
-        role: "codebook"
-        glob: "ASSESSMT_codebook.pdf"
-      - name: "2002_child_data"
-        role: "data"
-        glob: "CHILD.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_child_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "CHILD.do"
-      - name: "2002_child_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD.sas"
-      - name: "2002_child_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD.sps"
-      - name: "2002_child_codebook"
-        role: "codebook"
-        glob: "CHILD_codebook.pdf"
-      - name: "2002_demog_data"
+      - name: "demog_2002"
         role: "data"
         glob: "DEMOG.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_demog_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "DEMOG.do"
-      - name: "2002_demog_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG.sas"
-      - name: "2002_demog_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG.sps"
-      - name: "2002_demog_codebook"
+        reader: "fwf"
+        col_positions: "layouts/demog_2002.csv"
+      - name: "demog_2002_codebook"
         role: "codebook"
         glob: "DEMOG_codebook.pdf"
-      - name: "2002_emsteach_data"
-        role: "data"
-        glob: "EMSTEACH.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_emsteach_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "EMSTEACH.do"
-      - name: "2002_emsteach_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "EMSTEACH.sas"
-      - name: "2002_emsteach_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "EMSTEACH.sps"
-      - name: "2002_emsteach_codebook"
-        role: "codebook"
-        glob: "EMSTEACH_codebook.pdf"
-      - name: "2002_gen_map_data"
-        role: "data"
-        glob: "GEN_MAP.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_gen_map_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "GEN_MAP.do"
-      - name: "2002_gen_map_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "GEN_MAP.sas"
-      - name: "2002_gen_map_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "GEN_MAP.sps"
-      - name: "2002_gen_map_codebook"
-        role: "codebook"
-        glob: "GEN_MAP_codebook.pdf"
-      - name: "2002_idmap02_data"
+      - name: "id_map_2002"
         role: "data"
         glob: "IDMAP02.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_idmap02_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "IDMAP02.do"
-      - name: "2002_idmap02_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "IDMAP02.sas"
-      - name: "2002_idmap02_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "IDMAP02.sps"
-      - name: "2002_idmap02_codebook"
+        reader: "fwf"
+        col_positions: "layouts/id_map_2002.csv"
+      - name: "id_map_2002_codebook"
         role: "codebook"
         glob: "IDMAP02_codebook.pdf"
-      - name: "2002_ocg_chld_data"
-        role: "data"
-        glob: "OCG_CHLD.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_ocg_chld_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "OCG_CHLD.do"
-      - name: "2002_ocg_chld_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_CHLD.sas"
-      - name: "2002_ocg_chld_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_CHLD.sps"
-      - name: "2002_ocg_chld_codebook"
-        role: "codebook"
-        glob: "OCG_CHLD_codebook.pdf"
-      - name: "2002_ocg_hhld_data"
-        role: "data"
-        glob: "OCG_HHLD.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_ocg_hhld_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "OCG_HHLD.do"
-      - name: "2002_ocg_hhld_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_HHLD.sas"
-      - name: "2002_ocg_hhld_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_HHLD.sps"
-      - name: "2002_ocg_hhld_codebook"
-        role: "codebook"
-        glob: "OCG_HHLD_codebook.pdf"
-      - name: "2002_pcg_chld_data"
+      - name: "pcg_child_2002"
         role: "data"
         glob: "PCG_CHLD.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_pcg_chld_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCG_CHLD.do"
-      - name: "2002_pcg_chld_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG_CHLD.sas"
-      - name: "2002_pcg_chld_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG_CHLD.sps"
-      - name: "2002_pcg_chld_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_child_2002.csv"
+      - name: "pcg_child_2002_codebook"
         role: "codebook"
         glob: "PCG_CHLD_codebook.pdf"
-      - name: "2002_pcg_hhld_data"
+      - name: "pcg_hh_2002"
         role: "data"
         glob: "PCG_HHLD.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_pcg_hhld_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCG_HHLD.do"
-      - name: "2002_pcg_hhld_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG_HHLD.sas"
-      - name: "2002_pcg_hhld_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG_HHLD.sps"
-      - name: "2002_pcg_hhld_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_hh_2002.csv"
+      - name: "pcg_hh_2002_codebook"
         role: "codebook"
         glob: "PCG_HHLD_codebook.pdf"
-      - name: "2002_td_activity_data"
+      - name: "child_2002"
         role: "data"
-        glob: "TD_ACTIVITY.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_td_activity_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_ACTIVITY.do"
-      - name: "2002_td_activity_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACTIVITY.sas"
-      - name: "2002_td_activity_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACTIVITY.sps"
-      - name: "2002_td_activity_codebook"
+        glob: "CHILD.txt"
+        reader: "fwf"
+        col_positions: "layouts/child_2002.csv"
+      - name: "child_2002_codebook"
         role: "codebook"
-        glob: "TD_ACTIVITY_codebook.pdf"
-      - name: "2002_td_followup_data"
+        glob: "CHILD_codebook.pdf"
+      - name: "assess_2002"
         role: "data"
-        glob: "TD_FOLLOWUP.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_td_followup_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_FOLLOWUP.do"
-      - name: "2002_td_followup_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_FOLLOWUP.sas"
-      - name: "2002_td_followup_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_FOLLOWUP.sps"
-      - name: "2002_td_followup_codebook"
+        glob: "ASSESSMT.txt"
+        reader: "fwf"
+        col_positions: "layouts/assess_2002.csv"
+      - name: "assess_2002_codebook"
         role: "codebook"
-        glob: "TD_FOLLOWUP_codebook.pdf"
-      - name: "2002_td02_act_agg_data"
+        glob: "ASSESSMT_codebook.pdf"
+      - name: "td_agg_2002"
         role: "data"
         glob: "TD02_ACT_AGG.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_td02_act_agg_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD02_ACT_AGG.do"
-      - name: "2002_td02_act_agg_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD02_ACT_AGG.sas"
-      - name: "2002_td02_act_agg_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD02_ACT_AGG.sps"
-      - name: "2002_td02_act_agg_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_agg_2002.csv"
+      - name: "td_agg_2002_codebook"
         role: "codebook"
         glob: "TD02_ACT_AGG_codebook.pdf"
-      - name: "2002_td02media_data"
+      - name: "td_media_2002"
         role: "data"
         glob: "TD02MEDIA.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2002_td02media_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD02MEDIA.do"
-      - name: "2002_td02media_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD02MEDIA.sas"
-      - name: "2002_td02media_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD02MEDIA.sps"
-      - name: "2002_td02media_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_media_2002.csv"
+      - name: "td_media_2002_codebook"
         role: "codebook"
         glob: "TD02MEDIA_codebook.pdf"
+      - name: "td_activity_2002"
+        role: "data"
+        glob: "TD_ACTIVITY.txt"
+        reader: "fwf"
+        col_positions: "layouts/td_activity_2002.csv"
+      - name: "td_activity_2002_codebook"
+        role: "codebook"
+        glob: "TD_ACTIVITY_codebook.pdf"
+      - name: "td_followup_2002"
+        role: "data"
+        glob: "TD_FOLLOWUP.txt"
+        reader: "fwf"
+        col_positions: "layouts/td_followup_2002.csv"
+      - name: "td_followup_2002_codebook"
+        role: "codebook"
+        glob: "TD_FOLLOWUP_codebook.pdf"
+      - name: "teacher_ems_2002"
+        role: "data"
+        glob: "EMSTEACH.txt"
+        reader: "fwf"
+        col_positions: "layouts/teacher_ems_2002.csv"
+      - name: "teacher_ems_2002_codebook"
+        role: "codebook"
+        glob: "EMSTEACH_codebook.pdf"
+      - name: "setup_files_2002"
+        role: "docs"
+        glob: "*.{sps,do,sas}"
+      - name: "not_read_2002"
+        role: "docs"
+        glob:
+          - "GEN_MAP.txt"
+          - "OCG_CHLD.txt"
+          - "OCG_HHLD.txt"
+          - "GEN_MAP_codebook.pdf"
+          - "OCG_CHLD_codebook.pdf"
+          - "OCG_HHLD_codebook.pdf"
 
   - wave: "2007"
-    label: "PSID-CDS 2007"
+    label: "CDS-III (2007)"
     wave_dir: "2007"
     resources:
-      - name: "2007_assess07_data"
-        role: "data"
-        glob: "ASSESS07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_assess07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "ASSESS07.do"
-      - name: "2007_assess07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "ASSESS07.sas"
-      - name: "2007_assess07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "ASSESS07.sps"
-      - name: "2007_assess07_codebook"
-        role: "codebook"
-        glob: "ASSESS07_codebook.pdf"
-      - name: "2007_child07_data"
-        role: "data"
-        glob: "CHILD07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_child07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "CHILD07.do"
-      - name: "2007_child07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD07.sas"
-      - name: "2007_child07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD07.sps"
-      - name: "2007_child07_codebook"
-        role: "codebook"
-        glob: "CHILD07_codebook.pdf"
-      - name: "2007_demog07_data"
+      - name: "demog_2007"
         role: "data"
         glob: "DEMOG07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_demog07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "DEMOG07.do"
-      - name: "2007_demog07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG07.sas"
-      - name: "2007_demog07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG07.sps"
-      - name: "2007_demog07_codebook"
+        reader: "fwf"
+        col_positions: "layouts/demog_2007.csv"
+      - name: "demog_2007_codebook"
         role: "codebook"
         glob: "DEMOG07_codebook.pdf"
-      - name: "2007_genmap07_data"
-        role: "data"
-        glob: "GENMAP07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_genmap07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "GENMAP07.do"
-      - name: "2007_genmap07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "GENMAP07.sas"
-      - name: "2007_genmap07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "GENMAP07.sps"
-      - name: "2007_genmap07_codebook"
-        role: "codebook"
-        glob: "GENMAP07_codebook.pdf"
-      - name: "2007_idmap07_data"
+      - name: "id_map_2007"
         role: "data"
         glob: "IDMAP07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_idmap07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "IDMAP07.do"
-      - name: "2007_idmap07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "IDMAP07.sas"
-      - name: "2007_idmap07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "IDMAP07.sps"
-      - name: "2007_idmap07_codebook"
+        reader: "fwf"
+        col_positions: "layouts/id_map_2007.csv"
+      - name: "id_map_2007_codebook"
         role: "codebook"
         glob: "IDMAP07_codebook.pdf"
-      - name: "2007_ocg_child07_data"
-        role: "data"
-        glob: "OCG_CHILD07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_ocg_child07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "OCG_CHILD07.do"
-      - name: "2007_ocg_child07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_CHILD07.sas"
-      - name: "2007_ocg_child07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_CHILD07.sps"
-      - name: "2007_ocg_child07_codebook"
-        role: "codebook"
-        glob: "OCG_CHILD07_codebook.pdf"
-      - name: "2007_ocg_hh07_data"
-        role: "data"
-        glob: "OCG_HH07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_ocg_hh07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "OCG_HH07.do"
-      - name: "2007_ocg_hh07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_HH07.sas"
-      - name: "2007_ocg_hh07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "OCG_HH07.sps"
-      - name: "2007_ocg_hh07_codebook"
-        role: "codebook"
-        glob: "OCG_HH07_codebook.pdf"
-      - name: "2007_pcg_child07_data"
+      - name: "pcg_child_2007"
         role: "data"
         glob: "PCG_CHILD07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_pcg_child07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCG_CHILD07.do"
-      - name: "2007_pcg_child07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG_CHILD07.sas"
-      - name: "2007_pcg_child07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG_CHILD07.sps"
-      - name: "2007_pcg_child07_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_child_2007.csv"
+      - name: "pcg_child_2007_codebook"
         role: "codebook"
         glob: "PCG_CHILD07_codebook.pdf"
-      - name: "2007_pcg_hh07_data"
+      - name: "pcg_hh_2007"
         role: "data"
         glob: "PCG_HH07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_pcg_hh07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCG_HH07.do"
-      - name: "2007_pcg_hh07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG_HH07.sas"
-      - name: "2007_pcg_hh07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCG_HH07.sps"
-      - name: "2007_pcg_hh07_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_hh_2007.csv"
+      - name: "pcg_hh_2007_codebook"
         role: "codebook"
         glob: "PCG_HH07_codebook.pdf"
-      - name: "2007_td_act07_data"
+      - name: "child_2007"
         role: "data"
-        glob: "TD_ACT07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_td_act07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT07.do"
-      - name: "2007_td_act07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT07.sas"
-      - name: "2007_td_act07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT07.sps"
-      - name: "2007_td_act07_codebook"
+        glob: "CHILD07.txt"
+        reader: "fwf"
+        col_positions: "layouts/child_2007.csv"
+      - name: "child_2007_codebook"
         role: "codebook"
-        glob: "TD_ACT07_codebook.pdf"
-      - name: "2007_td_actagg07_data"
+        glob: "CHILD07_codebook.pdf"
+      - name: "assess_2007"
+        role: "data"
+        glob: "ASSESS07.txt"
+        reader: "fwf"
+        col_positions: "layouts/assess_2007.csv"
+      - name: "assess_2007_codebook"
+        role: "codebook"
+        glob: "ASSESS07_codebook.pdf"
+      - name: "td_agg_2007"
         role: "data"
         glob: "TD_ACTAGG07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_td_actagg07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_ACTAGG07.do"
-      - name: "2007_td_actagg07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACTAGG07.sas"
-      - name: "2007_td_actagg07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACTAGG07.sps"
-      - name: "2007_td_actagg07_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_agg_2007.csv"
+      - name: "td_agg_2007_codebook"
         role: "codebook"
         glob: "TD_ACTAGG07_codebook.pdf"
-      - name: "2007_td_follow07_data"
-        role: "data"
-        glob: "TD_FOLLOW07.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_td_follow07_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_FOLLOW07.do"
-      - name: "2007_td_follow07_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_FOLLOW07.sas"
-      - name: "2007_td_follow07_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_FOLLOW07.sps"
-      - name: "2007_td_follow07_codebook"
-        role: "codebook"
-        glob: "TD_FOLLOW07_codebook.pdf"
-      - name: "2007_td07media_data"
+      - name: "td_media_2007"
         role: "data"
         glob: "TD07MEDIA.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2007_td07media_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD07MEDIA.do"
-      - name: "2007_td07media_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD07MEDIA.sas"
-      - name: "2007_td07media_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD07MEDIA.sps"
-      - name: "2007_td07media_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_media_2007.csv"
+      - name: "td_media_2007_codebook"
         role: "codebook"
         glob: "TD07MEDIA-codebook.pdf"
+      - name: "td_activity_2007"
+        role: "data"
+        glob: "TD_ACT07.txt"
+        reader: "fwf"
+        col_positions: "layouts/td_activity_2007.csv"
+      - name: "td_activity_2007_codebook"
+        role: "codebook"
+        glob: "TD_ACT07_codebook.pdf"
+      - name: "td_followup_2007"
+        role: "data"
+        glob: "TD_FOLLOW07.txt"
+        reader: "fwf"
+        col_positions: "layouts/td_followup_2007.csv"
+      - name: "td_followup_2007_codebook"
+        role: "codebook"
+        glob: "TD_FOLLOW07_codebook.pdf"
+      - name: "setup_files_2007"
+        role: "docs"
+        glob: "*.{sps,do,sas}"
+      - name: "not_read_2007"
+        role: "docs"
+        glob:
+          - "GENMAP07.txt"
+          - "OCG_CHILD07.txt"
+          - "OCG_HH07.txt"
+          - "GENMAP07_codebook.pdf"
+          - "OCG_CHILD07_codebook.pdf"
+          - "OCG_HH07_codebook.pdf"
 
   - wave: "2014"
-    label: "PSID-CDS 2014"
+    label: "CDS-2014"
     wave_dir: "2014"
     resources:
-      - name: "2014_assess14_data"
-        role: "data"
-        glob: "ASSESS14.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2014_assess14_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "ASSESS14.do"
-      - name: "2014_assess14_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "ASSESS14.sas"
-      - name: "2014_assess14_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "ASSESS14.sps"
-      - name: "2014_assess14_codebook"
-        role: "codebook"
-        glob: "ASSESS14_codebook.pdf"
-      - name: "2014_child14_data"
-        role: "data"
-        glob: "CHILD14.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2014_child14_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "CHILD14.do"
-      - name: "2014_child14_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD14.sas"
-      - name: "2014_child14_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD14.sps"
-      - name: "2014_child14_codebook"
-        role: "codebook"
-        glob: "CHILD14_codebook.pdf"
-      - name: "2014_demog14_data"
+      - name: "demog_2014"
         role: "data"
         glob: "DEMOG14.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2014_demog14_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "DEMOG14.do"
-      - name: "2014_demog14_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG14.sas"
-      - name: "2014_demog14_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG14.sps"
-      - name: "2014_demog14_codebook"
+        reader: "fwf"
+        col_positions: "layouts/demog_2014.csv"
+      - name: "demog_2014_codebook"
         role: "codebook"
         glob: "DEMOG14_codebook.pdf"
-      - name: "2014_hhroster14_data"
-        role: "data"
-        glob: "HHROSTER14.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2014_hhroster14_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER14.do"
-      - name: "2014_hhroster14_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER14.sas"
-      - name: "2014_hhroster14_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER14.sps"
-      - name: "2014_hhroster14_codebook"
-        role: "codebook"
-        glob: "HHROSTER14_codebook.pdf"
-      - name: "2014_idmap14_data"
+      - name: "id_map_2014"
         role: "data"
         glob: "IDMAP14.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2014_idmap14_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "IDMAP14.do"
-      - name: "2014_idmap14_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "IDMAP14.sas"
-      - name: "2014_idmap14_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "IDMAP14.sps"
-      - name: "2014_idmap14_codebook"
+        reader: "fwf"
+        col_positions: "layouts/id_map_2014.csv"
+      - name: "id_map_2014_codebook"
         role: "codebook"
         glob: "IDMAP14_codebook.pdf"
-      - name: "2014_pcgchild14_data"
+      - name: "hh_roster_2014"
+        role: "data"
+        glob: "HHROSTER14.txt"
+        reader: "fwf"
+        col_positions: "layouts/hh_roster_2014.csv"
+      - name: "hh_roster_2014_codebook"
+        role: "codebook"
+        glob: "HHROSTER14_codebook.pdf"
+      - name: "pcg_child_2014"
         role: "data"
         glob: "PCGCHILD14.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2014_pcgchild14_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD14.do"
-      - name: "2014_pcgchild14_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD14.sas"
-      - name: "2014_pcgchild14_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD14.sps"
-      - name: "2014_pcgchild14_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_child_2014.csv"
+      - name: "pcg_child_2014_codebook"
         role: "codebook"
         glob: "PCGCHILD14_codebook.pdf"
-      - name: "2014_pcghh14_data"
+      - name: "pcg_hh_2014"
         role: "data"
         glob: "PCGHH14.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2014_pcghh14_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCGHH14.do"
-      - name: "2014_pcghh14_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGHH14.sas"
-      - name: "2014_pcghh14_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGHH14.sps"
-      - name: "2014_pcghh14_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_hh_2014.csv"
+      - name: "pcg_hh_2014_codebook"
         role: "codebook"
         glob: "PCGHH14_codebook.pdf"
-      - name: "2014_td_act14_data"
+      - name: "child_2014"
         role: "data"
-        glob: "TD_ACT14.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2014_td_act14_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT14.do"
-      - name: "2014_td_act14_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT14.sas"
-      - name: "2014_td_act14_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT14.sps"
-      - name: "2014_td_act14_codebook"
+        glob: "CHILD14.txt"
+        reader: "fwf"
+        col_positions: "layouts/child_2014.csv"
+      - name: "child_2014_codebook"
         role: "codebook"
-        glob: "TD_ACT14_codebook.pdf"
-      - name: "2014_td_actagg14_data"
+        glob: "CHILD14_codebook.pdf"
+      - name: "assess_2014"
+        role: "data"
+        glob: "ASSESS14.txt"
+        reader: "fwf"
+        col_positions: "layouts/assess_2014.csv"
+      - name: "assess_2014_codebook"
+        role: "codebook"
+        glob: "ASSESS14_codebook.pdf"
+      - name: "td_agg_2014"
         role: "data"
         glob: "TD_ACTAGG14.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2014_td_actagg14_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_ACTAGG14.do"
-      - name: "2014_td_actagg14_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACTAGG14.sas"
-      - name: "2014_td_actagg14_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACTAGG14.sps"
-      - name: "2014_td_actagg14_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_agg_2014.csv"
+      - name: "td_agg_2014_codebook"
         role: "codebook"
         glob: "TD_ACTAGG14_codebook.pdf"
-      - name: "2014_td_follow14_data"
-        role: "data"
-        glob: "TD_FOLLOW14.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2014_td_follow14_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_FOLLOW14.do"
-      - name: "2014_td_follow14_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_FOLLOW14.sas"
-      - name: "2014_td_follow14_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_FOLLOW14.sps"
-      - name: "2014_td_follow14_codebook"
-        role: "codebook"
-        glob: "TD_FOLLOW14_codebook.pdf"
-      - name: "2014_td14media_data"
+      - name: "td_media_2014"
         role: "data"
         glob: "TD14MEDIA.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2014_td14media_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD14MEDIA.do"
-      - name: "2014_td14media_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD14MEDIA.sas"
-      - name: "2014_td14media_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD14MEDIA.sps"
-      - name: "2014_td14media_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_media_2014.csv"
+      - name: "td_media_2014_codebook"
         role: "codebook"
         glob: "TD14MEDIA_codebook.pdf"
-      - name: "2014_doc_cds_2014_coverscreen_interview"
+      - name: "td_activity_2014"
+        role: "data"
+        glob: "TD_ACT14.txt"
+        reader: "fwf"
+        col_positions: "layouts/td_activity_2014.csv"
+      - name: "td_activity_2014_codebook"
+        role: "codebook"
+        glob: "TD_ACT14_codebook.pdf"
+      - name: "td_followup_2014"
+        role: "data"
+        glob: "TD_FOLLOW14.txt"
+        reader: "fwf"
+        col_positions: "layouts/td_followup_2014.csv"
+      - name: "td_followup_2014_codebook"
+        role: "codebook"
+        glob: "TD_FOLLOW14_codebook.pdf"
+      - name: "setup_files_2014"
         role: "docs"
-        glob: "doc/CDS_2014_Coverscreen_Interview.pdf"
-      - name: "2014_doc_cds_2014_questionnaire"
+        glob: "*.{sps,do,sas}"
+      - name: "documentation_2014"
         role: "docs"
-        glob: "doc/CDS_2014_Questionnaire.pdf"
-      - name: "2014_doc_cds_2014_readme"
-        role: "docs"
-        glob: "doc/CDS_2014_readme.txt"
-      - name: "2014_doc_cds_2014_time_diary_questionnaire"
-        role: "docs"
-        glob: "doc/CDS_2014_Time_Diary_Questionnaire.pdf"
+        glob: "doc/*"
 
   - wave: "2019"
-    label: "PSID-CDS 2019"
+    label: "CDS-2019"
     wave_dir: "2019"
     resources:
-      - name: "2019_assess2019_data"
-        role: "data"
-        glob: "ASSESS2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2019_assess2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "ASSESS2019.do"
-      - name: "2019_assess2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "ASSESS2019.sas"
-      - name: "2019_assess2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "ASSESS2019.sps"
-      - name: "2019_assess2019_codebook"
-        role: "codebook"
-        glob: "ASSESS2019_codebook.pdf"
-      - name: "2019_cdsind2019_data"
-        role: "data"
-        glob: "CDSIND2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2019_cdsind2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "CDSIND2019.do"
-      - name: "2019_cdsind2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CDSIND2019.sas"
-      - name: "2019_cdsind2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CDSIND2019.sps"
-      - name: "2019_cdsind2019_codebook"
-        role: "codebook"
-        glob: "CDSIND2019_codebook.pdf"
-      - name: "2019_child2019_data"
-        role: "data"
-        glob: "CHILD2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2019_child2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "CHILD2019.do"
-      - name: "2019_child2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD2019.sas"
-      - name: "2019_child2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD2019.sps"
-      - name: "2019_child2019_codebook"
-        role: "codebook"
-        glob: "CHILD2019_codebook.pdf"
-      - name: "2019_demog2019_data"
+      - name: "demog_2019"
         role: "data"
         glob: "DEMOG2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2019_demog2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "DEMOG2019.do"
-      - name: "2019_demog2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG2019.sas"
-      - name: "2019_demog2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG2019.sps"
-      - name: "2019_demog2019_codebook"
+        reader: "fwf"
+        col_positions: "layouts/demog_2019.csv"
+      - name: "demog_2019_codebook"
         role: "codebook"
         glob: "DEMOG2019_codebook.pdf"
-      - name: "2019_hhroster2019_data"
+      - name: "hh_roster_2019"
         role: "data"
         glob: "HHROSTER2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2019_hhroster2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER2019.do"
-      - name: "2019_hhroster2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER2019.sas"
-      - name: "2019_hhroster2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER2019.sps"
-      - name: "2019_hhroster2019_codebook"
+        reader: "fwf"
+        col_positions: "layouts/hh_roster_2019.csv"
+      - name: "hh_roster_2019_codebook"
         role: "codebook"
         glob: "HHROSTER2019_codebook.pdf"
-      - name: "2019_pcgchild2019_data"
+      - name: "pcg_child_2019"
         role: "data"
         glob: "PCGCHILD2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2019_pcgchild2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD2019.do"
-      - name: "2019_pcgchild2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD2019.sas"
-      - name: "2019_pcgchild2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD2019.sps"
-      - name: "2019_pcgchild2019_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_child_2019.csv"
+      - name: "pcg_child_2019_codebook"
         role: "codebook"
         glob: "PCGCHILD2019_codebook.pdf"
-      - name: "2019_pcghh2019_data"
+      - name: "pcg_hh_2019"
         role: "data"
         glob: "PCGHH2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2019_pcghh2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCGHH2019.do"
-      - name: "2019_pcghh2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGHH2019.sas"
-      - name: "2019_pcghh2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGHH2019.sps"
-      - name: "2019_pcghh2019_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_hh_2019.csv"
+      - name: "pcg_hh_2019_codebook"
         role: "codebook"
         glob: "PCGHH2019_codebook.pdf"
-      - name: "2019_td_act2019_data"
+      - name: "child_2019"
         role: "data"
-        glob: "TD_ACT2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2019_td_act2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT2019.do"
-      - name: "2019_td_act2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT2019.sas"
-      - name: "2019_td_act2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT2019.sps"
-      - name: "2019_td_act2019_codebook"
+        glob: "CHILD2019.txt"
+        reader: "fwf"
+        col_positions: "layouts/child_2019.csv"
+      - name: "child_2019_codebook"
         role: "codebook"
-        glob: "TD_ACT2019_codebook.pdf"
-      - name: "2019_td_agg2019_data"
+        glob: "CHILD2019_codebook.pdf"
+      - name: "assess_2019"
+        role: "data"
+        glob: "ASSESS2019.txt"
+        reader: "fwf"
+        col_positions: "layouts/assess_2019.csv"
+      - name: "assess_2019_codebook"
+        role: "codebook"
+        glob: "ASSESS2019_codebook.pdf"
+      - name: "td_agg_2019"
         role: "data"
         glob: "TD_AGG2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2019_td_agg2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_AGG2019.do"
-      - name: "2019_td_agg2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_AGG2019.sas"
-      - name: "2019_td_agg2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_AGG2019.sps"
-      - name: "2019_td_agg2019_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_agg_2019.csv"
+      - name: "td_agg_2019_codebook"
         role: "codebook"
         glob: "TD_AGG2019_codebook.pdf"
-      - name: "2019_td_qn2019_data"
-        role: "data"
-        glob: "TD_QN2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2019_td_qn2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_QN2019.do"
-      - name: "2019_td_qn2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_QN2019.sas"
-      - name: "2019_td_qn2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_QN2019.sps"
-      - name: "2019_td_qn2019_codebook"
-        role: "codebook"
-        glob: "TD_QN2019_codebook.pdf"
-      - name: "2019_td19media_data"
+      - name: "td_media_2019"
         role: "data"
         glob: "TD19MEDIA.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2019_td19media_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD19MEDIA.do"
-      - name: "2019_td19media_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD19MEDIA.sas"
-      - name: "2019_td19media_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD19MEDIA.sps"
-      - name: "2019_td19media_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_media_2019.csv"
+      - name: "td_media_2019_codebook"
         role: "codebook"
         glob: "TD19MEDIA_codebook.pdf"
-      - name: "2019_doc_cds_2019_child_interview_qnaire"
+      - name: "td_activity_2019"
+        role: "data"
+        glob: "TD_ACT2019.txt"
+        reader: "fwf"
+        col_positions: "layouts/td_activity_2019.csv"
+      - name: "td_activity_2019_codebook"
+        role: "codebook"
+        glob: "TD_ACT2019_codebook.pdf"
+      - name: "td_followup_2019"
+        role: "data"
+        glob: "TD_QN2019.txt"
+        reader: "fwf"
+        col_positions: "layouts/td_followup_2019.csv"
+      - name: "td_followup_2019_codebook"
+        role: "codebook"
+        glob: "TD_QN2019_codebook.pdf"
+      - name: "setup_files_2019"
         role: "docs"
-        glob: "doc/CDS 2019 Child Interview Qnaire.pdf"
-      - name: "2019_doc_cds_2019_coverscreen_qnaire"
+        glob: "*.{sps,do,sas}"
+      - name: "documentation_2019"
         role: "docs"
-        glob: "doc/CDS 2019 Coverscreen Qnaire.pdf"
-      - name: "2019_doc_cds_2019_pcg_interview_qnaire"
+        glob: "doc/*"
+      - name: "not_read_2019"
         role: "docs"
-        glob: "doc/CDS 2019 PCG Interview Qnaire.pdf"
-      - name: "2019_doc_cds_2019_weekday_time_diary"
-        role: "docs"
-        glob: "doc/CDS 2019 Weekday Time Diary.pdf"
-      - name: "2019_doc_cds_2019_weekend_time_diary"
-        role: "docs"
-        glob: "doc/CDS 2019 Weekend Time Diary.pdf"
-      - name: "2019_doc_cds_2019_readme"
-        role: "docs"
-        glob: "doc/CDS_2019_readme.txt"
-      - name: "2019_doc_cds2019_userguide"
-        role: "docs"
-        glob: "doc/CDS2019_UserGuide.pdf"
+        glob:
+          - "CDSIND2019.txt"
+          - "CDSIND2019_codebook.pdf"
 
   - wave: "2020"
-    label: "PSID-CDS 2020"
+    label: "CDS-2020"
     wave_dir: "2020"
     resources:
-      - name: "2020_cdsind2019_data"
-        role: "data"
-        glob: "CDSIND2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2020_cdsind2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "CDSIND2019.do"
-      - name: "2020_cdsind2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CDSIND2019.sas"
-      - name: "2020_cdsind2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CDSIND2019.sps"
-      - name: "2020_cdsind2019_codebook"
-        role: "codebook"
-        glob: "CDSIND2019_codebook.pdf"
-      - name: "2020_cvh2020_data"
-        role: "data"
-        glob: "CVH2020.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2020_cvh2020_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "CVH2020.do"
-      - name: "2020_cvh2020_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CVH2020.sas"
-      - name: "2020_cvh2020_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CVH2020.sps"
-      - name: "2020_cvh2020_codebook"
-        role: "codebook"
-        glob: "CVH2020_codebook.pdf"
-      - name: "2020_demog2019_data"
-        role: "data"
-        glob: "DEMOG2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2020_demog2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "DEMOG2019.do"
-      - name: "2020_demog2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG2019.sas"
-      - name: "2020_demog2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG2019.sps"
-      - name: "2020_demog2019_codebook"
-        role: "codebook"
-        glob: "DEMOG2019_codebook.pdf"
-      - name: "2020_hhroster2019_data"
-        role: "data"
-        glob: "HHROSTER2019.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2020_hhroster2019_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER2019.do"
-      - name: "2020_hhroster2019_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER2019.sas"
-      - name: "2020_hhroster2019_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER2019.sps"
-      - name: "2020_hhroster2019_codebook"
-        role: "codebook"
-        glob: "HHROSTER2019_codebook.pdf"
-      - name: "2020_pcgchild2020_data"
+      - name: "pcg_child_2020"
         role: "data"
         glob: "PCGCHILD2020.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2020_pcgchild2020_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD2020.do"
-      - name: "2020_pcgchild2020_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD2020.sas"
-      - name: "2020_pcgchild2020_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD2020.sps"
-      - name: "2020_pcgchild2020_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_child_2020.csv"
+      - name: "pcg_child_2020_codebook"
         role: "codebook"
         glob: "PCGCHILD2020_codebook.pdf"
-      - name: "2020_pcghh2020_data"
+      - name: "pcg_hh_2020"
         role: "data"
         glob: "PCGHH2020.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2020_pcghh2020_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCGHH2020.do"
-      - name: "2020_pcghh2020_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGHH2020.sas"
-      - name: "2020_pcghh2020_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGHH2020.sps"
-      - name: "2020_pcghh2020_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_hh_2020.csv"
+      - name: "pcg_hh_2020_codebook"
         role: "codebook"
         glob: "PCGHH2020_codebook.pdf"
-      - name: "2020_td_act2020_data"
-        role: "data"
-        glob: "TD_ACT2020.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2020_td_act2020_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT2020.do"
-      - name: "2020_td_act2020_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT2020.sas"
-      - name: "2020_td_act2020_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_ACT2020.sps"
-      - name: "2020_td_act2020_codebook"
-        role: "codebook"
-        glob: "TD_ACT2020_codebook.pdf"
-      - name: "2020_td_agg2020_data"
+      - name: "td_agg_2020"
         role: "data"
         glob: "TD_AGG2020.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2020_td_agg2020_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_AGG2020.do"
-      - name: "2020_td_agg2020_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_AGG2020.sas"
-      - name: "2020_td_agg2020_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_AGG2020.sps"
-      - name: "2020_td_agg2020_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_agg_2020.csv"
+      - name: "td_agg_2020_codebook"
         role: "codebook"
         glob: "TD_AGG2020_codebook.pdf"
-      - name: "2020_td_qn2020_data"
-        role: "data"
-        glob: "TD_QN2020.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2020_td_qn2020_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD_QN2020.do"
-      - name: "2020_td_qn2020_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_QN2020.sas"
-      - name: "2020_td_qn2020_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD_QN2020.sps"
-      - name: "2020_td_qn2020_codebook"
-        role: "codebook"
-        glob: "TD_QN2020_codebook.pdf"
-      - name: "2020_td20media_data"
+      - name: "td_media_2020"
         role: "data"
         glob: "TD20MEDIA.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2020_td20media_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "TD20MEDIA.do"
-      - name: "2020_td20media_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD20MEDIA.sas"
-      - name: "2020_td20media_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "TD20MEDIA.sps"
-      - name: "2020_td20media_codebook"
+        reader: "fwf"
+        col_positions: "layouts/td_media_2020.csv"
+      - name: "td_media_2020_codebook"
         role: "codebook"
         glob: "TD20MEDIA_codebook.pdf"
-      - name: "2020_doc_cds_2019_weekday_time_diary"
+      - name: "td_activity_2020"
+        role: "data"
+        glob: "TD_ACT2020.txt"
+        reader: "fwf"
+        col_positions: "layouts/td_activity_2020.csv"
+      - name: "td_activity_2020_codebook"
+        role: "codebook"
+        glob: "TD_ACT2020_codebook.pdf"
+      - name: "td_followup_2020"
+        role: "data"
+        glob: "TD_QN2020.txt"
+        reader: "fwf"
+        col_positions: "layouts/td_followup_2020.csv"
+      - name: "td_followup_2020_codebook"
+        role: "codebook"
+        glob: "TD_QN2020_codebook.pdf"
+      - name: "setup_files_2020"
         role: "docs"
-        glob: "doc/CDS 2019 Weekday Time Diary.pdf"
-      - name: "2020_doc_cds_2019_weekend_time_diary"
+        glob: "{CVH2020,PCGCHILD2020,PCGHH2020,TD_ACT2020,TD_AGG2020,TD_QN2020,TD20MEDIA}.{sps,do,sas}"
+      - name: "documentation_2020"
         role: "docs"
-        glob: "doc/CDS 2019 Weekend Time Diary.pdf"
-      - name: "2020_doc_cds_2020_covid19_module"
+        glob:
+          - "doc/CDS 2020 (Covid19 Module).pdf"
+          - "doc/CDS2020_UserGuide.pdf"
+          - "doc/CDS_2020_readme.txt"
+      - name: "not_read_2020"
         role: "docs"
-        glob: "doc/CDS 2020 (Covid19 Module).pdf"
-      - name: "2020_doc_cds_2020_readme"
-        role: "docs"
-        glob: "doc/CDS_2020_readme.txt"
-      - name: "2020_doc_cds2020_userguide"
-        role: "docs"
-        glob: "doc/CDS2020_UserGuide.pdf"
+        glob:
+          - "CVH2020.txt"
+          - "CVH2020_codebook.pdf"
 
   - wave: "2021"
-    label: "PSID-CDS 2021"
+    label: "CDS-2021"
     wave_dir: "2021"
     resources:
-      - name: "2021_cdsind2021_data"
-        role: "data"
-        glob: "CDSIND2021.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2021_cdsind2021_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "CDSIND2021.do"
-      - name: "2021_cdsind2021_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CDSIND2021.sas"
-      - name: "2021_cdsind2021_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CDSIND2021.sps"
-      - name: "2021_cdsind2021_codebook"
-        role: "codebook"
-        glob: "CDSIND2021_codebook.pdf"
-      - name: "2021_child2021_data"
-        role: "data"
-        glob: "CHILD2021.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2021_child2021_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "CHILD2021.do"
-      - name: "2021_child2021_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD2021.sas"
-      - name: "2021_child2021_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "CHILD2021.sps"
-      - name: "2021_child2021_codebook"
-        role: "codebook"
-        glob: "CHILD2021_codebook.pdf"
-      - name: "2021_demog2021_data"
+      - name: "demog_2021"
         role: "data"
         glob: "DEMOG2021.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2021_demog2021_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "DEMOG2021.do"
-      - name: "2021_demog2021_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG2021.sas"
-      - name: "2021_demog2021_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "DEMOG2021.sps"
-      - name: "2021_demog2021_codebook"
+        reader: "fwf"
+        col_positions: "layouts/demog_2021.csv"
+      - name: "demog_2021_codebook"
         role: "codebook"
         glob: "DEMOG2021_codebook.pdf"
-      - name: "2021_hhroster2021_data"
+      - name: "hh_roster_2021"
         role: "data"
         glob: "HHROSTER2021.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2021_hhroster2021_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER2021.do"
-      - name: "2021_hhroster2021_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER2021.sas"
-      - name: "2021_hhroster2021_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "HHROSTER2021.sps"
-      - name: "2021_hhroster2021_codebook"
+        reader: "fwf"
+        col_positions: "layouts/hh_roster_2021.csv"
+      - name: "hh_roster_2021_codebook"
         role: "codebook"
         glob: "HHROSTER2021_codebook.pdf"
-      - name: "2021_pcgchild2021_data"
+      - name: "pcg_child_2021"
         role: "data"
         glob: "PCGCHILD2021.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2021_pcgchild2021_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD2021.do"
-      - name: "2021_pcgchild2021_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD2021.sas"
-      - name: "2021_pcgchild2021_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGCHILD2021.sps"
-      - name: "2021_pcgchild2021_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_child_2021.csv"
+      - name: "pcg_child_2021_codebook"
         role: "codebook"
         glob: "PCGCHILD2021_codebook.pdf"
-      - name: "2021_pcghh2021_data"
+      - name: "pcg_hh_2021"
         role: "data"
         glob: "PCGHH2021.txt"
-        reader: "ascii"  # PLACEHOLDER: not a valid reader per schema enum;
-                         # replace with the confirmed reader (e.g. stata/sas/spss).
-      - name: "2021_pcghh2021_do_syntax"   # read/setup syntax
-        role: "docs"
-        glob: "PCGHH2021.do"
-      - name: "2021_pcghh2021_sas_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGHH2021.sas"
-      - name: "2021_pcghh2021_sps_syntax"  # read/setup syntax
-        role: "docs"
-        glob: "PCGHH2021.sps"
-      - name: "2021_pcghh2021_codebook"
+        reader: "fwf"
+        col_positions: "layouts/pcg_hh_2021.csv"
+      - name: "pcg_hh_2021_codebook"
         role: "codebook"
         glob: "PCGHH2021_codebook.pdf"
-      - name: "2021_doc_cds_2021_child_interview_qnaire"
+      - name: "child_2021"
+        role: "data"
+        glob: "CHILD2021.txt"
+        reader: "fwf"
+        col_positions: "layouts/child_2021.csv"
+      - name: "child_2021_codebook"
+        role: "codebook"
+        glob: "CHILD2021_codebook.pdf"
+      - name: "setup_files_2021"
         role: "docs"
-        glob: "doc/CDS 2021 Child Interview Qnaire.pdf"
-      - name: "2021_doc_cds_2021_coverscreen_qnaire"
+        glob: "*.{sps,do,sas}"
+      - name: "documentation_2021"
         role: "docs"
-        glob: "doc/CDS 2021 Coverscreen Qnaire.pdf"
-      - name: "2021_doc_cds_2021_pcg_interview_qnaire"
-        role: "docs"
-        glob: "doc/CDS 2021 PCG Interview Qnaire.pdf"
-      - name: "2021_doc_cds_2021_readme"
-        role: "docs"
-        glob: "doc/CDS_2021_readme.txt"
-      - name: "2021_doc_cds2021_userguide"
-        role: "docs"
-        glob: "doc/CDS2021_UserGuide.pdf"
+        glob: "doc/*"
 
 notes: |
-  Dataset: PSID Child Development Supplement (CDS), BPIPD-46.
-
-  Structure: one subfolder per wave (1997, 2002, 2007, 2014, 2019, 2020, 2021),
-  located at the wave_dir named above (e.g. "1997/", "2002/", ...).
-
-  Within each wave folder, data are organised as repeated groups of five files
-  sharing a common basename, e.g. CHILD97.txt / .do / .sas / .sps / _codebook.pdf:
-    - .txt  = raw/ASCII data file -> captured as one "data" resource
-    - .do   = Stata read/setup syntax   -> captured as a "docs" resource
-    - .sas  = SAS read/setup syntax     -> captured as a "docs" resource
-    - .sps  = SPSS read/setup syntax    -> captured as a "docs" resource
-    - _codebook.pdf = variable-level codebook -> captured as a "codebook" resource
-  Each file in a group is its own resource (five resources per group total); the
-  .txt data resource is listed first, immediately followed by its three read/setup
-  syntax files (name suffixed "_do_syntax" / "_sas_syntax" / "_sps_syntax", also
-  flagged with a "read/setup syntax" comment), then the codebook.
-  The "reader" field on every .txt data resource is a PLACEHOLDER value ("ascii"),
-  which is not a valid enum value per the schema - it is a marker only. Replace it
-  with the confirmed real reader (most likely "stata", "sas", or "spss") once the
-  intended read path for each file is decided, before using this spec with
-  read_dataset_from_spec().
-
-  Several waves (1997, 2014, 2019, 2020, 2021) also contain a "doc/" subfolder
-  with wave-level reference material (user guides, questionnaires, readmes, and
-  in the 1997 case, an additional set of instrument-level codebook PDFs). These
-  are captured as "docs" resources with a glob path prefixed "doc/".
-  Waves 2002 and 2007 had no doc/ subfolder captured in the source listing.
-
-  Note on file reuse: the 2020 wave folder contains three file groups
-  (CDSIND2019, DEMOG2019, HHROSTER2019) that carry over the 2019 file basenames
-  unchanged (no new 2020 data collected for those instruments); the corresponding
-  resource names are prefixed "2020_..." here to keep them distinct from the
-  identically-named resources under the 2019 wave.
+  PSID Child Development Supplement (CDS), a longitudinal supplement to the US Panel Study of Income Dynamics, delivered as one folder per wave: 1997 (CDS-I), 2002 (CDS-II), 2007 (CDS-III), 2014, 2019, 2020 and 2021.
+  The 2021 files are read only as donors for the 2020 carries: CDS-2021 asked only frequency screen items, so the tidier drops its rows.
+  Every data file is a headerless fixed-width ASCII `.txt` file with CRLF line ends, shipped with an SPSS (`.sps`), Stata (`.do`) and SAS (`.sas`) setup file and a `<stem>_codebook.pdf` of the same stem.
+  There is no `.sav`, `.dta` or other self-describing copy anywhere in the folder, so every data file is read with the `fwf` reader.
+  Each layout in `layouts/` is generated from the DATA LIST block of the file's SPSS setup file by `layouts/generate_layouts.R`, which writes it only if the Stata and SAS setup files and the data file agree (positions, field count, record length, row count, CRLF); `layouts/README.md` records the checks.
+  Every field of every declared file is read, and each layout carries the setup file's variable label for the tidier.
+  Decimal-format fields (weights, ages in months, some scores) hold a literal decimal point in every non-blank value, so nothing is rescaled: the `decimals` layout column is provenance only.
+  Data declared, 68 of the 84 distinct data files:
+  - the cumulative ID map `2021/CDSIND2021` as a top-level resource (no `.wave`), which links every CDS child from 1997 to 2021 to the PSID person ID (1968 interview number and person number), the core family IDs, the PCG's IDs and per-wave file-presence flags;
+  - the per-wave ID maps of 1997, 2002, 2007 and 2014 (`IDMAP*`), which give each child's CDS household interview number and household PCG indicator, the key of the PCG-household file; `CDSIND2021` lacks the PCG indicator before 2014, and 15 children in 2002 and 7 in 2007 have a PCG outside the PSID family (core ID 0), whom the core-ID link cannot reach;
+  - per wave, the demographic or interview-information file, the PCG-child, PCG-household and child-interview files, the assessment file (from 2002; the 1997 assessments are in the 1997 child file), and the four time-diary files (aggregate, activity-level, media content coding, and follow-up or questionnaire);
+  - the household rosters of 2014, 2019 and 2021 (one row per household member), the only source of the child's sex in the folder (no 1997-2007 file carries it);
+  - the 1997 and 2002 elementary/middle-school teacher files, the 1997 preschool/day-care teacher file, and the three 1997 school and preschool time diaries (teacher-reported behaviour items and school computer use).
+  2020 has no demographic or roster file of its own: its records carry 2019 IDs.
+  The 2020 folder repeats `CDSIND2019`, `DEMOG2019` and `HHROSTER2019` (data, setup files and codebooks) and the two 2019 diary instruments in `doc/`, byte for byte; those copies are not declared, and the 2019 files are read once, in the 2019 wave.
+  Declared as docs and not read (the `not_read_<wave>` resources, with their codebooks): the generational maps `GEN_MAP` (2002) and `GENMAP07` and the cumulative map `CDSIND2019`, superseded by `CDSIND2021`; the other-caregiver files (`OCG_*`); the 1997 fathers-outside-the-home files (`FOH_*`); the 1997 home-based care provider file and its diary; the 1997 school and preschool administrator files; and the 2020 COVID-19 household health file (`CVH2020`).
+  The setup files of each wave are declared as docs (`setup_files_<wave>`), and each wave's `doc/` folder (user guides, questionnaires, instruments, readmes) as `documentation_<wave>`.
