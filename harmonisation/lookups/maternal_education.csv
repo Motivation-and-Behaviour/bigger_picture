@@ -404,3 +404,14 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 706,parental_education,5,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 5 Master's.
 706,parental_education,6,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 6 Post-graduate.
 706,paternal_education,999,Unknown,incompatible,Father_Education code 999 is in no document.
+1295,maternal_education,1,Unknown,unavailable,"Code 1: does not live with mother (stepmother or female guardian), or with father (stepfather or male guardian); no level reported"
+1295,maternal_education,2,Secondary school or less,compatible,Code 2: less than high school graduation (ISCED 0-2)
+1295,maternal_education,3,Secondary school or less,compatible,Code 3: high school graduation only (ISCED 3)
+1295,maternal_education,4,Post-secondary,compatible,"Code 4: vocational, trade or business school after high school, less than two years (ISCED 4)"
+1295,maternal_education,5,Post-secondary,compatible,"Code 5: vocational, trade or business school after high school, two years or more (ISCED 4-5)"
+1295,maternal_education,6,Post-secondary,compatible,Code 6: college program with less than two years of college (tertiary study begun)
+1295,maternal_education,7,Post-secondary,compatible,"Code 7: two or more years of college, including a two-year degree (ISCED 5, or tertiary study begun)"
+1295,maternal_education,8,Bachelor degree or higher,compatible,Code 8: finished college (four- or five-year degree; ISCED 6)
+1295,maternal_education,9,Bachelor degree or higher,compatible,Code 9: master's degree or equivalent (ISCED 7)
+1295,maternal_education,10,Bachelor degree or higher,compatible,"Code 10: PhD, MD or other advanced professional degree (ISCED 8)"
+1295,maternal_education,11,Unknown,unavailable,Code 11: don't know

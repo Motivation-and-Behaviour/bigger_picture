@@ -1,208 +1,1024 @@
-target_variable,status,source_columns,expression,notes,lookup_table
-participant_id,in_progress,,,,
-wave,in_progress,,,,
-data_year,in_progress,,,,
-rct_arm,in_progress,,,,
-age_years,in_progress,,,,
-sex,in_progress,,,,
-country,in_progress,,,,
-state,in_progress,,,,
-ethnicity,in_progress,,,,
-indigenous,in_progress,,,,
-minority,in_progress,,,,
-ses_area,in_progress,,,,
-ses_household,in_progress,,,,
-ses_household_measure,in_progress,,,,
-maternal_education,in_progress,,,,
-paternal_education,in_progress,,,,
-parental_education,in_progress,,,,
-urbanicity,in_progress,,,,
-family_structure,in_progress,,,,
-school_grade,in_progress,,,,
-st_measure_type,in_progress,,,,
-st_measure_name,in_progress,,,,
-st_responder,in_progress,,,,
-st_total_wd,in_progress,,,,
-st_total_we,in_progress,,,,
-st_total,in_progress,,,,
-st_watch_wd,in_progress,,,,
-st_watch_we,in_progress,,,,
-st_watch,in_progress,,,,
-st_game_wd,in_progress,,,,
-st_game_we,in_progress,,,,
-st_game,in_progress,,,,
-st_game_comp_wd,in_progress,,,,
-st_game_comp_we,in_progress,,,,
-st_game_comp,in_progress,,,,
-st_game_console_wd,in_progress,,,,
-st_game_console_we,in_progress,,,,
-st_game_console,in_progress,,,,
-st_game_handheldconsole_wd,in_progress,,,,
-st_game_handheldconsole_we,in_progress,,,,
-st_game_handheldconsole,in_progress,,,,
-st_game_active_wd,in_progress,,,,
-st_game_active_we,in_progress,,,,
-st_game_active,in_progress,,,,
-st_game_phone_wd,in_progress,,,,
-st_game_phone_we,in_progress,,,,
-st_game_phone,in_progress,,,,
-st_game_tablet_wd,in_progress,,,,
-st_game_tablet_we,in_progress,,,,
-st_game_tablet,in_progress,,,,
-st_comp_nongaming_wd,in_progress,,,,
-st_comp_nongaming_we,in_progress,,,,
-st_comp_nongaming,in_progress,,,,
-st_comp_wd,in_progress,,,,
-st_comp_we,in_progress,,,,
-st_comp,in_progress,,,,
-st_tablet_wd,in_progress,,,,
-st_tablet_we,in_progress,,,,
-st_tablet,in_progress,,,,
-st_phone_wd,in_progress,,,,
-st_phone_we,in_progress,,,,
-st_phone,in_progress,,,,
-st_socmedia_wd,in_progress,,,,
-st_socmedia_we,in_progress,,,,
-st_socmedia,in_progress,,,,
-st_educational_wd,in_progress,,,,
-st_educational_we,in_progress,,,,
-st_educational,in_progress,,,,
-st_internet_wd,in_progress,,,,
-st_internet_we,in_progress,,,,
-st_internet,in_progress,,,,
-st_videochat,in_progress,,,,
-st_email,in_progress,,,,
-st_shopping,in_progress,,,,
-st_total_school,in_progress,,,,
-st_educational_school,in_progress,,,,
-st_comp_school,in_progress,,,,
-st_tablet_school,in_progress,,,,
-st_internet_school,in_progress,,,,
-st_phone_school,in_progress,,,,
-acc_academachment_selfrated,in_progress,,,,
-acc_academachment_lettergrades,in_progress,,,,
-acc_academachment_stdtest,in_progress,,,,
-acc_schoolengage_caresschool,in_progress,,,,
-acc_schoolengage_homework,in_progress,,,,
-acc_academachment_numgrades,in_progress,,,,
-acc_academachment_teacherrated,in_progress,,,,
-acc_numeracy_stdtest,in_progress,,,,
-acc_literacy_stdtest,in_progress,,,,
-beh_hyper_basc2,in_progress,,,,
-beh_atten_basc2,in_progress,,,,
-beh_atten_self,in_progress,,,,
-beh_selfreg_htks,in_progress,,,,
-beh_bullied,in_progress,,,,
-beh_beenbullied,in_progress,,,,
-beh_beenbullied_online,in_progress,,,,
-beh_fight,in_progress,,,,
-beh_conduct_sdq_parent,in_progress,,,,
-beh_hyper_sdq_parent,in_progress,,,,
-beh_peerprob_sdq_parent,in_progress,,,,
-beh_prosocial_sdq_parent,in_progress,,,,
-beh_aggphys_bpaq_self,in_progress,,,,
-beh_aggverb_bpaq_self,in_progress,,,,
-beh_agganger_bpaq_self,in_progress,,,,
-beh_agghostility_bpaq_self,in_progress,,,,
-beh_agg_self,in_progress,,,,
-beh_argues,in_progress,,,,
-beh_persistence_finishwork,in_progress,,,,
-beh_emotreg_stayscalm,in_progress,,,,
-beh_peerprob_makefriends,in_progress,,,,
-beh_conduct_diagnosed,in_progress,,,,
-beh_conduct_diagnosed_severity,in_progress,,,,
-beh_conduct_sdq_self,in_progress,,,,
-beh_hyper_sdq_self,in_progress,,,,
-beh_peerprob_sdq_self,in_progress,,,,
-beh_prosocial_sdq_self,in_progress,,,,
-beh_conduct_sdq_teacher,in_progress,,,,
-beh_hyper_sdq_teacher,in_progress,,,,
-beh_peerprob_sdq_teacher,in_progress,,,,
-beh_prosocial_sdq_teacher,in_progress,,,,
-beh_ext_sdq_parent,in_progress,,,,
-beh_ext_sdq_self,in_progress,,,,
-beh_ext_sdq_teacher,in_progress,,,,
-beh_agg_cbcl_parent,in_progress,,,,
-beh_atten_cbcl_parent,in_progress,,,,
-beh_rulebreak_cbcl_parent,in_progress,,,,
-beh_ext_cbcl_parent,in_progress,,,,
-beh_cbcl_measure,in_progress,,,,
-cog_execfunc_basc2,in_progress,,,,
-cog_langexec_nepsy,in_progress,,,,
-cog_phono_nepsy,in_progress,,,,
-cog_inhibcont_nepsy,in_progress,,,,
-cog_vismotor_nepsy,in_progress,,,,
-cog_verbalfluency_nepsy,in_progress,,,,
-cog_inhib_nihtb_flanker,in_progress,,,,
-cog_flex_nihtb_dccs,in_progress,,,,
-cog_wm_nihtb_listsort,in_progress,,,,
-cog_speed_nihtb_pattern,in_progress,,,,
-cog_epimem_nihtb_picseq,in_progress,,,,
-cog_vocab_nihtb_picvocab,in_progress,,,,
-cog_fluidcomp_nihtb,in_progress,,,,
-cog_crystcomp_nihtb,in_progress,,,,
-cog_totalcomp_nihtb,in_progress,,,,
-cog_wm_digitspan,in_progress,,,,
-cog_iq_fullscale,in_progress,,,,
-cog_vocab_bpvs,in_progress,,,,
-cog_vocab_ppvt,in_progress,,,,
-cog_execfunc_brief_parent,in_progress,,,,
-mh_anx_basc2,in_progress,,,,
-mh_dep_basc2,in_progress,,,,
-mh_emotsymp_sdq_parent,in_progress,,,,
-mh_totaldiff_sdq_parent,in_progress,,,,
-mh_anx_diagnosed,in_progress,,,,
-mh_anx_diagnosed_severity,in_progress,,,,
-mh_dep_diagnosed,in_progress,,,,
-mh_dep_diagnosed_severity,in_progress,,,,
-mh_emotsymp_sdq_self,in_progress,,,,
-mh_emotsymp_sdq_teacher,in_progress,,,,
-mh_totaldiff_sdq_self,in_progress,,,,
-mh_totaldiff_sdq_teacher,in_progress,,,,
-mh_int_sdq_parent,in_progress,,,,
-mh_int_sdq_self,in_progress,,,,
-mh_int_sdq_teacher,in_progress,,,,
-mh_dep_smfq_self,in_progress,,,,
-mh_dep_smfq_parent,in_progress,,,,
-mh_dep_cdi_self,in_progress,,,,
-mh_dep_cesd_self,in_progress,,,,
-mh_dep_phq9_self,in_progress,,,,
-mh_dep_rcads_self,in_progress,,,,
-mh_dep_dass21_self,in_progress,,,,
-mh_dep_scl_self,in_progress,,,,
-mh_distress_k6_self,in_progress,,,,
-mh_distress_k10_self,in_progress,,,,
-mh_anx_masc_self,in_progress,,,,
-mh_anx_scas_self,in_progress,,,,
-mh_anx_scas_parent,in_progress,,,,
-mh_anx_scared_self,in_progress,,,,
-mh_anx_scared_parent,in_progress,,,,
-mh_anx_gad7_self,in_progress,,,,
-mh_anx_rcads_self,in_progress,,,,
-mh_anx_dass21_self,in_progress,,,,
-mh_anxdep_cbcl_parent,in_progress,,,,
-mh_int_cbcl_parent,in_progress,,,,
-mh_anx_self,in_progress,,,,
-mh_anx_measure,in_progress,,,,
-wb_emotsc_basc2,in_progress,,,,
-wb_mwb_wemwbs,in_progress,,,,
-wb_lifesatisfaction_cantrilladder,in_progress,,,,
-wb_resil_basc2,in_progress,,,,
-wb_psychcomplaints_feellow,in_progress,,,,
-wb_psychcomplaints_irritable,in_progress,,,,
-wb_psychcomplaints_nervous,in_progress,,,,
-wb_psychcomplaints_diffsleep,in_progress,,,,
-wb_bodyimage,in_progress,,,,
-wb_lifesat_slss_self,in_progress,,,,
-wb_lifesat_swls_self,in_progress,,,,
-wb_lifesat_singleitem_self,in_progress,,,,
-wb_qol_pedsql_self,in_progress,,,,
-wb_qol_pedsql_parent,in_progress,,,,
-wb_qol_kidscreen10_self,in_progress,,,,
-wb_qol_kidscreen10_parent,in_progress,,,,
-wb_selfesteem_rosenberg_self,in_progress,,,,
-wb_selfesteem_self,in_progress,,,,
-wb_selfesteem_measure,in_progress,,,,
-wb_selfefficacy_gse_self,in_progress,,,,
-wb_mwb_who5_self,in_progress,,,,
-wb_happiness_shs_self,in_progress,,,,
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,ID,as.character(ID),"HS&B student ID (ID: the base-year CASEID and the follow-up ID, verified as one key), six characters with the base-year school in the first four; the same on every wave.",,
+wave,compatible,wave,wave,"Round label from the tidier: 'Base year 1980', 'First follow-up 1982' and 'Second follow-up 1984'. The 1986 third follow-up asks no screen item and is not kept.",,
+data_year,inferred,wave,"case_when(
+  wave == ""Base year 1980"" ~ 1980,
+  wave == ""First follow-up 1982"" ~ 1982,
+  wave == ""Second follow-up 1984"" ~ 1984
+)","Year of each round's documented fieldwork, assigned by wave: student sessions 1 February to 15 May 1980; first follow-up February to June 1982; second follow-up February to July 1984 (08896-Codebook.pdf, data collection sections). The questionnaire dates released (FE24MN, FD35M, SY1M, SE1M) give the month only.",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,compatible,"DESIGNWT, FUWT, FU2WT, wave","case_when(
+  wave == ""Base year 1980"" ~ as.numeric(DESIGNWT),
+  wave == ""First follow-up 1982"" ~ as.numeric(FUWT),
+  wave == ""Second follow-up 1984"" ~ as.numeric(haven::zap_labels(FU2WT))
+)","Each round's cross-sectional participant weight as released, not rescaled: DESIGNWT (base-year weight, 1980 rows), FUWT (first follow-up participant weight, 1982 rows) and FU2WT (second follow-up participant weight, 1984 rows). The panel weights (PANELWT, PANELWT3), BYWT and RAWWT on 1982 rows, the test, transcript and parent weights and TRWT2 (empty) are not used.",,
+survey_strata,partial,SCHSAMP,as.character(as.numeric(SCHSAMP)),"Original school sample type from the school sampling file (SCHSAMP, nine types: regular public, alternative, Cuban and other Hispanic public, regular and Black Catholic, Cuban Hispanic Catholic, elite and other private), fixed at base-year sampling and constant within school and participant. Partial: the finer strata of the regular public schools (census division, racial composition, enrolment, urbanicity; 08896-Codebook.pdf Table 3.1-1) are not released. The 1980 student file's SCHLTYPE (differs for 10 students) is not used.",,
+survey_cluster,compatible,school_id,as.character(school_id),"Base-year school (first four characters of ID), the first-stage sampling unit of the two-stage design (schools, then students within school; 08896-Codebook.pdf section 3.1); fixed at sampling and the same on every wave.",,
+family_id,compatible,"FAMID, ID","if_else(is.na(FAMID) | FAMID == """", paste0(""S"", ID), paste0(""F"", FAMID))","The twins-and-siblings file's family ID (FAMID, 1,348 families of sampled twins, triplets and siblings, 2,257 participants), prefixed 'F'; every other participant takes their own ID prefixed 'S'. Constant within participant. No parent or household answer is shared between siblings in the mapped rows. The 461 augmentation twins are not sample members and are not in the table.",,
+sample_component,unavailable,,,Single sample.,,
+sample_population,inferred,,"""General population""","Two-stage stratified probability sample of 1,015 US high schools, with sophomores and seniors sampled within schools (08896-Codebook.pdf section 3.1).",,
+parent_respondent,unavailable,,,Not in the supplied extract.,,
+age_years,partial,"BB084, FY105M, FY105Y, FD86M, FD86Y, FD35M, FE86M, FE86Y, FE24MN, SY2M, SY2Y, SY1M, SE2M, SE2Y, SE1M, FUSTTYPE, cohort, wave","local({
+  fy <- if_else(
+    as.numeric(FY105M) %in% 1:12 & as.numeric(FY105Y) %in% 50:70,
+    1900 + as.numeric(FY105Y) + (as.numeric(FY105M) - 0.5) / 12,
+    NA_real_
+  )
+  fd <- if_else(
+    as.numeric(FD86M) %in% 1:12 & as.numeric(FD86Y) %in% 50:70,
+    1900 + as.numeric(FD86Y) + (as.numeric(FD86M) - 0.5) / 12,
+    NA_real_
+  )
+  fe <- if_else(
+    as.numeric(FE86M) %in% 1:12 & as.numeric(FE86Y) %in% 50:70,
+    1900 + as.numeric(FE86Y) + (as.numeric(FE86M) - 0.5) / 12,
+    NA_real_
+  )
+  sy <- if_else(
+    as.numeric(SY2M) %in% 1:12 & as.numeric(SY2Y) %in% 50:70,
+    1900 + as.numeric(SY2Y) + (as.numeric(SY2M) - 0.5) / 12,
+    NA_real_
+  )
+  se <- if_else(
+    as.numeric(SE2M) %in% 1:12 & as.numeric(SE2Y) %in% 50:70,
+    1900 + as.numeric(SE2Y) + (as.numeric(SE2M) - 0.5) / 12,
+    NA_real_
+  )
+  fd_date <- if_else(as.numeric(FD35M) %in% 2:6, 1982 + (as.numeric(FD35M) - 0.5) / 12, 1982 + 3.5 / 12)
+  fe_date <- if_else(as.numeric(FE24MN) %in% 2:6, 1982 + (as.numeric(FE24MN) - 0.5) / 12, 1982 + 3.5 / 12)
+  sy_date <- if_else(as.numeric(SY1M) %in% 2:7, 1984 + (as.numeric(SY1M) - 0.5) / 12, 1984 + 4 / 12)
+  se_date <- if_else(as.numeric(SE1M) %in% 2:7, 1984 + (as.numeric(SE1M) - 0.5) / 12, 1984 + 4 / 12)
+  case_when(
+    wave == ""Base year 1980"" ~ if_else(as.numeric(BB084) %in% 13:21, as.numeric(BB084) + 0.5, NA_real_),
+    wave == ""First follow-up 1982"" & as.numeric(cohort) == 1 & as.numeric(FUSTTYPE) %in% 2 ~ fd_date - coalesce(fd, fy),
+    wave == ""First follow-up 1982"" & as.numeric(cohort) == 1 ~ 1982 + 3.5 / 12 - fy,
+    wave == ""First follow-up 1982"" ~ fe_date - fe,
+    .default = coalesce(sy_date - sy, se_date - se)
+  )
+})","1980: 'Age' (BB084), completed years + 0.5; the open bands '13 or younger' (sophomore form), '15 or younger' (senior form) and '21 or older' take 13.5, 15.5 and 21.5 (under 0.5% of answers). Follow-ups: decimal age from the student's birth month and year at mid-month against the questionnaire month at mid-month: 1982 dropouts FD86M/FD86Y against 'today's month' FD35M, 1982 seniors FE86M/FE86Y against FE24MN, 1984 SY2M/SY2Y and SE2M/SE2Y against SY1M and SE1M. The 1982 in-school, transfer and early-graduate sophomores have no questionnaire date (FY105M/FY105Y against mid-April 1982, the midpoint of the documented February-June 1982 sessions; 08896-Codebook.pdf), as have follow-up rows with no questionnaire month (fieldwork midpoints mid-April 1982 and the start of May 1984). Partial: those rows use an assumed reference date. Missing and reserved codes are NA; ages above 19 are kept.",,
+sex,compatible,"BB083, SEX, SEXCOMP, ID","local({
+  value <- recode_values(
+    coalesce(as.numeric(BB083), as.numeric(SEX), as.numeric(SEXCOMP)),
+    1 ~ ""Male"",
+    2 ~ ""Female"",
+    default = NA_character_
+  )
+  coalesce(modal_within(value, ID), ""Unknown"")
+})","1980 student item 'Sex' (BB083) and the study's sex composites (SEX on 1982 rows, SEXCOMP on 1984 rows, which repeats the 1982 composite); male or female only, self-report with study editing. Modal within participant; ties and no value = Unknown.",,
+country,inferred,,"""USA""",No country variable; HS&B is a national probability sample of US high schools and their spring-1980 sophomores and seniors (08896-descriptioncitation.html).,,
+state,unavailable,,,Not an Australian dataset.,,
+region,proximate,"SCHREGN, HSREG, FUSTTYPE, FE5, SY7, SE7, cohort, wave","local({
+  division <- recode_values(
+    as.numeric(SCHREGN),
+    1 ~ ""US: New England"",
+    2 ~ ""US: Middle Atlantic"",
+    3 ~ ""US: South Atlantic"",
+    4 ~ ""US: East South Central"",
+    5 ~ ""US: West South Central"",
+    6 ~ ""US: East North Central"",
+    7 ~ ""US: West North Central"",
+    8 ~ ""US: Mountain"",
+    9 ~ ""US: Pacific"",
+    default = NA_character_
+  )
+  region84 <- recode_values(
+    as.numeric(HSREG),
+    1 ~ ""US: Northeast"",
+    2 ~ ""US: North Central"",
+    3 ~ ""US: South"",
+    4 ~ ""US: West"",
+    default = NA_character_
+  )
+  value <- case_when(
+    wave == ""Base year 1980"" ~ division,
+    wave == ""First follow-up 1982"" & as.numeric(cohort) == 1 & as.numeric(FUSTTYPE) == 1 ~ division,
+    wave == ""First follow-up 1982"" & as.numeric(cohort) == 2 & as.numeric(FE5) %in% 1:2 ~ division,
+    wave == ""Second follow-up 1984"" & (as.numeric(SY7) %in% 1:2 | as.numeric(SE7) %in% 1:2) ~ region84,
+    .default = NA_character_
+  )
+  coalesce(value, ""Unknown"")
+})","School location standing in for residence, only where the student is still at the high school or lives in the same place or less than 50 miles from it: the base-year school's census division (SCHREGN, nine divisions, 'US: <division>') on 1980 rows, on 1982 rows of sophomores still in their base-year school (FUSTTYPE 1) and of seniors living in the same place as when they were seniors or less than 50 miles from it (FE5 = 1 or 2); the senior high school's census region (HSREG, four regions, 'US: <region>') on 1984 rows living in the same place as that school or less than 50 miles from it (SY7, SE7 = 1 or 2). Unknown elsewhere. Proximate: census groupings of states, and school location. HSDIV (1984) codes only three divisions and is not used; CENRGN repeats SCHREGN.",,
+ethnicity,proximate,"BB089, BB090, RACE, RACE2, ID, wave","local({
+  key <- case_when(
+    wave == ""Base year 1980"" & as.numeric(BB090) %in% 1:4 ~ ""BB090 1-4"",
+    wave == ""Base year 1980"" & as.numeric(BB089) %in% 1:5 ~ paste(""BB089"", as.numeric(BB089)),
+    wave == ""First follow-up 1982"" & as.numeric(RACE) %in% 1:6 ~ paste(""RACE"", as.numeric(RACE)),
+    wave == ""Second follow-up 1984"" & as.numeric(RACE2) %in% 1:5 ~ paste(""RACE2"", as.numeric(RACE2)),
+    .default = NA_character_
+  )
+  ethnicity <- lookup_values(key, lookup_ethnicity, dataset_id = spec$dataset_id, target_variable = ""ethnicity"")
+  ethnicity <- carry_within(ethnicity, ID, order = wave)
+  coalesce(ethnicity, ""Unknown"")
+})","1980: Hispanic or Spanish origin or descent (BB090 codes 1-4: Mexican, Cuban, Puerto Rican, other Latin American) first, then race (BB089: Black, White, American Indian or Alaskan Native = Other, Asian or Pacific Islander = Asian, Other); 1982 the study's race composite (RACE, Hispanic first) and 1984 its composite (RACE2; 'other or missing' = no value), through the shared ethnicity lookup; observed values stay, other rows take the earliest observed value; none = Unknown. Proximate: Pacific Islanders are merged with Asian in every source. No multiple-race option (multiple marks are missing).",ethnicity,
+indigenous,partial,"BB089, RACE, RACE2, ID, wave","local({
+  value <- case_when(
+    wave == ""Base year 1980"" & as.numeric(BB089) == 3 ~ ""Indigenous"",
+    wave == ""Base year 1980"" & as.numeric(BB089) %in% c(1, 2, 4, 5) ~ ""Non-Indigenous"",
+    wave == ""First follow-up 1982"" & as.numeric(RACE) == 2 ~ ""Indigenous"",
+    wave == ""First follow-up 1982"" & as.numeric(RACE) %in% c(1, 3, 4, 5, 6) ~ ""Non-Indigenous"",
+    wave == ""Second follow-up 1984"" & as.numeric(RACE2) == 2 ~ ""Indigenous"",
+    wave == ""Second follow-up 1984"" & as.numeric(RACE2) %in% c(1, 3, 4, 5) ~ ""Non-Indigenous"",
+    .default = NA_character_
+  )
+  coalesce(carry_within(value, ID, order = wave), ""Unknown"")
+})","American Indian or Alaskan Native as the one race marked (BB089 code 3, 1980) or in the race composites (RACE code 2, 1982; RACE2 code 2, 1984) = Indigenous; any other answered race = Non-Indigenous; carried within participant to rows with no value; none = Unknown. Partial: the 1980 item takes one race only, and the composites place Hispanic American Indians under Hispanic.",,
+minority,compatible,"BB089, BB090, RACE, RACE2, ID, wave","local({
+  key <- case_when(
+    wave == ""Base year 1980"" & as.numeric(BB090) %in% 1:4 ~ ""BB090 1-4"",
+    wave == ""Base year 1980"" & as.numeric(BB089) %in% 1:5 ~ paste(""BB089"", as.numeric(BB089)),
+    wave == ""First follow-up 1982"" & as.numeric(RACE) %in% 1:6 ~ paste(""RACE"", as.numeric(RACE)),
+    wave == ""Second follow-up 1984"" & as.numeric(RACE2) %in% 1:5 ~ paste(""RACE2"", as.numeric(RACE2)),
+    .default = NA_character_
+  )
+  ethnicity <- lookup_values(key, lookup_ethnicity, dataset_id = spec$dataset_id, target_variable = ""ethnicity"")
+  ethnicity <- carry_within(ethnicity, ID, order = wave)
+  case_when(ethnicity == ""White"" ~ ""Non-minority"", !is.na(ethnicity) ~ ""Minority"", .default = ""Unknown"")
+})","Same items, lookup and carry as ethnicity: White and not Hispanic = Non-minority (the US majority); Hispanic, Black, Asian or Pacific Islander, American Indian or Alaskan Native and other = Minority; none = Unknown.",ethnicity,
+immigrant_background,incompatible,"BB040, BB043, BB044",,"Parents' birthplace not asked: BB040 and BB043 ask how many years the father and mother have lived in the US ('all or almost all' of their life to 1-5 years), which cannot separate US-born parents from parents who arrived young; the student's own birthplace (BB044) goes to born_in_country.",,
+born_in_country,compatible,"BB044, ID, wave","coalesce(
+  carry_within(recode_values(as.numeric(BB044), 1 ~ ""Yes"", 2 ~ ""No"", default = NA_character_), ID, order = wave),
+  ""Unknown""
+)","1980 student: 'Were you born in the United States?' (BB044; 1 yes, 2 no per 07896-0002-Codebook.txt student item 214, the table holding no value labels because the sophomore .sav reverses them); multiple punch and missing = Unknown. Carried within participant to 1982 and 1984; base-year non-participants are Unknown.",,
+home_language,compatible,"LANGDATA, LB14, LB15, ID, wave","local({
+  usual <- as.numeric(LB14)
+  other <- as.numeric(LB15)
+  english <- usual %in% c(1, 12:22) | other %in% c(2, 20:29)
+  another <- usual %in% c(2:22, 33) | other %in% c(3:12, 20:72)
+  value <- case_when(
+    wave != ""Base year 1980"" ~ NA_character_,
+    as.numeric(LANGDATA) == 0 ~ ""Country language only"",
+    !(usual %in% c(1:22, 33)) | !(other %in% 1:72) ~ NA_character_,
+    english & another ~ ""Country language and another"",
+    english ~ ""Country language only"",
+    another ~ ""Another language only"",
+    .default = NA_character_
+  )
+  coalesce(carry_within(value, ID, order = wave), ""Unknown"")
+})","1980 student items 'What language do the people in your home usually speak?' (LB14) and 'What other language is spoken in your home?' (LB15), country language English. Every student answered the five language questions; only those who gave a non-English answer to any of them have language-file data (LANGDATA 1), so LANGDATA 0 = Country language only (it also holds the few who left all five blank). English usual with no other language = Country language only; English with another language, in either item or a combined code, = Country language and another (LB15 codes 20-29 combine English with another language, 31-72 two other languages); non-English usual language with no English in either item = Another language only; multiple punch and missing = Unknown. Carried within participant to 1982 and 1984 (base-year non-participants Unknown). HOMELANG (1984 rows) is the study's composite of the same 1980 items and is not used.",,
+ses_area,incompatible,"CUNEMR80, CUNEMR81, CUNEMR82, SUNEMR80",,"Only county and state labour-market indicators of the base-year school (unemployment rates, employment growth, per-capita income and wages), not an area SES index on national quintiles.",,
+ses_household,compatible,"BBSESRAW, FUSES, wave","local({
+  score <- case_when(
+    wave == ""Base year 1980"" & as.numeric(BBSESRAW) < 98 ~ as.numeric(BBSESRAW),
+    wave == ""First follow-up 1982"" & as.numeric(FUSES) < 98 ~ as.numeric(FUSES),
+    .default = NA_real_
+  )
+  low <- stats::ave(score, wave, FUN = function(v) stats::quantile(v, 0.4, na.rm = TRUE, names = FALSE))
+  high <- stats::ave(score, wave, FUN = function(v) stats::quantile(v, 0.6, na.rm = TRUE, names = FALSE))
+  case_when(is.na(score) ~ ""Unknown"", score <= low ~ ""Low"", score > high ~ ""High"", .default = ""Medium"")
+})","1980: the study's SES composite (BBSESRAW: father's occupation, father's and mother's education, family income and an additive scale of eight household possessions, each standardised within grade and summed; student report). 1982 sophomores: the first follow-up SES composite built the same way from 1982 data (FUSES; not built for dropouts). Cut 40/20/40 on the unweighted rows within wave (at or below the 40th percentile Low, above the 60th High). 1982 seniors (no composite: too few components were asked) and 1984 rows (young adults, own and spouse's income only, not the family's) are Unknown; household SES is never carried over the 24 months between waves.",,
+ses_household_measure,inferred,wave,"case_when(
+  wave ==
+    ""Base year 1980"" ~ ""Composite SES index: HS&B base-year SES composite (BBSESRAW; father's occupation, father's and mother's education, family income, household possessions)"",
+  wave ==
+    ""First follow-up 1982"" ~ ""Composite SES index: HS&B first follow-up SES composite (FUSES; sophomore cohort, base-year procedures)"",
+  .default = NA_character_
+)","Names the measure behind ses_household on every row of 1980 and 1982; NA in 1984, where it is not derived.",,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,proximate,mother_education,"coalesce(
+  lookup_values(
+    as.numeric(mother_education),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","'What was the highest level of education your mother (stepmother or female guardian) completed?' (BB042 1980, FY56 and FD51 1982 sophomores, FE21 1982 seniors), coalesced in the tidier and carried within student (rows with no item, don't know or a reserved code take the student's earliest level; does not live with mother is kept as answered). Shared education lookup: less than high school and high school graduation = Secondary school or less; vocational, trade or business school after high school and college below a four-year degree = Post-secondary; finished college, master's and PhD or MD = Bachelor degree or higher; does not live with mother = Unknown, as are don't know and reserved codes with no level at another wave. Proximate: a stepmother or female guardian stands in for the mother.",maternal_education,
+paternal_education,proximate,father_education,"coalesce(
+  lookup_values(
+    as.numeric(father_education),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education""
+  ),
+  ""Unknown""
+)","As maternal_education for 'your father (stepfather or male guardian)' (BB039 1980, FY55 and FD50 1982 sophomores, FE20 1982 seniors), carried within student in the tidier in the same way (does not live with father is kept as answered). Proximate: a stepfather or male guardian stands in for the father.",maternal_education,
+parental_education,compatible,"father_education, mother_education","local({
+  father <- as.numeric(father_education)
+  mother <- as.numeric(mother_education)
+  father[!father %in% 2:10] <- NA
+  mother[!mother %in% 2:10] <- NA
+  highest <- pmax(father, mother, na.rm = TRUE)
+  coalesce(
+    lookup_values(
+      highest,
+      lookup_maternal_education,
+      dataset_id = spec$dataset_id,
+      target_variable = ""maternal_education""
+    ),
+    ""Unknown""
+  )
+})","Highest of the mother figure's and father figure's education codes (as maternal_education and paternal_education, codes 2-10 ordered by level), so one known parent suffices; levels through the shared education lookup; neither known = Unknown. The study's 1984 composite PAREDUC is not used beside the carried items.",maternal_education,
+maternal_employment,proximate,"BB037A, wave","case_when(
+  wave == ""Base year 1980"" & as.numeric(BB037A) == 1 ~ ""Not employed"",
+  wave == ""Base year 1980"" & as.numeric(BB037A) %in% c(2, 3) ~ ""Employed"",
+  .default = ""Unknown""
+)","1980 student: 'Did your mother (stepmother or female guardian) usually work during the following periods of your life? When you were in high school' (BB037A): part-time or full-time work = Employed, did not work = Not employed; don't know, does not apply and missing = Unknown. Proximate: a longer window (usual work during the student's high school years) and a female guardian may stand in. 1982 and 1984 rows are Unknown: the mother's most recent job (FY54A, 1982) is an occupation, not employment status, and the 1980 report is 24 months earlier.",,
+maternal_age,unavailable,,,Not in the supplied extract.,,
+urbanicity,proximate,"SCHURB, FY100, FD4, FE4, SY6, SE6, FUSTTYPE, cohort, wave","local({
+  community <- case_when(
+    wave == ""First follow-up 1982"" & as.numeric(cohort) == 1 & as.numeric(FUSTTYPE) %in% 2 ~ as.numeric(FD4),
+    wave == ""First follow-up 1982"" & as.numeric(cohort) == 1 ~ as.numeric(FY100),
+    wave == ""First follow-up 1982"" ~ as.numeric(FE4),
+    wave == ""Second follow-up 1984"" ~ coalesce(as.numeric(SY6), as.numeric(SE6)),
+    .default = NA_real_
+  )
+  value <- if_else(
+    wave == ""Base year 1980"",
+    recode_values(as.numeric(SCHURB), 1 ~ ""Urban"", 2 ~ ""Suburban"", 3 ~ ""Rural"", default = NA_character_),
+    recode_values(community, 1 ~ ""Rural"", c(2, 3, 4, 6, 8) ~ ""Suburban"", c(5, 7) ~ ""Urban"", default = NA_character_)
+  )
+  coalesce(value, ""Unknown"")
+})","1980: the base-year school's urbanicity from the sampling frame (SCHURB: urban, suburban, rural), standing in for residence. Follow-ups: 'What kind of community did you live in during the first week of February [1982/1984]?' (FY100 1982 sophomores, FD4 dropouts, FE4 seniors, SY6 and SE6 1984): rural or farming community = Rural; small city or town (under 50,000), medium-sized city (50,000-100,000) and suburbs of medium, large and very large cities = Suburban; large city (100,000-500,000) and very large city = Urban; military base and missing = Unknown. Proximate: school location in 1980, and a self-described community list rather than an official typology. SCHURB on 1982 rows and HSURBAN and COMTYPE (1984 composites) are not used.",,
+family_structure,proximate,"BB036B, BB036C, BB036D, BB036E, FY52B, FY52C, FY52D, FY52E, FE3B, FE3C, FE3D, FE3E, SY4B, SY4C, SY4D, SY4E, SE4B, SE4C, SE4D, SE4E, cohort, wave","local({
+  father <- coalesce(as.numeric(BB036B), as.numeric(FY52B), as.numeric(FE3B), as.numeric(SY4B), as.numeric(SE4B))
+  male <- coalesce(as.numeric(BB036C), as.numeric(FY52C), as.numeric(FE3C), as.numeric(SY4C), as.numeric(SE4C))
+  mother <- coalesce(as.numeric(BB036D), as.numeric(FY52D), as.numeric(FE3D), as.numeric(SY4D), as.numeric(SE4D))
+  female <- coalesce(as.numeric(BB036E), as.numeric(FY52E), as.numeric(FE3E), as.numeric(SY4E), as.numeric(SE4E))
+  structure <- case_when(
+    !(father %in% 0:2 & mother %in% 0:2) ~ ""Unknown"",
+    father %in% 1 & mother %in% 1 ~ ""Two biological/adoptive parents"",
+    (mother %in% 1 & male %in% 1) | (father %in% 1 & female %in% 1) ~ ""Step family"",
+    mother %in% 1 | father %in% 1 ~ ""Single parent"",
+    .default = ""Other""
+  )
+  adult <- wave == ""Second follow-up 1984"" | (wave == ""First follow-up 1982"" & as.numeric(cohort) == 2)
+  if_else(adult & structure == ""Other"", ""Unknown"", structure)
+})","'Which of the following people live in the same household with you?' (BB036 1980) or lived with you in the first week of February (FY52 1982 sophomores, not dropouts; FE3 1982 seniors; SY4 and SE4 1984): father and mother = Two biological/adoptive parents; one parent with an other guardian of the other sex (stepfather or foster father; stepmother or female guardian) = Step family; one parent only = Single parent; neither parent = Other; unanswered = Unknown. Proximate: a foster parent beside a parent is coded Step family, the category the structure forces. Not carried. 1982 senior and 1984 young adults living with a parent are coded the same way; those living with neither parent (alone, with a spouse, in a dormitory or barracks, or with others) are Unknown, because their main home cannot be identified.",,
+fam_siblings_n,partial,"BB096A, BB096B, BB096C, BB096D, BB096E, FY106, FD54, FE70, FUSTTYPE, wave","local({
+  bands <- cbind(as.numeric(BB096A), as.numeric(BB096B), as.numeric(BB096C), as.numeric(BB096D), as.numeric(BB096E))
+  bands[!(bands %in% 1:6)] <- NA
+  count82 <- coalesce(if_else(as.numeric(FUSTTYPE) %in% 2, as.numeric(FD54), as.numeric(FY106)), as.numeric(FE70))
+  case_when(
+    wave == ""Base year 1980"" ~ rowSums(bands - 1),
+    wave == ""First follow-up 1982"" ~ if_else(count82 %in% 1:7, count82 - 1, NA_real_),
+    .default = NA_real_
+  )
+})","1980: 'How many brothers and sisters do you have in each of the age groups below? Please include step-brothers and step-sisters if they live, or have lived, in your home' (BB096A-E: three or more years older, 1-2 older, same age, 1-2 younger, three or more younger; none to 'five or more' = 5 each), summed, complete-case (29,950 of the 58,270 1980 rows answer all five). 1982: number of brothers and sisters (FY106 sophomores, FD54 dropouts, FE70 seniors; none to top band 'six or more' = 6). Partial: banded counts with open top bands, and step-siblings counted only if they live or lived in the home. 1984 rows are NA: only yes/no items (SY38, SE38, a subsample), not used; not carried over 24 months.",,
+fam_siblings_any,unavailable,,,Derive at analysis from fam_siblings_n.,,
+fam_screenrules,unavailable,,,Not collected.,,
+fam_contentrules,unavailable,,,Not collected.,,
+fam_bedroomscreen,unavailable,,,Not collected.,,
+fam_firstphone_age,unavailable,,,Not collected.,,
+fam_firstscreen_age,unavailable,,,Not collected.,,
+fam_coview_freq,unavailable,,,Not collected.,,
+fam_mediation_restrict,unavailable,,,Not collected.,,
+fam_mediation_active,unavailable,,,Not collected.,,
+fam_mediation_monitor,unavailable,,,Not collected.,,
+fam_mediation_technical,unavailable,,,Not collected.,,
+fam_mediation_measure,unavailable,,,See fam_mediation_restrict.,,
+fam_parent_screentime,unavailable,,,Not collected.,,
+fam_parentstress,unavailable,,,Not collected.,,
+fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
+fam_parent_dep,unavailable,,,Not collected.,,
+fam_parent_anx,unavailable,,,Not collected.,,
+fam_parent_distress,unavailable,,,Not collected.,,
+fam_parent_mh_measure,unavailable,,,See fam_parent_dep.,,
+fam_parenting_warmth_parent,unavailable,,,Not collected.,,
+fam_parenting_harsh_parent,unavailable,,,Not collected.,,
+fam_parenting_inconsistent_parent,unavailable,,,Not collected.,,
+fam_monitoring_parent,unavailable,,,Not collected.,,
+fam_monitoring_self,partial,"BB046A, BB046B, BB046C, FY57A, FY57B, FY57C, wave","local({
+  items <- cbind(
+    coalesce(as.numeric(BB046A), as.numeric(FY57A)),
+    coalesce(as.numeric(BB046B), as.numeric(FY57B)),
+    coalesce(as.numeric(BB046C), as.numeric(FY57C))
+  )
+  items[!(items %in% 1:2)] <- NA
+  rowMeans(2 - items)
+})","Student true/false items 'My mother keeps close track of how well I am doing in school', 'My father keeps close track of how well I am doing in school' and 'My parents almost always know where I am and what I am doing' (BB046A-C 1980; FY57A-C 1982 sophomores, not asked of dropouts): true = 1, false = 0, mean of the three, complete-case; 'does not apply' and missing are NA. Partial: a study's own true/false items with no published scoring, two of them on school progress.",,
+fam_parenting_measure,inferred,wave,"if_else(
+  wave %in% c(""Base year 1980"", ""First follow-up 1982""),
+  ""HS&B student questionnaire (self); monitoring (self): study items, no published scoring, 3 of 3 items (mother and father keep close track of how well I am doing in school, parents almost always know where I am and what I am doing), 0-1 item scoring (true 1, false 0; range 0-1), mean, complete-case, 'does not apply' as missing"",
+  NA_character_
+)","1980 and 1982 rows, where the items were asked; NA in 1984.",,
+fam_physpunish,unavailable,,,Not collected.,,
+fam_parentchild_rel_self,incompatible,"BB047G, FY60F",,"Only a single frequency item on 'talking with your mother or father about personal experiences' (BB047G 1980, FY60F 1982); single items do not fill the scale row.",,
+fam_parentchild_rel_parent,unavailable,,,Not collected.,,
+fam_parentchild_conflict_parent,unavailable,,,Not collected.,,
+fam_parentchild_measure,unavailable,,,See fam_parentchild_rel_self.,,
+fam_functioning_parent,unavailable,,,Not collected.,,
+fam_functioning_self,unavailable,,,Not collected.,,
+fam_conflict_parent,unavailable,,,Not collected.,,
+fam_conflict_self,unavailable,,,Not collected.,,
+fam_functioning_measure,unavailable,,,See fam_functioning_parent.,,
+fam_readto_freq,incompatible,BB095,,"Only a retrospective item, 'How often did someone read to you before you started school?' (BB095, 1980), not reading at the occasion.",,
+fam_readto_time,unavailable,,,Not collected.,,
+fam_childbooks,incompatible,"BB104G, FY113G",,"Only 'more than 50 books' in the home (BB104G 1980 possessions list; FY113G 1982 sophomores), a count of all books, not children's books.",,
+fam_home_total,unavailable,,,Not collected.,,
+fam_home_cogstim,unavailable,,,Not collected.,,
+fam_home_emotsupport,unavailable,,,Not collected.,,
+fam_home_measure,unavailable,,,See fam_home_total.,,
+school_grade,inferred,"cohort, FUSTTYPE, wave","case_when(
+  wave == ""Base year 1980"" & as.numeric(cohort) == 1 ~ ""Grade 10"",
+  wave == ""Base year 1980"" & as.numeric(cohort) == 2 ~ ""Grade 12"",
+  wave == ""First follow-up 1982"" & as.numeric(cohort) == 1 & as.numeric(FUSTTYPE) %in% c(1, 3) ~ ""Grade 12"",
+  .default = NA_character_
+)","1980: Grade 10 (sophomores) or Grade 12 (seniors), fixed by the sample design (GRADE). 1982: Grade 12 for sophomore-cohort members in school or transferred (FUSTTYPE 1, 3), deduced from cohort progression, which the documentation names ('nearly all of whom were then in the 12th grade', 08896-Codebook.pdf section 4.3); inferred, so the row takes the weaker status. Dropouts, early graduates, 1982 seniors and 1984 rows are NA.",,
+school_sector,compatible,"SCHSAMP, FUSTTYPE, wave","local({
+  sector <- recode_values(as.numeric(SCHSAMP), 0:3 ~ ""Public"", 5:9 ~ ""Private"", default = ""Unknown"")
+  case_when(
+    wave == ""Base year 1980"" ~ sector,
+    wave == ""First follow-up 1982"" & as.numeric(FUSTTYPE) == 1 ~ sector,
+    .default = ""Unknown""
+  )
+})","School sample type from the sampling frame (SCHSAMP, the official classification): regular, alternative and Hispanic public schools = Public; Catholic, elite and other private schools = Private. 1980 rows and 1982 sophomores still in their base-year school (FUSTTYPE 1); transfers (new school not identified), dropouts, early graduates, 1982 seniors and 1984 rows (out of high school) are Unknown. The school questionnaire's control items (SB059, SB063) and HSTYPE (1984) are not used.",,
+school_track,compatible,"BB002, FY2, FUSTTYPE, wave","local({
+  code <- case_when(
+    wave == ""Base year 1980"" ~ as.numeric(BB002),
+    wave == ""First follow-up 1982"" & as.numeric(FUSTTYPE) %in% c(1, 3) ~ as.numeric(FY2),
+    .default = NA_real_
+  )
+  recode_values(code, 1 ~ ""Intermediate"", 2 ~ ""Academic"", 3:9 ~ ""Vocational"", default = ""Unknown"")
+})","Student: 'Which of the following best describes your present high school program?' (BB002 1980, FY2 1982 sophomores in school or transferred): general = Intermediate, academic or college preparatory = Academic, the seven vocational programmes (agriculture, business or office, distributive education, health, home economics, technical, trade or industry) = Vocational. Dropouts, early graduates, 1982 seniors and 1984 rows (out of high school) are Unknown; HSPROG (1984 composite) is not used.",,
+st_measure_type,inferred,,"""Categorical""","Weekday TV hours in seven response bands (1980, 1982) and ten bands (1984), 'MARK ONE'.",,
+st_measure_name,inferred,,"""Custom""",Items written for the HS&B student questionnaires ('During weekdays about how many hours per day do you watch TV?'); no named instrument.,,
+st_responder,inferred,,"""Self""","Student self-report in every round, the dropout questionnaire included; the harmoniser sets NA where no st_ value exists.",,
+st_total_wd,unavailable,,,Not collected.,,
+st_total_we,unavailable,,,Not collected.,,
+st_total,unavailable,,,Not collected.,,
+st_watch_wd,partial,"BB048, FY61, FE76, SY68, SE69, cohort, wave","local({
+  band7 <- coalesce(as.numeric(BB048), as.numeric(FY61), as.numeric(FE76))
+  band10 <- coalesce(as.numeric(SY68), as.numeric(SE69))
+  coalesce(
+    recode_values(band7, 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5, default = NA_real_),
+    recode_values(
+      band10,
+      1 ~ 0,
+      2 ~ 0.5,
+      3 ~ 1.5,
+      4 ~ 2.5,
+      5 ~ 3.5,
+      6 ~ 4.5,
+      7 ~ 5.5,
+      8 ~ 6.5,
+      9 ~ 7.5,
+      10 ~ 8,
+      default = NA_real_
+    )
+  )
+})","Student: 'During weekdays about how many hours per day do you watch TV?' 1980 (BB048, both cohorts), 1982 sophomores (FY61, dropouts included; FD75 is a copy for dropouts and is not used) and seniors (FE76): don't watch 0, less than 1 hour 0.5, one-hour bands 1-2 to 4-5 at their midpoints, top band '5 hours or more' = 5. 1984 (SY68, SE69): don't watch 0, less than 1 hour 0.5, one-hour bands 1-2 to 7-8 at their midpoints, top band '8 or more hours' = 8. Multiple punch, refused and missing are NA. Partial: TV set only.",,
+st_watch_we,unavailable,,,Not collected.,,
+st_watch,incompatible,"BB048, FY61, FE76, SY68, SE69",,Weekday items only; no usual-day value.,,
+st_game_wd,unavailable,,,Not collected.,,
+st_game_we,unavailable,,,Not collected.,,
+st_game,unavailable,,,Not collected.,,
+st_game_comp_wd,unavailable,,,Not collected.,,
+st_game_comp_we,unavailable,,,Not collected.,,
+st_game_comp,unavailable,,,Not collected.,,
+st_game_console_wd,unavailable,,,Not collected.,,
+st_game_console_we,unavailable,,,Not collected.,,
+st_game_console,unavailable,,,Not collected.,,
+st_game_handheldconsole_wd,unavailable,,,Not collected.,,
+st_game_handheldconsole_we,unavailable,,,Not collected.,,
+st_game_handheldconsole,unavailable,,,Not collected.,,
+st_game_active_wd,unavailable,,,Not collected.,,
+st_game_active_we,unavailable,,,Not collected.,,
+st_game_active,unavailable,,,Not collected.,,
+st_game_phone_wd,unavailable,,,Not collected.,,
+st_game_phone_we,unavailable,,,Not collected.,,
+st_game_phone,unavailable,,,Not collected.,,
+st_game_tablet_wd,unavailable,,,Not collected.,,
+st_game_tablet_we,unavailable,,,Not collected.,,
+st_game_tablet,unavailable,,,Not collected.,,
+st_comp_nongaming_wd,unavailable,,,Not collected.,,
+st_comp_nongaming_we,unavailable,,,Not collected.,,
+st_comp_nongaming,unavailable,,,Not collected.,,
+st_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_we,unavailable,,,No weekday/weekend split.,,
+st_comp,incompatible,"SY8B4, SY8C4, SY8D4, SY8E4, SE9B4, SE9C4, SE9D4, SE9E4, FY113K",,"Only yes/no use of computer terminals and micro-, mini- and mainframe computers on the job, for education or recreationally (SY8B-SY8E, SE9B-SE9E, 1984) and household ownership of a micro- or minicomputer (FY113K, 1982): no hours.",,
+st_tablet_wd,unavailable,,,Not collected.,,
+st_tablet_we,unavailable,,,Not collected.,,
+st_tablet,unavailable,,,Not collected.,,
+st_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_phone_we,unavailable,,,No weekday/weekend split.,,
+st_phone,incompatible,BB047E,,"Only how often the student talks on the telephone (BB047E, 1980; rarely or never to every day or almost): a landline call frequency, with no duration.",,
+st_socmedia_wd,unavailable,,,Not collected.,,
+st_socmedia_we,unavailable,,,Not collected.,,
+st_socmedia,unavailable,,,Not collected.,,
+st_educational_wd,unavailable,,,No weekday/weekend split.,,
+st_educational_we,unavailable,,,No weekday/weekend split.,,
+st_educational,incompatible,"SY8B3, SY8C3, SY8D3, SY8E3, SE9B3, SE9C3, SE9D3, SE9E3",,"Only yes/no use of computers for education (SY8B3-SY8E3, SE9B3-SE9E3, 1984): no hours.",,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,Not collected.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
+st_work_wd,unavailable,,,No weekday/weekend split.,,
+st_work_we,unavailable,,,No weekday/weekend split.,,
+st_work,incompatible,"SY8B2, SY8C2, SY8D2, SY8E2, SE9B2, SE9C2, SE9D2, SE9E2",,"Only yes/no use of computers on the job (SY8B2-SY8E2, SE9B2-SE9E2, 1984): no hours.",,
+st_internet_wd,unavailable,,,Not collected.,,
+st_internet_we,unavailable,,,Not collected.,,
+st_internet,unavailable,,,Not collected.,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,unavailable,,,Not collected.,,
+st_messaging_we,unavailable,,,Not collected.,,
+st_messaging,unavailable,,,Not collected.,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
+st_email,unavailable,,,Not collected.,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,incompatible,"SY11B2, SY11C2, SE12B2, SE12C2",,"Only whether a micro- or minicomputer or a computer terminal was ever used in high school (SY11B2, SY11C2, SE12B2, SE12C2, 1984; yes/no): no hours.",,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,incompatible,"BB007, FY7",,"Only self-reported letter grades so far in high school (BB007, FY7), which go to acc_academachment_lettergrades.",,
+acc_academachment_lettergrades,compatible,"BB007, FY7, wave","local({
+  code <- case_when(
+    wave == ""Base year 1980"" ~ as.numeric(BB007),
+    wave == ""First follow-up 1982"" ~ as.numeric(FY7),
+    .default = NA_real_
+  )
+  recode_values(
+    code,
+    1 ~ ""A"",
+    2 ~ ""A/B"",
+    3 ~ ""B"",
+    4 ~ ""B/C"",
+    5 ~ ""C"",
+    6 ~ ""C/D"",
+    7 ~ ""D"",
+    8 ~ ""F"",
+    default = NA_character_
+  )
+})","Student: 'Which of the following best describes your grades so far in high school?' (BB007 1980, both cohorts; FY7 1982 sophomores, not asked of dropouts): mostly A's = A, about half A's and half B's = A/B, mostly B's = B, B/C, C, C/D, mostly D's = D, mostly below D = F; reserved codes NA. 1982 seniors and 1984 rows are NA: the 1984 items (SY22, SE23) are postsecondary grades, not school grades.",,
+acc_academachment_stdtest,compatible,"YBSCINSD, FYSCINSD, cohort, wave","local({
+  score <- case_when(
+    wave == ""Base year 1980"" ~ as.numeric(YBSCINSD),
+    wave == ""First follow-up 1982"" & as.numeric(cohort) == 1 ~ as.numeric(FYSCINSD),
+    .default = NA_real_
+  )
+  if_else(score > 0 & score < 900, score, NA_real_)
+})","Domain: science. Sophomore-cohort HS&B science test (20 items), standardised score (mean 50, SD 10) as released: 1980 (YBSCINSD) and the 1982 retest (FYSCINSD). Not given to seniors; dropouts were tested in 1982 where reached. Writing and civics (sophomores) are not used; vocabulary goes to the literacy rows. Standardise within dataset and wave.",,
+acc_schoolengage_caresschool,incompatible,"BB061E, BB059C",,"Only true/false statements 'I like to work hard in school' (BB061E) and 'I am interested in school' (BB059C), not frequency ratings.",,
+acc_schoolengage_homework,incompatible,"YB016C, FY18C",,"Only how often the student comes to class without homework done (YB016C, FY18C; usually to never), a negatively worded item not reversed onto this row; scored in acc_schoolengage_self.",,
+acc_schoolengage_self,partial,"YB016A, YB016B, YB016C, FY18A, FY18B, FY18C, FUSTTYPE, wave","local({
+  items <- cbind(
+    coalesce(as.numeric(YB016A), as.numeric(FY18A)),
+    coalesce(as.numeric(YB016B), as.numeric(FY18B)),
+    coalesce(as.numeric(YB016C), as.numeric(FY18C))
+  )
+  items[!(items %in% 1:4)] <- NA
+  score <- rowMeans(items)
+  if_else(wave == ""First follow-up 1982"" & !(as.numeric(FUSTTYPE) %in% c(1, 3)), NA_real_, score)
+})","Sophomore cohort: 'How often do you come to class and find yourself without these things? Pencil or paper; books; your homework done' (YB016A-C 1980, FY18A-C 1982 sophomores in school or transferred; dropouts were not asked and early graduates, no longer enrolled, are NA): usually 1, fairly often 2, seldom 3, never 4, so higher = better prepared; mean of the three, complete-case, range 1-4. Partial: a class-preparedness battery with no published scoring. Not asked of seniors.",,
+acc_schoolengage_teacher,unavailable,,,Not collected.,,
+acc_schoolengage_measure,inferred,wave,"if_else(
+  wave %in% c(""Base year 1980"", ""First follow-up 1982""),
+  ""self: HS&B class preparedness items (study items, no published scoring), 3 of 3 items (coming to class without pencil or paper, books, homework done), 1-4 item scoring (usually 1 to never 4; range 1-4), mean, keyed so higher = better prepared, complete-case; sophomore cohort only"",
+  NA_character_
+)",1980 and 1982 rows; NA in 1984.,,
+acc_homework_time,compatible,"BB015, FY15, FUSTTYPE, wave","local({
+  week <- case_when(
+    wave == ""Base year 1980"" ~ recode_values(
+      as.numeric(BB015),
+      c(1, 2) ~ 0,
+      3 ~ 0.5,
+      4 ~ 2,
+      5 ~ 4,
+      6 ~ 7.5,
+      7 ~ 10,
+      default = NA_real_
+    ),
+    wave == ""First follow-up 1982"" & as.numeric(FUSTTYPE) %in% c(1, 3) ~ recode_values(
+      as.numeric(FY15),
+      c(1, 2) ~ 0,
+      3 ~ 0.5,
+      4 ~ 2,
+      5 ~ 4,
+      6 ~ 7.5,
+      7 ~ 12.5,
+      8 ~ 15,
+      default = NA_real_
+    ),
+    .default = NA_real_
+  )
+  week / 7
+})","Student: 'Approximately what is the average amount of time you spend on homework a week?' 1980 (BB015, both cohorts): no homework assigned and 'I have homework but don't do it' 0, less than 1 hour 0.5, 1-3 hours 2, 3-5 hours 4, 5-10 hours 7.5, top band 'more than 10 hours' = 10; 1982 sophomores in school or transferred (FY15): bands as 1980 to 5-10 hours, 10-15 hours 12.5, top band '15 hours or more' = 15; weekly totals / 7. Dropouts, early graduates, 1982 seniors and 1984 rows are NA (not enrolled or out of high school); HSHOMEWK (1984 rows) is a three-level recode of the earlier items and is not used.",,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolstress_self,unavailable,,,Not collected.,,
+acc_schoolstress_measure,unavailable,,,See acc_schoolstress_self.,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,partial,"BB007, FY7, wave","local({
+  code <- case_when(
+    wave == ""Base year 1980"" ~ as.numeric(BB007),
+    wave == ""First follow-up 1982"" ~ as.numeric(FY7),
+    .default = NA_real_
+  )
+  recode_values(code, 1 ~ 4, 2 ~ 3.5, 3 ~ 3, 4 ~ 2.5, 5 ~ 2, 6 ~ 1.5, 7 ~ 1, 8 ~ 0, default = NA_real_)
+})","Same items as acc_academachment_lettergrades on the US 4-point scale: mostly A's 4, half A's and half B's 3.5, mostly B's 3, 2.5, 2, 1.5, mostly D's 1, mostly below D 0. Partial: banded self-reported grades. Postsecondary grades (SY22, SE23, 1984) are not used.",,
+acc_academachment_teacherrated,unavailable,,,Not in the supplied extract.,,
+acc_academachment_parentrated,unavailable,,,Not collected.,,
+acc_numeracy_stdtest,compatible,"YBMTH1SD, EBMTH1SD, FYMTH1SD, cohort, wave","local({
+  score <- case_when(
+    wave == ""Base year 1980"" & as.numeric(cohort) == 1 ~ as.numeric(YBMTH1SD),
+    wave == ""Base year 1980"" ~ as.numeric(EBMTH1SD),
+    wave == ""First follow-up 1982"" & as.numeric(cohort) == 1 ~ as.numeric(FYMTH1SD),
+    .default = NA_real_
+  )
+  if_else(score > 0 & score < 900, score, NA_real_)
+})","HS&B mathematics test part 1 (28 items, 16 minutes for sophomores), each cohort's own form, standardised score (mean 50, SD 10) as released: 1980 sophomores (YBMTH1SD) and seniors (EBMTH1SD), 1982 sophomore retest (FYMTH1SD, level 1). Part 2 (YBMTH2SD, EBMTH2SD, FYMTH2SD) and the common-item score (BBMATHSD) are not used. Standardise within dataset and wave.",,
+acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered.,,
+acc_literacy_stdtest,compatible,"YBREADSD, EBREADSD, FYREADSD, cohort, wave","local({
+  score <- case_when(
+    wave == ""Base year 1980"" & as.numeric(cohort) == 1 ~ as.numeric(YBREADSD),
+    wave == ""Base year 1980"" ~ as.numeric(EBREADSD),
+    wave == ""First follow-up 1982"" & as.numeric(cohort) == 1 ~ as.numeric(FYREADSD),
+    .default = NA_real_
+  )
+  if_else(score > 0 & score < 900, score, NA_real_)
+})","HS&B reading test, each cohort's own form, standardised score (mean 50, SD 10) as released: 1980 sophomores (YBREADSD, 20 items) and seniors (EBREADSD), 1982 sophomore retest (FYREADSD); seniors not retested. The vocabulary tests and the both-cohort common-item score (BBREADSD, 8 items) are not used. Standardise within dataset and wave.",,
+acc_literacy_bas_wordreading,unavailable,,,BAS II not administered.,,
+acc_learningdisab_diagnosed,incompatible,"BB087A, FY103A, FD83A, FE83A",,"Only 'Do you have any of the following conditions? Specific learning disability' (BB087A, FY103A, FD83A, FE83A), not attributed to a health professional.",,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not collected.,,
+acc_graderepeated,compatible,"FY59, wave","if_else(
+  wave == ""First follow-up 1982"",
+  recode_values(as.numeric(FY59), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_),
+  NA_character_
+)","1982 sophomores (not dropouts): 'Have you ever repeated a grade or been held back a grade in school?' (FY59; grades 1-9 follow-ups FY59AA-AI). Dropouts' 'Before high school, did you ever repeat a grade?' (FD14) covers one stage and is not spliced in. 1980 and 1984 rows are NA: no item, and an observed TRUE is not yet carried to the 1984 rows.",,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_self,unavailable,,,Not collected.,,
+beh_hyper_self,unavailable,,,Not collected.,,
+beh_adhdsymp_self,unavailable,,,Not collected.,,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_atten_singleitem_teacher,unavailable,,,Not collected.,,
+beh_impulsivity_self,unavailable,,,Not collected.,,
+beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_selfreg_parent,unavailable,,,Not collected.,,
+beh_emotdysreg_parent,unavailable,,,Not collected.,,
+beh_emotreg_parent,unavailable,,,Not collected.,,
+beh_selfreg_self,unavailable,,,Not collected.,,
+beh_emotreg_self,unavailable,,,Not collected.,,
+beh_emotdysreg_self,unavailable,,,Not collected.,,
+beh_emotreg_suppression_self,unavailable,,,Not collected.,,
+beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
+beh_emotaware_self,unavailable,,,Not collected.,,
+beh_selfreg_measure,unavailable,,,See beh_selfreg_self.,,
+beh_temp_negaffect_parent,unavailable,,,Not collected.,,
+beh_temp_surgency_parent,unavailable,,,Not collected.,,
+beh_temp_measure,unavailable,,,See beh_temp_negaffect_parent.,,
+beh_bullied,unavailable,,,Not collected.,,
+beh_beenbullied,unavailable,,,Not collected.,,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,unavailable,,,Not collected.,,
+beh_truancy,partial,"BB059E, FY66F, FUSTTYPE, wave","local({
+  case_when(
+    wave == ""Base year 1980"" ~ recode_values(as.numeric(BB059E), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_),
+    wave == ""First follow-up 1982"" & as.numeric(FUSTTYPE) %in% c(1, 3) ~ recode_values(
+      as.numeric(FY66F),
+      1 ~ ""TRUE"",
+      2 ~ ""FALSE"",
+      default = NA_character_
+    ),
+    .default = NA_character_
+  )
+})","Student true/false: 'Every once in a while I cut a class' (BB059E 1980, both cohorts; FY66F 1982 sophomores in school or transferred): true = TRUE. Partial: no recall period. Absence 'when not ill' (BB016, FY16) includes permitted absence and is not used.",,
+beh_suspended,partial,"BB059D, FY66E, FUSTTYPE, wave","local({
+  case_when(
+    wave == ""Base year 1980"" ~ recode_values(as.numeric(BB059D), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_),
+    wave == ""First follow-up 1982"" & as.numeric(FUSTTYPE) %in% c(1, 3) ~ recode_values(
+      as.numeric(FY66E),
+      1 ~ ""TRUE"",
+      2 ~ ""FALSE"",
+      default = NA_character_
+    ),
+    .default = NA_character_
+  )
+})","Student true/false: 'I have been suspended or put on probation in school' (BB059D 1980, both cohorts) and 'I have been suspended or put on probation in school for disciplinary reasons' (FY66E 1982 sophomores in school or transferred): true = TRUE, false = FALSE. Partial: suspension pooled with probation, and an 'ever' item. Not asked of 1982 seniors or in 1984; dropouts and early graduates (not enrolled) are NA. Not used: the transcript's days suspended (DAYSUSPN, not in the supplied extract, 10 values), FY66D (academic reasons) and FD12A (suspension or expulsion as a reason for leaving school).",,
+beh_stealing,unavailable,,,Not collected.,,
+beh_vandalism,unavailable,,,Not collected.,,
+beh_alcohol_self,compatible,"FE79, FD80, wave","local({
+  value <- coalesce(
+    recode_values(as.numeric(FE79), 1 ~ ""FALSE"", 2:6 ~ ""TRUE"", default = NA_character_),
+    recode_values(as.numeric(FD80), 1 ~ ""FALSE"", 2:6 ~ ""TRUE"", default = NA_character_)
+  )
+  if_else(wave == ""First follow-up 1982"", value, NA_character_)
+})","1982 only: seniors 'On how many occasions (if any) have you had alcoholic beverages to drink during the last 30 days?' (FE79, a voluntary item) and sophomore-cohort dropouts' same item (FD80): none = FALSE, any occasion = TRUE. Not asked of in-school sophomores or in 1980 and 1984.",,
+beh_tobacco_self,compatible,"FE78, FD79, wave","local({
+  value <- coalesce(
+    recode_values(as.numeric(FE78), 1 ~ ""FALSE"", 2:6 ~ ""TRUE"", default = NA_character_),
+    recode_values(as.numeric(FD79), 1 ~ ""FALSE"", 2:6 ~ ""TRUE"", default = NA_character_)
+  )
+  if_else(wave == ""First follow-up 1982"", value, NA_character_)
+})","1982 only: seniors 'How frequently have you smoked cigarettes during the past 30 days?' (FE78) and sophomore-cohort dropouts' same item (FD79): not at all = FALSE, less than 5 a day or more = TRUE.",,
+beh_vaping_self,unavailable,,,Not collected.,,
+beh_cannabis_self,compatible,"FE77C, FD78C, wave","local({
+  value <- coalesce(
+    recode_values(as.numeric(FE77C), 1 ~ ""FALSE"", 2:7 ~ ""TRUE"", default = NA_character_),
+    recode_values(as.numeric(FD78C), 1 ~ ""FALSE"", 2:7 ~ ""TRUE"", default = NA_character_)
+  )
+  if_else(wave == ""First follow-up 1982"", value, NA_character_)
+})","1982 only: seniors 'On how many occasions (if any) have you used hashish (hash) or marijuana (grass, pot, dope) during the last 30 days?' (FE77C) and sophomore-cohort dropouts' same item (FD78C): 0 times = FALSE, any = TRUE. The lifetime, 12-month and last-high-school-year items (FE77A, FE77B, FE77D, FD78A, FD78B, FD78D) are not used.",,
+beh_drugs_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ-SF not administered.,,
+beh_agg_self,unavailable,,,Not collected.,,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,unavailable,,,Not collected.,,
+beh_aggphys_measure,unavailable,,,See beh_aggphys_self.,,
+beh_aggrel_self,unavailable,,,Not collected.,,
+beh_aggrel_measure,unavailable,,,See beh_aggrel_self.,,
+beh_anger_self,unavailable,,,Not collected.,,
+beh_anger_measure,unavailable,,,See beh_anger_self.,,
+beh_aggbeliefs_self,unavailable,,,Not collected.,,
+beh_agghostattrib_self,unavailable,,,Not collected.,,
+beh_aggfantasy_self,unavailable,,,Not collected.,,
+beh_aggcog_measure,unavailable,,,See beh_aggbeliefs_self.,,
+beh_agg_singleitem_teacher,unavailable,,,Not collected.,,
+beh_disrupt_singleitem_teacher,unavailable,,,Not collected.,,
+beh_aggphys_teacher,unavailable,,,Not collected.,,
+beh_aggrel_teacher,unavailable,,,Not collected.,,
+beh_agg_teacher,unavailable,,,Not collected.,,
+beh_victphys_teacher,unavailable,,,Not collected.,,
+beh_victrel_teacher,unavailable,,,Not collected.,,
+beh_vict_teacher,unavailable,,,Not collected.,,
+beh_atten_teacher,unavailable,,,Not collected.,,
+beh_hyper_teacher,unavailable,,,Not collected.,,
+beh_adhdsymp_teacher,unavailable,,,Not collected.,,
+beh_ext_teacher,unavailable,,,Not collected.,,
+beh_prosocial_teacher,unavailable,,,Not collected.,,
+beh_socialskills_teacher,unavailable,,,Not collected.,,
+beh_teacher_measure,unavailable,,,See beh_aggphys_teacher.,,
+beh_argues,unavailable,,,Not collected.,,
+beh_persistence_finishwork,unavailable,,,Not collected.,,
+beh_emotreg_stayscalm,unavailable,,,Not collected.,,
+beh_peerprob_makefriends,unavailable,,,Not collected.,,
+beh_conduct_diagnosed,unavailable,,,Not collected.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,unavailable,,,Not collected.,,
+beh_autism_diagnosed,unavailable,,,Not collected.,,
+beh_autism_diagnosed_severity,unavailable,,,Not collected.,,
+beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ not administered.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_self,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_socprob_cbcl_parent,unavailable,,,Not collected.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,CBCL not administered.,,
+beh_ext_self,unavailable,,,Not collected.,,
+beh_opp_self,unavailable,,,Not collected.,,
+beh_conduct_self,unavailable,,,Not collected.,,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,unavailable,,,Not collected.,,
+beh_hyper_parent,unavailable,,,Not collected.,,
+beh_adhdsymp_parent,unavailable,,,Not collected.,,
+beh_opp_parent,unavailable,,,Not collected.,,
+beh_conduct_parent,unavailable,,,Not collected.,,
+beh_ext_parent,unavailable,,,Not collected.,,
+beh_parent_measure,unavailable,,,See beh_atten_parent.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,unavailable,,,Not collected.,,
+beh_prosocial_measure,unavailable,,,See beh_prosocial_self.,,
+beh_prosocial_parent,unavailable,,,Not collected.,,
+beh_socialskills_self,unavailable,,,Not collected.,,
+beh_socialskills_measure,unavailable,,,See beh_socialskills_self.,,
+beh_socialskills_parent,unavailable,,,Not collected.,,
+beh_prosocial_singleitem_teacher,unavailable,,,Not collected.,,
+beh_empathy_self,unavailable,,,Not collected.,,
+beh_empathy_measure,unavailable,,,See beh_empathy_self.,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_parent,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,NEPSY not administered.,,
+cog_phono_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhibcont_nepsy,unavailable,,,NEPSY not administered.,,
+cog_vismotor_nepsy,unavailable,,,NEPSY not administered.,,
+cog_verbalfluency_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhib_nihtb_flanker,unavailable,,,NIH Toolbox not administered.,,
+cog_flex_nihtb_dccs,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox not administered.,,
+cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox not administered.,,
+cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox not administered.,,
+cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox not administered.,,
+cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_atten_task,unavailable,,,Not collected.,,
+cog_atten_task_measure,unavailable,,,See cog_atten_task.,,
+cog_flex_task,unavailable,,,Not collected.,,
+cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
+cog_inhib_task,unavailable,,,Not collected.,,
+cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
+cog_wm_task,incompatible,EBPICTFS,,"Only the senior picture-number test (EBPICTFS, 1980), an associative-memory task, not working memory.",,
+cog_wm_task_measure,unavailable,,,See cog_wm_task.,,
+cog_speed_task,compatible,"EBMOS1FS, EBMOS2FS, wave","if_else(as.numeric(EBMOS1FS) < 900 & as.numeric(EBMOS2FS) < 900, as.numeric(EBMOS1FS) + as.numeric(EBMOS2FS), NA_real_)","1980 seniors only: mosaic comparisons test (perceptual speed; parts 1 and 2, 56 items in 3 minutes each), sum of the two parts' formula scores (number right corrected for guessing), complete-case; raw score. The standardised scores (EBMOS1SD, EBMOS2SD, normed within the study's sample) are not used, nor are picture-number (EBPICT*, associative memory) and visualisation in three dimensions (EBVISL*).",,
+cog_speed_task_measure,inferred,wave,"if_else(
+  wave == ""Base year 1980"",
+  ""Mosaic comparisons (HS&B 1980 senior test battery), parts 1 and 2 (56 items, 3 minutes each), sum of formula scores (number right minus a fraction of number wrong), raw, as released; seniors only"",
+  NA_character_
+)",1980 rows; NA in 1982 and 1984.,,
+cog_wm_digitspan,unavailable,,,Digit span not administered.,,
+cog_iq_fullscale,unavailable,,,Not collected.,,
+cog_nonverbalreason_task,incompatible,EBVISLFS,,"Only the senior visualisation in three dimensions test (EBVISLFS, 1980), a spatial task, not a matrix or figural reasoning test.",,
+cog_nonverbalreason_task_measure,unavailable,,,See cog_nonverbalreason_task.,,
+cog_vocab_bpvs,unavailable,,,BPVS not administered.,,
+cog_vocab_ppvt,unavailable,,,PPVT not administered.,,
+cog_vocab_receptive_task,incompatible,"YBVOCBFS, EBVOC1FS, EBVOC2FS, BBVOCBFS, FYVOCBFS",,"Only written multiple-choice vocabulary tests (YBVOCB, EBVOC1, EBVOC2, BBVOCB 1980; FYVOCB 1982), which belong on the literacy rows.",,
+cog_vocab_expressive_task,incompatible,"YBVOCBFS, EBVOC1FS, EBVOC2FS, BBVOCBFS, FYVOCBFS",,"Only written multiple-choice vocabulary tests (YBVOCB, EBVOC1, EBVOC2, BBVOCB 1980; FYVOCB 1982), which belong on the literacy rows.",,
+cog_vocab_task_measure,unavailable,,,See cog_vocab_receptive_task.,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered.,,
+cog_execfunc_parent,unavailable,,,Not collected.,,
+cog_execfunc_teacher,unavailable,,,Not collected.,,
+cog_execfunc_self,unavailable,,,Not collected.,,
+cog_execfunc_measure,unavailable,,,See cog_execfunc_parent.,,
+cog_vocab_bas_naming,unavailable,,,BAS II not administered.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,BAS II not administered.,,
+cog_spatial_bas_pattern,unavailable,,,BAS II not administered.,,
+cog_verbalreason_bas_versim,unavailable,,,BAS II not administered.,,
+cog_earlynumber_bas_enc,unavailable,,,BAS II not administered.,,
+cog_schoolread_bracken,unavailable,,,Bracken School Readiness Assessment not administered.,,
+cog_earlylang_parent,unavailable,,,Not collected.,,
+cog_earlylang_measure,unavailable,,,See cog_earlylang_parent.,,
+cog_creativethinking_stdtest,unavailable,,,Not collected.,,
+cog_speechlang_diagnosed,incompatible,"BB087E, FY103E, FD83E, FE83E",,"Only 'speech disability' among the student's conditions (BB087E, FY103E, FD83E, FE83E), not attributed to a health professional.",,
+cog_speechlang_diagnosed_severity,unavailable,,,Not collected.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_anx_diagnosed,unavailable,,,Not collected.,,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ not administered.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_int_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_int_sdq_self,unavailable,,,SDQ not administered.,,
+mh_int_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered.,,
+mh_distress_k6_self,unavailable,,,K6 not administered.,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered.,,
+mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered.,,
+mh_distress_self,partial,"YB064B, YB064D, YB064F, YB064H, YB064J","local({
+  items <- cbind(as.numeric(YB064B), as.numeric(YB064D), as.numeric(YB064F), as.numeric(YB064H), as.numeric(YB064J))
+  items[!(items %in% 1:4)] <- NA
+  rowSums(items - 1)
+})","1980 sophomores only: 'During the past few weeks, did you ever feel ...' (never, once, several times, a lot; rebased 0-3): so restless that you couldn't sit long in a chair, very lonely or remote from other people, bored, depressed or very unhappy, upset because someone criticized you (YB064B, D, F, H, J); sum, complete-case, range 0-15. Partial: a study checklist with no published scoring; the wording matches the negative items of Bradburn's Affect Balance Scale, which the study does not name.",,
+mh_distress_measure,inferred,wave,"if_else(
+  wave == ""Base year 1980"",
+  ""HS&B 1980 sophomore feelings items (study checklist; wording matches the negative items of Bradburn's Affect Balance Scale, which the study does not name), 5 of 10 items, 0-3 item scoring (never 0, once 1, several times 2, a lot 3; range 0-15), sum, complete-case; four-point frequency format instead of yes/no; past few weeks"",
+  NA_character_
+)",1980 rows; NA in 1982 and 1984.,,
+mh_anx_masc_self,unavailable,,,MASC not administered.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_withdrawn_cbcl_parent,unavailable,,,Not collected.,,
+mh_somatic_cbcl_parent,unavailable,,,Not collected.,,
+mh_emotreact_cbcl_parent,unavailable,,,Not collected.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,incompatible,BB060,,"BB060 ('so sad, or had so many problems, that you wondered if anything was worthwhile', past month; yes more than once, yes once, no) is a mood-frequency item, not a depressive-episode screen.",,
+mh_dep_self,incompatible,"YB064H, BB060",,"Only single items: 'depressed or very unhappy' (YB064H, mapped to mh_sad_self) and BB060 ('so sad, or had so many problems, that you wondered if anything was worthwhile').",,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,unavailable,,,Not collected.,,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_socanx_self,unavailable,,,Not collected.,,
+mh_socanx_measure,unavailable,,,See mh_socanx_self.,,
+mh_int_parent,unavailable,,,Not collected.,,
+mh_anx_parent,unavailable,,,Not collected.,,
+mh_dep_parent,unavailable,,,Not collected.,,
+mh_totalprob_parent,unavailable,,,Not collected.,,
+mh_int_teacher,unavailable,,,Not collected.,,
+mh_anx_teacher,unavailable,,,Not collected.,,
+mh_dep_teacher,unavailable,,,Not collected.,,
+mh_totalprob_teacher,unavailable,,,Not collected.,,
+mh_depanx_diagnosed,unavailable,,,Not collected.,,
+mh_stress_self,unavailable,,,Not collected.,,
+mh_stress_scale_self,unavailable,,,Not collected.,,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,partial,YB064D,"recode_values(as.numeric(YB064D), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", default = NA_character_)","1980 sophomores only: 'During the past few weeks, did you ever feel very lonely or remote from other people?' (YB064D; never, once, several times, a lot): never = Never, once = Rarely, several times = Sometimes, a lot = Often; Always unused. Partial: four levels, and loneliness pooled with feeling remote. Also scored in the 1980 sophomore feelings battery.",,
+mh_lonely_scale_self,unavailable,,,Not collected.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,partial,YB064H,"recode_values(as.numeric(YB064H), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"", default = NA_character_)","1980 sophomores only: 'During the past few weeks, did you ever feel depressed or very unhappy?' (YB064H; never, once, several times, a lot): never = Never, once = Rarely, several times = Sometimes, a lot = Often; Always unused. Partial: four levels, and 'depressed or very unhappy' rather than sad. Also scored in the 1980 sophomore feelings battery. BB060 pools sadness with having many problems and is not used.",,
+mh_worry_self,unavailable,,,Not collected.,,
+mh_irritable_self,unavailable,,,Not collected.,,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,incompatible,BB060,,"Only 'During the past month, have you felt so sad, or had so many problems, that you wondered if anything was worthwhile?' (BB060, 1980): a 'life is meaningless' item.",,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_unhealthywtctrl_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,unavailable,,,Not collected.,,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered.,,
+wb_bodyimage,incompatible,BB061B,,"Only the true/false statement 'I am overweight' (BB061B, 1980), whose 'false' cannot be placed on the five levels.",,
+wb_bodyesteem_self,unavailable,,,Not collected.,,
+wb_bodyesteem_measure,unavailable,,,See wb_bodyesteem_self.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
+wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_lifesat_self,unavailable,,,Not collected.,,
+wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
+wb_happiness_singleitem_self,unavailable,,,Not collected.,,
+wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,partial,"BB059A, FY66A, FUSTTYPE, wave","local({
+  case_when(
+    wave == ""Base year 1980"" ~ recode_values(as.numeric(BB059A), 1 ~ 1, 2 ~ 0, default = NA_real_),
+    wave == ""First follow-up 1982"" & as.numeric(FUSTTYPE) %in% c(1, 3) ~ recode_values(
+      as.numeric(FY66A),
+      1 ~ 1,
+      2 ~ 0,
+      default = NA_real_
+    ),
+    .default = NA_real_
+  )
+})","Student true/false: 'I am satisfied with the way my education is going' (BB059A 1980, both cohorts; FY66A 1982 sophomores in school or transferred), 2 points: true = 1, false = 0. Partial: satisfaction with educational experience as a whole, on a true/false scale. Standardise within dataset.",,
+wb_domainsat_appearance_self,incompatible,BB061C,,"Only the true/false statement 'I am physically unattractive' (BB061C, 1980), not a satisfaction rating.",,
+wb_domainsat_family_self,unavailable,,,Not collected.,,
+wb_domainsat_friends_self,unavailable,,,Not collected.,,
+wb_domainsat_school_self,incompatible,"BB059C, FY66C",,"Only 'I am interested in school' (BB059C, FY66C; true/false), interest rather than satisfaction or liking.",,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
+wb_selfesteem_rosenberg_self,incompatible,"BB058A, BB058C, BB058D, BB058H, BB058J, BB058L, FY75A, FY75C, FY75D, FY75H, FY75J, FY75L, FE75A, FE75C, FE75D, FE75H, FE75J, FE75L",,"Only 6 of the 10 Rosenberg items were asked, with an added 'no opinion' option; scored on wb_selfesteem_self.",,
+wb_selfesteem_singleitem_self,unavailable,,,Not collected.,,
+wb_selfesteem_self,compatible,"BB058A, BB058C, BB058D, BB058H, BB058J, BB058L, FY75A, FY75C, FY75D, FY75H, FY75J, FY75L, FE75A, FE75C, FE75D, FE75H, FE75J, FE75L, cohort, wave","local({
+  items <- cbind(
+    coalesce(as.numeric(BB058A), as.numeric(FY75A), as.numeric(FE75A)),
+    coalesce(as.numeric(BB058C), as.numeric(FY75C), as.numeric(FE75C)),
+    coalesce(as.numeric(BB058D), as.numeric(FY75D), as.numeric(FE75D)),
+    coalesce(as.numeric(BB058H), as.numeric(FY75H), as.numeric(FE75H)),
+    coalesce(as.numeric(BB058J), as.numeric(FY75J), as.numeric(FE75J)),
+    coalesce(as.numeric(BB058L), as.numeric(FY75L), as.numeric(FE75L))
+  )
+  items[!(items %in% 1:4)] <- NA
+  items[, 1:4] <- 5 - items[, 1:4]
+  rowSums(items)
+})","Student: 'How do you feel about each of the following statements?' six Rosenberg Self-Esteem Scale items asked in 1980 (BB058) and 1982 (FY75 sophomores, FE75 seniors): 'I take a positive attitude toward myself', 'I feel I am a person of worth, on an equal plane with others', 'I am able to do things as well as most other people', 'On the whole, I am satisfied with myself' (agree strongly = 4) and 'At times I think I am no good at all', 'I feel I do not have much to be proud of' (disagree strongly = 4); sum, complete-case, range 6-24; 'no opinion' and reserved codes NA. Every item asked at both waves is scored; the study's self-concept composites (BBCONCPT, FYCONCPT, FECONCPT: the four positive items standardised within grade and summed without reversal, so higher = less self-esteem) are not used. Not asked in 1984.",,
+wb_selfesteem_measure,inferred,wave,"if_else(
+  wave %in% c(""Base year 1980"", ""First follow-up 1982""),
+  ""Rosenberg Self-Esteem Scale, 6 of 10 items, 1-4 item scoring (range 6-24), sum; 'I take a positive attitude toward myself', 'person of worth', 'able to do things as well as most other people' and 'satisfied with myself' reversed (agree strongly = 4); agreement scale with an added 'no opinion' option set to missing; complete-case"",
+  NA_character_
+)","1980 and 1982 rows, where the items were asked; NA in 1984.",,
+wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_selfefficacy_academic_self,unavailable,,,Not collected.,,
+wb_selfefficacy_academic_measure,unavailable,,,See wb_selfefficacy_academic_self.,,
+wb_control_self,compatible,"BBLOCUS, FYLOCUS, FELOCUS, BB058B, BB058E, BB058F, BB058G, FY75B, FY75E, FY75F, FY75G, FE75B, FE75E, FE75F, FE75G, cohort, wave","local({
+  items <- cbind(
+    coalesce(as.numeric(BB058B), as.numeric(FY75B), as.numeric(FE75B)),
+    coalesce(as.numeric(BB058E), as.numeric(FY75E), as.numeric(FE75E)),
+    coalesce(as.numeric(BB058F), as.numeric(FY75F), as.numeric(FE75F)),
+    coalesce(as.numeric(BB058G), as.numeric(FY75G), as.numeric(FE75G))
+  )
+  answered <- rowSums(items >= 1 & items <= 5, na.rm = TRUE)
+  score <- case_when(
+    wave == ""Base year 1980"" ~ as.numeric(BBLOCUS),
+    wave == ""First follow-up 1982"" & as.numeric(cohort) == 1 ~ as.numeric(FYLOCUS),
+    wave == ""First follow-up 1982"" ~ as.numeric(FELOCUS),
+    .default = NA_real_
+  )
+  if_else(score < 8 & answered >= 2, score, NA_real_)
+})","The study's locus of control composite (BBLOCUS 1980; FYLOCUS 1982 sophomores, FELOCUS 1982 seniors): four agree-disagree items 'Good luck is more important than hard work for success', 'Every time I try to get ahead, something or somebody stops me', 'Planning only makes a person unhappy since plans hardly ever work out anyway' and 'People who accept their condition in life are happier than those who try to change things' (BB058B, E, F, G and their 1982 copies), each standardised within grade and combined (07896-0002-Codebook.txt student item 514). Higher = more disagreement with the external statements = more internal control; keying checked (each item correlates 0.62-0.72 with the composite in every wave). Missing code 8 is NA. The composite's missing-item rule is not documented: the study scores 'no opinion' and releases a score for students who answered only one of the four items, so it is used only where at least two of the four items were answered (agree-disagree or 'no opinion'; FY75 holds the dropouts' FD77 answers). 'What happens to me is my own doing' and 'When I make plans, I am almost certain I can make them work' are not in the composite and are not used. Not asked in 1984.",,
+wb_control_measure,inferred,wave,"if_else(
+  wave %in% c(""Base year 1980"", ""First follow-up 1982""),
+  ""HS&B locus of control composite (NLS-72 and HS&B items), 4 external-control agree-disagree items (luck over hard work, somebody stops me, planning does not pay, accept one's condition), 1-4 item scoring (agree strongly 1 to disagree strongly 4), each standardised within grade and combined by the study, supplied already keyed (higher = more internal control); 'no opinion' scored by the study; missing-item rule not documented (scored from any answered item), used where at least 2 of 4 items were answered"",
+  NA_character_
+)",1980 and 1982 rows; NA in 1984.,,
+wb_selfconcept_academic_self,unavailable,,,Not collected.,,
+wb_selfconcept_maths_self,unavailable,,,Not collected.,,
+wb_selfconcept_verbal_self,unavailable,,,Not collected.,,
+wb_selfconcept_science_self,unavailable,,,Not collected.,,
+wb_selfconcept_social_self,incompatible,"BB061D, YB053A",,"Only single items: 'I am popular with other students' (BB061D, true/false) and 'Do others see you as popular?' (YB053A).",,
+wb_selfconcept_measure,unavailable,,,See wb_selfconcept_academic_self.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,SHS not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,unavailable,,,Not collected.,,
+wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,unavailable,,,Not collected.,,
+wb_posaffect_self,partial,"YB064A, YB064C, YB064E, YB064G, YB064I","local({
+  items <- cbind(as.numeric(YB064A), as.numeric(YB064C), as.numeric(YB064E), as.numeric(YB064G), as.numeric(YB064I))
+  items[!(items %in% 1:4)] <- NA
+  rowSums(items - 1)
+})","1980 sophomores only: 'During the past few weeks, did you ever feel ...' (never, once, several times, a lot; rebased 0-3): particularly excited or interested in something, proud because someone complimented you on something you had done, pleased about having accomplished something, on top of the world, that things were going your way (YB064A, C, E, G, I); sum, complete-case, range 0-15. Partial: a study's own positive-feeling items with no published scoring; the wording matches the positive items of Bradburn's Affect Balance Scale, which the study does not name.",,
+wb_posaffect_measure,inferred,wave,"if_else(
+  wave == ""Base year 1980"",
+  ""HS&B 1980 sophomore feelings items (study items; wording matches the positive items of Bradburn's Affect Balance Scale, which the study does not name), 5 of 10 items, 0-3 item scoring (never 0, once 1, several times 2, a lot 3; range 0-15), sum, complete-case; four-point frequency format instead of yes/no; past few weeks"",
+  NA_character_
+)",1980 rows; NA in 1982 and 1984.,,
+wb_negaffect_self,incompatible,"YB064B, YB064D, YB064F, YB064H, YB064J",,"The negative-feeling items of the 1980 sophomore feelings battery are a study checklist with no published scoring (the study names no instrument), mapped to mh_distress_self.",,
+wb_negaffect_measure,unavailable,,,See wb_negaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,unavailable,,,Not collected.,,
+wb_socsupport_friends_self,unavailable,,,Not collected.,,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self.,,
+hlth_sleep_wd,unavailable,,,Not collected.,,
+hlth_sleep_we,unavailable,,,Not collected.,,
+hlth_sleep,unavailable,,,Not collected.,,
+hlth_sleepprob,unavailable,,,Not collected.,,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not collected.,,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,partial,"BB085, BB086, wave","local({
+  height <- as.numeric(BB085)
+  band <- as.numeric(BB086)
+  pounds <- case_when(band == 1 ~ 100, band %in% 2:26 ~ 103 + 5 * (band - 2), band == 27 ~ 226, .default = NA_real_)
+  inches <- if_else(height >= 36 & height < 100, height, NA_real_)
+  if_else(wave == ""Base year 1980"", 703 * pounds / inches^2, NA_real_)
+})","1980 only, self-reported 'Height' in feet and inches (BB085, coded in inches) and 'Weight' in five-pound bands (BB086: 101-105 to 221-225 pounds at their midpoints, 103 to 223; bottom band 'less than 100 pounds' at its bound 100 and top band 'over 226 pounds' at 226), BMI = 703 x pounds / inches squared; missing and multiple punch are NA; implausible heights are kept. Partial: banded weight.",,
+hlth_bmi_measure,inferred,wave,"if_else(wave == ""Base year 1980"", ""Self-reported"", NA_character_)","Student-reported height and weight, 1980 rows only.",,
+hlth_bmi_z,unavailable,,,Not collected.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,unavailable,,,Not collected.,,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,incompatible,"BB087G, FY103G, FD83G, FE83G",,"Only 'other health impairment' among the student's conditions (BB087G, FY103G, FD83G, FE83G), not attributed to a health professional; it counts on hlth_disability.",,
+hlth_disability,partial,"BB087B, BB087C, BB087D, BB087F, BB087G, BB088, FY103B, FY103C, FY103D, FY103F, FY103G, FY104, FD83B, FD83C, FD83D, FD83F, FD83G, FD84, FE83B, FE83C, FE83D, FE83F, FE83G, FE84, FUSTTYPE, cohort, wave","local({
+  impair80 <- cbind(as.numeric(BB087B), as.numeric(BB087C), as.numeric(BB087D), as.numeric(BB087F), as.numeric(BB087G))
+  dropout <- as.numeric(FUSTTYPE) %in% 2
+  impair82 <- cbind(
+    coalesce(if_else(dropout, as.numeric(FD83B), as.numeric(FY103B)), as.numeric(FE83B)),
+    coalesce(if_else(dropout, as.numeric(FD83C), as.numeric(FY103C)), as.numeric(FE83C)),
+    coalesce(if_else(dropout, as.numeric(FD83D), as.numeric(FY103D)), as.numeric(FE83D)),
+    coalesce(if_else(dropout, as.numeric(FD83F), as.numeric(FY103F)), as.numeric(FE83F)),
+    coalesce(if_else(dropout, as.numeric(FD83G), as.numeric(FY103G)), as.numeric(FE83G))
+  )
+  limit <- coalesce(as.numeric(BB088), if_else(dropout, as.numeric(FD84), as.numeric(FY104)), as.numeric(FE84))
+  yes <- rowSums(cbind(impair80 == 1, impair82 == 1, limit == 2), na.rm = TRUE)
+  no <- rowSums(cbind(impair80 == 0, impair82 == 2, limit == 1), na.rm = TRUE)
+  case_when(yes > 0 ~ ""TRUE"", no > 0 ~ ""FALSE"", .default = NA_character_)
+})","Student: 'Do you have any of the following conditions?' visual handicap (not corrected by glasses), hard of hearing, deafness, orthopedic handicap, other health impairment (BB087B-D, F, G 1980; FY103B-D, F, G 1982 sophomores; FD83 dropouts; FE83 seniors), and 'Do you feel that you have a physical condition that limits the kind or amount of work you can do on a job, or affects your chances for more education?' (BB088, FY104, FD84, FE84). TRUE if any is yes, FALSE if every answered item is no (a 1980 condition left unchecked counts as no), NA if none is answered. Learning disability and speech disability (BB087A, BB087E and their 1982 copies) are not counted; HANDICAP (1984 composite) pools them and is not used. 1984 rows are NA. Partial: the 1980 checklist asks 'visual handicap' (11.7% yes) where 1982 asks 'visual handicap not corrected' (1.5%), a level shift between waves.",,
