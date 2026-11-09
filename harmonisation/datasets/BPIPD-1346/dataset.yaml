@@ -1,17 +1,18 @@
 dataset_id: "1346"
 dataset_name: "High School Longitudinal Study of 2009"
-status: "planned"
+status: "in_progress"
 
 resources:
   - name: "school_data"
     role: "data"
-    glob: "HLS_09_SCHOOL_v1_0.rdata"
+    glob: "HSLS_09_SCHOOL_v1_0.rdata"
     reader: "rda"
 
   - name: "pets_student_data"
     role: "data"
     glob: "hsls09_16_student_pets_pear_v1_0.rdata"
     reader: "rda"
+    object: "hsls09_16_student_pets_pear_v1_0"
 
   - name: "pets_codebook"
     role: "codebook"
@@ -19,7 +20,7 @@ resources:
 
   - name: "school_layout"
     role: "docs"
-    glob: "RecordFileLayout_HLS_09_SCHOOL.txt"
+    glob: "RecordFileLayout_HSLS_09_SCHOOL.txt"
 
   - name: "pets_student_layout"
     role: "docs"
@@ -27,4 +28,5 @@ resources:
     
 notes: |
   Contains two .rdata data files, one plain-text codebook (.txt), and two
-  plain-text record layout files (.txt).
+  plain-text record layout files (.txt). The student .rdata also holds a stray
+  `.Traceback` object, so `object` names the data frame.
