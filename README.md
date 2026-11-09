@@ -222,6 +222,10 @@ and the pull request process.
   devcontainer; this repository is not an R package.
 - `_targets/` is generated runtime state and should not be edited
   manually.
+- The funder report’s sources live in a separate private repository,
+  cloned into the project as `DoEreport/` (gitignored). When it is
+  present, `R/analysis/private_report_targets.R` adds its render targets
+  to the pipeline; public clones build without it.
 - Keep ingestion logic generic in `R/registry/`.
 - Keep study-specific tidying in `R/tidy/tidy_BPIPD_<id>.R`; it should
   return one tibble.

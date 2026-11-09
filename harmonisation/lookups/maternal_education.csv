@@ -415,3 +415,11 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1295,maternal_education,9,Bachelor degree or higher,compatible,Code 9: master's degree or equivalent (ISCED 7)
 1295,maternal_education,10,Bachelor degree or higher,compatible,"Code 10: PhD, MD or other advanced professional degree (ISCED 8)"
 1295,maternal_education,11,Unknown,unavailable,Code 11: don't know
+278,maternal_education,No schooling,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 1 (무학).
+278,maternal_education,Elementary school graduate,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 2 (초등학교 졸업).
+278,maternal_education,Middle school graduate,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 3 (중학교 졸업).
+278,maternal_education,High school graduate,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 4 (고등학교 졸업); also the secondary-or-less level of parental_education.
+278,maternal_education,Junior college graduate (2-3 years),Post-secondary,compatible,DMtdmg014/DFtdmg014 code 5 (2- or 3-year junior college graduate; ISCED 5).
+278,maternal_education,University graduate (4 years or more),Bachelor degree or higher,compatible,DMtdmg014/DFtdmg014 code 6 (4-year university graduate).
+278,maternal_education,Graduate school graduate,Bachelor degree or higher,compatible,"DMtdmg014/DFtdmg014 codes 7 and 8 (master's, doctorate) in 2008-2011, 9 in 2012 (the father's codes also in 2013) and 7 otherwise (graduate school)."
+278,maternal_education,Don't know or no response,Unknown,compatible,DMtdmg014/DFtdmg014 don't know (88888888) and no response (99999999).

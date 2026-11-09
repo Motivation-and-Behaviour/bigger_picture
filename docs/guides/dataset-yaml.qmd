@@ -49,6 +49,7 @@ Each item in `resources` describes one file — or one group of related files �
 | `object` | `rda` only | The object to extract; may be omitted when the file contains exactly one object. |
 | `col_names` | `csv`/`csv2`/`tsv` only, optional | Whether the first row is a header. Default `true`; set `false` for a headerless file, whose columns are then named `X1`, `X2`, … for the tidier to rename (see [Headerless delimited files](#headerless-delimited-files)). |
 | `col_positions` | `fwf` only, **required** | Path to the fixed-width layout CSV, relative to the dataset's spec folder (see [Fixed-width files](#fixed-width-files)). |
+| `lines_per_record` | `fwf` only, optional | Physical lines per record, for a file that spreads each record over several lines (see [Records over several lines](#records-over-several-lines)); default 1. |
 | `encoding` | Optional | Character encoding of the source file, e.g. `"latin1"`. Accepted by `csv`, `csv2`, `tsv`, `fwf`, `stata`, `spss` and `sas`; any other reader refuses it. |
 | `columns` | `stata`/`spss`/`por`/`sas` only, optional | Read only the listed columns of a very wide file; each entry is a regular expression matched against the whole column name (see [Reading only some columns](#reading-only-some-columns)). |
 
@@ -58,7 +59,7 @@ Each item in `resources` describes one file — or one group of related files �
 |------|---------|
 | `data` | The actual dataset file(s) — `.sav`, `.dta`, `.csv`, `.xlsx`, etc. **Requires a `reader`.** Read into R and passed to the tidier. |
 | `codebook` | Data dictionaries and variable documentation. The file path is recorded for reference, but the file is **not read into R**. |
-| `docs` | Anything else: technical reports, user guides, questionnaires, syntax files. Paths only — must not have a `reader` or any reader option (`sheet`, `range`, `table`, `object`, `col_names`, `col_positions`, `encoding`, `columns`). |
+| `docs` | Anything else: technical reports, user guides, questionnaires, syntax files. Paths only — must not have a `reader` or any reader option (`sheet`, `range`, `table`, `object`, `col_names`, `col_positions`, `lines_per_record`, `encoding`, `columns`). |
 
 ### Globs
 
@@ -95,7 +96,7 @@ readers <- tibble::tribble(
   "`col_names`, `encoding` (both optional)",
   "tsv", "`.tsv` (tab-separated)", "`col_names`, `encoding` (both optional)",
   "fwf", "`.dat` / `.txt` (fixed-width, no delimiter)",
-  "`col_positions` (required), `encoding` (optional)",
+  "`col_positions` (required), `lines_per_record`, `encoding` (both optional)",
   "stata", "`.dta` (Stata)", "`encoding`, `columns` (both optional)",
   "spss", "`.sav` (SPSS)", "`encoding`, `columns` (both optional)",
   "por", "`.por` (SPSS Portable)", "`columns` (optional)",
@@ -225,6 +226,25 @@ Layout files are tracked like data files: editing one rebuilds the read.
 
 Implied decimals (a codebook format such as `N8.3`) are **not** applied by the reader; carry the format in an extra layout column and divide in the tidier.
 There is a worked example in the [cookbook](spec-cookbook.qmd#fixed-width-file).
+
+#### Records over several lines {#records-over-several-lines}
+
+Some releases spread each record over several physical lines; a Stata dictionary says so with `_lines(n)`, and places each field with `_line(k)` and a column within that line.
+Set `lines_per_record` to that number, and write the layout's `start` and `end` as positions in the record joined end to end, without line terminators:
+
+```yaml
+- name: "child_file"
+  role: "data"
+  glob: "child.dat"
+  reader: "fwf"
+  col_positions: "layouts/child_file.csv"
+  lines_per_record: 3
+```
+
+A field on line `k` then starts at the summed widths of lines 1 to `k - 1` plus its column within line `k`.
+The reader stops on a file whose line count is not a whole number of records, which is what a truncated download looks like, and on a line whose width varies between records, because every field after it would shift.
+It warns, as for single-line files, when the layout runs past the end of the joined record.
+Keep the dictionary's own line and within-line columns in extra layout columns, so the layout can be checked against it.
 
 ## Waves
 
