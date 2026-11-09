@@ -404,6 +404,19 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 706,parental_education,5,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 5 Master's.
 706,parental_education,6,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 6 Post-graduate.
 706,paternal_education,999,Unknown,incompatible,Father_Education code 999 is in no document.
+1346,maternal_education,Less than high school,Secondary school or less,compatible,"X1MOMEDU/X1DADEDU/X1PAREDU and their 2012 X2 counterparts code 1: no high school diploma (ISCED 0-2)"
+1346,maternal_education,High school diploma or GED,Secondary school or less,proximate,"Code 2: high school diploma or GED (ISCED 3); the composites code highest degree earned, so a parent who started college without completing a degree is also coded here"
+1346,maternal_education,Associate's degree,Post-secondary,compatible,"Base-year code 3, 2012 code 4: associate's degree (ISCED 5)"
+1346,maternal_education,Bachelor's degree,Bachelor degree or higher,compatible,"Base-year code 4, 2012 code 5: bachelor's degree (ISCED 6)"
+1346,maternal_education,Master's degree,Bachelor degree or higher,compatible,"Base-year code 5, 2012 code 6: master's degree (ISCED 7); the public-use file recodes the base-year Educational Specialist diploma to this code"
+1346,maternal_education,Educational Specialist diploma,Bachelor degree or higher,compatible,"Code 6: Educational Specialist diploma (ISCED 7); recoded to code 5 on the public-use file, so not observed"
+1346,maternal_education,Ph.D/M.D/Law/other high lvl prof degree,Bachelor degree or higher,compatible,"Base-year and 2012 code 7: doctoral or professional degree (ISCED 8)"
+1346,maternal_education,No bio/adoptive/step-mother in household,Unknown,compatible,"X1MOMEDU code 0: no biological, adoptive or step mother in the household"
+1346,maternal_education,No bio/adoptive/step-father in household,Unknown,compatible,"X1DADEDU code 0: no biological, adoptive or step father in the household"
+1346,maternal_education,Nonrespondent,Unknown,compatible,Code -8: no base-year parent questionnaire
+1346,maternal_education,High school diploma or GED or alterntive HS credential,Secondary school or less,proximate,"2012 X2PAREDU code 2 (label spelled as released): high school diploma, GED or alternative credential (ISCED 3); highest degree earned, so a parent who started college without completing a degree is also coded here"
+1346,maternal_education,High school diploma or GED or alternative HS credential,Secondary school or less,proximate,"2012 X2MOMEDU/X2DADEDU code 2: high school diploma, GED or alternative credential (ISCED 3); highest degree earned, so a parent who started college without completing a degree is also coded here"
+1346,maternal_education,Certificate/diploma from school providing occupational training,Post-secondary,compatible,"2012 code 3: certificate or diploma from a school providing occupational training (ISCED 4, post-secondary non-tertiary)"
 775,maternal_education,0,Secondary school or less,compatible,X_PAR1ED_I/X_PAR2ED_I code 0: none (no schooling); the three parent-education rows share these rows
 775,maternal_education,1,Secondary school or less,compatible,Code 1: 8th grade or below (ISCED 0-2)
 775,maternal_education,2,Secondary school or less,compatible,"Code 2: 9th-12th grade, no diploma (ISCED 2-3)"
