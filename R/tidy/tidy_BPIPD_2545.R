@@ -1,22 +1,21 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-2545 (Marques, 2014)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One SPSS file from a single cross-sectional school survey of 802 students
+#' aged 10-12; the release has no participant id.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per student
 tidy_BPIPD_2545 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
+  df <- tibble::as_tibble(raw_dataset$data$data)
 
-  tibble::as_tibble(raw_dataset$data[[1]])
+  # `xxxxxxxxxx` is an undefined placeholder that is empty in every row.
+  df <- df[, names(df) != "xxxxxxxxxx", drop = FALSE]
+
+  # `filter_$` is an SPSS working selection (`Pratica_rec` == 1), not an
+  # exclusion flag, so every student is kept.
+  df
 }
