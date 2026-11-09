@@ -347,3 +347,20 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 775,ethnicity,"7: AMERICAN INDIAN/ALASKA NATIVE, NON-HISPANIC",Other,proximate,"Code 7: American Indian or Alaska Native as the only race, not Hispanic; no schema category (reported in indigenous)"
 775,ethnicity,"8: TWO OR MORE RACES, NON-HISPANIC",Mixed,compatible,"Code 8: two or more races, not Hispanic"
 775,ethnicity,-9: NOT ASCERTAINED,Unknown,compatible,Code -9: not ascertained
+1295,ethnicity,BB090 1-4,Hispanic,compatible,"1980 origin or descent (BB090) codes 1-4: Mexican, Cuban, Puerto Rican, other Latin American or Spanish (Hispanic origin first in a US sample)"
+1295,ethnicity,BB089 1,Black,compatible,"1980 race (BB089) code 1 Black, origin not Hispanic"
+1295,ethnicity,BB089 2,White,compatible,"1980 race code 2 White, origin not Hispanic"
+1295,ethnicity,BB089 3,Other,compatible,"1980 race code 3 American Indian or Alaskan Native, origin not Hispanic (Other in the schema)"
+1295,ethnicity,BB089 4,Asian,proximate,"1980 race code 4 Asian or Pacific Islander: merges Pacific Islanders (Other in the schema) with Asian; mapped to the real value, merge named"
+1295,ethnicity,BB089 5,Other,compatible,"1980 race code 5 Other, origin not Hispanic"
+1295,ethnicity,RACE 1,Hispanic,compatible,1982 race composite (RACE) code 1 Hispanic or Spanish
+1295,ethnicity,RACE 2,Other,compatible,RACE code 2 American Indian (Other in the schema)
+1295,ethnicity,RACE 3,Asian,proximate,"RACE code 3 Asian or Pacific Islander: merges Pacific Islanders with Asian, merge named"
+1295,ethnicity,RACE 4,Black,compatible,RACE code 4 Black
+1295,ethnicity,RACE 5,White,compatible,RACE code 5 White
+1295,ethnicity,RACE 6,Other,compatible,RACE code 6 Other
+1295,ethnicity,RACE2 1,Hispanic,compatible,1984 race composite (RACE2) code 1 Hispanic
+1295,ethnicity,RACE2 2,Other,compatible,RACE2 code 2 Native American (Other in the schema)
+1295,ethnicity,RACE2 3,Asian,proximate,"RACE2 code 3 Asian or Pacific Islander: merges Pacific Islanders with Asian, merge named"
+1295,ethnicity,RACE2 4,Black,compatible,RACE2 code 4 Black
+1295,ethnicity,RACE2 5,White,compatible,RACE2 code 5 White

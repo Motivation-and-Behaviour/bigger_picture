@@ -414,3 +414,22 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 775,maternal_education,7,Bachelor degree or higher,compatible,"Code 7: graduate or professional school, no degree, after a bachelor's degree (ISCED 6)"
 775,maternal_education,8,Bachelor degree or higher,compatible,Code 8: master's degree or higher (ISCED 7)
 775,maternal_education,9,Bachelor degree or higher,compatible,Code 9: doctorate or professional degree (ISCED 8)
+1295,maternal_education,1,Unknown,unavailable,"Code 1: does not live with mother (stepmother or female guardian), or with father (stepfather or male guardian); no level reported"
+1295,maternal_education,2,Secondary school or less,compatible,Code 2: less than high school graduation (ISCED 0-2)
+1295,maternal_education,3,Secondary school or less,compatible,Code 3: high school graduation only (ISCED 3)
+1295,maternal_education,4,Post-secondary,compatible,"Code 4: vocational, trade or business school after high school, less than two years (ISCED 4)"
+1295,maternal_education,5,Post-secondary,compatible,"Code 5: vocational, trade or business school after high school, two years or more (ISCED 4-5)"
+1295,maternal_education,6,Post-secondary,compatible,Code 6: college program with less than two years of college (tertiary study begun)
+1295,maternal_education,7,Post-secondary,compatible,"Code 7: two or more years of college, including a two-year degree (ISCED 5, or tertiary study begun)"
+1295,maternal_education,8,Bachelor degree or higher,compatible,Code 8: finished college (four- or five-year degree; ISCED 6)
+1295,maternal_education,9,Bachelor degree or higher,compatible,Code 9: master's degree or equivalent (ISCED 7)
+1295,maternal_education,10,Bachelor degree or higher,compatible,"Code 10: PhD, MD or other advanced professional degree (ISCED 8)"
+1295,maternal_education,11,Unknown,unavailable,Code 11: don't know
+278,maternal_education,No schooling,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 1 (무학).
+278,maternal_education,Elementary school graduate,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 2 (초등학교 졸업).
+278,maternal_education,Middle school graduate,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 3 (중학교 졸업).
+278,maternal_education,High school graduate,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 4 (고등학교 졸업); also the secondary-or-less level of parental_education.
+278,maternal_education,Junior college graduate (2-3 years),Post-secondary,compatible,DMtdmg014/DFtdmg014 code 5 (2- or 3-year junior college graduate; ISCED 5).
+278,maternal_education,University graduate (4 years or more),Bachelor degree or higher,compatible,DMtdmg014/DFtdmg014 code 6 (4-year university graduate).
+278,maternal_education,Graduate school graduate,Bachelor degree or higher,compatible,"DMtdmg014/DFtdmg014 codes 7 and 8 (master's, doctorate) in 2008-2011, 9 in 2012 (the father's codes also in 2013) and 7 otherwise (graduate school)."
+278,maternal_education,Don't know or no response,Unknown,compatible,DMtdmg014/DFtdmg014 don't know (88888888) and no response (99999999).
