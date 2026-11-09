@@ -1,0 +1,2892 @@
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,N_ID,"sprintf(""%.0f"", N_ID)","PSKC child id (N_ID), stable across waves.",,
+wave,compatible,wave,as.character(wave),PSKC wave number as in the file names and codebook sheets (3 = 2010 ... 16 = 2023); 2008 and 2009 have no screen item and are dropped in the tidier.,,
+data_year,compatible,"interview_date, survey_year","coalesce(as.numeric(format(interview_date, ""%Y"")), as.numeric(survey_year))","Year of the caregiver CAPI interview date, 2010-2017 (1 interview of the 2010 wave fell in January 2011); otherwise the survey year label of the file and codebook sheet (2018-2023, no interview date released). 12 undated 2017 rows take the wave's modal fieldwork year, 2017.",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,compatible,DHuwgh001,haven::zap_labels(DHuwgh001),"Cross-sectional weight of the wave (DHuwgh001), as released, recomputed every wave; missing for 377 rows in 2020. The longitudinal weight DHuwgh002 is not used.",,
+survey_strata,unavailable,,,Not in the supplied extract.,,
+survey_cluster,unavailable,,,Not in the supplied extract.,,
+family_id,unavailable,,,One participant per family.,,
+sample_component,unavailable,,,Single sample.,,
+sample_population,inferred,,"""General population""","Birth cohort of children born in South Korea in 2008, sampled in stages through delivery hospitals and then households, with mothers or newborns with serious health problems excluded (PSKC, Atlas of Longitudinal Datasets entry and Mendeley dataset description).",,
+parent_respondent,compatible,"survey_year, EMtint002, EMtint005, DHuint005, DChint005, DHuint001, FFtint005, IChcbl001","local({
+  rel <- coalesce(haven::zap_labels(DHuint005), haven::zap_labels(DChint005))
+  mq <- haven::zap_labels(EMtint002)
+  mrel <- haven::zap_labels(EMtint005)
+  nocapi <- haven::zap_labels(DHuint001) %in% 0
+  case_when(
+    survey_year == 2010 & mq == 1 ~ ""Mother"",
+    survey_year == 2010 & mq == 2 & mrel == 1 ~ ""Father"",
+    survey_year == 2010 & mq == 2 & mrel %in% 2:12 ~ ""Other carer"",
+    survey_year <= 2013 ~ ""Unknown"",
+    rel == 1 ~ ""Mother"",
+    rel == 2 ~ ""Father"",
+    rel %in% 3:5 ~ ""Other carer"",
+    nocapi & survey_year >= 2016 & mrel %in% 1 ~ ""Mother"",
+    nocapi & haven::zap_labels(FFtint005) %in% 1 ~ ""Father"",
+    nocapi & !is.na(IChcbl001) ~ ""Unknown"",
+    nocapi ~ NA_character_,
+    .default = ""Unknown""
+  )
+})","2010: the mother questionnaire that reported screen time (EMtint002 'respondent is the mother', else EMtint005 relationship: father, or grandparent or other relative = Other carer). 2011-2013: the caregiver CAPI that reported screen time records no respondent (Unknown). 2014-2020: CAPI respondent's relationship to the child (DHuint005 2014, 2016, 2018, 2020; DChint005 2015, 2017, 2019); 2021-2023 (child-reported screen time): the CAPI respondent, the main parent interview. Grandparents, siblings and other relatives = Other carer. Rows with no CAPI take the mother questionnaire's respondent where it is the mother (EMtint005), else the father questionnaire's (FFtint005), else Unknown where only the CBCL was returned (IChcbl001); NA for child-only participants with no parent component.",,
+age_years,compatible,DChdmg006,haven::zap_labels(DChdmg006) / 12,"Study-derived age in completed months at the occasion (DChdmg006) / 12, as is; missing for a few participants with no caregiver interview (28 in 2017, 26 in 2023, 21 in 2018, under 10 in other waves).",,
+sex,compatible,"DChdmg001, N_ID","coalesce(modal_within(recode_values(haven::zap_labels(DChdmg001), 1 ~ ""Male"", 2 ~ ""Female""), N_ID), ""Unknown"")","Child's sex recorded by the study at every wave (DChdmg001: 1 boy, 2 girl; caregiver interview to 2017, child record from 2018); participant's modal value, no-response code Unknown.",,
+country,inferred,,"""South Korea""",National birth cohort sampled in South Korea (PSKC design documentation).,,
+state,unavailable,,,Not an Australian dataset.,,
+region,compatible,"DHucmm014, EHucmm014, survey_year","local({
+  code <- coalesce(haven::zap_labels(DHucmm014), haven::zap_labels(EHucmm014))
+  to2021 <- c(
+    ""KR-11"",
+    ""KR-26"",
+    ""KR-27"",
+    ""KR-28"",
+    ""KR-29"",
+    ""KR-30"",
+    ""KR-31"",
+    ""KR-41"",
+    ""KR-51"",
+    ""KR-43"",
+    ""KR-44"",
+    ""KR-47"",
+    ""KR-48"",
+    ""KR-52"",
+    ""KR-46"",
+    ""KR-49"",
+    ""KR-50""
+  )
+  from2022 <- c(
+    ""KR-11"",
+    ""KR-26"",
+    ""KR-27"",
+    ""KR-28"",
+    ""KR-29"",
+    ""KR-30"",
+    ""KR-31"",
+    ""KR-50"",
+    ""KR-41"",
+    ""KR-51"",
+    ""KR-43"",
+    ""KR-44"",
+    ""KR-52"",
+    ""KR-46"",
+    ""KR-47"",
+    ""KR-48"",
+    ""KR-49""
+  )
+  coalesce(if_else(survey_year >= 2022, from2022[code], to2021[code]), ""Unknown"")
+})","Province or metropolitan city of residence, study-derived (DHucmm014; 2012 from the mother questionnaire, EHucmm014), as its current ISO 3166-2 code (Gangwon KR-51 and Jeonbuk KR-52 since their renaming as special self-governing provinces). Codes 1-17 follow the 2010-2021 order (8 Gyeonggi ... 17 Sejong) to 2021 and the 2023 order (8 Sejong, 9 Gyeonggi ... 17 Jeju) in 2022-2023: the 2022 codebook sheet prints the old order, but the 2022 codes cross-tabulate with the six-region code (DHucmm001) as the 2023 order. A few rows with no caregiver interview are Unknown.",,
+ethnicity,incompatible,"EMtdmg007, EMtdmg008, FFtdmg007, FFtdmg008, DMtdmg007, DMtdmg008, DFtdmg007, DFtdmg008",,Only the parents' citizenship and pre-naturalisation nationality (2010-2011) are in hand; no ethnic-group item.,,
+indigenous,unavailable,,,Not collected.,,
+minority,incompatible,"EMtdmg007, EMtdmg008, FFtdmg007, FFtdmg008, DMtdmg007, DMtdmg008, DFtdmg007, DFtdmg008",,No ethnicity or birthplace item; the parents' citizenship and pre-naturalisation nationality (2010-2011) cannot place minority status.,,
+immigrant_background,incompatible,"EMtdmg007, EMtdmg008, FFtdmg007, FFtdmg008, DMtdmg007, DMtdmg008, DFtdmg007, DFtdmg008",,Parents' citizenship and pre-naturalisation nationality only (2010-2011); no parent birthplace item.,,
+born_in_country,inferred,,"""Yes""","Children were recruited at birth in South Korean delivery hospitals in 2008 (PSKC sampling design), which guarantees birth in the country.",,
+home_language,unavailable,,,Not collected.,,
+ses_area,unavailable,,,Not collected.,,
+ses_household,proximate,"DHuses006, DHuses008, DHuses014, DHuses022, DHuses024, DHuses029, survey_year","local({
+  comp <- case_when(
+    survey_year == 2011 ~ na_if(na_if(as.numeric(haven::zap_labels(DHuses008)), 99999999), 88888888) +
+      na_if(na_if(as.numeric(haven::zap_labels(DHuses014)), 99999999), 88888888) +
+      na_if(na_if(as.numeric(haven::zap_labels(DHuses022)), 99999999), 88888888) +
+      na_if(na_if(as.numeric(haven::zap_labels(DHuses024)), 99999999), 88888888),
+    survey_year == 2012 ~ na_if(na_if(as.numeric(haven::zap_labels(DHuses008)), 99999999), 88888888) +
+      na_if(na_if(as.numeric(haven::zap_labels(DHuses014)), 99999999), 88888888) +
+      na_if(na_if(as.numeric(haven::zap_labels(DHuses022)), 99999999), 88888888) +
+      na_if(na_if(as.numeric(haven::zap_labels(DHuses029)), 99999999), 88888888)
+  )
+  inc <- coalesce(comp, na_if(na_if(as.numeric(haven::zap_labels(DHuses006)), 99999999), 88888888))
+  lo <- stats::ave(inc, survey_year, FUN = function(v) stats::quantile(v, 0.4, na.rm = TRUE, names = FALSE))
+  hi <- stats::ave(inc, survey_year, FUN = function(v) stats::quantile(v, 0.6, na.rm = TRUE, names = FALSE))
+  case_when(inc <= lo ~ ""Low"", inc <= hi ~ ""Medium"", inc > hi ~ ""High"", .default = ""Unknown"")
+})","Monthly household income in 10,000 KRW, open-ended, caregiver interview (DHuses006), cut 40/20/40 on the unweighted rows within wave (at or below the 40th percentile Low, above the 60th High). 2011-2012 asked income by source instead: the sum of earned or business, private transfer, asset and other (2011) or public transfer (2012) income (DHuses008, 014, 022, 024, 029), complete-case, else the tidier's carried DHuses006 (nearest interview within 12 months). Don't know and no response set to NA; no value = Unknown. No value carried into or out of 2018-2023 (no interview dates). Proximate: heaped incomes put over 50% of rows at or below the 40th percentile in 2010, 2014 and 2020, with Medium at 6-9% in 2010 and 2014.",,
+ses_household_measure,inferred,survey_year,"if_else(
+  survey_year %in% c(2011, 2012),
+  ""Income: monthly household income (10,000 KRW), the sum of income by source (earned or business, private transfer, asset, other or public transfer), else the total carried from an interview within 12 months"",
+  ""Income: monthly household income (10,000 KRW), open-ended""
+)",Every wave; 2011-2012 income asked by source.,,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,compatible,DMtdmg014,"lookup_values(
+  recode_values(
+    haven::zap_labels(DMtdmg014),
+    1 ~ ""No schooling"",
+    2 ~ ""Elementary school graduate"",
+    3 ~ ""Middle school graduate"",
+    4 ~ ""High school graduate"",
+    5 ~ ""Junior college graduate (2-3 years)"",
+    6 ~ ""University graduate (4 years or more)"",
+    c(7, 8, 9) ~ ""Graduate school graduate"",
+    default = ""Don't know or no response""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education"",
+  default = ""Unknown""
+)","Mother's highest completed education (DMtdmg014, caregiver report; the mother's own questionnaire from 2018), carried by the tidier from the earliest wave recording it. Graduate school is codes 7 and 8 (master's, doctorate) in 2008-2011, 9 in 2012 (the father's codes also in 2013) and 7 otherwise; 7, 8 and 9 all map to graduate school in every year. Don't know and no response = Unknown.",maternal_education,
+paternal_education,compatible,DFtdmg014,"lookup_values(
+  recode_values(
+    haven::zap_labels(DFtdmg014),
+    1 ~ ""No schooling"",
+    2 ~ ""Elementary school graduate"",
+    3 ~ ""Middle school graduate"",
+    4 ~ ""High school graduate"",
+    5 ~ ""Junior college graduate (2-3 years)"",
+    6 ~ ""University graduate (4 years or more)"",
+    c(7, 8, 9) ~ ""Graduate school graduate"",
+    default = ""Don't know or no response""
+  ),
+  lookup_maternal_education,
+  dataset_id = spec$dataset_id,
+  target_variable = ""maternal_education"",
+  default = ""Unknown""
+)","Father's highest completed education (DFtdmg014, caregiver report; the father's own questionnaire from 2018), carried by the tidier from the earliest wave recording it; codes and lookup as maternal_education.",maternal_education,
+parental_education,compatible,"DMtdmg014, DFtdmg014","local({
+  mo <- as.numeric(haven::zap_labels(DMtdmg014))
+  fa <- as.numeric(haven::zap_labels(DFtdmg014))
+  mo <- case_when(mo %in% 1:4 ~ 1, mo == 5 ~ 2, mo %in% 6:9 ~ 3)
+  fa <- case_when(fa %in% 1:4 ~ 1, fa == 5 ~ 2, fa %in% 6:9 ~ 3)
+  lookup_values(
+    recode_values(
+      pmax(mo, fa, na.rm = TRUE),
+      1 ~ ""High school graduate"",
+      2 ~ ""Junior college graduate (2-3 years)"",
+      3 ~ ""University graduate (4 years or more)"",
+      default = ""Don't know or no response""
+    ),
+    lookup_maternal_education,
+    dataset_id = spec$dataset_id,
+    target_variable = ""maternal_education"",
+    default = ""Unknown""
+  )
+})","Higher of the mother's and father's education (DMtdmg014, DFtdmg014, both carried by the tidier), ranked secondary or less, junior college, university or graduate school, so one known parent suffices; neither known = Unknown.",maternal_education,
+maternal_employment,compatible,DMtjcg003,"recode_values(haven::zap_labels(DMtjcg003), c(1, 3) ~ ""Employed"", c(2, 4) ~ ""Not employed"", default = ""Unknown"")","Mother's current work or study status (DMtjcg003, caregiver report; the mother's own questionnaire from 2018): working (on leave included) or working and studying = Employed; studying only or neither = Not employed. Carried by the tidier from the nearest interview within 12 months; no-response and not carried = Unknown.",,
+maternal_age,compatible,DMtdmg006,"na_if(haven::zap_labels(DMtdmg006), 99999999) + 0.5","Mother's age in completed years at the occasion (DMtdmg006, study-derived from the caregiver interview; the mother's questionnaire from 2018) + 0.5; no-response code set to NA.",,
+urbanicity,proximate,"DHucmm002, EHucmm002, survey_year","local({
+  size <- coalesce(haven::zap_labels(DHucmm002), haven::zap_labels(EHucmm002))
+  size <- case_when(survey_year == 2018 & size == 2 ~ 3, survey_year == 2018 & size == 3 ~ 2, .default = size)
+  coalesce(recode_values(size, 1 ~ ""Urban"", 3 ~ ""Suburban"", 2 ~ ""Rural""), ""Unknown"")
+})","Study-derived size of the area of residence (DHucmm002; 2012 from the mother questionnaire, EHucmm002): metropolitan city (대도시) = Urban, medium or small city (중소도시) = Suburban, eup or myeon (읍/면) = Rural; codes 2 and 3 are swapped in 2018 (codebook and frequencies). Proximate: a settlement-size typology, and small and medium cities are not suburbs. The classification shifts between waves without explanation in the codebook: the eup/myeon share falls to 60-85 children in 2014 and 2017-2020 from 250-370 in other waves, eup/myeon areas inside metropolitan cities are coded eup/myeon only in 2010-2012 and 2021, and in 2022-2023 about two thirds of Gyeonggi residents are coded metropolitan city (none before 2022).",,
+family_structure,proximate,"DMtdmg029, DFtdmg029","local({
+  mo <- haven::zap_labels(DMtdmg029)
+  fa <- haven::zap_labels(DFtdmg029)
+  case_when(
+    mo == 1 & fa == 1 ~ ""Two biological/adoptive parents"",
+    (mo == 1 & fa %in% c(2, 9)) | (fa == 1 & mo %in% c(2, 9)) ~ ""Single parent"",
+    mo %in% c(2, 9) & fa %in% c(2, 9) ~ ""Other"",
+    .default = ""Unknown""
+  )
+})","Whether the mother and the father live with the child (DMtdmg029, DFtdmg029, caregiver report 2011-2017, the parents' own questionnaires 2019-2023): both = Two biological/adoptive parents, one = Single parent (a father living apart, e.g. for work, counts as non-resident), neither = Other. Proximate: step-parents cannot be separated. Not asked in 2010 or 2018 and not carried (Unknown).",,
+fam_siblings_n,partial,"DChdmg002a, DChdmg002b","na_if(na_if(as.numeric(haven::zap_labels(DChdmg002a)), 99999999), 88888888) +
+  na_if(na_if(as.numeric(haven::zap_labels(DChdmg002b)), 99999999), 88888888) -
+  1","Number of sons plus number of daughters, the child included, minus one (DChdmg002a/b, caregiver report): 2012-2014 the family's children in the birth-order item (all children), 2015-2023 the household's children (resident only; the 2015 counts, asked in the household roster, are joined to the same columns in the tidier). 2011 values (907 rows) are carried in the tidier from the 2012 interview where it lies within 12 months; not asked in 2010. Partial: resident children only from 2015.",,
+fam_siblings_any,unavailable,,,Derive at analysis from fam_siblings_n.,,
+fam_screenrules,unavailable,,,Not collected.,,
+fam_contentrules,unavailable,,,Not collected.,,
+fam_bedroomscreen,unavailable,,,Not collected.,,
+fam_firstphone_age,partial,"DChmid006, DChdmg006, N_ID, wave","local({
+  a <- carry_within(
+    na_if(na_if(as.numeric(haven::zap_labels(DChmid006)), 99999999), 88888888) + 0.5,
+    N_ID,
+    order = wave
+  )
+  if_else(a > as.numeric(haven::zap_labels(DChdmg006)) / 12, NA_real_, a)
+})","Age in completed years at which the child started using a mobile phone (DChmid006, caregiver report, asked in 2012 of children who used one) + 0.5, carried to the other waves except where the carried age is above the child's age at that wave. Partial: first use, not first own phone.",,
+fam_firstscreen_age,partial,"DChmid004, DChmid005, DChmid006, DChdmg006, N_ID, wave","local({
+  a <- pmin(
+    na_if(na_if(as.numeric(haven::zap_labels(DChmid004)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(DChmid005)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(DChmid006)), 99999999), 88888888),
+    na.rm = TRUE
+  ) +
+    0.5
+  a <- carry_within(a, N_ID, order = wave)
+  if_else(a > as.numeric(haven::zap_labels(DChdmg006)) / 12, NA_real_, a)
+})","Earliest age in completed years at which the child started using a computer, a personal game console or a mobile phone (DChmid004-006, caregiver report, asked in 2012 of users) + 0.5, carried to the other waves except where the carried age is above the child's age at that wave. Partial: three devices only (no TV or video item).",,
+fam_coview_freq,unavailable,,,Not collected.,,
+fam_mediation_restrict,unavailable,,,Not collected.,,
+fam_mediation_active,unavailable,,,Not collected.,,
+fam_mediation_monitor,unavailable,,,Not collected.,,
+fam_mediation_technical,unavailable,,,Not collected.,,
+fam_mediation_measure,unavailable,,,See fam_mediation_restrict.,,
+fam_parent_screentime,unavailable,,,Not collected.,,
+fam_parentstress,compatible,"EMtprs001, EMtprs002, EMtprs003, EMtprs004, EMtprs005, EMtprs006, EMtprs007, EMtprs008, EMtprs009, EMtprs010, EMtprs011, EMtprs101, EMtprs102, EMtprs103, EMtprs104, EMtprs105, EMtprs106, EMtprs107, EMtprs108, EMtprs109, EMtprs110, EMtprs111, EMtprs112, EMtprs113, EMtprs114, EMtprs115, EMtprs116, EMtprs117, EMtprs118, EMtprs119, EMtprs120, EMtprs121, EMtprs122, EMtprs123, EMtprs124, survey_year","local({
+  a <- sapply(
+    list(
+      EMtprs001,
+      EMtprs002,
+      EMtprs003,
+      EMtprs004,
+      EMtprs005,
+      EMtprs006,
+      EMtprs007,
+      EMtprs008,
+      EMtprs009,
+      EMtprs010,
+      EMtprs011
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a[!a %in% 1:5] <- NA
+  b <- sapply(
+    list(
+      EMtprs101,
+      EMtprs102,
+      EMtprs103,
+      EMtprs104,
+      EMtprs105,
+      EMtprs106,
+      EMtprs107,
+      EMtprs108,
+      EMtprs109,
+      EMtprs110,
+      EMtprs111,
+      EMtprs112,
+      EMtprs113,
+      EMtprs114,
+      EMtprs115,
+      EMtprs116,
+      EMtprs117,
+      EMtprs118,
+      EMtprs119,
+      EMtprs120,
+      EMtprs121,
+      EMtprs122,
+      EMtprs123,
+      EMtprs124
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 1:5] <- NA
+  case_when(
+    survey_year <= 2015 ~ rowMeans(a),
+    survey_year == 2020 ~ rowMeans(b),
+    survey_year >= 2021 ~ rowMeans(b[, 1:17])
+  )
+})","Mother's parenting-stress scale (mother questionnaire), mean of the items scored 1-5 (strongly disagree to strongly agree), complete-case: an 11-item form 2010-2015 (EMtprs001-011) and a new form from 2020 (24 items in 2020, EMtprs101-124; 17 in 2021-2023). Every item correlates positively with the scale (all keyed toward stress). Not asked 2016-2019 (a single daily-stress item only). The father's scale (FFtprs) is not used.",,
+fam_parentstress_measure,inferred,survey_year,"case_when(
+  survey_year <=
+    2015 ~ ""Study parenting-stress scale, waves 1-8 form (instrument not named in the codebook), 11 of 11 items, 1-5 item scoring (range 1-5), mean; mother"",
+  survey_year ==
+    2020 ~ ""Study parenting-stress scale, wave 13 form (instrument not named in the codebook), 24 of 24 items, 1-5 item scoring (range 1-5), mean; mother"",
+  survey_year >=
+    2021 ~ ""Study parenting-stress scale, wave 13 form (instrument not named in the codebook), 17 of 24 items, 1-5 item scoring (range 1-5), mean; mother"",
+  .default = NA_character_
+)","Waves where the mother's parenting-stress scale was given (2010-2015, 2020-2023); standardise within dataset and form at analysis.",,
+fam_parent_dep,compatible,"EMtdpr019, EMtdpr020, EMtdpr021, EMtdpr022, EMtdpr023, EMtdpr024, EMtdpr025, EMtdpr026, EMtdpr027","local({
+  m <- sapply(
+    list(EMtdpr019, EMtdpr020, EMtdpr021, EMtdpr022, EMtdpr023, EMtdpr024, EMtdpr025, EMtdpr026, EMtdpr027),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:4] <- NA
+  rowSums(m - 1)
+})","2023 only. Mother's 9-item PHQ-9-type depression scale (EMtdpr019-027, mother questionnaire: not at all, several days, more than a week, nearly every day), rebased 1-4 to 0-3 and summed (range 0-27), complete-case. The K6-type set of earlier waves goes to fam_parent_distress; the father's scale is not used.",,
+fam_parent_anx,unavailable,,,Not collected.,,
+fam_parent_distress,compatible,"EMtdpr013, EMtdpr014, EMtdpr015, EMtdpr016, EMtdpr017, EMtdpr018","local({
+  m <- sapply(list(EMtdpr013, EMtdpr014, EMtdpr015, EMtdpr016, EMtdpr017, EMtdpr018), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  m[!m %in% 1:5] <- NA
+  rowSums(m - 1)
+})","Mother's 6-item K6-type distress scale (EMtdpr013-018, mother questionnaire; the study labels it depression), items rebased 1-5 to 0-4 and summed (range 0-24), complete-case; 2010-2015, 2017, 2019 and 2021. Response anchors are frequency (never to always feel) to 2015 and agreement (strongly disagree to strongly agree) in 2017-2021; standardise within wave. The father's scale (FFtdpr) is not used.",,
+fam_parent_mh_measure,inferred,survey_year,"case_when(
+  survey_year %in%
+    c(
+      2010:2015,
+      2017,
+      2019,
+      2021
+    ) ~ ""distress: K6-type scale (the study's 6-item depression scale; item wording not in the codebook), 6 of 6 items, 0-4 item scoring (range 0-24), sum, mother questionnaire; frequency anchors to 2015, agreement anchors 2017-2021; complete-case"",
+  survey_year ==
+    2023 ~ ""depression: PHQ-9-type scale (9 items, not at all to nearly every day), 9 of 9 items, 0-3 item scoring (range 0-27), sum, mother questionnaire; complete-case"",
+  .default = NA_character_
+)","Waves where a mother's distress or depression scale was given; the mother questionnaire is answered by the mother in nearly every family (EMtint002, EMtint005).",,
+fam_parenting_warmth_parent,partial,"EMtcrs018, EMtcrs019, EMtcrs020, EMtcrs021, EMtcrs022, EMtcrs023, FFtcrs018, FFtcrs019, FFtcrs020, FFtcrs021, FFtcrs022, FFtcrs023, FFtcrs024, FFtcrs025, DHuint005, DChint005, survey_year","local({
+  rel <- coalesce(haven::zap_labels(DHuint005), haven::zap_labels(DChint005))
+  who <- case_when(
+    survey_year <= 2013 ~ ""Unknown"",
+    rel %in% 1 ~ ""Mother"",
+    rel %in% 2 ~ ""Father"",
+    .default = NA_character_
+  )
+  m <- sapply(list(EMtcrs018, EMtcrs019, EMtcrs020, EMtcrs021, EMtcrs022, EMtcrs023), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  f <- sapply(
+    list(FFtcrs018, FFtcrs019, FFtcrs020, FFtcrs021, FFtcrs022, FFtcrs023, FFtcrs024, FFtcrs025),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:5] <- NA
+  f[!f %in% 1:5] <- NA
+  case_when(
+    survey_year == 2011 ~ rowMeans(f),
+    who %in% c(""Mother"", ""Unknown"") ~ rowMeans(m),
+    who == ""Father"" ~ rowMeans(f[, 1:6]),
+    .default = NA_real_
+  )
+})","2011-2015 only. The warmth subscale of the study's parenting-behaviour scale ('parenting behaviour: warm 1-6', 1-5 not at all to very true), mean, complete-case; every item correlates positively with the scale. 2011: the father's 8 items (FFtcrs018-025), the only parent asked. 2012-2015: the mother's (EMtcrs018-023) or the father's (FFtcrs018-023) 6 items, whichever parent parent_respondent records (the caregiver interview respondent), the other named unused, never averaged. In 2012-2013 the caregiver interview records no respondent (parent_respondent Unknown), so the mother's form is taken. Partial: study items, no published scoring; standardise within wave (8 items in 2011). The controlling subscale and the 2017-2018 parenting behaviour scale (no subscale key) are named unused.",,
+fam_parenting_harsh_parent,incompatible,"EMtcrs010, EMtcrs011, EMtcrs012, EMtcrs013, EMtcrs014, EMtcrs015, EMtcrs016, EMtcrs017, FFtcrs010, FFtcrs011, FFtcrs012, FFtcrs013, FFtcrs014, FFtcrs015, FFtcrs016, FFtcrs017",,"No harsh-discipline scale: the parents' controlling-parenting subscale ('parenting behaviour: controlling 1-8', EMtcrs010-017 and FFtcrs010-017, 2011-2015) has no item wording in the codebook, so it cannot be read as harsh discipline, and the 2017-2018 62-item parenting behaviour scale (EMtprb, FFtprb) has no subscale key in the codebook.",,
+fam_parenting_inconsistent_parent,incompatible,"EMtcrs010, EMtcrs011, EMtcrs012, EMtcrs013, EMtcrs014, EMtcrs015, EMtcrs016, EMtcrs017, FFtcrs010, FFtcrs011, FFtcrs012, FFtcrs013, FFtcrs014, FFtcrs015, FFtcrs016, FFtcrs017",,"No inconsistent- or lax-discipline scale: the parents' controlling-parenting subscale (EMtcrs010-017, FFtcrs010-017, 2011-2015) has no item wording in the codebook, and the 2017-2018 parenting behaviour scale (EMtprb, FFtprb) has no subscale key.",,
+fam_monitoring_parent,partial,"DMtcrs052, DMtcrs053, DMtcrs054, DMtcrs055, survey_year","local({
+  m <- sapply(list(DMtcrs052, DMtcrs053, DMtcrs054, DMtcrs055), function(v) as.numeric(haven::zap_labels(v)))
+  top <- if_else(survey_year == 2023, 4, 5)
+  m[m < 1 | m > top] <- NA
+  rowMeans(m)
+})","2015-2023 only. The study's 4-item parental supervision scale ('parental supervision 1-4', DMtcrs052-055) in the caregiver questionnaire (the mother's in 2018; parent response in 2023): mean of items 1-5 (not at all to always true; 2023 a four-point scale, not at all to very much), complete-case; codes 6 and 9 (not applicable, don't know) NA; every item correlates positively with the scale. Partial: study items, no published scoring; standardise within wave (format change in 2023). The controlling-parenting subscale (EMtcrs010-017, FFtcrs010-017) shares no item with it and is named unused.",,
+fam_monitoring_self,partial,"JChcrs052, JChcrs053, JChcrs054, JChcrs055","local({
+  m <- sapply(list(JChcrs052, JChcrs053, JChcrs054, JChcrs055), function(v) as.numeric(haven::zap_labels(v)))
+  m[!m %in% 1:4] <- NA
+  rowMeans(m)
+})","2021-2023 only. The child's form of the study's 4-item parental supervision scale ('parental supervision 1-4, child response', JChcrs052-055): mean of items 1-4 (not at all to very much), complete-case; every item correlates positively with the scale. Partial: study items, no published scoring.",,
+fam_parenting_measure,inferred,survey_year,"case_when(
+  survey_year ==
+    2011 ~ ""warmth: study parenting-behaviour scale, warmth subscale (the father's questionnaire, the only parent asked), 8 of 8 items, 1-5 item scoring (range 1-5), mean; supplied already keyed; complete-case; study items, no published scoring"",
+  survey_year %in%
+    2012:2013 ~ ""warmth: study parenting-behaviour scale, warmth subscale (the mother's questionnaire; the interview respondent is not recorded), 6 of 6 items, 1-5 item scoring (range 1-5), mean; supplied already keyed; complete-case; study items, no published scoring"",
+  survey_year ==
+    2014 ~ ""warmth: study parenting-behaviour scale, warmth subscale (the parent recorded in parent_respondent: the mother's or the father's questionnaire), 6 of 6 items, 1-5 item scoring (range 1-5), mean; supplied already keyed; complete-case; study items, no published scoring"",
+  survey_year ==
+    2015 ~ ""warmth: study parenting-behaviour scale, warmth subscale (the parent recorded in parent_respondent: the mother's or the father's questionnaire), 6 of 6 items, 1-5 item scoring (range 1-5), mean; monitoring (parent): study parental supervision scale (caregiver questionnaire), 4 of 4 items, 1-5 item scoring (range 1-5), mean; supplied already keyed; complete-case; study items, no published scoring"",
+  survey_year %in%
+    2016:2020 ~ ""monitoring (parent): study parental supervision scale (caregiver questionnaire), 4 of 4 items, 1-5 item scoring (range 1-5), mean; supplied already keyed; complete-case; study items, no published scoring"",
+  survey_year %in%
+    2021:2022 ~ ""monitoring (parent): study parental supervision scale (caregiver questionnaire), 4 of 4 items, 1-5 item scoring (range 1-5), mean; monitoring (self): study parental supervision scale (child), 4 of 4 items, 1-4 item scoring (range 1-4), mean; supplied already keyed; complete-case; study items, no published scoring"",
+  survey_year ==
+    2023 ~ ""monitoring (parent): study parental supervision scale (caregiver questionnaire), 4 of 4 items, 1-4 item scoring (range 1-4), mean; monitoring (self): study parental supervision scale (child), 4 of 4 items, 1-4 item scoring (range 1-4), mean; parent items on a four-point scale in 2023; supplied already keyed; complete-case; study items, no published scoring"",
+  .default = NA_character_
+)","Waves where a parenting or monitoring scale was given: warmth 2011-2015 where mapped, parental supervision 2015-2023 (parent) and 2021-2023 (child).",,
+fam_physpunish,incompatible,"JChpar001, JChpar002, JChpar003, JChpar004, JChpar005, JChpar006, JChpar007, JChpar008, JChpar009",,"The child's 2019-2023 child-maltreatment items (JChpar001-009, never to almost daily) carry no item wording in the codebook, so no item can be identified as physical punishment.",,
+fam_parentchild_rel_self,compatible,"JChach001, JChach002, JChach003, JChach004, JChach005, JChach006, JChach007, JChach008, JChach009, JChach010, JChach011, JChach012, JChach013, JChach014, JChach015, JChach016, JChach017, JChach018, JChach019, JChach020, JChach021, JChach022, JChach023, JChach024","local({
+  m <- sapply(
+    list(
+      JChach001,
+      JChach002,
+      JChach003,
+      JChach004,
+      JChach005,
+      JChach006,
+      JChach007,
+      JChach008,
+      JChach009,
+      JChach010,
+      JChach011,
+      JChach012,
+      JChach013,
+      JChach014,
+      JChach015,
+      JChach016,
+      JChach017,
+      JChach018,
+      JChach019,
+      JChach020,
+      JChach021,
+      JChach022,
+      JChach023,
+      JChach024
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:5] <- NA
+  m[, c(7, 9, 11, 19, 21, 23)] <- 6 - m[, c(7, 9, 11, 19, 21, 23)]
+  fa <- rowMeans(m[, 1:12])
+  mo <- rowMeans(m[, 13:24])
+  out <- rowMeans(cbind(fa, mo), na.rm = TRUE)
+  if_else(is.nan(out), NA_real_, out)
+})","2019 and 2021-2023. Child's attachment to father and to mother, an IPPA-type scale (communication, trust and alienation subscales, 12 items per parent, 1-5 never to always): mean of each parent's 12 items, complete-case, then the mean of the answered parents. Items 7, 9 and 11 (19, 21, 23 for the mother) are reversed: they correlate negatively with the scale. The study's released subscales (JChach025-030) also reverse items 8 and 20, which then do not correlate with the scale; they are kept as worded. The child's 2022-2023 parent-child communication scale (JChfcs001-010) is named unused: the attachment scale, compatible, is given on the same occasions.",,
+fam_parentchild_rel_parent,partial,"EMtfcs001, EMtfcs002, EMtfcs003, EMtfcs004, EMtfcs005, EMtfcs006, EMtfcs007, EMtfcs008, EMtfcs009, EMtfcs010, FFtfcs001, FFtfcs002, FFtfcs003, FFtfcs004, FFtfcs005, FFtfcs006, FFtfcs007, FFtfcs008, FFtfcs009, FFtfcs010, DHuint005, DChint005, DHuint001, EMtint005, FFtint005","local({
+  rel <- coalesce(haven::zap_labels(DHuint005), haven::zap_labels(DChint005))
+  nocapi <- haven::zap_labels(DHuint001) %in% 0
+  mo <- rel %in% 1 | (nocapi & haven::zap_labels(EMtint005) %in% 1)
+  fa <- !mo & (rel %in% 2 | (nocapi & haven::zap_labels(FFtint005) %in% 1))
+  m <- sapply(
+    list(EMtfcs001, EMtfcs002, EMtfcs003, EMtfcs004, EMtfcs005, EMtfcs006, EMtfcs007, EMtfcs008, EMtfcs009, EMtfcs010),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  f <- sapply(
+    list(FFtfcs001, FFtfcs002, FFtfcs003, FFtfcs004, FFtfcs005, FFtfcs006, FFtfcs007, FFtfcs008, FFtfcs009, FFtfcs010),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:5] <- NA
+  f[!f %in% 1:5] <- NA
+  case_when(mo ~ rowMeans(m), fa ~ rowMeans(f), .default = NA_real_)
+})","2022-2023 only. The study's 10-item parent-child communication scale ('parent-child communication 1-10'), mother's (EMtfcs001-010) and father's (FFtfcs001-010) questionnaires: the form of the parent recorded in parent_respondent (the caregiver interview respondent; the mother's or father's questionnaire where no interview was held), the other named unused, never averaged; mean of items 1-5 (not at all to very much true), complete-case; every item correlates positively with the scale. Partial: a parent-child communication scale; study items, no published scoring.",,
+fam_parentchild_conflict_parent,unavailable,,,Not collected.,,
+fam_parentchild_measure,inferred,survey_year,"case_when(
+  survey_year %in%
+    c(
+      2019,
+      2021
+    ) ~ ""relationship (self): IPPA-type parent attachment scale (father and mother rated separately; communication, trust, alienation), 12 of 12 items per parent, 1-5 item scoring (range 1-5), mean per parent then mean of the answered parents; items 7, 9, 11 of each parent reversed; complete-case per parent; study items, instrument not named in the codebook"",
+  survey_year %in%
+    2022:2023 ~ ""relationship (self): IPPA-type parent attachment scale (father and mother rated separately; communication, trust, alienation), 12 of 12 items per parent, 1-5 item scoring (range 1-5), mean per parent then mean of the answered parents; items 7, 9, 11 of each parent reversed; complete-case per parent; study items, instrument not named in the codebook; closeness (parent): study parent-child communication scale (the mother's or the father's form, whichever parent parent_respondent records), 10 of 10 items, 1-5 item scoring (range 1-5), mean; supplied already keyed; complete-case; study items, no published scoring"",
+  .default = NA_character_
+)","Waves where the child's attachment scale (2019, 2021-2023) or the parents' communication scale (2022-2023) was given.",,
+fam_functioning_parent,compatible,"EMtfli001, EMtfli003, EMtfli005, EMtfli007, EMtfli009, EMtfli011, EMtfli013, FFtfli001, FFtfli003, FFtfli005, FFtfli007, FFtfli009, FFtfli011, FFtfli013, DHuint005, DChint005, survey_year","local({
+  rel <- coalesce(haven::zap_labels(DHuint005), haven::zap_labels(DChint005))
+  who <- case_when(
+    survey_year <= 2013 ~ ""Unknown"",
+    rel %in% 1 ~ ""Mother"",
+    rel %in% 2 ~ ""Father"",
+    .default = NA_character_
+  )
+  m <- sapply(list(EMtfli001, EMtfli003, EMtfli005, EMtfli007, EMtfli009, EMtfli011, EMtfli013), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  f <- sapply(list(FFtfli001, FFtfli003, FFtfli005, FFtfli007, FFtfli009, FFtfli011, FFtfli013), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  m[!m %in% 1:5] <- NA
+  f[!f %in% 1:5] <- NA
+  case_when(
+    survey_year == 2016 ~ rowSums(m),
+    who %in% c(""Mother"", ""Unknown"") ~ rowSums(m),
+    who == ""Father"" ~ rowSums(f),
+    .default = NA_real_
+  )
+})","2013, 2014 and 2016 only. FACES IV balanced cohesion ('family interaction: balanced cohesion 1-7', odd items of the 14-item family-interaction scale, 1-5 not at all to very true): sum of 7 items (range 7-35), complete-case; codes 8 and 9 (not applicable, don't know) NA; every item correlates positively with the scale. 2013-2014: the mother's (EMtfli) or the father's (FFtfli) form, whichever parent parent_respondent records, the other named unused, never averaged; 2016: the mother's form, the only parent asked. In 2013 the caregiver interview records no respondent (parent_respondent Unknown), so the mother's form is taken. Balanced flexibility (the even items) is named unused.",,
+fam_functioning_self,unavailable,,,Not collected.,,
+fam_conflict_parent,unavailable,,,Not collected.,,
+fam_conflict_self,unavailable,,,Not collected.,,
+fam_functioning_measure,inferred,survey_year,"case_when(
+  survey_year ==
+    2013 ~ ""functioning (parent): FACES IV balanced cohesion (the mother's questionnaire; the interview respondent is not recorded), 7 of 7 items, 1-5 item scoring (range 7-35), sum; supplied already keyed; complete-case; balanced flexibility (7 items) not used"",
+  survey_year ==
+    2014 ~ ""functioning (parent): FACES IV balanced cohesion (the parent recorded in parent_respondent: the mother's or the father's questionnaire), 7 of 7 items, 1-5 item scoring (range 7-35), sum; supplied already keyed; complete-case; balanced flexibility (7 items) not used"",
+  survey_year ==
+    2016 ~ ""functioning (parent): FACES IV balanced cohesion (the mother's questionnaire, the only parent asked), 7 of 7 items, 1-5 item scoring (range 7-35), sum; supplied already keyed; complete-case; balanced flexibility (7 items) not used"",
+  .default = NA_character_
+)",Waves where the family-interaction scale was mapped.,,
+fam_readto_freq,incompatible,JChsfs028,,"JChsfs028 (2014 pictorial self-perception item on how much the mother reads books with the child: a lot, often, sometimes) gives no frequency per week.",,
+fam_readto_time,unavailable,,,Not collected.,,
+fam_childbooks,unavailable,,,Not collected.,,
+fam_home_total,incompatible,"DHuhlm001, DHuhls001, DHuhpn001, DHuhrs001, DHuhcs001, DHuhmd001, DHuhvr001, DHuhcc001, DHuhom001",,"The 2011-2014 EC-HOME interview items (eight subscales: learning materials, language stimulation, physical environment, responsivity, academic stimulation, modelling, variety, acceptance; DHuhlm, DHuhls, DHuhpn, DHuhrs, DHuhcs, DHuhmd, DHuhvr, DHuhcc) are released without a total or subscale score, and the 2015-2017 59-item home-environment checklist (DHuhom001-059) is a study checklist not documented as a HOME form.",,
+fam_home_cogstim,incompatible,"DHuhlm001, DHuhcs001",,"A full EC-HOME form (2011-2014) was given, not a HOME short form, and its items are released without subscale scores; see fam_home_total.",,
+fam_home_emotsupport,incompatible,"DHuhrs001, DHuhcc001",,"A full EC-HOME form (2011-2014) was given, not a HOME short form, and its items are released without subscale scores; see fam_home_total.",,
+fam_home_measure,unavailable,,,See fam_home_total.,,
+school_grade,unavailable,,,Not collected.,,
+school_sector,compatible,"DChscm001, DInscm001, survey_year","local({
+  a <- as.numeric(haven::zap_labels(DChscm001))
+  b <- as.numeric(haven::zap_labels(DInscm001))
+  case_when(
+    survey_year == 2015 & a == 1 ~ ""Public"",
+    survey_year == 2015 & a == 2 ~ ""Private"",
+    survey_year %in% 2016:2019 & a %in% c(1, 2) ~ ""Public"",
+    survey_year %in% 2016:2019 & a == 3 ~ ""Private"",
+    survey_year == 2020 & b %in% c(1, 2) ~ ""Public"",
+    survey_year == 2020 & b == 3 ~ ""Private"",
+    .default = ""Unknown""
+  )
+})","2015-2020 only: the elementary school's founding type, caregiver report (DChscm001 2015-2019; DInscm001 2020): national or public = Public, private = Private; international, alternative and other schools = Unknown (management not documented). Codes differ by year (2015: 1 national/public, 2 private; 2016-2020: 1 national, 2 public, 3 private). 2021-2023 record the middle-school type (general, arts, sports, international, alternative), not the sector (Unknown); no school before 2015.",,
+school_track,inferred,survey_year,"if_else(survey_year %in% 2015:2020, ""Not tracked"", ""Unknown"")","2015-2020: the cohort, born April-July 2008, attends elementary school (school-type items name elementary schools in 2015-2020), which the schema counts as not tracked. 2010-2014 not yet at school and 2021-2023 middle school (no read source on middle-school tracking) = Unknown.",,
+st_measure_type,inferred,,"""Continuous""","Open hours (minutes in 2010-2011) per weekday, weekend day or average day, written into daily time-use grids and media-time items.",,
+st_measure_name,inferred,,"""Custom""",Study's own time-use grid and media-time items (KICCE questionnaires); no published instrument named.,,
+st_responder,inferred,survey_year,"if_else(survey_year >= 2021, ""Self"", ""Parent or carer"")","2010 mother questionnaire, 2011-2020 caregiver CAPI (D questionnaire; the codebook's subject column reads 'child' from 2018 but names whom the item is about), 2021-2023 the child's own questionnaire (J).",,
+st_total_wd,partial,"DChdlc021, DChdlc022, DChdsc006a","coalesce(
+  na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdlc021)), 99999999), 88888888), 9998) +
+    na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdlc022)), 99999999), 88888888), 9998),
+  na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006a)), 99999999), 88888888), 9998)
+)","2013-2014: weekday hours of education using electronic media plus play using electronic media (DChdlc021 + DChdlc022, caregiver report), the two purpose parts of one all-device item (DR-0004); 2015: weekday hours of 'media' (DChdsc006a), caregiver time-use grid. Partial: 'media' is not defined in the codebook and is asked beside TV watching, so it may leave TV out.",,
+st_total_we,partial,DChdsc006b,"na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006b)), 99999999), 88888888), 9998)","2015 only. Weekend-day hours of 'media' (DChdsc006b), caregiver time-use grid. Partial: 'media' is not defined and is asked beside TV watching, so it may leave TV out.",,
+st_total,partial,"DChdsc006a, DChdsc006b, DChmid017, JChmid017a, JChmid017b","coalesce(
+  (5 *
+    na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006a)), 99999999), 88888888), 9998) +
+    2 * na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006b)), 99999999), 88888888), 9998)) /
+    7,
+  na_if(na_if(na_if(as.numeric(haven::zap_labels(DChmid017)), 99999999), 88888888), 9998),
+  na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017a)), 99999999), 88888888), 9998) +
+    na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017b)), 99999999), 88888888), 9998) / 60
+)","2015-2023 only: the caregiver's 2015 weekday and weekend hours of 'media' (DChdsc006a/b, in the time-use grid beside TV watching), the caregiver's hours per average day of smartphone and PC use (DChmid017, 2016-2017; 2018 item not in the codebook, 25 rows with the undefined code 9998 set to NA) and of media use (2019-2020; 'don't know' set to NA), and the child's media use per average day in hours and minutes (JChmid017a + JChmid017b / 60, 2021-2023); 2015 as (5 x weekday + 2 x weekend) / 7. Partial: TV is not named, 2016-2017 counts smartphone and PC only, the scope of 'media' is not defined, and the series splices three items (caregiver to 2020, child from 2021). 2013-2014 are weekday only (st_total_wd).",,
+st_watch_wd,partial,"EChdlc001, EChdlc002, EChdlc003, EChdlc004, EChdlc005, EChdlc006, EChdlc007, EChdlc008, EChdlc009, EChdlc010, EChdlc011, EChdlc012, EChdlc013, DChdlc008_min, DChdlc008, DChdsc005a, JChdsc005a","local({
+  g <- sapply(
+    list(
+      EChdlc001,
+      EChdlc002,
+      EChdlc003,
+      EChdlc004,
+      EChdlc005,
+      EChdlc006,
+      EChdlc007,
+      EChdlc008,
+      EChdlc009,
+      EChdlc010,
+      EChdlc011,
+      EChdlc012,
+      EChdlc013
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  g[g >= 88888888] <- NA
+  grid <- rowSums(!is.na(g)) > 0
+  case_when(
+    survey_year == 2010 ~ if_else(
+      grid,
+      coalesce(na_if(na_if(as.numeric(haven::zap_labels(EChdlc008)), 99999999), 88888888), 0),
+      NA_real_
+    ) /
+      60,
+    survey_year == 2011 ~ na_if(na_if(as.numeric(haven::zap_labels(DChdlc008_min)), 99999999), 88888888) / 60,
+    survey_year == 2012 ~ na_if(na_if(as.numeric(haven::zap_labels(DChdlc008)), 99999999), 88888888),
+    .default = coalesce(
+      na_if(na_if(as.numeric(haven::zap_labels(DChdsc005a)), 99999999), 88888888),
+      na_if(na_if(as.numeric(haven::zap_labels(JChdsc005a)), 99999999), 88888888)
+    )
+  )
+})","Weekday hours of TV and video watching (2010-2012, 'TV, 비디오 등 시청'), TV watching (2015-2018) or video watching (2019-2023): mother questionnaire minutes / 60 in 2010 (EChdlc008), caregiver interview minutes / 60 in 2011 (DChdlc008_min) and hours in 2012 (DChdlc008), caregiver time-use grid 2015-2020 (DChdsc005a), child grid 2021-2023 (JChdsc005a). Not asked in 2013-2014. Partial: TV-set wording to 2018; in 2010 a blank cell in a grid the mother otherwise answered is read as 0 (the grid records no zeros), and rows with no grid answer are NA.",,
+st_watch_we,partial,"DChdsc005b, JChdsc005b","coalesce(
+  na_if(na_if(as.numeric(haven::zap_labels(DChdsc005b)), 99999999), 88888888),
+  na_if(na_if(as.numeric(haven::zap_labels(JChdsc005b)), 99999999), 88888888)
+)","2015-2023 only. Weekend-day hours of TV watching (2015-2018, 'TV 시청') or video watching (2019-2023, '영상 시청') in the daily time-use grid: caregiver report 2015-2020 (DChdsc005b), child report 2021-2023 (JChdsc005b). Partial: the 2015-2018 wording names TV only; one item whose wording widened in 2019. Open hours, no top band.",,
+st_watch,partial,"DChdsc005a, DChdsc005b, JChdsc005a, JChdsc005b","local({
+  wd <- coalesce(
+    na_if(na_if(as.numeric(haven::zap_labels(DChdsc005a)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(JChdsc005a)), 99999999), 88888888)
+  )
+  we <- coalesce(
+    na_if(na_if(as.numeric(haven::zap_labels(DChdsc005b)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(JChdsc005b)), 99999999), 88888888)
+  )
+  (5 * wd + 2 * we) / 7
+})","2015-2023 only. (5 x weekday + 2 x weekend-day) / 7 hours of TV (2015-2018) or video (2019-2023) watching, as st_watch_wd and st_watch_we. Partial: TV-only wording 2015-2018. 2010-2012 asked weekdays only.",,
+st_game_wd,partial,"EChdlc001, EChdlc002, EChdlc003, EChdlc004, EChdlc005, EChdlc006, EChdlc007, EChdlc008, EChdlc009, EChdlc010, EChdlc011, EChdlc012, EChdlc013, DChdlc009_min, DChdlc009, DChdsc022a, JChdsc022a","local({
+  g <- sapply(
+    list(
+      EChdlc001,
+      EChdlc002,
+      EChdlc003,
+      EChdlc004,
+      EChdlc005,
+      EChdlc006,
+      EChdlc007,
+      EChdlc008,
+      EChdlc009,
+      EChdlc010,
+      EChdlc011,
+      EChdlc012,
+      EChdlc013
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  g[g >= 88888888] <- NA
+  grid <- rowSums(!is.na(g)) > 0
+  case_when(
+    survey_year == 2010 ~ if_else(
+      grid,
+      coalesce(na_if(na_if(as.numeric(haven::zap_labels(EChdlc009)), 99999999), 88888888), 0),
+      NA_real_
+    ) /
+      60,
+    survey_year == 2011 ~ na_if(na_if(as.numeric(haven::zap_labels(DChdlc009_min)), 99999999), 88888888) / 60,
+    survey_year == 2012 ~ na_if(na_if(as.numeric(haven::zap_labels(DChdlc009)), 99999999), 88888888),
+    .default = coalesce(
+      na_if(na_if(as.numeric(haven::zap_labels(DChdsc022a)), 99999999), 88888888),
+      na_if(na_if(as.numeric(haven::zap_labels(JChdsc022a)), 99999999), 88888888)
+    )
+  )
+})","Weekday hours of games ('오락, 컴퓨터 게임하기', games and computer games, 2010-2012; '게임', games, 2017-2023), no device restriction: mother questionnaire minutes / 60 in 2010 (EChdlc009), caregiver interview minutes / 60 in 2011 (DChdlc009_min) and hours in 2012 (DChdlc009), caregiver grid 2017-2020 (DChdsc022a), child grid 2021-2023 (JChdsc022a). Not asked in 2013-2016. Partial: in 2010 a blank cell in a grid the mother otherwise answered is read as 0 (the grid records no zeros); rows with no grid answer are NA.",,
+st_game_we,compatible,"DChdsc022b, JChdsc022b","coalesce(
+  na_if(na_if(as.numeric(haven::zap_labels(DChdsc022b)), 99999999), 88888888),
+  na_if(na_if(as.numeric(haven::zap_labels(JChdsc022b)), 99999999), 88888888)
+)","2017-2023 only. Weekend-day hours of games ('게임', no device named) in the daily time-use grid: caregiver report 2017-2020 (DChdsc022b), child report 2021-2023 (JChdsc022b). Open hours. The games part of the 2021-2023 media time (JChmid017g, JChmid017h) is not used.",,
+st_game,compatible,"DChdsc022a, DChdsc022b, JChdsc022a, JChdsc022b","local({
+  wd <- coalesce(
+    na_if(na_if(as.numeric(haven::zap_labels(DChdsc022a)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(JChdsc022a)), 99999999), 88888888)
+  )
+  we <- coalesce(
+    na_if(na_if(as.numeric(haven::zap_labels(DChdsc022b)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(JChdsc022b)), 99999999), 88888888)
+  )
+  (5 * wd + 2 * we) / 7
+})","2017-2023 only. (5 x weekday + 2 x weekend-day) / 7 hours of games, as st_game_wd and st_game_we. 2010-2012 asked weekdays only.",,
+st_game_comp_wd,unavailable,,,No device split; see st_game.,,
+st_game_comp_we,unavailable,,,No device split; see st_game.,,
+st_game_comp,unavailable,,,No device split; see st_game.,,
+st_game_console_wd,unavailable,,,No device split; see st_game.,,
+st_game_console_we,unavailable,,,No device split; see st_game.,,
+st_game_console,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_wd,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_we,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole,unavailable,,,No device split; see st_game.,,
+st_game_active_wd,unavailable,,,No device split; see st_game.,,
+st_game_active_we,unavailable,,,No device split; see st_game.,,
+st_game_active,unavailable,,,No device split; see st_game.,,
+st_game_phone_wd,unavailable,,,No device split; see st_game.,,
+st_game_phone_we,unavailable,,,No device split; see st_game.,,
+st_game_phone,unavailable,,,No device split; see st_game.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_game.,,
+st_game_tablet_we,unavailable,,,No device split; see st_game.,,
+st_game_tablet,unavailable,,,No device split; see st_game.,,
+st_comp_nongaming_wd,unavailable,,,Not collected.,,
+st_comp_nongaming_we,unavailable,,,Not collected.,,
+st_comp_nongaming,unavailable,,,Not collected.,,
+st_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_we,unavailable,,,No weekday/weekend split.,,
+st_comp,incompatible,"DChmid001, DChmid017",,"DChmid001 (2012-2014) rates how much the child uses a computer (internet) on a 5-point degree scale, no hours; DChmid017 (2016-2017 smartphone and PC hours) pools computers with phones.",,
+st_tablet_wd,unavailable,,,Not collected.,,
+st_tablet_we,unavailable,,,Not collected.,,
+st_tablet,unavailable,,,Not collected.,,
+st_phone_wd,unavailable,,,No weekday/weekend split.,,
+st_phone_we,unavailable,,,No weekday/weekend split.,,
+st_phone,incompatible,"DChmid003, DChmid012, JChmid012",,"DChmid003 (2012-2014) rates the child's mobile-phone use on a 5-point degree scale, and DChmid012/JChmid012 record smartphone ownership; no phone hours.",,
+st_socmedia_wd,unavailable,,,No weekday/weekend split.,,
+st_socmedia_we,unavailable,,,No weekday/weekend split.,,
+st_socmedia,compatible,"JChmid017k, JChmid017l","na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017k)), 99999999), 88888888), 9998) +
+  na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017l)), 99999999), 88888888), 9998) / 60","2021-2023 only. SNS part of the child's media use per average day (JChmid017k + JChmid017l / 60), one of five purpose parts that sum to the total. The 2017-2020 SNS degree-of-use item (DChmid015e) and the 2016 SNS per-cent share (DChmid015e_pct) are not used.",,
+st_educational_wd,partial,"DChdlc021, DChdsc021a","coalesce(
+  na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdlc021)), 99999999), 88888888), 9998),
+  na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc021a)), 99999999), 88888888), 9998)
+)","2013-2014 weekday hours of education using electronic media (DChdlc021, caregiver report; the school-work part of an all-device item split by purpose, for children below school age, as educational apps are); 2017-2020 hours of correspondence education such as internet classes ('인터넷수업 등 통신교육', DChdsc021a/b, caregiver time-use grid), weekday. Partial: below school age in 2013-2014; distance education may include non-screen correspondence courses. The 2021-2023 non-face-to-face education item (JChdsc021a) is not used, as the learning part of media time fills st_educational in those waves.",,
+st_educational_we,partial,DChdsc021b,"na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc021b)), 99999999), 88888888), 9998)","2017-2020 only. 2017-2020 hours of correspondence education such as internet classes ('인터넷수업 등 통신교육', DChdsc021a/b, caregiver time-use grid), weekend day. Partial: may include non-screen correspondence courses.",,
+st_educational,partial,"DChdsc021a, DChdsc021b, JChmid017c, JChmid017d","coalesce(
+  (5 *
+    na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc021a)), 99999999), 88888888), 9998) +
+    2 * na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc021b)), 99999999), 88888888), 9998)) /
+    7,
+  na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017c)), 99999999), 88888888), 9998) +
+    na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017d)), 99999999), 88888888), 9998) / 60
+)","2017-2023 only. 2017-2020 hours of correspondence education such as internet classes ('인터넷수업 등 통신교육', DChdsc021a/b, caregiver time-use grid) as (5 x weekday + 2 x weekend) / 7; 2021-2023 learning part of the child's media use per average day (JChmid017c + JChmid017d / 60). Partial: online lessons only to 2020, then all screen use for learning, a spliced series with a level shift.",,
+st_leisure_wd,compatible,DChdlc022,"na_if(na_if(as.numeric(haven::zap_labels(DChdlc022)), 99999999), 88888888)","2013-2014 only. Weekday hours of play using electronic media ('전자매체를 이용한 놀이시간'), caregiver report: the leisure part of the all-device item the grid splits by purpose (the other part is education using electronic media, st_educational_wd). Open hours.",,
+st_leisure_we,unavailable,,,No weekday/weekend split.,,
+st_leisure,partial,"JChmid017e, JChmid017f, JChmid017g, JChmid017h, JChmid017i, JChmid017j, JChmid017k, JChmid017l","(na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017e)), 99999999), 88888888), 9998) +
+  na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017f)), 99999999), 88888888), 9998) / 60) +
+  (na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017g)), 99999999), 88888888), 9998) +
+    na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017h)), 99999999), 88888888), 9998) / 60) +
+  (na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017i)), 99999999), 88888888), 9998) +
+    na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017j)), 99999999), 88888888), 9998) / 60) +
+  (na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017k)), 99999999), 88888888), 9998) +
+    na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017l)), 99999999), 88888888), 9998) / 60)","2021-2023 only. Sum of the information-search, games, entertainment and SNS parts of the child's media use per average day (JChmid017e-l, hours + minutes / 60): the non-learning parts of an item the instrument splits by purpose. Partial: information search may serve school work, and 'media' is not defined. 2013-2014 play using electronic media is weekday only (st_leisure_wd).",,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,unavailable,,,Not collected.,,
+st_internet_we,unavailable,,,Not collected.,,
+st_internet,unavailable,,,Not collected.,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,incompatible,JChdsc040a,,"JChdsc040a (2021-2023 weekday hours of non-face-to-face social activity, child report) pools any remote socialising (calls, messages, video calls, social media) and does not name screens.",,
+st_messaging_we,incompatible,JChdsc040b,,"JChdsc040b (2021-2023 weekend hours of non-face-to-face social activity, child report) pools any remote socialising and does not name screens.",,
+st_messaging,incompatible,"JChdsc040a, JChdsc040b",,"JChdsc040a/b (2021-2023 hours of non-face-to-face social activity, child report) pool any remote socialising (calls, messages, video calls, social media) and do not name screens.",,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
+st_email,unavailable,,,Not collected.,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,incompatible,"JChjcs013, JChjcs014, JChjcs015, JChjcs016, JChjcs017",,"Only the child's 2021-2022 ratings of how well they understand each subject (Korean, English, maths, social studies, science; JChjcs013-017), not of overall grades or class standing.",,
+acc_academachment_lettergrades,unavailable,,,Not collected.,,
+acc_academachment_stdtest,unavailable,,,Not collected.,,
+acc_schoolengage_caresschool,incompatible,"JChscl013, JChscl002",,"No item on caring about doing well in school: the child's 'I work hard at school' item (JChscl013, 2016-2018, 2020) is an effort item and 'Do you like school?' (JChscl002) a liking item, mapped to wb_domainsat_school_self.",,
+acc_schoolengage_homework,incompatible,"DChdsc003a, DChdsc003b, JChdsc037",,"No homework-completion item: the caregiver's weekday and weekend homework and study hours (DChdsc003a/b) go to acc_homework_time, and the child's 'is your homework time enough?' (JChdsc037, 2017-2022) is a satisfaction item.",,
+acc_schoolengage_self,partial,"JChadj001, JChadj002, JChadj003, JChadj004, JChadj005, JChadj022, JChlat000, JChsca057, JChsca058, JChsca059, JChsca060, JChsca061, JChsca062, JChsca063, JChsca064, JChsca065, JChsca066, JChsca067, JChsca068, JChsca069, JChsca070, JChsca071, JChsca072, JChsca073, JChsca074, JChsca075, JChsca076, JChsca077, JChsca078, JChsca079, JChsca080, JChsca081, JChsca082, JChsca083, JChsca084, JChsca085, JChsca086, JChsca087, JChsca088, JChsca089, JChsca090, JChsca091, JChsca092, JChsca093, JChsca094","local({
+  m <- sapply(
+    list(
+      JChsca057,
+      JChsca058,
+      JChsca059,
+      JChsca060,
+      JChsca061,
+      JChsca062,
+      JChsca063,
+      JChsca064,
+      JChsca065,
+      JChsca066,
+      JChsca067,
+      JChsca068,
+      JChsca069,
+      JChsca070,
+      JChsca071,
+      JChsca072,
+      JChsca073,
+      JChsca074,
+      JChsca075,
+      JChsca076,
+      JChsca077,
+      JChsca078,
+      JChsca079,
+      JChsca080,
+      JChsca081,
+      JChsca082,
+      JChsca083,
+      JChsca084,
+      JChsca085,
+      JChsca086,
+      JChsca087,
+      JChsca088,
+      JChsca089,
+      JChsca090,
+      JChsca091,
+      JChsca092,
+      JChsca093,
+      JChsca094
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:5] <- NA
+  adj <- as.numeric(haven::zap_labels(JChadj022))
+  lat <- as.numeric(haven::zap_labels(JChlat000))
+  case_when(survey_year == 2019 ~ adj, survey_year == 2020 ~ lat, survey_year >= 2021 ~ rowMeans(m))
+})","2019-2023 only, child report. 2019: learning-activities subscale of the grade 5-6 school-adjustment scale (study's released score JChadj022: mean of items 1-5, item 5 reversed, 1-4); 2020: the 12-item learning-attitude scale (released JChlat000, mean, 1-4), taken over the school-adjustment scale on that occasion; 2021-2023: the 38-item middle-school adjustment scale, mean of all items (1-5), complete-case, no subscale released (every item correlates positively with the scale). Partial: school-adjustment subscale and total (the total adds peer and teacher relationships); standardise within wave.",,
+acc_schoolengage_teacher,partial,"LChsca001, LChsca002, LChsca003, LChsca004, LChsca005, LChsca006, LChsca007, LChsca008, LChsca009, LChsca010, LChsca011","local({
+  m <- sapply(
+    list(
+      LChsca001,
+      LChsca002,
+      LChsca003,
+      LChsca004,
+      LChsca005,
+      LChsca006,
+      LChsca007,
+      LChsca008,
+      LChsca009,
+      LChsca010,
+      LChsca011
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:5] <- NA
+  m[, c(1, 11)] <- 6 - m[, c(1, 11)]
+  rowMeans(m)
+})","2015-2018 only. School-life adjustment subscale of the homeroom teacher's 35-item school-adjustment scale: mean of items 1-11 (1-5), items 1 and 11 reversed, complete-case, as the study scores its released 2018 subscale (LChsca035a), computed the same way in 2015-2017. Partial: a subscale of a school-adjustment scale.",,
+acc_schoolengage_measure,inferred,survey_year,"case_when(
+  survey_year %in%
+    2015:2018 ~ ""teacher: study school-adjustment scale, school-life adjustment subscale (homeroom teacher), 11 of 35 items, 1-5 item scoring (range 1-5), mean; items 1 and 11 reversed; complete-case"",
+  survey_year ==
+    2019 ~ ""self: study grade 5-6 school-adjustment scale, learning-activities subscale (released score), 5 of 21 items, 1-4 item scoring (range 1-4), mean; item 5 reversed"",
+  survey_year ==
+    2020 ~ ""self: study learning-attitude scale (released score), 12 of 12 items, 1-4 item scoring (range 1-4), mean"",
+  survey_year %in%
+    2021:2023 ~ ""self: study middle-school adjustment scale, total, 38 of 38 items, 1-5 item scoring (range 1-5), mean; adds peer and teacher relationships; complete-case"",
+  .default = NA_character_
+)","Waves where a school-engagement scale was given (teacher 2015-2018, child 2019-2023).",,
+acc_homework_time,partial,"DChdsc003a, DChdsc003b, JChdsc003a, JChdsc003b","local({
+  wd <- coalesce(
+    na_if(na_if(as.numeric(haven::zap_labels(DChdsc003a)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(JChdsc003a)), 99999999), 88888888)
+  )
+  we <- coalesce(
+    na_if(na_if(as.numeric(haven::zap_labels(DChdsc003b)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(JChdsc003b)), 99999999), 88888888)
+  )
+  (5 * wd + 2 * we) / 7
+})","2015-2023 only. (5 x weekday + 2 x weekend-day) / 7 hours of 'homework and study' (2015-2018) or 'studying alone' (2019-2023) in the daily time-use grid: caregiver report 2015-2020 (DChdsc003a/b), child report 2021-2023 (JChdsc003a/b). Partial: self-study beyond homework is counted. Open hours.",,
+acc_schoolpressure_self,incompatible,JChstr002,,"Only stress from homework or exams (JChstr002), an item of the academic-stress scale (acc_schoolstress_self); no school-pressure item.",,
+acc_schoolstress_self,compatible,"JChstr001, JChstr002, JChstr003, JChstr004","local({
+  m <- sapply(list(JChstr001, JChstr002, JChstr003, JChstr004), function(v) as.numeric(haven::zap_labels(v)))
+  m[!m %in% 1:5] <- NA
+  if_else(survey_year >= 2021, rowMeans(m), rowMeans(m[, 1:3]))
+})","2018-2023. Child's academic-stress scale (stress from poor grades, from homework or exams, from boring study; a fourth item from 2021), items 1-5 (never to always), mean, complete-case; equals the study's released score (JChstr000, 2019-2023). Every item correlates positively with the scale.",,
+acc_schoolstress_measure,inferred,survey_year,"case_when(
+  survey_year %in%
+    2018:2020 ~ ""Study academic-stress scale (instrument not named in the codebook), 3 items, 1-5 item scoring (range 1-5), mean; complete-case"",
+  survey_year %in%
+    2021:2023 ~ ""Study academic-stress scale (instrument not named in the codebook), 4 items, 1-5 item scoring (range 1-5), mean; complete-case"",
+  .default = NA_character_
+)",Waves where the academic-stress scale was given; standardise within wave (item added in 2021).,,
+acc_schoolbelonging_self,unavailable,,,Not collected.,,
+acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
+acc_academachment_numgrades,unavailable,,,Not collected.,,
+acc_academachment_teacherrated,proximate,LChacs039,"recode_values(
+  as.numeric(haven::zap_labels(LChacs039)),
+  5 ~ ""Very good"",
+  4 ~ ""Good"",
+  3 ~ ""Average"",
+  c(1, 2) ~ ""Below average"",
+  default = NA_character_
+)","2015-2020 only. Homeroom teacher's rating of the child's overall academic performance against classmates (LChacs039, the last item of the teacher's academic performance scale; the study releases it as the overall rating in 2018-2020, LChacs039g and LChacs000, which equal it on every row): top 20%, upper 21-40%, middle, lower 21-40%, bottom 20%; five-level collapse: top -> Very good, upper -> Good, middle -> Average, the two lowest -> Below average. Proximate: five levels collapsed to four. The subject ratings (LChacs039a-f, LChacs001-006, LChacs000a-f) are named unused.",,
+acc_academachment_parentrated,partial,"IChcbl129, IChcbl130, IChcbl131, IChcbl132, IChcbl133, IChcbl124a_2021, IChcbl124b_2021, IChcbl124c_2021, IChcbl124d_2021, IChcbl124e_2021, survey_year","local({
+  a <- sapply(list(IChcbl129, IChcbl130, IChcbl131, IChcbl132, IChcbl133), function(v) as.numeric(haven::zap_labels(v)))
+  a <- a + if_else(survey_year %in% c(2015, 2017), 1, 0)
+  b <- sapply(list(IChcbl124a_2021, IChcbl124b_2021, IChcbl124c_2021, IChcbl124d_2021, IChcbl124e_2021), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  a[!a %in% 1:5] <- NA
+  b[!b %in% 1:5] <- NA
+  m <- coalesce(rowMeans(a), rowMeans(b))
+  recode_values(
+    ceiling(m - 0.5),
+    5 ~ ""Very good"",
+    4 ~ ""Good"",
+    3 ~ ""Average"",
+    c(1, 2) ~ ""Below average"",
+    default = NA_character_
+  )
+})","2015, 2017, 2019, 2021 and 2023 only. The caregiver's K-CBCL 6-18 academic performance ratings of Korean, maths, social studies, science and English (IChcbl129-133 to 2019, IChcbl124a-e_2021 from 2021): poor (bottom 20%), below average, average, above average, very good (coded 0-4 in 2015 and 2017, 1-5 after); mean of all five (all required), rounded half toward the poorer level, then the five-level collapse: very good -> Very good, above average -> Good, average -> Average, below average and poor -> Below average. Partial: mean of subject ratings. The released school competence score (IChcbs028, IChcbs024_2021) adds special-class, repeated-grade and school-problem items and is named unused.",,
+acc_numeracy_stdtest,unavailable,,,Not collected.,,
+acc_numeracy_bas_numberskills,unavailable,,,BAS not administered.,,
+acc_literacy_stdtest,unavailable,,,Not collected.,,
+acc_literacy_bas_wordreading,unavailable,,,BAS not administered.,,
+acc_learningdisab_diagnosed,partial,"DChhlt021, EChhlt021, DChhlt032, DChhlt032d_2015, DChhlt032d, DChhlt036d, DChhlt052d","local({
+  hs <- coalesce(haven::zap_labels(DChhlt021), haven::zap_labels(EChhlt021)) %in% 1:2
+  g <- as.numeric(haven::zap_labels(DChhlt032))
+  t16 <- as.numeric(haven::zap_labels(DChhlt032d_2015))
+  yr <- as.numeric(haven::zap_labels(DChhlt032d))
+  tr <- as.numeric(haven::zap_labels(DChhlt036d))
+  cur <- as.numeric(haven::zap_labels(DChhlt052d))
+  told <- case_when(
+    survey_year <= 2015 ~ NA,
+    survey_year == 2016 & t16 > 0 & t16 < 88888888 ~ TRUE,
+    survey_year == 2016 & (g %in% 0 | t16 %in% 0) ~ FALSE,
+    survey_year >= 2017 & yr >= 2008 & yr <= 2023 ~ TRUE,
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2017:2022 & hs ~ FALSE,
+    .default = NA
+  )
+  now <- case_when(
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2016:2022 & tr %in% 1:2 ~ TRUE,
+    survey_year %in% 2016:2022 & tr %in% 3 ~ FALSE,
+    .default = NA
+  )
+  case_when(
+    told %in% FALSE ~ ""Never diagnosed"",
+    told %in% TRUE & now %in% TRUE ~ ""Currently diagnosed"",
+    told %in% TRUE & now %in% FALSE ~ ""Previously diagnosed"",
+    .default = NA_character_
+  )
+})","2016-2023 only. Caregiver report of a doctor's diagnosis of a specific learning disorder in the psychosocial-condition checklist: 2016 the doctor-diagnosis item after the any-condition filter (DChhlt032, DChhlt032d_2015), 2017-2023 the year of first diagnosis (DChhlt032d). Current: 2023 whether the child has it now (DChhlt052d); 2016-2022 regular or occasional counselling or hospital treatment for it (DChhlt036d) = Currently diagnosed, no treatment = Previously diagnosed, treatment unanswered NA. In 2017-2022 the checklist records only a year of first diagnosis, so a blank year where the caregiver answered the health section is read as never told. The ever-told ticks of 2010-2015 have no current/previous split and leave those waves NA, because other waves separate current from previous diagnosis. Partial: treatment as the proxy for current in 2016-2022.",,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not collected.,,
+acc_graderepeated,unavailable,,,Not collected.,,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered; see beh_atten_cbcl_parent.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered; see beh_atten_cbcl_parent.,,
+beh_atten_self,unavailable,,,Not collected.,,
+beh_hyper_self,unavailable,,,Not collected.,,
+beh_adhdsymp_self,unavailable,,,Not collected.,,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_atten_singleitem_teacher,unavailable,,,Not collected.,,
+beh_impulsivity_self,unavailable,,,Not collected.,,
+beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
+beh_selfreg_htks,unavailable,,,Head-Toes-Knees-Shoulders not administered; see beh_selfreg_parent.,,
+beh_selfreg_parent,compatible,"IChssr022, IChssr028, IChssr029, IChssr040, IChssr041, IChssr046, IChssr053","local({
+  m <- sapply(list(IChssr022, IChssr028, IChssr029, IChssr040, IChssr041, IChssr046, IChssr053), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  m[!m %in% 1:3] <- NA
+  rowMeans(m)
+})","2014 only. Self-control subscale of the caregiver-rated social competence scale (7 items scored 1-3, never to very often), mean, complete-case; no released score. The 2015-2018 executive-function difficulty scale defines no inhibitory-control subscale in the codebook.",,
+beh_emotdysreg_parent,incompatible,IChcbs004,,Only the CBCL/1.5-5 Emotionally Reactive syndrome (mh_emotreact_cbcl_parent) and other CBCL problem scales (CBCL rows).,,
+beh_emotreg_parent,incompatible,"IChssr022, IChssr028, IChssr029, IChssr040, IChssr041, IChssr046, IChssr053",,"Only the social-competence self-control subscale (2014), which goes to beh_selfreg_parent.",,
+beh_selfreg_self,incompatible,"JChsel001_2020, JChsel002_2020, JChsel003_2020, JChsel004_2020, JChsel005_2020, JChsel006_2020, JChsel007_2020, JChsel008_2020, JChsel009_2020, JChsel010_2020, JChsel011_2020, JChsel012_2020, JChsel013_2020, JChsel014_2020, JChsel015_2020, JChsel016_2020, JChsel017_2020, JChsel018_2020, JChsel019_2020, JChsel020_2020, JChsel021_2020, JChsel022_2020, JChsel023_2020, JChsel024_2020, JChsel025_2020, JChsel026_2020, JChsel027_2020, JChsel028_2020, JChsel029_2020, JChsel030_2020, JChsel031_2020, JChsel032_2020, JChsel033_2020, JChsel034_2020, JChsel035_2020, JChsel036_2020, JChsel037_2020, JChsel038_2020, JChsel039_2020, JChsel040_2020",,"No self-report self-control scale: the child's 2020 and 2022 executive-function difficulty scale defines no inhibitory-control subscale in the codebook (its total is on cog_execfunc_self), and the ego-resilience items asked under the same stem in 2019, 2021 and 2023 are not a self-control scale.",,
+beh_emotreg_self,unavailable,,,Not collected.,,
+beh_emotdysreg_self,unavailable,,,Not collected.,,
+beh_emotreg_suppression_self,unavailable,,,Not collected.,,
+beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
+beh_emotaware_self,unavailable,,,Not collected.,,
+beh_selfreg_measure,unavailable,,,See beh_selfreg_self.,,
+beh_temp_negaffect_parent,incompatible,"EChtmp001, EChtmp002, EChtmp003, EChtmp004, EChtmp005, EChtmp006, EChtmp007, EChtmp008, EChtmp009, EChtmp010, EChtmp011, EChtmp012, EChtmp013, EChtmp014, EChtmp015, EChtmp016, EChtmp017, EChtmp018, EChtmp019, EChtmp020",,"The mother's 20-item temperament scale (EChtmp001-020, 2010-2012) carries no item wording, instrument name or subscale key in the codebook ('temperament 1-20'), so no negative-affectivity or emotionality items can be identified.",,
+beh_temp_surgency_parent,incompatible,"EChtmp001, EChtmp002, EChtmp003, EChtmp004, EChtmp005, EChtmp006, EChtmp007, EChtmp008, EChtmp009, EChtmp010, EChtmp011, EChtmp012, EChtmp013, EChtmp014, EChtmp015, EChtmp016, EChtmp017, EChtmp018, EChtmp019, EChtmp020",,"The mother's 20-item temperament scale (EChtmp001-020, 2010-2012) carries no item wording, instrument name or subscale key in the codebook, so no activity, sociability or surgency items can be identified.",,
+beh_temp_measure,unavailable,,,See beh_temp_negaffect_parent.,,
+beh_bullied,partial,"JChvio014, JChvio015, JChvio016, JChvio017, JChvio018, JChvio019, JChvio020, JChvio021, JChvio022, JChvio023, JChvio024, JChvio025, JChvio026","local({
+  m <- sapply(
+    list(
+      JChvio014,
+      JChvio015,
+      JChvio016,
+      JChvio017,
+      JChvio018,
+      JChvio019,
+      JChvio020,
+      JChvio021,
+      JChvio022,
+      JChvio023,
+      JChvio024,
+      JChvio025,
+      JChvio026
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[m >= 88888888] <- NA
+  any <- rowSums(m > 1, na.rm = TRUE) > 0
+  answered <- rowSums(!is.na(m)) > 0
+  case_when(any ~ ""TRUE"", answered ~ ""FALSE"")
+})","2021-2023 only. Child report, 13-item online and offline violence-perpetration checklist (JChvio014-026, 1 never to 6 several times a week), TRUE if any act occurred, FALSE if every answered act is never. Partial: acts not framed as bullying, target not stated; item wording not in the codebook.",,
+beh_beenbullied,partial,"JChvio001, JChvio002, JChvio003, JChvio004, JChvio005, JChvio006, JChvio007, JChvio008, JChvio009, JChvio010, JChvio011, JChvio012, JChvio013","local({
+  m <- sapply(
+    list(
+      JChvio001,
+      JChvio002,
+      JChvio003,
+      JChvio004,
+      JChvio005,
+      JChvio006,
+      JChvio007,
+      JChvio008,
+      JChvio009,
+      JChvio010,
+      JChvio011,
+      JChvio012,
+      JChvio013
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  none <- if_else(survey_year <= 2020, 0, 1)
+  m[m >= 88888888] <- NA
+  m[survey_year <= 2020, 8:13] <- NA
+  any <- rowSums(m > none, na.rm = TRUE) > 0
+  answered <- rowSums(!is.na(m)) > 0
+  case_when(any ~ ""TRUE"", answered ~ ""FALSE"")
+})","2018-2023. Child report, multi-type checklist of school-violence victimisation by other students (2018 wording: hit, ostracised, verbally abused, harassed or made to run errands, robbed, threatened, sexually humiliated; JChvio001-007, 0 never to 5 several times a week, '1-2 times a year' the lowest frequency), TRUE if any act occurred, FALSE if every answered act is never (2018-2020; the 2020 agreement-rated item 8 is not used); 2021-2023 the 13-item online and offline violence-victimisation checklist (JChvio001-013, 1 never to 6), TRUE above never. Partial: the 2021-2023 items pool online with offline acts and name no perpetrator; item wording is not in the codebook from 2019.",,
+beh_beenbullied_online,incompatible,"JChivo001, JChivo002, JChvio001",,"The 2019-2020 cyber-violence items (JChivo001-002) carry no item wording in the codebook (victim or perpetrator not stated), and the 2021-2023 victimisation checklist (JChvio001-013) pools online with offline acts; see beh_beenbullied.",,
+beh_bullied_online,incompatible,"JChivo001, JChivo002, JChvio014",,"The 2019-2020 cyber-violence items (JChivo001-002) carry no item wording in the codebook, and the 2021-2023 perpetration checklist (JChvio014-026) pools online with offline acts; see beh_bullied.",,
+beh_fight,incompatible,"JChvio001, IChcbl037",,"Being hit by other students (JChvio001, victimisation, beh_beenbullied) and the CBCL truth-rated item 'gets in many fights' (IChcbl037, beh_agg_cbcl_parent); no self-report fighting item.",,
+beh_truancy,unavailable,,,Not collected.,,
+beh_suspended,unavailable,,,Not collected.,,
+beh_stealing,unavailable,,,Not collected.,,
+beh_vandalism,unavailable,,,Not collected.,,
+beh_alcohol_self,compatible,"JChdrn001, JChdrn003","local({
+  ever <- as.numeric(haven::zap_labels(JChdrn001))
+  freq <- as.numeric(haven::zap_labels(JChdrn003))
+  case_when(freq %in% 2:6 ~ ""TRUE"", freq == 1 ~ ""FALSE"", ever == 1 ~ ""FALSE"")
+})","2022-2023 only. Child report: drinking frequency in the past year (JChdrn003), any drinking = TRUE, none in the past year = FALSE; children who have never drunk (JChdrn001) = FALSE.",,
+beh_tobacco_self,partial,"JChsmk001, JChsmk003","local({
+  ever <- as.numeric(haven::zap_labels(JChsmk001))
+  days <- as.numeric(haven::zap_labels(JChsmk003))
+  case_when(days > 0 ~ ""TRUE"", days == 0 ~ ""FALSE"", ever == 1 ~ ""FALSE"")
+})","2022-2023 only. Child report: days smoked (JChsmk003; 2023 in the past month, 2022 with no recall period stated), any day = TRUE, 0 = FALSE; children who have never smoked (JChsmk001) = FALSE. Partial: the 2022 item states no recall period.",,
+beh_vaping_self,unavailable,,,Not collected.,,
+beh_cannabis_self,unavailable,,,Not collected.,,
+beh_drugs_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,unavailable,,,SDQ parent form not administered; see mh_int_cbcl_parent.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ parent form not administered; see mh_int_cbcl_parent.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ parent form not administered; see mh_int_cbcl_parent.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ parent form not administered; see mh_int_cbcl_parent.,,
+beh_aggphys_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_aggverb_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_agganger_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_agghostility_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_agg_self.,,
+beh_agg_self,incompatible,"JChvio014, JChvio015, JChvio016, JChvio017, JChvio018, JChvio019, JChvio020, JChvio021, JChvio022, JChvio023, JChvio024, JChvio025, JChvio026",,"Only the child's 2021-2023 school-violence perpetration items (JChvio014-026, online and offline), which are bullying-framed acts against other students; see beh_bullied.",,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,incompatible,"JChvio014, JChvio015, JChvio016, JChvio017, JChvio018, JChvio019, JChvio020, JChvio021, JChvio022, JChvio023, JChvio024, JChvio025, JChvio026",,"Only the child's 2021-2023 school-violence perpetration items (JChvio014-026), bullying-framed; see beh_bullied.",,
+beh_aggphys_measure,unavailable,,,See beh_aggphys_self.,,
+beh_aggrel_self,incompatible,"JChvio014, JChvio015, JChvio016, JChvio017, JChvio018, JChvio019, JChvio020, JChvio021, JChvio022, JChvio023, JChvio024, JChvio025, JChvio026",,"Only the child's 2021-2023 school-violence perpetration items (JChvio014-026), bullying-framed; see beh_bullied.",,
+beh_aggrel_measure,unavailable,,,See beh_aggrel_self.,,
+beh_anger_self,unavailable,,,Not collected.,,
+beh_anger_measure,unavailable,,,See beh_anger_self.,,
+beh_aggbeliefs_self,unavailable,,,Not collected.,,
+beh_agghostattrib_self,unavailable,,,Not collected.,,
+beh_aggfantasy_self,unavailable,,,Not collected.,,
+beh_aggcog_measure,unavailable,,,See beh_aggbeliefs_self.,,
+beh_agg_singleitem_teacher,unavailable,,,Not collected.,,
+beh_disrupt_singleitem_teacher,unavailable,,,Not collected.,,
+beh_aggphys_teacher,unavailable,,,Not collected.,,
+beh_aggrel_teacher,unavailable,,,Not collected.,,
+beh_agg_teacher,compatible,"IChtrs010, IChtrs008","coalesce(as.numeric(haven::zap_labels(IChtrs010)), as.numeric(haven::zap_labels(IChtrs008)))","2019, 2021 and 2023 only. TRF (K-TRF) Aggressive Behavior syndrome, completed by the child's school teacher (present exactly where the teacher survey was returned): the study's released raw score (IChtrs010 in 2019, IChtrs008 from 2021, where the study renumbers its scores): sum of 20 items, 0-2 item scoring (range 0-40), a scale presented as aggression; no problem item is unanswered on any rated child, and the published item list reproduces the released score exactly on every row. Higher = more problems.",,
+beh_victphys_teacher,unavailable,,,Not collected.,,
+beh_victrel_teacher,unavailable,,,Not collected.,,
+beh_vict_teacher,unavailable,,,Not collected.,,
+beh_atten_teacher,incompatible,"IChtrs009, IChtrs011_2021",,"No inattention-only teacher scale: the TRF Attention Problems syndrome (IChtrs009, IChtrs011_2021) mixes inattention with hyperactivity-impulsivity and its Inattention subscale is not released; the DSM-oriented ADH scale fills beh_adhdsymp_teacher.",,
+beh_hyper_teacher,incompatible,"IChtrs009, IChtrs011_2021",,"No hyperactivity-impulsivity-only teacher scale: the TRF Attention Problems syndrome (IChtrs009, IChtrs011_2021) mixes both and its Hyperactivity-Impulsivity subscale is not released; the DSM-oriented ADH scale fills beh_adhdsymp_teacher.",,
+beh_adhdsymp_teacher,compatible,"IChtrs015, IChtrs016_2021","coalesce(as.numeric(haven::zap_labels(IChtrs015)), as.numeric(haven::zap_labels(IChtrs016_2021)))","2019, 2021 and 2023 only. TRF (K-TRF) DSM-oriented Attention Deficit/Hyperactivity Problems, completed by the child's school teacher (present exactly where the teacher survey was returned): the study's released raw score (IChtrs015 in 2019, IChtrs016_2021 from 2021): sum of 13 items mixing inattention with hyperactivity-impulsivity, 0-2 item scoring (range 0-26); no problem item is unanswered on any rated child, and the published item list reproduces the released score exactly on every row. Higher = more problems. The Attention Problems syndrome (IChtrs009, IChtrs011_2021), the sum of the unreleased Inattention and Hyperactivity-Impulsivity subscales, is named unused.",,
+beh_ext_teacher,compatible,IChtrs003,as.numeric(haven::zap_labels(IChtrs003)),"2019, 2021 and 2023 only. TRF (K-TRF) Externalizing, completed by the child's school teacher (present exactly where the teacher survey was returned): the study's released raw score (IChtrs003): sum of the 32 items of the Rule-Breaking and Aggressive Behavior syndromes, 0-2 item scoring (range 0-64); no problem item is unanswered on any rated child, and the published item list reproduces the released score exactly on every row. Higher = more problems.",,
+beh_prosocial_teacher,compatible,"LChsdq001, LChsdq002, LChsdq003, LChsdq004, LChsdq005, LChsdq006, LChsdq007, LChsdq008, LChsdq009, LChsdq010, LChsdq011, LChsdq012, LChsdq013, LChsdq014, LChsdq015, LChsdq016, LChsdq017, LChsdq018, LChsdq019, LChsdq020, LChsdq021, LChsdq022, LChsdq023, LChsdq024, LChsdq025","local({
+  m <- sapply(
+    list(
+      LChsdq001,
+      LChsdq002,
+      LChsdq003,
+      LChsdq004,
+      LChsdq005,
+      LChsdq006,
+      LChsdq007,
+      LChsdq008,
+      LChsdq009,
+      LChsdq010,
+      LChsdq011,
+      LChsdq012,
+      LChsdq013,
+      LChsdq014,
+      LChsdq015,
+      LChsdq016,
+      LChsdq017,
+      LChsdq018,
+      LChsdq019,
+      LChsdq020,
+      LChsdq021,
+      LChsdq022,
+      LChsdq023,
+      LChsdq024,
+      LChsdq025
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:3] <- NA
+  m <- m - 1
+  m[, c(7, 11, 14, 21, 25)] <- 2 - m[, c(7, 11, 14, 21, 25)]
+  if_else(
+    rowSums(!is.na(m[, c(1, 4, 9, 17, 20)])) >= 3,
+    floor(rowMeans(m[, c(1, 4, 9, 17, 20)], na.rm = TRUE) * 5 + 0.5),
+    NA_real_
+  )
+})","Repeats beh_prosocial_sdq_teacher. 2016-2018 only. Prosocial behaviour, items 1, 4, 9, 17, 20. Homeroom teacher's SDQ (LChsdq001-025, 2016-2018), items rebased 1-3 to 0-2, SDQ rule (mean of answered items x 5, floor(x + 0.5), NA below 3 of 5). The study's released 2018 subscales are not used: its emotional-symptoms score takes item 12 (a conduct item) in place of item 13.",,
+beh_socialskills_teacher,partial,"HInssr001, HInssr004, HInssr007, HInssr009, HInssr010, HInssr012, HInssr015, HInssr016, HInssr019, HInssr002, HInssr008, HInssr017, HInssr018, HInssr021","local({
+  m <- sapply(
+    list(
+      HInssr001,
+      HInssr004,
+      HInssr007,
+      HInssr009,
+      HInssr010,
+      HInssr012,
+      HInssr015,
+      HInssr016,
+      HInssr019,
+      HInssr002,
+      HInssr008,
+      HInssr017,
+      HInssr018,
+      HInssr021
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:3] <- NA
+  (rowMeans(m[, 1:9]) + rowMeans(m[, 10:14])) / 2
+})","2014 only. Childcare or kindergarten teacher's social-competence scale (items 1-3, never to very often), no released score: mean of the cooperation (9 items) and assertion (5 items) facet means, complete-case. Partial: facets only, the self-control facet (7 items) left out and named unused (a teacher-rated self-control subscale fills no row).",,
+beh_teacher_measure,inferred,survey_year,"case_when(
+  survey_year ==
+    2014 ~ ""study social-competence scale (childcare or kindergarten teacher); social skills: mean of the cooperation (9 items) and assertion (5 items) facet means of 21 items, 1-3 item scoring (range 1-3); complete-case; self-control facet (7 items) not used"",
+  survey_year %in%
+    c(
+      2019,
+      2021,
+      2023
+    ) ~ ""TRF, Korean version (school teacher); aggression: Aggressive Behavior, 20 of 20 items, 0-2 item scoring (range 0-40), sum; combined ADHD: DSM-oriented Attention Deficit/Hyperactivity Problems, 13 of 13 items (range 0-26), sum; externalising: Externalizing, 32 of 32 items (range 0-64), sum; internalising: Internalizing, 33 of 33 items (range 0-66), sum; anxiety: DSM-oriented Anxiety Problems, 6 of 6 items (range 0-12), sum; depression: DSM-oriented Affective Problems, 10 of 10 items (range 0-20), sum; total: Total Problems, all problem items, 0-2 item scoring, sum; the study's released raw scores, no problem items unanswered"",
+  .default = NA_character_
+)","Waves with a generic teacher-report score: the 2014 childcare or kindergarten teacher's social-competence scale and the 2019, 2021 and 2023 TRF.",,
+beh_argues,unavailable,,,Not collected.,,
+beh_persistence_finishwork,unavailable,,,Not collected.,,
+beh_emotreg_stayscalm,unavailable,,,Not collected.,,
+beh_peerprob_makefriends,unavailable,,,Not collected.,,
+beh_conduct_diagnosed,partial,"DChhlt021, EChhlt021, DChhlt032, DChhlt032f_2015, DChhlt032f, DChhlt036f, DChhlt052f","local({
+  hs <- coalesce(haven::zap_labels(DChhlt021), haven::zap_labels(EChhlt021)) %in% 1:2
+  g <- as.numeric(haven::zap_labels(DChhlt032))
+  t16 <- as.numeric(haven::zap_labels(DChhlt032f_2015))
+  yr <- as.numeric(haven::zap_labels(DChhlt032f))
+  tr <- as.numeric(haven::zap_labels(DChhlt036f))
+  cur <- as.numeric(haven::zap_labels(DChhlt052f))
+  told <- case_when(
+    survey_year <= 2015 ~ NA,
+    survey_year == 2016 & t16 > 0 & t16 < 88888888 ~ TRUE,
+    survey_year == 2016 & (g %in% 0 | t16 %in% 0) ~ FALSE,
+    survey_year >= 2017 & yr >= 2008 & yr <= 2023 ~ TRUE,
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2017:2022 & hs ~ FALSE,
+    .default = NA
+  )
+  now <- case_when(
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2016:2022 & tr %in% 1:2 ~ TRUE,
+    survey_year %in% 2016:2022 & tr %in% 3 ~ FALSE,
+    .default = NA
+  )
+  case_when(
+    told %in% FALSE ~ ""Never diagnosed"",
+    told %in% TRUE & now %in% TRUE ~ ""Currently diagnosed"",
+    told %in% TRUE & now %in% FALSE ~ ""Previously diagnosed"",
+    .default = NA_character_
+  )
+})","2016-2023 only. Caregiver report of a doctor's diagnosis of a disruptive, impulse-control or conduct disorder in the psychosocial-condition checklist: 2016 the doctor-diagnosis item after the any-condition filter (DChhlt032, DChhlt032f_2015), 2017-2023 the year of first diagnosis (DChhlt032f). Current: 2023 whether the child has it now (DChhlt052f); 2016-2022 regular or occasional counselling or hospital treatment for it (DChhlt036f) = Currently diagnosed, no treatment = Previously diagnosed, treatment unanswered NA. In 2017-2022 the checklist records only a year of first diagnosis, so a blank year where the caregiver answered the health section is read as never told. The ever-told ticks of 2010-2015 have no current/previous split and leave those waves NA, because other waves separate current from previous diagnosis. Partial: treatment as the proxy for current in 2016-2022.",,
+beh_conduct_diagnosed_severity,unavailable,,,Not collected.,,
+beh_adhd_diagnosed,partial,"DChhlt021, EChhlt021, DChhlt032, DChhlt032c_2015, DChhlt032c, DChhlt036c, DChhlt052c","local({
+  hs <- coalesce(haven::zap_labels(DChhlt021), haven::zap_labels(EChhlt021)) %in% 1:2
+  g <- as.numeric(haven::zap_labels(DChhlt032))
+  t16 <- as.numeric(haven::zap_labels(DChhlt032c_2015))
+  yr <- as.numeric(haven::zap_labels(DChhlt032c))
+  tr <- as.numeric(haven::zap_labels(DChhlt036c))
+  cur <- as.numeric(haven::zap_labels(DChhlt052c))
+  told <- case_when(
+    survey_year <= 2015 ~ NA,
+    survey_year == 2016 & t16 > 0 & t16 < 88888888 ~ TRUE,
+    survey_year == 2016 & (g %in% 0 | t16 %in% 0) ~ FALSE,
+    survey_year >= 2017 & yr >= 2008 & yr <= 2023 ~ TRUE,
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2017:2022 & hs ~ FALSE,
+    .default = NA
+  )
+  now <- case_when(
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2016:2022 & tr %in% 1:2 ~ TRUE,
+    survey_year %in% 2016:2022 & tr %in% 3 ~ FALSE,
+    .default = NA
+  )
+  case_when(
+    told %in% FALSE ~ ""Never diagnosed"",
+    told %in% TRUE & now %in% TRUE ~ ""Currently diagnosed"",
+    told %in% TRUE & now %in% FALSE ~ ""Previously diagnosed"",
+    .default = NA_character_
+  )
+})","2016-2023 only. Caregiver report of a doctor's diagnosis of attention-deficit/hyperactivity disorder in the psychosocial-condition checklist: 2016 the doctor-diagnosis item after the any-condition filter (DChhlt032, DChhlt032c_2015), 2017-2023 the year of first diagnosis (DChhlt032c). Current: 2023 whether the child has it now (DChhlt052c); 2016-2022 regular or occasional counselling or hospital treatment for it (DChhlt036c) = Currently diagnosed, no treatment = Previously diagnosed, treatment unanswered NA. In 2017-2022 the checklist records only a year of first diagnosis, so a blank year where the caregiver answered the health section is read as never told. The ever-told ticks of 2010-2015 have no current/previous split and leave those waves NA, because other waves separate current from previous diagnosis. Partial: treatment as the proxy for current in 2016-2022.",,
+beh_autism_diagnosed,partial,"DChhlt021, EChhlt021, DChhlt032, DChhlt032b_2015, DChhlt032b, DChhlt036b, DChhlt052b","local({
+  hs <- coalesce(haven::zap_labels(DChhlt021), haven::zap_labels(EChhlt021)) %in% 1:2
+  g <- as.numeric(haven::zap_labels(DChhlt032))
+  t16 <- as.numeric(haven::zap_labels(DChhlt032b_2015))
+  yr <- as.numeric(haven::zap_labels(DChhlt032b))
+  tr <- as.numeric(haven::zap_labels(DChhlt036b))
+  cur <- as.numeric(haven::zap_labels(DChhlt052b))
+  told <- case_when(
+    survey_year <= 2015 ~ NA,
+    survey_year == 2016 & t16 > 0 & t16 < 88888888 ~ TRUE,
+    survey_year == 2016 & (g %in% 0 | t16 %in% 0) ~ FALSE,
+    survey_year >= 2017 & yr >= 2008 & yr <= 2023 ~ TRUE,
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2017:2022 & hs ~ FALSE,
+    .default = NA
+  )
+  now <- case_when(
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2016:2022 & tr %in% 1:2 ~ TRUE,
+    survey_year %in% 2016:2022 & tr %in% 3 ~ FALSE,
+    .default = NA
+  )
+  case_when(
+    told %in% FALSE ~ ""Never diagnosed"",
+    told %in% TRUE & now %in% TRUE ~ ""Currently diagnosed"",
+    told %in% TRUE & now %in% FALSE ~ ""Previously diagnosed"",
+    .default = NA_character_
+  )
+})","2016-2023 only. Caregiver report of a doctor's diagnosis of autism spectrum disorder in the psychosocial-condition checklist: 2016 the doctor-diagnosis item after the any-condition filter (DChhlt032, DChhlt032b_2015), 2017-2023 the year of first diagnosis (DChhlt032b). Current: 2023 whether the child has it now (DChhlt052b); 2016-2022 regular or occasional counselling or hospital treatment for it (DChhlt036b) = Currently diagnosed, no treatment = Previously diagnosed, treatment unanswered NA. In 2017-2022 the checklist records only a year of first diagnosis, so a blank year where the caregiver answered the health section is read as never told. The ever-told ticks of 2010-2015 have no current/previous split and leave those waves NA, because other waves separate current from previous diagnosis. Partial: treatment as the proxy for current in 2016-2022.",,
+beh_autism_diagnosed_severity,incompatible,"DChhlt029o, DChhlt028o",,"Only the grade or degree of a registered autism disability (DChhlt029o, DChhlt028o, the national disability registration), an official classification, not a respondent-rated severity.",,
+beh_conduct_sdq_self,unavailable,,,SDQ self-report not administered.,,
+beh_hyper_sdq_self,unavailable,,,SDQ self-report not administered.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ self-report not administered.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ self-report not administered.,,
+beh_conduct_sdq_teacher,compatible,"LChsdq001, LChsdq002, LChsdq003, LChsdq004, LChsdq005, LChsdq006, LChsdq007, LChsdq008, LChsdq009, LChsdq010, LChsdq011, LChsdq012, LChsdq013, LChsdq014, LChsdq015, LChsdq016, LChsdq017, LChsdq018, LChsdq019, LChsdq020, LChsdq021, LChsdq022, LChsdq023, LChsdq024, LChsdq025","local({
+  m <- sapply(
+    list(
+      LChsdq001,
+      LChsdq002,
+      LChsdq003,
+      LChsdq004,
+      LChsdq005,
+      LChsdq006,
+      LChsdq007,
+      LChsdq008,
+      LChsdq009,
+      LChsdq010,
+      LChsdq011,
+      LChsdq012,
+      LChsdq013,
+      LChsdq014,
+      LChsdq015,
+      LChsdq016,
+      LChsdq017,
+      LChsdq018,
+      LChsdq019,
+      LChsdq020,
+      LChsdq021,
+      LChsdq022,
+      LChsdq023,
+      LChsdq024,
+      LChsdq025
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:3] <- NA
+  m <- m - 1
+  m[, c(7, 11, 14, 21, 25)] <- 2 - m[, c(7, 11, 14, 21, 25)]
+  if_else(
+    rowSums(!is.na(m[, c(5, 7, 12, 18, 22)])) >= 3,
+    floor(rowMeans(m[, c(5, 7, 12, 18, 22)], na.rm = TRUE) * 5 + 0.5),
+    NA_real_
+  )
+})","2016-2018 only. Conduct problems, items 5, 7 (reversed), 12, 18, 22. Homeroom teacher's SDQ (LChsdq001-025, 2016-2018), items rebased 1-3 to 0-2, SDQ rule (mean of answered items x 5, floor(x + 0.5), NA below 3 of 5). The study's released 2018 subscales are not used: its emotional-symptoms score takes item 12 (a conduct item) in place of item 13.",,
+beh_hyper_sdq_teacher,compatible,"LChsdq001, LChsdq002, LChsdq003, LChsdq004, LChsdq005, LChsdq006, LChsdq007, LChsdq008, LChsdq009, LChsdq010, LChsdq011, LChsdq012, LChsdq013, LChsdq014, LChsdq015, LChsdq016, LChsdq017, LChsdq018, LChsdq019, LChsdq020, LChsdq021, LChsdq022, LChsdq023, LChsdq024, LChsdq025","local({
+  m <- sapply(
+    list(
+      LChsdq001,
+      LChsdq002,
+      LChsdq003,
+      LChsdq004,
+      LChsdq005,
+      LChsdq006,
+      LChsdq007,
+      LChsdq008,
+      LChsdq009,
+      LChsdq010,
+      LChsdq011,
+      LChsdq012,
+      LChsdq013,
+      LChsdq014,
+      LChsdq015,
+      LChsdq016,
+      LChsdq017,
+      LChsdq018,
+      LChsdq019,
+      LChsdq020,
+      LChsdq021,
+      LChsdq022,
+      LChsdq023,
+      LChsdq024,
+      LChsdq025
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:3] <- NA
+  m <- m - 1
+  m[, c(7, 11, 14, 21, 25)] <- 2 - m[, c(7, 11, 14, 21, 25)]
+  if_else(
+    rowSums(!is.na(m[, c(2, 10, 15, 21, 25)])) >= 3,
+    floor(rowMeans(m[, c(2, 10, 15, 21, 25)], na.rm = TRUE) * 5 + 0.5),
+    NA_real_
+  )
+})","2016-2018 only. Hyperactivity/inattention, items 2, 10, 15, 21 and 25 (reversed). Homeroom teacher's SDQ (LChsdq001-025, 2016-2018), items rebased 1-3 to 0-2, SDQ rule (mean of answered items x 5, floor(x + 0.5), NA below 3 of 5). The study's released 2018 subscales are not used: its emotional-symptoms score takes item 12 (a conduct item) in place of item 13.",,
+beh_peerprob_sdq_teacher,compatible,"LChsdq001, LChsdq002, LChsdq003, LChsdq004, LChsdq005, LChsdq006, LChsdq007, LChsdq008, LChsdq009, LChsdq010, LChsdq011, LChsdq012, LChsdq013, LChsdq014, LChsdq015, LChsdq016, LChsdq017, LChsdq018, LChsdq019, LChsdq020, LChsdq021, LChsdq022, LChsdq023, LChsdq024, LChsdq025","local({
+  m <- sapply(
+    list(
+      LChsdq001,
+      LChsdq002,
+      LChsdq003,
+      LChsdq004,
+      LChsdq005,
+      LChsdq006,
+      LChsdq007,
+      LChsdq008,
+      LChsdq009,
+      LChsdq010,
+      LChsdq011,
+      LChsdq012,
+      LChsdq013,
+      LChsdq014,
+      LChsdq015,
+      LChsdq016,
+      LChsdq017,
+      LChsdq018,
+      LChsdq019,
+      LChsdq020,
+      LChsdq021,
+      LChsdq022,
+      LChsdq023,
+      LChsdq024,
+      LChsdq025
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:3] <- NA
+  m <- m - 1
+  m[, c(7, 11, 14, 21, 25)] <- 2 - m[, c(7, 11, 14, 21, 25)]
+  if_else(
+    rowSums(!is.na(m[, c(6, 11, 14, 19, 23)])) >= 3,
+    floor(rowMeans(m[, c(6, 11, 14, 19, 23)], na.rm = TRUE) * 5 + 0.5),
+    NA_real_
+  )
+})","2016-2018 only. Peer problems, items 6, 11 and 14 (reversed), 19, 23. Homeroom teacher's SDQ (LChsdq001-025, 2016-2018), items rebased 1-3 to 0-2, SDQ rule (mean of answered items x 5, floor(x + 0.5), NA below 3 of 5). The study's released 2018 subscales are not used: its emotional-symptoms score takes item 12 (a conduct item) in place of item 13.",,
+beh_prosocial_sdq_teacher,compatible,"LChsdq001, LChsdq002, LChsdq003, LChsdq004, LChsdq005, LChsdq006, LChsdq007, LChsdq008, LChsdq009, LChsdq010, LChsdq011, LChsdq012, LChsdq013, LChsdq014, LChsdq015, LChsdq016, LChsdq017, LChsdq018, LChsdq019, LChsdq020, LChsdq021, LChsdq022, LChsdq023, LChsdq024, LChsdq025","local({
+  m <- sapply(
+    list(
+      LChsdq001,
+      LChsdq002,
+      LChsdq003,
+      LChsdq004,
+      LChsdq005,
+      LChsdq006,
+      LChsdq007,
+      LChsdq008,
+      LChsdq009,
+      LChsdq010,
+      LChsdq011,
+      LChsdq012,
+      LChsdq013,
+      LChsdq014,
+      LChsdq015,
+      LChsdq016,
+      LChsdq017,
+      LChsdq018,
+      LChsdq019,
+      LChsdq020,
+      LChsdq021,
+      LChsdq022,
+      LChsdq023,
+      LChsdq024,
+      LChsdq025
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:3] <- NA
+  m <- m - 1
+  m[, c(7, 11, 14, 21, 25)] <- 2 - m[, c(7, 11, 14, 21, 25)]
+  if_else(
+    rowSums(!is.na(m[, c(1, 4, 9, 17, 20)])) >= 3,
+    floor(rowMeans(m[, c(1, 4, 9, 17, 20)], na.rm = TRUE) * 5 + 0.5),
+    NA_real_
+  )
+})","2016-2018 only. Prosocial behaviour, items 1, 4, 9, 17, 20. Homeroom teacher's SDQ (LChsdq001-025, 2016-2018), items rebased 1-3 to 0-2, SDQ rule (mean of answered items x 5, floor(x + 0.5), NA below 3 of 5). The study's released 2018 subscales are not used: its emotional-symptoms score takes item 12 (a conduct item) in place of item 13.",,
+beh_ext_sdq_parent,unavailable,,,SDQ parent form not administered; see mh_int_cbcl_parent.,,
+beh_ext_sdq_self,unavailable,,,SDQ self-report not administered.,,
+beh_ext_sdq_teacher,unavailable,,,Derive at analysis from the subscale rows.,,
+beh_agg_cbcl_parent,compatible,"IChcbc008, IChcbc015, IChcbc016, IChcbc018, IChcbc020, IChcbc027, IChcbc029, IChcbc035, IChcbc040, IChcbc042, IChcbc044, IChcbc053, IChcbc058, IChcbc066, IChcbc069, IChcbc081, IChcbc085, IChcbc088, IChcbc096, IChcbl003, IChcbl016, IChcbl019, IChcbl020, IChcbl021, IChcbl022, IChcbl023, IChcbl037, IChcbl057, IChcbl068, IChcbl086, IChcbl087, IChcbl088, IChcbl089, IChcbl094, IChcbl095, IChcbl097, IChcbl104","local({
+  a <- sapply(
+    list(
+      IChcbc008,
+      IChcbc015,
+      IChcbc016,
+      IChcbc018,
+      IChcbc020,
+      IChcbc027,
+      IChcbc029,
+      IChcbc035,
+      IChcbc040,
+      IChcbc042,
+      IChcbc044,
+      IChcbc053,
+      IChcbc058,
+      IChcbc066,
+      IChcbc069,
+      IChcbc081,
+      IChcbc085,
+      IChcbc088,
+      IChcbc096
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a[!a %in% 0:2] <- NA
+  b <- sapply(
+    list(
+      IChcbl003,
+      IChcbl016,
+      IChcbl019,
+      IChcbl020,
+      IChcbl021,
+      IChcbl022,
+      IChcbl023,
+      IChcbl037,
+      IChcbl057,
+      IChcbl068,
+      IChcbl086,
+      IChcbl087,
+      IChcbl088,
+      IChcbl089,
+      IChcbl094,
+      IChcbl095,
+      IChcbl097,
+      IChcbl104
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 0:2] <- NA
+  coalesce(
+    if_else(rowSums(!is.na(a)) >= 0.8 * ncol(a), rowMeans(a, na.rm = TRUE), NA_real_),
+    if_else(rowSums(!is.na(b)) >= 0.8 * ncol(b), rowMeans(b, na.rm = TRUE), NA_real_)
+  )
+})","Aggressive Behavior (1.5-5: 19 items; 6-18: 18 items), forms pooled. Caregiver-rated CBCL (K-CBCL), 1.5-5 form 2012-2014 and 6-18 form 2015, 2017, 2019, 2021, 2023; mean of answered 0-2 items, NA below 80% answered (CBCL rule); the published item lists reproduce the study's released raw scores exactly on complete rows in every wave.",,
+beh_atten_cbcl_parent,compatible,"IChcbc005, IChcbc006, IChcbc056, IChcbc059, IChcbc095, IChcbl001, IChcbl004, IChcbl008, IChcbl010, IChcbl013, IChcbl017, IChcbl041, IChcbl061, IChcbl078, IChcbl080","local({
+  a <- sapply(list(IChcbc005, IChcbc006, IChcbc056, IChcbc059, IChcbc095), function(v) as.numeric(haven::zap_labels(v)))
+  a[!a %in% 0:2] <- NA
+  b <- sapply(
+    list(IChcbl001, IChcbl004, IChcbl008, IChcbl010, IChcbl013, IChcbl017, IChcbl041, IChcbl061, IChcbl078, IChcbl080),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 0:2] <- NA
+  coalesce(
+    if_else(rowSums(!is.na(a)) >= 0.8 * ncol(a), rowMeans(a, na.rm = TRUE), NA_real_),
+    if_else(rowSums(!is.na(b)) >= 0.8 * ncol(b), rowMeans(b, na.rm = TRUE), NA_real_)
+  )
+})","Attention Problems (1.5-5: 5 items; 6-18: 10 items), forms pooled. Caregiver-rated CBCL (K-CBCL), 1.5-5 form 2012-2014 and 6-18 form 2015, 2017, 2019, 2021, 2023; mean of answered 0-2 items, NA below 80% answered (CBCL rule); the published item lists reproduce the study's released raw scores exactly on complete rows in every wave.",,
+beh_rulebreak_cbcl_parent,compatible,"IChcbl002, IChcbl026, IChcbl028, IChcbl039, IChcbl043, IChcbl063, IChcbl067, IChcbl072, IChcbl073, IChcbl081, IChcbl082, IChcbl090, IChcbl096, IChcbl099, IChcbl101, IChcbl105, IChcbl106","local({
+  b <- sapply(
+    list(
+      IChcbl002,
+      IChcbl026,
+      IChcbl028,
+      IChcbl039,
+      IChcbl043,
+      IChcbl063,
+      IChcbl067,
+      IChcbl072,
+      IChcbl073,
+      IChcbl081,
+      IChcbl082,
+      IChcbl090,
+      IChcbl096,
+      IChcbl099,
+      IChcbl101,
+      IChcbl105,
+      IChcbl106
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 0:2] <- NA
+  if_else(rowSums(!is.na(b)) >= 0.8 * ncol(b), rowMeans(b, na.rm = TRUE), NA_real_)
+})","2015-2023 only. Rule-Breaking Behavior (6-18: 17 items); the 1.5-5 form has no such scale. Caregiver-rated CBCL (K-CBCL), 1.5-5 form 2012-2014 and 6-18 form 2015, 2017, 2019, 2021, 2023; mean of answered 0-2 items, NA below 80% answered (CBCL rule); the published item lists reproduce the study's released raw scores exactly on complete rows in every wave.",,
+beh_socprob_cbcl_parent,compatible,"IChcbl011, IChcbl012, IChcbl025, IChcbl027, IChcbl034, IChcbl036, IChcbl038, IChcbl048, IChcbl062, IChcbl064, IChcbl079","local({
+  b <- sapply(
+    list(
+      IChcbl011,
+      IChcbl012,
+      IChcbl025,
+      IChcbl027,
+      IChcbl034,
+      IChcbl036,
+      IChcbl038,
+      IChcbl048,
+      IChcbl062,
+      IChcbl064,
+      IChcbl079
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 0:2] <- NA
+  if_else(rowSums(!is.na(b)) >= 0.8 * ncol(b), rowMeans(b, na.rm = TRUE), NA_real_)
+})","2015-2023 only. Social Problems (6-18: 11 items); the 1.5-5 form has no such scale. Caregiver-rated CBCL (K-CBCL), 1.5-5 form 2012-2014 and 6-18 form 2015, 2017, 2019, 2021, 2023; mean of answered 0-2 items, NA below 80% answered (CBCL rule); the published item lists reproduce the study's released raw scores exactly on complete rows in every wave.",,
+beh_ext_cbcl_parent,compatible,"IChcbc005, IChcbc006, IChcbc056, IChcbc059, IChcbc095, IChcbc008, IChcbc015, IChcbc016, IChcbc018, IChcbc020, IChcbc027, IChcbc029, IChcbc035, IChcbc040, IChcbc042, IChcbc044, IChcbc053, IChcbc058, IChcbc066, IChcbc069, IChcbc081, IChcbc085, IChcbc088, IChcbc096, IChcbl002, IChcbl026, IChcbl028, IChcbl039, IChcbl043, IChcbl063, IChcbl067, IChcbl072, IChcbl073, IChcbl081, IChcbl082, IChcbl090, IChcbl096, IChcbl099, IChcbl101, IChcbl105, IChcbl106, IChcbl003, IChcbl016, IChcbl019, IChcbl020, IChcbl021, IChcbl022, IChcbl023, IChcbl037, IChcbl057, IChcbl068, IChcbl086, IChcbl087, IChcbl088, IChcbl089, IChcbl094, IChcbl095, IChcbl097, IChcbl104","local({
+  a1 <- sapply(list(IChcbc005, IChcbc006, IChcbc056, IChcbc059, IChcbc095), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  a1[!a1 %in% 0:2] <- NA
+  a2 <- sapply(
+    list(
+      IChcbc008,
+      IChcbc015,
+      IChcbc016,
+      IChcbc018,
+      IChcbc020,
+      IChcbc027,
+      IChcbc029,
+      IChcbc035,
+      IChcbc040,
+      IChcbc042,
+      IChcbc044,
+      IChcbc053,
+      IChcbc058,
+      IChcbc066,
+      IChcbc069,
+      IChcbc081,
+      IChcbc085,
+      IChcbc088,
+      IChcbc096
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a2[!a2 %in% 0:2] <- NA
+  b1 <- sapply(
+    list(
+      IChcbl002,
+      IChcbl026,
+      IChcbl028,
+      IChcbl039,
+      IChcbl043,
+      IChcbl063,
+      IChcbl067,
+      IChcbl072,
+      IChcbl073,
+      IChcbl081,
+      IChcbl082,
+      IChcbl090,
+      IChcbl096,
+      IChcbl099,
+      IChcbl101,
+      IChcbl105,
+      IChcbl106
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b1[!b1 %in% 0:2] <- NA
+  b2 <- sapply(
+    list(
+      IChcbl003,
+      IChcbl016,
+      IChcbl019,
+      IChcbl020,
+      IChcbl021,
+      IChcbl022,
+      IChcbl023,
+      IChcbl037,
+      IChcbl057,
+      IChcbl068,
+      IChcbl086,
+      IChcbl087,
+      IChcbl088,
+      IChcbl089,
+      IChcbl094,
+      IChcbl095,
+      IChcbl097,
+      IChcbl104
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b2[!b2 %in% 0:2] <- NA
+  coalesce(
+    if_else(
+      rowSums(!is.na(a1)) >= 0.8 * ncol(a1) & rowSums(!is.na(a2)) >= 0.8 * ncol(a2),
+      rowMeans(cbind(a1, a2), na.rm = TRUE),
+      NA_real_
+    ),
+    if_else(
+      rowSums(!is.na(b1)) >= 0.8 * ncol(b1) & rowSums(!is.na(b2)) >= 0.8 * ncol(b2),
+      rowMeans(cbind(b1, b2), na.rm = TRUE),
+      NA_real_
+    )
+  )
+})","Externalizing: 1.5-5 Attention Problems + Aggressive Behavior (24 items); 6-18 Rule-Breaking + Aggressive Behavior (35 items); mean over the union, each component gated at 80%. Caregiver-rated CBCL (K-CBCL), 1.5-5 form 2012-2014 and 6-18 form 2015, 2017, 2019, 2021, 2023; mean of answered 0-2 items, NA below 80% answered (CBCL rule); the published item lists reproduce the study's released raw scores exactly on complete rows in every wave.",,
+beh_cbcl_measure,inferred,survey_year,"case_when(
+  survey_year %in%
+    2012:2014 ~ ""CBCL/1.5-5 (K-CBCL), caregiver report; anxious/depressed 8 of 8, withdrawn 8 of 8, somatic complaints 11 of 11, emotionally reactive 9 of 9, attention 5 of 5, aggressive 19 of 19; internalising = emotionally reactive + anxious/depressed + somatic + withdrawn (36 items), externalising = attention + aggressive (24 items); 0-2 item scoring; no-response codes set to NA; mean of answered items, NA below 80% answered (composites: each component)"",
+  survey_year %in%
+    c(
+      2015,
+      2017,
+      2019,
+      2021,
+      2023
+    ) ~ ""CBCL/6-18 (K-CBCL), caregiver report; anxious/depressed 13 of 13, withdrawn/depressed 8 of 8, somatic complaints 11 of 11, social problems 11 of 11, attention 10 of 10, rule-breaking 17 of 17, aggressive 18 of 18; internalising = anxious/depressed + withdrawn/depressed + somatic (32 items), externalising = rule-breaking + aggressive (35 items); 0-2 item scoring; no-response codes set to NA; mean of answered items, NA below 80% answered (composites: each component)"",
+  .default = NA_character_
+)",Form and items per CBCL wave (every other year from 2015).,,
+beh_ext_self,unavailable,,,Youth Self-Report not administered; no self-report externalising scale.,,
+beh_opp_self,unavailable,,,Youth Self-Report not administered; no self-report externalising scale.,,
+beh_conduct_self,unavailable,,,Youth Self-Report not administered; no self-report externalising scale.,,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,incompatible,"IChcbs009, IChcbs011_2021",,"Only the CBCL Attention Problems syndrome (beh_atten_cbcl_parent) and the DSM-oriented ADH scale, which mixes inattention with hyperactivity (beh_adhdsymp_parent).",,
+beh_hyper_parent,incompatible,"IChcbs015, IChcbs016_2021",,"Only the CBCL DSM-oriented ADH scale, which mixes inattention with hyperactivity-impulsivity (beh_adhdsymp_parent).",,
+beh_adhdsymp_parent,compatible,"IChcbc005, IChcbc006, IChcbc008, IChcbc016, IChcbc036, IChcbc059, IChcbl004, IChcbl008, IChcbl010, IChcbl041, IChcbl078, IChcbl093, IChcbl104","local({
+  a <- sapply(list(IChcbc005, IChcbc006, IChcbc008, IChcbc016, IChcbc036, IChcbc059), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  a[!a %in% 0:2] <- NA
+  b <- sapply(list(IChcbl004, IChcbl008, IChcbl010, IChcbl041, IChcbl078, IChcbl093, IChcbl104), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  b[!b %in% 0:2] <- NA
+  coalesce(rowSums(a), rowSums(b))
+})","DSM-oriented Attention Deficit/Hyperactivity Problems, which mix inattention with hyperactivity-impulsivity (1.5-5 form 2012-2014: 6 items, range 0-12; 6-18 form 2015, 2017, 2019, 2021, 2023: 7 items, range 0-14). Caregiver-rated K-CBCL, raw sum of the 0-2 items, complete-case; the published DSM-oriented item lists (2000-2001 versions) reproduce the study's released DSM-oriented raw scores exactly in every wave. Forms pooled; standardise within dataset and form at analysis.",,
+beh_opp_parent,compatible,"IChcbc015, IChcbc020, IChcbc044, IChcbc081, IChcbc085, IChcbc088, IChcbl003, IChcbl022, IChcbl023, IChcbl086, IChcbl095","local({
+  a <- sapply(list(IChcbc015, IChcbc020, IChcbc044, IChcbc081, IChcbc085, IChcbc088), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  a[!a %in% 0:2] <- NA
+  b <- sapply(list(IChcbl003, IChcbl022, IChcbl023, IChcbl086, IChcbl095), function(v) as.numeric(haven::zap_labels(v)))
+  b[!b %in% 0:2] <- NA
+  coalesce(rowSums(a), rowSums(b))
+})","DSM-oriented Oppositional Defiant Problems (1.5-5 form 2012-2014: 6 items, range 0-12; 6-18 form 2015, 2017, 2019, 2021, 2023: 5 items, range 0-10). Caregiver-rated K-CBCL, raw sum of the 0-2 items, complete-case; the published DSM-oriented item lists (2000-2001 versions) reproduce the study's released DSM-oriented raw scores exactly in every wave. Forms pooled; standardise within dataset and form at analysis.",,
+beh_conduct_parent,compatible,"IChcbl015, IChcbl016, IChcbl021, IChcbl026, IChcbl028, IChcbl037, IChcbl039, IChcbl043, IChcbl057, IChcbl067, IChcbl072, IChcbl081, IChcbl082, IChcbl090, IChcbl097, IChcbl101, IChcbl106","local({
+  b <- sapply(
+    list(
+      IChcbl015,
+      IChcbl016,
+      IChcbl021,
+      IChcbl026,
+      IChcbl028,
+      IChcbl037,
+      IChcbl039,
+      IChcbl043,
+      IChcbl057,
+      IChcbl067,
+      IChcbl072,
+      IChcbl081,
+      IChcbl082,
+      IChcbl090,
+      IChcbl097,
+      IChcbl101,
+      IChcbl106
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 0:2] <- NA
+  rowSums(b)
+})","2015-2023 only. DSM-oriented Conduct Problems of the 6-18 form (2015, 2017, 2019, 2021, 2023: 17 items, range 0-34); the 1.5-5 form has no such scale. Caregiver-rated K-CBCL, raw sum of the 0-2 items, complete-case; the published DSM-oriented item lists (2000-2001 versions) reproduce the study's released DSM-oriented raw scores exactly in every wave. Forms pooled; standardise within dataset and form at analysis.",,
+beh_ext_parent,incompatible,IChcbs003,,"Only the CBCL Externalizing composite, which stays on beh_ext_cbcl_parent.",,
+beh_parent_measure,inferred,survey_year,"case_when(
+  survey_year %in%
+    2012:2013 ~ ""CBCL/1.5-5 (K-CBCL), caregiver report, DSM-oriented scales: anxiety 10 of 10 items (range 0-20), affective 10 of 10 (0-20), attention deficit/hyperactivity 6 of 6 (0-12), oppositional defiant 6 of 6 (0-12); 0-2 item scoring, raw sum, complete-case; pervasive developmental problems not used; total: Total Problems, 100 of 100 items (range 0-200), sum, complete-case over the fixed items, written-in other problems blank = 0"",
+  survey_year ==
+    2014 ~ ""CBCL/1.5-5 (K-CBCL), caregiver report, DSM-oriented scales: anxiety 10 of 10 items (range 0-20), affective 10 of 10 (0-20), attention deficit/hyperactivity 6 of 6 (0-12), oppositional defiant 6 of 6 (0-12); 0-2 item scoring, raw sum, complete-case; pervasive developmental problems not used; total: Total Problems, 100 of 100 items (range 0-200), sum, complete-case over the fixed items, written-in other problems blank = 0; study social-competence scale (caregiver), 32 items, 1-3 item scoring (never to very often), no released score: self-regulation: self-control facet, 7 of 32 items (range 1-3), mean, complete-case; social skills: mean of the cooperation (6 items), responsibility (8) and assertion (11) facet means (range 1-3), complete-case"",
+  survey_year %in%
+    c(
+      2015,
+      2017
+    ) ~ ""CBCL/6-18 (K-CBCL), caregiver report, DSM-oriented scales (2001 version): anxiety 6 of 6 items (range 0-12), affective 13 of 13 (0-26), ADH 7 of 7 (0-14), oppositional defiant 5 of 5 (0-10), conduct 17 of 17 (0-34); 0-2 item scoring, raw sum, complete-case; somatic problems not used; total: Total Problems, 120 of 120 items (range 0-240), sum, complete-case over the fixed items, written-in other problems blank = 0"",
+  survey_year %in%
+    c(
+      2019,
+      2021,
+      2023
+    ) ~ ""CBCL/6-18 (K-CBCL), caregiver report, DSM-oriented scales (2001 version): anxiety 6 of 6 items (range 0-12), affective 13 of 13 (0-26), ADH 7 of 7 (0-14), oppositional defiant 5 of 5 (0-10), conduct 17 of 17 (0-34); 0-2 item scoring, raw sum, complete-case; somatic problems not used; total: Total Problems, 120 of 120 items (range 0-240), sum, complete-case over the fixed items, written-in other problems blank = 0; social skills: K-CBCL 6-18 social competence scale, the study's released raw score (-1, not scorable, NA), missing-item rule not documented"",
+  .default = NA_character_
+)","Form and scales per wave: the CBCL in 2012-2014 and every other year from 2015, the caregiver's social-competence scale in 2014; the item set changes with the form, so the generic parent rows are standardised within dataset and form at analysis.",,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,unavailable,,,Not collected.,,
+beh_prosocial_measure,unavailable,,,See beh_prosocial_self.,,
+beh_prosocial_parent,unavailable,,,Not collected.,,
+beh_socialskills_self,unavailable,,,Not collected.,,
+beh_socialskills_measure,unavailable,,,See beh_socialskills_self.,,
+beh_socialskills_parent,partial,"IChssr023, IChssr024, IChssr031, IChssr035, IChssr036, IChssr045, IChssr025, IChssr026, IChssr033, IChssr037, IChssr038, IChssr039, IChssr047, IChssr050, IChssr027, IChssr030, IChssr032, IChssr034, IChssr042, IChssr043, IChssr044, IChssr048, IChssr049, IChssr051, IChssr052, IChcbs027, IChcbs023_2021","local({
+  co <- sapply(list(IChssr023, IChssr024, IChssr031, IChssr035, IChssr036, IChssr045), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  re <- sapply(
+    list(IChssr025, IChssr026, IChssr033, IChssr037, IChssr038, IChssr039, IChssr047, IChssr050),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  asr <- sapply(
+    list(
+      IChssr027,
+      IChssr030,
+      IChssr032,
+      IChssr034,
+      IChssr042,
+      IChssr043,
+      IChssr044,
+      IChssr048,
+      IChssr049,
+      IChssr051,
+      IChssr052
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  co[!co %in% 1:3] <- NA
+  re[!re %in% 1:3] <- NA
+  asr[!asr %in% 1:3] <- NA
+  ssr <- (rowMeans(co) + rowMeans(re) + rowMeans(asr)) / 3
+  cb <- coalesce(as.numeric(IChcbs027), as.numeric(IChcbs023_2021))
+  coalesce(ssr, if_else(cb >= 0, cb, NA_real_))
+})","2014: the caregiver's 32-item social-competence scale (items 1-3, never to very often), no released score: mean of the cooperation (6 items), responsibility (8) and assertion (11) facet means, complete-case; the self-control facet (7 items) is on beh_selfreg_parent. 2019, 2021 and 2023: the study's released K-CBCL 6-18 social competence score (IChcbs027 in 2019, IChcbs023_2021 from 2021), caregiver report, as released (-1, not scorable, NA); no social competence score is released in 2015 or 2017. Partial: facets only (2014) and the CBCL social competence scale; standardise within wave.",,
+beh_prosocial_singleitem_teacher,unavailable,,,Not collected.,,
+beh_empathy_self,compatible,"JChemp001, JChemp002, JChemp003, JChemp004, JChemp005, JChemp006, JChemp007, JChemp008, JChemp009, JChemp010, JChemp011, JChemp012, JChemp013, JChemp014, JChemp015, JChemp016, JChemp017","local({
+  m <- sapply(
+    list(
+      JChemp001,
+      JChemp002,
+      JChemp003,
+      JChemp004,
+      JChemp005,
+      JChemp006,
+      JChemp007,
+      JChemp008,
+      JChemp009,
+      JChemp010,
+      JChemp011,
+      JChemp012,
+      JChemp013,
+      JChemp014,
+      JChemp015,
+      JChemp016,
+      JChemp017
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:6] <- NA
+  m[, c(11, 13)] <- 7 - m[, c(11, 13)]
+  if_else(survey_year == 2021, rowMeans(m), rowMeans(m[, -c(11, 13)]))
+})","2021-2023 only. Child's empathy scale (study items, instrument not named in the codebook), 1-6 (never to always), mean, complete-case: 17 items in 2021, 15 from 2022 (items 11 and 13 dropped); items 11 and 13 reversed in 2021 (they correlate negatively with the scale).",,
+beh_empathy_measure,inferred,survey_year,"case_when(
+  survey_year ==
+    2021 ~ ""Study empathy scale (instrument not named in the codebook), 17 of 17 items, 1-6 item scoring (range 1-6), mean; items 11 and 13 reversed"",
+  survey_year %in%
+    2022:2023 ~ ""Study empathy scale (instrument not named in the codebook), 15 of 17 items, 1-6 item scoring (range 1-6), mean; items 11 and 13 not asked"",
+  .default = NA_character_
+)",Waves where the empathy scale was given; standardise within wave (item set changes).,,
+beh_problematicuse_self,compatible,JChmid063,"local({
+  x <- as.numeric(haven::zap_labels(JChmid063))
+  if_else(x >= 15 & x <= 60, x, NA_real_)
+})","2021-2023 only. Child's media-device addiction self-diagnosis scale, the study's released total (JChmid063): 15 items scored 1-4, items 8, 10 and 13 reversed (verified from the items), sum 15-60; released only where every item was answered.",,
+beh_problematicuse_parent,compatible,"EChmid018, EChmid019, EChmid020, EChmid021, EChmid022, EChmid023, EChmid024, EChmid025, EChmid026, EChmid027, EChmid028, EChmid029, EChmid030, EChmid031, EChmid032, DChmid018, DChmid019, DChmid020, DChmid021, DChmid022, DChmid023, DChmid024, DChmid025, DChmid026, DChmid027, DChmid028, DChmid029, DChmid030, DChmid031, DChmid032","local({
+  a <- sapply(
+    list(
+      EChmid018,
+      EChmid019,
+      EChmid020,
+      EChmid021,
+      EChmid022,
+      EChmid023,
+      EChmid024,
+      EChmid025,
+      EChmid026,
+      EChmid027,
+      EChmid028,
+      EChmid029,
+      EChmid030,
+      EChmid031,
+      EChmid032
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a[!a %in% 1:4] <- NA
+  b <- sapply(
+    list(
+      DChmid018,
+      DChmid019,
+      DChmid020,
+      DChmid021,
+      DChmid022,
+      DChmid023,
+      DChmid024,
+      DChmid025,
+      DChmid026,
+      DChmid027,
+      DChmid028,
+      DChmid029,
+      DChmid030,
+      DChmid031,
+      DChmid032
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 1:4] <- NA
+  coalesce(rowSums(a), rowSums(b))
+})","2017-2023. Mother's rating of the child's PC and smartphone use (2017-2018) and media-device addiction (2019-2023): the same 15 items scored 1-4 (strongly disagree to strongly agree), summed (range 15-60), complete-case; mother questionnaire 2017-2019 (EChmid018-032), from 2020 asked of the mother in the caregiver interview (DChmid018-032). No item is reversed: the codebook names none, and items 10 and 11 correlate near zero with the rest either way.",,
+beh_problematicuse_measure,inferred,survey_year,"case_when(
+  survey_year %in%
+    2017:2020 ~ ""parent: study media-device addiction scale, observer form (smartphone and internet), 15 of 15 items, 1-4 item scoring (range 15-60), sum; mother; no items reversed"",
+  survey_year %in%
+    2021:2023 ~ ""self: study media-device addiction self-diagnosis scale (smartphone and internet), 15 of 15 items, 1-4 item scoring (range 15-60), sum, items 8, 10, 13 reversed (released total); parent: study media-device addiction scale, observer form, 15 of 15 items, 1-4 item scoring (range 15-60), sum; mother; no items reversed"",
+  .default = NA_character_
+)","Waves where a problematic-use scale was given (parent 2017-2023, child 2021-2023).",,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,NEPSY not administered.,,
+cog_phono_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhibcont_nepsy,unavailable,,,NEPSY not administered.,,
+cog_vismotor_nepsy,unavailable,,,NEPSY not administered.,,
+cog_verbalfluency_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhib_nihtb_flanker,unavailable,,,NIH Toolbox not administered.,,
+cog_flex_nihtb_dccs,unavailable,,,NIH Toolbox not administered.,,
+cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox not administered.,,
+cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox not administered.,,
+cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox not administered.,,
+cog_vocab_nihtb_picvocab,unavailable,,,Not administered; see cog_vocab_receptive_task.,,
+cog_fluidcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_crystcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_totalcomp_nihtb,unavailable,,,NIH Toolbox not administered.,,
+cog_atten_task,unavailable,,,Not collected.,,
+cog_atten_task_measure,unavailable,,,See cog_atten_task.,,
+cog_flex_task,unavailable,,,Not collected.,,
+cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
+cog_inhib_task,unavailable,,,Not collected.,,
+cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
+cog_wm_task,unavailable,,,Not collected.,,
+cog_wm_task_measure,unavailable,,,See cog_wm_task.,,
+cog_speed_task,unavailable,,,Not collected.,,
+cog_speed_task_measure,unavailable,,,See cog_speed_task.,,
+cog_wm_digitspan,unavailable,,,Not collected.,,
+cog_iq_fullscale,incompatible,GChwpp032,,"K-WPPSI full-scale IQ (GChwpp032) given to the 2013 in-depth subsample only (412 of 1,662); selection not documented.",,
+cog_nonverbalreason_task,unavailable,,,Not collected.,,
+cog_nonverbalreason_task_measure,unavailable,,,See cog_nonverbalreason_task.,,
+cog_vocab_bpvs,unavailable,,,Not administered; see cog_vocab_receptive_task.,,
+cog_vocab_ppvt,unavailable,,,Not administered; see cog_vocab_receptive_task.,,
+cog_vocab_receptive_task,compatible,"AChrev007, AChrev036","local({
+  x <- coalesce(as.numeric(haven::zap_labels(AChrev007)), as.numeric(haven::zap_labels(AChrev036)))
+  if_else(x >= 88888888, NA_real_, x)
+})","2011, 2013 and 2015. REVT (Receptive and Expressive Vocabulary Test, Korean) receptive vocabulary, picture pointing, raw score (AChrev007 2011 and 2013, AChrev036 2015); the release gives only percentiles, age equivalents and a norm classification besides the raw score. Standardise within dataset and age band at analysis.",,
+cog_vocab_expressive_task,compatible,"AChrev001, AChrev026, survey_year","local({
+  x <- coalesce(as.numeric(haven::zap_labels(AChrev001)), as.numeric(haven::zap_labels(AChrev026)))
+  x <- if_else(x >= 88888888, NA_real_, x)
+  if_else(survey_year == 2013, NA_real_, x)
+})","2011 and 2015. REVT expressive vocabulary, picture naming, raw score (AChrev001 2011, AChrev026 2015; 'not computable' code set to NA). The 2013 expressive test went to the in-depth subsample only (414 of 1,662) and is not used. Standardise within dataset and age band at analysis.",,
+cog_vocab_task_measure,inferred,survey_year,"case_when(
+  survey_year %in%
+    c(
+      2011,
+      2015
+    ) ~ ""receptive: REVT receptive vocabulary (Korean), Korean, raw score, raw; expressive: REVT expressive vocabulary (Korean), Korean, raw score, raw"",
+  survey_year == 2013 ~ ""receptive: REVT receptive vocabulary (Korean), Korean, raw score, raw"",
+  .default = NA_character_
+)",Waves of the REVT; 2013 receptive only (expressive given to the in-depth subsample).,,
+cog_execfunc_brief_parent,unavailable,,,BRIEF not administered; see cog_execfunc_parent.,,
+cog_execfunc_parent,compatible,"EMtexf001, EMtexf002, EMtexf003, EMtexf004, EMtexf005, EMtexf006, EMtexf007, EMtexf008, EMtexf009, EMtexf010, EMtexf011, EMtexf012, EMtexf013, EMtexf014, EMtexf015, EMtexf016, EMtexf017, EMtexf018, EMtexf019, EMtexf020, EMtexf021, EMtexf022, EMtexf023, EMtexf024, EMtexf025, EMtexf026, EMtexf027, EMtexf028, EMtexf029, EMtexf030, EMtexf031, EMtexf032, EMtexf033, EMtexf034, EMtexf035, EMtexf036, EMtexf037, EMtexf038, EMtexf039, EMtexf040, EChexf001, EChexf002, EChexf003, EChexf004, EChexf005, EChexf006, EChexf007, EChexf008, EChexf009, EChexf010, EChexf011, EChexf012, EChexf013, EChexf014, EChexf015, EChexf016, EChexf017, EChexf018, EChexf019, EChexf020, EChexf021, EChexf022, EChexf023, EChexf024, EChexf025, EChexf026, EChexf027, EChexf028, EChexf029, EChexf030, EChexf031, EChexf032, EChexf033, EChexf034, EChexf035, EChexf036, EChexf037, EChexf038, EChexf039, EChexf040","local({
+  a <- sapply(
+    list(
+      EMtexf001,
+      EMtexf002,
+      EMtexf003,
+      EMtexf004,
+      EMtexf005,
+      EMtexf006,
+      EMtexf007,
+      EMtexf008,
+      EMtexf009,
+      EMtexf010,
+      EMtexf011,
+      EMtexf012,
+      EMtexf013,
+      EMtexf014,
+      EMtexf015,
+      EMtexf016,
+      EMtexf017,
+      EMtexf018,
+      EMtexf019,
+      EMtexf020,
+      EMtexf021,
+      EMtexf022,
+      EMtexf023,
+      EMtexf024,
+      EMtexf025,
+      EMtexf026,
+      EMtexf027,
+      EMtexf028,
+      EMtexf029,
+      EMtexf030,
+      EMtexf031,
+      EMtexf032,
+      EMtexf033,
+      EMtexf034,
+      EMtexf035,
+      EMtexf036,
+      EMtexf037,
+      EMtexf038,
+      EMtexf039,
+      EMtexf040
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a[!a %in% 1:3] <- NA
+  b <- sapply(
+    list(
+      EChexf001,
+      EChexf002,
+      EChexf003,
+      EChexf004,
+      EChexf005,
+      EChexf006,
+      EChexf007,
+      EChexf008,
+      EChexf009,
+      EChexf010,
+      EChexf011,
+      EChexf012,
+      EChexf013,
+      EChexf014,
+      EChexf015,
+      EChexf016,
+      EChexf017,
+      EChexf018,
+      EChexf019,
+      EChexf020,
+      EChexf021,
+      EChexf022,
+      EChexf023,
+      EChexf024,
+      EChexf025,
+      EChexf026,
+      EChexf027,
+      EChexf028,
+      EChexf029,
+      EChexf030,
+      EChexf031,
+      EChexf032,
+      EChexf033,
+      EChexf034,
+      EChexf035,
+      EChexf036,
+      EChexf037,
+      EChexf038,
+      EChexf039,
+      EChexf040
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 1:3] <- NA
+  coalesce(rowSums(a), rowSums(b))
+})","2015-2018. Mother's 40-item executive-function difficulty scale of the child (EMtexf001-040 in 2015, EChexf001-040 in 2016-2018, mother questionnaire), items scored 1-3 (never, sometimes, often), summed (range 40-120), complete-case; keyed higher = more difficulties (every item correlates positively with the scale). No released score and no subscale scoring in the codebook.",,
+cog_execfunc_teacher,compatible,"LInexf001, LInexf002, LInexf003, LInexf004, LInexf005, LInexf006, LInexf007, LInexf008, LInexf009, LInexf010, LInexf011, LInexf012, LInexf013, LInexf014, LInexf015, LInexf016, LInexf017, LInexf018, LInexf019, LInexf020, LInexf021, LInexf022, LInexf023, LInexf024, LInexf025, LInexf026, LInexf027, LInexf028, LInexf029, LInexf030, LInexf031, LInexf032, LInexf033, LInexf034, LInexf035, LInexf036, LInexf037, LInexf038, LInexf039, LInexf040","local({
+  m <- sapply(
+    list(
+      LInexf001,
+      LInexf002,
+      LInexf003,
+      LInexf004,
+      LInexf005,
+      LInexf006,
+      LInexf007,
+      LInexf008,
+      LInexf009,
+      LInexf010,
+      LInexf011,
+      LInexf012,
+      LInexf013,
+      LInexf014,
+      LInexf015,
+      LInexf016,
+      LInexf017,
+      LInexf018,
+      LInexf019,
+      LInexf020,
+      LInexf021,
+      LInexf022,
+      LInexf023,
+      LInexf024,
+      LInexf025,
+      LInexf026,
+      LInexf027,
+      LInexf028,
+      LInexf029,
+      LInexf030,
+      LInexf031,
+      LInexf032,
+      LInexf033,
+      LInexf034,
+      LInexf035,
+      LInexf036,
+      LInexf037,
+      LInexf038,
+      LInexf039,
+      LInexf040
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:3] <- NA
+  rowSums(m)
+})","2015 only. Homeroom teacher's form of the 40-item executive-function difficulty scale (LInexf001-040), items scored 1-3, summed (range 40-120), complete-case; keyed higher = more difficulties.",,
+cog_execfunc_self,compatible,"JChsel001_2020, JChsel002_2020, JChsel003_2020, JChsel004_2020, JChsel005_2020, JChsel006_2020, JChsel007_2020, JChsel008_2020, JChsel009_2020, JChsel010_2020, JChsel011_2020, JChsel012_2020, JChsel013_2020, JChsel014_2020, JChsel015_2020, JChsel016_2020, JChsel017_2020, JChsel018_2020, JChsel019_2020, JChsel020_2020, JChsel021_2020, JChsel022_2020, JChsel023_2020, JChsel024_2020, JChsel025_2020, JChsel026_2020, JChsel027_2020, JChsel028_2020, JChsel029_2020, JChsel030_2020, JChsel031_2020, JChsel032_2020, JChsel033_2020, JChsel034_2020, JChsel035_2020, JChsel036_2020, JChsel037_2020, JChsel038_2020, JChsel039_2020, JChsel040_2020","local({
+  m <- sapply(
+    list(
+      JChsel001_2020,
+      JChsel002_2020,
+      JChsel003_2020,
+      JChsel004_2020,
+      JChsel005_2020,
+      JChsel006_2020,
+      JChsel007_2020,
+      JChsel008_2020,
+      JChsel009_2020,
+      JChsel010_2020,
+      JChsel011_2020,
+      JChsel012_2020,
+      JChsel013_2020,
+      JChsel014_2020,
+      JChsel015_2020,
+      JChsel016_2020,
+      JChsel017_2020,
+      JChsel018_2020,
+      JChsel019_2020,
+      JChsel020_2020,
+      JChsel021_2020,
+      JChsel022_2020,
+      JChsel023_2020,
+      JChsel024_2020,
+      JChsel025_2020,
+      JChsel026_2020,
+      JChsel027_2020,
+      JChsel028_2020,
+      JChsel029_2020,
+      JChsel030_2020,
+      JChsel031_2020,
+      JChsel032_2020,
+      JChsel033_2020,
+      JChsel034_2020,
+      JChsel035_2020,
+      JChsel036_2020,
+      JChsel037_2020,
+      JChsel038_2020,
+      JChsel039_2020,
+      JChsel040_2020
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:3] <- NA
+  rowSums(m)
+})","2020 and 2022 only. The child's own form of the study's 40-item executive-function difficulty scale ('executive function 1-40', JChsel001-040 in those years), items scored 1-3 (not at all, sometimes, often true), summed (range 40-120), complete-case; keyed higher = more difficulties (every item correlates positively with the scale). No released score and no subscale scoring in the codebook.",,
+cog_execfunc_measure,inferred,survey_year,"case_when(
+  survey_year ==
+    2015 ~ ""study 40-item executive-function difficulty scale (mother; homeroom teacher); parent: total, 40 of 40 items, 1-3 item scoring (range 40-120), sum; teacher: total, 40 of 40 items, 1-3 item scoring (range 40-120), sum; keyed higher = more difficulties, no items reversed; complete-case; study items, no released score"",
+  survey_year %in%
+    2016:2018 ~ ""study 40-item executive-function difficulty scale (mother); parent: total, 40 of 40 items, 1-3 item scoring (range 40-120), sum; keyed higher = more difficulties, no items reversed; complete-case; study items, no released score"",
+  survey_year %in%
+    c(
+      2020,
+      2022
+    ) ~ ""study 40-item executive-function difficulty scale (child); self: total, 40 of 40 items, 1-3 item scoring (range 40-120), sum; keyed higher = more difficulties, no items reversed; complete-case; study items, no released score"",
+  .default = NA_character_
+)","Waves where the executive-function difficulty scale was given: mother 2015-2018, homeroom teacher 2015, child 2020 and 2022.",,
+cog_vocab_bas_naming,unavailable,,,Not administered; see cog_vocab_receptive_task.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,BAS not administered.,,
+cog_spatial_bas_pattern,unavailable,,,BAS not administered.,,
+cog_verbalreason_bas_versim,unavailable,,,BAS not administered.,,
+cog_earlynumber_bas_enc,unavailable,,,BAS not administered.,,
+cog_schoolread_bracken,unavailable,,,Bracken School Readiness Assessment not administered.,,
+cog_earlylang_parent,compatible,AChasq003,"local({
+  x <- as.numeric(haven::zap_labels(AChasq003))
+  if_else(x >= 0 & x <= 60, x, NA_real_)
+})","2010 only. K-ASQ (Korean Ages and Stages Questionnaire, ASQ second edition) Communication area total, caregiver-completed: 6 items scored 0, 5, 10, summed (range 0-60), the study's released total (equals the item sum); form by test age 22-30 months in cog_earlylang_measure. Cut-off scores are not used.",,
+cog_earlylang_measure,inferred,"AChasq001, AChasq003","if_else(
+  !is.na(AChasq003),
+  paste0(
+    ""K-ASQ (Korean ASQ, 2nd edition) Communication, "",
+    as.numeric(haven::zap_labels(AChasq001)),
+    ""-month questionnaire, 6 of 6 items, 0-5-10 item scoring (range 0-60), sum""
+  ),
+  NA_character_
+)","One value per K-ASQ form (test age 22, 24, 27 or 30 months, AChasq001), 2010.",,
+cog_creativethinking_stdtest,compatible,AChfct001o,as.numeric(haven::zap_labels(AChfct001o)),"2012 and 2017. Child-performed figural creativity test, overall T-score (AChfct001o): FCTYC (figural creativity test for young children) in 2012, K-FCTES (its elementary-school form) in 2017; standardise within wave.",,
+cog_speechlang_diagnosed,partial,"DChhlt021, EChhlt021, DChhlt032, DChhlt032a_2015, DChhlt032a, DChhlt036a, DChhlt052a","local({
+  hs <- coalesce(haven::zap_labels(DChhlt021), haven::zap_labels(EChhlt021)) %in% 1:2
+  g <- as.numeric(haven::zap_labels(DChhlt032))
+  t16 <- as.numeric(haven::zap_labels(DChhlt032a_2015))
+  yr <- as.numeric(haven::zap_labels(DChhlt032a))
+  tr <- as.numeric(haven::zap_labels(DChhlt036a))
+  cur <- as.numeric(haven::zap_labels(DChhlt052a))
+  told <- case_when(
+    survey_year <= 2015 ~ NA,
+    survey_year == 2016 & t16 > 0 & t16 < 88888888 ~ TRUE,
+    survey_year == 2016 & (g %in% 0 | t16 %in% 0) ~ FALSE,
+    survey_year >= 2017 & yr >= 2008 & yr <= 2023 ~ TRUE,
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2017:2022 & hs ~ FALSE,
+    .default = NA
+  )
+  now <- case_when(
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2016:2022 & tr %in% 1:2 ~ TRUE,
+    survey_year %in% 2016:2022 & tr %in% 3 ~ FALSE,
+    .default = NA
+  )
+  case_when(
+    told %in% FALSE ~ ""Never diagnosed"",
+    told %in% TRUE & now %in% TRUE ~ ""Currently diagnosed"",
+    told %in% TRUE & now %in% FALSE ~ ""Previously diagnosed"",
+    .default = NA_character_
+  )
+})","2016-2023 only. Caregiver report of a doctor's diagnosis of a communication disorder in the psychosocial-condition checklist: 2016 the doctor-diagnosis item after the any-condition filter (DChhlt032, DChhlt032a_2015), 2017-2023 the year of first diagnosis (DChhlt032a). Current: 2023 whether the child has it now (DChhlt052a); 2016-2022 regular or occasional counselling or hospital treatment for it (DChhlt036a) = Currently diagnosed, no treatment = Previously diagnosed, treatment unanswered NA. In 2017-2022 the checklist records only a year of first diagnosis, so a blank year where the caregiver answered the health section is read as never told. The ever-told ticks of 2010-2015 have no current/previous split and leave those waves NA, because other waves separate current from previous diagnosis. Partial: treatment as the proxy for current in 2016-2022.",,
+cog_speechlang_diagnosed_severity,incompatible,"DChhlt029e, DChhlt028e",,"Only the grade or degree of a registered speech or language disability (DChhlt029e, DChhlt028e, the national disability registration), an official classification, not a respondent-rated severity.",,
+mh_anx_basc2,unavailable,,,BASC-2 not administered; see mh_int_cbcl_parent.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered; see mh_int_cbcl_parent.,,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ parent form not administered; see mh_int_cbcl_parent.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ parent form not administered; see mh_int_cbcl_parent.,,
+mh_anx_diagnosed,partial,"DChhlt021, EChhlt021, DChhlt032, DChhlt032i_2015, DChhlt032i, DChhlt036i, DChhlt052i","local({
+  hs <- coalesce(haven::zap_labels(DChhlt021), haven::zap_labels(EChhlt021)) %in% 1:2
+  g <- as.numeric(haven::zap_labels(DChhlt032))
+  t16 <- as.numeric(haven::zap_labels(DChhlt032i_2015))
+  yr <- as.numeric(haven::zap_labels(DChhlt032i))
+  tr <- as.numeric(haven::zap_labels(DChhlt036i))
+  cur <- as.numeric(haven::zap_labels(DChhlt052i))
+  told <- case_when(
+    survey_year <= 2015 ~ NA,
+    survey_year == 2016 & t16 > 0 & t16 < 88888888 ~ TRUE,
+    survey_year == 2016 & (g %in% 0 | t16 %in% 0) ~ FALSE,
+    survey_year >= 2017 & yr >= 2008 & yr <= 2023 ~ TRUE,
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2017:2022 & hs ~ FALSE,
+    .default = NA
+  )
+  now <- case_when(
+    survey_year == 2023 & cur %in% 1 ~ TRUE,
+    survey_year == 2023 & cur %in% 2 ~ FALSE,
+    survey_year %in% 2016:2022 & tr %in% 1:2 ~ TRUE,
+    survey_year %in% 2016:2022 & tr %in% 3 ~ FALSE,
+    .default = NA
+  )
+  case_when(
+    told %in% FALSE ~ ""Never diagnosed"",
+    told %in% TRUE & now %in% TRUE ~ ""Currently diagnosed"",
+    told %in% TRUE & now %in% FALSE ~ ""Previously diagnosed"",
+    .default = NA_character_
+  )
+})","2016-2023 only. Caregiver report of a doctor's diagnosis of an anxiety disorder in the psychosocial-condition checklist: 2016 the doctor-diagnosis item after the any-condition filter (DChhlt032, DChhlt032i_2015), 2017-2023 the year of first diagnosis (DChhlt032i). Current: 2023 whether the child has it now (DChhlt052i); 2016-2022 regular or occasional counselling or hospital treatment for it (DChhlt036i) = Currently diagnosed, no treatment = Previously diagnosed, treatment unanswered NA. In 2017-2022 the checklist records only a year of first diagnosis, so a blank year where the caregiver answered the health section is read as never told. The ever-told ticks of 2010-2015 have no current/previous split and leave those waves NA, because other waves separate current from previous diagnosis. Partial: treatment as the proxy for current in 2016-2022.",,
+mh_anx_diagnosed_severity,unavailable,,,Not collected.,,
+mh_dep_diagnosed,unavailable,,,Not collected.,,
+mh_dep_diagnosed_severity,unavailable,,,Not collected.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ self-report not administered.,,
+mh_emotsymp_sdq_teacher,compatible,"LChsdq001, LChsdq002, LChsdq003, LChsdq004, LChsdq005, LChsdq006, LChsdq007, LChsdq008, LChsdq009, LChsdq010, LChsdq011, LChsdq012, LChsdq013, LChsdq014, LChsdq015, LChsdq016, LChsdq017, LChsdq018, LChsdq019, LChsdq020, LChsdq021, LChsdq022, LChsdq023, LChsdq024, LChsdq025","local({
+  m <- sapply(
+    list(
+      LChsdq001,
+      LChsdq002,
+      LChsdq003,
+      LChsdq004,
+      LChsdq005,
+      LChsdq006,
+      LChsdq007,
+      LChsdq008,
+      LChsdq009,
+      LChsdq010,
+      LChsdq011,
+      LChsdq012,
+      LChsdq013,
+      LChsdq014,
+      LChsdq015,
+      LChsdq016,
+      LChsdq017,
+      LChsdq018,
+      LChsdq019,
+      LChsdq020,
+      LChsdq021,
+      LChsdq022,
+      LChsdq023,
+      LChsdq024,
+      LChsdq025
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:3] <- NA
+  m <- m - 1
+  m[, c(7, 11, 14, 21, 25)] <- 2 - m[, c(7, 11, 14, 21, 25)]
+  if_else(
+    rowSums(!is.na(m[, c(3, 8, 13, 16, 24)])) >= 3,
+    floor(rowMeans(m[, c(3, 8, 13, 16, 24)], na.rm = TRUE) * 5 + 0.5),
+    NA_real_
+  )
+})","2016-2018 only. Emotional symptoms, items 3, 8, 13, 16, 24. Homeroom teacher's SDQ (LChsdq001-025, 2016-2018), items rebased 1-3 to 0-2, SDQ rule (mean of answered items x 5, floor(x + 0.5), NA below 3 of 5). The study's released 2018 subscales are not used: its emotional-symptoms score takes item 12 (a conduct item) in place of item 13.",,
+mh_totaldiff_sdq_self,unavailable,,,SDQ self-report not administered.,,
+mh_totaldiff_sdq_teacher,compatible,"LChsdq001, LChsdq002, LChsdq003, LChsdq004, LChsdq005, LChsdq006, LChsdq007, LChsdq008, LChsdq009, LChsdq010, LChsdq011, LChsdq012, LChsdq013, LChsdq014, LChsdq015, LChsdq016, LChsdq017, LChsdq018, LChsdq019, LChsdq020, LChsdq021, LChsdq022, LChsdq023, LChsdq024, LChsdq025","local({
+  m <- sapply(
+    list(
+      LChsdq001,
+      LChsdq002,
+      LChsdq003,
+      LChsdq004,
+      LChsdq005,
+      LChsdq006,
+      LChsdq007,
+      LChsdq008,
+      LChsdq009,
+      LChsdq010,
+      LChsdq011,
+      LChsdq012,
+      LChsdq013,
+      LChsdq014,
+      LChsdq015,
+      LChsdq016,
+      LChsdq017,
+      LChsdq018,
+      LChsdq019,
+      LChsdq020,
+      LChsdq021,
+      LChsdq022,
+      LChsdq023,
+      LChsdq024,
+      LChsdq025
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  m[!m %in% 1:3] <- NA
+  m <- m - 1
+  m[, c(7, 11, 14, 21, 25)] <- 2 - m[, c(7, 11, 14, 21, 25)]
+  if_else(
+    rowSums(!is.na(m[, c(3, 8, 13, 16, 24)])) >= 3,
+    floor(rowMeans(m[, c(3, 8, 13, 16, 24)], na.rm = TRUE) * 5 + 0.5),
+    NA_real_
+  ) +
+    if_else(
+      rowSums(!is.na(m[, c(5, 7, 12, 18, 22)])) >= 3,
+      floor(rowMeans(m[, c(5, 7, 12, 18, 22)], na.rm = TRUE) * 5 + 0.5),
+      NA_real_
+    ) +
+    if_else(
+      rowSums(!is.na(m[, c(2, 10, 15, 21, 25)])) >= 3,
+      floor(rowMeans(m[, c(2, 10, 15, 21, 25)], na.rm = TRUE) * 5 + 0.5),
+      NA_real_
+    ) +
+    if_else(
+      rowSums(!is.na(m[, c(6, 11, 14, 19, 23)])) >= 3,
+      floor(rowMeans(m[, c(6, 11, 14, 19, 23)], na.rm = TRUE) * 5 + 0.5),
+      NA_real_
+    )
+})","2016-2018 only. Total difficulties: sum of the four difficulty subscales (range 0-40), NA where any is NA. Homeroom teacher's SDQ (LChsdq001-025, 2016-2018), items rebased 1-3 to 0-2, SDQ rule (mean of answered items x 5, floor(x + 0.5), NA below 3 of 5). The study's released 2018 subscales are not used: its emotional-symptoms score takes item 12 (a conduct item) in place of item 13.",,
+mh_int_sdq_parent,unavailable,,,SDQ parent form not administered; see mh_int_cbcl_parent.,,
+mh_int_sdq_self,unavailable,,,SDQ self-report not administered.,,
+mh_int_sdq_teacher,unavailable,,,Derive at analysis from the subscale rows.,,
+mh_dep_smfq_self,unavailable,,,Not administered; see mh_dep_self.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered; see mh_dep_parent.,,
+mh_dep_cdi_self,unavailable,,,Not administered; see mh_dep_self.,,
+mh_dep_cesd_self,incompatible,JChdpr000,,"An 11-item CES-D-format short form (2021-2023), not the full 20 items; see mh_dep_self.",,
+mh_dep_phq9_self,unavailable,,,Not administered; see mh_dep_self.,,
+mh_dep_rcads_self,unavailable,,,Not administered; see mh_dep_self.,,
+mh_dep_dass21_self,unavailable,,,Not administered; see mh_dep_self.,,
+mh_dep_scl_self,unavailable,,,Not administered; see mh_dep_self.,,
+mh_distress_k6_self,unavailable,,,Not administered; see mh_distress_self.,,
+mh_distress_k10_self,unavailable,,,Not administered; see mh_distress_self.,,
+mh_distress_malaise_self,unavailable,,,Not administered; see mh_distress_self.,,
+mh_distress_ghq12_self,unavailable,,,Not administered; see mh_distress_self.,,
+mh_distress_self,unavailable,,,Not collected.,,
+mh_distress_measure,unavailable,,,See mh_distress_self.,,
+mh_anx_masc_self,unavailable,,,Not administered; see mh_anx_self.,,
+mh_anx_scas_self,unavailable,,,Not administered; see mh_anx_self.,,
+mh_anx_scas_parent,unavailable,,,Not administered; see mh_anx_parent.,,
+mh_anx_scared_self,unavailable,,,Not administered; see mh_anx_self.,,
+mh_anx_scared_parent,unavailable,,,Not administered; see mh_anx_parent.,,
+mh_anx_gad7_self,unavailable,,,Not administered; see mh_anx_self.,,
+mh_anx_rcads_self,unavailable,,,Not administered; see mh_anx_self.,,
+mh_anx_dass21_self,unavailable,,,Not administered; see mh_anx_self.,,
+mh_anxdep_cbcl_parent,compatible,"IChcbc010, IChcbc033, IChcbc037, IChcbc043, IChcbc047, IChcbc068, IChcbc087, IChcbc090, IChcbl014, IChcbl029, IChcbl030, IChcbl031, IChcbl032, IChcbl033, IChcbl035, IChcbl045, IChcbl050, IChcbl052, IChcbl071, IChcbl091, IChcbl112","local({
+  a <- sapply(
+    list(IChcbc010, IChcbc033, IChcbc037, IChcbc043, IChcbc047, IChcbc068, IChcbc087, IChcbc090),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a[!a %in% 0:2] <- NA
+  b <- sapply(
+    list(
+      IChcbl014,
+      IChcbl029,
+      IChcbl030,
+      IChcbl031,
+      IChcbl032,
+      IChcbl033,
+      IChcbl035,
+      IChcbl045,
+      IChcbl050,
+      IChcbl052,
+      IChcbl071,
+      IChcbl091,
+      IChcbl112
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 0:2] <- NA
+  coalesce(
+    if_else(rowSums(!is.na(a)) >= 0.8 * ncol(a), rowMeans(a, na.rm = TRUE), NA_real_),
+    if_else(rowSums(!is.na(b)) >= 0.8 * ncol(b), rowMeans(b, na.rm = TRUE), NA_real_)
+  )
+})","Anxious/Depressed (1.5-5: 8 items; 6-18: 13 items), forms pooled. Caregiver-rated CBCL (K-CBCL), 1.5-5 form 2012-2014 and 6-18 form 2015, 2017, 2019, 2021, 2023; mean of answered 0-2 items, NA below 80% answered (CBCL rule); the published item lists reproduce the study's released raw scores exactly on complete rows in every wave.",,
+mh_withdrawn_cbcl_parent,compatible,"IChcbc002, IChcbc004, IChcbc023, IChcbc062, IChcbc067, IChcbc070, IChcbc071, IChcbc098, IChcbl005, IChcbl042, IChcbl065, IChcbl069, IChcbl075, IChcbl102, IChcbl103, IChcbl111","local({
+  a <- sapply(
+    list(IChcbc002, IChcbc004, IChcbc023, IChcbc062, IChcbc067, IChcbc070, IChcbc071, IChcbc098),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a[!a %in% 0:2] <- NA
+  b <- sapply(
+    list(IChcbl005, IChcbl042, IChcbl065, IChcbl069, IChcbl075, IChcbl102, IChcbl103, IChcbl111),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 0:2] <- NA
+  coalesce(
+    if_else(rowSums(!is.na(a)) >= 0.8 * ncol(a), rowMeans(a, na.rm = TRUE), NA_real_),
+    if_else(rowSums(!is.na(b)) >= 0.8 * ncol(b), rowMeans(b, na.rm = TRUE), NA_real_)
+  )
+})","Withdrawn (1.5-5: 8 items) and Withdrawn/Depressed (6-18: 8 items), forms pooled. Caregiver-rated CBCL (K-CBCL), 1.5-5 form 2012-2014 and 6-18 form 2015, 2017, 2019, 2021, 2023; mean of answered 0-2 items, NA below 80% answered (CBCL rule); the published item lists reproduce the study's released raw scores exactly on complete rows in every wave.",,
+mh_somatic_cbcl_parent,compatible,"IChcbc001, IChcbc007, IChcbc012, IChcbc019, IChcbc024, IChcbc039, IChcbc045, IChcbc052, IChcbc078, IChcbc086, IChcbc093, IChcbl047, IChcbl049, IChcbl051, IChcbl054, IChcbl056a, IChcbl056b, IChcbl056c, IChcbl056d, IChcbl056e, IChcbl056f, IChcbl056g","local({
+  a <- sapply(
+    list(
+      IChcbc001,
+      IChcbc007,
+      IChcbc012,
+      IChcbc019,
+      IChcbc024,
+      IChcbc039,
+      IChcbc045,
+      IChcbc052,
+      IChcbc078,
+      IChcbc086,
+      IChcbc093
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a[!a %in% 0:2] <- NA
+  b <- sapply(
+    list(
+      IChcbl047,
+      IChcbl049,
+      IChcbl051,
+      IChcbl054,
+      IChcbl056a,
+      IChcbl056b,
+      IChcbl056c,
+      IChcbl056d,
+      IChcbl056e,
+      IChcbl056f,
+      IChcbl056g
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 0:2] <- NA
+  coalesce(
+    if_else(rowSums(!is.na(a)) >= 0.8 * ncol(a), rowMeans(a, na.rm = TRUE), NA_real_),
+    if_else(rowSums(!is.na(b)) >= 0.8 * ncol(b), rowMeans(b, na.rm = TRUE), NA_real_)
+  )
+})","Somatic Complaints (1.5-5: 11 items; 6-18: 11 items), forms pooled. The DSM-oriented Somatic Problems scale is not used. Caregiver-rated CBCL (K-CBCL), 1.5-5 form 2012-2014 and 6-18 form 2015, 2017, 2019, 2021, 2023; mean of answered 0-2 items, NA below 80% answered (CBCL rule); the published item lists reproduce the study's released raw scores exactly on complete rows in every wave.",,
+mh_emotreact_cbcl_parent,compatible,"IChcbc021, IChcbc046, IChcbc051, IChcbc079, IChcbc082, IChcbc083, IChcbc092, IChcbc097, IChcbc099","local({
+  a <- sapply(
+    list(IChcbc021, IChcbc046, IChcbc051, IChcbc079, IChcbc082, IChcbc083, IChcbc092, IChcbc097, IChcbc099),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a[!a %in% 0:2] <- NA
+  if_else(rowSums(!is.na(a)) >= 0.8 * ncol(a), rowMeans(a, na.rm = TRUE), NA_real_)
+})","2012-2014 only. Emotionally Reactive (1.5-5: 9 items); the 6-18 form has no such scale. Caregiver-rated CBCL (K-CBCL), 1.5-5 form 2012-2014 and 6-18 form 2015, 2017, 2019, 2021, 2023; mean of answered 0-2 items, NA below 80% answered (CBCL rule); the published item lists reproduce the study's released raw scores exactly on complete rows in every wave.",,
+mh_int_cbcl_parent,compatible,"IChcbc021, IChcbc046, IChcbc051, IChcbc079, IChcbc082, IChcbc083, IChcbc092, IChcbc097, IChcbc099, IChcbc010, IChcbc033, IChcbc037, IChcbc043, IChcbc047, IChcbc068, IChcbc087, IChcbc090, IChcbc001, IChcbc007, IChcbc012, IChcbc019, IChcbc024, IChcbc039, IChcbc045, IChcbc052, IChcbc078, IChcbc086, IChcbc093, IChcbc002, IChcbc004, IChcbc023, IChcbc062, IChcbc067, IChcbc070, IChcbc071, IChcbc098, IChcbl014, IChcbl029, IChcbl030, IChcbl031, IChcbl032, IChcbl033, IChcbl035, IChcbl045, IChcbl050, IChcbl052, IChcbl071, IChcbl091, IChcbl112, IChcbl005, IChcbl042, IChcbl065, IChcbl069, IChcbl075, IChcbl102, IChcbl103, IChcbl111, IChcbl047, IChcbl049, IChcbl051, IChcbl054, IChcbl056a, IChcbl056b, IChcbl056c, IChcbl056d, IChcbl056e, IChcbl056f, IChcbl056g","local({
+  a1 <- sapply(
+    list(IChcbc021, IChcbc046, IChcbc051, IChcbc079, IChcbc082, IChcbc083, IChcbc092, IChcbc097, IChcbc099),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a1[!a1 %in% 0:2] <- NA
+  a2 <- sapply(
+    list(IChcbc010, IChcbc033, IChcbc037, IChcbc043, IChcbc047, IChcbc068, IChcbc087, IChcbc090),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a2[!a2 %in% 0:2] <- NA
+  a3 <- sapply(
+    list(
+      IChcbc001,
+      IChcbc007,
+      IChcbc012,
+      IChcbc019,
+      IChcbc024,
+      IChcbc039,
+      IChcbc045,
+      IChcbc052,
+      IChcbc078,
+      IChcbc086,
+      IChcbc093
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a3[!a3 %in% 0:2] <- NA
+  a4 <- sapply(
+    list(IChcbc002, IChcbc004, IChcbc023, IChcbc062, IChcbc067, IChcbc070, IChcbc071, IChcbc098),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a4[!a4 %in% 0:2] <- NA
+  b1 <- sapply(
+    list(
+      IChcbl014,
+      IChcbl029,
+      IChcbl030,
+      IChcbl031,
+      IChcbl032,
+      IChcbl033,
+      IChcbl035,
+      IChcbl045,
+      IChcbl050,
+      IChcbl052,
+      IChcbl071,
+      IChcbl091,
+      IChcbl112
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b1[!b1 %in% 0:2] <- NA
+  b2 <- sapply(
+    list(IChcbl005, IChcbl042, IChcbl065, IChcbl069, IChcbl075, IChcbl102, IChcbl103, IChcbl111),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b2[!b2 %in% 0:2] <- NA
+  b3 <- sapply(
+    list(
+      IChcbl047,
+      IChcbl049,
+      IChcbl051,
+      IChcbl054,
+      IChcbl056a,
+      IChcbl056b,
+      IChcbl056c,
+      IChcbl056d,
+      IChcbl056e,
+      IChcbl056f,
+      IChcbl056g
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b3[!b3 %in% 0:2] <- NA
+  coalesce(
+    if_else(
+      rowSums(!is.na(a1)) >= 0.8 * ncol(a1) &
+        rowSums(!is.na(a2)) >= 0.8 * ncol(a2) &
+        rowSums(!is.na(a3)) >= 0.8 * ncol(a3) &
+        rowSums(!is.na(a4)) >= 0.8 * ncol(a4),
+      rowMeans(cbind(a1, a2, a3, a4), na.rm = TRUE),
+      NA_real_
+    ),
+    if_else(
+      rowSums(!is.na(b1)) >= 0.8 * ncol(b1) &
+        rowSums(!is.na(b2)) >= 0.8 * ncol(b2) &
+        rowSums(!is.na(b3)) >= 0.8 * ncol(b3),
+      rowMeans(cbind(b1, b2, b3), na.rm = TRUE),
+      NA_real_
+    )
+  )
+})","Internalizing: 1.5-5 Emotionally Reactive + Anxious/Depressed + Somatic Complaints + Withdrawn (36 items); 6-18 Anxious/Depressed + Withdrawn/Depressed + Somatic Complaints (32 items); mean over the union, each component gated at 80%. Caregiver-rated CBCL (K-CBCL), 1.5-5 form 2012-2014 and 6-18 form 2015, 2017, 2019, 2021, 2023; mean of answered 0-2 items, NA below 80% answered (CBCL rule); the published item lists reproduce the study's released raw scores exactly on complete rows in every wave.",,
+mh_dep_binary_self,unavailable,,,Not collected.,,
+mh_dep_self,compatible,JChdpr000,"local({
+  x <- as.numeric(haven::zap_labels(JChdpr000))
+  if_else(x >= 1 & x <= 4, x, NA_real_)
+})","2021-2023 only. Child's 11-item depression scale with CES-D day-band anchors (rarely, 1 day or less a week, to most, 5-7 days), the study's released score (JChdpr000): mean of the 11 items scored 1-4, items 4 and 5 reversed (positive items; they correlate negatively with the rest), range 1-4; released only where every item was answered. Instrument not named in the codebook (CES-D-11 format).",,
+mh_dep_measure,inferred,survey_year,"if_else(
+  survey_year %in% 2021:2023,
+  ""CES-D-type 11-item short form (instrument not named in the codebook; CES-D day-band anchors), 11 of 20 items, 1-4 item scoring (range 1-4), mean, items 4 and 5 reversed; study's released score, complete-case"",
+  NA_character_
+)",Waves where the child's depression scale was given.,,
+mh_anx_self,unavailable,,,Not collected.,,
+mh_anx_measure,unavailable,,,See mh_anx_self.,,
+mh_socanx_self,unavailable,,,Not collected.,,
+mh_socanx_measure,unavailable,,,See mh_socanx_self.,,
+mh_int_parent,incompatible,IChcbs002,,"Only the CBCL Internalizing composite, which stays on mh_int_cbcl_parent.",,
+mh_anx_parent,compatible,"IChcbc010, IChcbc022, IChcbc028, IChcbc032, IChcbc037, IChcbc047, IChcbc048, IChcbc051, IChcbc087, IChcbc099, IChcbl011, IChcbl029, IChcbl030, IChcbl045, IChcbl050, IChcbl112","local({
+  a <- sapply(
+    list(IChcbc010, IChcbc022, IChcbc028, IChcbc032, IChcbc037, IChcbc047, IChcbc048, IChcbc051, IChcbc087, IChcbc099),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a[!a %in% 0:2] <- NA
+  b <- sapply(list(IChcbl011, IChcbl029, IChcbl030, IChcbl045, IChcbl050, IChcbl112), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  b[!b %in% 0:2] <- NA
+  coalesce(rowSums(a), rowSums(b))
+})","DSM-oriented Anxiety Problems (1.5-5 form 2012-2014: 10 items, range 0-20; 6-18 form 2015, 2017, 2019, 2021, 2023: 6 items, range 0-12). Caregiver-rated K-CBCL, raw sum of the 0-2 items, complete-case; the published DSM-oriented item lists (2000-2001 versions) reproduce the study's released DSM-oriented raw scores exactly in every wave. Forms pooled; standardise within dataset and form at analysis.",,
+mh_dep_parent,compatible,"IChcbc013, IChcbc024, IChcbc038, IChcbc043, IChcbc049, IChcbc050, IChcbc071, IChcbc074, IChcbc089, IChcbc090, IChcbl005, IChcbl014, IChcbl018, IChcbl024, IChcbl035, IChcbl052, IChcbl054, IChcbl076, IChcbl077, IChcbl091, IChcbl100, IChcbl102, IChcbl103","local({
+  a <- sapply(
+    list(IChcbc013, IChcbc024, IChcbc038, IChcbc043, IChcbc049, IChcbc050, IChcbc071, IChcbc074, IChcbc089, IChcbc090),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  a[!a %in% 0:2] <- NA
+  b <- sapply(
+    list(
+      IChcbl005,
+      IChcbl014,
+      IChcbl018,
+      IChcbl024,
+      IChcbl035,
+      IChcbl052,
+      IChcbl054,
+      IChcbl076,
+      IChcbl077,
+      IChcbl091,
+      IChcbl100,
+      IChcbl102,
+      IChcbl103
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b[!b %in% 0:2] <- NA
+  coalesce(rowSums(a), rowSums(b))
+})","DSM-oriented Affective Problems (1.5-5 form 2012-2014: 10 items, range 0-20; 6-18 form 2015, 2017, 2019, 2021, 2023: 13 items, range 0-26). Caregiver-rated K-CBCL, raw sum of the 0-2 items, complete-case; the published DSM-oriented item lists (2000-2001 versions) reproduce the study's released DSM-oriented raw scores exactly in every wave. Forms pooled; standardise within dataset and form at analysis.",,
+mh_totalprob_parent,compatible,"IChcbc001, IChcbc002, IChcbc003, IChcbc004, IChcbc005, IChcbc006, IChcbc007, IChcbc008, IChcbc009, IChcbc010, IChcbc011, IChcbc012, IChcbc013, IChcbc014, IChcbc015, IChcbc016, IChcbc017, IChcbc018, IChcbc019, IChcbc020, IChcbc021, IChcbc022, IChcbc023, IChcbc024, IChcbc025, IChcbc026, IChcbc027, IChcbc028, IChcbc029, IChcbc030, IChcbc031, IChcbc032, IChcbc033, IChcbc034, IChcbc035, IChcbc036, IChcbc037, IChcbc038, IChcbc039, IChcbc040, IChcbc041, IChcbc042, IChcbc043, IChcbc044, IChcbc045, IChcbc046, IChcbc047, IChcbc048, IChcbc049, IChcbc050, IChcbc051, IChcbc052, IChcbc053, IChcbc054, IChcbc055, IChcbc056, IChcbc057, IChcbc058, IChcbc059, IChcbc060, IChcbc061, IChcbc062, IChcbc063, IChcbc064, IChcbc065, IChcbc066, IChcbc067, IChcbc068, IChcbc069, IChcbc070, IChcbc071, IChcbc072, IChcbc073, IChcbc074, IChcbc075, IChcbc076, IChcbc077, IChcbc078, IChcbc079, IChcbc080, IChcbc081, IChcbc082, IChcbc083, IChcbc084, IChcbc085, IChcbc086, IChcbc087, IChcbc088, IChcbc089, IChcbc090, IChcbc091, IChcbc092, IChcbc093, IChcbc094, IChcbc095, IChcbc096, IChcbc097, IChcbc098, IChcbc099, IChcbc100, IChcbc100a, IChcbc100b, IChcbc100c, IChcbl001, IChcbl002, IChcbl003, IChcbl004, IChcbl005, IChcbl006, IChcbl007, IChcbl008, IChcbl009, IChcbl010, IChcbl011, IChcbl012, IChcbl013, IChcbl014, IChcbl015, IChcbl016, IChcbl017, IChcbl018, IChcbl019, IChcbl020, IChcbl021, IChcbl022, IChcbl023, IChcbl024, IChcbl025, IChcbl026, IChcbl027, IChcbl028, IChcbl029, IChcbl030, IChcbl031, IChcbl032, IChcbl033, IChcbl034, IChcbl035, IChcbl036, IChcbl037, IChcbl038, IChcbl039, IChcbl040, IChcbl041, IChcbl042, IChcbl043, IChcbl044, IChcbl045, IChcbl046, IChcbl047, IChcbl048, IChcbl049, IChcbl050, IChcbl051, IChcbl052, IChcbl053, IChcbl054, IChcbl055, IChcbl056a, IChcbl056b, IChcbl056c, IChcbl056d, IChcbl056e, IChcbl056f, IChcbl056g, IChcbl057, IChcbl058, IChcbl059, IChcbl060, IChcbl061, IChcbl062, IChcbl063, IChcbl064, IChcbl065, IChcbl066, IChcbl067, IChcbl068, IChcbl069, IChcbl070, IChcbl071, IChcbl072, IChcbl073, IChcbl074, IChcbl075, IChcbl076, IChcbl077, IChcbl078, IChcbl079, IChcbl080, IChcbl081, IChcbl082, IChcbl083, IChcbl084, IChcbl085, IChcbl086, IChcbl087, IChcbl088, IChcbl089, IChcbl090, IChcbl091, IChcbl092, IChcbl093, IChcbl094, IChcbl095, IChcbl096, IChcbl097, IChcbl098, IChcbl099, IChcbl100, IChcbl101, IChcbl102, IChcbl103, IChcbl104, IChcbl105, IChcbl106, IChcbl107, IChcbl108, IChcbl109, IChcbl110, IChcbl111, IChcbl112, IChcbl056h, IChcbl113a, IChcbl113b, IChcbl113c","local({
+  a <- sapply(tbl[sprintf(""IChcbc%03d"", 1:99)], function(v) as.numeric(haven::zap_labels(v)))
+  ao <- sapply(list(IChcbc100, IChcbc100a, IChcbc100b, IChcbc100c), function(v) as.numeric(haven::zap_labels(v)))
+  b <- sapply(
+    tbl[c(sprintf(""IChcbl%03d"", 1:55), paste0(""IChcbl056"", letters[1:7]), sprintf(""IChcbl%03d"", 57:112))],
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  bh <- as.numeric(haven::zap_labels(IChcbl056h))
+  bo <- sapply(list(IChcbl113a, IChcbl113b, IChcbl113c), function(v) as.numeric(haven::zap_labels(v)))
+  a[!a %in% 0:2] <- NA
+  b[!b %in% 0:2] <- NA
+  ao[!ao %in% 0:2] <- 0
+  bh[!bh %in% 0:2] <- 0
+  bo[!bo %in% 0:2] <- 0
+  coalesce(rowSums(a) + apply(ao, 1, max), rowSums(b) + bh + apply(bo, 1, max))
+})","CBCL Total Problems, caregiver report (K-CBCL 1.5-5 2012-2014: items 1-99 plus item 100, other problems; 6-18 2015, 2017, 2019, 2021, 2023: items 1-112 with 56a-g plus the written-in 56h and 113): raw sum of the 0-2 items, complete-case over the fixed items; a written-in other-problem item left blank scores 0, as the instrument scores it. Items 100 and 113 count once each, at the highest score of their up to three written-in entries (IChcbc100 in 2013, IChcbc100a-c in 2012, IChcbc100 and IChcbc100a-b in 2014; IChcbl113a-c), which reproduces the released 1.5-5 total on 4,589 of 4,592 complete rows. The study's released score (IChcbs001), which counts unanswered items as zero, is named unused. Forms pooled; standardise within dataset and form at analysis.",,
+mh_int_teacher,compatible,IChtrs002,as.numeric(haven::zap_labels(IChtrs002)),"2019, 2021 and 2023 only. TRF (K-TRF) Internalizing, completed by the child's school teacher (present exactly where the teacher survey was returned): the study's released raw score (IChtrs002): sum of the 33 items of the Anxious/Depressed, Withdrawn/Depressed and Somatic Complaints syndromes, 0-2 item scoring (range 0-66); no problem item is unanswered on any rated child, and the published item list reproduces the released score exactly on every row. Higher = more problems.",,
+mh_anx_teacher,compatible,"IChtrs013, IChtrs014","coalesce(as.numeric(haven::zap_labels(IChtrs013)), as.numeric(haven::zap_labels(IChtrs014)))","2019, 2021 and 2023 only. TRF (K-TRF) DSM-oriented Anxiety Problems, completed by the child's school teacher (present exactly where the teacher survey was returned): the study's released raw score (IChtrs013 in 2019, IChtrs014 from 2021): sum of 6 items, 0-2 item scoring (range 0-12); no problem item is unanswered on any rated child, and the published item list reproduces the released score exactly on every row. Higher = more problems.",,
+mh_dep_teacher,compatible,"IChtrs012, IChtrs013_2021","coalesce(as.numeric(haven::zap_labels(IChtrs012)), as.numeric(haven::zap_labels(IChtrs013_2021)))","2019, 2021 and 2023 only. TRF (K-TRF) DSM-oriented Affective Problems, completed by the child's school teacher (present exactly where the teacher survey was returned): the study's released raw score (IChtrs012 in 2019, IChtrs013_2021 from 2021): sum of 10 items, 0-2 item scoring (range 0-20); no problem item is unanswered on any rated child, and the published item list reproduces the released score exactly on every row. Higher = more problems.",,
+mh_totalprob_teacher,compatible,IChtrs001,as.numeric(haven::zap_labels(IChtrs001)),"2019, 2021 and 2023 only. TRF (K-TRF) Total Problems, completed by the child's school teacher: the study's released raw score (IChtrs001), sum of all problem items, 0-2 item scoring (items 1-112 with 56a-h answered on every rated child; written-in other problems, item 113, counted where written). One 2023 rating scores every item 2 (238) and is kept as released. Higher = more problems.",,
+mh_depanx_diagnosed,incompatible,DChhlt032i,,"Anxiety disorder is asked on its own (DChhlt032i, the psychosocial-condition checklist, from 2016), for mh_anx_diagnosed; no depression item.",,
+mh_stress_self,unavailable,,,Not collected.,,
+mh_stress_scale_self,unavailable,,,Not collected.,,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,incompatible,"JChdpr019, JChdpr020, JChdpr021, JChdpr022, JChdpr023, JChdpr024, JChdpr025, JChdpr026, JChdpr027, JChdpr028, JChdpr029",,"The CES-D-type depression items (JChdpr019-029, 2021-2023) carry no item wording in the codebook, so no single loneliness item can be identified; see mh_dep_self.",,
+mh_lonely_scale_self,unavailable,,,Not collected.,,
+mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
+mh_sad_self,incompatible,"JChdpr019, JChdpr020, JChdpr021, JChdpr022, JChdpr023, JChdpr024, JChdpr025, JChdpr026, JChdpr027, JChdpr028, JChdpr029",,"The CES-D-type depression items (JChdpr019-029, 2021-2023) carry no item wording in the codebook, so no single sadness item can be identified; see mh_dep_self.",,
+mh_worry_self,unavailable,,,Not collected.,,
+mh_irritable_self,unavailable,,,Not collected.,,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_unhealthywtctrl_self,partial,"JChdit002, JChdit003c, JChdit003d, JChdit003h","local({
+  tried <- as.numeric(haven::zap_labels(JChdit002))
+  hit <- !is.na(JChdit003c) | !is.na(JChdit003d) | !is.na(JChdit003h)
+  case_when(
+    survey_year < 2021 ~ NA_character_,
+    tried %in% 1:3 & hit ~ ""TRUE"",
+    tried %in% 1:3 ~ ""FALSE"",
+    tried == 4 ~ ""FALSE""
+  )
+})","2021-2023 only. Child report: among children who tried to lose, keep or gain weight (JChdit002), skipping meals (JChdit003c), health supplements (JChdit003d) or, in 2023, prescribed medicine (JChdit003h) ticked = TRUE, none of these = FALSE; children who never tried = FALSE. Partial: only skipping meals and supplements or medicine are asked (no fasting, vomiting, laxative or diet-pill item), with no recall period stated. Exercise, diet control and one-food diets never qualify. 2020 asked no methods.",,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,unavailable,,,Not collected.,,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,Not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered; see wb_lifesat_self.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered.,,
+wb_bodyimage,proximate,JChdit001,"recode_values(
+  as.numeric(haven::zap_labels(JChdit001)),
+  1 ~ ""Much too thin"",
+  2 ~ ""A bit too thin"",
+  3 ~ ""About right"",
+  4 ~ ""A bit too fat"",
+  5 ~ ""Much too fat""
+)","2020-2023 only. Child's perception of their own body shape (JChdit001: very thin, a little thin, average, a little obese, very obese), by rank. Proximate: weight-status wording ('obese', 'average').",,
+wb_bodyesteem_self,partial,JChbod000,"local({
+  x <- as.numeric(haven::zap_labels(JChbod000))
+  if_else(x >= 1 & x <= 4, x, NA_real_)
+})","2019-2023 only. Child's 5-item physical self-image scale ('신체적 자아상'), the study's released score (JChbod000): mean of items scored 1-4, negatively correlated items reversed (items 2 and 4; item 4 only in 2020), which the item correlations confirm in every wave; released only where every item was answered. Item wording is not in the codebook. Partial: appearance items cannot be told from physical-ability items.",,
+wb_bodyesteem_measure,inferred,survey_year,"if_else(
+  survey_year %in% 2019:2023,
+  ""Study physical self-image scale (instrument not named in the codebook), 5 of 5 items, 1-4 item scoring (range 1-4), mean; items 2 and 4 reversed (2020: item 4); study's released score"",
+  NA_character_
+)",Waves where the scale was given.,,
+wb_lifesat_slss_self,unavailable,,,Not administered; see wb_lifesat_self.,,
+wb_lifesat_swls_self,unavailable,,,Not administered; see wb_lifesat_self.,,
+wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_lifesat_self,compatible,"JChsfs042, JChsfs043, JChsfs044, survey_year","local({
+  m <- sapply(list(JChsfs042, JChsfs043, JChsfs044), function(v) as.numeric(haven::zap_labels(v)))
+  m[!m %in% 1:4] <- NA
+  m[survey_year != 2018, 2] <- 5 - m[survey_year != 2018, 2]
+  rowMeans(m)
+})","2018-2022 only. Child's 3-item life-satisfaction scale (life is enjoyable, few or many worries, life is happy), items 1-4, mean, complete-case, scored from the items: the worries item is worded positively in 2018 ('do you have few worries') and correlates negatively with the scale in 2019-2022, so it is reversed there. The study's released score (JChsfs000) reverses it in 2019-2021 but not in 2022.",,
+wb_lifesat_measure,inferred,survey_year,"if_else(
+  survey_year %in% 2018:2022,
+  ""Study life-satisfaction scale (instrument not named in the codebook), 3 of 3 items, 1-4 item scoring (range 1-4), mean; item 2 (worries) reversed in 2019-2022, worded positively in 2018; complete-case"",
+  NA_character_
+)",Waves where the life-satisfaction scale was given.,,
+wb_happiness_singleitem_self,incompatible,"JChshs001, JChshs006",,"The 2014-2015 'in general, how happy are you' item (JChshs001) is scored in the subjective happiness scale (wb_happiness_shs_self), and the 2015-2023 overall-happiness items (JChshs006-011) form a six-item study scale with no row; no stand-alone happiness question.",,
+wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,unavailable,,,Not collected.,,
+wb_domainsat_friends_self,unavailable,,,Not collected.,,
+wb_domainsat_school_self,partial,JChscl002,"local({
+  x <- as.numeric(haven::zap_labels(JChscl002))
+  if_else(x %in% 1:4, x, NA_real_)
+})","2015-2018 and 2020 only. Child: 'Do you like school?' (JChscl002), 1 do not like, 2 like a little, 3 mostly like, 4 like very much (4 points, higher = more liking). Partial: a liking item. 'School life is enjoyable' (JChscl006, 2015 only) is named unused.",,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
+wb_selfesteem_rosenberg_self,incompatible,"JChsfs037, JChsfs038, JChsfs039, JChsfs040, JChsfs041",,"A 5-item self-esteem scale whose instrument the codebook does not name (2015-2018, 2020-2023), not the full 10-item Rosenberg form; see wb_selfesteem_self.",,
+wb_selfesteem_singleitem_self,unavailable,,,Not collected.,,
+wb_selfesteem_self,compatible,"JChsfs037, JChsfs038, JChsfs039, JChsfs040, JChsfs041","local({
+  m <- sapply(list(JChsfs037, JChsfs038, JChsfs039, JChsfs040, JChsfs041), function(v) as.numeric(haven::zap_labels(v)))
+  m[!m %in% 1:4] <- NA
+  rowMeans(m)
+})","2015-2018 and 2020-2023. Child's 5-item self-esteem scale (JChsfs037-041), items 1-4 (not at all to very true), mean, complete-case (equals the study's released score JChsfs045 where released); every item correlates positively with the scale. The 2014 pictorial perceived-competence items (JChsfs012-036) are not used.",,
+wb_selfesteem_measure,inferred,survey_year,"if_else(
+  survey_year %in% c(2015:2018, 2020:2023),
+  ""Study self-esteem scale (instrument not named in the codebook), 5 items, 1-4 item scoring (range 1-4), mean; no items reversed; complete-case"",
+  NA_character_
+)",Waves where the self-esteem scale was given.,,
+wb_selfefficacy_gse_self,unavailable,,,General Self-Efficacy Scale not administered; see wb_selfefficacy_self.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_selfefficacy_academic_self,partial,AChamt101,as.numeric(haven::zap_labels(AChamt101)),"2019 only. Academic self-efficacy subscale of the AMT (Academic Motivation Test, Korean), child-completed, the study's released T-score (AChamt101); items and raw scores are not released. Partial: a T-score only.",,
+wb_selfefficacy_academic_measure,inferred,survey_year,"if_else(
+  survey_year == 2019,
+  ""AMT (Academic Motivation Test, Korean) academic self-efficacy subscale (confidence, self-regulatory efficacy, task-difficulty preference), T-score (mean 50, SD 10) as released; items not released"",
+  NA_character_
+)",2019 only.,,
+wb_control_self,unavailable,,,Not collected.,,
+wb_control_measure,unavailable,,,See wb_control_self.,,
+wb_selfconcept_academic_self,incompatible,"JChsfs012, JChsfs021, JChsfs025, JChsfs029, JChsfs033",,"Only the 2014 pictorial perceived-competence items on puzzles, colours, numbers, letters and names (JChsfs012-036), with no released score or documented subscale scoring.",,
+wb_selfconcept_maths_self,partial,JChjcs015,"local({
+  x <- as.numeric(haven::zap_labels(JChjcs015))
+  if_else(x %in% 1:5, x, NA_real_)
+})",2021-2022 only. Child's single rating of how well they understand maths (JChjcs015: 1 hardly at all to 5 very well). Partial: a single item. Standardise within dataset.,,
+wb_selfconcept_verbal_self,partial,JChjcs013,"local({
+  x <- as.numeric(haven::zap_labels(JChjcs013))
+  if_else(x %in% 1:5, x, NA_real_)
+})",2021-2022 only. Child's single rating of how well they understand Korean (JChjcs013: 1 hardly at all to 5 very well); the English item (JChjcs014) is not used. Partial: a single item.,,
+wb_selfconcept_science_self,partial,JChjcs017,"local({
+  x <- as.numeric(haven::zap_labels(JChjcs017))
+  if_else(x %in% 1:5, x, NA_real_)
+})",2021-2022 only. Child's single rating of how well they understand science (JChjcs017: 1 hardly at all to 5 very well). Partial: a single item.,,
+wb_selfconcept_social_self,incompatible,"JChsfs013, JChsfs018, JChsfs022, JChsfs026, JChsfs030",,"Only the 2014 pictorial peer-acceptance items (friends to play with, playing at friends' homes; JChsfs012-036), with no released score or documented subscale scoring.",,
+wb_selfconcept_measure,inferred,survey_year,"if_else(
+  survey_year %in% 2021:2022,
+  ""maths: study single item, understanding of maths, 1-5; verbal: study single item, understanding of Korean, 1-5; science: study single item, understanding of science, 1-5"",
+  NA_character_
+)",2021-2022 only.,,
+wb_mwb_who5_self,unavailable,,,Not administered.,,
+wb_happiness_shs_self,partial,"JChshs001, JChshs002, JChshs003, JChshs004","local({
+  m <- sapply(list(JChshs001, JChshs002, JChshs003, JChshs004), function(v) as.numeric(haven::zap_labels(v)))
+  m[!m %in% 1:4] <- NA
+  rowSums(m)
+})","2014-2015 only. Child's 4-item subjective happiness scale (JChshs001-004: in general, compared with friends, and two vignette items), each answered on a 4-point very or not at all happy scale, so the fourth item is supplied already keyed; sum (range 4-16), complete-case. Partial: 4-point instead of the 7-point SHS response scale. The 6-item overall-happiness scale (JChshs006-011, 2015-2023) is a different study scale and is not used.",,
+wb_mwb_swemwbs_self,unavailable,,,Not administered.,,
+wb_selfratedhealth_self,incompatible,DChhlt049,,"Only the caregiver's rating of the child's health (DChhlt049), which goes to wb_generalhealth_parent.",,
+wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,proximate,DChhlt049,"recode_values(
+  as.numeric(haven::zap_labels(DChhlt049)),
+  5 ~ ""Excellent"",
+  4 ~ ""Very good"",
+  3 ~ ""Good"",
+  2 ~ ""Fair"",
+  1 ~ ""Poor""
+)","2015-2023 only. Caregiver's rating of the child's health (DChhlt049: very healthy, fairly healthy, average, fairly unhealthy, very unhealthy; caregiver interview, 'caregiver's perception' from 2020), by rank. Proximate: a symmetric five-level scale.",,
+wb_posaffect_self,incompatible,"JChshs006, JChshs007, JChshs008, JChshs009, JChshs010, JChshs011",,"The 6-item overall-happiness scale (JChshs006-011, 2015-2023) rates how happy the child is, not how often positive feelings occur; a study happiness scale with no row.",,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_negaffect_self,unavailable,,,Not collected.,,
+wb_negaffect_measure,unavailable,,,See wb_negaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,unavailable,,,Not collected.,,
+wb_socsupport_friends_self,unavailable,,,Not collected.,,
+wb_socsupport_measure,unavailable,,,See wb_socsupport_family_self.,,
+hlth_sleep_wd,partial,"DChslp024, DChslp024a, DChslp022e, DChslp024b_2019, JChslp024c","coalesce(
+  na_if(na_if(as.numeric(haven::zap_labels(DChslp024)), 99999999), 88888888),
+  na_if(na_if(as.numeric(haven::zap_labels(DChslp024a)), 99999999), 88888888),
+  na_if(na_if(as.numeric(haven::zap_labels(DChslp022e)), 99999999), 88888888),
+  na_if(na_if(as.numeric(haven::zap_labels(DChslp024b_2019)), 99999999), 88888888),
+  na_if(na_if(as.numeric(haven::zap_labels(JChslp024c)), 99999999), 88888888)
+)","2012-2023 only, hours. Caregiver report: 2012-2014 'weekday sleep, total hours a day' (DChslp024, may include naps); 2015-2016 and 2020 the weekday sleep hours of the daily-activity grid (DChslp024a); 2017 and 2018 total weekday sleep time (DChslp022e, DChslp024a); 2019 the activity-grid weekday sleep hours (DChslp024b_2019). Child report 2021-2023: activity-grid weekday sleep hours (JChslp024c). Direct sleep-hour items are taken over the bedtime and waking-time items asked beside them (bedtime to waking would be partial); the study-derived 2019 and 2021-2023 sleep totals are named unused. Partial: the 2012-2014 daily total may include naps, and the series splices items and respondents.",,
+hlth_sleep_we,partial,"DChslp024b, DChslp023e, DChslp024d, JChslp024d","coalesce(
+  na_if(na_if(as.numeric(haven::zap_labels(DChslp024b)), 99999999), 88888888),
+  na_if(na_if(as.numeric(haven::zap_labels(DChslp023e)), 99999999), 88888888),
+  na_if(na_if(as.numeric(haven::zap_labels(DChslp024d)), 99999999), 88888888),
+  na_if(na_if(as.numeric(haven::zap_labels(JChslp024d)), 99999999), 88888888)
+)","2015-2023 only, hours. Caregiver report: weekend sleep hours of the daily-activity grid (DChslp024b, 2015-2016 and 2020; DChslp024d, 2019) and total weekend sleep time (DChslp023e 2017, DChslp024b 2018). Child report 2021-2023: activity-grid weekend sleep hours (JChslp024d). Bedtime and waking-time items asked beside them are named unused. Partial: the series splices items and respondents.",,
+hlth_sleep,partial,"DChslp024, DChslp024a, DChslp022e, DChslp024b_2019, JChslp024c, DChslp024b, DChslp023e, DChslp024d, JChslp024d, DChslp022a_2011, DChslp022b_2011, DChslp023a_2011, DChslp023b_2011, EChslp022, EChslp023","local({
+  wd <- coalesce(
+    na_if(na_if(as.numeric(haven::zap_labels(DChslp024)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(DChslp024a)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(DChslp022e)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(DChslp024b_2019)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(JChslp024c)), 99999999), 88888888)
+  )
+  we <- coalesce(
+    na_if(na_if(as.numeric(haven::zap_labels(DChslp024b)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(DChslp023e)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(DChslp024d)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(JChslp024d)), 99999999), 88888888)
+  )
+  bed <- na_if(na_if(as.numeric(haven::zap_labels(DChslp022a_2011)), 99999999), 88888888) +
+    na_if(na_if(as.numeric(haven::zap_labels(DChslp022b_2011)), 99999999), 88888888) / 60
+  wake <- na_if(na_if(as.numeric(haven::zap_labels(DChslp023a_2011)), 99999999), 88888888) +
+    na_if(na_if(as.numeric(haven::zap_labels(DChslp023b_2011)), 99999999), 88888888) / 60
+  bed10 <- round(na_if(na_if(as.numeric(EChslp022), 99999999), 88888888) / 60) / 60
+  wake10 <- round(na_if(na_if(as.numeric(EChslp023), 99999999), 88888888) / 60) / 60
+  coalesce((5 * wd + 2 * we) / 7, (wake - bed) %% 24, (wake10 - bed10) %% 24)
+})","Hours. 2015-2023: (5 x hlth_sleep_wd + 2 x hlth_sleep_we) / 7. 2011-2014 (no weekend item): the caregiver's usual bedtime to waking time (DChslp022a/b_2011, DChslp023a/b_2011, hour and minute, no day named), (wake - bed) modulo 24. 2010: the mother's usual bedtime and waking time (EChslp022, EChslp023, clock times released as seconds after midnight, rounded to the minute), the same way. Partial: bedtime to waking in 2010-2014, and the series splices items and respondents.",,
+hlth_sleepprob,compatible,"IChcbc022, IChcbc038, IChcbc048, IChcbc064, IChcbc074, IChcbc084, IChcbc094","local({
+  m <- sapply(list(IChcbc022, IChcbc038, IChcbc048, IChcbc064, IChcbc074, IChcbc084, IChcbc094), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  m[!m %in% 0:2] <- NA
+  rowSums(m)
+})","2012-2014 only. Caregiver-rated CBCL/1.5-5 Sleep Problems scale, all 7 items (IChcbc022, 038, 048, 064, 074, 084, 094), 0-2, summed (range 0-14), complete-case; reproduces the study's released raw score.",,
+hlth_sleepprob_measure,inferred,survey_year,"if_else(
+  survey_year %in% 2012:2014,
+  ""CBCL/1.5-5 Sleep Problems (parent report), 7 of 7 items, 0-2 item scoring (range 0-14), sum"",
+  NA_character_
+)",Waves of the CBCL/1.5-5 form.,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not collected.,,
+hlth_sleepprob_singleitem_parent,incompatible,"DChslp025, DChslp026, EChslp009, EChslp013",,"Only a yes/no sound-sleep item (DChslp025, 2011-2015), counts of night wakings (DChslp026) and the mother's 2010-2011 sleep-habit items with no item wording in the codebook (EChslp009-017); the CBCL/1.5-5 sleep items are scored in hlth_sleepprob.",,
+hlth_bmi,compatible,"EChhlt012, EChhlt013, DChhlt012, DChhlt013, JChhlt012, JChhlt013","local({
+  kg <- coalesce(
+    na_if(na_if(as.numeric(haven::zap_labels(EChhlt012)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(DChhlt012)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(JChhlt012)), 99999999), 88888888)
+  )
+  cm <- coalesce(
+    na_if(na_if(as.numeric(haven::zap_labels(EChhlt013)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(DChhlt013)), 99999999), 88888888),
+    na_if(na_if(as.numeric(haven::zap_labels(JChhlt013)), 99999999), 88888888)
+  )
+  kg / (cm / 100)^2
+})","Weight (kg) / height (m) squared at each wave: mother questionnaire 2010 (EChhlt012/013), caregiver interview 2011-2012 (DChhlt012/013), child questionnaire 2013-2023 (JChhlt012/013), kept as entered (implausible entries screened at analysis); equals the study's BMI (JChhlt039, 2019-2023) where both exist. Never carried.",,
+hlth_bmi_measure,inferred,"survey_year, JChhlt031a, JChhlt031b, EChhlt012, EChhlt013, DChhlt012, DChhlt013, JChhlt012, JChhlt013","local({
+  m <- sapply(list(EChhlt012, DChhlt012, JChhlt012, EChhlt013, DChhlt013, JChhlt013), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  m[m >= 88888888] <- NA
+  has_bmi <- !is.na(coalesce(m[, 1], m[, 2], m[, 3])) & !is.na(coalesce(m[, 4], m[, 5], m[, 6]))
+  w <- as.numeric(haven::zap_labels(JChhlt031a))
+  ht <- as.numeric(haven::zap_labels(JChhlt031b))
+  case_when(
+    survey_year <= 2012 ~ ""Parent-reported"",
+    !has_bmi ~ NA_character_,
+    survey_year <= 2021 ~ ""Unknown"",
+    w == 1 & ht == 1 ~ ""Measured"",
+    w %in% 1:3 & ht %in% 1:3 ~ ""Self-reported"",
+    .default = ""Unknown""
+  )
+})","2010 mother questionnaire and 2011-2012 caregiver interview = Parent-reported; 2013-2021 child questionnaire, source not recorded = Unknown where a BMI exists; 2022-2023 per row from how weight and height were obtained (JChhlt031a/b): both measured by the interviewer = Measured, entered by the child (measured by the child at the interview, or a past value) = Self-reported, one value not measured or not recorded but a BMI computable = Unknown; NA where no BMI can be computed (2013-2023).",,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,proximate,"DChhlt039a, DChhlt039, JChhlt040a","local({
+  a <- coalesce(
+    as.numeric(haven::zap_labels(DChhlt039a)),
+    as.numeric(haven::zap_labels(DChhlt039)),
+    as.numeric(haven::zap_labels(JChhlt040a))
+  )
+  recode_values(a, 1 ~ 1, 2 ~ 0)
+})","2018-2023 only. Whether secondary sex characteristics have appeared (1 yes, 0 no): caregiver report in 2018 (DChhlt039a) and 2019-2020 (DChhlt039), child report 2021-2023 (JChhlt040a). Proximate: an onset item alone. Never carried.",,
+hlth_puberty_measure,inferred,survey_year,"case_when(
+  survey_year %in%
+    2018:2020 ~ ""Study item on the onset of secondary sex characteristics (parent), 1 item, yes/no (0-1), onset indicator"",
+  survey_year %in%
+    2021:2023 ~ ""Study item on the onset of secondary sex characteristics (self), 1 item, yes/no (0-1), onset indicator"",
+  .default = NA_character_
+)","Waves where the onset item was asked; standardise within dataset, sex and measure at analysis.",,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,incompatible,"DChhob007, DChhob008, JChhob009",,"Days in the past week of vigorous activity of 30 minutes or more indoors and outdoors (DChhob007/008, 2018) and days of indoor and outdoor physical activity with no duration criterion (DChhob007/008 2019-2020, JChhob009 2021-2023); not the days-of-60-minutes item.",,
+hlth_birthweight,compatible,"BCh08hlt001, N_ID, wave","local({
+  x <- as.numeric(haven::zap_labels(BCh08hlt001))
+  carry_within(if_else(x >= 88888888, NA_real_, x * 1000), N_ID, order = wave)
+})","Birth weight in kg x 1,000 (BCh08hlt001), mother's report in the 2008 questionnaire, joined to every row by the tidier and carried within participant.",,
+hlth_preterm,compatible,"BMt08pnb001, N_ID, wave","local({
+  d <- as.numeric(haven::zap_labels(BMt08pnb001))
+  d <- if_else(d >= 88888888, NA_real_, d)
+  carry_within(if_else(d < 259, ""TRUE"", ""FALSE""), N_ID, order = wave)
+})","Gestational age at birth in days (BMt08pnb001, mother's report in 2008): under 259 days (37 completed weeks) = TRUE; joined to every row by the tidier and carried within participant.",,
+hlth_breastfed,compatible,"DCh08fed001, DCh08fed002, DCh09fed001, N_ID, wave","local({
+  now08 <- as.numeric(haven::zap_labels(DCh08fed001))
+  stop08 <- as.numeric(haven::zap_labels(DCh08fed002))
+  now09 <- as.numeric(haven::zap_labels(DCh09fed001))
+  out <- case_when(
+    now08 == 1 ~ ""TRUE"",
+    stop08 > 0 & stop08 < 88888888 ~ ""TRUE"",
+    stop08 == 0 ~ ""FALSE"",
+    now09 == 1 ~ ""TRUE""
+  )
+  carry_within(out, N_ID, order = wave)
+})","Ever breastfed, caregiver report in 2008 (child aged 4-8 months): still breastfeeding (DCh08fed001) or stopped after more than 0 weeks (DCh08fed002) = TRUE, stopped at 0 weeks = FALSE; else breastfeeding at the 2009 interview (DCh09fed001) = TRUE. Joined to every row by the tidier and carried within participant.",,
+hlth_prenatalsmoking,compatible,"KMtsmk011, N_ID, wave","local({
+  x <- as.numeric(haven::zap_labels(KMtsmk011))
+  carry_within(recode_values(x, 1 ~ ""TRUE"", 2 ~ ""FALSE""), N_ID, order = wave)
+})","Whether the mother smoked during the pregnancy (KMtsmk011, asked retrospectively in the 2013 health questionnaire, caregiver report), carried within participant to every wave. The mother's second-hand smoke exposure in pregnancy (KMtsmk010) is not used.",,
+hlth_chroniccond_diagnosed,partial,"DChhlt021, EChhlt021, DChhlt031, DChhlt031a_2015, DChhlt031c_2015, DChhlt031d_2015, DChhlt031f_2015, DChhlt031g_2015, DChhlt031h_2015, KChasx011, KChasx014, DChhlt031a, DChhlt031c, DChhlt031d, DChhlt031f, DChhlt031g, DChhlt031h, DChhlt031i, DChhlt031n, DChhlt034a, DChhlt034c, DChhlt034d, DChhlt034f, DChhlt034g, DChhlt034h, DChhlt034i, DChhlt034n, DChhlt051a, DChhlt051c, DChhlt051d, DChhlt051f, DChhlt051g, DChhlt051h, DChhlt051i, DChhlt051n","local({
+  hs <- coalesce(haven::zap_labels(DChhlt021), haven::zap_labels(EChhlt021)) %in% 1:2
+  g <- as.numeric(haven::zap_labels(DChhlt031))
+  t16 <- sapply(
+    list(DChhlt031a_2015, DChhlt031c_2015, DChhlt031d_2015, DChhlt031f_2015, DChhlt031g_2015, DChhlt031h_2015),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  r16 <- sapply(list(DChhlt034a, DChhlt034c, DChhlt034d, DChhlt034f, DChhlt034g, DChhlt034h), function(v) {
+    as.numeric(haven::zap_labels(v))
+  })
+  asth <- as.numeric(haven::zap_labels(KChasx011))
+  asth_tr <- as.numeric(haven::zap_labels(KChasx014))
+  yr <- sapply(
+    list(DChhlt031a, DChhlt031c, DChhlt031d, DChhlt031f, DChhlt031g, DChhlt031h, DChhlt031i, DChhlt031n),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  rt <- sapply(
+    list(DChhlt034a, DChhlt034c, DChhlt034d, DChhlt034f, DChhlt034g, DChhlt034h, DChhlt034i, DChhlt034n),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  cur <- sapply(
+    list(DChhlt051a, DChhlt051c, DChhlt051d, DChhlt051f, DChhlt051g, DChhlt051h, DChhlt051i, DChhlt051n),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  told16 <- cbind(t16 > 0 & t16 < 88888888, asth == 1, FALSE)
+  now16 <- cbind(r16 <= 2, asth_tr == 1, NA)
+  now16[!cbind(!is.na(r16) & r16 >= 1 & r16 <= 3, !is.na(asth_tr) & asth_tr >= 1 & asth_tr <= 2, FALSE)] <- NA
+  told_m <- yr >= 2008 & yr <= 2023
+  now_m <- rt <= 2
+  now_m[!(!is.na(rt) & rt >= 1 & rt <= 3)] <- NA
+  i16 <- survey_year == 2016
+  i23 <- survey_year == 2023
+  told_m[i16, ] <- told16[i16, ]
+  now_m[i16, ] <- now16[i16, ]
+  told_m[i23, ] <- ((!is.na(yr) & yr >= 2008 & yr <= 2023) | (!is.na(cur) & cur == 1))[i23, ]
+  now23 <- cur == 1
+  now23[!(!is.na(cur) & cur >= 1 & cur <= 2)] <- NA
+  now_m[i23, ] <- now23[i23, ]
+  yes <- told_m & !is.na(told_m)
+  any_told <- rowSums(yes) > 0
+  any_now <- rowSums(yes & !is.na(now_m) & now_m) > 0
+  unknown <- rowSums(yes & is.na(now_m)) > 0
+  none_told <- case_when(
+    survey_year == 2016 ~ g %in% 0 | rowSums(t16 == 0, na.rm = TRUE) > 0,
+    survey_year == 2023 ~ rowSums(!is.na(cur)) > 0,
+    survey_year %in% 2017:2022 ~ hs,
+    .default = FALSE
+  )
+  case_when(
+    survey_year <= 2015 ~ NA_character_,
+    any_now ~ ""Currently diagnosed"",
+    any_told & !unknown ~ ""Previously diagnosed"",
+    any_told ~ NA_character_,
+    none_told ~ ""Never diagnosed"",
+    .default = NA_character_
+  )
+})","2016-2023 only. Caregiver report of a doctor's diagnosis of a chronic physical condition: congenital heart disease, epilepsy, diabetes, chronic sinusitis, chronic otitis media, chronic urinary tract infection, asthma and (from 2019) another chronic disease. Told: 2016 the chronic-condition items after the any-condition filter (DChhlt031, DChhlt031a-h_2015) and the asthma module's ever-diagnosed item (KChasx011); 2017-2023 the year of first diagnosis (DChhlt031a-n). Current: 2023 whether the child has each now (DChhlt051a-n); 2016-2022 regular or occasional hospital treatment for a told condition (DChhlt034a-n; asthma treatment KChasx014 in 2016). Told of any = told; Currently diagnosed if any told condition is current, Previously diagnosed if every told condition is not, NA if a told condition's treatment is unanswered. A blank year (2017-2022) where the caregiver answered the health section is read as never told. The ever-told ticks of 2010-2015 have no current/previous split and leave those waves NA, because other waves separate current from previous diagnosis. Atopic dermatitis, allergic rhinitis, food allergy and allergic conjunctivitis are named unused. Partial: treatment as the proxy for current in 2016-2022.",,
+hlth_disability,partial,"EChhlt028, EChhlt029, DChhlt028, DChhlt029, DChhlt029a_2015, DChhlt029b_2015, DChhlt028a, DChhlt028b, DChhlt028c, DChhlt028d, DChhlt028f, DChhlt028g, DChhlt028h, DChhlt028i, DChhlt028j, DChhlt028k, DChhlt028l, DChhlt028p, DChhlt029a, DChhlt029b, DChhlt029c, DChhlt029d, DChhlt029f, DChhlt029g, DChhlt029h, DChhlt029i, DChhlt029j, DChhlt029k, DChhlt029l, DChhlt029p, DChhlt021, EChhlt021","local({
+  hs <- coalesce(haven::zap_labels(DChhlt021), haven::zap_labels(EChhlt021)) %in% 1:2
+  reg <- coalesce(as.numeric(haven::zap_labels(EChhlt028)), as.numeric(haven::zap_labels(DChhlt028)))
+  c1 <- coalesce(
+    as.numeric(haven::zap_labels(EChhlt029)),
+    as.numeric(haven::zap_labels(DChhlt029)),
+    as.numeric(haven::zap_labels(DChhlt029a_2015))
+  )
+  c2 <- as.numeric(haven::zap_labels(DChhlt029b_2015))
+  ph1 <- (c1 %/% 10) %in% c(1:4, 6:12, 16)
+  ph2 <- (c2 %/% 10) %in% c(1:4, 6:12, 16)
+  a <- sapply(
+    list(
+      DChhlt028a,
+      DChhlt028b,
+      DChhlt028c,
+      DChhlt028d,
+      DChhlt028f,
+      DChhlt028g,
+      DChhlt028h,
+      DChhlt028i,
+      DChhlt028j,
+      DChhlt028k,
+      DChhlt028l,
+      DChhlt028p
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  b <- sapply(
+    list(
+      DChhlt029a,
+      DChhlt029b,
+      DChhlt029c,
+      DChhlt029d,
+      DChhlt029f,
+      DChhlt029g,
+      DChhlt029h,
+      DChhlt029i,
+      DChhlt029j,
+      DChhlt029k,
+      DChhlt029l,
+      DChhlt029p
+    ),
+    function(v) as.numeric(haven::zap_labels(v))
+  )
+  has <- case_when(
+    survey_year == 2017 ~ rowSums(a == 1, na.rm = TRUE) > 0,
+    survey_year %in% 2018:2020 ~ rowSums(a == 2, na.rm = TRUE) > 0,
+    survey_year == 2021 ~ rowSums(b >= 1 & b <= 2, na.rm = TRUE) > 0,
+    survey_year >= 2022 ~ rowSums(a >= 1 & a <= 2, na.rm = TRUE) > 0,
+    .default = NA
+  )
+  none <- case_when(
+    survey_year == 2017 ~ hs,
+    survey_year == 2021 ~ rowSums(!is.na(b)) > 0,
+    survey_year >= 2018 ~ rowSums(!is.na(a)) > 0,
+    .default = FALSE
+  )
+  case_when(
+    survey_year >= 2021 ~ NA,
+    survey_year <= 2016 & reg %in% 1 & (ph1 | ph2) ~ TRUE,
+    survey_year <= 2016 & reg %in% 1:2 ~ FALSE,
+    has ~ TRUE,
+    none ~ FALSE,
+    .default = NA
+  )
+})","2010-2020 only. Caregiver report of a registered disability (the national disability registration) of a physical, sensory or other health type: 2010-2016 'registered disability' (EChhlt028, DChhlt028) with the type-and-grade codes (EChhlt029, DChhlt029, DChhlt029a/b_2015); 2017 ticks of the types registered (DChhlt028a-p); 2018-2023 each type asked (DChhlt028a-p; DChhlt029a-p in 2021, where the release puts them). TRUE for any physical, brain-lesion, visual, hearing, facial, kidney, heart, liver, respiratory, ostomy, epilepsy or other registered type; FALSE for none. Speech or language, intellectual, mental-disorder and autism registrations are named unused and never make the row TRUE. In 2017 an unticked list where the caregiver answered the health section is read as no registration. 2021-2023 are NA: the release codes the answer for a child with no registration with codes no document defines (9998 in 2021-2022, 3 in 2023, where the codebook gives 9 = none), so no registration cannot be read. Partial: a registered disability.",,

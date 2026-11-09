@@ -207,5 +207,8 @@ list(
   .harmonisation_file_targets,
   .harmonisation_config_targets,
   .harmonised_targets,
-  .analysis_target
+  .analysis_target,
+  # Analysis targets (ANALYSIS_PLAN.md, Step 1 onward) go here, then the
+  # private report, which is absent from public clones.
+  private_report_targets()
 )

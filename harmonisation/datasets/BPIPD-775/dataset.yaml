@@ -1,0 +1,45 @@
+dataset_id: "775"
+dataset_name: "ECLS-K"
+status: "in_progress"
+
+resources:
+  - name: "eclsk2011_k5_child"
+    role: "data"
+    glob: "childK5p.dat"
+    reader: "fwf"
+    col_positions: "layouts/eclsk2011_k5_child.csv"
+    lines_per_record: 27
+  # Truncated copy (4,166 of 21,409 children): not read until a complete file
+  # arrives; then role "data", reader "fwf",
+  # col_positions "layouts/eclsk_k8_child.csv" and lines_per_record 15.
+  - name: "eclsk_k8_child"
+    role: "docs"
+    glob: "childk8p.dat"
+  - name: "eclsk2011_k5_dictionary"
+    role: "codebook"
+    glob: "ECLSK2011_K5PUF.dct"
+  - name: "eclsk_k8_dictionary"
+    role: "codebook"
+    glob: "ECLSK_Kto8_child_STATA.dct"
+  - name: "eclsk2011_k5_stata_do"
+    role: "docs"
+    glob: "ECLSK2011_K5PUF.do"
+  - name: "eclsk_k8_stata_do"
+    role: "docs"
+    glob: "ECLSK_Kto8_child_STATA.do"
+
+notes: |
+  The folder is named ECLS-B, but it holds ECLS-K data only: the NCES public-use child files of two Early Childhood Longitudinal Study kindergarten cohorts, and no ECLS-B file.
+  The lead confirmed this on 2026-11-08 and asked for what is there to be harmonised; ECLS-B data may be added later.
+  dataset_name is ECLS-K, the data the spec reads; the folder keeps its name, ECLS-B, until ECLS-B data arrive.
+  childK5p.dat is ECLS-K (kindergarten class of 2010-11, kindergarten to fifth grade, nine rounds 2010-2016), one record per child for the 18,174 children NCES documents for the K-5 public-use file.
+  childk8p.dat is ECLS-K (kindergarten class of 1998-99, kindergarten to eighth grade, seven rounds 1998-2007); NCES documents 21,409 children, but this copy is truncated and holds only the first 4,166 complete records (see BPIPD-775_notes.md).
+  Whether the two cohorts stay under one dataset ID is a decision for the lead.
+  Both data files are fixed-width ASCII (CRLF line ends) and the only format in the folder; there is no Stata, SPSS or SAS data copy.
+  Each record spans several physical lines (27 lines and 135,066 characters per child in childK5p.dat, 15 lines and 74,328 characters in childk8p.dat), as the Stata dictionaries' _lines() statements say and the file bytes confirm.
+  The layouts in layouts/ were generated from the two .dct dictionaries by layouts/make_layouts.R; start and end are positions in the record formed by joining a child's lines end to end, and line, line_start and line_end keep the dictionary's own positions (layouts/README.md).
+  The layouts list a labelled subset of fields: 11,945 of 26,060 in the K-5 file and 8,388 of 18,949 in the K-8 file, dropping replicate weights and teacher-level, school-level, special-education and child-care-provider blocks (reasons in layouts/README.md).
+  childK5p.dat is read with the fwf reader's lines_per_record option (27), which joins each child's lines before applying the layout and refuses a file that is not a whole number of records or whose lines vary in width.
+  childk8p.dat is declared as docs, not data, because it is truncated: the reader would refuse it (62,502 lines are not a whole number of 15-line records), and the 4,166 complete records are the first base-year schools in id order, not a sample.
+  When a complete copy arrives, declare it as data with layouts/eclsk_k8_child.csv and lines_per_record 15.
+  The .dct dictionaries are the only variable-level documentation in the folder (names, positions, formats and variable labels); value labels and missing-value codes are in the .do files, which are Stata setup syntax.
