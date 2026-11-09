@@ -137,6 +137,11 @@
           "type": "string",
           "description": "Path to the fixed-width column layout CSV (required if reader is fwf), relative to this dataset's spec directory harmonisation/datasets/BPIPD-<id>/. The CSV has columns name, start, end and optionally type."
         },
+        "lines_per_record": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Physical lines per record (fwf only). Default 1. For a release that spreads each record over several lines (e.g. a Stata dictionary's _lines(n)), the reader joins each record's lines end to end and the layout's start and end count along the joined record. A line count that is not a whole number of records, or a line whose width varies between records, stops the read. Refused for other readers."
+        },
         "encoding": {
           "type": "string",
           "description": "Character encoding of the source file, e.g. \"latin1\". Applies to csv, csv2, tsv, fwf (via readr's locale) and stata, spss, sas (via haven's encoding argument). Refused for other readers."
@@ -214,6 +219,11 @@
                 {
                   "required": [
                     "col_positions"
+                  ]
+                },
+                {
+                  "required": [
+                    "lines_per_record"
                   ]
                 },
                 {

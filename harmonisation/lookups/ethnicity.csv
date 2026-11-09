@@ -343,3 +343,44 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 2187,ethnicity,Not Hispanic or Latino: Black,Black,compatible,Race_Coded Black among non-Hispanic adolescents
 2187,ethnicity,Not Hispanic or Latino: Asian,Asian,compatible,Race_Coded Asian among non-Hispanic adolescents
 2187,ethnicity,Not Hispanic or Latino: More than one race,Mixed,compatible,Race_Coded More than one race: two or more races = Mixed
+46,ethnicity,1,White,compatible,CHRACE code 1: White non-Hispanic (PCG report of the child's race and Hispanic origin in one item; 1997)
+46,ethnicity,2,Black,compatible,CHRACE code 2: Black non-Hispanic (1997)
+46,ethnicity,3,Hispanic,compatible,CHRACE code 3: Hispanic (1997)
+46,ethnicity,4,Asian,proximate,CHRACE code 4: Asian or Pacific Islander; Pacific Islanders pooled with Asian (1997)
+46,ethnicity,5,Other,compatible,CHRACE code 5: American Indian or Alaskan Native (1997)
+46,ethnicity,7,Other,compatible,CHRACE code 7: Other (1997)
+46,ethnicity,9,Unknown,compatible,CHRACE code 9: NA or refused (1997)
+1346,ethnicity,"Amer. Indian/Alaska Native, non-Hispanic",Other,proximate,"X1RACE code 1: American Indian or Alaska Native as the sole race, not Hispanic; no schema category, so Other"
+1346,ethnicity,"Asian, non-Hispanic",Asian,compatible,"X1RACE code 2: Asian as the sole race, not Hispanic"
+1346,ethnicity,"Black/African-American, non-Hispanic",Black,compatible,"X1RACE code 3: Black or African American as the sole race, not Hispanic"
+1346,ethnicity,"Hispanic, no race specified",Hispanic,compatible,"X1RACE code 4: Hispanic origin, race not reported (Hispanic origin first in a US sample)"
+1346,ethnicity,"Hispanic, race specified",Hispanic,compatible,X1RACE code 5: Hispanic origin with any race (Hispanic origin first in a US sample)
+1346,ethnicity,"More than one race, non-Hispanic",Mixed,compatible,"X1RACE code 6: two or more races, not Hispanic"
+1346,ethnicity,"Native Hawaiian/Pacific Islander, non-Hispanic",Other,proximate,"X1RACE code 7: Native Hawaiian or other Pacific Islander as the sole race, not Hispanic; no schema category, so Other"
+1346,ethnicity,"White, non-Hispanic",White,compatible,"X1RACE code 8: White as the sole race, not Hispanic"
+775,ethnicity,"1: WHITE, NON-HISPANIC",White,compatible,"X_RACETH_R code 1: White as the only race, not Hispanic"
+775,ethnicity,"2: BLACK/AFRICAN AMERICAN, NON-HISPANIC",Black,compatible,"Code 2: Black or African American as the only race, not Hispanic"
+775,ethnicity,"3: HISPANIC, RACE SPECIFIED",Hispanic,compatible,"Code 3: Hispanic or Latino of any race, race reported (Hispanic origin first in a US sample)"
+775,ethnicity,"4: HISPANIC, NO RACE SPECIFIED",Hispanic,compatible,"Code 4: Hispanic or Latino, race not reported (Hispanic origin first in a US sample)"
+775,ethnicity,"5: ASIAN, NON-HISPANIC",Asian,compatible,"Code 5: Asian as the only race, not Hispanic"
+775,ethnicity,"6: NATIVE HAWAIIAN/PACIFIC ISLANDER, NON-HISPANIC",Other,proximate,"Code 6: Native Hawaiian or other Pacific Islander as the only race, not Hispanic; no schema category"
+775,ethnicity,"7: AMERICAN INDIAN/ALASKA NATIVE, NON-HISPANIC",Other,proximate,"Code 7: American Indian or Alaska Native as the only race, not Hispanic; no schema category (reported in indigenous)"
+775,ethnicity,"8: TWO OR MORE RACES, NON-HISPANIC",Mixed,compatible,"Code 8: two or more races, not Hispanic"
+775,ethnicity,-9: NOT ASCERTAINED,Unknown,compatible,Code -9: not ascertained
+1295,ethnicity,BB090 1-4,Hispanic,compatible,"1980 origin or descent (BB090) codes 1-4: Mexican, Cuban, Puerto Rican, other Latin American or Spanish (Hispanic origin first in a US sample)"
+1295,ethnicity,BB089 1,Black,compatible,"1980 race (BB089) code 1 Black, origin not Hispanic"
+1295,ethnicity,BB089 2,White,compatible,"1980 race code 2 White, origin not Hispanic"
+1295,ethnicity,BB089 3,Other,compatible,"1980 race code 3 American Indian or Alaskan Native, origin not Hispanic (Other in the schema)"
+1295,ethnicity,BB089 4,Asian,proximate,"1980 race code 4 Asian or Pacific Islander: merges Pacific Islanders (Other in the schema) with Asian; mapped to the real value, merge named"
+1295,ethnicity,BB089 5,Other,compatible,"1980 race code 5 Other, origin not Hispanic"
+1295,ethnicity,RACE 1,Hispanic,compatible,1982 race composite (RACE) code 1 Hispanic or Spanish
+1295,ethnicity,RACE 2,Other,compatible,RACE code 2 American Indian (Other in the schema)
+1295,ethnicity,RACE 3,Asian,proximate,"RACE code 3 Asian or Pacific Islander: merges Pacific Islanders with Asian, merge named"
+1295,ethnicity,RACE 4,Black,compatible,RACE code 4 Black
+1295,ethnicity,RACE 5,White,compatible,RACE code 5 White
+1295,ethnicity,RACE 6,Other,compatible,RACE code 6 Other
+1295,ethnicity,RACE2 1,Hispanic,compatible,1984 race composite (RACE2) code 1 Hispanic
+1295,ethnicity,RACE2 2,Other,compatible,RACE2 code 2 Native American (Other in the schema)
+1295,ethnicity,RACE2 3,Asian,proximate,"RACE2 code 3 Asian or Pacific Islander: merges Pacific Islanders with Asian, merge named"
+1295,ethnicity,RACE2 4,Black,compatible,RACE2 code 4 Black
+1295,ethnicity,RACE2 5,White,compatible,RACE2 code 5 White
