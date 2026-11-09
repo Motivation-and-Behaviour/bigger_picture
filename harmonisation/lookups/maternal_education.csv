@@ -404,3 +404,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 706,parental_education,5,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 5 Master's.
 706,parental_education,6,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 6 Post-graduate.
 706,paternal_education,999,Unknown,incompatible,Father_Education code 999 is in no document.
+2187,parental_education,High school diploma or equivalency (GED),Secondary school or less,compatible,"Code 2 (parent 2 label), ISCED 3; never the higher parent's level"
+2187,parental_education,Some college / Technical or trade school,Post-secondary,compatible,"Code 3: tertiary study begun but not completed, or technical or trade school (ISCED 4-5)"
+2187,parental_education,Bachelor's degree,Bachelor degree or higher,compatible,"Code 5, ISCED 6"
+2187,parental_education,Master's degree,Bachelor degree or higher,compatible,"Code 6, ISCED 7"
+2187,parental_education,"Professional (MD, JD, DDS, etc.)",Bachelor degree or higher,compatible,"Code 7: professional degree, ISCED 7"
+2187,parental_education,Doctorate,Bachelor degree or higher,compatible,"Code 8, ISCED 8"
