@@ -1,0 +1,15 @@
+dataset_id: "2545"
+dataset_name: "Marques, 2014"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "BD_English.sav"
+    reader: "spss"
+  - name: "codebook"
+    role: "codebook"
+    glob: "Codebook_BD_English.xlsx"
+
+notes: |
+  One .sav data file and one excel codebook

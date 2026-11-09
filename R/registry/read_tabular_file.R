@@ -13,6 +13,7 @@ read_opt_readers <- function() {
   list(
     col_names = c("csv", "csv2", "tsv"),
     col_positions = "fwf",
+    lines_per_record = "fwf",
     encoding = c("csv", "csv2", "tsv", "fwf", "stata", "spss", "sas"),
     columns = haven_readers()
   )
@@ -234,6 +235,98 @@ check_fwf_record_width <- function(data_path, layout, layout_path) {
   invisible(NULL)
 }
 
+#' Validate a resource's `lines_per_record`, defaulting to one line per record
+fwf_lines_per_record <- function(value, data_path) {
+  if (is.null(value)) {
+    return(1L)
+  }
+  n <- suppressWarnings(as.integer(value))
+  if (length(value) != 1L || is.na(n) || n != value || n < 1L) {
+    stop(
+      "`lines_per_record` must be a whole number of at least 1 (",
+      data_path,
+      ")",
+      call. = FALSE
+    )
+  }
+  n
+}
+
+#' Join each record's physical lines into one line of text
+#'
+#' Some releases spread one record over several physical lines (a Stata
+#' dictionary's `_lines(n)`), while `read_fwf()` takes one line as one record.
+#' The layout's positions then count along the record joined end to end,
+#' without line terminators. Two failures would otherwise read as plausible
+#' values: a truncated file, whose line count is not a whole number of records,
+#' and a ragged line, whose width varies between records and shifts every field
+#' after it. Both stop the read. Line widths are measured in bytes, as
+#' `read_fwf()` counts positions.
+read_fwf_records <- function(data_path, lines_per_record) {
+  lines <- readLines(data_path, warn = FALSE)
+  n_lines <- length(lines)
+  if (n_lines %% lines_per_record != 0L) {
+    stop(
+      data_path,
+      " has ",
+      n_lines,
+      " lines, which is not a whole number of ",
+      lines_per_record,
+      "-line records; the file may be truncated.",
+      call. = FALSE
+    )
+  }
+
+  widths <- matrix(nchar(lines, type = "bytes"), nrow = lines_per_record)
+  ragged <- which(apply(widths, 1L, function(w) min(w) != max(w)))
+  if (length(ragged) > 0) {
+    stop(
+      "Line ",
+      ragged[1],
+      " of the ",
+      lines_per_record,
+      "-line records in ",
+      data_path,
+      " varies in width (",
+      min(widths[ragged[1], ]),
+      " to ",
+      max(widths[ragged[1], ]),
+      " bytes), so the positions after it would shift between records.",
+      call. = FALSE
+    )
+  }
+
+  parts <- split(lines, rep_len(seq_len(lines_per_record), n_lines))
+  rm(lines)
+  do.call(paste0, unname(parts))
+}
+
+#' Warn when a layout reaches past the end of a joined multi-line record
+#'
+#' The multi-line counterpart of `check_fwf_record_width()`: every joined
+#' record has the same width, so the first one stands for all of them.
+check_fwf_joined_width <- function(records, layout, layout_path, data_path) {
+  if (length(records) == 0) {
+    return(invisible(NULL))
+  }
+  width <- nchar(records[1], type = "bytes")
+  if (max(layout$end) > width) {
+    warning(
+      "Fixed-width layout ",
+      layout_path,
+      " ends at position ",
+      max(layout$end),
+      " but the joined records of ",
+      data_path,
+      " are ",
+      width,
+      " bytes wide; fields past the end of a record read as NA.",
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
 #' Refuse a read that left parse failures behind
 #'
 #' `readr` records every cell it could not parse as the column's type in a
@@ -281,7 +374,7 @@ report_parse_problems <- function(out, path) {
 #'
 #' `opts` is the resource's `read_opts` from the resource index: the optional
 #' spec keys (`sheet`, `range`, `table`, `object`, `col_names`,
-#' `col_positions`, `encoding`, `columns`) as a named list, absent keys being NULL. The
+#' `col_positions`, `lines_per_record`, `encoding`, `columns`) as a named list, absent keys being NULL. The
 #' set of keys is closed by `harmonisation/dataset.schema.json`; passing them
 #' as a list just means a new option touches this file and the schema rather
 #' than every caller in between.
@@ -316,9 +409,23 @@ read_tabular_file <- function(path, reader, opts = list()) {
     ),
     "fwf" = {
       layout <- read_fwf_layout(opts$col_positions, path)
-      check_fwf_record_width(path, layout, opts$col_positions)
+      lines_per_record <- fwf_lines_per_record(opts$lines_per_record, path)
+      source <- path
+      if (lines_per_record > 1L) {
+        # The joined records go through a temporary file rather than I():
+        # readr pastes literal data into one string, which cannot exceed
+        # 2 GB, and multi-line releases are typically the largest files.
+        records <- read_fwf_records(path, lines_per_record)
+        check_fwf_joined_width(records, layout, opts$col_positions, path)
+        source <- tempfile(fileext = ".dat")
+        on.exit(unlink(source), add = TRUE)
+        writeLines(records, source, useBytes = TRUE)
+        rm(records)
+      } else {
+        check_fwf_record_width(path, layout, opts$col_positions)
+      }
       readr::read_fwf(
-        path,
+        source,
         col_positions = readr::fwf_positions(
           layout$start,
           layout$end,
