@@ -488,3 +488,23 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 278,maternal_education,University graduate (4 years or more),Bachelor degree or higher,compatible,DMtdmg014/DFtdmg014 code 6 (4-year university graduate).
 278,maternal_education,Graduate school graduate,Bachelor degree or higher,compatible,"DMtdmg014/DFtdmg014 codes 7 and 8 (master's, doctorate) in 2008-2011, 9 in 2012 (the father's codes also in 2013) and 7 otherwise (graduate school)."
 278,maternal_education,Don't know or no response,Unknown,compatible,DMtdmg014/DFtdmg014 don't know (88888888) and no response (99999999).
+933,maternal_education,No formal qualifications,Secondary school or less,compatible,profile_education_level code 1
+933,maternal_education,Youth training certificate/skillseekers,Secondary school or less,compatible,"profile_education_level code 2: youth training schemes, below upper secondary"
+933,maternal_education,Recognised trade apprenticeship completed,Secondary school or less,compatible,"profile_education_level code 3: apprenticeship, upper-secondary vocational"
+933,maternal_education,Clerical and commercial,Secondary school or less,compatible,"profile_education_level code 4: clerical and commercial certificates (e.g. typing, bookkeeping), at or below upper secondary"
+933,maternal_education,City & Guilds certificate,Secondary school or less,compatible,"profile_education_level code 5: craft-level vocational certificate, at or below ISCED 3"
+933,maternal_education,City & Guilds certificate - advanced,Secondary school or less,proximate,"profile_education_level code 6: advanced craft certificates are mostly level 3 (ISCED 3), with some higher technological awards; placed with the level holding most of its members"
+933,maternal_education,ONC,Secondary school or less,compatible,"profile_education_level code 7: Ordinary National Certificate, level 3 (ISCED 3)"
+933,maternal_education,CSE grades 2-5,Secondary school or less,compatible,profile_education_level code 8
+933,maternal_education,"CSE grade 1, GCE O level, GCSE, School Certificate",Secondary school or less,compatible,profile_education_level code 9
+933,maternal_education,Scottish Ordinary/ Lower Certificate,Secondary school or less,compatible,profile_education_level code 10
+933,maternal_education,GCE A level or Higher Certificate,Secondary school or less,compatible,"profile_education_level code 11: A levels, ISCED 3"
+933,maternal_education,Scottish Higher Certificate,Secondary school or less,compatible,"profile_education_level code 12: Scottish Highers, ISCED 3"
+933,maternal_education,"Nursing qualification (e.g. SEN, SRN, SCM, RGN)",Post-secondary,compatible,"profile_education_level code 13: nursing qualifications below degree"
+933,maternal_education,Teaching qualification (not degree),Post-secondary,compatible,profile_education_level code 14: teaching qualification below degree
+933,maternal_education,University diploma,Post-secondary,proximate,"profile_education_level code 15: higher-education diplomas below degree (e.g. DipHE), which hold most of the band; postgraduate diplomas cannot be separated"
+933,maternal_education,"University or CNAA first degree (e.g. BA, B.Sc, B.Ed)",Bachelor degree or higher,compatible,profile_education_level code 16
+933,maternal_education,"University or CNAA higher degree (e.g. M.Sc, Ph.D)",Bachelor degree or higher,compatible,profile_education_level code 17
+933,maternal_education,"Other technical, professional or higher qualification",Unknown,compatible,"profile_education_level code 18: other qualifications of unstated level, Unknown under the education rules"
+933,maternal_education,Don't know,Unknown,compatible,profile_education_level code 19
+933,maternal_education,Prefer not to say,Unknown,compatible,profile_education_level code 20

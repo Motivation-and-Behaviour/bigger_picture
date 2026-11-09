@@ -1,0 +1,64 @@
+dataset_id: "933"
+dataset_name: "British Children's Play Survey"
+status: "in_progress"
+
+resources:
+  - name: "raw_survey"
+    role: "data"
+    glob: "2020/csv/all_raw_data.csv"
+    reader: "csv"
+  - name: "variable_map"
+    role: "codebook"
+    glob: "2020/mrdoc/excel/8793_variable_map.xlsx"
+  - name: "questionnaire"
+    role: "docs"
+    glob: "2020/mrdoc/pdf/8793_finalsurvey.pdf"
+  - name: "methods"
+    role: "docs"
+    glob: "2020/mrdoc/pdf/8793_methods.pdf"
+  - name: "readme"
+    role: "docs"
+    glob: "2020/mrdoc/pdf/8793_readme_file.pdf"
+  - name: "analysis_code"
+    role: "docs"
+    glob:
+      - "2020/csv/yougov_analysis_paper1.rmd"
+      - "2020/csv/yougov_analysis_paper2.rmd"
+  - name: "analysis_output"
+    role: "docs"
+    glob:
+      - "2020/csv/yougov_analysis_paper1.html"
+      - "2020/csv/yougov_analysis_paper2.html"
+  - name: "ukda_information"
+    role: "docs"
+    glob:
+      - "2020/read8793.htm"
+      - "2020/8793_file_information.rtf"
+      - "2020/mrdoc/UKDA/UKDA_Study_8793_Information.htm"
+
+notes: |
+  UK Data Service study 8793, "British Children's Play Survey, 2020" (2nd
+  edition, December 2022): a cross-sectional YouGov online survey of parents
+  and caregivers of children aged 5 to 11 in Great Britain, fielded 4-15 April
+  2020. The files are those of SN 8793 (school-age children), although the
+  folder is named "British Preschool-children Play Survey".
+  dataset_name is therefore "British Children's Play Survey", after the data
+  the files hold, not the folder name; the folder keeps its name, and whether
+  the preschool survey's files were also meant for BPIPD-933 is a question for
+  the contributor.
+  Data: 2020/csv/all_raw_data.csv, the only full data file (CSV, UTF-8 with
+  BOM, 19,354 rows x 262 columns, one row per omnibus respondent, key
+  RecordNo). It holds every respondent to the YouGov omnibus screener,
+  including the 17,435 who had no child aged 5-11 and were screened out
+  (survey items all missing); the 1,919 qualifying parents are the rows with
+  omnibus_parents_rc_4 == 1 (equivalently GUC_Q1 not missing), the filter the
+  authors' analysis code applies. The tidier must make that cut.
+  The data come in one format only (CSV, numeric codes); value labels are in
+  the variable map workbook (sheet "Label"), question wording in the final
+  survey PDF.
+  Not declared: 2020/csv/q27data_oliver_et_al_framework.csv and its labels
+  (mrdoc/pdf/8793_q27_oliver_et_al_data_labels.pdf), free-text Q27/Q27b
+  answers with demographics for 377 of the same parents, released without
+  RecordNo on purpose so it cannot be linked (it would duplicate participants
+  and has no screen-use item); mrdoc/pdf/8793_yougovtermsandconditions.pdf
+  (panel terms); 2020/csv/.Rhistory (empty).
