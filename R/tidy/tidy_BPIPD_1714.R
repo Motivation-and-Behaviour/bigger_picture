@@ -1,22 +1,14 @@
-#' Template tidier for pre-harmonisation dataset shaping
+#' Tidier for BPIPD-1714 (Alloway)
 #'
-#' Use this step for study-specific table assembly before harmonisation, for
-#' example joining multiple raw files, binding waves, filtering records, or
-#' reshaping raw tables into one canonical analysis tibble.
+#' One cross-sectional SPSS file, already one row per child, returned as is.
+#' The `Fic*`, `Pic*`, `Fact*` and `Edu*` columns are book reading, not screens.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble to be used as the harmonisation input
+#' - one tibble, one row per child, keyed on `Prticpnt`
 tidy_BPIPD_1714 <- function(raw_dataset, spec) {
-  if (length(raw_dataset$data) != 1L) {
-    stop(
-      "Replace the template tidier with study-specific code",
-      call. = FALSE
-    )
-  }
-
-  tibble::as_tibble(raw_dataset$data[[1]])
+  tibble::as_tibble(raw_dataset$data$data)
 }
