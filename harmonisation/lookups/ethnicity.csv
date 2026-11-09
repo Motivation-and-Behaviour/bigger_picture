@@ -338,3 +338,12 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1760,ethnicity,8,Asian,proximate,Q4 code 8: Indian; the responding parent's own group.
 1760,ethnicity,9,Asian,proximate,Q4 code 9: Filipino; the responding parent's own group.
 1760,ethnicity,10,Other,proximate,"Q4 code 10: Other, resolved first through the dataset's ethnicity_other lookup; the responding parent's own group."
+775,ethnicity,"1: WHITE, NON-HISPANIC",White,compatible,"X_RACETH_R code 1: White as the only race, not Hispanic"
+775,ethnicity,"2: BLACK/AFRICAN AMERICAN, NON-HISPANIC",Black,compatible,"Code 2: Black or African American as the only race, not Hispanic"
+775,ethnicity,"3: HISPANIC, RACE SPECIFIED",Hispanic,compatible,"Code 3: Hispanic or Latino of any race, race reported (Hispanic origin first in a US sample)"
+775,ethnicity,"4: HISPANIC, NO RACE SPECIFIED",Hispanic,compatible,"Code 4: Hispanic or Latino, race not reported (Hispanic origin first in a US sample)"
+775,ethnicity,"5: ASIAN, NON-HISPANIC",Asian,compatible,"Code 5: Asian as the only race, not Hispanic"
+775,ethnicity,"6: NATIVE HAWAIIAN/PACIFIC ISLANDER, NON-HISPANIC",Other,proximate,"Code 6: Native Hawaiian or other Pacific Islander as the only race, not Hispanic; no schema category"
+775,ethnicity,"7: AMERICAN INDIAN/ALASKA NATIVE, NON-HISPANIC",Other,proximate,"Code 7: American Indian or Alaska Native as the only race, not Hispanic; no schema category (reported in indigenous)"
+775,ethnicity,"8: TWO OR MORE RACES, NON-HISPANIC",Mixed,compatible,"Code 8: two or more races, not Hispanic"
+775,ethnicity,-9: NOT ASCERTAINED,Unknown,compatible,Code -9: not ascertained

@@ -404,3 +404,13 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 706,parental_education,5,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 5 Master's.
 706,parental_education,6,Bachelor degree or higher,compatible,highest of Mother_Education and Father_Education code 6 Post-graduate.
 706,paternal_education,999,Unknown,incompatible,Father_Education code 999 is in no document.
+775,maternal_education,0,Secondary school or less,compatible,X_PAR1ED_I/X_PAR2ED_I code 0: none (no schooling); the three parent-education rows share these rows
+775,maternal_education,1,Secondary school or less,compatible,Code 1: 8th grade or below (ISCED 0-2)
+775,maternal_education,2,Secondary school or less,compatible,"Code 2: 9th-12th grade, no diploma (ISCED 2-3)"
+775,maternal_education,3,Secondary school or less,compatible,Code 3: high school diploma or equivalent (ISCED 3)
+775,maternal_education,4,Post-secondary,compatible,Code 4: vocational or technical programme after high school (ISCED 4-5)
+775,maternal_education,5,Post-secondary,compatible,Code 5: some college (tertiary study begun but not completed)
+775,maternal_education,6,Bachelor degree or higher,compatible,Code 6: bachelor's degree (ISCED 6)
+775,maternal_education,7,Bachelor degree or higher,compatible,"Code 7: graduate or professional school, no degree, after a bachelor's degree (ISCED 6)"
+775,maternal_education,8,Bachelor degree or higher,compatible,Code 8: master's degree or higher (ISCED 7)
+775,maternal_education,9,Bachelor degree or higher,compatible,Code 9: doctorate or professional degree (ISCED 8)

@@ -1,61 +1,1195 @@
-target_variable,status,source_columns,expression,notes,lookup_table
-participant_id,in_progress,,,,
-wave,in_progress,,,,
-data_year,in_progress,,,,
-age_years,in_progress,,,,
-sex,in_progress,,,,
-country,in_progress,,,,
-ethnicity,in_progress,,,,
-indigenous,in_progress,,,,
-minority,in_progress,,,,
-ses_area,in_progress,,,,
-maternal_education,in_progress,,,,
-st_measure_type,in_progress,,,,
-st_measure_name,in_progress,,,,
-st_watch_wd,in_progress,,,,
-st_watch_we,in_progress,,,,
-st_watch,in_progress,,,,
-st_game_wd,in_progress,,,,
-st_game_we,in_progress,,,,
-st_game,in_progress,,,,
-st_comp_wd,in_progress,,,,
-st_comp_we,in_progress,,,,
-st_comp,in_progress,,,,
-st_phone_wd,in_progress,,,,
-st_phone_we,in_progress,,,,
-st_phone,in_progress,,,,
-st_game_comp_wd,in_progress,,,,
-st_game_comp_we,in_progress,,,,
-st_game_comp,in_progress,,,,
-st_game_console_wd,in_progress,,,,
-st_game_console_we,in_progress,,,,
-st_game_console,in_progress,,,,
-st_game_handheldconsole_wd,in_progress,,,,
-st_game_handheldconsole_we,in_progress,,,,
-st_game_handheldconsole,in_progress,,,,
-st_game_active_wd,in_progress,,,,
-st_game_active_we,in_progress,,,,
-st_game_active,in_progress,,,,
-st_game_phone_wd,in_progress,,,,
-st_game_phone_we,in_progress,,,,
-st_game_phone,in_progress,,,,
-st_comp_nongaming_wd,in_progress,,,,
-st_comp_nongaming_we,in_progress,,,,
-st_comp_nongaming,in_progress,,,,
-st_tablet_wd,in_progress,,,,
-st_tablet_we,in_progress,,,,
-st_tablet,in_progress,,,,
-wb_mwb_wemwbs,in_progress,,,,
-beh_hyper_basc2,in_progress,,,,
-beh_atten_basc2,in_progress,,,,
-mh_anx_basc2,in_progress,,,,
-mh_dep_basc2,in_progress,,,,
-cog_execfunc_basc2,in_progress,,,,
-wb_resil_basc2,in_progress,,,,
-cog_langexec_nepsy,in_progress,,,,
-cog_phono_nepsy,in_progress,,,,
-cog_inhibcont_nepsy,in_progress,,,,
-cog_vismotor_nepsy,in_progress,,,,
-cog_verbalfluency_nepsy,in_progress,,,,
-beh_selfreg_htks,in_progress,,,,
-wb_emotsc_basc2,in_progress,,,,
+target_variable,status,source_columns,expression,notes,lookup_table,measure
+participant_id,compatible,CHILDID,as.character(CHILDID),"ECLS-K child id (CHILDID), the same in every round (K-5 User's Manual, NCES 2019-051).",,
+wave,compatible,round,"sprintf(""%.0f"", as.numeric(round))","ECLS-K data-collection round, 2-9, from the round digit of the source names (tidier): 2 spring 2011 (kindergarten), 3 fall 2011 and 4 spring 2012 (first grade), 5 fall 2012 and 6 spring 2013 (second grade), 7-9 spring 2014-2016 (third to fifth grade). Round 1 (fall 2010) asked no screen item and is dropped.",,
+data_year,compatible,"X_PARDAT, F_INTVYY, X_ASMTYY","coalesce(if_else(as.numeric(X_PARDAT) == 1, as.numeric(F_INTVYY), NA_real_), as.numeric(X_ASMTYY), as.numeric(F_INTVYY))","Year of the parent interview (F_INTVYY), the component that asked the screen items, where the round has parent data (X_PARDAT = 1); else the child assessment year (X_ASMTYY, 16,933 rows); 7 rows with no parent data and no assessment year take the released parent-interview year. Every row has a year (2011-2016).",,
+rct_arm,unavailable,,,Not a randomised trial.,,
+survey_weight,partial,W1_2P0,"if_else(as.numeric(W1_2P0) > 0, as.numeric(W1_2P0), NA_real_)","Base-year parent weight W1_2P0 ('(P1)_(P2) full sample weight': parent interview in fall or spring kindergarten), fixed at the base year and the same on every row; 0 (not a base-year parent respondent) is NA. Partial: the release has only longitudinal weights for later rounds, so one base-year weight is carried to every round; not rescaled. Replicate weights are not harmonised.",,
+survey_strata,compatible,"W1_2P0, W1_2P0STR","if_else(as.numeric(W1_2P0) > 0, sprintf(""%.0f"", as.numeric(W1_2P0STR)), NA_character_)","Taylor-series variance stratum of the chosen weight (W1_2P0STR, 72 strata), fixed at the base year; each weight in the release carries its own stratum codes.",,
+survey_cluster,compatible,"W1_2P0, W1_2P0STR, W1_2P0PSU","if_else(
+  as.numeric(W1_2P0) > 0,
+  paste(sprintf(""%.0f"", as.numeric(W1_2P0STR)), sprintf(""%.0f"", as.numeric(W1_2P0PSU)), sep = ""_""),
+  NA_character_
+)","Taylor-series PSU of the chosen weight (W1_2P0PSU), numbered within stratum (K-5 User's Manual, section 4.3.4.2), so the cluster is stratum and PSU together; fixed at the base year. The sampling PSU id (PSUID) is suppressed in the public-use file.",,
+family_id,compatible,"CHILDID, TWIN_ID","if_else(!is.na(TWIN_ID) & nzchar(TWIN_ID) & TWIN_ID < CHILDID, as.character(TWIN_ID), as.character(CHILDID))","Sampled twin pairs share the smaller of the two children's ids (TWIN_ID is the CHILDID of the focal child's sampled twin, 48 pairs); every other child takes their own CHILDID. PARENTID is unique per child, so it marks no family unit. Twins share the one parent interview of their household.",,
+sample_component,unavailable,,,Single sample.,,
+sample_population,inferred,,"""General population""","Nationally representative probability sample of US kindergartners in 2010-11, drawn through counties, then public and private schools, then children (K-5 User's Manual, NCES 2019-051, section 4.1).",,
+parent_respondent,compatible,"X_PARDAT, X_RESREL, X_RESREL2, X_RESID, X_IDP1, X_IDP2, X_HPAR1, X_HPAR2, CHILDID, round","local({
+  r <- as.numeric(round)
+  resid <- as.numeric(X_RESID)
+  id1 <- as.numeric(X_IDP1)
+  id2 <- as.numeric(X_IDP2)
+  id1[!is.na(id1) & id1 <= 0] <- NA
+  id2[!is.na(id2) & id2 <= 0] <- NA
+  rel1 <- if_else(!is.na(id1), as.numeric(X_HPAR1), NA_real_)
+  rel2 <- if_else(!is.na(id2), as.numeric(X_HPAR2), NA_real_)
+  id1 <- carry_within(id1, CHILDID, order = r)
+  id2 <- carry_within(id2, CHILDID, order = r)
+  rel1 <- carry_within(rel1, CHILDID, order = r)
+  rel2 <- carry_within(rel2, CHILDID, order = r)
+  rel <- case_when(
+    !is.na(resid) & resid > 0 & resid == id1 ~ rel1,
+    !is.na(resid) & resid > 0 & resid == id2 ~ rel2,
+    .default = NA_real_
+  )
+  fall <- case_when(
+    rel %in% c(1, 3, 5, 7, 11, 13) ~ ""Mother"",
+    rel %in% c(2, 4, 6, 8, 12, 14) ~ ""Father"",
+    rel %in% c(9, 10) ~ ""Other carer"",
+    .default = ""Unknown""
+  )
+  case_when(
+    as.numeric(X_PARDAT) != 1 ~ NA_character_,
+    r == 2 ~ recode_values(
+      as.numeric(X_RESREL),
+      c(1, 2) ~ ""Mother"",
+      c(3, 4) ~ ""Father"",
+      c(5, 6) ~ ""Other carer"",
+      default = ""Unknown""
+    ),
+    r %in% c(4, 6, 7, 8, 9) ~ recode_values(
+      as.numeric(X_RESREL2),
+      c(1, 2, 3) ~ ""Mother"",
+      c(4, 5, 6) ~ ""Father"",
+      c(7, 8) ~ ""Other carer"",
+      default = ""Unknown""
+    ),
+    .default = fall
+  )
+})","Respondent's relationship to the child (X_RESREL round 2; X_RESREL2 rounds 4, 6-9): biological, other or unknown-type mother = Mother, the same for fathers = Father, non-parent relative or non-relative = Other carer. Rounds 3 and 5 release only the respondent's household roster number (X_RESID): it is matched to the roster numbers of parent 1 and parent 2 (X_IDP1, X_IDP2) and their relationship codes (X_HPAR1, X_HPAR2) from the child's earliest round with a roster, carried within child, because roster numbers identify persons (within rounds 4 and 6-9 the same match reproduces X_RESREL2 for over 99.8% of respondent mothers and fathers); a respondent who matches neither parent is Unknown. The parent interview's respondent also reported screen time. NA where the round has no parent interview (X_PARDAT = 0). The respondent is taken per round, never carried.",,
+age_years,partial,child_age_months,as.numeric(child_age_months) / 12,"Child assessment age in decimal months (X_KAGE_R round 2, X_AGE rounds 3-9, NCES composites) / 12, no +0.5. Partial: 3,946 rows (4.1%) with no assessment age, mostly parent-interview-only rows, are filled in the tidier (child_age_months) as the child's nearest assessed round's age plus the months from that assessment to the row's parent interview; 416 rows of 121 children never assessed stay NA.",,
+sex,compatible,"X_CHSEX_R, CHILDID","coalesce(
+  modal_within(recode_values(as.numeric(X_CHSEX_R), 1 ~ ""Male"", 2 ~ ""Female"", default = NA_character_), CHILDID),
+  ""Unknown""
+)","Child composite sex, revised (X_CHSEX_R), child-level and the same on every row; modal value within child by the carry-forward rule. 121 rows (-9 not ascertained) are Unknown.",,
+country,inferred,,"""USA""","United States: ECLS-K is a US national sample (K-5 User's Manual, NCES 2019-051).",,
+state,unavailable,,,Not an Australian dataset.,,
+region,unavailable,,,Not in the supplied extract.,,
+ethnicity,proximate,"X_RACETH_R, CHILDID, round","coalesce(
+  carry_within(
+    lookup_values(
+      haven::as_factor(X_RACETH_R),
+      lookup_ethnicity,
+      dataset_id = spec$dataset_id,
+      target_variable = ""ethnicity""
+    ),
+    CHILDID,
+    order = as.numeric(round)
+  ),
+  ""Unknown""
+)","Child race/ethnicity composite from the parent and school report (X_RACETH_R, revised, child-level) through the shared lookup: Hispanic of any race = Hispanic (US rule), then non-Hispanic single race; two or more races = Mixed. Proximate: American Indian/Alaska Native and Native Hawaiian/Pacific Islander have no schema category (Other). -9 not ascertained = Unknown.",ethnicity,
+indigenous,partial,"X_RACETH_R, CHILDID, round","coalesce(
+  carry_within(
+    recode_values(
+      as.numeric(X_RACETH_R),
+      7 ~ ""Indigenous"",
+      c(1, 2, 3, 4, 5, 6, 8) ~ ""Non-Indigenous"",
+      default = NA_character_
+    ),
+    CHILDID,
+    order = as.numeric(round)
+  ),
+  ""Unknown""
+)",Same composite as ethnicity (X_RACETH_R): non-Hispanic American Indian/Alaska Native alone = Indigenous; every other category = Non-Indigenous. Partial: the composite files Hispanic AIAN children under Hispanic and multiracial AIAN children under two or more races.,,
+minority,compatible,"X_RACETH_R, CHILDID, round","coalesce(
+  carry_within(
+    recode_values(
+      as.numeric(X_RACETH_R),
+      1 ~ ""Non-minority"",
+      c(2, 3, 4, 5, 6, 7, 8) ~ ""Minority"",
+      default = NA_character_
+    ),
+    CHILDID,
+    order = as.numeric(round)
+  ),
+  ""Unknown""
+)","Same composite as ethnicity (X_RACETH_R): non-Hispanic White = Non-minority (the US majority); Hispanic, every other race and two or more races = Minority.",,
+immigrant_background,incompatible,"P_BMCOB, P_BDCOB, P_PARCT1_R246, P_PARCT1_R7, P_PARCT2, P_CITIZN",,"Parents' birthplaces are released (P_BMCOB, P_BDCOB round 6; P_PARCT1/P_PARCT2), but the child's birthplace (P_BTHPLC, P_CNTRYB) is suppressed in the public-use file, so a row can emit only Native or Unknown; citizenship (P_CITIZN) alone does not classify.",,
+born_in_country,unavailable,,,Not in the supplied extract.,,
+home_language,compatible,"P_ANYLNG, P_ENGTOO, CHILDID, round","coalesce(
+  carry_within(
+    case_when(
+      as.numeric(P_ANYLNG) == 2 ~ ""Country language only"",
+      as.numeric(P_ANYLNG) == 1 & as.numeric(P_ENGTOO) == 1 ~ ""Country language and another"",
+      as.numeric(P_ANYLNG) == 1 & as.numeric(P_ENGTOO) == 2 ~ ""Another language only"",
+      as.numeric(P_ANYLNG) == 1 ~ ""Another language, country language not recorded"",
+      .default = NA_character_
+    ),
+    CHILDID,
+    order = as.numeric(round)
+  ),
+  ""Unknown""
+)","Parent: is any language other than English regularly used in the home (P_ANYLNG; SPQ155 round 2, PLQ020 rounds 4, 6, 7, 9) and, if so, is English also used (P_ENGTOO; SPQ156, PLQ030; not asked in round 7, where another language is 'country language not recorded'); English is the country language. Carried within child (carry-forward rule). The home-language composite X_LANGST (primary language, a main-language source) is unused.",,
+ses_area,unavailable,,,Not in the supplied extract.,,
+ses_household,proximate,"X_SESL_I, X_POVTY_I, round","local({
+  s <- as.numeric(X_SESL_I)
+  s[s == -9] <- NA
+  w <- as.numeric(round)
+  lo <- stats::ave(s, w, FUN = function(v) {
+    if (all(is.na(v))) NA_real_ else stats::quantile(v, 0.4, na.rm = TRUE, names = FALSE)
+  })
+  hi <- stats::ave(s, w, FUN = function(v) {
+    if (all(is.na(v))) NA_real_ else stats::quantile(v, 0.6, na.rm = TRUE, names = FALSE)
+  })
+  comp <- case_when(is.na(s) ~ NA_character_, s <= lo ~ ""Low"", s > hi ~ ""High"", .default = ""Medium"")
+  pov <- recode_values(as.numeric(X_POVTY_I), 1 ~ ""Low"", 2 ~ ""Medium"", 3 ~ ""High"", default = NA_character_)
+  coalesce(if_else(w == 7, pov, comp), ""Unknown"")
+})","Rounds 2-6, 8-9: the NCES continuous SES composite (X_SESL_I: both parents' education and occupational prestige and household income; NCES-imputed from round 4; K-5 User's Manual, section 7.5.2.8), cut 40/20/40 within round (at or below the 40th percentile Low, above the 60th High); observed in rounds 2, 4 and 9 and carried to rounds 3, 5, 6 and 8 within 12 months in the tidier, otherwise Unknown. Round 7 (no composite): NCES income-to-poverty composite (X_POVTY_I, imputed), by within-round ridit: below the poverty threshold (24.7%, ridit 0.12) Low, 100-199% (22.8%, 0.36, the band nearest 0.5) Medium, 200% or more (52.5%, 0.74) High. Proximate: round 7 is 25/23/53, more than 10 points from 40/20/40.",,
+ses_household_measure,inferred,round,"if_else(
+  as.numeric(round) == 7,
+  ""Income-to-needs: NCES poverty level composite, 3 levels (below, 100-199%, 200% or more of the federal poverty threshold)"",
+  ""Composite SES index: NCES continuous SES composite (parents' education, occupational prestige, household income)""
+)","One measure per round: the SES composite, or income-to-needs in round 7.",,
+ses_hukou,unavailable,,,Hukou not asked.,,
+maternal_education,compatible,"X_PAR1ED_I, X_PAR2ED_I, X_HPAR1_ED, X_HPAR2_ED","local({
+  mothers <- c(1, 3, 5, 7, 11, 13)
+  ed <- case_when(
+    as.numeric(X_HPAR1_ED) %in% mothers ~ as.numeric(X_PAR1ED_I),
+    as.numeric(X_HPAR2_ED) %in% mothers ~ as.numeric(X_PAR2ED_I),
+    .default = NA_real_
+  )
+  ed[!is.na(ed) & ed < 0] <- NA
+  coalesce(
+    lookup_values(
+      if_else(is.na(ed), NA_character_, sprintf(""%.0f"", ed)),
+      lookup_maternal_education,
+      dataset_id = spec$dataset_id,
+      target_variable = ""maternal_education""
+    ),
+    ""Unknown""
+  )
+})","Education composite (X_PAR1ED_I, X_PAR2ED_I, NCES-imputed) of the resident parent whose relationship code in the round the value came from (X_HPAR1_ED, X_HPAR2_ED, paired in the tidier) is a mother figure (biological, adoptive, step or foster mother, a parent's female partner, a female parent figure of unknown type; parent 1 first), through the shared education lookup. Carried from the earliest round that records it, with its relationship code (tidier). 8th grade or below to high school diploma = Secondary school or less; vocational or technical programme and some college = Post-secondary; bachelor's degree and above = Bachelor degree or higher. No resident mother figure (other female guardians included) and -9 = Unknown.",maternal_education,
+paternal_education,compatible,"X_PAR1ED_I, X_PAR2ED_I, X_HPAR1_ED, X_HPAR2_ED","local({
+  fathers <- c(2, 4, 6, 8, 12, 14)
+  ed <- case_when(
+    as.numeric(X_HPAR1_ED) %in% fathers ~ as.numeric(X_PAR1ED_I),
+    as.numeric(X_HPAR2_ED) %in% fathers ~ as.numeric(X_PAR2ED_I),
+    .default = NA_real_
+  )
+  ed[!is.na(ed) & ed < 0] <- NA
+  coalesce(
+    lookup_values(
+      if_else(is.na(ed), NA_character_, sprintf(""%.0f"", ed)),
+      lookup_maternal_education,
+      dataset_id = spec$dataset_id,
+      target_variable = ""maternal_education""
+    ),
+    ""Unknown""
+  )
+})","Education composite (X_PAR1ED_I, X_PAR2ED_I, NCES-imputed) of the resident parent whose relationship code in the round the value came from (X_HPAR1_ED, X_HPAR2_ED, paired in the tidier) is a father figure (biological, adoptive, step or foster father, a parent's male partner, a male parent figure of unknown type; parent 1 first), through the shared education lookup. Carried from the earliest round that records it, with its relationship code (tidier). Levels as maternal_education. No resident father figure (other male guardians are not substituted) and -9 = Unknown.",maternal_education,
+parental_education,compatible,"X_PAR1ED_I, X_PAR2ED_I","local({
+  ed1 <- as.numeric(X_PAR1ED_I)
+  ed2 <- as.numeric(X_PAR2ED_I)
+  ed1[ed1 < 0] <- NA
+  ed2[ed2 < 0] <- NA
+  top <- pmax(ed1, ed2, na.rm = TRUE)
+  coalesce(
+    lookup_values(
+      if_else(is.na(top), NA_character_, sprintf(""%.0f"", top)),
+      lookup_maternal_education,
+      dataset_id = spec$dataset_id,
+      target_variable = ""maternal_education""
+    ),
+    ""Unknown""
+  )
+})","Highest of the two resident parents' or guardians' education composites (X_PAR1ED_I, X_PAR2ED_I, NCES-imputed), through the shared education lookup; one known parent suffices; -1 (no second parent) and -9 are dropped. Carried from the earliest round that records it (tidier). 8th grade or below to high school diploma = Secondary school or less; vocational or technical programme and some college = Post-secondary; bachelor's degree and above = Bachelor degree or higher.",maternal_education,
+maternal_employment,compatible,"X_HPAR1, X_HPAR2, X_PAR1EMP_I, X_PAR2EMP_I","local({
+  mothers <- c(1, 3, 5, 7, 11, 13)
+  emp1 <- recode_values(
+    as.numeric(X_PAR1EMP_I),
+    c(1, 2) ~ ""Employed"",
+    c(3, 4) ~ ""Not employed"",
+    default = NA_character_
+  )
+  emp2 <- recode_values(
+    as.numeric(X_PAR2EMP_I),
+    c(1, 2) ~ ""Employed"",
+    c(3, 4) ~ ""Not employed"",
+    default = NA_character_
+  )
+  coalesce(
+    case_when(
+      as.numeric(X_HPAR1) %in% mothers ~ emp1,
+      as.numeric(X_HPAR2) %in% mothers ~ emp2,
+      .default = NA_character_
+    ),
+    ""Unknown""
+  )
+})","Employment composite (X_PAR1EMP_I, X_PAR2EMP_I, NCES-imputed; paid job last week, hours) of the parent whose relationship code (X_HPAR1, X_HPAR2) is a mother figure (biological, adoptive, step or foster mother, a parent's female partner, a female parent figure of unknown type): 35+ or under 35 hours a week = Employed, looking for work or not in the labour force = Not employed. Households with no mother figure are Unknown. Employment and relationship codes are carried within 12 months in the tidier, otherwise Unknown.",,
+maternal_age,compatible,"X_HPAR1, X_HPAR2, X_PAR1AGE, X_PAR2AGE, X_PAR1AGE_R, X_PAR2AGE_R","local({
+  mothers <- c(1, 3, 5, 7, 11, 13)
+  age1 <- coalesce(as.numeric(X_PAR1AGE), as.numeric(X_PAR1AGE_R))
+  age2 <- coalesce(as.numeric(X_PAR2AGE), as.numeric(X_PAR2AGE_R))
+  age1[age1 < 0] <- NA
+  age2[age2 < 0] <- NA
+  case_when(
+    as.numeric(X_HPAR1) %in% mothers ~ age1 + 0.5,
+    as.numeric(X_HPAR2) %in% mothers ~ age2 + 0.5,
+    .default = NA_real_
+  )
+})","Household-roster age in completed years (+0.5) of the parent whose relationship code (X_HPAR1, X_HPAR2) is a mother figure, as for maternal_employment: X_PAR1AGE/X_PAR2AGE rounds 2, 6-9, the revised X_PAR1AGE_R/X_PAR2AGE_R round 4. Rounds 3 and 5 have no roster age (NA; not carried).",,
+urbanicity,proximate,X_LOCALE,"recode_values(as.numeric(X_LOCALE), 1 ~ ""Urban"", c(2, 3) ~ ""Suburban"", 4 ~ ""Rural"", default = ""Unknown"")","NCES locale of the child's school (X_LOCALE): city = Urban, suburb and town = Suburban (a town level between suburb and rural), rural = Rural. Proximate: school location stands in for residence. -1 and -9 = Unknown.",,
+family_structure,compatible,X_HPARNT,"recode_values(
+  as.numeric(X_HPARNT),
+  1 ~ ""Two biological/adoptive parents"",
+  2 ~ ""Step family"",
+  3 ~ ""Single parent"",
+  4 ~ ""Other"",
+  default = ""Unknown""
+)","NCES composite of the types of parents in the household (X_HPARNT): two biological or adoptive parents; one biological or adoptive parent and one other parent or partner = Step family; one biological or adoptive parent only = Single parent; other guardians = Other. Carried within 12 months in the tidier, otherwise Unknown.",,
+fam_siblings_n,partial,X_NUMSIB,"if_else(as.numeric(X_NUMSIB) >= 0, as.numeric(X_NUMSIB), NA_real_)","NCES count of the child's siblings living in the household (X_NUMSIB), from the household roster. Partial: siblings living elsewhere are not counted. Carried within 12 months in the tidier, otherwise NA.",,
+fam_siblings_any,unavailable,,,Derive at analysis from fam_siblings_n.,,
+fam_screenrules,partial,"P_TVRUL3, P_TVRUL2, C_RULWHN, round","local({
+  parent <- case_when(
+    as.numeric(P_TVRUL3) == 1 | as.numeric(P_TVRUL2) == 1 ~ ""TRUE"",
+    as.numeric(P_TVRUL3) == 2 & as.numeric(P_TVRUL2) == 2 ~ ""FALSE"",
+    .default = NA_character_
+  )
+  child <- recode_values(as.numeric(C_RULWHN), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_)
+  if_else(as.numeric(round) == 2, parent, child)
+})","Round 2, parent: 'Are there family rules for {CHILD} about ... how many hours {CHILD} may watch television? ... how early or late {CHILD} may watch television?' (DWQ086, DWQ088; yes/no), TRUE if either rule is reported; families with no TV skipped the items (NA). Rounds 8-9, child: whether the family has a rule about when the child can text, message or e-mail (CLQ500, CLQ825; yes/no), the only rule item of those rounds, asked of every child including those who never text. Partial: one medium per round (television, then messaging), and the informant is the parent in round 2 and the child in rounds 8-9. The child's rule on whom they may text (C_RULWHO) is a contact rule and unused.",,
+fam_contentrules,partial,P_TVRULE,"recode_values(as.numeric(P_TVRULE), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_)","Round 2 only, parent: 'Are there family rules for {CHILD} about ... what programs {CHILD} can watch?' (DWQ084; yes/no). Partial: television only. The child's rounds 8-9 rule on whom they may text (C_RULWHO) is a contact rule, not content, and is unused.",,
+fam_bedroomscreen,unavailable,,,Not collected.,,
+fam_firstphone_age,unavailable,,,Not collected.,,
+fam_firstscreen_age,unavailable,,,Not collected.,,
+fam_coview_freq,unavailable,,,Not collected.,,
+fam_mediation_restrict,incompatible,"P_TVRULE, P_TVRUL3, P_TVRUL2",,"Only yes/no television rules (round 2), which count only inside a published index; they fill fam_screenrules and fam_contentrules.",,
+fam_mediation_active,unavailable,,,Not collected.,,
+fam_mediation_monitor,incompatible,"P_MONTIM, P_MONCON",,"Rounds 8-9, parent: 'Do you monitor how many hours {CHILD} spends online?' and whether the parent monitors what the child looks at online (HEQ226, HEQ227): yes/no items, which count only inside a published index.",,
+fam_mediation_technical,unavailable,,,Not collected.,,
+fam_mediation_measure,unavailable,,,See fam_mediation_restrict.,,
+fam_parent_screentime,unavailable,,,Not collected.,,
+fam_parentstress,compatible,"P_PTHARD, P_CHDBTH, P_SACRFC, P_FLANGR","local({
+  items <- cbind(as.numeric(P_PTHARD), as.numeric(P_CHDBTH), as.numeric(P_SACRFC), as.numeric(P_FLANGR))
+  items[!items %in% 1:4] <- NA
+  items <- 4 - items
+  rowSums(items) / 4
+})","Rounds 2, 4 and 9 (the interview's parenting-stress topic), parent respondent: 'Being a parent is harder than I thought it would be', '{CHILD} does things that really bother me', 'I find myself giving up more of my life to meet {CHILD}'s needs than I ever expected', 'I often feel angry with {CHILD}' (DWQ040-DWQ060), completely true to not at all true, reversed to 0-3 so higher = more stress; mean of the four, complete-case. Asked only when the respondent is a parent or guardian.",,
+fam_parentstress_measure,inferred,round,"if_else(
+  as.numeric(round) %in% c(2, 4, 9),
+  ""ECLS-K parenting stress items (DWQ040, DWQ045, DWQ050, DWQ060), 4 items, 0-3 item scoring (not at all true to completely true, reversed from the source), mean (range 0-3), complete-case, parent respondent"",
+  NA_character_
+)","Rounds 2, 4 and 9; NA in rounds without the items.",,
+fam_parent_dep,compatible,"P_BOTHER, P_APPETI, P_BLUE, P_KPMIND, P_DEPRES, P_EFFORT, P_FEARFL, P_RESTLS, P_TALKLS, P_LONELY, P_SAD, P_NOTGO, X_RESREL, X_RESREL2, X_HPAR1, X_HPAR2, round","local({
+  items <- cbind(
+    as.numeric(P_BOTHER),
+    as.numeric(P_APPETI),
+    as.numeric(P_BLUE),
+    as.numeric(P_KPMIND),
+    as.numeric(P_DEPRES),
+    as.numeric(P_EFFORT),
+    as.numeric(P_FEARFL),
+    as.numeric(P_RESTLS),
+    as.numeric(P_TALKLS),
+    as.numeric(P_LONELY),
+    as.numeric(P_SAD),
+    as.numeric(P_NOTGO)
+  )
+  items[!items %in% 1:4] <- NA
+  items <- items - 1
+  score <- rowSums(items)
+  resp_mother <- if_else(
+    as.numeric(round) == 2,
+    as.numeric(X_RESREL) %in% c(1, 2),
+    as.numeric(X_RESREL2) %in% c(1, 2, 3)
+  )
+  mothers <- c(1, 3, 5, 7, 11, 13)
+  mother_in_home <- as.numeric(X_HPAR1) %in% mothers | as.numeric(X_HPAR2) %in% mothers
+  if_else(resp_mother | !mother_in_home, score, NA_real_)
+})","Rounds 2, 7, 8 and 9: the respondent's own 12 CES-D items for the past week ('bothered by things that usually don't bother you' ... 'could not get going'; PPQ100-PPQ210), never, some, a moderate amount, most of the time = 0-3, summed, complete-case (range 0-36). Mother figure's score where she answered; where the respondent is another parent or carer it is used only if the household has no mother figure (X_HPAR1, X_HPAR2), else NA (the other parent's score is unused). Not carried.",,
+fam_parent_anx,unavailable,,,Not collected.,,
+fam_parent_distress,unavailable,,,Not collected.,,
+fam_parent_mh_measure,inferred,round,"if_else(
+  as.numeric(round) %in% c(2, 7, 8, 9),
+  ""depression: CES-D 12-item short form as fielded in the ECLS-K parent interview (PPQ100-PPQ210), 12 items, 0-3 item scoring (range 0-36), sum, complete-case, past week; the mother figure where she answered, else the responding parent or carer in households with no mother figure"",
+  NA_character_
+)","Rounds 2, 7, 8 and 9; NA in rounds without the items.",,
+fam_parenting_warmth_parent,partial,"P_WARMCL, P_CHLIKE, P_SHOWLV, P_EXPRES","local({
+  items <- cbind(as.numeric(P_WARMCL), as.numeric(P_CHLIKE), as.numeric(P_SHOWLV), as.numeric(P_EXPRES))
+  items[!items %in% 1:4] <- NA
+  items <- 4 - items
+  rowSums(items) / 4
+})","Rounds 2, 7 and 9, parent respondent: '{CHILD} and I often have warm, close times together', 'Most of the time I feel that {CHILD} likes me and wants to be near me', 'Even when I'm in a bad mood, I show {CHILD} a lot of love', 'I express affection by hugging, kissing, and holding {CHILD}' (DWQ010-DWQ035), completely true to not at all true, reversed to 0-3; mean, complete-case. Partial: the study's own items with no published scoring. Asked only when the respondent is a parent or guardian.",,
+fam_parenting_harsh_parent,incompatible,"P_SPANK, P_HITSPK, P_HITBCK, P_HITYEL",,"Only a single spanking count (round 2, mapped to fam_physpunish) and a hypothetical 'what would you do if {CHILD} hit you' checklist (DWQ110), which never fills a harsh-discipline scale.",,
+fam_parenting_inconsistent_parent,partial,"P_NOPUNISH, P_TALKOUTPNSH, P_EARLYPNSH","local({
+  items <- cbind(as.numeric(P_NOPUNISH), as.numeric(P_TALKOUTPNSH), as.numeric(P_EARLYPNSH))
+  items[!items %in% 1:5] <- NA
+  items <- items - 1
+  rowSums(items) / 3
+})","Rounds 4, 7, 8 and 9, parent respondent: 'You threaten to punish {CHILD} and then do not actually punish {him/her}', the child talks the parent out of a punishment, the parent lets the child off a punishment early (DWQ077a-c), never to always = 0-4; mean, complete-case. Partial: the study's own graded items with no published scoring.",,
+fam_monitoring_parent,unavailable,,,Not collected.,,
+fam_monitoring_self,compatible,"C_KNWFREE, C_KNWHW, C_KNWGRD","local({
+  items <- cbind(as.numeric(C_KNWFREE), as.numeric(C_KNWHW), as.numeric(C_KNWGRD))
+  items[!items %in% 1:6] <- NA
+  rowSums(items) / 3
+})","Round 9, child questionnaire: how often parents know what the child does in free time, how much homework the child has and what the child's school grades are (CLQ830-CLQ840; never to always, 1-6), adapted from Kerr and Stattin's parental knowledge scale (K-5 User's Manual, exhibit 3-4); mean, complete-case. NCES releases no composite.",,
+fam_parenting_measure,inferred,round,"case_when(
+  as.numeric(round) %in%
+    c(
+      2,
+      7
+    ) ~ ""warmth: ECLS-K parent items DWQ010-DWQ035, 4 items, 0-3 item scoring (reversed), mean, complete-case, parent respondent; inconsistent discipline (round 7): DWQ077a-c, 3 items, 0-4 item scoring, mean, complete-case"",
+  as.numeric(round) ==
+    4 ~ ""inconsistent discipline: ECLS-K parent items DWQ077a-c, 3 items, 0-4 item scoring, mean, complete-case, parent respondent"",
+  as.numeric(round) ==
+    8 ~ ""inconsistent discipline: ECLS-K parent items DWQ077a-c, 3 items, 0-4 item scoring, mean, complete-case, parent respondent"",
+  as.numeric(round) ==
+    9 ~ ""warmth: ECLS-K parent items DWQ010-DWQ035, 4 items, 0-3 item scoring (reversed), mean, complete-case, parent respondent; inconsistent discipline: DWQ077a-c, 3 items, 0-4 item scoring, mean, complete-case; monitoring (child): parental knowledge items adapted from Kerr and Stattin (CLQ830-CLQ840), 3 items, 1-6 item scoring, mean, complete-case"",
+  .default = NA_character_
+)","One string per round for the rows mapped; warmth rounds 2, 7, 9, inconsistent discipline rounds 4, 7-9, child-reported monitoring round 9.",,
+fam_physpunish,compatible,P_SPANK,"local({
+  n <- as.numeric(P_SPANK)
+  case_when(n == 95 ~ ""FALSE"", n > 0 & n < 95 ~ ""TRUE"", n == 0 ~ ""FALSE"", .default = NA_character_)
+})","Round 2 only, parent respondent: 'About how many times, if any, have you spanked {CHILD} in the past week?' (DWQ100); above 0 = TRUE, 0 and 95 ('never spanked') = FALSE. Not carried.",,
+fam_parentchild_rel_self,unavailable,,,Not collected.,,
+fam_parentchild_rel_parent,partial,"P_LISTNCH, P_DISWOR, P_ENCTRB, P_ENCFRD, P_ENCOPN, P_STOPLS","local({
+  items <- cbind(
+    as.numeric(P_LISTNCH),
+    as.numeric(P_DISWOR),
+    as.numeric(P_ENCTRB),
+    as.numeric(P_ENCFRD),
+    as.numeric(P_ENCOPN),
+    as.numeric(P_STOPLS)
+  )
+  items[!items %in% 1:4] <- NA
+  items <- items - 1
+  items[, c(2, 6)] <- 3 - items[, c(2, 6)]
+  rowSums(items) / 6
+})","Rounds 6-9, parent respondent: makes time to listen to the child, discourages the child from talking about worries (reversed), encourages the child to talk about troubles, about friends, to express opinions, loses patience and stops listening (reversed) (DWQ070a-f; never true to very often true, 0-3); mean, complete-case. Partial: a parent-child communication item set with no published scoring.",,
+fam_parentchild_conflict_parent,incompatible,P_ARGUE,,"Only a single item, rounds 8-9: how often the parent argues with the child (DWQ075).",,
+fam_parentchild_measure,inferred,round,"if_else(
+  as.numeric(round) %in% c(6, 7, 8, 9),
+  ""parent-child communication (parent): ECLS-K parent items DWQ070a-f, 6 items, 0-3 item scoring (b and f reversed), mean, complete-case, parent respondent"",
+  NA_character_
+)",Rounds 6-9; NA elsewhere.,,
+fam_functioning_parent,unavailable,,,Not collected.,,
+fam_functioning_self,unavailable,,,Not collected.,,
+fam_conflict_parent,unavailable,,,Not collected.,,
+fam_conflict_self,unavailable,,,Not collected.,,
+fam_functioning_measure,unavailable,,,See fam_functioning_parent.,,
+fam_readto_freq,compatible,"P_READBK, P_RDBKTC","recode_values(
+  coalesce(as.numeric(P_READBK), as.numeric(P_RDBKTC)),
+  1 ~ ""Less than once a week"",
+  2 ~ ""Once or twice a week"",
+  3 ~ ""Several times a week"",
+  4 ~ ""Every day"",
+  default = NA_character_
+)","Parent: how often the child is read books (HEQ030, rounds 4 and 6: not at all, once or twice a week, 3-6 times a week, every day) or, in the fall rounds 3 and 5, how often 'you or any other family member' read books to the child during a typical week of the summer (HEQ010C: never, once or twice, 3-6 times, every day; 'child away whole summer' NA). Recall does not change the status.",,
+fam_readto_time,partial,"P_READBK, P_RDMINS, round","local({
+  spring_days <- recode_values(as.numeric(P_READBK), 1 ~ 0, 2 ~ 1.5, 3 ~ 4.5, 4 ~ 7, default = NA_real_)
+  mins <- as.numeric(P_RDMINS)
+  spring <- case_when(as.numeric(P_READBK) == 1 ~ 0, mins > 0 ~ mins * spring_days / 7 / 60, .default = NA_real_)
+  if_else(as.numeric(round) == 4, spring, NA_real_)
+})","Minutes read to times days read to per week / 7, in hours (day-of-use rule): round 4, minutes read to (HEQ036, open entry) with the weekly frequency (HEQ030: once or twice = 1.5, 3-6 times = 4.5, every day = 7 days); not read to = 0. Partial: day-of-use scaling. Round 6 asked the frequency only, so the whole round is NA, its not-read-to answers included (a frequency-only item gives no time). The fall rounds' summer session-length bands (HEQ020, P_HWLGRD) are unused: the questionnaire gives '15 minutes or less, 16 to 29 minutes' where the released labels give '5 minutes or less, 6 to 29 minutes'.",,
+fam_childbooks,compatible,P_CHLDBK,"if_else(as.numeric(P_CHLDBK) >= 0, as.numeric(P_CHLDBK), NA_real_)","Rounds 4, 7 and 9, parent: 'About how many children's books does {CHILD} have in your home now, including library books? Please only include books that are for children.' (HEQ040; books shared with siblings count), open entry, kept as entered (0-5,000).",,
+fam_home_total,unavailable,,,HOME Inventory not administered.,,
+fam_home_cogstim,unavailable,,,HOME Inventory not administered.,,
+fam_home_emotsupport,unavailable,,,HOME Inventory not administered.,,
+fam_home_measure,unavailable,,,See fam_home_total.,,
+school_grade,compatible,"T_GRADE_R2, X_GRDLVL_R3, X_GRDLVL_R4, X_GRDLVL_R56, X_GRDLVL_R7, X_GRDLVL_R8, X_GRDLVL_R9, round","local({
+  r <- as.numeric(round)
+  case_when(
+    r == 2 & as.numeric(T_GRADE_R2) %in% c(1, 2) ~ ""Kindergarten"",
+    r == 3 ~ recode_values(
+      as.numeric(X_GRDLVL_R3),
+      1 ~ ""Kindergarten"",
+      2 ~ ""Grade 1"",
+      3 ~ ""Grade 2"",
+      default = NA_character_
+    ),
+    r == 4 ~ recode_values(
+      as.numeric(X_GRDLVL_R4),
+      1 ~ ""Kindergarten"",
+      2 ~ ""Grade 1"",
+      3 ~ ""Grade 2"",
+      4 ~ ""Grade 3"",
+      default = NA_character_
+    ),
+    r %in% c(5, 6) & as.numeric(X_GRDLVL_R56) == 1 ~ ""Grade 2"",
+    r == 7 & as.numeric(X_GRDLVL_R7) == 1 ~ ""Grade 3"",
+    r == 8 & as.numeric(X_GRDLVL_R8) == 1 ~ ""Grade 4"",
+    r == 9 & as.numeric(X_GRDLVL_R9) == 1 ~ ""Grade 5"",
+    .default = NA_character_
+  )
+})","Round 2: the teacher's report of the grade the child is enrolled in (T_GRADE_R2; full- or part-day kindergarten). Rounds 3-4: the child's grade-level composite (kindergarten to second grade in round 3, to third grade in round 4; ungraded NA, coded 4 in round 3 and 5 in round 4). Rounds 5-9: the composite records only whether the child is in the round's modal grade (second grade in rounds 5-6, then third to fifth); 'other' grades are NA.",,
+school_sector,compatible,X_PUBPRI,"recode_values(as.numeric(X_PUBPRI), 1 ~ ""Public"", 2 ~ ""Private"", default = ""Unknown"")","NCES composite of the child's school's control (X_PUBPRI), every round: public or private. -1 (not applicable, e.g. home-schooled) and -9 = Unknown.",,
+school_track,inferred,,"""Not tracked""","Every round falls in US elementary school, kindergarten to fifth grade (K-5 User's Manual, NCES 2019-051, exhibit 1-1), a stage with no tracks.",,
+st_measure_type,inferred,,"""Continuous""","Open entry of hours and minutes in the parent interview (DWQ080-DWQ082, HEQ038-HEQ039).",,
+st_measure_name,inferred,,"""Custom""",ECLS-K parent-interview items written for the study.,,
+st_responder,inferred,,"""Parent or carer""","The parent interview's respondent, a parent in 97% of interviews (X_RESREL, X_RESREL2; see parent_respondent), occasionally another relative or guardian.",,
+st_total_wd,incompatible,"P_TVHR, P_VIDHR, P_TVBF8H, P_TVDAYH, P_TVA6PH",,"No all-screen item; the weekday TV and video-game items sit on st_watch_wd and st_game_wd and are not summed (DR-0002, DR-0004).",,
+st_total_we,incompatible,"P_TVSATH, P_TVSUNH, P_TVHR_SUMMER, P_VIDHR_SUMMER",,"No all-screen item; the weekend and summer-day TV and video-game items sit on st_watch_we and st_game_we and are not summed (DR-0002, DR-0004).",,
+st_total,incompatible,"P_TVHR, P_VIDHR, P_TVHR_SUMMER, P_VIDHR_SUMMER",,"No all-screen item; TV and video-game items are never summed (DR-0002, DR-0004).",,
+st_watch_wd,partial,"P_TVBF8H, P_TVBF8M, P_TVDAYH, P_TVDAYM, P_TVA6PH, P_TVA6PM, P_TVHR, P_TVMIN","local({
+  early_h <- as.numeric(P_TVBF8H)
+  early_m <- as.numeric(P_TVBF8M)
+  early_m[!is.na(early_m) & early_m == -1] <- 0
+  early <- if_else(early_h >= 0 & early_h <= 24 & early_m >= 0, early_h + early_m / 60, NA_real_)
+  day_h <- as.numeric(P_TVDAYH)
+  day_m <- as.numeric(P_TVDAYM)
+  day_m[!is.na(day_m) & day_m == -1] <- 0
+  day <- if_else(day_h >= 0 & day_h <= 24 & day_m >= 0, day_h + day_m / 60, NA_real_)
+  evening_h <- as.numeric(P_TVA6PH)
+  evening_m <- as.numeric(P_TVA6PM)
+  evening_m[!is.na(evening_m) & evening_m == -1] <- 0
+  evening <- if_else(evening_h >= 0 & evening_h <= 24 & evening_m >= 0, evening_h + evening_m / 60, NA_real_)
+  weekday_h <- as.numeric(P_TVHR)
+  weekday_m <- as.numeric(P_TVMIN)
+  weekday_m[!is.na(weekday_m) & weekday_m == -1] <- 0
+  weekday <- if_else(weekday_h >= 0 & weekday_h <= 24 & weekday_m >= 0, weekday_h + weekday_m / 60, NA_real_)
+  no_tv <- as.numeric(P_TVBF8H) == 77
+  coalesce(if_else(no_tv, 0, early + day + evening), weekday)
+})","Parent, hours + minutes / 60; an empty minutes field (-1) counts as 0 minutes (the interview allowed empty minutes, not empty hours). Round 2: 'On any given weekday, how many hours of television, videotapes, or DVDs on average does {CHILD} watch at home?' before 8 a.m., 8 a.m.-6 p.m. and after 6 p.m. (DWQ080a-c), Sum of the before-8 a.m., 8 a.m.-6 p.m. and after-6 p.m. parts (P_TVBF8H/M, P_TVDAYH/M, P_TVA6PH/M) (DR-0002); 'family does not have a TV' (77, 46 families) = 0 (Non-users rule). Rounds 4, 6, 7: the same weekday question for television shows, videos or DVDs 'watched on a TV, computer, or handheld device' (DWQ080a-b). Partial: round 2 counts viewing at home only, so the series splices two item forms.",,
+st_watch_we,partial,"P_TVBF8H, P_TVSATH, P_TVSATM, P_TVSUNH, P_TVSUNM, P_TVHR_SUMMER, P_TVMIN_SUMMER","local({
+  sat_h <- as.numeric(P_TVSATH)
+  sat_m <- as.numeric(P_TVSATM)
+  sat_m[!is.na(sat_m) & sat_m == -1] <- 0
+  sat <- if_else(sat_h >= 0 & sat_h <= 24 & sat_m >= 0, sat_h + sat_m / 60, NA_real_)
+  sun_h <- as.numeric(P_TVSUNH)
+  sun_m <- as.numeric(P_TVSUNM)
+  sun_m[!is.na(sun_m) & sun_m == -1] <- 0
+  sun <- if_else(sun_h >= 0 & sun_h <= 24 & sun_m >= 0, sun_h + sun_m / 60, NA_real_)
+  summer_h <- as.numeric(P_TVHR_SUMMER)
+  summer_m <- as.numeric(P_TVMIN_SUMMER)
+  summer_m[!is.na(summer_m) & summer_m == -1] <- 0
+  summer <- if_else(summer_h >= 0 & summer_h <= 24 & summer_m >= 0, summer_h + summer_m / 60, NA_real_)
+  no_tv <- as.numeric(P_TVBF8H) == 77
+  coalesce(if_else(no_tv, 0, (sat + sun) / 2), summer)
+})","Parent, hours + minutes / 60, empty minutes (-1) = 0. Round 2: hours of television, videotapes or DVDs watched at home on Saturdays and on Sundays (DWQ082a-b), averaged; no TV (77) = 0. Rounds 3 and 5 (fall subsample): 'On a typical summer day, how many hours of television, videotapes, or DVDs on average did {CHILD} watch?', any device (HEQ038a-b), the summer before the fall interview, a non-school day (holidays rule). Partial: round 2 counts viewing at home only, and the series splices weekend and summer-day items.",,
+st_watch,partial,"P_TVBF8H, P_TVBF8M, P_TVDAYH, P_TVDAYM, P_TVA6PH, P_TVA6PM, P_TVSATH, P_TVSATM, P_TVSUNH, P_TVSUNM","local({
+  early_h <- as.numeric(P_TVBF8H)
+  early_m <- as.numeric(P_TVBF8M)
+  early_m[!is.na(early_m) & early_m == -1] <- 0
+  early <- if_else(early_h >= 0 & early_h <= 24 & early_m >= 0, early_h + early_m / 60, NA_real_)
+  day_h <- as.numeric(P_TVDAYH)
+  day_m <- as.numeric(P_TVDAYM)
+  day_m[!is.na(day_m) & day_m == -1] <- 0
+  day <- if_else(day_h >= 0 & day_h <= 24 & day_m >= 0, day_h + day_m / 60, NA_real_)
+  evening_h <- as.numeric(P_TVA6PH)
+  evening_m <- as.numeric(P_TVA6PM)
+  evening_m[!is.na(evening_m) & evening_m == -1] <- 0
+  evening <- if_else(evening_h >= 0 & evening_h <= 24 & evening_m >= 0, evening_h + evening_m / 60, NA_real_)
+  sat_h <- as.numeric(P_TVSATH)
+  sat_m <- as.numeric(P_TVSATM)
+  sat_m[!is.na(sat_m) & sat_m == -1] <- 0
+  sat <- if_else(sat_h >= 0 & sat_h <= 24 & sat_m >= 0, sat_h + sat_m / 60, NA_real_)
+  sun_h <- as.numeric(P_TVSUNH)
+  sun_m <- as.numeric(P_TVSUNM)
+  sun_m[!is.na(sun_m) & sun_m == -1] <- 0
+  sun <- if_else(sun_h >= 0 & sun_h <= 24 & sun_m >= 0, sun_h + sun_m / 60, NA_real_)
+  no_tv <- as.numeric(P_TVBF8H) == 77
+  weekday <- if_else(no_tv, 0, early + day + evening)
+  weekend <- if_else(no_tv, 0, (sat + sun) / 2)
+  (5 * weekday + 2 * weekend) / 7
+})","Round 2 only, the one round with both day types: (5 x st_watch_wd + 2 x st_watch_we) / 7 from the round-2 items. Partial: viewing at home only. Rounds 3-7 ask one day type only (NA).",,
+st_game_wd,compatible,"P_VIDHR, P_VIDMIN","local({
+  game_h <- as.numeric(P_VIDHR)
+  game_m <- as.numeric(P_VIDMIN)
+  game_m[!is.na(game_m) & game_m == -1] <- 0
+  game <- if_else(game_h >= 0 & game_h <= 24 & game_m >= 0, game_h + game_m / 60, NA_real_)
+  game
+})","Rounds 4, 6-9, parent: 'On any given weekday, how much time does {CHILD} spend playing video games?' on consoles, handhelds such as a Nintendo DS, iPod, iPad or cellphone, or the computer, not educational computer use or homework (DWQ081a-b); hours + minutes / 60, empty minutes (-1) = 0. 151 round-6 rows skipped the block (-1 hours) and are NA.",,
+st_game_we,compatible,"P_VIDHR_SUMMER, P_VIDMIN_SUMMER","local({
+  game_h <- as.numeric(P_VIDHR_SUMMER)
+  game_m <- as.numeric(P_VIDMIN_SUMMER)
+  game_m[!is.na(game_m) & game_m == -1] <- 0
+  game <- if_else(game_h >= 0 & game_h <= 24 & game_m >= 0, game_h + game_m / 60, NA_real_)
+  game
+})","Rounds 3 and 5 (fall subsample), parent: 'On a typical summer day, how much time did {CHILD} spend playing video games?', the same device list, not educational computer use (HEQ039a-b); the summer before the fall interview, a non-school day (holidays rule). Hours + minutes / 60, empty minutes (-1) = 0.",,
+st_game,incompatible,"P_VIDHR, P_VIDHR_SUMMER",,"Weekday items (rounds 4, 6-9) and summer-day items (rounds 3, 5) come from different rounds; no round has both, so no usual-day value.",,
+st_game_comp_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_comp_we,unavailable,,,No device split; see st_game_we.,,
+st_game_comp,unavailable,,,No device split; see st_game.,,
+st_game_console_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_console_we,unavailable,,,No device split; see st_game_we.,,
+st_game_console,unavailable,,,No device split; see st_game.,,
+st_game_handheldconsole_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_handheldconsole_we,unavailable,,,No device split; see st_game_we.,,
+st_game_handheldconsole,unavailable,,,No device split; see st_game.,,
+st_game_active_wd,unavailable,,,No weekday/weekend split.,,
+st_game_active_we,unavailable,,,No weekday/weekend split.,,
+st_game_active,incompatible,P_VIDEXC,,"Rounds 2 and 7, parent: whether the child did interactive video exercise or games among the week's physical activities (CHQ070, yes/no); no hours.",,
+st_game_phone_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_phone_we,unavailable,,,No device split; see st_game_we.,,
+st_game_phone,unavailable,,,No device split; see st_game.,,
+st_game_tablet_wd,unavailable,,,No device split; see st_game_wd.,,
+st_game_tablet_we,unavailable,,,No device split; see st_game_we.,,
+st_game_tablet,unavailable,,,No device split; see st_game.,,
+st_comp_nongaming_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming_we,unavailable,,,No weekday/weekend split.,,
+st_comp_nongaming,incompatible,"P_USECMP, P_COMEDU, P_MTHRD",,"Frequency-only computer items (how often the child uses the home computer, round 2; uses a computer for education or to learn, rounds 3, 5, 6-9); no hours.",,
+st_comp_wd,unavailable,,,No weekday/weekend split.,,
+st_comp_we,unavailable,,,No weekday/weekend split.,,
+st_comp,incompatible,"P_HOMECM, P_USECMP, P_HMCOMP",,"Ownership and frequency only: a home computer the child uses (P_HOMECM, P_HMCOMP; yes/no) and how often the child uses it (P_USECMP, round 2; never to every day); no hours.",,
+st_tablet_wd,unavailable,,,Not collected.,,
+st_tablet_we,unavailable,,,Not collected.,,
+st_tablet,unavailable,,,Not collected.,,
+st_phone_wd,unavailable,,,Not collected.,,
+st_phone_we,unavailable,,,Not collected.,,
+st_phone,unavailable,,,Not collected.,,
+st_socmedia_wd,unavailable,,,No weekday/weekend split.,,
+st_socmedia_we,unavailable,,,No weekday/weekend split.,,
+st_socmedia,incompatible,C_SOCLNET,,"Round 9, child: how often the child uses social networking sites (C_SOCLNET; never to many times a day), a frequency item with no hours.",,
+st_educational_wd,unavailable,,,No weekday/weekend split.,,
+st_educational_we,unavailable,,,No weekday/weekend split.,,
+st_educational,incompatible,"P_LRNPRG, P_COMEDU, P_MTHRD",,"Yes/no and frequency only: uses the computer to learn skills (P_LRNPRG, round 2) and how often the child used a computer for education or to learn (P_COMEDU, rounds 3, 5; P_MTHRD, rounds 6-9); no hours.",,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
+st_work_wd,unavailable,,,Not collected.,,
+st_work_we,unavailable,,,Not collected.,,
+st_work,unavailable,,,Not collected.,,
+st_internet_wd,unavailable,,,No weekday/weekend split.,,
+st_internet_we,unavailable,,,No weekday/weekend split.,,
+st_internet,incompatible,P_INTRNT,,"Rounds 2 and 6, parent: whether the child uses the computer for the internet (P_INTRNT, yes/no); no hours.",,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
+st_videochat,unavailable,,,Not collected.,,
+st_messaging_wd,unavailable,,,No weekday/weekend split.,,
+st_messaging_we,unavailable,,,No weekday/weekend split.,,
+st_messaging,incompatible,C_OFTTXT,,"Rounds 8-9, child: how often the child sends text messages, instant messages or e-mail (C_OFTTXT; never to many times a day), a frequency item with no hours, bundling messaging with e-mail.",,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
+st_creating,unavailable,,,Not collected.,,
+st_email_wd,unavailable,,,No weekday/weekend split.,,
+st_email_we,unavailable,,,No weekday/weekend split.,,
+st_email,incompatible,C_OFTTXT,,"The only e-mail item bundles it with texting and instant messages and gives a frequency, not hours (see st_messaging).",,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
+st_shopping,unavailable,,,Not collected.,,
+st_total_school,unavailable,,,No item on use at school.,,
+st_educational_school,unavailable,,,No item on use at school.,,
+st_comp_school,unavailable,,,No item on use at school.,,
+st_tablet_school,unavailable,,,No item on use at school.,,
+st_internet_school,unavailable,,,No item on use at school.,,
+st_phone_school,unavailable,,,No item on use at school.,,
+acc_academachment_selfrated,unavailable,,,Not collected.,,
+acc_academachment_lettergrades,compatible,P_USGRAD,"recode_values(as.numeric(P_USGRAD), 1 ~ ""A"", 2 ~ ""B"", 3 ~ ""C"", 4 ~ ""D"", default = NA_character_)","Rounds 8-9, parent: 'Overall, across all subjects {he/she} takes at school, does {he/she} get mostly A's, mostly B's, mostly C's, mostly D's and lower?' (PIQ560); 'Mostly X's' = X, the open bottom band = D; 'school does not give those grades' NA. Also mapped to acc_academachment_numgrades.",,
+acc_academachment_stdtest,partial,X_STHETK5,"if_else(as.numeric(X_STHETK5) == -9, NA_real_, as.numeric(X_STHETK5))","Domain: science. ECLS-K science assessment, every kept round: IRT theta (ability estimate on the K-5 metric, about -4 to 4). Partial: not age-normed; standardise within dataset and wave.",,
+acc_schoolengage_caresschool,incompatible,C_TRYHRD,,"Only 'I try hard to do well in school' (rounds 8-9, never to very often), which is trying, not caring, and is scored in acc_schoolengage_self.",,
+acc_schoolengage_homework,incompatible,"P_HMWORK, P_HWKCMP",,"Only how often the child does homework at home (PIQ510; never to 5 or more times a week) and how often a parent checks it is done (P_HWKCMP), not completion of all homework set.",,
+acc_schoolengage_self,partial,"C_TRYHRD, C_WRKHRD, C_PARDIS, C_PAYATT, C_LSTNCL","local({
+  items <- cbind(
+    as.numeric(C_TRYHRD),
+    as.numeric(C_WRKHRD),
+    as.numeric(C_PARDIS),
+    as.numeric(C_PAYATT),
+    as.numeric(C_LSTNCL)
+  )
+  items[!items %in% 1:5] <- NA
+  rowSums(items) / 5
+})","Rounds 8-9, child questionnaire, behavioural engagement adapted from Skinner, Kindermann and Furrer (2009) (K-5 User's Manual, exhibit 3-4): tries hard to do well in school, works as hard as possible in class, participates in class discussion, pays attention, listens carefully (never to very often, 1-5); mean, complete-case. Partial: the study's own battery, no released score.",,
+acc_schoolengage_teacher,incompatible,X_TCHAPP,,"Only the teacher Approaches to Learning scale (X_TCHAPP: organised, eager to learn, works independently, adapts, persists, pays attention, follows rules), an approaches-to-learning scale, which has no row.",,
+acc_schoolengage_measure,inferred,round,"if_else(
+  as.numeric(round) %in% c(8, 9),
+  ""self: ECLS-K child questionnaire behavioural engagement items adapted from Skinner et al. 2009, 5 items, 1-5 item scoring (never to very often; range 1-5), mean, complete-case"",
+  NA_character_
+)",Rounds 8-9; NA elsewhere.,,
+acc_homework_time,incompatible,P_HMWORK,,"Only how often the child does homework (PIQ510, a frequency); no time item.",,
+acc_schoolpressure_self,unavailable,,,Not collected.,,
+acc_schoolstress_self,compatible,"C_WRYTST, C_HARDFIN, C_ASHAME, C_WRYWEL, C_WRYFIN","local({
+  items <- cbind(
+    as.numeric(C_WRYTST),
+    as.numeric(C_HARDFIN),
+    as.numeric(C_ASHAME),
+    as.numeric(C_WRYWEL),
+    as.numeric(C_WRYFIN)
+  )
+  items[!items %in% 1:4] <- NA
+  rowSums(items) / 5
+})","Round 9, child questionnaire, Worry/Stress About School (adapted from the ECLS-K internalising items; K-5 User's Manual, exhibit 3-4): worries about taking tests, finds it hard to finish schoolwork, is ashamed of mistakes at school, worries about doing well in school, worries about finishing work (not at all true to very true, 1-4); mean, complete-case.",,
+acc_schoolstress_measure,inferred,round,"if_else(
+  as.numeric(round) == 9,
+  ""ECLS-K child questionnaire Worry/Stress About School items, 5 items, 1-4 item scoring (not at all true to very true; range 1-4), mean, complete-case"",
+  NA_character_
+)",Round 9; NA elsewhere.,,
+acc_schoolbelonging_self,compatible,"C_FITIN, C_CLOSCL, C_CLOSTC, C_ENJOY, C_SAFE","local({
+  items <- cbind(
+    as.numeric(C_FITIN),
+    as.numeric(C_CLOSCL),
+    as.numeric(C_CLOSTC),
+    as.numeric(C_ENJOY),
+    as.numeric(C_SAFE)
+  )
+  items[!items %in% 1:4] <- NA
+  rowSums(items) / 5
+})","Round 9, child questionnaire, School Belonging items from the ECLS-K grade 8 student questionnaire (K-5 User's Manual, exhibit 3-4): how often the child feels they fit in at school, feels close to classmates, feels close to teachers, enjoys being at school, feels safe at school (never, sometimes, often, always, 1-4); mean, complete-case; NCES releases no composite.",,
+acc_schoolbelonging_measure,inferred,round,"if_else(
+  as.numeric(round) == 9,
+  ""ECLS-K child questionnaire School Belonging items (from the ECLS-K grade 8 student questionnaire), 5 items, 1-4 item scoring (never to always; range 1-4), mean, complete-case"",
+  NA_character_
+)",Round 9; NA elsewhere.,,
+acc_academachment_numgrades,compatible,P_USGRAD,"recode_values(as.numeric(P_USGRAD), 1 ~ 4, 2 ~ 3, 3 ~ 2, 4 ~ 1, default = NA_real_)","Same item as acc_academachment_lettergrades (PIQ560, rounds 8-9, parent): mostly A's = 4, B's = 3, C's = 2, D's and lower = 1 (US grade points); no letter grades NA.",,
+acc_academachment_teacherrated,partial,"T_RTLAN, T_RTMTH, T_RTSC, T_RTSSS, T_RTREAD, T_RTWRTE, T_RTOLAN, T_RTMAT, T_RTSCI, T_RTSOC, round","local({
+  r <- as.numeric(round)
+  k <- cbind(as.numeric(T_RTLAN), as.numeric(T_RTMTH), as.numeric(T_RTSC), as.numeric(T_RTSSS))
+  k[!k %in% 1:5] <- NA
+  k_level <- ceiling(rowSums(k) / 4 - 0.5)
+  g <- cbind(
+    as.numeric(T_RTREAD),
+    as.numeric(T_RTWRTE),
+    as.numeric(T_RTOLAN),
+    as.numeric(T_RTMAT),
+    as.numeric(T_RTSCI),
+    as.numeric(T_RTSOC)
+  )
+  g[!g %in% 1:3] <- NA
+  g_level <- ceiling(rowSums(g) / 6 - 0.5)
+  case_when(
+    r %in% c(2, 4) ~ recode_values(
+      k_level,
+      5 ~ ""Very good"",
+      4 ~ ""Good"",
+      3 ~ ""Average"",
+      c(1, 2) ~ ""Below average"",
+      default = NA_character_
+    ),
+    r %in% c(6, 7) ~ recode_values(g_level, 3 ~ ""Good"", 2 ~ ""Average"", 1 ~ ""Below average"", default = NA_character_),
+    .default = NA_character_
+  )
+})","Classroom teacher, mean of every academic subject rated, all required, half rounded toward the poorer level. Rounds 2 and 4: language and literacy, mathematics, science and social studies compared with other children of the same grade (S18A-D; far below to far above average, 1-5), five-level collapse (far above = Very good, above = Good, average = Average, below and far below = Below average). Rounds 6 and 7: reading, writing, oral language, mathematics, science and social studies against grade level (D19A-F, E14A-F; below, on, above grade level), read by rank as Below average, Average and Good, so Very good is not reached in those rounds. Partial: a subject mean, with the response scale changing after round 4. Rounds 8-9 are unused: the reading teacher rates no mathematics or science, and the mathematics or science teacher rates one subject.",,
+acc_academachment_parentrated,incompatible,P_WKSCHL,,"Rounds 8-9, parent's rating of the child's work at school (PIQ570; excellent to failing), asked only of children whose school does not give letter grades (a subsample).",,
+acc_numeracy_stdtest,partial,X_MTHETK5,"if_else(as.numeric(X_MTHETK5) == -9, NA_real_, as.numeric(X_MTHETK5))","ECLS-K two-stage adaptive mathematics assessment, every round: IRT theta (ability estimate on the K-5 metric, about -4 to 4). Partial: not age-normed; standardise within dataset and wave.",,
+acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered; see acc_numeracy_stdtest.,,
+acc_literacy_stdtest,partial,X_RTHETK5,"if_else(as.numeric(X_RTHETK5) == -9, NA_real_, as.numeric(X_RTHETK5))","ECLS-K two-stage adaptive reading assessment, every round: IRT theta (ability estimate on the K-5 metric, about -4 to 4) (K-5 User's Manual, section 3.1). Partial: not age-normed; standardise within dataset and wave.",,
+acc_literacy_bas_wordreading,unavailable,,,BAS II not administered; see acc_literacy_stdtest.,,
+acc_learningdisab_diagnosed,unavailable,,,Not in the supplied extract.,,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+acc_graderepeated,partial,grade_repeated,as.character(grade_repeated),"No retention item; derived in the tidier (grade_repeated) from the first-time-kindergartner flags (X1FIRKDG, T1FIRKDG where X1FIRKDG is -9) and grade level (X_GRDLVL_R3, X_GRDLVL_R4, X_GRDLVL_R56, X_GRDLVL_R7, X_GRDLVL_R8, X_GRDLVL_R9): TRUE where the child repeated kindergarten, was still in kindergarten in round 3 or 4, or was in a grade other than the round's modal grade in rounds 5-9 right after an attended round at the modal grade (the kindergarten year counts); TRUE is carried to every later round; FALSE for a first-time kindergartner at the modal grade with no earlier TRUE; otherwise NA. Partial: grade level is not a retention report, and 'other' grade also holds a few children ahead of grade.",,
+beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_basc2,unavailable,,,BASC-2 not administered.,,
+beh_atten_self,unavailable,,,Not collected.,,
+beh_hyper_self,unavailable,,,Not collected.,,
+beh_adhdsymp_self,unavailable,,,Not collected.,,
+beh_atten_measure,unavailable,,,See beh_atten_self.,,
+beh_atten_singleitem_teacher,incompatible,T_ATTEN,,'Pays attention well' (T_ATTEN) is scored in the teacher approaches-to-learning scale; a teacher's scale item does not fill a single-item row.,,
+beh_impulsivity_self,unavailable,,,Not collected.,,
+beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
+beh_selfreg_htks,unavailable,,,Head-Toes-Knees-Shoulders task not administered.,,
+beh_selfreg_parent,partial,X_PRNCON,"if_else(as.numeric(X_PRNCON) >= 1, as.numeric(X_PRNCON), NA_real_)","Rounds 2 and 4, parent: NCES parent Self-Control score (X_PRNCON), a mean of parent social-skills items adapted from the Social Skills Rating System parent elementary form (P_SS*, released with the K-5 file), 1-4. Partial: the study's adaptation, scored by NCES.",,
+beh_emotdysreg_parent,incompatible,X_PRNCON,,"Only the parent Social Rating Scale self-control score (rounds 2 and 4), a behavioural self-control scale, not emotion dysregulation.",,
+beh_emotreg_parent,incompatible,X_PRNCON,,"Only the parent Social Rating Scale self-control score (rounds 2 and 4), a behavioural self-control scale, not emotion regulation competence.",,
+beh_selfreg_self,unavailable,,,Not collected.,,
+beh_emotreg_self,unavailable,,,Not collected.,,
+beh_emotdysreg_self,unavailable,,,Not collected.,,
+beh_emotreg_suppression_self,unavailable,,,Not collected.,,
+beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
+beh_emotaware_self,unavailable,,,Not collected.,,
+beh_selfreg_measure,unavailable,,,See beh_selfreg_self.,,
+beh_temp_negaffect_parent,unavailable,,,Not collected.,,
+beh_temp_surgency_parent,unavailable,,,Not collected.,,
+beh_temp_measure,unavailable,,,See beh_temp_negaffect_parent.,,
+beh_bullied,incompatible,"T_TSTEAS, T_TSPUSH, T_TSLIES, T_TSLFTO, G_TSTEAS, G_TSPUSH, G_TSLIES, G_TSLFTO",,"No self-report of bullying others; only teacher items on the child teasing, pushing, lying to or excluding others (rounds 6-9), another informant.",,
+beh_beenbullied,partial,"C_TEASED, C_LIESABT, C_PUSHCH, C_EXCLDCH, P_OTHTEA, P_OTHHIT, P_OTHEXC, round","local({
+  child <- cbind(as.numeric(C_TEASED), as.numeric(C_LIESABT), as.numeric(C_PUSHCH), as.numeric(C_EXCLDCH))
+  child[!child %in% 1:5] <- NA
+  parent <- cbind(as.numeric(P_OTHTEA), as.numeric(P_OTHHIT), as.numeric(P_OTHEXC))
+  parent[!parent %in% 1:2] <- NA
+  child_any <- case_when(
+    rowSums(child >= 2, na.rm = TRUE) > 0 ~ ""TRUE"",
+    rowSums(!is.na(child)) > 0 ~ ""FALSE"",
+    .default = NA_character_
+  )
+  parent_any <- case_when(
+    rowSums(parent == 1, na.rm = TRUE) > 0 ~ ""TRUE"",
+    rowSums(!is.na(parent)) > 0 ~ ""FALSE"",
+    .default = NA_character_
+  )
+  if_else(as.numeric(round) == 6, parent_any, child_any)
+})","Rounds 7-9, child questionnaire peer victimisation items adapted from Espelage and Holt (2001): how often other kids teased or called the child names, told lies about the child, pushed or shoved the child, excluded the child (never to very often); TRUE if any is above never, FALSE if every answered item is never (compatible). Round 6, parent: whether other children teased, pushed or hit, or excluded the child (VIQ010-VIQ050, yes/no), partial as a parent report. The round-7 parent items are unused (the child reports that round).",,
+beh_beenbullied_online,unavailable,,,Not collected.,,
+beh_bullied_online,unavailable,,,Not collected.,,
+beh_fight,unavailable,,,Not collected.,,
+beh_truancy,unavailable,,,Not collected.,,
+beh_suspended,unavailable,,,Not collected.,,
+beh_stealing,unavailable,,,Not collected.,,
+beh_vandalism,unavailable,,,Not collected.,,
+beh_alcohol_self,unavailable,,,Not collected.,,
+beh_tobacco_self,unavailable,,,Not collected.,,
+beh_vaping_self,unavailable,,,Not collected.,,
+beh_cannabis_self,unavailable,,,Not collected.,,
+beh_drugs_self,unavailable,,,Not collected.,,
+beh_conduct_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_aggphys_bpaq_self,unavailable,,,Buss-Perry Aggression Questionnaire not administered.,,
+beh_aggverb_bpaq_self,unavailable,,,Buss-Perry Aggression Questionnaire not administered.,,
+beh_agganger_bpaq_self,unavailable,,,Buss-Perry Aggression Questionnaire not administered.,,
+beh_agghostility_bpaq_self,unavailable,,,Buss-Perry Aggression Questionnaire not administered.,,
+beh_agg_self,unavailable,,,Not collected.,,
+beh_agg_measure,unavailable,,,See beh_agg_self.,,
+beh_aggphys_self,unavailable,,,Not collected.,,
+beh_aggphys_measure,unavailable,,,See beh_aggphys_self.,,
+beh_aggrel_self,unavailable,,,Not collected.,,
+beh_aggrel_measure,unavailable,,,See beh_aggrel_self.,,
+beh_anger_self,unavailable,,,Not collected.,,
+beh_anger_measure,unavailable,,,See beh_anger_self.,,
+beh_aggbeliefs_self,unavailable,,,Not collected.,,
+beh_agghostattrib_self,unavailable,,,Not collected.,,
+beh_aggfantasy_self,unavailable,,,Not collected.,,
+beh_aggcog_measure,unavailable,,,See beh_aggbeliefs_self.,,
+beh_agg_singleitem_teacher,incompatible,"T_SS1, T_SS3, T_SS5, T_SS6, T_SS7, T_SS8, T_SS10, T_SS11, T_SS12, T_SS14, T_SS15, T_SS16, T_SS18",,The teacher's aggression items are Social Skills Rating System items released under their form numbers and scored in beh_ext_teacher; a teacher's scale item does not fill a single-item row.,,
+beh_disrupt_singleitem_teacher,incompatible,T_SS19,,'Talks during quiet time' (T_SS19) is scored in the teacher externalising scale (beh_ext_teacher); a teacher's scale item does not fill a single-item row.,,
+beh_aggphys_teacher,incompatible,"T_TSPUSH, G_TSPUSH",,"A single teacher item on pushing others (rounds 6-9), part of an unscored item set (see beh_agg_teacher).",,
+beh_aggrel_teacher,incompatible,"T_TSLIES, T_TSLFTO, G_TSLIES, G_TSLFTO",,"Two teacher items (lies to, excludes others; rounds 6-9) from an item set released without a score.",,
+beh_agg_teacher,incompatible,"X_TCHEXT, T_TSTEAS, T_TSPUSH, T_TSLIES, T_TSLFTO, G_TSTEAS, G_TSPUSH, G_TSLIES, G_TSLFTO",,"The broadband externalising scale (X_TCHEXT) is mapped to beh_ext_teacher; the rounds 6-9 'this student teases, pushes, lies to, excludes others' items are released without a score (K-5 User's Manual, exhibit 3-5).",,
+beh_victphys_teacher,incompatible,"T_OSPUSH, G_OSPUSH",,"A single teacher item on the child being pushed (rounds 6-9), part of an unscored item set (see beh_vict_teacher).",,
+beh_victrel_teacher,incompatible,"T_OSLIES, T_OSLFTO, G_OSLIES, G_OSLFTO",,"Teacher items on lies and exclusion (rounds 6-9) and the excluded-by-peers items, released without a score (see beh_vict_teacher).",,
+beh_vict_teacher,incompatible,"T_OSTEAS, T_OSPUSH, T_OSLIES, T_OSLFTO, G_OSTEAS, G_OSPUSH, G_OSLIES, G_OSLFTO",,"Teacher items on other students teasing, pushing, lying to or excluding the child (rounds 6-9), released without a score (K-5 User's Manual, exhibit 3-5).",,
+beh_atten_teacher,incompatible,"X_ATTNFS, X_ATTMCQ, X_TCHAPP",,"Only temperament attentional-focusing scales rated by the teacher (Children's Behavior Questionnaire, rounds 2 and 4; Temperament in Middle Childhood Questionnaire, rounds 6-9), effortful-control facets with no teacher self-regulation row, and the approaches-to-learning scale (X_TCHAPP), which mixes attention with persistence and organisation.",,
+beh_hyper_teacher,incompatible,"X_INBCNT, X_INTMCQ",,"Only teacher-rated temperament inhibitory-control scales (CBQ rounds 2 and 4, TMCQ rounds 6-9), effortful-control facets with no teacher self-regulation row.",,
+beh_adhdsymp_teacher,incompatible,"X_ATTNFS, X_ATTMCQ, X_INBCNT, X_INTMCQ",,Only teacher-rated temperament attentional-focusing and inhibitory-control scales (see beh_atten_teacher); no ADHD symptom scale.,,
+beh_ext_teacher,compatible,"X_TCHEXT, X_KTCHEXT","local({
+  x <- coalesce(as.numeric(X_TCHEXT), as.numeric(X_KTCHEXT))
+  if_else(x >= 1 & x <= 4, x, NA_real_)
+})","NCES teacher Externalizing Problem Behaviors scale (X_TCHEXT; round-4 kindergarten repeaters X_KTCHEXT), items adapted from the Social Skills Rating System, 5 items in round 2 and 6 from round 3 (an item on talking when not supposed to was added); mean rating, never to very often (1-4), scored where at least 4 of the items were rated (K-5 User's Manual, section 3.4.1). Classroom teacher in rounds 2-7, reading teacher in rounds 8-9; standardise within wave.",,
+beh_prosocial_teacher,incompatible,"T_OTDIST, G_OTDIST",,"The teacher's Prosocial with Peers items (rounds 7-9) are released without a score (K-5 User's Manual, exhibit 3-5).",,
+beh_socialskills_teacher,partial,"X_TCHPER, X_KTCHPER","local({
+  x <- coalesce(as.numeric(X_TCHPER), as.numeric(X_KTCHPER))
+  if_else(x >= 1 & x <= 4, x, NA_real_)
+})","NCES teacher Interpersonal Skills scale (X_TCHPER; X_KTCHPER for round-4 kindergarten repeaters), 5 items adapted from the Social Skills Rating System; mean rating 1-4 (higher = more often interacts with others in a positive way), scored where at least 4 of 5 were rated (K-5 User's Manual, section 3.4.1). Partial: only released facets are interpersonal skills and self-control, and the self-control facet (X_TCHCON) is unused.",,
+beh_teacher_measure,inferred,round,"local({
+  rater <- if_else(as.numeric(round) %in% c(8, 9), ""reading and language arts teacher"", ""classroom teacher"")
+  ext_items <- if_else(as.numeric(round) == 2, ""5 of 5 items"", ""6 of 6 items"")
+  paste0(
+    ""ECLS-K teacher social skills scales, items adapted from the Social Skills Rating System ("",
+    rater,
+    ""); "",
+    ""externalising: Externalizing Problem Behaviors, "",
+    ext_items,
+    "", 1-4 item scoring (never to very often; range 1-4), mean, NCES-released, at least 4 items rated; "",
+    ""social skills: Interpersonal Skills, 5 of 5 items, 1-4 item scoring (range 1-4), mean, NCES-released, at least 4 of 5 rated, the self-control facet unused; "",
+    ""internalising: Internalizing Problem Behaviors, 4 of 4 items, 1-4 item scoring (range 1-4), mean, NCES-released, at least 3 of 4 rated""
+  )
+})",One string per round: the externalising item count changes after round 2 and the rater after round 7.,,
+beh_argues,incompatible,P_ARGUE,,"Only the parent's report of how often they argue with the child (P_ARGUE, DWQ075, rounds 8-9), a quarrel with one parent rather than the child's arguing in general.",,
+beh_persistence_finishwork,incompatible,"C_FINISH, T_PERSIS, P_WRKFIN",,"The child's 'I finish what I begin' (round 9) is rated by how much it is like the child, not by frequency; the teacher's 'persists in completing tasks' (T_PERSIS) and the parent's 'keeps working to finish' (P_WRKFIN) are scored in their approaches-to-learning scales.",,
+beh_emotreg_stayscalm,unavailable,,,Not collected.,,
+beh_peerprob_makefriends,incompatible,C_MKFRNDS,,"Only 'I make friends easily' (round 7), a truth rating of ease, not difficulty, scored in wb_selfconcept_social_self.",,
+beh_conduct_diagnosed,unavailable,,,Not in the supplied extract.,,
+beh_conduct_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+beh_adhd_diagnosed,unavailable,,,Not in the supplied extract.,,
+beh_autism_diagnosed,unavailable,,,Not in the supplied extract.,,
+beh_autism_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+beh_conduct_sdq_self,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_self,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_self,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_self,unavailable,,,SDQ not administered.,,
+beh_conduct_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_hyper_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_peerprob_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_prosocial_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_parent,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_self,unavailable,,,SDQ not administered.,,
+beh_ext_sdq_teacher,unavailable,,,SDQ not administered.,,
+beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_socprob_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
+beh_cbcl_measure,unavailable,,,See beh_agg_cbcl_parent.,,
+beh_ext_self,unavailable,,,Not collected.,,
+beh_opp_self,unavailable,,,Not collected.,,
+beh_conduct_self,unavailable,,,Not collected.,,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,incompatible,"X_PRNAPP, P_CONCEN",,"Only the parent approaches-to-learning score (X_PRNAPP, rounds 2 and 4), which mixes concentration (P_CONCEN) with persistence, interest, eagerness and creativity.",,
+beh_hyper_parent,partial,X_PRNIMP,"if_else(as.numeric(X_PRNIMP) >= 1, as.numeric(X_PRNIMP), NA_real_)","Rounds 2 and 4, parent: NCES parent Impulsive/Overactive score (X_PRNIMP), a mean of adapted Social Skills Rating System problem items, 1-4. Partial: the study's adaptation, scored by NCES.",,
+beh_adhdsymp_parent,incompatible,X_PRNIMP,,"No combined inattention and hyperactivity scale; the parent impulsive/overactive score (X_PRNIMP, rounds 2 and 4) covers hyperactivity-impulsivity only.",,
+beh_opp_parent,unavailable,,,Not collected.,,
+beh_conduct_parent,unavailable,,,Not collected.,,
+beh_ext_parent,incompatible,"X_PRNIMP, X_PRNCON",,No broadband parent externalising score; only the narrow impulsive/overactive and self-control scales of the parent Social Rating Scale (rounds 2 and 4).,,
+beh_parent_measure,inferred,round,"if_else(
+  as.numeric(round) %in% c(2, 4),
+  ""ECLS-K parent social rating items adapted from the Social Skills Rating System parent elementary form (parent respondent); hyperactivity: Impulsive/Overactive, NCES-released mean, 1-4; self-regulation: Self-Control, NCES-released mean, 1-4; social skills: Social Interaction, NCES-released mean, 1-4; internalising: Sad/Lonely, NCES-released mean, 1-4; item counts and missing-item rule as in the NCES base-year manual"",
+  NA_character_
+)",Rounds 2 and 4; NA elsewhere.,,
+beh_prosocial_online_self,unavailable,,,Not collected.,,
+beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
+beh_prosocial_self,compatible,"C_CHEERUP, C_HLPOTH, C_NICEOTH","local({
+  items <- cbind(as.numeric(C_CHEERUP), as.numeric(C_HLPOTH), as.numeric(C_NICEOTH))
+  items[!items %in% 1:5] <- NA
+  rowSums(items) / 3
+})","Round 7, child questionnaire prosocial items adapted from the Children's Social Behavior Scale self-report: cheers up upset classmates, helps other kids when needed, says or does nice things for others (never to very often, 1-5); mean, complete-case.",,
+beh_prosocial_measure,inferred,round,"if_else(
+  as.numeric(round) == 7,
+  ""ECLS-K child questionnaire prosocial items adapted from the Children's Social Behavior Scale self-report (Crick and Grotpeter 1995), 3 items, 1-5 item scoring (never to very often; range 1-5), mean, complete-case"",
+  NA_character_
+)",Round 7; NA elsewhere.,,
+beh_prosocial_parent,incompatible,P_SS4,,"Only the single parent item 'comfort or help others' (rounds 2 and 4), scored in the parent social interaction score.",,
+beh_socialskills_self,unavailable,,,Not collected.,,
+beh_socialskills_measure,unavailable,,,See beh_socialskills_self.,,
+beh_socialskills_parent,partial,X_PRNSOC,"if_else(as.numeric(X_PRNSOC) >= 1, as.numeric(X_PRNSOC), NA_real_)","Rounds 2 and 4, parent: NCES parent Social Interaction score (X_PRNSOC), a mean of adapted Social Skills Rating System items, 1-4. Partial: one released facet; the self-control facet goes to beh_selfreg_parent.",,
+beh_prosocial_singleitem_teacher,incompatible,T_SS17,,'Comforts other children' (T_SS17) is scored in the teacher interpersonal skills scale (beh_socialskills_teacher).,,
+beh_empathy_self,unavailable,,,Not collected.,,
+beh_empathy_measure,unavailable,,,See beh_empathy_self.,,
+beh_problematicuse_self,unavailable,,,Not collected.,,
+beh_problematicuse_parent,unavailable,,,Not collected.,,
+beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
+cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
+cog_langexec_nepsy,unavailable,,,NEPSY not administered.,,
+cog_phono_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhibcont_nepsy,unavailable,,,NEPSY not administered.,,
+cog_vismotor_nepsy,unavailable,,,NEPSY not administered.,,
+cog_verbalfluency_nepsy,unavailable,,,NEPSY not administered.,,
+cog_inhib_nihtb_flanker,incompatible,X_FLANKER,,"Only the raw NIH Toolbox computed score is released, not an age-corrected or uncorrected standard score; mapped to cog_inhib_task.",,
+cog_flex_nihtb_dccs,incompatible,X_DCCSSCR,,"Only the raw NIH Toolbox computed score (0-10) is released, not an age-corrected or uncorrected standard score; mapped to cog_flex_task.",,
+cog_wm_nihtb_listsort,unavailable,,,NIH Toolbox List Sorting not administered; see cog_wm_task.,,
+cog_speed_nihtb_pattern,unavailable,,,NIH Toolbox Pattern Comparison not administered.,,
+cog_epimem_nihtb_picseq,unavailable,,,NIH Toolbox Picture Sequence Memory not administered.,,
+cog_vocab_nihtb_picvocab,unavailable,,,NIH Toolbox Picture Vocabulary not administered.,,
+cog_fluidcomp_nihtb,unavailable,,,"NIH Toolbox composite batteries not administered; only the DCCS and Flanker tasks were given (see cog_flex_task, cog_inhib_task).",,
+cog_crystcomp_nihtb,unavailable,,,"NIH Toolbox composite batteries not administered; only the DCCS and Flanker tasks were given (see cog_flex_task, cog_inhib_task).",,
+cog_totalcomp_nihtb,unavailable,,,"NIH Toolbox composite batteries not administered; only the DCCS and Flanker tasks were given (see cog_flex_task, cog_inhib_task).",,
+cog_atten_task,incompatible,X_FLANKER,,The NIH Toolbox Flanker goes to cog_inhib_task.,,
+cog_atten_task_measure,unavailable,,,See cog_atten_task.,,
+cog_flex_task,partial,"X_DCCSSCR, X_DCCSTOT","if_else(as.numeric(X_DCCSSCR) >= 0, as.numeric(X_DCCSSCR), NA_real_)","Rounds 5-9 (the task form given in most rounds): NIH Toolbox Dimensional Change Card Sort, computerised, the version for ages 8 and over given to every child, overall computed score combining accuracy and reaction time (X_DCCSSCR, 1.25-10; K-5 User's Manual, section 3.2.1). Partial: raw NIH Toolbox computed score, not age-corrected. The physical card sort of rounds 2-4 (X_DCCSTOT) is unused: score forms never mix across waves.",,
+cog_flex_task_measure,inferred,round,"if_else(
+  as.numeric(round) %in% 5:9,
+  ""NIH Toolbox Dimensional Change Card Sort (computerised, ages 8+ start point for all children), 30 mixed-block trials, overall computed score (observed 1.25-10), raw, as released"",
+  NA_character_
+)",Rounds 5-9; NA in rounds 2-4.,,
+cog_inhib_task,partial,X_FLANKER,"if_else(as.numeric(X_FLANKER) >= 0, as.numeric(X_FLANKER), NA_real_)","Rounds 8-9: NIH Toolbox Flanker Inhibitory Control and Attention Test, overall computed score combining accuracy and reaction time (X_FLANKER, 2.5-10 observed). Partial: raw NIH Toolbox computed score, not age-corrected.",,
+cog_inhib_task_measure,inferred,round,"if_else(
+  as.numeric(round) %in% c(8, 9),
+  ""NIH Toolbox Flanker Inhibitory Control and Attention Test, overall computed score (observed 2.5-10), raw, as released"",
+  NA_character_
+)",Rounds 8-9; NA elsewhere.,,
+cog_wm_task,compatible,X_NRSSCR,"if_else(as.numeric(X_NRSSCR) > 0, as.numeric(X_NRSSCR), NA_real_)","Numbers Reversed, a backward digit span task scored on Woodcock-Johnson III norms, every round: age standard score (mean 100, SD 15) as released (X_NRSSCR; observed 14-197; K-5 User's Manual, section 3.2.2). The W-ability, grade-standard and percentile scores are unused.",,
+cog_wm_task_measure,inferred,,"""Woodcock-Johnson III Tests of Cognitive Abilities Numbers Reversed (backward digit span), administered by the ECLS-K assessor, age standard score (observed 14-197), age-normed, as released""",Every round.,,
+cog_speed_task,unavailable,,,Not collected.,,
+cog_speed_task_measure,unavailable,,,See cog_speed_task.,,
+cog_wm_digitspan,unavailable,,,Digit Span not administered; see cog_wm_task.,,
+cog_iq_fullscale,unavailable,,,Not collected.,,
+cog_nonverbalreason_task,unavailable,,,Not collected.,,
+cog_nonverbalreason_task_measure,unavailable,,,See cog_nonverbalreason_task.,,
+cog_vocab_bpvs,unavailable,,,BPVS not administered.,,
+cog_vocab_ppvt,unavailable,,,PPVT not administered.,,
+cog_vocab_receptive_task,unavailable,,,Not collected.,,
+cog_vocab_expressive_task,compatible,"X_PLART, round","if_else(as.numeric(round) == 2 & as.numeric(X_PLART) >= 0, as.numeric(X_PLART), NA_real_)","Round 2 (spring kindergarten) only: preLAS 2000 Art Show (X_PLART), 'a picture vocabulary assessment that tested children's expressive vocabulary', 10 items, given to every child as the first part of the assessment (ECLS-K Kindergarten User's Manual, NCES 2015-074, section 3.1.1), raw number right 0-10 as released; 82% of children score 10. Rounds 3-4 tested only children who had not yet passed the language screener (a subsample, NA). Standardise within dataset and age band.",,
+cog_vocab_task_measure,inferred,round,"if_else(
+  as.numeric(round) == 2,
+  ""expressive: preLAS 2000 Art Show (English language screener picture vocabulary task), 10 items, raw number right (range 0-10), as released"",
+  NA_character_
+)",Round 2; NA elsewhere.,,
+cog_execfunc_brief_parent,incompatible,X_PWKMEM,,"Only four BRIEF working-memory items (rounds 7-8, NCES parent working-memory score X_PWKMEM), not the full form or its Global Executive Composite.",,
+cog_execfunc_parent,incompatible,X_PWKMEM,,"Only a four-item BRIEF working-memory item set (rounds 7-8), a subscale subset, not a total or global executive-function score.",,
+cog_execfunc_teacher,incompatible,X_TWKMEM,,"Only a teacher working-memory item set (round 7, X_TWKMEM), not a total or global executive-function score.",,
+cog_execfunc_self,unavailable,,,Not collected.,,
+cog_execfunc_measure,unavailable,,,See cog_execfunc_parent.,,
+cog_vocab_bas_naming,unavailable,,,BAS II not administered.,,
+cog_nonverbalreason_bas_picsim,unavailable,,,BAS II not administered.,,
+cog_spatial_bas_pattern,unavailable,,,BAS II not administered.,,
+cog_verbalreason_bas_versim,unavailable,,,BAS II not administered.,,
+cog_earlynumber_bas_enc,unavailable,,,BAS II not administered.,,
+cog_schoolread_bracken,unavailable,,,Bracken School Readiness Assessment not administered.,,
+cog_earlylang_parent,incompatible,P_ARTICL,,"Only a single parent item on how well the child communicates compared with other children the same age (CHQ200), for school-age children.",,
+cog_earlylang_measure,unavailable,,,See cog_earlylang_parent.,,
+cog_creativethinking_stdtest,unavailable,,,Not collected.,,
+cog_speechlang_diagnosed,unavailable,,,Not in the supplied extract.,,
+cog_speechlang_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
+mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
+mh_emotsymp_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_anx_diagnosed,unavailable,,,Not in the supplied extract.,,
+mh_anx_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+mh_dep_diagnosed,unavailable,,,Not in the supplied extract.,,
+mh_dep_diagnosed_severity,unavailable,,,Not in the supplied extract.,,
+mh_emotsymp_sdq_self,unavailable,,,SDQ not administered.,,
+mh_emotsymp_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_self,unavailable,,,SDQ not administered.,,
+mh_totaldiff_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_int_sdq_parent,unavailable,,,SDQ not administered.,,
+mh_int_sdq_self,unavailable,,,SDQ not administered.,,
+mh_int_sdq_teacher,unavailable,,,SDQ not administered.,,
+mh_dep_smfq_self,unavailable,,,SMFQ not administered.,,
+mh_dep_smfq_parent,unavailable,,,SMFQ not administered.,,
+mh_dep_cdi_self,unavailable,,,CDI not administered.,,
+mh_dep_cesd_self,unavailable,,,CES-D not administered to the child.,,
+mh_dep_phq9_self,unavailable,,,PHQ-9 not administered.,,
+mh_dep_rcads_self,unavailable,,,RCADS not administered.,,
+mh_dep_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_dep_scl_self,unavailable,,,SCL-90-R not administered.,,
+mh_distress_k6_self,unavailable,,,K6 not administered.,,
+mh_distress_k10_self,unavailable,,,K10 not administered.,,
+mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered.,,
+mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered.,,
+mh_distress_self,unavailable,,,Not collected.,,
+mh_distress_measure,unavailable,,,See mh_distress_self.,,
+mh_anx_masc_self,unavailable,,,MASC not administered.,,
+mh_anx_scas_self,unavailable,,,SCAS not administered.,,
+mh_anx_scas_parent,unavailable,,,SCAS not administered.,,
+mh_anx_scared_self,unavailable,,,SCARED not administered.,,
+mh_anx_scared_parent,unavailable,,,SCARED not administered.,,
+mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
+mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
+mh_anx_dass21_self,unavailable,,,DASS-21 not administered.,,
+mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_withdrawn_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_somatic_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_emotreact_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_dep_binary_self,unavailable,,,Not collected.,,
+mh_dep_self,unavailable,,,Not collected.,,
+mh_dep_measure,unavailable,,,See mh_dep_self.,,
+mh_anx_self,partial,"C_WRYTHK, C_WRYDTLK, C_AFRDNTLK","local({
+  items <- cbind(as.numeric(C_WRYTHK), as.numeric(C_WRYDTLK), as.numeric(C_AFRDNTLK))
+  items[!items %in% 1:5] <- NA
+  rowSums(items)
+})","Repeats mh_socanx_self (social-anxiety fear-of-negative-evaluation items, rounds 7-9), partial, as no broader anxiety scale was given on those occasions.",,
+mh_anx_measure,inferred,round,"if_else(
+  as.numeric(round) %in% c(7, 8, 9),
+  ""Social Anxiety Scale for Children-Revised fear of negative evaluation items as adapted for the ECLS-K child questionnaire, 3 items, 1-5 item scoring (never to very often; range 3-15), sum, complete-case"",
+  NA_character_
+)",Describes mh_anx_self; rounds 7-9.,,
+mh_socanx_self,partial,"C_WRYTHK, C_WRYDTLK, C_AFRDNTLK","local({
+  items <- cbind(as.numeric(C_WRYTHK), as.numeric(C_WRYDTLK), as.numeric(C_AFRDNTLK))
+  items[!items %in% 1:5] <- NA
+  rowSums(items)
+})","Rounds 7-9, child questionnaire, fear of negative evaluation by peers adapted from the Social Anxiety Scale for Children-Revised (K-5 User's Manual, exhibit 3-4): worries what others think of them, worries other kids don't like them, is afraid others won't like them (never to very often, 1-5); sum, complete-case (range 3-15). Partial: one facet (fear of negative evaluation) only.",,
+mh_socanx_measure,inferred,round,"if_else(
+  as.numeric(round) %in% c(7, 8, 9),
+  ""Social Anxiety Scale for Children-Revised fear of negative evaluation items as adapted for the ECLS-K child questionnaire, 3 items, 1-5 item scoring (never to very often; range 3-15), sum, complete-case"",
+  NA_character_
+)",Rounds 7-9; NA elsewhere.,,
+mh_int_parent,partial,X_PRNSAD,"if_else(as.numeric(X_PRNSAD) >= 1, as.numeric(X_PRNSAD), NA_real_)","Rounds 2 and 4, parent: NCES parent Sad/Lonely score (X_PRNSAD), a mean of adapted Social Skills Rating System items, 1-4. Partial: one internalising facet.",,
+mh_anx_parent,incompatible,X_PRNSAD,,"No parent anxiety scale; the parent Social Rating Scale sad/lonely score (X_PRNSAD, rounds 2 and 4) mixes sadness, loneliness and worry.",,
+mh_dep_parent,incompatible,X_PRNSAD,,"No parent depression scale; the parent Social Rating Scale sad/lonely score (X_PRNSAD, rounds 2 and 4) mixes sadness, loneliness and worry.",,
+mh_totalprob_parent,unavailable,,,Not collected.,,
+mh_int_teacher,compatible,"X_TCHINT, X_KTCHINT","local({
+  x <- coalesce(as.numeric(X_TCHINT), as.numeric(X_KTCHINT))
+  if_else(x >= 1 & x <= 4, x, NA_real_)
+})","NCES teacher Internalizing Problem Behaviors scale (X_TCHINT; round-4 kindergarten repeaters X_KTCHINT), 4 items adapted from the Social Skills Rating System; mean rating, never to very often (1-4), scored where at least 3 of 4 were rated (K-5 User's Manual, section 3.4.1). Classroom teacher in rounds 2-7, reading teacher in rounds 8-9.",,
+mh_anx_teacher,incompatible,X_TCHINT,,No teacher anxiety scale; the broadband internalising scale (X_TCHINT) is mapped to mh_int_teacher.,,
+mh_dep_teacher,incompatible,X_TCHINT,,No teacher depression scale; the broadband internalising scale (X_TCHINT) is mapped to mh_int_teacher.,,
+mh_totalprob_teacher,unavailable,,,Not collected.,,
+mh_depanx_diagnosed,unavailable,,,Not in the supplied extract.,,
+mh_stress_self,unavailable,,,Not collected.,,
+mh_stress_scale_self,unavailable,,,Not collected.,,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,partial,C_LONELY,"recode_values(
+  as.numeric(C_LONELY),
+  1 ~ ""Never"",
+  2 ~ ""Rarely"",
+  3 ~ ""Sometimes"",
+  4 ~ ""Often"",
+  5 ~ ""Always"",
+  default = NA_character_
+)","Rounds 8-9, child: 'I feel lonely at school' (never, rarely, sometimes, often, very often; very often, the top anchor above often, = Always); also scored in mh_lonely_scale_self. Partial: loneliness at school only; recall not stated in the documentation read.",,
+mh_lonely_scale_self,compatible,"C_LONELY, C_LFTOUT, C_ALONE","local({
+  items <- cbind(as.numeric(C_LONELY), as.numeric(C_LFTOUT), as.numeric(C_ALONE))
+  items[!items %in% 1:5] <- NA
+  rowSums(items)
+})","Rounds 8-9, child questionnaire loneliness items adapted from Parker and Asher (1993): feels lonely at school, feels left out at school, feels alone at school (never to very often, 1-5); sum, complete-case (range 3-15).",,
+mh_lonely_measure,inferred,round,"if_else(
+  as.numeric(round) %in% c(8, 9),
+  ""ECLS-K child questionnaire loneliness items adapted from Parker and Asher (1993), 3 items (lonely, left out, alone at school), 1-5 item scoring (never to very often; range 3-15), sum, complete-case"",
+  NA_character_
+)",Rounds 8-9; NA elsewhere.,,
+mh_sad_self,unavailable,,,Not collected.,,
+mh_worry_self,incompatible,"C_WRYTHK, C_WRYWEL",,"Only worry about what others think (scored in mh_socanx_self) and about doing well in school (scored in acc_schoolstress_self), not general worry.",,
+mh_irritable_self,unavailable,,,Not collected.,,
+mh_nobodycares_self,unavailable,,,Not collected.,,
+mh_lifenotworth_self,unavailable,,,Not collected.,,
+mh_suicide_ideation_self,unavailable,,,Not collected.,,
+mh_suicide_attempt_self,unavailable,,,Not collected.,,
+mh_selfharm_self,unavailable,,,Not collected.,,
+mh_unhealthywtctrl_self,unavailable,,,Not collected.,,
+mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
+mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
+mh_somatic_self,unavailable,,,Not collected.,,
+mh_somatic_measure,unavailable,,,See mh_somatic_self.,,
+wb_emotsc_basc2,unavailable,,,BASC-2 not administered.,,
+wb_mwb_wemwbs,unavailable,,,WEMWBS not administered.,,
+wb_lifesatisfaction_cantrilladder,unavailable,,,Cantril ladder not administered.,,
+wb_resil_basc2,unavailable,,,BASC-2 not administered.,,
+wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered.,,
+wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered.,,
+wb_bodyimage,unavailable,,,Not collected.,,
+wb_bodyesteem_self,unavailable,,,Not collected.,,
+wb_bodyesteem_measure,unavailable,,,See wb_bodyesteem_self.,,
+wb_lifesat_slss_self,unavailable,,,SLSS not administered; see wb_lifesat_self.,,
+wb_lifesat_swls_self,unavailable,,,SWLS not administered; see wb_lifesat_self.,,
+wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
+wb_lifesat_self,incompatible,"C_HAPHOB, C_HAPTHGS, C_HAPATTN, C_HAPFRND, C_HAPSKIL, C_HAPNBHD",,"Only the child's 'I'm happy with ...' items on single life domains (hobbies and free time, clothes, games and toys, attention from parents, friends, skills and talents, neighbourhood; six in round 7, three in round 9; not at all to very much), with no released or published total; a domain-satisfaction index is used only as a study releases it, never as a sum of the items. Attention from parents and friends fill wb_domainsat_family_self and wb_domainsat_friends_self.",,
+wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
+wb_happiness_singleitem_self,unavailable,,,Not collected.,,
+wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
+wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
+wb_domainsat_appearance_self,unavailable,,,Not collected.,,
+wb_domainsat_family_self,partial,C_HAPATTN,"if_else(as.numeric(C_HAPATTN) %in% 1:5, as.numeric(C_HAPATTN), NA_real_)","Rounds 7 and 9, child: happy with attention from parents (CLQ260, CLQ850; not at all to very much, 1-5). Partial: satisfaction with attention from parents, not the family as a whole.",,
+wb_domainsat_friends_self,compatible,C_HAPFRND,"if_else(as.numeric(C_HAPFRND) %in% 1:5, as.numeric(C_HAPFRND), NA_real_)","Round 7, child: happy with the friends I have (CLQ265; not at all, a little bit, somewhat, quite a bit, very much, 1-5).",,
+wb_domainsat_school_self,incompatible,C_ENJOY,,"Only how often the child enjoys being at school (round 9, never to always), an enjoyment frequency scored in acc_schoolbelonging_self, not a satisfaction rating.",,
+wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
+wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
+wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered.,,
+wb_selfesteem_singleitem_self,unavailable,,,Not collected.,,
+wb_selfesteem_self,unavailable,,,Not collected.,,
+wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
+wb_selfefficacy_gse_self,unavailable,,,General Self-Efficacy Scale not administered.,,
+wb_selfefficacy_self,unavailable,,,Not collected.,,
+wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
+wb_selfefficacy_academic_self,unavailable,,,Not collected.,,
+wb_selfefficacy_academic_measure,unavailable,,,See wb_selfefficacy_academic_self.,,
+wb_control_self,unavailable,,,Not collected.,,
+wb_control_measure,unavailable,,,See wb_control_self.,,
+wb_selfconcept_academic_self,incompatible,"C_GDREAD, C_GDMTH, C_GDSCI",,"Only subject self-concept scales (reading, maths, science; round 7), mapped to their subject rows; a composite across subjects fills no self-concept row.",,
+wb_selfconcept_maths_self,compatible,"C_LIKMTH, C_INTMTH, C_CTWMTH, C_GDMTH, C_ENJMTH","local({
+  items <- cbind(
+    as.numeric(C_LIKMTH),
+    as.numeric(C_INTMTH),
+    as.numeric(C_CTWMTH),
+    as.numeric(C_GDMTH),
+    as.numeric(C_ENJMTH)
+  )
+  items[!items %in% 1:4] <- NA
+  rowSums(items) / 5
+})","Round 7, child questionnaire, Perceived Interest/Competence in Math adapted from the Self Description Questionnaire I (K-5 User's Manual, exhibit 3-4): likes math, is interested in math, cannot wait to do math, is good at math, enjoys work in math (not at all true to very true, 1-4); mean, complete-case.",,
+wb_selfconcept_verbal_self,compatible,"C_LKREAD, C_INTREAD, C_CTWREAD, C_GDREAD, C_ENJREAD","local({
+  items <- cbind(
+    as.numeric(C_LKREAD),
+    as.numeric(C_INTREAD),
+    as.numeric(C_CTWREAD),
+    as.numeric(C_GDREAD),
+    as.numeric(C_ENJREAD)
+  )
+  items[!items %in% 1:4] <- NA
+  rowSums(items) / 5
+})","Round 7, child questionnaire, Perceived Interest/Competence in Reading adapted from the Self Description Questionnaire I: likes reading, is interested in reading, cannot wait to read each day, is good at reading, enjoys work in reading (not at all true to very true, 1-4); mean, complete-case.",,
+wb_selfconcept_science_self,compatible,"C_LKSCI, C_INTSCI, C_CTWSCI, C_GDSCI, C_ENJSCI","local({
+  items <- cbind(
+    as.numeric(C_LKSCI),
+    as.numeric(C_INTSCI),
+    as.numeric(C_CTWSCI),
+    as.numeric(C_GDSCI),
+    as.numeric(C_ENJSCI)
+  )
+  items[!items %in% 1:4] <- NA
+  rowSums(items) / 5
+})","Round 7, child questionnaire, Perceived Interest/Competence in Science, adapted from the Self Description Questionnaire I format: likes science, is interested in science, cannot wait to do science, is good at science, enjoys work in science (not at all true to very true, 1-4); mean, complete-case.",,
+wb_selfconcept_social_self,compatible,"C_HASFRNDS, C_MKFRNDS, C_GETALNG, C_EASYLIK, C_WTMEFRND, C_MORFRND","local({
+  items <- cbind(
+    as.numeric(C_HASFRNDS),
+    as.numeric(C_MKFRNDS),
+    as.numeric(C_GETALNG),
+    as.numeric(C_EASYLIK),
+    as.numeric(C_WTMEFRND),
+    as.numeric(C_MORFRND)
+  )
+  items[!items %in% 1:4] <- NA
+  rowSums(items) / 6
+})","Round 7, child questionnaire, Perceived Interest/Competence in Peer Relationships adapted from the Self Description Questionnaire I peer relations scale: has lots of friends, makes friends easily, gets along with kids easily, is easy to like, other kids want me to be their friend, has more friends than others (not at all true to very true, 1-4); mean, complete-case.",,
+wb_selfconcept_measure,inferred,round,"if_else(
+  as.numeric(round) == 7,
+  ""Self Description Questionnaire I items as adapted for the ECLS-K child questionnaire (Perceived Interest/Competence scales); maths: 5 items, 1-4 item scoring (not at all true to very true; range 1-4), mean; verbal: reading, 5 items, 1-4 item scoring, mean; science: 5 items, 1-4 item scoring, mean; social: peer relationships, 6 items, 1-4 item scoring, mean; complete-case, no items reversed"",
+  NA_character_
+)",Round 7; NA elsewhere.,,
+wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
+wb_happiness_shs_self,unavailable,,,Subjective Happiness Scale not administered.,,
+wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
+wb_selfratedhealth_self,unavailable,,,Not collected.,,
+wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,proximate,P_HSCALE,"recode_values(as.numeric(P_HSCALE), 1 ~ ""Excellent"", 2 ~ ""Very good"", 3 ~ ""Good"", 4 ~ ""Fair"", default = NA_character_)","Rounds 2, 4, 6-9, parent: 'Would you say {CHILD}'s health is excellent, very good, good, fair, or poor?' (CHQ330). Proximate: the public-use file merges fair and poor (code 4, mapped to Fair; Poor unused).",,
+wb_posaffect_self,unavailable,,,Not collected.,,
+wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
+wb_negaffect_self,unavailable,,,Not collected.,,
+wb_negaffect_measure,unavailable,,,See wb_negaffect_self.,,
+wb_eudaimonic_self,unavailable,,,Not collected.,,
+wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
+wb_socsupport_family_self,unavailable,,,Not collected.,,
+wb_socsupport_friends_self,partial,"C_KIDBTR, C_KIDPLY, C_KIDHAP, C_KIDHLP, C_KIDHLPX, C_FRIEND, C_HELPMN","local({
+  items <- cbind(
+    as.numeric(C_KIDBTR),
+    as.numeric(C_KIDPLY),
+    as.numeric(C_KIDHAP),
+    coalesce(as.numeric(C_KIDHLP), as.numeric(C_KIDHLPX)),
+    as.numeric(C_FRIEND),
+    as.numeric(C_HELPMN)
+  )
+  items[!items %in% 1:5] <- NA
+  rowSums(items) / 6
+})","Rounds 8-9, child questionnaire Peer Social Support items adapted from Vandell (2000), about classmates: make me feel better, let me play with them, make me feel happy, would help if I was hurt, say I'm their friend, help if others are mean to me (never to very often, 1-5); mean, complete-case. Partial: classmates rather than friends, and play and friendship items mix companionship with support.",,
+wb_socsupport_measure,inferred,round,"if_else(
+  as.numeric(round) %in% c(8, 9),
+  ""friends: ECLS-K child questionnaire Peer Social Support items adapted from Vandell (2000), classmates, 6 items, 1-5 item scoring (never to very often; range 1-5), mean, complete-case"",
+  NA_character_
+)",Rounds 8-9; NA elsewhere.,,
+hlth_sleep_wd,compatible,"P_CHSLPHR, P_CHSLPMN","local({
+  sleep_h <- as.numeric(P_CHSLPHR)
+  sleep_m <- as.numeric(P_CHSLPMN)
+  sleep_m[!is.na(sleep_m) & sleep_m == -1] <- 0
+  sleep <- if_else(sleep_h >= 0 & sleep_m >= 0, sleep_h + sleep_m / 60, NA_real_)
+  sleep
+})","Rounds 7-9, parent: 'On an average school night, how many hours of sleep does {CHILD} get?' (HEQ600a-b), hours + minutes / 60; empty minutes (-1) = 0. Round 2's usual and latest bedtimes (HEQ560, HEQ570) give no duration and are unused.",,
+hlth_sleep_we,unavailable,,,Not collected.,,
+hlth_sleep,incompatible,"P_CHSLPHR, P_CHSLPMN",,School-night item only (see hlth_sleep_wd); no usual-night value.,,
+hlth_sleepprob,unavailable,,,Not collected.,,
+hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not collected.,,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,compatible,X_BMI,"if_else(as.numeric(X_BMI) > 0, as.numeric(X_BMI), NA_real_)","NCES child BMI composite (X_BMI), every round, from the assessor's two height and weight measurements (pounds and inches x 703); kept as released, extreme values screened at analysis.",,
+hlth_bmi_measure,inferred,,"""Measured""",Height and weight measured by the ECLS-K assessors at every round.,,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,incompatible,P_RAPID,,"Only days in a typical week with exercise causing rapid breathing for 20 continuous minutes or more (CHQ060), another minimum duration.",,
+hlth_birthweight,compatible,"P1BRTWGT, P1WEIGHP, P1WEIGHO, P1WEIGHG, P2WEIGHU, P2WEIGHP, P2WEIGHO, P2WEIGHG","local({
+  unit1 <- as.numeric(P1BRTWGT)
+  lb1 <- as.numeric(P1WEIGHP)
+  oz1 <- as.numeric(P1WEIGHO)
+  g1 <- as.numeric(P1WEIGHG)
+  unit2 <- as.numeric(P2WEIGHU)
+  lb2 <- as.numeric(P2WEIGHP)
+  oz2 <- as.numeric(P2WEIGHO)
+  g2 <- as.numeric(P2WEIGHG)
+  fall <- case_when(
+    unit1 == 1 & lb1 >= 0 & oz1 >= 0 ~ (lb1 * 16 + oz1) * 28.35,
+    unit1 == 2 & g1 > 0 ~ g1,
+    .default = NA_real_
+  )
+  spring <- case_when(
+    unit2 == 1 & lb2 >= 0 & oz2 >= 0 ~ (lb2 * 16 + oz2) * 28.35,
+    unit2 == 2 & g2 > 0 ~ g2,
+    .default = NA_real_
+  )
+  coalesce(fall, spring)
+})","Parent recall: the child's birth weight in pounds and ounces ((lb x 16 + oz) x 28.35) or grams, as the parent chose (CHQ005-CHQ007 in the fall kindergarten interview; SPQ060-SPQ066 for parents first interviewed in spring); child-level columns kept on every row by the tidier. The public-use file holds no pounds value below 3 or above 10 (2.2% and 1.6% of children sit at 3 and 10 pounds, and the fall grams heap at 1,360 and 4,540), the look of a bottom and top code; those values stay at the bound. An ounces answer of don't know leaves the weight NA.",,
+hlth_preterm,partial,"P1PREMAT, P2PREMAT","recode_values(coalesce(as.numeric(P1PREMAT), as.numeric(P2PREMAT)), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_)","Parent recall: whether the child was born more than 2 weeks early (CHQ025, fall kindergarten; SPQ090 spring). Partial: a 2-week cut, not 37 completed weeks; how early (CHQ030) is suppressed in the public-use file.",,
+hlth_breastfed,compatible,P1BRSFED,"recode_values(as.numeric(P1BRSFED), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_)","Parent, fall kindergarten interview: whether the child was breastfed (CHQ031, yes/no); child-level column. The extract has no spring supplemental-questionnaire breastfeeding item, so children whose parent was first interviewed in spring are NA.",,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,partial,"P_ASTHMA, P_TRTASTHMA","case_when(
+  as.numeric(P_ASTHMA) == 2 ~ ""Never diagnosed"",
+  as.numeric(P_ASTHMA) == 1 & as.numeric(P_TRTASTHMA) == 1 ~ ""Currently diagnosed"",
+  as.numeric(P_ASTHMA) == 1 & as.numeric(P_TRTASTHMA) == 2 ~ ""Previously diagnosed"",
+  .default = NA_character_
+)","Rounds 4, 6-9, parent: 'Has a doctor, nurse, or other medical professional ever told you that {CHILD} has asthma?' (CHQ026) and 'Does {he/she} receive treatment for this condition?' (CHQ027): told and treated = Currently diagnosed, told and not treated = Previously diagnosed, not told = Never diagnosed. Partial: asthma is the only condition released (the other diagnosis items are suppressed), and treatment stands in for current.",,
+hlth_disability,incompatible,"X_DISABL, X_DISABL2, P_DIFFH3, P_VISIO2",,"X_DISABL (and its version 2, X_DISABL2), the NCES parent-report composite of a professional's diagnosis of an attention, learning, behaviour, emotional, communication, hearing or vision problem or therapy for one (K-5 User's Manual, section 7.5.1.8), pools learning, developmental and emotional conditions with sensory ones, so it is not used; the separate hearing and vision items (P_DIFFH3, P_VISIO2) are told diagnoses with no disability or limitation wording, and the other condition items (CHQ125) are suppressed in the public-use file.",,
