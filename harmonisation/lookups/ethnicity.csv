@@ -400,3 +400,9 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 933,ethnicity,Chinese,Asian,proximate,"profile_ethnicity code 14; Chinese is a separate UK census group, collapsed into Asian; the respondent's own group"
 933,ethnicity,Other ethnic group,Other,proximate,profile_ethnicity code 15; the respondent's own group
 933,ethnicity,Prefer not to say,Unknown,compatible,profile_ethnicity code 16
+279,ethnicity,"Hispanic, any race",Hispanic,compatible,"I_HISP_K = 1 (imputed child Hispanic origin), taken ahead of race in a US sample"
+279,ethnicity,"Non-Hispanic, white",White,compatible,I_RACEKR = 1 among non-Hispanic children; multiracial children were coded to the race that best describes them
+279,ethnicity,"Non-Hispanic, black or African American",Black,compatible,I_RACEKR = 2 among non-Hispanic children
+279,ethnicity,"Non-Hispanic, Native American or Alaska Native",Other,proximate,I_RACEKR = 3: US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous
+279,ethnicity,"Non-Hispanic, Asian",Asian,compatible,I_RACEKR = 4 among non-Hispanic children
+279,ethnicity,"Non-Hispanic, other race",Other,compatible,"I_RACEKR = 5: the public file's residual race category (Other in the schema); the five-category recode has no Native Hawaiian or Pacific Islander group, and where NCHS put them is not documented"
