@@ -678,6 +678,109 @@ test_that("reader fwf warns when the layout is wider than the record", {
   expect_identical(nrow(tbl), 3L)
 })
 
+fwf_two_line <- c("001ALICE", " 12.5", "002BOB  ", " 07.0", "003CAROL", " 99.9")
+
+fwf_two_line_layout <- function(...) {
+  tibble::tibble(
+    name = c("id", "name", "score"),
+    start = c(1L, 4L, 10L),
+    end = c(3L, 8L, 13L),
+    ...
+  )
+}
+
+read_two_line <- function(fx, lines_per_record = 2L) {
+  read_tabular_file(
+    fx$data,
+    "fwf",
+    list(col_positions = fx$layout, lines_per_record = lines_per_record)
+  )
+}
+
+test_that("reader fwf joins multi-line records before applying the layout", {
+  fx <- write_fwf_fixture(
+    withr::local_tempdir(),
+    fwf_two_line,
+    fwf_two_line_layout(type = c("c", "c", "d"))
+  )
+
+  tbl <- read_two_line(fx)
+
+  expect_identical(dim(tbl), c(3L, 3L))
+  expect_identical(tbl$id, c("001", "002", "003"))
+  expect_identical(tbl$name, c("ALICE", "BOB", "CAROL"))
+  expect_equal(tbl$score, c(12.5, 7, 99.9))
+})
+
+test_that("reader fwf refuses a multi-line file cut mid-record", {
+  fx <- write_fwf_fixture(
+    withr::local_tempdir(),
+    fwf_two_line[1:5],
+    fwf_two_line_layout()
+  )
+
+  expect_error(
+    read_two_line(fx),
+    "5 lines, which is not a whole number of 2-line records"
+  )
+})
+
+test_that("reader fwf refuses multi-line records whose line widths vary", {
+  ragged <- fwf_two_line
+  ragged[3] <- "002BOB"
+  fx <- write_fwf_fixture(withr::local_tempdir(), ragged, fwf_two_line_layout())
+
+  expect_error(
+    read_two_line(fx),
+    "Line 1 of the 2-line records .* varies in width \\(6 to 8 bytes\\)"
+  )
+})
+
+test_that("reader fwf warns when the layout is wider than a joined record", {
+  fx <- write_fwf_fixture(
+    withr::local_tempdir(),
+    fwf_two_line,
+    dplyr::mutate(fwf_two_line_layout(), end = c(3L, 8L, 14L))
+  )
+
+  expect_warning(
+    tbl <- read_two_line(fx),
+    "ends at position 14 but the joined records .* are 13 bytes wide"
+  )
+  expect_identical(nrow(tbl), 3L)
+})
+
+test_that("reader fwf takes lines_per_record = 1 as the single-line read", {
+  fx <- write_fwf_fixture(withr::local_tempdir(), fwf_lines, fwf_layout())
+
+  expect_identical(
+    read_two_line(fx, lines_per_record = 1L),
+    read_tabular_file(fx$data, "fwf", list(col_positions = fx$layout))
+  )
+})
+
+test_that("reader fwf rejects a lines_per_record that is not a whole number", {
+  fx <- write_fwf_fixture(
+    withr::local_tempdir(),
+    fwf_two_line,
+    fwf_two_line_layout()
+  )
+
+  for (bad in list(0L, 1.5, "two", c(2L, 3L))) {
+    expect_error(
+      read_two_line(fx, bad),
+      "`lines_per_record` must be a whole number"
+    )
+  }
+})
+
+test_that("lines_per_record is refused by readers other than fwf", {
+  expect_error(
+    read_tabular_file("x.csv", "csv", list(lines_per_record = 2L)),
+    "`lines_per_record` is not supported by reader `csv`"
+  )
+})
+
 test_that("col_names = FALSE keeps the first row of a headerless file", {
   path <- fs::path(withr::local_tempdir(), "data.dat")
   writeLines(c("1\t5\t9", "2\t6\t10"), path)
@@ -843,6 +946,7 @@ test_that("build_resource_index resolves col_positions against the spec dir", {
         glob = "data.dat",
         reader = "fwf",
         col_positions = "layouts/data.csv",
+        lines_per_record = 3L,
         encoding = "latin1"
       )
     )
@@ -851,6 +955,7 @@ test_that("build_resource_index resolves col_positions against the spec dir", {
   index <- build_resource_index(base_dir, spec)
   opts <- index$read_opts[[1]]
   expect_null(opts$columns)
+  expect_identical(opts$lines_per_record, 3L)
 
   expect_identical(
     opts$col_positions,

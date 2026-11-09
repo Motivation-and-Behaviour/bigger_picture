@@ -410,3 +410,51 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 1714,maternal_education,Honours,Bachelor degree or higher,compatible,Code 4 'Honours': honours bachelor degree (ISCED 6).
 1714,maternal_education,Masters,Bachelor degree or higher,compatible,Code 5 'Masters' (ISCED 7).
 1714,maternal_education,Other,Unknown,incompatible,Code 6 'Other': other qualifications cannot be ranked and are Unknown.
+2187,parental_education,High school diploma or equivalency (GED),Secondary school or less,compatible,"Code 2 (parent 2 label), ISCED 3; never the higher parent's level"
+2187,parental_education,Some college / Technical or trade school,Post-secondary,compatible,"Code 3: tertiary study begun but not completed, or technical or trade school (ISCED 4-5)"
+2187,parental_education,Bachelor's degree,Bachelor degree or higher,compatible,"Code 5, ISCED 6"
+2187,parental_education,Master's degree,Bachelor degree or higher,compatible,"Code 6, ISCED 7"
+2187,parental_education,"Professional (MD, JD, DDS, etc.)",Bachelor degree or higher,compatible,"Code 7: professional degree, ISCED 7"
+2187,parental_education,Doctorate,Bachelor degree or higher,compatible,"Code 8, ISCED 8"
+1346,maternal_education,Less than high school,Secondary school or less,compatible,"X1MOMEDU/X1DADEDU/X1PAREDU and their 2012 X2 counterparts code 1: no high school diploma (ISCED 0-2)"
+1346,maternal_education,High school diploma or GED,Secondary school or less,proximate,"Code 2: high school diploma or GED (ISCED 3); the composites code highest degree earned, so a parent who started college without completing a degree is also coded here"
+1346,maternal_education,Associate's degree,Post-secondary,compatible,"Base-year code 3, 2012 code 4: associate's degree (ISCED 5)"
+1346,maternal_education,Bachelor's degree,Bachelor degree or higher,compatible,"Base-year code 4, 2012 code 5: bachelor's degree (ISCED 6)"
+1346,maternal_education,Master's degree,Bachelor degree or higher,compatible,"Base-year code 5, 2012 code 6: master's degree (ISCED 7); the public-use file recodes the base-year Educational Specialist diploma to this code"
+1346,maternal_education,Educational Specialist diploma,Bachelor degree or higher,compatible,"Code 6: Educational Specialist diploma (ISCED 7); recoded to code 5 on the public-use file, so not observed"
+1346,maternal_education,Ph.D/M.D/Law/other high lvl prof degree,Bachelor degree or higher,compatible,"Base-year and 2012 code 7: doctoral or professional degree (ISCED 8)"
+1346,maternal_education,No bio/adoptive/step-mother in household,Unknown,compatible,"X1MOMEDU code 0: no biological, adoptive or step mother in the household"
+1346,maternal_education,No bio/adoptive/step-father in household,Unknown,compatible,"X1DADEDU code 0: no biological, adoptive or step father in the household"
+1346,maternal_education,Nonrespondent,Unknown,compatible,Code -8: no base-year parent questionnaire
+1346,maternal_education,High school diploma or GED or alterntive HS credential,Secondary school or less,proximate,"2012 X2PAREDU code 2 (label spelled as released): high school diploma, GED or alternative credential (ISCED 3); highest degree earned, so a parent who started college without completing a degree is also coded here"
+1346,maternal_education,High school diploma or GED or alternative HS credential,Secondary school or less,proximate,"2012 X2MOMEDU/X2DADEDU code 2: high school diploma, GED or alternative credential (ISCED 3); highest degree earned, so a parent who started college without completing a degree is also coded here"
+1346,maternal_education,Certificate/diploma from school providing occupational training,Post-secondary,compatible,"2012 code 3: certificate or diploma from a school providing occupational training (ISCED 4, post-secondary non-tertiary)"
+775,maternal_education,0,Secondary school or less,compatible,X_PAR1ED_I/X_PAR2ED_I code 0: none (no schooling); the three parent-education rows share these rows
+775,maternal_education,1,Secondary school or less,compatible,Code 1: 8th grade or below (ISCED 0-2)
+775,maternal_education,2,Secondary school or less,compatible,"Code 2: 9th-12th grade, no diploma (ISCED 2-3)"
+775,maternal_education,3,Secondary school or less,compatible,Code 3: high school diploma or equivalent (ISCED 3)
+775,maternal_education,4,Post-secondary,compatible,Code 4: vocational or technical programme after high school (ISCED 4-5)
+775,maternal_education,5,Post-secondary,compatible,Code 5: some college (tertiary study begun but not completed)
+775,maternal_education,6,Bachelor degree or higher,compatible,Code 6: bachelor's degree (ISCED 6)
+775,maternal_education,7,Bachelor degree or higher,compatible,"Code 7: graduate or professional school, no degree, after a bachelor's degree (ISCED 6)"
+775,maternal_education,8,Bachelor degree or higher,compatible,Code 8: master's degree or higher (ISCED 7)
+775,maternal_education,9,Bachelor degree or higher,compatible,Code 9: doctorate or professional degree (ISCED 8)
+1295,maternal_education,1,Unknown,unavailable,"Code 1: does not live with mother (stepmother or female guardian), or with father (stepfather or male guardian); no level reported"
+1295,maternal_education,2,Secondary school or less,compatible,Code 2: less than high school graduation (ISCED 0-2)
+1295,maternal_education,3,Secondary school or less,compatible,Code 3: high school graduation only (ISCED 3)
+1295,maternal_education,4,Post-secondary,compatible,"Code 4: vocational, trade or business school after high school, less than two years (ISCED 4)"
+1295,maternal_education,5,Post-secondary,compatible,"Code 5: vocational, trade or business school after high school, two years or more (ISCED 4-5)"
+1295,maternal_education,6,Post-secondary,compatible,Code 6: college program with less than two years of college (tertiary study begun)
+1295,maternal_education,7,Post-secondary,compatible,"Code 7: two or more years of college, including a two-year degree (ISCED 5, or tertiary study begun)"
+1295,maternal_education,8,Bachelor degree or higher,compatible,Code 8: finished college (four- or five-year degree; ISCED 6)
+1295,maternal_education,9,Bachelor degree or higher,compatible,Code 9: master's degree or equivalent (ISCED 7)
+1295,maternal_education,10,Bachelor degree or higher,compatible,"Code 10: PhD, MD or other advanced professional degree (ISCED 8)"
+1295,maternal_education,11,Unknown,unavailable,Code 11: don't know
+278,maternal_education,No schooling,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 1 (무학).
+278,maternal_education,Elementary school graduate,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 2 (초등학교 졸업).
+278,maternal_education,Middle school graduate,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 3 (중학교 졸업).
+278,maternal_education,High school graduate,Secondary school or less,compatible,DMtdmg014/DFtdmg014 code 4 (고등학교 졸업); also the secondary-or-less level of parental_education.
+278,maternal_education,Junior college graduate (2-3 years),Post-secondary,compatible,DMtdmg014/DFtdmg014 code 5 (2- or 3-year junior college graduate; ISCED 5).
+278,maternal_education,University graduate (4 years or more),Bachelor degree or higher,compatible,DMtdmg014/DFtdmg014 code 6 (4-year university graduate).
+278,maternal_education,Graduate school graduate,Bachelor degree or higher,compatible,"DMtdmg014/DFtdmg014 codes 7 and 8 (master's, doctorate) in 2008-2011, 9 in 2012 (the father's codes also in 2013) and 7 otherwise (graduate school)."
+278,maternal_education,Don't know or no response,Unknown,compatible,DMtdmg014/DFtdmg014 don't know (88888888) and no response (99999999).

@@ -34,6 +34,11 @@ bp_shared_lookup_dir <- function() {
   fs::path(bp_harmonisation_dir(), "lookups")
 }
 
+# The private funder report: its own repository, cloned or linked in here.
+bp_private_report_dir <- function() {
+  "DoEreport"
+}
+
 bp_harmonisation_dataset_dir <- function(dataset_id) {
   fs::path(bp_harmonisation_dir(), "datasets", paste0("BPIPD-", dataset_id))
 }
