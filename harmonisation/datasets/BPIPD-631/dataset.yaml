@@ -19,8 +19,8 @@ resources:
   # ~3,100 columns), so only join keys and context items are read; the data
   # dictionaries below list the rest.
   #
-  # BHPS youth files carry no age; `age` here is age at interview, joined on
-  # pidp.
+  # BHPS youth files carry no age or sample origin; `age` here is age at
+  # interview and `memorig` the individual sample origin, joined on pidp.
   - name: "bhps_indall"
     role: "data"
     glob: "stata/stata14_se/bhps/b{d,e,f,g,h,i,j,k,l,m,n,o,p,q,r}_indall.dta"
@@ -30,6 +30,7 @@ resources:
       - "b[d-r]_hidp"
       - "b[d-r]_pno"
       - "b[d-r]_age"
+      - "b[d-r]_memorig"
   # Adult interviews: parents' education and occupation, joined on hidp +
   # the youth's mnspno/fnspno.
   - name: "bhps_indresp"
@@ -58,6 +59,31 @@ resources:
       - "[a-o]_hiqual_dv"
       - "[a-o]_jbstat"
       - "[a-o]_jbnssec8_dv"
+  # Child files: whether the child attends a state or private school
+  # (schsta), reported by a parent in the adult interview; only the waves
+  # that ask it. BHPS files hold one row per responding parent and child (pno
+  # is the parent's, scpno the child's); UKHLS ones one row per child, with
+  # the parent who answered the school questions in rapno2. From UKHLS wave
+  # 3, schsta is asked only of children not still at the school recorded
+  # last time; stillstate/stillpriv record that they are.
+  - name: "bhps_child"
+    role: "data"
+    glob: "stata/stata14_se/bhps/b{l,m,q}_child.dta"
+    reader: "stata"
+    columns:
+      - "b[lmq]_hidp"
+      - "b[lmq]_pno"
+      - "b[lmq]_scpno"
+      - "b[lmq]_schsta"
+  - name: "ukhls_child"
+    role: "data"
+    glob: "stata/stata14_se/ukhls/{a,c,e,g,h,i,k,m,o}_child.dta"
+    reader: "stata"
+    columns:
+      - "[a-o]_hidp"
+      - "[a-o]_pno"
+      - "[a-o]_(schsta|stillstate|stillpriv)"
+      - "[a-o]_rapno2"
   # Household questionnaires: income and composition, joined on hidp.
   # fihhmngrs_dv is the income measure both surveys share. BHPS youth files
   # carry no interview date or region; those come from here instead
@@ -101,7 +127,8 @@ resources:
       - "[a-o]_nkids_dv"
   # Cross-wave person file, one row per person: ethnic group (BHPS youth
   # files lack it) and UK birthplace, joined on pidp to each youth and
-  # resident parent.
+  # resident parent; the youth's birth weight and timing, as the mother
+  # reported them (UKHLS `bw*`, BHPS `bw*_bh`), joined to the youth only.
   - name: "xwavedat"
     role: "data"
     glob: "stata/stata14_se/ukhls/xwavedat.dta"
@@ -110,6 +137,20 @@ resources:
       - "pidp"
       - "ethn_dv"
       - "bornuk_dv"
+      - "bwt"
+      - "bwtlb"
+      - "bwtoz"
+      - "bwtk"
+      - "bwtxp"
+      - "bwtel"
+      - "bwtwk"
+      - "bwtkn_bh"
+      - "bwtlb_bh"
+      - "bwtoz_bh"
+      - "bwtgm_bh"
+      - "bwtxp_bh"
+      - "bwtel_bh"
+      - "bwtwk_bh"
 
   - name: "Technical and Survey Documentation"
     role: "docs"

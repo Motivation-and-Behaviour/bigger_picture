@@ -1,0 +1,304 @@
+source_value,harmonised_value,notes
+AT_1,AT-1,Austria NUTS 2: Burgenland
+AT_2,AT-2,Austria NUTS 2: Kärnten
+AT_3,AT-3,Austria NUTS 2: Niederösterreich
+AT_4,AT-4,Austria NUTS 2: Oberösterreich
+AT_5,AT-5,Austria NUTS 2: Salzburg
+AT_6,AT-6,Austria NUTS 2: Steiermark
+AT_7,AT-7,Austria NUTS 2: Tirol
+AT_8,AT-8,Austria NUTS 2: Vorarlberg
+AT_9,AT-9,Austria NUTS 2: Wien
+BE_1,BE-VLG,"Belgium NUTS 2 province, aggregated to its region: Anvers"
+BE_2,BE-VLG,"Belgium NUTS 2 province, aggregated to its region: Brabant Flamand"
+BE_3,BE-VLG,"Belgium NUTS 2 province, aggregated to its region: Flandre Occidentale"
+BE_4,BE-VLG,"Belgium NUTS 2 province, aggregated to its region: Flandre Orientale"
+BE_5,BE-VLG,"Belgium NUTS 2 province, aggregated to its region: Limbourg"
+BE_6,BE-BRU,"Belgium NUTS 2 province, aggregated to its region: Bruxelles Capitale"
+BE_7,BE-WAL,"Belgium NUTS 2 province, aggregated to its region: Brabant Wallon"
+BE_8,BE-WAL,"Belgium NUTS 2 province, aggregated to its region: Hainaut"
+BE_9,BE-WAL,"Belgium NUTS 2 province, aggregated to its region: Liège"
+BE_10,BE-WAL,"Belgium NUTS 2 province, aggregated to its region: Luxembourg"
+BE_11,BE-WAL,"Belgium NUTS 2 province, aggregated to its region: Namur"
+BG_1,BG: North West,"Bulgaria NUTS 2 planning region, a grouping of provinces"
+BG_2,BG: North Central,"Bulgaria NUTS 2 planning region, a grouping of provinces"
+BG_3,BG: North East,"Bulgaria NUTS 2 planning region, a grouping of provinces"
+BG_4,BG: South West,"Bulgaria NUTS 2 planning region, a grouping of provinces"
+BG_5,BG: South Central,"Bulgaria NUTS 2 planning region, a grouping of provinces"
+BG_6,BG: South East,"Bulgaria NUTS 2 planning region, a grouping of provinces"
+CY_1,CY-01,Cyprus district (sampling stratum): Nicosia
+CY_2,CY-02,Cyprus district (sampling stratum): Limassol
+CY_3,CY-03,Cyprus district (sampling stratum): Larnaka
+CY_4,CY-05,Cyprus district (sampling stratum): Paphos
+CY_5,CY-04,Cyprus district (sampling stratum): Famagusta
+CZ_1,CZ-10,Czech Republic NUTS 3 region: Praha
+CZ_2,CZ-20,Czech Republic NUTS 3 region: Stredocesky
+CZ_3,CZ-31,Czech Republic NUTS 3 region: Jihocesky
+CZ_4,CZ-32,Czech Republic NUTS 3 region: Plzensky
+CZ_5,CZ-41,Czech Republic NUTS 3 region: Karlovarsky
+CZ_6,CZ-42,Czech Republic NUTS 3 region: Ustecky
+CZ_7,CZ-51,Czech Republic NUTS 3 region: Liberecky
+CZ_8,CZ-52,Czech Republic NUTS 3 region: Kralovehradecky
+CZ_9,CZ-53,Czech Republic NUTS 3 region: Pardubicky
+CZ_10,CZ-63,Czech Republic NUTS 3 region: Vysocina
+CZ_11,CZ-64,Czech Republic NUTS 3 region: Jihomoravsky
+CZ_12,CZ-71,Czech Republic NUTS 3 region: Olomoucky
+CZ_13,CZ-80,Czech Republic NUTS 3 region: Moravskoslezsky
+CZ_14,CZ-72,Czech Republic NUTS 3 region: Zlinsky
+DE_1,DE-SH,Germany NUTS 1 Land: Schleswig-Holstein
+DE_2,DE-HH,Germany NUTS 1 Land: Hamburg
+DE_3,DE-NI,Germany NUTS 1 Land: Niedersachsen
+DE_4,DE-HB,Germany NUTS 1 Land: Bremen
+DE_5,DE-NW,Germany NUTS 1 Land: Nordrhein-Westfalen
+DE_6,DE-HE,Germany NUTS 1 Land: Hessen
+DE_7,DE-RP,Germany NUTS 1 Land: Rheinland-Pfalz
+DE_8,DE-BW,Germany NUTS 1 Land: Baden-Wuerttemberg
+DE_9,DE-BY,Germany NUTS 1 Land: Bayern
+DE_10,DE-SL,Germany NUTS 1 Land: Saarland
+DE_11,DE-BE,Germany NUTS 1 Land: Berlin
+DE_12,DE-BB,Germany NUTS 1 Land: Brandenburg
+DE_13,DE-MV,Germany NUTS 1 Land: Mecklenburg-Vorpommern
+DE_14,DE-SN,Germany NUTS 1 Land: Sachsen
+DE_15,DE-ST,Germany NUTS 1 Land: Sachsen-Anhalt
+DE_16,DE-TH,Germany NUTS 1 Land: Thueringen
+DK_1,DK-84,Denmark NUTS 2 region: Hovedstaden
+DK_2,DK-85,Denmark NUTS 2 region: Sjaelland
+DK_3,DK-83,Denmark NUTS 2 region: Syddanmark
+DK_4,DK-82,Denmark NUTS 2 region: Midtjylland
+DK_5,DK-81,Denmark NUTS 2 region: Nordjylland
+EE_1,EE: Capital (Tallinn),"Estonia NUTS 3 region, a grouping of counties"
+EE_2,EE: Northern Estonia,"Estonia NUTS 3 region, a grouping of counties"
+EE_3,EE: Western Estonia,"Estonia NUTS 3 region, a grouping of counties"
+EE_4,EE: Central Estonia,"Estonia NUTS 3 region, a grouping of counties"
+EE_5,EE: Southern Estonia,"Estonia NUTS 3 region, a grouping of counties"
+GR_1,GR-A,Greece region: Eastern Macedonia and Thrace
+GR_2,GR-B,Greece region: Central Macedonia
+GR_3,GR-C,Greece region: Western Macedonia
+GR_4,GR-D,Greece region: Epirus
+GR_5,GR-E,Greece region: Thessalia
+GR_6,GR: Western Greece and Ionian Islands,Greece region: Western Greece and Ionian Islands (grouping of two regions)
+GR_7,GR-H,Greece region: Continental Greece (Central Greece)
+GR_8,GR-J,Greece region: Peloponnese
+GR_9,GR-I,Greece region: Attica
+GR_10,GR: Aegean,Greece region: Aegean (grouping of North and South Aegean)
+GR_11,GR-M,Greece region: Crete
+ES_1,ES-AN,Spain NUTS 2 autonomous community: Andalucia
+ES_2,ES-AR,Spain NUTS 2 autonomous community: Aragon
+ES_3,ES-AS,Spain NUTS 2 autonomous community: Asturias
+ES_4,ES-IB,Spain NUTS 2 autonomous community: Illes Balears
+ES_5,ES-CN,Spain NUTS 2 autonomous community: Canarias
+ES_6,ES-CB,Spain NUTS 2 autonomous community: Cantabria
+ES_7,ES-CL,Spain NUTS 2 autonomous community: Castilla y Leon
+ES_8,ES-CM,Spain NUTS 2 autonomous community: Castilla-La Mancha
+ES_9,ES-CT,Spain NUTS 2 autonomous community: Cataluna
+ES_10,ES-VC,Spain NUTS 2 autonomous community: Comunitat Valenciana
+ES_11,ES-EX,Spain NUTS 2 autonomous community: Extremadura
+ES_12,ES-GA,Spain NUTS 2 autonomous community: Galicia
+ES_13,ES-MD,Spain NUTS 2 autonomous community: Madrid
+ES_14,ES-MC,Spain NUTS 2 autonomous community: Murcia
+ES_15,ES-NC,Spain NUTS 2 autonomous community: Navarra
+ES_16,ES-PV,Spain NUTS 2 autonomous community: Pais Vasco
+ES_17,ES-RI,Spain NUTS 2 autonomous community: La Rioja
+FI3_1,FI-18,Finland NUTS 3 region (maakunta): Uusimaa
+FI3_2,FI-19,Finland NUTS 3 region (maakunta): Varsinais-Suomi
+FI3_3,FI-18,Finland NUTS 3 region (maakunta): Ita-Uusimaa (merged into Uusimaa in 2011)
+FI3_4,FI-17,Finland NUTS 3 region (maakunta): Satakunta
+FI3_5,FI-06,Finland NUTS 3 region (maakunta): Kanta-Hame
+FI3_6,FI-11,Finland NUTS 3 region (maakunta): Pirkanmaa
+FI3_7,FI-16,Finland NUTS 3 region (maakunta): Paijat-Hame
+FI3_8,FI-09,Finland NUTS 3 region (maakunta): Kymenlaakso
+FI3_9,FI-02,Finland NUTS 3 region (maakunta): Etela-Karjala
+FI3_10,FI-04,Finland NUTS 3 region (maakunta): Etela-Savo
+FI3_11,FI-15,Finland NUTS 3 region (maakunta): Pohjois-Savo
+FI3_12,FI-13,Finland NUTS 3 region (maakunta): Pohjois-Karjala
+FI3_13,FI-08,Finland NUTS 3 region (maakunta): Keski-Suomi
+FI3_14,FI-03,Finland NUTS 3 region (maakunta): Etela-Pohjanmaa
+FI3_15,FI-12,Finland NUTS 3 region (maakunta): Pohjanmaa
+FI3_16,FI-07,Finland NUTS 3 region (maakunta): Keski-Pohjanmaa
+FI3_17,FI-14,Finland NUTS 3 region (maakunta): Pohjois-Pohjanmaa
+FI3_18,FI-05,Finland NUTS 3 region (maakunta): Kainuu
+FI3_19,FI-10,Finland NUTS 3 region (maakunta): Lappi
+FI2_1,FI: Southern Finland,"Finland NUTS 2 (former province), used where NUTS 3 is not included: Southern Finland (grouping)"
+FI2_2,FI: Western Finland,"Finland NUTS 2 (former province), used where NUTS 3 is not included: Western Finland (grouping)"
+FI2_3,FI: Eastern Finland,"Finland NUTS 2 (former province), used where NUTS 3 is not included: Eastern Finland (grouping)"
+FI2_4,FI: Province of Oulu,"Finland NUTS 2 (former province), used where NUTS 3 is not included: Province of Oulu (grouping)"
+FI2_5,FI-10,"Finland NUTS 2 (former province), used where NUTS 3 is not included: Province of Lapland (= Lappi)"
+FR_1,FR-IDF,"France NUTS 2 (2010 region), aggregated to its current region: Ile de France"
+FR_2,FR-GES,"France NUTS 2 (2010 region), aggregated to its current region: Champagne-Ardenne"
+FR_3,FR-HDF,"France NUTS 2 (2010 region), aggregated to its current region: Picardie"
+FR_4,FR-NOR,"France NUTS 2 (2010 region), aggregated to its current region: Haute-Normandie"
+FR_5,FR-CVL,"France NUTS 2 (2010 region), aggregated to its current region: Centre"
+FR_6,FR-NOR,"France NUTS 2 (2010 region), aggregated to its current region: Basse-Normandie"
+FR_7,FR-BFC,"France NUTS 2 (2010 region), aggregated to its current region: Bourgogne"
+FR_8,FR-HDF,"France NUTS 2 (2010 region), aggregated to its current region: Nord-Pas-de-Calais"
+FR_9,FR-GES,"France NUTS 2 (2010 region), aggregated to its current region: Lorraine"
+FR_10,FR-GES,"France NUTS 2 (2010 region), aggregated to its current region: Alsace"
+FR_11,FR-BFC,"France NUTS 2 (2010 region), aggregated to its current region: Franche-Comte"
+FR_12,FR-PDL,"France NUTS 2 (2010 region), aggregated to its current region: Pays de la Loire"
+FR_13,FR-BRE,"France NUTS 2 (2010 region), aggregated to its current region: Bretagne"
+FR_14,FR-NAQ,"France NUTS 2 (2010 region), aggregated to its current region: Poitou-Charentes"
+FR_15,FR-NAQ,"France NUTS 2 (2010 region), aggregated to its current region: Aquitaine"
+FR_16,FR-OCC,"France NUTS 2 (2010 region), aggregated to its current region: Midi-Pyrenees"
+FR_17,FR-NAQ,"France NUTS 2 (2010 region), aggregated to its current region: Limousin"
+FR_18,FR-ARA,"France NUTS 2 (2010 region), aggregated to its current region: Rhone-Alpes"
+FR_19,FR-ARA,"France NUTS 2 (2010 region), aggregated to its current region: Auvergne"
+FR_20,FR-OCC,"France NUTS 2 (2010 region), aggregated to its current region: Languedoc-Roussillon"
+FR_21,FR-PAC,"France NUTS 2 (2010 region), aggregated to its current region: Provence-Alpes-Cote d'Azur"
+FR_22,FR-20R,"France NUTS 2 (2010 region), aggregated to its current region: Corse"
+HU_1,HU: Central Hungary,"Hungary NUTS 2 region, a grouping of counties"
+HU_2,HU: Central Transdanubia,"Hungary NUTS 2 region, a grouping of counties"
+HU_3,HU: Western Transdanubia,"Hungary NUTS 2 region, a grouping of counties"
+HU_4,HU: Southern Transdanubia,"Hungary NUTS 2 region, a grouping of counties"
+HU_5,HU: Northern Hungary,"Hungary NUTS 2 region, a grouping of counties"
+HU_6,HU: Northern Great Plain,"Hungary NUTS 2 region, a grouping of counties"
+HU_7,HU: Southern Great Plain,"Hungary NUTS 2 region, a grouping of counties"
+IE_1,IE: Border,Ireland NUTS 3 region: Border (counties in three provinces; grouping)
+IE_2,IE-L,Ireland NUTS 3 region: Midland (Leinster)
+IE_3,IE-C,Ireland NUTS 3 region: West (Connacht)
+IE_4,IE-L,Ireland NUTS 3 region: Dublin (Leinster)
+IE_5,IE-L,Ireland NUTS 3 region: Mid-East (Leinster)
+IE_6,IE-M,Ireland NUTS 3 region: Mid-West (Munster)
+IE_7,IE: South-East,Ireland NUTS 3 region: South-East (counties in Leinster and Munster; grouping)
+IE_8,IE-M,Ireland NUTS 3 region: South-West (Munster)
+IT_1,IT-21,Italy NUTS 2 region: Piemonte
+IT_2,IT-23,Italy NUTS 2 region: Valle d'Aosta
+IT_3,IT-25,Italy NUTS 2 region: Lombardia
+IT_4,IT-32,Italy NUTS 2 region: Trentino-Alto Adige
+IT_5,IT-34,Italy NUTS 2 region: Veneto
+IT_6,IT-36,Italy NUTS 2 region: Friuli Venezia Giulia
+IT_7,IT-42,Italy NUTS 2 region: Liguria
+IT_8,IT-45,Italy NUTS 2 region: Emilia-Romagna
+IT_9,IT-52,Italy NUTS 2 region: Toscana
+IT_10,IT-55,Italy NUTS 2 region: Umbria
+IT_11,IT-57,Italy NUTS 2 region: Marche
+IT_12,IT-62,Italy NUTS 2 region: Lazio
+IT_13,IT-65,Italy NUTS 2 region: Abruzzo
+IT_14,IT-67,Italy NUTS 2 region: Molise
+IT_15,IT-72,Italy NUTS 2 region: Campania
+IT_16,IT-75,Italy NUTS 2 region: Puglia
+IT_17,IT-77,Italy NUTS 2 region: Basilicata
+IT_18,IT-78,Italy NUTS 2 region: Calabria
+IT_19,IT-82,Italy NUTS 2 region: Sicilia
+IT_20,IT-88,Italy NUTS 2 region: Sardegna
+LT_1,LT-AL,Lithuania NUTS 3 county: Alytaus
+LT_2,LT-KU,Lithuania NUTS 3 county: Kauno
+LT_3,LT-KL,Lithuania NUTS 3 county: Klaipedos
+LT_4,LT-MR,Lithuania NUTS 3 county: Marijampoles
+LT_5,LT-PN,Lithuania NUTS 3 county: Panevezio
+LT_6,LT-SA,Lithuania NUTS 3 county: Siauliu
+LT_7,LT-TA,Lithuania NUTS 3 county: Taurages
+LT_8,LT-TE,Lithuania NUTS 3 county: Telsiu
+LT_9,LT-UT,Lithuania NUTS 3 county: Utenos
+LT_10,LT-VL,Lithuania NUTS 3 county: Vilniaus
+NL_1,NL-GR,Netherlands NUTS 2 province: Groningen
+NL_2,NL-FR,Netherlands NUTS 2 province: Friesland
+NL_3,NL-DR,Netherlands NUTS 2 province: Drenthe
+NL_4,NL-OV,Netherlands NUTS 2 province: Overijssel
+NL_5,NL-GE,Netherlands NUTS 2 province: Gelderland
+NL_6,NL-FL,Netherlands NUTS 2 province: Flevoland
+NL_7,NL-UT,Netherlands NUTS 2 province: Utrecht
+NL_8,NL-NH,Netherlands NUTS 2 province: Noord-Holland
+NL_9,NL-ZH,Netherlands NUTS 2 province: Zuid-Holland
+NL_10,NL-ZE,Netherlands NUTS 2 province: Zeeland
+NL_11,NL-NB,Netherlands NUTS 2 province: Noord-Brabant
+NL_12,NL-LI,Netherlands NUTS 2 province: Limburg
+NO3_1,NO-03,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Oslo"
+NO3_2,NO-30,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Akershus"
+NO3_3,NO-34,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Hedmark"
+NO3_4,NO-34,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Oppland"
+NO3_5,NO-30,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Ostfold"
+NO3_6,NO-30,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Buskerud"
+NO3_7,NO-38,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Vestfold"
+NO3_8,NO-38,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Telemark"
+NO3_9,NO-42,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Aust-Agder"
+NO3_10,NO-42,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Vest-Agder"
+NO3_11,NO-11,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Rogaland"
+NO3_12,NO-46,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Hordaland"
+NO3_13,NO-46,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Sogn og Fjordane"
+NO3_14,NO-15,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: More og Romsdal"
+NO3_15,NO-50,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Sor-Trondelag"
+NO3_16,NO-50,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Nord-Trondelag"
+NO3_17,NO-18,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Nordland"
+NO3_18,NO-54,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Troms"
+NO3_19,NO-54,"Norway NUTS 3 (2010 county), aggregated to its current ISO county: Finnmark"
+NO2_1,NO: Oslo og Akershus,"Norway NUTS 2, used where NUTS 3 is not included: Oslo og Akershus (grouping)"
+NO2_2,NO-34,"Norway NUTS 2, used where NUTS 3 is not included: Hedmark og Oppland (= Innlandet)"
+NO2_3,NO: Sor-Ostlandet,"Norway NUTS 2, used where NUTS 3 is not included: Sor-Ostlandet (grouping)"
+NO2_4,NO: Agder og Rogaland,"Norway NUTS 2, used where NUTS 3 is not included: Agder og Rogaland (grouping)"
+NO2_5,NO: Vestlandet,"Norway NUTS 2, used where NUTS 3 is not included: Vestlandet (grouping)"
+NO2_6,NO-50,"Norway NUTS 2, used where NUTS 3 is not included: Trondelag"
+NO2_7,NO: Nord-Norge,"Norway NUTS 2, used where NUTS 3 is not included: Nord-Norge (grouping)"
+PL_1,PL-02,Poland NUTS 2 voivodeship: Dolnoslaskie
+PL_2,PL-04,Poland NUTS 2 voivodeship: Kujawsko-Pomorskie
+PL_3,PL-06,Poland NUTS 2 voivodeship: Lubelskie
+PL_4,PL-08,Poland NUTS 2 voivodeship: Lubuskie
+PL_5,PL-10,Poland NUTS 2 voivodeship: Lodzkie
+PL_6,PL-12,Poland NUTS 2 voivodeship: Malopolskie
+PL_7,PL-14,Poland NUTS 2 voivodeship: Mazowieckie
+PL_8,PL-16,Poland NUTS 2 voivodeship: Opolskie
+PL_9,PL-18,Poland NUTS 2 voivodeship: Podkarpackie
+PL_10,PL-20,Poland NUTS 2 voivodeship: Podlaskie
+PL_11,PL-22,Poland NUTS 2 voivodeship: Pomorskie
+PL_12,PL-24,Poland NUTS 2 voivodeship: Slaskie
+PL_13,PL-26,Poland NUTS 2 voivodeship: Swietokrzyskie
+PL_14,PL-28,Poland NUTS 2 voivodeship: Warminsko-Mazurskie
+PL_15,PL-30,Poland NUTS 2 voivodeship: Wielkopolskie
+PL_16,PL-32,Poland NUTS 2 voivodeship: Zachodniopomorskie
+PT_1,PT: Alentejo,Portugal NUTS 2 region: Alentejo (grouping)
+PT_2,PT-08,Portugal NUTS 2 region: Algarve (= Faro district)
+PT_3,PT: Centro,Portugal NUTS 2 region: Centro (grouping)
+PT_4,PT: Lisboa,Portugal NUTS 2 region: Lisboa (grouping)
+PT_5,PT: Norte,Portugal NUTS 2 region: Norte (grouping)
+PT_6,PT-30,Portugal NUTS 2 region: Madeira
+PT_7,PT-20,Portugal NUTS 2 region: Azores
+RO_1,RO: North-East,"Romania NUTS 2 development region, a grouping of counties (Bucharest: the Bucharest-Ilfov region)"
+RO_2,RO: South-East,"Romania NUTS 2 development region, a grouping of counties (Bucharest: the Bucharest-Ilfov region)"
+RO_3,RO: South,"Romania NUTS 2 development region, a grouping of counties (Bucharest: the Bucharest-Ilfov region)"
+RO_4,RO: South-West,"Romania NUTS 2 development region, a grouping of counties (Bucharest: the Bucharest-Ilfov region)"
+RO_5,RO: West,"Romania NUTS 2 development region, a grouping of counties (Bucharest: the Bucharest-Ilfov region)"
+RO_6,RO: North-West,"Romania NUTS 2 development region, a grouping of counties (Bucharest: the Bucharest-Ilfov region)"
+RO_7,RO: Centre,"Romania NUTS 2 development region, a grouping of counties (Bucharest: the Bucharest-Ilfov region)"
+RO_8,RO: Bucharest,"Romania NUTS 2 development region, a grouping of counties (Bucharest: the Bucharest-Ilfov region)"
+SE_1,SE-AB,Sweden NUTS 2: Stockholm (= Stockholm county)
+SE_2,SE: Eastern mid Sweden,"Sweden NUTS 2 region, a grouping of counties"
+SE_3,SE: Smaland and the Isles,"Sweden NUTS 2 region, a grouping of counties"
+SE_4,SE: South Sweden,"Sweden NUTS 2 region, a grouping of counties"
+SE_5,SE: West Sweden,"Sweden NUTS 2 region, a grouping of counties"
+SE_6,SE: Northern Mid Sweden,"Sweden NUTS 2 region, a grouping of counties"
+SE_7,SE: Mid Northern Sweden,"Sweden NUTS 2 region, a grouping of counties"
+SE_8,SE: Upper North Sweden,"Sweden NUTS 2 region, a grouping of counties"
+SI_1,SI: Pomurska,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+SI_2,SI: Podravska,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+SI_3,SI: Koroska,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+SI_4,SI: Savinjska,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+SI_5,SI: Zasavska,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+SI_6,SI: Spodnjeposavska,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+SI_7,SI: JV Slovenija,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+SI_8,SI: Osrednjeslovenska,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+SI_9,SI: Gorenjska,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+SI_10,SI: Notranjsko-kraska,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+SI_11,SI: Goriska,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+SI_12,SI: Obalno-kraska,"Slovenia NUTS 3 statistical region, a grouping of municipalities"
+TR_1,TR-34,Turkey NUTS 1: Istanbul (= Istanbul province)
+TR_2,TR: West Anatolia,"Turkey NUTS 1 region, a grouping of provinces"
+TR_3,TR: East Marmara,"Turkey NUTS 1 region, a grouping of provinces"
+TR_4,TR: Aegean,"Turkey NUTS 1 region, a grouping of provinces"
+TR_5,TR: West Marmara,"Turkey NUTS 1 region, a grouping of provinces"
+TR_6,TR: Mediterranean,"Turkey NUTS 1 region, a grouping of provinces"
+TR_7,TR: West Black Sea,"Turkey NUTS 1 region, a grouping of provinces"
+TR_8,TR: Middle Anatolia,"Turkey NUTS 1 region, a grouping of provinces"
+TR_9,TR: East Black Sea,"Turkey NUTS 1 region, a grouping of provinces"
+TR_10,TR: Southeast Anatolia,"Turkey NUTS 1 region, a grouping of provinces"
+TR_11,TR: Middle East Anatolia,"Turkey NUTS 1 region, a grouping of provinces"
+TR_12,TR: Northeast Anatolia,"Turkey NUTS 1 region, a grouping of provinces"
+UK_1,GB-ENG,"UK NUTS 1 region, aggregated to its nation: East Midlands"
+UK_2,GB-ENG,"UK NUTS 1 region, aggregated to its nation: East of England"
+UK_3,GB-ENG,"UK NUTS 1 region, aggregated to its nation: London"
+UK_4,GB-ENG,"UK NUTS 1 region, aggregated to its nation: North East"
+UK_5,GB-ENG,"UK NUTS 1 region, aggregated to its nation: North West"
+UK_6,GB-NIR,"UK NUTS 1 region, aggregated to its nation: Northern Ireland"
+UK_7,GB-SCT,"UK NUTS 1 region, aggregated to its nation: Scotland"
+UK_8,GB-ENG,"UK NUTS 1 region, aggregated to its nation: South East"
+UK_9,GB-ENG,"UK NUTS 1 region, aggregated to its nation: South West"
+UK_10,GB-WLS,"UK NUTS 1 region, aggregated to its nation: Wales"
+UK_11,GB-ENG,"UK NUTS 1 region, aggregated to its nation: West Midlands"
+UK_12,GB-ENG,"UK NUTS 1 region, aggregated to its nation: Yorkshire and the Humber"

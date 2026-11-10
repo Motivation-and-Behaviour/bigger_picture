@@ -11,22 +11,44 @@ survey_cluster,partial,"SCLID, ID, wave","local({
   cluster <- if_else(wave_num == first_wave, as.numeric(SCLID), NA_real_)
   as.character(carry_within(cluster, ID, wave_num))
 })","School code (SCLID) from each participant's earliest wave, carried within participant to every later wave, without a wave prefix. Partial: SCLID is the participant's current school, which changes when they move, and the sampled-school design is not documented in the supplied files.",,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,compatible,HID,"sprintf(""%.0f"", as.numeric(HID))","KCYPS household ID (HID), constant within participant: main-panel youth share it with the siblings surveyed from wave 2, and 8 households have a main-panel member in each cohort; 5,161 households for 8,402 participants (2,366 with one participant, 2,362 with two, 433 with three or four). One guardian questionnaire covers the main-panel member and the siblings, so household and parent items (income PINCOME, parents' education PSCHOOL1-3 and work PWORKW1-3, the household roster PFRELATION/PFBRTA) are shared within a household-wave.",,
+sample_component,compatible,respondent,"recode_values(respondent, ""main"" ~ ""Main panel"", ""sibling"" ~ ""Siblings of main panel members"")","Label from the file split (tidier column respondent, the main-panel and sibling files; COHORT 1-2 and 3-4). Main panel: the Elementary 4 and Middle 1 cohorts, recruited together at wave 1 (2018) under one design (5,197 youth). Siblings of main panel members: elementary, middle and high school siblings of main-panel youth, recruited through the panel households from wave 2 (2019) and given the elementary or middle/high school questionnaire by school level (3,205 youth; codebook GUIDE sheet).",,
 sample_population,inferred,,"""General population""","Multi-stratified cluster sample of 4th grade elementary and 1st grade middle school students across South Korea in 2018 (KCYPS 2018, Atlas of Longitudinal Datasets entry).",,
-parent_respondent,in_progress,,,,,
+parent_respondent,compatible,PARENT,"recode_values(as.numeric(PARENT), 1 ~ ""Mother"", 2 ~ ""Father"", 3:7 ~ ""Other carer"")","Guardian questionnaire, every wave: 'What is your relationship to the youth (child or dependent) participating in this survey?' (PARENT): mother = Mother, father = Father; (maternal) grandmother or grandfather, sibling, relatives and non-blood relatives = Other carer. One guardian answers for the main-panel member and the siblings; the youth self-report screen time. NA on the 24 rows with no guardian questionnaire. Not carried.",,
 age_years,compatible,"YBRT1A, wave","recode_values(wave, ""w1"" ~ 2018, ""w2"" ~ 2019, ""w3"" ~ 2020, ""w4"" ~ 2021, ""w5"" ~ 2022, ""w6"" ~ 2023, ""w7"" ~ 2024) -
   as.numeric(YBRT1A)","Collection year minus birth year (YBRT1A); no interview date or documented fieldwork window, so no midpoint adjustment and no +0.5. w7 ages above 19 (m1 cohort, older siblings) are kept.",,
 sex,compatible,YGENDER,"recode_values(as.numeric(YGENDER), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")",No 'other'/'prefer not to say' option; the Unknown default is only a guard.,,
 country,inferred,,"""South Korea""",No country variable; fieldwork in the Republic of Korea.,,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,compatible,ARA1B,"local({
+  iso <- c(
+    ""KR-11"",
+    ""KR-26"",
+    ""KR-27"",
+    ""KR-28"",
+    ""KR-29"",
+    ""KR-30"",
+    ""KR-31"",
+    ""KR-50"",
+    ""KR-41"",
+    ""KR-51"",
+    ""KR-43"",
+    ""KR-44"",
+    ""KR-52"",
+    ""KR-46"",
+    ""KR-47"",
+    ""KR-48"",
+    ""KR-49""
+  )
+  code <- as.numeric(ARA1B)
+  coalesce(iso[ifelse(code %in% 1:17, code, NA)], ""Unknown"")
+})","City or province of residence (ARA1B, 'based on residence'), every wave, as its current ISO 3166-2 code: 1 Seoul KR-11, 2 Busan KR-26, 3 Daegu KR-27, 4 Incheon KR-28, 5 Gwangju KR-29, 6 Daejeon KR-30, 7 Ulsan KR-31, 8 Sejong KR-50, 9 Gyeonggi KR-41, 10 Gangwon KR-51, 11 Chungbuk KR-43, 12 Chungnam KR-44, 13 Jeonbuk KR-52, 14 Jeonnam KR-46, 15 Gyeongbuk KR-47, 16 Gyeongnam KR-48, 17 Jeju KR-49 (Gangwon and Jeonbuk under their codes as special self-governing provinces). The school-based code (ARA1A) is unused. Asked every wave, so nothing is carried.",,
 ethnicity,incompatible,PBRP1,,No ethnicity or race item; PBRP1 (guardian's birthplace) does not describe the child.,,
 indigenous,unavailable,,,Not collected.,,
 minority,incompatible,PBRP1,,Guardian birthplace only (PBRP1); cannot identify minority children.,,
 immigrant_background,incompatible,"PARENT, PBRP1",,Responding guardian's birthplace only (PBRP1); the other parent's is not asked.,,
 born_in_country,compatible,PYBRP1,"recode_values(as.numeric(PYBRP1), 1 ~ ""Yes"", 2 ~ ""No"", default = ""Unknown"")","Guardian report of the child's birthplace (PYBRP1: in Korea / abroad), every wave; missing = Unknown.",,
-home_language,in_progress,,,,,
+home_language,unavailable,,,Not collected.,,
 ses_area,unavailable,,,Not collected.,,
 ses_household,proximate,"PINCOME, wave","case_when(
   is.na(na_if(as.numeric(PINCOME), 9999)) ~ ""Unknown"",
@@ -94,8 +116,20 @@ parental_education,compatible,"PSCHOOL1, PSCHOOL2","lookup_values(
   target_variable = ""maternal_education"",
   default = ""Unknown""
 )","Higher of father's and mother's education (PSCHOOL1, PSCHOOL2; codes 1-7 ordered by level) through the maternal_education lookup; codes 8/9/10 dropped first, so one reported parent suffices.",maternal_education,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,compatible,PWORKW2,"recode_values(as.numeric(PWORKW2), 1 ~ ""Employed"", 2 ~ ""Not employed"", default = ""Unknown"")","Guardian report, every wave: 'In the past week, did the parents (or guardian if applicable) of the youth work for at least one hour to earn income? Or did they work at least 18 hours in a family-run business or farm without receiving pay?' - Mother (PWORKW2): yes = Employed, no = Not employed; not applicable (no mother) and no guardian questionnaire = Unknown. Asked every wave, so nothing is carried. The mother's occupation (PJOB2) is unused.",,
+maternal_age,compatible,"wave, PFRELATION2, PFRELATION3, PFRELATION4, PFRELATION5, PFRELATION6, PFRELATION7, PFRELATION8, PFRELATION9, PFBRTA2, PFBRTA3, PFBRTA4, PFBRTA5, PFBRTA6, PFBRTA7, PFBRTA8, PFBRTA9","local({
+  born <- coalesce(
+    if_else(as.numeric(PFRELATION2) == 2, as.numeric(PFBRTA2), NA_real_),
+    if_else(as.numeric(PFRELATION3) == 2, as.numeric(PFBRTA3), NA_real_),
+    if_else(as.numeric(PFRELATION4) == 2, as.numeric(PFBRTA4), NA_real_),
+    if_else(as.numeric(PFRELATION5) == 2, as.numeric(PFBRTA5), NA_real_),
+    if_else(as.numeric(PFRELATION6) == 2, as.numeric(PFBRTA6), NA_real_),
+    if_else(as.numeric(PFRELATION7) == 2, as.numeric(PFBRTA7), NA_real_),
+    if_else(as.numeric(PFRELATION8) == 2, as.numeric(PFBRTA8), NA_real_),
+    if_else(as.numeric(PFRELATION9) == 2, as.numeric(PFBRTA9), NA_real_)
+  )
+  recode_values(wave, ""w1"" ~ 2018, ""w2"" ~ 2019, ""w3"" ~ 2020, ""w4"" ~ 2021, ""w5"" ~ 2022, ""w6"" ~ 2023, ""w7"" ~ 2024) - born
+})","Guardian's household roster, every wave: the member recorded as the youth's 'Mother' (PFRELATION2-9 = 2; relationship to the main-panel youth, roster entry 1 being the youth) and her year of birth (PFBRTA2-9); collection year minus birth year, as age_years (no interview date or documented fieldwork window, so no midpoint adjustment). Sibling rows share the main-panel member's roster. NA where the roster records no mother or there is no guardian questionnaire (1,299 rows). Not carried.",,
 urbanicity,proximate,ARA2A,"recode_values(as.numeric(ARA2A), 1 ~ ""Urban"", 2 ~ ""Suburban"", 3 ~ ""Rural"", default = ""Unknown"")","Settlement size of school location. Proximate: middle category is small/medium cities, not suburbs; three-level order preserved.",,
 family_structure,proximate,PFAM1A00,"recode_values(
   as.numeric(PFAM1A00),
@@ -185,8 +219,25 @@ school_grade,inferred,"SGRADE, cohort, wave, respondent","case_when(
   ),
   .default = NA_character_
 )","Main panel has no grade item: inferred from cohort design (the codebook's Elementary 4 and Middle 1 cohorts at w1, +1 grade per wave; repetition rare). Siblings report grade (SGRADE). m1 main panel NA at w7: 2,033 answered the adult form (left school) and 40 the school form (SCLTYP) with no grade item. SGRADE code 13 (undocumented) NA.",,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,incompatible,SCLTYP,,"High-school type only (SCLTYP: general, autonomous, special-purpose, specialized), not public or private management; see school_track.",,
+school_track,inferred,"respondent, cohort, wave, SGRADE, SCLTYP","local({
+  stage <- case_when(
+    as.numeric(SGRADE) %in% 1:9 ~ ""untracked"",
+    as.numeric(SGRADE) %in% 10:12 ~ ""high"",
+    respondent == ""main"" & cohort == ""elem"" & wave %in% c(""w1"", ""w2"", ""w3"", ""w4"", ""w5"", ""w6"") ~ ""untracked"",
+    respondent == ""main"" & cohort == ""elem"" & wave == ""w7"" ~ ""high"",
+    respondent == ""main"" & cohort == ""mid"" & wave %in% c(""w1"", ""w2"", ""w3"") ~ ""untracked"",
+    respondent == ""main"" & cohort == ""mid"" & wave %in% c(""w4"", ""w5"", ""w6"") ~ ""high""
+  )
+  type <- if_else(wave %in% c(""w4"", ""w5""), as.numeric(SCLTYP), NA_real_)
+  case_when(
+    stage == ""untracked"" ~ ""Not tracked"",
+    stage == ""high"" & type %in% c(1, 2, 4) ~ ""Academic"",
+    stage == ""high"" & type == 3 ~ ""Intermediate"",
+    stage == ""high"" & type %in% c(5, 6) ~ ""Vocational"",
+    .default = ""Unknown""
+  )
+})","Elementary and middle school = Not tracked: Korea has a single-track 6-3-3-4 system whose school types are high-school types (Korean Education Centre in the UK, https://koreaneducentreinuk.org/en/education-in-korea/); the stage comes from the cohort design for the main panel (Elementary 4 and Middle 1 cohorts at wave 1, one grade a wave, as school_grade) and from the sibling's grade (SGRADE). High school at waves 4-5: the study's high-school type coded from the school (SCLTYP): general (1), autonomous (2) and special-purpose science and foreign languages (4) = Academic; special-purpose arts and physical education (3) = Intermediate; special-purpose Meister (5) and specialized (vocational, 6) high schools = Vocational; other (7) = Unknown (proximate fold of seven types). High school at waves 6-7 = Unknown: SCLTYP there carries codes 8-12 and 97 that the codebook does not define and its 1-7 distribution shifts, so the code list cannot be applied. Middle 1 main panel at wave 7 (mostly past secondary school) and sibling grade code 13 (undocumented) = Unknown. Inferred: the main panel's stage is assigned from the design (waves 1-7); the high-school rows are per-row values.",,
 st_measure_type,inferred,,"""Categorical""",Time-use items use seven ordered duration bands.,,
 st_measure_name,inferred,,"""Custom""","Bespoke KCYPS time-use grid (Q1), not a named instrument.",,
 st_responder,inferred,,"""Self""",Youth self-report time-use grid.,,
@@ -243,41 +294,41 @@ st_educational_we,partial,YTIM1F02,"recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2
 st_educational,partial,"YTIM1F01, YTIM1F02","((recode_values(as.numeric(YTIM1F01), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4) * 5) +
   (recode_values(as.numeric(YTIM1F02), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 3.5, 7 ~ 4) * 2)) /
   7",(5 x wd + 2 x we) / 7 of st_educational_wd and st_educational_we; lectures only. Top band '4 hours or more' = 4.,,
-st_leisure_wd,in_progress,,,,,
-st_leisure_we,in_progress,,,,,
-st_leisure,in_progress,,,,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_leisure_wd,incompatible,"YTIM1K01, YTIM1L01, YTIM1M01",,"Single-device leisure items only on weekdays (smartphone YTIM1K01, computer YTIM1L01, TV YTIM1M01), mapped to st_phone_wd, st_comp_wd and st_watch_wd; separately asked device items are never summed (DR-0004).",,
+st_leisure_we,incompatible,"YTIM1K02, YTIM1L02, YTIM1M02",,"Single-device leisure items only on weekends (smartphone YTIM1K02, computer YTIM1L02, TV YTIM1M02), mapped to st_phone_we, st_comp_we and st_watch_we; separately asked device items are never summed (DR-0004).",,
+st_leisure,incompatible,"YTIM1K01, YTIM1K02, YTIM1L01, YTIM1L02, YTIM1M01, YTIM1M02",,"Single-device leisure items only (smartphone YTIM1K01/K02, computer YTIM1L01/L02, TV YTIM1M01/M02), mapped to st_phone, st_comp and st_watch; separately asked device items are never summed (DR-0004).",,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch and st_violent_game.,,
+st_educontent_watch_wd,incompatible,YTIM1F01,,"Only weekday time watching internet and TV lectures (YTIM1F01), study use mapped to st_educational_wd; no item on programmes made to educate children.",,
+st_educontent_watch_we,incompatible,YTIM1F02,,"Only weekend time watching internet and TV lectures (YTIM1F02), study use mapped to st_educational_we; no item on programmes made to educate children.",,
+st_educontent_watch,incompatible,"YTIM1F01, YTIM1F02",,"Only time watching internet and TV lectures (YTIM1F01, YTIM1F02), study use mapped to st_educational; no item on programmes made to educate children.",,
 st_work_wd,unavailable,,,No weekday/weekend split.,,
 st_work_we,unavailable,,,No weekday/weekend split.,,
 st_work,incompatible,YMDA1B12,,"Only a frequency item for academic or work-related smartphone use (YMDA1B12: Never/Rarely/Occasionally/Frequently), not a duration.",,
 st_internet_wd,unavailable,,,Not collected.,,
 st_internet_we,unavailable,,,Not collected.,,
 st_internet,unavailable,,,Not collected.,,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
 st_videochat,unavailable,,,Not collected.,,
 st_messaging_wd,unavailable,,,No weekday/weekend split.,,
 st_messaging_we,unavailable,,,No weekday/weekend split.,,
 st_messaging,incompatible,"YMDA1B02, YMDA1B04",,"Only smartphone texting frequencies with family and friends (YMDA1B02, YMDA1B04: Never/Rarely/Occasionally/Frequently), not durations.",,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,No weekday/weekend split.,,
+st_creating_we,unavailable,,,No weekday/weekend split.,,
 st_creating,incompatible,YMDA1B07,,Only a smartphone frequency for taking photos/videos (YMDA1B07); no item on posting content or its duration.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
 st_email,unavailable,,,Not collected.,,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,unavailable,,,No item on use at school.,,
 st_educational_school,unavailable,,,No item on use at school.,,
@@ -740,19 +791,34 @@ hlth_sleep,partial,"YTIM1A01, YTIM1A02, YTIM1B01, YTIM1B02, YTIM1A03, YTIM1A04, 
   7","(5 x wd + 2 x we) / 7 of hlth_sleep_wd and hlth_sleep_we. Partial: time in bed, not hours asleep.",,
 hlth_sleepprob,incompatible,"YTIM1C01, YTIM1C02, YPSY4C01",,"Only single items: 'Do you usually sleep well?' on weekdays and weekends (YTIM1C01, YTIM1C02) and a sleep item scored in mh_somatic_self (YPSY4C01).",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,incompatible,"YPSY4C01, YTIM1C01, YTIM1C02",,"'I have trouble sleeping deeply and wake up in the middle of the night' (YPSY4C01) is agreement-rated and scored in mh_somatic_self; 'Do you usually sleep well?' on weekdays and weekends (YTIM1C01, YTIM1C02) is a sleep-quality rating that no row holds.",,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,compatible,"YPHY2A00, YPHY2B00","local({
+  cm <- as.numeric(YPHY2A00)
+  kg <- as.numeric(YPHY2B00)
+  cm <- if_else(cm > 0 & !cm %in% c(999, 9999), cm, NA_real_)
+  kg <- if_else(kg > 0 & !kg %in% c(999, 9999), kg, NA_real_)
+  kg / (cm / 100)^2
+})","Youth self-report, every wave: 'What is your height and weight?' (YPHY2A00 cm, YPHY2B00 kg); kg / m2 computed. 999 and 9999 (no response; 191 heights, 200 weights) = NA; other entries kept. The guardian's own height and weight (PPHY2A00, PPHY2B00) are unused. Never carried.",,
+hlth_bmi_measure,inferred,"YPHY2A00, YPHY2B00","local({
+  cm <- as.numeric(YPHY2A00)
+  kg <- as.numeric(YPHY2B00)
+  ok <- cm > 0 & !cm %in% c(999, 9999) & kg > 0 & !kg %in% c(999, 9999)
+  if_else(ok %in% TRUE, ""Self-reported"", NA_character_)
+})","Every wave, rows with a BMI: height and weight from the youth's own questionnaire; NA elsewhere.",,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,proximate,YPHY2C00,"recode_values(as.numeric(YPHY2C00), 1 ~ 0, 2:10 ~ 1)","Waves 2-7, middle/high school questionnaire (Middle 1 cohort from wave 2, Elementary 4 cohort from wave 4, siblings at middle or high school), self-report: 'When did you experience your first nocturnal emission or menstruation?' (YPHY2C00): not started yet = 0; any school grade given = 1. Proximate: an onset item alone. Never carried.",,
+hlth_puberty_measure,inferred,YPHY2C00,"if_else(
+  !is.na(YPHY2C00),
+  ""Study item on first nocturnal emission or menstruation (self), 1 of 1 items, not yet = 0 or any timing = 1 (range 0-1), onset indicator"",
+  NA_character_
+)",Rows given the middle/high school questionnaire's onset item (waves 2-7); NA elsewhere.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,incompatible,"YPHY1B00, YTIM1J01, YTIM1J02",,"Only hours of vigorous exercise in the past week (YPHY1B00: none to 4 hours or more) and daily time exercising outside school hours (YTIM1J01, YTIM1J02), not the days-of-60-minutes item; no row holds them.",,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,unavailable,,,Not collected.,,
+hlth_disability,unavailable,,,Not collected.,,

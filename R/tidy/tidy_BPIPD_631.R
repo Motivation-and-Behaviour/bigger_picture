@@ -2,8 +2,10 @@
 #'
 #' Stacks the youth self-completion files of BHPS waves 4-18 and UKHLS waves
 #' 1-15, joining each youth (within wave) to their household, resident
-#' parents' adult interviews and, for BHPS, age from the household roster;
-#' the cross-wave person file adds ethnicity and birthplace.
+#' parents' adult interviews and, for BHPS, age and sample origin from the
+#' household roster; the cross-wave person file adds ethnicity, birthplace and
+#' birth weight and timing, and the child files a parent's report of the
+#' school type.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -18,6 +20,7 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
   })
   indresp <- bp631_stack(tables, "indresp")
   xwave <- bp631_zap_missing(raw_dataset$data$xwavedat)
+  parent_cols <- c("pidp", "ethn_dv", "bornuk_dv")
 
   # `mnspno`/`fnspno`: natural/step/adoptive mother's and father's person
   # numbers; 0 (none) matches no `pno`.
@@ -53,17 +56,25 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
       mother_pidp = dplyr::coalesce(mother_pidp, mnspid),
       father_pidp = dplyr::coalesce(father_pidp, fnspid)
     ) |>
+    # Parents take ethnicity and birthplace only; birth items are the youth's
     dplyr::left_join(
-      bp631_parent(xwave, "mother", "pidp"),
+      bp631_parent(xwave[parent_cols], "mother", "pidp"),
       by = c("mother_pidp" = "pidp"),
       relationship = "many-to-one"
     ) |>
     dplyr::left_join(
-      bp631_parent(xwave, "father", "pidp"),
+      bp631_parent(xwave[parent_cols], "father", "pidp"),
       by = c("father_pidp" = "pidp"),
       relationship = "many-to-one"
     ) |>
     dplyr::relocate("pidp", "survey", "wave")
+
+  df <- dplyr::left_join(
+    df,
+    bp631_child(bp631_stack(tables, "child"), df),
+    by = c("survey", "wave", "hidp", "pno"),
+    relationship = "one-to-one"
+  )
 
   # The .dta labels of `ypnetchtw` are garbled (codes 3 and 4 both read 4-6
   # hours); the wave 15 youth questionnaire gives it the responses of `ypnetcht`.
@@ -74,12 +85,19 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
   df$psu[df$psu < 0] <- NA
   df$strata[df$strata < 0] <- NA
 
-  # Fill household income and composition missed at a wave from the
-  # participant's nearest wave interviewed 12 months or less away.
+  # Fill household income and composition and the mother's activity missed at
+  # a wave from the nearest wave interviewed 12 months or less away.
   interview_month <- 12 *
     dplyr::coalesce(bp631_num(df$intdaty_dv), bp631_num(df$intdatey)) +
     dplyr::coalesce(bp631_num(df$intdatm_dv), bp631_num(df$intdatem))
-  for (col in c("fihhmngrs_dv", "ieqmoecd_dv", "hhsize", "nkids_dv")) {
+  carried <- c(
+    "fihhmngrs_dv",
+    "ieqmoecd_dv",
+    "hhsize",
+    "nkids_dv",
+    "mother_jbstat"
+  )
+  for (col in carried) {
     df[[col]] <- bp631_carry_gap(df[[col]], df$pidp, interview_month)
   }
 
@@ -282,4 +300,32 @@ bp631_parent <- function(tbl, parent, keys) {
   }
   names(out)[names(out) %in% cols] <- paste0(parent, "_", cols)
   out
+}
+
+#' One school-type report per youth from the child files, keyed on `hidp`/`pno`
+bp631_child <- function(child, youth) {
+  # BHPS rows are one per responding parent and child: `pno` is the parent's
+  bhps <- child$survey == "BHPS"
+  child$rapno2[bhps] <- child$pno[bhps]
+  child$pno[bhps] <- child$scpno[bhps]
+  label <- "pno of parent who answered the school questions"
+  attr(child$rapno2, "label") <- label
+
+  keys <- c("survey", "wave", "hidp", "pno")
+  items <- c("schsta", "stillstate", "stillpriv", "rapno2")
+  child <- dplyr::inner_join(
+    child[c(keys, items)],
+    youth[c(keys, "mnspno", "fnspno")],
+    by = keys,
+    relationship = "many-to-one"
+  )
+  # Where both BHPS parents answered, keep the mother's answer, else the
+  # father's, else another adult's
+  respondent <- dplyr::case_when(
+    child$rapno2 == child$mnspno ~ 1,
+    child$rapno2 == child$fnspno ~ 2,
+    .default = 3
+  )
+  child <- child[order(is.na(child$schsta), respondent), ]
+  child[!duplicated(child[keys]), c(keys, items)]
 }

@@ -6,10 +6,23 @@ rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,compatible,student_weight,as.numeric(student_weight),"Each round's cross-sectional student weight as released, not rescaled: BYSTUWT (2002 respondents) and F1QWT (first follow-up questionnaire weight, all 2004 respondents). The BY-F1 panel weight (panel_weight) and the replicate weights are not used.",,
 survey_strata,compatible,STRAT_ID,as.character(STRAT_ID),"Taylor-series analysis stratum (STRAT_ID, 361 values), formed from the first-stage school sampling strata; fixed at base-year sampling and the same on both of a member's rows.",,
 survey_cluster,compatible,"STRAT_ID, PSU","paste(STRAT_ID, PSU, sep = ""_"")","Taylor-series analysis PSU, the base-year school: PSU (1-3) is numbered within stratum, so the cluster is STRAT_ID and PSU together (751 values); schools were the sampled units. Fixed at base-year sampling, the same on both rows.",,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,unavailable,,,Not collected.,,
+sample_component,compatible,G10COHRT,"recode_values(
+  as.numeric(haven::zap_labels(G10COHRT)),
+  1 ~ ""Base-year sample (spring 2002 10th graders)"",
+  0 ~ ""First follow-up freshening sample (spring 2004 12th graders)""
+)","From G10COHRT (sophomore cohort member, set by NCES from the sample-entry code F1UNIV2A), constant within participant. 'Base-year sample (spring 2002 10th graders)': the base-year school-based sample of spring-2002 10th graders, base-year nonparticipants who first answered in 2004 included. 'First follow-up freshening sample (spring 2004 12th graders)': spring-2004 12th graders added at the first follow-up through freshening because they were not in 10th grade in the US in spring 2002 (F1UNIV2A 4, 'F1 Freshened sample member'), 2004 rows only.",,
 sample_population,inferred,,"""General population""",Nationally representative school-based panel of spring 2002 US 10th graders (NCES ELS:2002).,,
-parent_respondent,in_progress,,,,,
+parent_respondent,compatible,parent_relation,"local({
+  rel <- as.numeric(haven::zap_labels(parent_relation))
+  case_when(
+    rel %in% c(1, 3, 5, 7, 9) ~ ""Mother"",
+    rel %in% c(2, 4, 6, 8, 10) ~ ""Father"",
+    rel %in% 11:16 ~ ""Other carer"",
+    rel == -2 ~ ""Unknown"",
+    .default = NA_character_
+  )
+})","2002 parent questionnaire respondent's relationship to the tenth grader (parent_relation, BYP01): biological, adoptive, step and foster mother = Mother, the same fathers = Father; a parent's or guardian's girlfriend or boyfriend/partner (a step-parent) by sex; grandmother, grandfather, other female or male relative and other female or male guardian = Other carer; refused = Unknown. Parent nonrespondents (-4) and every 2004 row are NA: no parent questionnaire on the occasion (the first follow-up interviewed no parent).",,
 age_years,compatible,"birth_year_month, questionnaire_date","local({
   birth_ym <- as.numeric(birth_year_month)
   quex_ym <- as.numeric(questionnaire_date)
@@ -21,7 +34,14 @@ age_years,compatible,"birth_year_month, questionnaire_date","local({
 sex,compatible,sex,"coalesce(modal_within(recode_values(as.numeric(sex), 1 ~ ""Male"", 2 ~ ""Female""), STU_ID), ""Unknown"")","Sex composite (BYSEX; F1SEX repeats it): the student questionnaire item, else the school roster, a first-name or a statistical imputation by NCES; male or female only. Modal within participant (identical on both rows).",,
 country,inferred,,"""USA""",No country variable; ELS:2002 is a nationally representative sample of US high schools and their spring-2002 10th graders (NCES ELS:2002 study documentation).,,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,proximate,school_region,"recode_values(
+  as.numeric(haven::zap_labels(school_region)),
+  1 ~ ""US: Northeast"",
+  2 ~ ""US: Midwest"",
+  3 ~ ""US: South"",
+  4 ~ ""US: West"",
+  default = ""Unknown""
+)","Census region of the school in the CCD/PSS 1999-2000 sampling frame ('Geographic region of school', school_region, BYREGION) as 'US: <region>': the 2002 school and, in 2004, the school the student attended (school file, linked on the first follow-up school ID, in the tidier), the finest grouping released. Proximate: a grouping of states, and school location stands in for residence. 2004 dropouts, early graduates, the homeschooled and students whose school is not in the school file = Unknown.",,
 ethnicity,proximate,race,"coalesce(
   carry_within(
     lookup_values(
@@ -60,7 +80,19 @@ born_in_country,compatible,birthplace_parent_report,"coalesce(
   carry_within(recode_values(as.numeric(birthplace_parent_report), c(1, 2) ~ ""Yes"", 3 ~ ""No""), STU_ID, order = wave),
   ""Unknown""
 )","2002 parent report: 'Was your tenth grader born in the United States (that is, any of the fifty states or the District of Columbia), in Puerto Rico, or in another country or area?' (BYP23): United States or Puerto Rico (a US territory) = Yes, another country = No; don't know, refused, missing and parent nonresponse = Unknown. Carried within participant to 2004; members first interviewed in 2004 are Unknown.",,
-home_language,in_progress,,,,,
+home_language,proximate,"home_language, STU_ID, wave","coalesce(
+  carry_within(
+    recode_values(
+      as.numeric(haven::zap_labels(home_language)),
+      1 ~ ""Country language only"",
+      2:6 ~ ""Another language, country language not recorded"",
+      default = NA_character_
+    ),
+    STU_ID,
+    order = as.numeric(wave == ""First follow-up 2004"")
+  ),
+  ""Unknown""
+)","The student's native language composite (home_language: BYHOMLNG 2002, F1HOMLNG 2004; student report, else parent report): English counted as the country language. English = Country language only; Spanish, other European, West or South Asian, Pacific or Southeast Asian and other languages = Another language, country language not recorded. Proximate: the participant's own native language, coded as the main home language. Missing (-9) takes the earliest observed value within participant (carry-forward rule), else Unknown. The English-native-language flag (english_native_language) repeats it and is unused.",,
 ses_area,incompatible,school_pct_free_lunch,,"Only the 2002 school's share of 10th graders receiving free or reduced-price lunch (school_pct_free_lunch, BY10FLP), a school-level indicator, not an area index of residence.",,
 ses_household,compatible,"ses_composite_v2, by_questionnaire_status, wave","local({
   score <- as.numeric(ses_composite_v2)
@@ -116,7 +148,19 @@ maternal_employment,compatible,"parent_relation, spouse_relation, parent_work_we
     .default = ""Unknown""
   )
 })","2002 only, parent questionnaire. Mother figure: the biological, adoptive, step or foster mother, the parent respondent if she is one (her own report) or else the respondent's spouse or partner (reported by the respondent) (parent_relation, spouse_relation; BYP01, BYP04). 'During the past week, were you [was your spouse/partner] working for pay full-time (35 hours or more), part-time, or not at all?' (parent_work_week, spouse_work_week; BYP36, BYP40): full- or part-time, or not at work but holding a full- or part-time job (temporary illness, vacation, strike or jury duty; parent_work_status, spouse_work_status; BYP37, BYP41) = Employed; unemployed and looking, disabled, retired, in school, keeping house, volunteering or none of these = Not employed; no mother figure, parent nonresponse, don't know, refused, multiple response and missing = Unknown. The 445 rows whose only female parent figure is a grandmother, another female relative or guardian, or a parent's partner are Unknown (no mother), although maternal_education takes the study's mother-or-female-guardian composite. The mother's occupation composite (mother_occupation; BYOCCUM, F1OCCUM) codes her current or most recent job, not employment status, and is not used. 2004 rows are Unknown: no parent was interviewed in 2004, and the 2002 report is 18-31 months earlier, beyond the 12-month carry.",,
-maternal_age,in_progress,,,,,
+maternal_age,compatible,"parent_relation, spouse_relation, parent_birth_year, spouse_birth_year, questionnaire_date, STU_ID, wave","local({
+  mothers <- c(1, 3, 5, 7)
+  resp <- as.numeric(haven::zap_labels(parent_relation))
+  spouse <- as.numeric(haven::zap_labels(spouse_relation))
+  born <- case_when(
+    resp %in% mothers ~ as.numeric(haven::zap_labels(parent_birth_year)),
+    spouse %in% mothers ~ as.numeric(haven::zap_labels(spouse_birth_year)),
+    .default = NA_real_
+  )
+  born <- carry_within(if_else(born > 1900, born, NA_real_), STU_ID, order = as.numeric(wave == ""First follow-up 2004""))
+  ym <- as.numeric(questionnaire_date)
+  ym %/% 100 + (ym %% 100 - 0.5) / 12 - (born + 0.5)
+})","Mother figure as for maternal_employment: the biological, adoptive, step or foster mother, the 2002 parent respondent if she is one ('In what year were you born?', parent_birth_year, BYP11) or else the respondent's spouse or partner (spouse_birth_year, BYP12, reported by the respondent) (parent_relation, spouse_relation). Her birth year, asked once in 2002, at mid-year, against the student's questionnaire month at mid-month (questionnaire_date) at each round: 2004 rows take the same birth year against the 2004 questionnaire month. Public-use codes: births in 1930 or earlier are coded 1930 and in 1970 or later 1970 (about 1% of mothers), taken at the bound. No mother figure, parent nonresponse and missing codes = NA, as are students first seen in 2004.",,
 urbanicity,proximate,school_urbanicity,"recode_values(as.numeric(school_urbanicity), 1 ~ ""Urban"", 2 ~ ""Suburban"", 3 ~ ""Rural"", default = ""Unknown"")","Urbanicity of the school's locale in the CCD/PSS 1999-2000 sampling frame (school_urbanicity, BYURBAN): the 2002 school and, in 2004, the school the student attended (school file, linked on the first follow-up school ID): Urban, Suburban, Rural. Proximate: school locale stands in for residence. 2004 transfer students (whose new school's link is suppressed in this release), homeschoolers, early graduates and dropouts (2,552 rows) have no linked school and are Unknown.",,
 family_structure,proximate,"family_composition, by_questionnaire_status, wave","case_when(
   wave == ""First follow-up 2004"" & as.numeric(by_questionnaire_status) > 0 ~ ""Unknown"",
@@ -176,7 +220,13 @@ school_grade,compatible,"wave, grade_attended","case_when(
   .default = NA_character_
 )","2002: Grade 10, fixed by the sample design (spring-2002 10th graders). 2004: grade attended in spring 2004 (grade_attended, F1GRADE: questionnaire, else enrolment status, else imputed by NCES) as 'Grade N', or the study's own 'Ungraded' (79 rows); early graduates, dropouts and homeschoolers (1,282 rows) are NA.",,
 school_sector,compatible,school_control,"recode_values(as.numeric(school_control), 1 ~ ""Public"", c(2, 3) ~ ""Private"", default = ""Unknown"")","Control of the school in the CCD/PSS 1999-2000 sampling frame (school_control, BYSCTRL), the official classification: the 2002 school and, in 2004, the school the student attended (school file, linked on the first follow-up school ID). Public = Public; Catholic and other private = Private. 2004 transfer students (whose new school's link is suppressed in this release), homeschoolers, early graduates and dropouts (2,552 rows) have no linked school and are Unknown.",,
-school_track,in_progress,,,,,
+school_track,compatible,"school_program, f1_questionnaire_status, wave","recode_values(
+  as.numeric(haven::zap_labels(school_program)),
+  2 ~ ""Academic"",
+  1 ~ ""Intermediate"",
+  3 ~ ""Vocational"",
+  default = ""Unknown""
+)","The student's high school program composite (school_program, BYSCHPRG: 'If you had to limit yourself to one of the following three choices, which comes nearest to describing your high school program?', BYS26, imputed by NCES where missing and used as released): college preparatory (academic) = Academic, general = Intermediate, vocational (including technical or business) = Vocational. Asked in 2002 (10th grade); carried in the tidier to the 2004 rows of students still in high school (F1QSTAT 1-4, transfers included), the same upper-secondary stage. 2004 dropouts, early graduates, the homeschooled and students first seen in 2004 = Unknown.",,
 st_measure_type,inferred,wave,"case_when(wave == ""Base year 2002"" ~ ""Continuous"", wave == ""First follow-up 2004"" ~ ""Categorical"")","2002: open entry of hours a day ('___ hours', with a box for not watching or playing), released as whole hours top-coded at '6 or more'. 2004: six response bands ('MARK ONE').",,
 st_measure_name,inferred,wave,"if_else(wave %in% c(""Base year 2002"", ""First follow-up 2004""), ""Custom"", NA_character_)","Items written for the ELS:2002 student questionnaires (2002 Q46, Q48-Q49; 2004 Q34-Q36); no named instrument.",,
 st_responder,inferred,,"""Self""","Student self-report in both rounds, including the abbreviated, transfer, homeschool, early-graduate and dropout forms; the harmoniser sets NA where no st_ value exists.",,
@@ -268,38 +318,38 @@ st_educational,partial,"computer_schoolwork_hours, computer_schoolwork_band","co
 st_leisure_wd,incompatible,"tv_wd_hours, tv_wd_band, game_wd_hours, game_wd_band",,"No all-device leisure item; the weekday TV and video-game items are single-activity items, mapped to st_watch_wd and st_game_wd, and are never summed (DR-0004).",,
 st_leisure_we,incompatible,"tv_we_hours, tv_we_band, game_we_hours, game_we_band",,"No all-device leisure item; the weekend TV and video-game items are single-activity items, mapped to st_watch_we and st_game_we, and are never summed (DR-0004).",,
 st_leisure,incompatible,"computer_other_hours, computer_other_band, tv_wd_hours, tv_wd_band, tv_we_hours, tv_we_band, game_wd_hours, game_wd_band, game_we_hours, game_we_band",,"No all-device leisure item. 'How many hours a day do you usually use a computer ... other than for school work?' (computer_other_hours, computer_other_band) is a single-device item, a part of st_comp; the TV and video-game items stay on st_watch and st_game and are never summed (DR-0004).",,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch and st_violent_game.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
 st_internet_wd,unavailable,,,No weekday/weekend split.,,
 st_internet_we,unavailable,,,No weekday/weekend split.,,
 st_internet,incompatible,"library_internet_public, library_internet_school, internet_freq_with_others",,"Only how often the student uses the public library (library_internet_public, F1S30I, 2004) or the school library (library_internet_school, BYS51I/F1S29I) to use the Internet, never to often, and how often they communicate with friends or relatives via the Internet (internet_freq_with_others, F1S39I, 2004): frequencies with no duration; see st_internet_school and st_messaging.",,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,unavailable,,,No weekday/weekend split.,,
+st_videochat_we,unavailable,,,No weekday/weekend split.,,
 st_videochat,incompatible,internet_freq_with_others,,"Only how often the student communicates with friends or relatives via the Internet outside school (internet_freq_with_others, F1S39I, 2004), which pools every online channel and gives a frequency with no duration; see st_messaging.",,
 st_messaging_wd,unavailable,,,No weekday/weekend split.,,
 st_messaging_we,unavailable,,,No weekday/weekend split.,,
 st_messaging,incompatible,internet_freq_with_others,,"Only how often the student communicates with friends or relatives via the Internet outside school (internet_freq_with_others, F1S39I, 2004; rarely or never to every day): a frequency with no duration.",,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
 st_creating,unavailable,,,Not collected.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,No weekday/weekend split.,,
+st_email_we,unavailable,,,No weekday/weekend split.,,
 st_email,incompatible,internet_freq_with_others,,"Only how often the student communicates with friends or relatives via the Internet outside school (internet_freq_with_others, F1S39I, 2004), which pools e-mail with other online channels and gives a frequency with no duration; see st_messaging.",,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,incompatible,"computer_freq_at_school, computer_freq_school_library, computer_freq_school_elsewhere",,"Only how often the student uses a computer at school (2002) or at the school library and elsewhere at school (2004): one device, and a frequency with no duration; see st_comp_school.",,
 st_educational_school,incompatible,"computer_freq_at_school, computer_freq_school_library, computer_freq_school_elsewhere",,"Only how often the student uses a computer at school, for any purpose, a frequency with no duration; see st_comp_school.",,
@@ -695,19 +745,32 @@ hlth_sleep_we,unavailable,,,Not collected.,,
 hlth_sleep,unavailable,,,Not collected.,,
 hlth_sleepprob,unavailable,,,Not collected.,,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not collected.,,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
 hlth_bmi,unavailable,,,Not collected.,,
 hlth_bmi_measure,unavailable,,,See hlth_bmi.,,
 hlth_bmi_z,unavailable,,,Not collected.,,
 hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
 hlth_pa_days60,incompatible,,,"Only how often the student plays non-school sports (BYS44H 2002, F1S39H 2004; rarely or never to every day or almost every day) and whether the student took part in intramural or interscholastic school sports this school year (the BYS39 and BYS40 series 2002, F1S26A-B 2004), not in the tidied table: sport frequency and participation, not days with 60 minutes of activity.",,
 hlth_birthweight,unavailable,,,Not collected.,,
 hlth_preterm,unavailable,,,Not collected.,,
 hlth_breastfed,unavailable,,,Not collected.,,
 hlth_prenatalsmoking,unavailable,,,Not collected.,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_chroniccond_diagnosed,incompatible,"parent_thinks_disability, disability_learning, disability_speech_language, disability_mental_retardation, disability_emotional, disability_hearing, disability_orthopedic, disability_visual, disability_other",,"Only the parent's 2002 opinion of the tenth grader's disabilities (BYP49, BYP50A-H), not attributed to a health professional; its hearing, orthopedic and visual items go to hlth_disability.",,
+hlth_disability,partial,"parent_thinks_disability, disability_hearing, disability_orthopedic, disability_visual, disability_other, disability_learning, disability_speech_language, disability_mental_retardation, disability_emotional","local({
+  any_disability <- as.numeric(haven::zap_labels(parent_thinks_disability))
+  items <- cbind(
+    as.numeric(haven::zap_labels(disability_hearing)),
+    as.numeric(haven::zap_labels(disability_orthopedic)),
+    as.numeric(haven::zap_labels(disability_visual))
+  )
+  case_when(
+    any_disability == 0 ~ ""FALSE"",
+    any_disability == 1 & rowSums(items == 1, na.rm = TRUE) > 0 ~ ""TRUE"",
+    any_disability == 1 & rowSums(items == 0, na.rm = TRUE) == 3 ~ ""FALSE"",
+    .default = NA_character_
+  )
+})","2002 parent questionnaire: 'In your opinion, does your tenth grader have a learning, physical, or emotional disability?' (parent_thinks_disability, BYP49) and, if so, which (mark all that apply, BYP50A-H). TRUE for hearing, orthopedic or visual impairments (disability_hearing, disability_orthopedic, disability_visual); FALSE for no disability or none of those three. Specific learning disabilities, speech and language impairments, mental retardation and emotional disturbance are named unused, as is 'other disability (for example, autism, deaf-blindness, traumatic brain injury, developmental delay)' (disability_other), which pools developmental conditions with others. Partial: sensory and orthopedic impairments only, with no item on other health conditions or activity limitation. Don't know, refused, missing and parent nonresponse NA; 2004 rows NA (no parent questionnaire).",,

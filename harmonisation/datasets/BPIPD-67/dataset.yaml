@@ -138,6 +138,22 @@ resources:
   - name: "codebook_weights_w8"
     role: "codebook"
     glob: "DS8232/36498-8232-Codebook.pdf"
+  - name: "evernever_w3"
+    role: "data"
+    glob: "DS3503/36498-3503-Data.rda"
+    reader: "rda"
+    object: "da36498.3503"
+  - name: "codebook_evernever_w3"
+    role: "codebook"
+    glob: "DS3503/36498-3503-Codebook.pdf"
+  - name: "evernever_w4"
+    role: "data"
+    glob: "DS4503/36498-4503-Data.rda"
+    reader: "rda"
+    object: "da36498.4503"
+  - name: "codebook_evernever_w4"
+    role: "codebook"
+    glob: "DS4503/36498-4503-Codebook.pdf"
   - name: "user_guide"
     role: "docs"
     glob: "36498-User_guide.pdf"
@@ -163,8 +179,10 @@ notes: |
   Cohort cross-sectional (DS4322), Wave 4 Cohort single-wave at waves 5 and 6 (DS5222, DS6222),
   Wave 7 Cohort cross-sectional (DS7332) and Wave 7 Cohort single-wave at wave 8 (DS8232).
   Waves 1 and 2 carry their weights in the youth files. The half-wave weight files of 37786 are
-  not in the study folder.
+  not in the study folder. The Wave 3 and Wave 4 ever/never tobacco reference files (DS3503,
+  DS4503) are read for their PERSONIDs only: DS3503 lists the Wave 1 Cohort and DS4503 adds the
+  Wave 4 recruits (User Guide 7.1), which places each youth in its recruitment sample.
   Not read: the adult files and adult weights (adults are 18 or older), the youth all-waves,
   older-cohort single-wave and special-collection weights (longitudinal analyses only), and the
-  ever/never tobacco reference files (DS3503 to DS6503; ICPSR releases DS5503 without an .rda).
+  later ever/never reference files (DS5503, DS6503; ICPSR releases DS5503 without an .rda).
   Each .rda file holds one object, da<study>.<DS number>.

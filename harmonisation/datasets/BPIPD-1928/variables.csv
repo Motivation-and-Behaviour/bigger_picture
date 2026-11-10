@@ -16,10 +16,14 @@ survey_cluster,compatible,"ID, UPA, escola, ESTRATO, ESTRATO_EXP, ESCOLA, .wave"
   .wave == ""2019"" ~ paste0(.wave, ""-"", ESTRATO, ""-"", ESCOLA),
   .wave == ""2024"" ~ paste0(.wave, ""-"", ESTRATO_EXP, ""-"", ESCOLA)
 )","Primary sampling unit for the edition, prefixed with wave: school ID (2009), UPA (2012), escola (2015, both samples; the released UPA), and stratum plus ESCOLA in 2019 (ESTRATO) and 2024 (ESTRATO_EXP), since ESCOLA is numbered 1-69 within stratum.",,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,unavailable,,,Not collected.,,
+sample_component,compatible,.wave,"case_when(
+  as.character(.wave) == ""2015_sample_1"" ~ ""2015 sample 1 (9th year)"",
+  as.character(.wave) == ""2015_sample_2"" ~ ""2015 sample 2 (6th year to 3rd year of ensino medio)"",
+  .default = NA_character_
+)","2015 only, from the file split: IBGE drew two independent samples with different designs, each released as its own files and kept as its own wave. '2015 sample 1 (9th year)': 9th-year classes of ensino fundamental, national with estimates for the state capitals (102,072 students). '2015 sample 2 (6th year to 3rd year of ensino medio)': classes from the 6th year of ensino fundamental to the 3rd year of ensino medio, regional estimates only (16,556 students). The 2009, 2012, 2019 and 2024 editions are each a single sample (NA).",,
 sample_population,inferred,,"""General population""","Sample of schools and classes of Brazilian school students, public and private (IBGE, PeNSE technical notes).",,
-parent_respondent,in_progress,,,,,
+parent_respondent,unavailable,,,Not collected.,,
 age_years,partial,"B01P03, B01003_2012, VB01003, B01003_2019, B01004, B01005, IDADE_AGREG, .wave","local({
   wave <- as.character(.wave)
   mid_band <- c(12.5, 14.5, 17, 18.5)
@@ -48,7 +52,52 @@ sex,compatible,"B01P01, B01001, VB01001, B01001A","recode_values(
 )","'Qual e o seu sexo?': 1 masculino/homem, 2 feminino/mulher, every edition. 2019 no-answer (9) and unanswered 2009 items -> Unknown.",,
 country,inferred,,"""Brazil""",National IBGE/Ministry of Health survey of Brazilian school students. 2015 files carry PAIS = 76 (Brazil).,,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,proximate,"COD_UF, CODMUN, REGIAO, UFCENSO, REGEOGR, UF, .wave","local({
+  wave <- as.character(.wave)
+  iso <- c(
+    ""11"" = ""BR-RO"",
+    ""12"" = ""BR-AC"",
+    ""13"" = ""BR-AM"",
+    ""14"" = ""BR-RR"",
+    ""15"" = ""BR-PA"",
+    ""16"" = ""BR-AP"",
+    ""17"" = ""BR-TO"",
+    ""21"" = ""BR-MA"",
+    ""22"" = ""BR-PI"",
+    ""23"" = ""BR-CE"",
+    ""24"" = ""BR-RN"",
+    ""25"" = ""BR-PB"",
+    ""26"" = ""BR-PE"",
+    ""27"" = ""BR-AL"",
+    ""28"" = ""BR-SE"",
+    ""29"" = ""BR-BA"",
+    ""31"" = ""BR-MG"",
+    ""32"" = ""BR-ES"",
+    ""33"" = ""BR-RJ"",
+    ""35"" = ""BR-SP"",
+    ""41"" = ""BR-PR"",
+    ""42"" = ""BR-SC"",
+    ""43"" = ""BR-RS"",
+    ""50"" = ""BR-MS"",
+    ""51"" = ""BR-MT"",
+    ""52"" = ""BR-GO"",
+    ""53"" = ""BR-DF""
+  )
+  groups <- c(""BR: North"", ""BR: Northeast"", ""BR: Southeast"", ""BR: South"", ""BR: Central-West"")
+  uf <- case_when(
+    wave == ""2009"" ~ as.numeric(COD_UF),
+    wave == ""2012"" & as.numeric(CODMUN) != 8888888 ~ floor(as.numeric(CODMUN) / 100000),
+    wave == ""2015_sample_1"" ~ as.numeric(UFCENSO),
+    wave %in% c(""2019"", ""2024"") ~ as.numeric(UF),
+    .default = NA_real_
+  )
+  grouping <- case_when(
+    wave == ""2012"" ~ as.numeric(REGIAO),
+    wave == ""2015_sample_2"" ~ as.numeric(REGEOGR),
+    .default = NA_real_
+  )
+  coalesce(unname(iso[as.character(uf)]), groups[grouping], ""Unknown"")
+})","State (Unidade da Federacao) of the sampled school, the IBGE state codes (11 Rondonia to 53 Distrito Federal, as listed in the 2015 and 2019 dictionaries) mapped to their ISO 3166-2 codes: 2009 COD_UF (the 26 state capitals and the Federal District); 2012 the capital's IBGE municipality code (CODMUN, first two digits the state code), and for schools outside the capitals (CODMUN 8888888, 47,959 rows) only the macro-region (REGIAO), coded 'BR: North', 'BR: Northeast', 'BR: Southeast', 'BR: South', 'BR: Central-West'; 2015 sample 1 UFCENSO; 2015 sample 2 only the macro-region (REGEOGR), as for 2012; 2019 and 2024 UF. Proximate: the school's location stands in for the student's residence, and two samples give only the macro-region. Repeated cross-section, so nothing is carried.",,
 ethnicity,proximate,"B01P02, B01002, VB01002, .wave","lookup_values(
   if_else(
     as.character(.wave) == ""2009"",
@@ -86,7 +135,7 @@ indigenous,compatible,"B01P02, B01002, VB01002, .wave","case_when(
 minority,incompatible,"B01P02, B01002, VB01002",,"No majority colour/race group in Brazil to be a minority against (branca and parda each ~35-45%; preta+parda are a majority). Would need a disadvantage-based definition, not just numbers.",,
 immigrant_background,unavailable,,,"No birthplace, nationality or migration item.",,
 born_in_country,unavailable,,,Not collected.,,
-home_language,in_progress,,,,,
+home_language,unavailable,,,Not collected.,,
 ses_area,incompatible,"DEP2, PUBPRIV, V0007, DEP_ADMIN, E01P01_2012, E01P01_2019, E01P01_2024",,"No area-level deprivation measure. PeNSE's SES proxies (public/private school, fee band) describe the school, not the student's area. Municipality codes (2009/2012 only) would need an external index.",,
 ses_household,proximate,"B01P20, B01P21, B01P22, B01P25, B01P26, B01015, B01016, B01017, B01019, B01020, VB01015A, VB01016, VB01017, VB01019, VB01020A, B01015B, B01019A, B01020A, .wave","local({
   car <- coalesce(as.numeric(B01P22), as.numeric(B01017), as.numeric(VB01017))
@@ -164,8 +213,8 @@ parental_education,compatible,"B01008, B01009","lookup_values(
   target_variable = ""maternal_education"",
   default = ""Unknown""
 )","Asked in 2012 only (the one edition asking about both parents). Higher of the mother's and father's codes 1-7 after dropping 'nao sei' and no-answer, so one known parent suffices, through the shared education lookup. Other editions Unknown (mother only; see maternal_education).",maternal_education,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,incompatible,"B01011, VB01011",,"Only the student's own work: 'Voce tem algum trabalho, emprego ou negocio...?' (B01011 2012, VB01011 2015); no item on the mother's employment.",,
+maternal_age,unavailable,,,Not collected.,,
 urbanicity,proximate,"V0006, SITUACAO","case_when(
   coalesce(as.numeric(V0006), as.numeric(SITUACAO)) == 1 ~ ""Urban"",
   coalesce(as.numeric(V0006), as.numeric(SITUACAO)) == 2 ~ ""Rural"",
@@ -255,8 +304,30 @@ school_grade,compatible,"VB01021, ANO_TURMA, .wave","local({
     )
   )
 })","Brazilian school years (ensino fundamental 6-9, ensino medio 1-3 = grades 6-12). Class-level grade used where the design fixes it: 2009/2012/2015 sample 1 sampled 9th year only; 2019/2024 use the class's year (ANO_TURMA, never missing). 2015 sample 2 has no class-level year, so uses the student's own report (VB01021); no-answer -> NA.",,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,compatible,"DEPEND_ADM, DEPENDADM, V0007, DEP_ADMIN","local({
+  text <- toupper(trimws(coalesce(as.character(DEPEND_ADM), as.character(DEPENDADM))))
+  code <- coalesce(as.numeric(V0007), as.numeric(DEP_ADMIN))
+  case_when(
+    text %in% c(""ESTADUAL"", ""FEDERAL"", ""MUNICIPAL"") ~ ""Public"",
+    text == ""PRIVADA"" ~ ""Private"",
+    code == 1 ~ ""Public"",
+    code == 2 ~ ""Private"",
+    .default = ""Unknown""
+  )
+})","Administrative dependency of the sampled school, a school-level variable of every edition: 2009 DEPEND_ADM and 2012 DEPENDADM (state, federal or municipal = Public; private = Private); 2015 V0007 and 2019, 2024 DEP_ADMIN (1 publica = Public, 2 privada = Private). The 2009 public/private flag DEP2 is not used: its codes run opposite to its dictionary label (code 1, labelled public, holds exactly the 14,857 PRIVADA schools of DEPEND_ADM). The esfera items (V0008, ESFERA) not used.",,
+school_track,inferred,"ANO_TURMA, VB01021, .wave","local({
+  wave <- as.character(.wave)
+  turma <- as.numeric(ANO_TURMA)
+  own <- as.numeric(VB01021)
+  case_when(
+    wave %in% c(""2009"", ""2012"", ""2015_sample_1"") ~ ""Not tracked"",
+    wave == ""2015_sample_2"" & own %in% 1:4 ~ ""Not tracked"",
+    wave %in% c(""2019"", ""2024"") & turma %in% 1:3 ~ ""Not tracked"",
+    wave == ""2019"" & turma %in% 4:6 ~ ""Academic"",
+    wave == ""2019"" & turma %in% 7:12 ~ ""Intermediate"",
+    .default = ""Unknown""
+  )
+})","Ensino fundamental (6th-9th year) is one common nine-year compulsory stage with no tracks, technical forms existing only at ensino medio (Lei 9.394/1996, arts. 32, 36-B, 36-C), so Not tracked. 2009, 2012 and 2015 sample 1: the design samples 9th-year classes only, so Not tracked for every row (inferred). 2015 sample 2: the student's own year (VB01021): 6th-9th year Not tracked; ensino medio years (no programme recorded) and no answer Unknown. 2019: the class's year and programme (ANO_TURMA): 7th-9th year Not tracked; ensino medio 1st-3rd series (regular, general) Academic; curso tecnico integrado and normal/magisterio series (programmes that also give the ensino medio certificate) Intermediate, two programmes folded. 2024: ANO_TURMA 7th-9th year Not tracked; ensino medio series (programme not recorded) Unknown. Inferred: design-assigned in 2009, 2012 and 2015 sample 1.",,
 st_measure_type,inferred,,"""Categorical""",Banded hours-per-day responses in every edition.,,
 st_measure_name,inferred,,"""Custom""","Bespoke items, self-completed on a handheld device from 2012; not a named instrument.",,
 st_responder,inferred,,"""Self""",The student answers the Questionario do Aluno; no proxy report.,,
@@ -340,41 +411,41 @@ st_socmedia,unavailable,,,Not asked.,,
 st_educational_wd,unavailable,,,Not asked.,,
 st_educational_we,unavailable,,,Not asked.,,
 st_educational,unavailable,,,Not asked.,,
-st_leisure_wd,in_progress,,,,,
-st_leisure_we,in_progress,,,,,
-st_leisure,in_progress,,,,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_leisure_wd,incompatible,"B03010, VB03010A, B03010B, B03010C, B03P11, B03P12, B03P13",,"No leisure screen item: the 2012-2024 weekday sitting-time item (B03010, VB03010A, B03010B, B03010C: time sitting watching TV, using a computer, phone or tablet, playing videogames, talking with friends or doing other seated activities, not counting school) also counts non-screen sitting; the separate 2009 TV, videogame and computer items (B03P11, B03P12, B03P13) are on their own rows and never summed (DR-0002).",,
+st_leisure_we,unavailable,,,Weekday only; no weekend item.,,
+st_leisure,incompatible,"B03010, VB03010A, B03010B, B03010C",,"Weekday items only; no usual-day value, and the sitting-time item (B03010, VB03010A, B03010B, B03010C) also counts non-screen sitting. See st_leisure_wd.",,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch and st_violent_game.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not asked.,,
 st_work_we,unavailable,,,Not asked.,,
 st_work,unavailable,,,Not asked.,,
 st_internet_wd,unavailable,,,Not asked.,,
 st_internet_we,unavailable,,,Not asked.,,
 st_internet,unavailable,,,Not asked.,,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
 st_videochat,unavailable,,,Not asked.,,
 st_messaging_wd,unavailable,,,Not asked.,,
 st_messaging_we,unavailable,,,Not asked.,,
 st_messaging,unavailable,,,Not asked.,,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
 st_creating,unavailable,,,Not asked.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
 st_email,unavailable,,,Not asked.,,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not asked.,,
 st_total_school,unavailable,,,Not asked.,,
 st_educational_school,unavailable,,,Not asked.,,
@@ -788,19 +859,35 @@ hlth_sleep_we,unavailable,,,Not collected.,,
 hlth_sleep,unavailable,,,Not collected.,,
 hlth_sleepprob,incompatible,"B12002, VB12002",,"Single item B12002/VB12002 (2012/2015): how often worry kept the student awake at night, past 12 months; not a multi-item sleep-problems scale. Mapped nowhere.",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,incompatible,"B12002, VB12002",,"Only 'how often could you not sleep at night because something worried you a lot?' (B12002 2012, VB12002 2015; past 12 months, never to always), an item that attributes poor sleep to worry.",,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,compatible,"Q2B01P01, Q2B01P02, VB17001, VB17002, .wave","local({
+  wave <- as.character(.wave)
+  weight <- case_when(
+    wave == ""2009"" & !as.numeric(Q2B01P01) %in% 888 ~ as.numeric(Q2B01P01),
+    wave == ""2015_sample_2"" & !as.numeric(VB17001) %in% c(998, 9999) ~ as.numeric(VB17001) / 10,
+    .default = NA_real_
+  )
+  height <- case_when(
+    wave == ""2009"" & !as.numeric(Q2B01P02) %in% 888 ~ as.numeric(Q2B01P02) / 100,
+    wave == ""2015_sample_2"" & !as.numeric(VB17002) %in% c(998, 9999) ~ as.numeric(VB17002) / 1000,
+    .default = NA_real_
+  )
+  weight / height^2
+})","2009 and 2015 sample 2 only, weight and height measured by IBGE staff at school: 2009 'Qual e o peso do aluno?' (Q2B01P01, kg) and 'Qual e a altura do aluno?' (Q2B01P02, cm), 888 in either (undocumented; the study imputed these) = NA; 2015 sample 2 VB17001 (kg x 10) and VB17002 (mm), 998 not informed and 9999 refusal or measurement impossible = NA. Weight / height in metres squared. Every other value kept as entered, including about 250 sample-2 heights under 1,000 in the millimetre field (most keyed in centimetres), screened at analysis. The study's imputed weights and heights (Q2B01P01I, Q2B01P02I, VB17003, VB17004) and nutritional-status flags (DEF_ALT, DEF_PES, EXC_PES, VB17006) not used. 2012, 2015 sample 1, 2019 and 2024 have no height or weight.",,
+hlth_bmi_measure,inferred,.wave,"if_else(as.character(.wave) %in% c(""2009"", ""2015_sample_2""), ""Measured"", NA_character_)","Weight and height measured by IBGE interviewers at school in 2009 (PeNSE 2009 interviewer manual, https://biblioteca.ibge.gov.br/visualizacao/instrumentos_de_coleta/doc2673.pdf) and 2015 sample 2 (dictionary codes for refusal or impossibility of measurement); NA in the editions with no anthropometry.",,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,compatible,"B03011, VB03011A","local({
+  code <- coalesce(as.numeric(B03011), as.numeric(VB03011A))
+  if_else(code %in% 1:8, code - 1, NA_real_)
+})","2012 and 2015 (both samples) only, self-report: 'NOS ULTIMOS 7 DIAS, em quantos dias voce fez atividade fisica por pelo menos 60 minutos (uma hora) por dia?' (B03011 2012, VB03011A 2015), past 7 days, codes 1-8 = 0-7 days (2015 codes 7 and 8 read '5 days plus Saturday' and '5 days plus Saturday and Sunday'); 2015 no answer (99) and the 2012 undocumented code 9 (220) = NA. 2009 asks only days of activity with or without an instructor (B03P06, B03P08) and 2019-2024 days of activity outside physical education (B03006B), not the 60-minute item; not used.",,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,incompatible,"B14002, VB14002, B14001, VB14001",,"Only 'Voce teve asma alguma vez na vida?' (ever had asthma, B14002 2012, VB14002 2015), the student's own report not attributed to a health professional, and wheezing in the past 12 months (B14001, VB14001), a symptom.",,
+hlth_disability,unavailable,,,Not collected.,,

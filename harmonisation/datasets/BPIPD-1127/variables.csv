@@ -6,10 +6,30 @@ rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,compatible,"w1stwt1, w2stwt1, w3stwt1, w4stwt1","coalesce(as.numeric(w1stwt1), as.numeric(w2stwt1), as.numeric(w3stwt1), as.numeric(w4stwt1))","Each wave's standardised student weight as released (mean 1; no other scaling released). W1-W2 estimate the 2001 grade-7 and grade-11 populations; W3-W4 the 2005 grade-11 population, core panel and new panel together. w2stwt2 and w4stwt2 (for IRT score analyses) and the carried first-wave weight (sampling_stwt1) are not used.",,
 survey_strata,partial,"cohort, sampling_urban3, sampling_priv, sampling_pgrm","paste(cohort, as.numeric(sampling_urban3), as.numeric(sampling_priv), as.numeric(sampling_pgrm), sep = ""_"")","Urban-rural stratum x public/private x school programme, the documented stratifiers (overview p. 8), at the sample's first wave (carried by the tidier), prefixed with the sample (J, S, NP; the core panel keeps J). Partial: no stratum code is released, so strata are rebuilt from the stratifiers.",,
 survey_cluster,unavailable,,,Not in the supplied extract.,,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,unavailable,,,Not collected.,,
+sample_component,compatible,cohort,"if_else(cohort == ""NP"", ""2005 new panel"", ""2001 samples"")","From the tidier's sample column (cohort), built from the file split and the core-panel flag (cp). '2001 samples': the grade-7 junior high and grade-11 senior high, vocational and junior college students sampled together in 2001 under one stratified school-class design (cohort J and S; the core panel, part of the grade-7 sample followed to grade 12, keeps this label). '2005 new panel': grade-11 students newly sampled in 2005 (cohort NP) and surveyed with the core panel in 2005 and 2007 (TEPS English overview, sampling design).",,
 sample_population,inferred,,"""General population""","Nationally representative samples of Taiwanese students from the 1984/85 and 1988/89 birth cohorts, sampled in schools (TEPS English overview).",,
-parent_respondent,in_progress,,,,,
+parent_respondent,compatible,"w1p101, w1p102, w2p101, w2p102, w3p101, w3p102, w4p102, w4p101, .wave","local({
+  rel <- case_when(
+    .wave == ""1"" ~ as.numeric(w1p101),
+    .wave == ""2"" ~ as.numeric(w2p101),
+    .wave == ""3"" ~ as.numeric(w3p101),
+    .wave == ""4"" ~ as.numeric(w4p102)
+  )
+  sex <- case_when(
+    .wave == ""1"" ~ as.numeric(w1p102),
+    .wave == ""2"" ~ as.numeric(w2p102),
+    .wave == ""3"" ~ as.numeric(w3p102),
+    .wave == ""4"" ~ as.numeric(w4p101)
+  )
+  case_when(
+    is.na(rel) ~ NA_character_,
+    rel %in% 1:3 & sex %in% 2 ~ ""Mother"",
+    rel %in% 1:3 & sex %in% 1 ~ ""Father"",
+    rel %in% 4:6 ~ ""Other carer"",
+    .default = ""Unknown""
+  )
+})","Parent questionnaire at each wave: 'What is your relationship with this student?' (parent, step-parent, foster or adoptive parent, grandparent, elder brother or sister, other) and the respondent's gender. A parent, step-parent or foster or adoptive parent: female = Mother, male = Father; grandparent, elder sibling or other = Other carer; relationship or gender missing or illegal = Unknown; no parent questionnaire record = NA. W3 releases labels for code 1 of both items only; its codes are read with the W1, W2 and W4 options, which the study's fully labelled W3 mother variables confirm (w3mowork equals the respondent's own employment for every code-2 parent and the spouse's for every code-1 parent, and is missing for relationship codes 4-6). Screen time is self-reported, so this is the main parent questionnaire's respondent. Not carried.",,
 age_years,compatible,"birth_year, .wave","recode_values(.wave, ""1"" ~ 2001.916, ""2"" ~ 2003.270, ""3"" ~ 2005.916, ""4"" ~ 2007.371) - (birth_year + 0.5)","Survey year minus birth year, plus the fieldwork midpoint as a year fraction minus 0.5: midpoint as a decimal year (2001-12-01, 2003-04-09, 2005-12-01, 2007-05-16 from the user guides) minus mid-birth-year. birth_year comes from the tidier: the ROC-year labels of w1s501 (J, S and core panel, carried from W1) or w3s479 (NP, carried to W4) + 1911. w3s479's codes 1-5 are relabelled ROC 75-79 in the tidier: the released labels (ROC 71-75) would make 2005 grade-11 students 20-21, and the codes match the core panel's ROC 77-78 four codes down (NP mean age 16.85 at W3, core panel 16.80).",,
 sex,compatible,"w1s502, w2s445, w3s480, participant_id","coalesce(
   modal_within(
@@ -24,7 +44,7 @@ sex,compatible,"w1s502, w2s445, w3s480, participant_id","coalesce(
 )","Self-reported gender (male, female): w1s502 (W1; the W2 and W4 files repeat it under that name), w2s445 (W2), w3s480 (W3). Each participant's modal value at every wave (carry-forward rule); 12 participants differ between waves, ties Unknown.",,
 country,inferred,,"""Taiwan""",National sample of Taiwan (TEPS overview p. 1).,,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,unavailable,,,Not in the supplied extract.,,
 ethnicity,proximate,"father_ethnic_group, mother_ethnic_group, participant_id, .wave","coalesce(
   carry_within(
     recode_values(
@@ -91,7 +111,26 @@ minority,proximate,"father_ethnic_group, mother_ethnic_group, participant_id, .w
 )","From the ethnicity derivation: Han Taiwanese (Fukienese, Hakka, Mainlander; Asian) = Non-minority, the Han majority; aborigine, other and mixed parentage = Minority. Proximate: parents' lineage stands in for the child.",ethnicity,
 immigrant_background,incompatible,"w3p105, w3p703",,"Only where each W3 parent lived longest before age 18 (w3p105, w3p703; labels truncated), not birthplace; the child's birthplace is not asked.",,
 born_in_country,unavailable,,,Not collected.,,
-home_language,in_progress,,,,,
+home_language,proximate,"w3s3301, w3s3302, w3s3303, w3s3304, w3s3305, w3s3306, w4s2191, w4s2192, w4s2193, w4s2194, w4s2195, w4s2196, participant_id, .wave","local({
+  mandarin <- as.numeric(w3s3301) %in% 1 | as.numeric(w4s2191) %in% 1
+  other <- as.numeric(w3s3302) %in%
+    1 |
+    as.numeric(w3s3303) %in% 1 |
+    as.numeric(w3s3304) %in% 1 |
+    as.numeric(w3s3305) %in% 1 |
+    as.numeric(w3s3306) %in% 1 |
+    as.numeric(w4s2192) %in% 1 |
+    as.numeric(w4s2193) %in% 1 |
+    as.numeric(w4s2194) %in% 1 |
+    as.numeric(w4s2195) %in% 1 |
+    as.numeric(w4s2196) %in% 1
+  observed <- case_when(
+    mandarin & other ~ ""Country language and another"",
+    mandarin ~ ""Country language only"",
+    other ~ ""Another language only""
+  )
+  coalesce(carry_within(observed, participant_id, as.numeric(.wave)), ""Unknown"")
+})","Student report, multiple choice: 'From childhood to now, which languages do your parents commonly use when talking with you at home?' (Mandarin, Taiwanese Hokkien, Hakka, Aboriginal languages, English, other foreign language), asked of the core panel at W3 (w3s3301-w3s3306) and the new panel at W4 (w4s2191-w4s2196). Mandarin, the national language at data collection, is the country language (Hokkien, Hakka and the Indigenous languages gained national-language status only under the 2017-2019 language acts); every other option is another language. Mandarin alone = Country language only; Mandarin with another = Country language and another; others without Mandarin = Another language only; no option ticked = Unknown. Carried within participant (carry-forward rule), so core-panel W1, W2 and W4 rows and new-panel W3 rows take the reported value; the rest of the 2001 samples were never asked: Unknown. Proximate: the languages the parents commonly speak with the child, not every language spoken in the home. The language-fluency items (student w1s5051-w1s5056, w3s3311-w3s3316; parent w1p108-w1p113) are proficiency and not used.",,
 ses_area,unavailable,,,Not collected.,,
 ses_household,proximate,"household_income, .wave","case_when(
   .wave == ""1"" & as.numeric(household_income) %in% 1:2 ~ ""Low"",
@@ -134,8 +173,23 @@ parental_education,proximate,parents_highest_education,"coalesce(
   ),
   ""Unknown""
 )","parents_highest_education from the tidier: the higher of father_education and mother_education ('other' ignored), so one known parent suffices; neither known = Unknown. Proximate as maternal_education.",maternal_education,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,compatible,"w1mowork, w2mowork, w3mowork, .wave","case_when(
+  .wave == ""1"" & as.numeric(w1mowork) %in% 1 ~ ""Employed"",
+  .wave == ""1"" & as.numeric(w1mowork) %in% 2:4 ~ ""Not employed"",
+  .wave == ""2"" & as.numeric(w2mowork) %in% 1 ~ ""Employed"",
+  .wave == ""2"" & as.numeric(w2mowork) %in% 2:4 ~ ""Not employed"",
+  .wave == ""3"" & as.numeric(w3mowork) %in% 1:4 ~ ""Employed"",
+  .wave == ""3"" & as.numeric(w3mowork) %in% 5:6 ~ ""Not employed"",
+  .default = ""Unknown""
+)","The study's derived mother-figure variable (mother incl. step and adoptive): the responding parent's own current employment status where the mother answered, her spouse's report where the father answered, missing where a grandparent or other relative answered. W1 (w1mowork) and W2 (w2mowork): employed = Employed; unemployed but worked before, retired, never had a job = Not employed. W3 (w3mowork): employed under 29, 30-39, 40-49 or 50 or more hours a week = Employed; unemployed, or housekeeper, housewife or retired = Not employed. Illegal value, missing and no parent questionnaire = Unknown. W4 asks no employment status and the gap from W3 exceeds 12 months: Unknown.",,
+maternal_age,compatible,"w1mobyr, w3mobyr, participant_id, .wave","local({
+  roc_year <- coalesce(
+    if_else(as.numeric(w1mobyr) %in% c(97, 99), NA_real_, as.numeric(w1mobyr)),
+    if_else(as.numeric(w3mobyr) %in% c(97, 99), NA_real_, as.numeric(w3mobyr))
+  )
+  roc_year <- carry_within(roc_year, participant_id, as.numeric(.wave))
+  recode_values(.wave, ""1"" ~ 2001.916, ""2"" ~ 2003.270, ""3"" ~ 2005.916, ""4"" ~ 2007.371) - (roc_year + 1911 + 0.5)
+})","Mother figure's (incl. step and adoptive) birth year in ROC years from the study's derived mother variables, the responding parent's own birth year where the mother answered and the spouse's where the father answered: W1 parent form (w1mobyr; the 2001 samples, core panel included) and the W3 new-panel form (w3mobyr). Age at each occasion = fieldwork midpoint as a decimal year (2001.916, 2003.270, 2005.916, 2007.371, as age_years) minus (birth year + 1911 + 0.5); the birth year is carried within participant to waves that did not ask it, so each wave takes the age at that occasion. Codes 97 (illegal) and 99 (missing) NA. Values kept as entered, including 15 entered birth years after ROC 70 (1981) and 42 before ROC 30 (1941), screened at analysis.",,
 urbanicity,proximate,"w1urban3, w2urban3, w3urban3, w4urban3","recode_values(
   coalesce(as.numeric(w1urban3), as.numeric(w2urban3), as.numeric(w3urban3), as.numeric(w4urban3)),
   1 ~ ""Rural"",
@@ -212,14 +266,29 @@ school_grade,inferred,"cohort, .wave, w1pgrm, w2pgrm, w3pgrm, w4pgrm","stringr::
   ),
   sep = "" ""
 )","Year of the programme attended at the wave (wNpgrm; comprehensive high schools as Senior high, five-year junior colleges as Junior college): 2001 junior sample Junior high 1 (grade 7) and Junior high 3 (grade 9); 2001 senior sample year 2 (grade 11) and year 3 (grade 12); core panel and 2005 new panel year 2 in 2005 and year 3 in 2007 (overview pp. 3, 9). Inferred: follow-up years assume normal progression; only the sampled grade (J W1, S W1, NP W3) is fixed by design.",,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,compatible,"w1priv, w2priv, w3priv, w4priv","recode_values(
+  coalesce(as.numeric(w1priv), as.numeric(w2priv), as.numeric(w3priv), as.numeric(w4priv)),
+  0 ~ ""Public"",
+  1 ~ ""Private"",
+  default = ""Unknown""
+)","The study's classification of the school attended at the wave as public or private (wNpriv: 0 public, 1 private; w3priv carries a wrong variable label but public/private value labels), every row: junior high, senior high, comprehensive and vocational high schools and five-year junior colleges.",,
+school_track,proximate,"w1pgrm, w2pgrm, w3pgrm, w4pgrm, w1clspgm, w2clspgm, w3clspgm, w4clspgm","local({
+  pgrm <- coalesce(as.numeric(w1pgrm), as.numeric(w2pgrm), as.numeric(w3pgrm), as.numeric(w4pgrm))
+  cls <- coalesce(as.numeric(w1clspgm), as.numeric(w2clspgm), as.numeric(w3clspgm), as.numeric(w4clspgm))
+  case_when(
+    pgrm %in% 1 ~ ""Not tracked"",
+    pgrm %in% 2 | (pgrm %in% 3 & cls %in% 31) ~ ""Academic"",
+    pgrm %in% 3 & cls %in% 32 ~ ""Intermediate"",
+    pgrm %in% c(4, 5) ~ ""Vocational"",
+    .default = ""Unknown""
+  )
+})","Every wave's school programme (wNpgrm) and class programme (wNclspgm), recorded for every row, mapped in order: junior high (1, grades 7-9, Taiwan's common compulsory stage) = Not tracked (W1 20,020, W2 18,925); general senior high (2) and the comprehensive high school's academic programme (3 with class 31) = Academic (W1-W4 9,330 / 9,127 / 11,804 / 11,597); the comprehensive high school's non-academic programme (32) = Intermediate (1,292 / 1,248 / 1,872 / 1,807); vocational high school (4) and the first three years of five-year junior college (5), which recruits 9th graders for vocational training = Vocational (8,428 / 7,989 / 6,403 / 6,051). Students are sorted into schools and tracks by entrance-exam scores, high scorers choosing the academic track, and the comprehensive track combines academic and vocational learning (TEPS English overview). No Unknown. Proximate: five programmes folded onto three levels.",,
 st_measure_type,inferred,,"""Categorical""",Banded self-report durations at every wave.,,
 st_measure_name,inferred,,"""Custom""",Items written for the TEPS student questionnaires.,,
 st_responder,inferred,,"""Self""",Student questionnaire at every wave.,,
 st_total_wd,unavailable,,,No weekday/weekend split.,,
 st_total_we,unavailable,,,No weekday/weekend split.,,
-st_total,incompatible,"w1s427, w1s423, w2s105, w2s106, w2s107, w3s128, w3s208, w3s209, w3s212, w3s213, w4s116, w4s117, w4s118",,"No all-screen item; the computer/internet, TV, texting, chat/BBS/e-mail, online-game and homework-internet items sit on their own rows and are not summed (DR-0002, DR-0004).",,
+st_total,incompatible,"w1s427, w1s423, w2s105, w2s106, w2s107, w3s128, w3s208, w3s209, w3s212, w3s213, w4s116, w4s117, w4s118",,"No all-screen item; the computer/internet, TV, texting, chat/BBS/e-mail, online-game and homework-internet items sit on their own rows or are unused and are not summed (DR-0002, DR-0004).",,
 st_watch_wd,unavailable,,,No weekday/weekend split.,,
 st_watch_we,unavailable,,,No weekday/weekend split.,,
 st_watch,partial,w3s208,"recode_values(as.numeric(w3s208), 6 ~ 0, 1 ~ 0.5, 2 ~ 1.5, 3 ~ 2.5, 4 ~ 3.5, 5 ~ 4)","W3 only. Average daily time watching TV or films (看電視或影片; English label 'TV or video tapes'): almost none 0, under 1 h 0.5, closed bands at midpoints, top band '4 hours or more' = 4. Partial: TV-set wording. W1's item bundles TV with sports and music (w1s423), not used; W2 and W4 ask none.",,
@@ -267,12 +336,7 @@ st_phone_we,unavailable,,,No weekday/weekend split.,,
 st_phone,incompatible,w3s209,,"Only phone calls or texting with friends (w3s209, W3), a single phone activity mapped to st_messaging.",,
 st_socmedia_wd,unavailable,,,No weekday/weekend split.,,
 st_socmedia_we,unavailable,,,No weekday/weekend split.,,
-st_socmedia,partial,"w2s106, w3s212, w4s117","coalesce(
-  recode_values(as.numeric(w2s106), 1 ~ 0, 2 ~ 2.5, 3 ~ 7.5, 4 ~ 12.5, 5 ~ 17.5, 6 ~ 20),
-  recode_values(as.numeric(w3s212), 6 ~ 0, 1 ~ 2.5, 2 ~ 7.5, 3 ~ 12.5, 4 ~ 17.5, 5 ~ 20),
-  recode_values(as.numeric(w4s117), 6 ~ 0, 1 ~ 2.5, 2 ~ 7.5, 3 ~ 12.5, 4 ~ 17.5, 5 ~ 20)
-) /
-  7","W2-W4 only. Weekly hours in chat rooms, on BBS, e-mailing or on instant messengers (ICQ, MSN, Yahoo Messenger, Skype) / 7: almost none 0, under 5 h 2.5, closed 5-hour bands at midpoints, top band '20 hours or more' = 20. Partial: BBS and chat rooms bundled with e-mail and messaging.",,
+st_socmedia,incompatible,"w2s106, w3s212, w4s117",,"Only the weekly time in chat rooms, on BBS, e-mailing or on instant messengers (W2 w2s106 names ICQ; W3 w3s212 and W4 w4s117 name ICQ or Yahoo Messenger, MSN and Skype), an online-communication bundle that names no social-network site: it goes to st_messaging, where it is unused because the W3 phone-or-texting item fills that row.",,
 st_educational_wd,unavailable,,,No weekday/weekend split.,,
 st_educational_we,unavailable,,,No weekday/weekend split.,,
 st_educational,partial,"w2s105, w3s128, w4s116","coalesce(
@@ -281,41 +345,41 @@ st_educational,partial,"w2s105, w3s128, w4s116","coalesce(
   recode_values(as.numeric(w4s116), 6 ~ 0, 1 ~ 1, 2 ~ 3, 3 ~ 5, 4 ~ 7, 5 ~ 8)
 ) /
   7","W2-W4 only. Weekly hours online looking up information for homework / 7: almost none 0, under 2 h 1, closed 2-hour bands at midpoints, top band '8 hours or more' = 8. Partial: internet searching for homework only.",,
-st_leisure_wd,in_progress,,,,,
-st_leisure_we,in_progress,,,,,
-st_leisure,in_progress,,,,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
 st_internet_wd,unavailable,,,No weekday/weekend split.,,
 st_internet_we,unavailable,,,No weekday/weekend split.,,
-st_internet,incompatible,"w1s427, w2s105, w2s106, w2s107, w3s128, w3s212, w3s213, w4s116, w4s117, w4s118",,"Online time asked only by purpose (homework, chat/BBS/e-mail, online games; mapped to st_educational, st_socmedia and st_game) and, at W1, pooled with computer use (mapped to st_comp).",,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
-st_videochat,incompatible,"w3s212, w4s117",,"Skype only inside the chat/BBS/e-mail/instant-messaging items (W3, W4), mapped to st_socmedia.",,
+st_internet,incompatible,"w1s427, w2s105, w2s106, w2s107, w3s128, w3s212, w3s213, w4s116, w4s117, w4s118",,"Online time asked only by purpose (homework and online games, mapped to st_educational and st_game; chat/BBS/e-mail/instant messaging, an online-communication bundle unused on st_messaging) and, at W1, pooled with computer use (mapped to st_comp).",,
+st_videochat_wd,unavailable,,,No weekday/weekend split.,,
+st_videochat_we,unavailable,,,No weekday/weekend split.,,
+st_videochat,incompatible,"w3s212, w4s117",,"Skype only inside the chat/BBS/e-mail/instant-messaging items (W3, W4), an online-communication bundle that goes to st_messaging and is unused there.",,
 st_messaging_wd,unavailable,,,No weekday/weekend split.,,
 st_messaging_we,unavailable,,,No weekday/weekend split.,,
-st_messaging,partial,w3s209,"recode_values(as.numeric(w3s209), 6 ~ 0, 1 ~ 0.25, 2 ~ 0.75, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3)","W3 only. Average daily time talking with friends on the phone or texting (w3s209): almost none 0, under 30 min 0.25, closed bands at midpoints, top band '3 hours or more' = 3. Partial: voice calls bundled with texting, friends only. The chat/BBS/e-mail/messenger items are on st_socmedia.",,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_messaging,partial,w3s209,"recode_values(as.numeric(w3s209), 6 ~ 0, 1 ~ 0.25, 2 ~ 0.75, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3)","W3 only. Average daily time talking with friends on the phone or texting (w3s209): almost none 0, under 30 min 0.25, closed bands at midpoints, top band '3 hours or more' = 3. Partial: voice calls bundled with texting, friends only. The weekly chat-room, BBS, e-mail and instant-messenger items (w2s106, w3s212, w4s117) are an online-communication bundle and are unused: this direct item fills the row, and a bundle is never added to it or spliced onto the other waves.",,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
 st_creating,unavailable,,,Not collected.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
-st_email,incompatible,"w2s106, w3s212, w4s117",,"E-mail only inside the chat/BBS/e-mail/instant-messaging items (W2-W4), mapped to st_socmedia.",,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_email_wd,unavailable,,,No weekday/weekend split.,,
+st_email_we,unavailable,,,No weekday/weekend split.,,
+st_email,incompatible,"w2s106, w3s212, w4s117",,"E-mail only inside the chat/BBS/e-mail/instant-messaging items (W2-W4), an online-communication bundle that goes to st_messaging and is unused there.",,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,unavailable,,,No item on use at school.,,
 st_educational_school,unavailable,,,No item on use at school.,,
@@ -774,19 +838,83 @@ hlth_sleep_we,unavailable,,,No weekday/weekend split.,,
 hlth_sleep,incompatible,"w1s101, w1s109a, w1s109b, w2s101, w3s101, w4s102, w4s103",,School-term items only; no usual-night value; see hlth_sleep_wd.,,
 hlth_sleepprob,incompatible,sleep_problems,,"Single checklist item only (can't sleep, sleep badly, wake easily or have nightmares; W1-W4); no sleep-problems scale; scored in mh_distress_self.",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,incompatible,"sleep_problems, w2s432",,"The checklist item 'can't sleep, sleep badly, wake easily or have nightmares' (sleep_problems, W1-W4) pools trouble sleeping with nightmares and is scored in mh_distress_self; 'feel that you never sleep enough' (w2s432, W2) is an enough-sleep item, mapped nowhere.",,
+hlth_sleepprob_singleitem_parent,partial,"w1p214, w3p208, .wave","case_when(
+  .wave == ""1"" ~ recode_values(
+    as.numeric(w1p214),
+    1 ~ ""Never"",
+    2 ~ ""Rarely"",
+    3 ~ ""Sometimes"",
+    4 ~ ""Often"",
+    default = NA_character_
+  ),
+  .wave == ""3"" ~ recode_values(
+    as.numeric(w3p208),
+    1 ~ ""Never"",
+    2 ~ ""Rarely"",
+    3 ~ ""Sometimes"",
+    4 ~ ""Often"",
+    default = NA_character_
+  ),
+  .default = NA_character_
+)","W1 and W3 only. Responding parent's report of whether the child has had problems with sleep (睡眠有問題; W1 w1p214 since the start of the semester, W3 w3p208 'have a sleeping disorder', recall not documented): never, seldom, sometimes, often = Never, Rarely, Sometimes, Often; not sure (W1 339, W3 475 rows) and missing NA; Always never emitted. The W3 release labels only code 1 (never), and no W3 parent questionnaire is supplied; its codes 1-5 are read by the W1 form of the item, whose code 1 matches. Partial: a general sleep-problems item on four levels. Not scored in a mapped scale. Never carried.",,
+hlth_bmi,partial,"w1sx01, w1sx02, w2sx01, w2sx02, w3sx01, w3sx02, w4sx01, w4sx02, .wave","local({
+  height <- case_when(
+    .wave == ""1"" ~ as.numeric(w1sx01),
+    .wave == ""2"" ~ as.numeric(w2sx01),
+    .wave == ""3"" ~ as.numeric(w3sx01),
+    .wave == ""4"" ~ as.numeric(w4sx01)
+  )
+  weight <- case_when(
+    .wave == ""1"" ~ as.numeric(w1sx02),
+    .wave == ""2"" ~ as.numeric(w2sx02),
+    .wave == ""3"" ~ as.numeric(w3sx02),
+    .wave == ""4"" ~ as.numeric(w4sx02)
+  )
+  height <- if_else(height %in% c(997, 999), NA_real_, height)
+  weight <- if_else(weight %in% c(997, 999), NA_real_, weight)
+  weight / (height / 100)^2
+})","Every wave, student questionnaire health supplement: the student's own height (cm) and weight (kg); BMI = weight / (height / 100)^2. The release top- and bottom-codes both items and the codes take their bounds: height 142-178 cm (W1), 151-178 (W2), 153-178 (W3, W4); weight 32-79 kg (W1), 40-79 (W2), 43-79 (W3, W4). 999 (missing) and 997 (illegal) NA. Partial: more than 5% of values sit at one code from W2 on (W2 weight 79 kg 6%; W3 height 153 cm 6% and 178 cm 9%, weight 43 kg 6% and 79 kg 7%; W4 height 153 cm 6% and 178 cm 10%, weight 79 kg 11%). Never carried.",,
+hlth_bmi_measure,inferred,,"""Self-reported""",Height and weight are the student's own answers in the student questionnaire at every wave.,,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,proximate,"w1sx06, w3s414, .wave","case_when(
+  .wave == ""1"" & as.numeric(w1sx06) %in% 1 ~ 1,
+  .wave == ""1"" & as.numeric(w1sx06) %in% 0 ~ 0,
+  .wave == ""3"" & as.numeric(w3s414) %in% 1:5 ~ 1,
+  .wave == ""3"" & as.numeric(w3s414) %in% 6 ~ 0,
+  .default = NA_real_
+)","W1 and W3 only, self-report. W1: whether the student has had menarche or a first nocturnal emission (w1sx06; no 0, yes 1). W3: age in completed years at the first menstrual period or nocturnal emission, under 10, 10-11, 12-13, 14-15, 16 or not yet (w3s414): any age = 1, not yet = 0. Proximate: an onset item alone. The W1 age at onset (w1sx07) is not used. Never carried.",,
+hlth_puberty_measure,inferred,.wave,"case_when(
+  .wave ==
+    ""1"" ~ ""Study item on menarche or first nocturnal emission (self), 1 item, no 0 / yes 1 (range 0-1), onset indicator"",
+  .wave ==
+    ""3"" ~ ""Study item on age at first menstrual period or nocturnal emission (self), 1 item, any age 1 / not yet 0 (range 0-1), onset indicator"",
+  .default = NA_character_
+)","Describes hlth_puberty_status at W1 and W3; NA at W2 and W4, which asked no pubertal item. Standardise within dataset, sex and measure at analysis.",,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,incompatible,"w3s211, w4s119",,"Only how many times a week the student usually does exercise that makes them sweat (e.g. swimming, basketball, running; W3 w3s211, W4 w4s119), sessions of vigorous exercise rather than days with 60 minutes of activity; mapped nowhere.",,
+hlth_birthweight,partial,"w3p402, w4p502, participant_id, .wave","carry_within(
+  coalesce(
+    recode_values(as.numeric(w3p402), 1 ~ 750, 2 ~ 1250, 3 ~ 2000, 4 ~ 3250, 5 ~ 4750, default = NA_real_),
+    recode_values(as.numeric(w4p502), 1 ~ 750, 2 ~ 1250, 3 ~ 2000, 4 ~ 3250, 5 ~ 4750, default = NA_real_)
+  ),
+  participant_id,
+  as.numeric(.wave)
+)","Core panel W3 (w3p402) and new panel W4 (w4p502) parent questionnaire 'How much did this child weigh when he/she was born?', parent recall, in bands: closed bands at their midpoint (1,001-1,500 g = 1,250; 1,501-2,500 = 2,000; 2,501-4,000 = 3,250); open bands half the neighbouring band's width beyond their bound ('less than 1,000 grams' = 750, W3 31 and W4 93 rows; '4,001 grams or more' = 4,750, W3 196 and W4 543 rows); don't know (W3 197, W4 883) and missing NA. The W3 release labels only code 1 (less than 1,000 grams), and no W3 parent questionnaire is supplied; its codes 1-6 are read by the W4 form of the item, whose code 1 matches and whose code distribution has the same shape. Carried within participant (carry-forward rule) to the core panel's W1, W2 and W4 rows and the new panel's W3 row. Partial: bands.",,
+hlth_preterm,compatible,"w3p401, participant_id, .wave","carry_within(
+  recode_values(as.numeric(w3p401), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_),
+  participant_id,
+  as.numeric(.wave)
+)","W3 parent questionnaire, core and new panels: 'Was this child born before 37 weeks of pregnancy?' (w3p401), parent recall: 1 yes = TRUE (1,027), 2 = FALSE (18,186); code 3 (286 rows, read as don't know), 97 and 99 NA. The release labels only code 1, and no W3 parent questionnaire is supplied; codes 2 and 3 are read as no and don't know by internal checks against the new panel's W4 birth weights (2,500 g or less for about half of code-1 children against 13% for code 2; don't know for 24% of code-3 children against about 5% otherwise). Carried within participant (carry-forward rule) to the core panel's W1, W2 and W4 rows and the new panel's W4 row.",,
+hlth_breastfed,partial,"w3p403, w4p501, participant_id, .wave","carry_within(
+  coalesce(
+    recode_values(as.numeric(w3p403), 1 ~ ""FALSE"", c(2, 3, 4, 5) ~ ""TRUE"", default = NA_character_),
+    recode_values(as.numeric(w4p501), 1 ~ ""FALSE"", c(2, 3, 4, 5) ~ ""TRUE"", default = NA_character_)
+  ),
+  participant_id,
+  as.numeric(.wave)
+)","Core panel W3 (w3p403) and new panel W4 (w4p501) parent questionnaire 'For how many months was this child breast-fed after he/she was born?', parent recall: less than 2 weeks, 2 weeks to 2 months, 2-6 months or 6 months or more = TRUE; hardly at all = FALSE; don't know (W3 163, W4 993) and missing NA. The W3 release labels only code 1 (hardly at all), and no W3 parent questionnaire is supplied; its codes 1-6 are read by the W4 form of the item, whose code 1 matches and whose code distribution has the same shape. Carried within participant (carry-forward rule) to the core panel's W1, W2 and W4 rows and the new panel's W3 row. Partial: 'hardly at all' is read as never breastfed.",,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,incompatible,"w2s451, w3s4121, w3s4122, w3s4123, w3s4124, w3s4125, w4s4771, w4s4772, w4s4773, w4s4774, w4s4775",,"Only the student's own report of asthma, not attributed to a health professional: 'Do you have asthma?' (w2s451, W2) and the school stages at which they have had asthma (core panel W3 w3s4121-w3s4125, new panel W4 w4s4771-w4s4775); asthma alone, and the chronic nasal allergy items (w3s411, w4s476) do not count. Mapped nowhere.",,
+hlth_disability,incompatible,"w1s530, w1s531, w3s410a, w3s410b, w4s475",,"Only sensory problem items with no disability or activity-limitation wording: can't see things clearly and problems with hearing since the start of the semester (W1 w1s530, w1s531; no, yes but not serious, yes very serious), when poor hearing started (core panel W3 w3s410a, new panel W4 w4s475) and hearing problems this semester (new panel W3 w3s410b). Mapped nowhere.",,

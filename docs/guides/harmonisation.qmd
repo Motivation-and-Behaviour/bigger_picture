@@ -247,6 +247,8 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Minutes / 60; hours and minutes h + m / 60; weekly totals / 7; a total for both weekend days / 2.
 - Clear negative and sentinel codes to NA before any arithmetic.
 - Bands: 'none' = 0, closed bands at their midpoint, 'less than 1 hour' = 0.5, sub-hour bands at their midpoint ('less than 30 minutes' = 0.25), point labels ('about 2 hours') at the stated value.
+- 'Almost none' is 0, and a label that states a small amount of time ('a few minutes') takes the midpoint between zero and the next band.
+- A band set with no 'none' option leaves the status unchanged, and its bottom band takes its midpoint.
 - An open top band takes the lower bound its label states ('5 or more' = 5, 'more than 7 hours' = 7).
 - A point label below the top band ('about 4 hours') is read as a band of plus or minus half an hour, so 'more than 4 hours' takes 4.5.
 - Write the top-band value into the row's notes.
@@ -260,6 +262,9 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - **Non-users:** 0 when a filter establishes non-use (routed past the item, 'not at all', or no device with use unanswered); NA when not asked or not answered; a filter never overrides a reported duration.
 - A routing filter that asks an item only of those who use the platform or device at least weekly establishes non-use, so the routed-out part is 0; respondents not asked for any other reason stay NA.
 - Keep values above 24 hours; they are excluded at analysis, with a sensitivity analysis that keeps them.
+- A value from a single diary day or a previous-day report is compatible where its content matches the row: the format is recorded by the measure block and `st_measure_name`, not by the status.
+- An item limited to use at home, or to use outside school hours, is partial, with the limit named.
+- In a screenshot or device log that lists only the top apps or categories of a day, an app or category absent from that day's list counts as 0, and the row is partial as a lower bound.
 - **Day-of-use rule:** minutes on a day of use are multiplied by the share of days used (days per week / 7) and marked partial; minutes with no frequency answer are NA.
 - Items that ask the time spent in each part of a typical weekday, usual school day or weekend day (morning, afternoon, evening) are usual-day items: their sum is hours per day and is never scaled by a separate how-often item.
 - Frequency-only, rank, most-used, yes/no and ownership items give no hours, so the row is incompatible, item named.
@@ -268,17 +273,22 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Never sum across watching, gaming, computer, phone, social media or internet, including into `st_total`, whoever did the summing.
 - Screen-time sums use `+`, with routed-out parts written as explicit zeros; `sum_nonmissing()` only where the instrument scores blanks as zero.
 - A skipped part is never scored as zero, so it leaves the sum NA.
+- A part routed out by age or design, and not by a filter on use, also leaves the sum NA.
 - An item may feed its umbrella row as a DR-0002 part, but never stands in for a broader or sibling row: texting is not `st_phone`, phone gaming is not `st_phone`, internet time is not `st_total`.
 - A single-activity item mapped to its content row leaves the device row incompatible.
 - A bundled item maps to one row as partial, and every other row it touches is incompatible, naming the item and the row it went to.
 - Social media with messaging goes to `st_socmedia`.
 - Gaming with other non-school computer use goes to `st_game`, and `st_comp` is incompatible.
+- A computer item that counts games among its uses stays on `st_comp` (partial where purpose-restricted), and beside a gaming item that covers consoles or TV games only, the computer item also stays on `st_comp`.
 - Gaming or computer items whose examples name social media never map to `st_game*`.
 - Phone with tablet goes to `st_phone` or `st_game_phone` (partial), and the tablet row is incompatible.
 - Computer with tablet as one response option goes to `st_tablet` or `st_game_tablet` (partial), and the computer row is incompatible.
 - Residual 'other online or device use' goes to `st_internet`.
+- A residual item that names the computer ('computer for other purposes') goes to `st_comp_nongaming` instead.
+- A bundle of e-mail, chat rooms and instant messaging goes to `st_messaging` as partial, to `st_socmedia` only where it names social-network sites, and is unused where a direct messaging item already fills the row.
 - A bundled or residual item is never added to a row that already has a direct item, nor spliced onto a row that a different item fills in other waves; name it as unused.
 - A social-media item whose examples name video-sharing platforms is not bundled with watching.
+- Per-platform items are placed by the platform's main use: video-first platforms (YouTube, TikTok, Twitch) on `st_watch`, feed and story platforms (Instagram, Snapchat, Facebook, X) on `st_socmedia`, and messengers (WhatsApp, Messenger) on `st_messaging`.
 - Watching pooled with gaming, computer or internet use goes to `st_total`.
 - An item that would go to `st_total` but is restricted to leisure (screen use for reasons other than school work), with no paired school-work item, goes to `st_leisure`, and `st_total` is incompatible ('Leisure only; see st_leisure'); an all-device item split into a school-work and a leisure part fills `st_educational` and `st_leisure`, and their sum fills `st_total`.
 - Paired school-work and leisure items asked over one multi-device scope are summed into `st_total` as the two purpose parts, partial where the scope leaves out devices or the school part pools paid work; a pair on one device, or on the internet alone, follows that device's row or `st_internet` (DR-0002), and `st_total` is incompatible.
@@ -286,6 +296,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Under a pooled multi-device gaming item, the device rows are unavailable ('No device split; see st_game.'); pooling activities within one device is bundling and stays incompatible.
 - `st_game` covers gaming on any device.
 - A gaming item that names devices and leaves out phones and tablets is partial whatever its year; an item naming no device is compatible.
+- 'Computer games', 'video games' and 'electronic games' are names for gaming and name no device; an item that names hardware ('on a computer or games console') does.
 - An item limited to the TV set (broadcast TV, or videos and DVDs on the set) is partial on `st_watch`; the test is the device, not the word 'videos'.
 - A computer item that excludes games goes to `st_comp_nongaming`; other purpose-restricted device items are partial.
 - Internet time on one device maps to that device's row as partial.
@@ -305,6 +316,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - `st_measure_type` and `st_measure_name` are filled wherever the instrument was administered; the harmoniser sets only `st_responder` to NA on primary rows with no `st_` value.
 - One responder per row, including any filter that sets a value to zero; responders are never combined within a row or a variable.
 - Where a column records who answered, `st_responder` is derived from it per row (compatible).
+- A form the child completed together with a parent takes `Parent or carer`, with the share recorded in the note.
 - The study's main series is primary, and a second responder, instrument or diary on the same occasion is a tagged block.
 - Block tags are `diary`, `parent`, `child`, `device` and `recall`, and every block maps `st_measure_type`, `st_measure_name` and `st_responder`.
 - A `recall` block covers the same occasion with a different reference period; its other variables belong to the occasion, so concurrent analyses exclude it.
@@ -340,6 +352,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - `hlth_bmi_measure` and `cog_earlylang_measure` are the exceptions: they are entity participant and their value follows the row (the height-and-weight source, or the child's form or age interval), and `hlth_bmi_measure` is compatible where a source column records the source per row.
 - A `*_measure` row says 'Unknown' only when a score exists but its instrument cannot be identified.
 - Use a study-supplied score as released and record its missing-item rule ('rule not documented' if unknown).
+- A named-instrument row keeps the published scoring; a generic row may drop an item whose keyed item-total correlation is at or below zero (as some translated items do), with the dropped item recorded in the `*_measure` row.
 - A study-imputed outcome score is NA wherever a flag identifies it as imputed; study-imputed covariates are used as released.
 - A released score prorated or averaged over answered items is used only where at least half the scale's items were answered.
 - A favourite-titles index counts the titles the respondent answered about as its items: a title counts where any per-title answer (frequency, time or rating) is given, and the index is used only where at least half of those titles were rated, so a respondent who names fewer titles is not penalised.
@@ -390,9 +403,11 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - The family scale rows share three measure rows, one segment per mapped row naming the informant: `fam_parenting_measure` (warmth, harsh and inconsistent discipline and both monitoring rows), `fam_functioning_measure` (functioning and conflict) and `fam_parentchild_measure` (the parent-child rows).
 - Cognitive rows take the age-normed score the study releases: standard score (mean 100, SD 15), T-score (50, 10) or scaled score (10, 3).
 - Raw, ability or number-correct scores map only when no normed form exists, as partial; percentiles, age-equivalents and normative classifications never map.
+- The generic task rows (`cog_atten_task`, `cog_flex_task`, `cog_inhib_task`, `cog_wm_task`, `cog_speed_task`) are exceptions, as their dataschema notes say: a raw score is compatible there where no normed score is released.
 - `cog_earlylang_parent` is the exception: parent-report early-language scales change items with the child's age and publish age norms only as percentiles or cut-off zones, which never map, so the row takes the raw ASQ-3 Communication area score or CDI word count as compatible, and the form and age interval are recorded in `cog_earlylang_measure` for standardisation within dataset and form or age interval at analysis.
 - `fam_home_total` takes the released raw total of a published HOME Inventory form, short forms included, and `fam_home_cogstim` and `fam_home_emotsupport` the released subscales of a HOME short form; full-form subscales are used only through the total, a standard score only where no raw score is released (partial), and `fam_home_measure` lists the forms by age group so the scores are standardised within dataset and form at analysis.
 - Never mix score forms within a row across waves; the executive-function rating rows (`cog_execfunc_parent`, `cog_execfunc_teacher`, `cog_execfunc_self`) are the exception: their instrument or score form may change between waves, as partial, standardised within wave.
+- The achievement test rows are a second exception: their score form may change between waves, as partial, standardised within wave.
 - NIH Toolbox rows take the age-corrected standard score (uncorrected only as partial), and the BASC-2 executive-function row takes the T-score; never the fully corrected T-score.
 - BAS II subtests are given individually, so there is no GCA for `cog_iq_fullscale`; map T-scores for the cognitive subtests and standard scores (mean 100, SD 15) for the achievement scales, with ability scores only as a partial fallback.
 - The BAS II Word Reading and Number Skills rows also fill the generic literacy and numeracy rows with the same score.
@@ -430,6 +445,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - **Frequency-item rules** (`mh_*_self` rows with Always to Never): self-reported frequency ratings only; truth, agreement, intensity and distress ratings are incompatible, item named.
 - Map anchors by wording: never, none, not at all -> Never; almost never, hardly ever, seldom, less than 1 day -> Rarely; sometimes, occasionally, some of the time, several days -> Sometimes; often, more than half the days -> Often; always, almost always, all of the time, nearly every day -> Always.
 - An anchor steps down one label when the source has an intensified anchor above it ('quite often' under 'very often' -> Sometimes; 'most of the time' under 'always' -> Often), and a top anchor above a source 'often' -> Always.
+- A top anchor 'most of the time', with nothing offered above it, is Often.
 - Day counts without wording map by share of a known recall window: 0 -> Never, up to 10% -> Rarely, up to 35% -> Sometimes, up to 70% -> Often, above 70% -> Always.
 - Labels the source cannot reach stay unused and are named in notes; a source with fewer than five levels is proximate; a wording mismatch is partial.
 - Record the recall period on every frequency row; it does not change the status there.
@@ -440,6 +456,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - A measure of another person (a parent's own stress or diagnosis) is unavailable on a `_self` row.
 - Always/Usually/Sometimes/Never rows take frequency scales only; degree, importance and agreement scales are incompatible.
 - On those rows, map anchors by wording with the same positional step; a four-level source whose labels do not match maps by rank, proximate, with the anchors in notes.
+- Where some of a source's labels match the target's, the matching labels map by wording and each unmatched label takes the nearest target level on its own side of Never, so a source 'rarely' on a row with no Rarely level is Sometimes, never Never.
 - 'All/Most/Some of the time' = Always/Usually/Sometimes, and a negatively worded item is never reversed onto these rows.
 - **Five-level collapse** onto Very good, Good, Average, Below average: top -> Very good, second -> Good, middle -> Average, two lowest -> Below average (proximate), from the full-resolution source item.
 - The four HBSC-SCL single-item rows are named-instrument rows: unavailable ('HBSC-SCL not administered; see \<row>.') wherever neither the checklist nor the adaptation in the row's note was given, even when a related item is in hand.
@@ -457,6 +474,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - `fam_firstscreen_age` takes the age at first use of any screen; one device or activity (the earliest of those asked) or the current age minus a reported duration of use is partial, and both onset rows are NA where the child has not started, never 0 or the current age.
 - `fam_siblings_n` counts all the child's siblings, resident or not: a count of the family's children that includes the child maps as the count minus one, counts of children living in the household or limited by age are partial, and a yes/no has-siblings item goes to `fam_siblings_any`, which is unavailable wherever the count is mapped ('Derive at analysis from fam_siblings_n.').
 - Binary behaviour rows are TRUE for any occurrence (the lowest response above never) and FALSE for never; yes/no items map directly.
+- A bottom anchor that pools never with almost never is FALSE, and the row is partial because it undercounts rare occurrence.
 - A status ladder (never, once or twice, used to, sometimes, weekly) follows the same rule, so every level above never is TRUE, and the row is partial: lifetime occurrence with no recall window.
 - A multi-item composite is TRUE if any answered item is positive, FALSE if every answered item is never, and NA if none is answered; study missing codes count as unanswered.
 - Use self-report where it exists; a parent-reported occurrence item is partial.
@@ -489,6 +507,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 
 - Emit `allowed_values` exactly, case included.
 - Demographic and SES rows emit the literal "Unknown", never NA, on every row of a mapped dataset, including waves where the item was not asked and nothing is carried (`default = "Unknown"` or `coalesce(..., "Unknown")`).
+- That rule is for mapped rows: an unavailable or incompatible demographic row stays NA.
 - `state` is the exception (NA outside Australia), and so is `ses_hukou` (NA outside mainland China or where not asked).
 - `region` takes the current ISO 3166-2 code of the first-level unit (state, province or equivalent), aggregating lower units the code list names; a study's grouping of first-level units takes the country code and the grouping's English name ('US: South'), proximate, and school location stands in for residence (proximate).
 - Places the code list does not name (towns, municipalities, schools) are never placed in a region with outside data.
@@ -514,9 +533,11 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Survey year minus birth year is adjusted by the fieldwork midpoint, and decimal age is derived where birth and interview months are released.
 - `maternal_age` takes the mother figure's age at the occasion under these age rules: her age at the child's birth plus `age_years` is compatible, a responding parent whose relationship to the child is not recorded is partial, the father's age is incompatible, and an age asked at one wave fills other waves as that age plus the change in `age_years`, partial, the projection named.
 - A single-age sample with no age item takes the centre of the sampled cohort's age at fieldwork, inferred.
+- An age assigned from school grade is the centre of that grade's entry-age birth window at the fieldwork midpoint, inferred, with the entry rule and the fieldwork period cited.
 - Single completed years and survey-year differences are compatible; multi-year bands, open bands holding more than about 5% of rows and design-assigned ages are partial or inferred; a birth date against an assumed reference date is partial.
 - Ages above `max_value` are kept, eligibility is applied at analysis, and tidiers drop rows only to define the study population and the waves each participant attended.
 - `data_year` takes the per-row interview year where released (compatible) or the survey's own year label (compatible); a year recoded from wave labels or documentation is inferred.
+- A survey's year label counts only where that year holds most of the fieldwork; where a labelled round was fielded mostly in another year, `data_year` is the modal fieldwork year (inferred) and `wave` keeps the label.
 - A missing per-row date takes the wave's modal fieldwork year; a few such fills leave the row compatible, with the count in notes, and inferred is for waves whose year is assigned wholesale.
 - Constants cite the fieldwork or design documentation that dates them or, under the publication fallback below, the publication or bound that dates them.
 - Fieldwork timing documented by the study's investigators counts even when it sits outside the supplied documents (e.g. a project description or funding report), and each wave takes its documented year, inferred.
@@ -537,6 +558,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Tidiers drop a participant's rows for waves the participant did not attend.
 - Survey design values fixed at sampling (stratum, cluster, design weight) are carried within participant to every wave without a wave prefix, so a participant stays in one stratum and cluster; a carried design weight is partial.
 - The weight is the study's core release weight, and schools in a randomised trial are not survey clusters.
+- A released zero weight is kept as 0, because it records that the row is outside the weighted population.
 - `rct_arm` takes the allocated arm in any controlled trial, randomised or not (whole classes or schools assigned by the investigators included), with the allocation design in notes, and datasets that are not trials keep 'Not a randomised trial.'
 - `family_id` takes the study's own family unit (a family, household, questionnaire or mother id) and `sample_component` the separately recruited sample a participant belongs to; both are constant within participant, NA where the dataset holds one participant per family or one sample, and neither is a stratum, cluster, wave or trial arm.
 - `sample_population` records how a participant was recruited: Clinical for recruitment because of a diagnosed or treated condition or through a specialist clinic, General population otherwise, well-child and vaccination clinics included.

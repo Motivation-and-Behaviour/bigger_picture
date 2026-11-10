@@ -26,6 +26,11 @@ tidy_BPIPD_2207 <- function(raw_dataset, spec) {
   for (col in carried) {
     df[[col]] <- bp2207_carry_gap(df[[col]], df$pid, interview_month)
   }
+  # The mother's job items are carried as one record, all from the same year.
+  job <- names(bp2207_mother_job)
+  donor <- ifelse(is.na(df$mother_job1), NA, seq_len(nrow(df)))
+  donor <- bp2207_carry_gap(donor, df$pid, interview_month)
+  df[job] <- lapply(df[job], function(x) x[donor])
 
   # `bind_rows()` drops the labels, so they go on after it.
   df <- bp2207_label(df, raw_dataset$codebook)
@@ -34,6 +39,14 @@ tidy_BPIPD_2207 <- function(raw_dataset, spec) {
       attr(df[[col]], "label"),
       "; missing years carried within `pid` from the nearest year interviewed",
       " 12 months or less away"
+    )
+  }
+  for (col in job) {
+    attr(df[[col]], "label") <- paste0(
+      "Mother figure: ",
+      bp2207_mother_job[[col]],
+      ", from her own person row; missing years carried as one record within",
+      " `pid` from the nearest year interviewed 12 months or less away"
     )
   }
 
@@ -49,6 +62,13 @@ tidy_BPIPD_2207 <- function(raw_dataset, spec) {
 
 #' Columns that already carry the same name in every year's file
 bp2207_link_pattern <- "^(p[0-9]{2}pid|h[0-9]{2}hid|[phd][0-9]{2}ans|KMPS[0-9]{2})$"
+
+#' The mother figure's job items linked from her own person row, with labels
+bp2207_mother_job <- c(
+  mother_job1 = "whether she has a job (`p_job1`: 1 yes, 2 no)",
+  mother_job2 = "employment status if working (`p_job2`)",
+  mother_job4 = "kind of non-employment if not working (`p_job4`)"
+)
 
 #' Person columns that are free text in some years and numeric in others
 bp2207_text_columns <- c(
@@ -323,7 +343,8 @@ bp2207_label <- function(tbl, codebook) {
   tbl
 }
 
-#' Parents' own education and the number of parent figures in the household
+#' Parents' own education, the mother figure's job items and the number of
+#' parent figures in the household
 #'
 #' The roster, indexed by `housenum`, gives each member's relation to the head.
 #' A child of the head (code 3) has the head and spouse (1, 2) as parent figures
@@ -370,6 +391,18 @@ bp2207_parents <- function(df) {
       "figure's completion status at that level (`p_school2`),",
       rule
     )
+  }
+
+  # The mother figure's own job items from her row that year; the caller carries them.
+  member <- ifelse(
+    rowSums(mothers) == 1,
+    max.col(mothers, ties.method = "first"),
+    NA
+  )
+  from <- match(paste(df$hid, df$.wave, member), person)
+  from[is.na(member) | is.na(df$p_job1[from])] <- NA
+  for (col in names(bp2207_mother_job)) {
+    df[[col]] <- df[[sub("^mother_", "p_", col)]][from]
   }
   df
 }

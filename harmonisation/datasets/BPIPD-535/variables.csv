@@ -6,15 +6,26 @@ rct_arm,compatible,Demo,"recode_values(as.numeric(Demo), 0 ~ ""Control"", 1 ~ ""
 survey_weight,unavailable,,,Not a survey sample.,,
 survey_strata,unavailable,,,Not a survey sample.,,
 survey_cluster,unavailable,,,Not a survey sample.,,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,unavailable,,,Not collected.,,
+sample_component,unavailable,,,Single sample.,,
 sample_population,inferred,,"""General population""","Children in grades 3-5 from 10 elementary schools in two US communities in a school-randomised obesity-prevention trial (Eisenmann et al. 2008, doi:10.1186/1471-2458-8-223).",,
-parent_respondent,in_progress,,,,,
+parent_respondent,proximate,"q159, q101, q140.1, q141.1","local({
+  parent_items <- tbl[grep(""^q1[0-5][0-9]([.]|$)"", names(tbl))]
+  answered <- Reduce(`|`, lapply(parent_items, function(x) !is.na(x)))
+  who <- as.numeric(q159)
+  case_when(
+    !answered ~ NA_character_,
+    who == 1 ~ ""Father"",
+    who == 2 ~ ""Mother"",
+    who == 3 ~ ""Both parents"",
+    .default = ""Unknown""
+  )
+})","Waves 1, 3 and 4 (no parent survey at wave 2): 'Who completed survey' (q159: Male, Female, Both) on the parent survey of the occasion: Female = Mother, Male = Father (respondent's sex only, proximate), Both = Both parents; the undefined code 7 and returned surveys with q159 unanswered = Unknown. NA at wave 2 and on rows with no answer to any parent-survey item of the occasion (q101-q159; the carried background items q160, q162 and q163 do not count). One parent survey per occasion, so it is also the parent screen-time reporter. Not carried.",,
 age_years,compatible,"Age_yrs, age_dob, wave","if_else(wave %in% c(""2"", ""4""), if_else(age_dob < 100, age_dob, NA_real_), as.numeric(Age_yrs))","Decimal years. Waves 1 and 3: the study's released age at the anthropometry date (ageW1, Age_yrs_W3). Waves 2 and 4: decimal age from date of birth to the child survey date (age_dob, derived in the tidier before the birth date was dropped); the released wave-4 age (Age_W4) is not used because it is about one year above the date-based age. One child's birth date is the SPSS date origin, a missing-date code (the study's own ages for that child are missing), so derived ages of 100 or more are NA. NA on 35 wave-1 and 39 wave-3 rows with no released age, and on 42 wave-2 and 53 wave-4 rows: 18 and 38 have no usable survey date (34 wave-4 dates hold only the year), 23 and 14 no birth date, and 1 and 1 the SPSS-origin birth date.",,
 sex,compatible,Sex,"coalesce(modal_within(recode_values(as.numeric(Sex), 1 ~ ""Male"", 2 ~ ""Female""), participant_id), ""Unknown"")","Sex (1 Male, 2 Female), the study's child-level sex variable, repeated on every wave row; reporter not documented. Participant's modal value; the one child with no value is Unknown. The wave-4 file's SexW4 and teacher-reported q225 are not used.",,
 country,inferred,,"""USA""","Constant: the two participating communities are Lakeville, Minnesota and Cedar Rapids, Iowa (district; doi:10.1186/1741-7015-7-49).",,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,proximate,district,"recode_values(as.numeric(district), 1 ~ ""US-MN"", 2 ~ ""US-IA"", default = ""Unknown"")","School district of the participating school (district: 1 Lakeville, 2 Cedar Rapids), every wave, placed by the study's own description of its communities as Lakeville, Minnesota and Cedar Rapids, Iowa (doi:10.1186/1741-7015-7-49): US-MN, US-IA. Proximate: school location stands in for residence. Recorded on every row, so nothing is carried.",,
 ethnicity,proximate,Race,"coalesce(
   carry_within(
     lookup_values(
@@ -79,7 +90,7 @@ paternal_education,proximate,"q162, q159_q162","if_else(
 )","As maternal_education where the parent who gave q162 was male (q159_q162 = 1); about 8% of parent respondents, so fathers are mostly Unknown. Proximate: the father is inferred from the respondent's sex.",maternal_education,
 parental_education,incompatible,q162,,"Only the responding parent's own education (q162); the other parent is never asked, so the highest level across parents cannot be formed. See maternal_education and paternal_education.",,
 maternal_employment,unavailable,,,Not collected.,,
-maternal_age,in_progress,,,,,
+maternal_age,unavailable,,,Not collected.,,
 urbanicity,incompatible,district,,"Only the two community names (district: Lakeville MN, Cedar Rapids IA); no residential urban/rural classification, and none is imported from external data.",,
 family_structure,proximate,q160,"recode_values(
   as.numeric(q160),
@@ -188,7 +199,7 @@ school_grade,inferred,"GRADE, wave","local({
   case_when(!grade %in% 3:5 ~ NA_character_, wave == ""4"" ~ paste(""Grade"", grade + 1), .default = paste(""Grade"", grade))
 })","Waves 1-3 (school year 2005-06): the roster grade (GRADE, grades 3-5), 'Grade N'. Wave 4 (Oct-Dec 2006, the next school year): the file's GRADEw4 equals each child's baseline grade on every row, so it is baseline grade + 1, inferred from cohort progression from the grades 3-5 the papers name (repetition not recorded). Inferred overall, as wave 4 is assigned.",,
 school_sector,unavailable,,,Not collected.,,
-school_track,in_progress,,,,,
+school_track,inferred,GRADE,"""Not tracked""","Constant from the design: every child was in grades 3-5 at one of 10 elementary schools in 2005-06 (waves 1-3; Eisenmann et al. 2008, doi:10.1186/1471-2458-8-223), and in grades 4-6 at the wave-4 follow-up in autumn 2006, all untracked US elementary or middle-school grades.",,
 st_measure_type,inferred,,"""Continuous""",Open entry of hours per daypart (stored in tenths of an hour; wave 2 keeps the study's codes for long and unclear answers).,,
 st_measure_name,inferred,,"""Custom""",The study's own child survey items (design paper doi:10.1186/1471-2458-8-223).,,
 st_responder,inferred,,"""Self""","The child's self-report survey, the study's main screen-time series, at all four waves.",,
@@ -348,8 +359,8 @@ st_educational,unavailable,,,Not collected.,,
 st_leisure_wd,unavailable,,,Not collected.,,
 st_leisure_we,unavailable,,,Not collected.,,
 st_leisure,unavailable,,,Not collected.,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
+st_violent_watch_wd,unavailable,,,No weekday/weekend split.,,
+st_violent_watch_we,unavailable,,,No weekday/weekend split.,,
 st_violent_watch,incompatible,"child_VTV_ind, q001.a1, q001.a2, q001.a3, q001.b1, q001.b2, q001.b3",,"Index, not hours; see st_violent_watch_index: favourite shows are rated for how often (q001.a1-a3), not how long, they are watched.",,
 st_violent_game_wd,unavailable,,,No weekday/weekend split.,,
 st_violent_game_we,unavailable,,,No weekday/weekend split.,,
@@ -397,9 +408,9 @@ st_violent_game_index,compatible,"child_VGV_ind, q002.a1, q002.b1, q002.a2, q002
   if_else(is.na(score) & rated == 0 & plays %in% 2, 0, score)
 })","Child report, all four waves: the study's Violent Video Games Exposure Index (child_VGV_ind, waves 1, 3, 4): for up to three favourite video games, how often the game is played (1 Almost never to 5 Almost every day) x how violent it is (child-rated, 0 Not at all to 3 Very violent), mean over games with both answers (range 0-15). Wave 2 built from b002 as for st_violent_watch_index (reversed codes). Used only where at least half the games with any answer (frequency or rating) have both a frequency and a rating. Non-users: 0 where the child answered 'Do you ever play VGs' No (q013, b013) and rated no game; never overrides a rated game. Not used: child_MVE (pooled over media), child_viol_vg (no time weight) and child_freq_vg (frequency only).",,
 st_violent_measure,inferred,,"""st_violent_watch_index: 3 named favourite TV shows, time weight frequency 1-5 (almost never to almost every day), violence classification self-rated 0-3 (not at all to very violent), product per title, mean over rated titles (range 0-15); st_violent_game_index: 3 named favourite video games, time weight frequency 1-5, violence classification self-rated 0-3, product per title, mean over rated titles (range 0-15). Study child survey items and indices (Violent TV Exposure Index, Violent Video Games Exposure Index), released at waves 1, 3 and 4 and built from the items at wave 2; an index is used where at least half the titles with any answer were rated""","Constant. Not used: child_MVE (the study's index over shows, games and movies; no combined row), child_viol_* (violence ratings with no time weight) and child_freq_* (frequency only).",,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
@@ -457,20 +468,20 @@ st_internet,compatible,"q027.1, q027.2, q027.3, b027.1, b027.2, b027.3, q028.1, 
   )
   (5 * hours[, 1] + 2 * hours[, 2]) / 7
 })","(5 x st_internet_wd + 2 x st_internet_we) / 7; item wording, wave-2 codes and top band in st_internet_wd. Online time naming no device (the study's weekly score is labelled online computer time).",,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
 st_videochat,unavailable,,,Not collected.,,
 st_messaging_wd,unavailable,,,Not collected.,,
 st_messaging_we,unavailable,,,Not collected.,,
 st_messaging,unavailable,,,Not collected.,,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
 st_creating,unavailable,,,Not collected.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
 st_email,unavailable,,,Not collected.,,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,unavailable,,,No item on use at school.,,
 st_educational_school,unavailable,,,No item on use at school.,,
@@ -876,22 +887,42 @@ hlth_sleep,compatible,"q036, q037, b036, b037, q038, q039, b038, b039","local({
 })","(5 x hlth_sleep_wd + 2 x hlth_sleep_we) / 7, child report; items in hlth_sleep_wd and hlth_sleep_we.",,
 hlth_sleepprob,incompatible,q224,,"Only a single teacher item, 'often is sleepy when he/she comes to school' (q224); no sleep-problems scale.",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
+hlth_sleepprob_singleitem_self,incompatible,q224,,"Only the teacher's rating 'This child often is sleepy when he/she comes to school' (q224), daytime sleepiness rated by a teacher, which fills neither sleep-problem row; no child item on trouble falling or staying asleep.",,
+hlth_sleepprob_singleitem_parent,incompatible,q224,,"Only the teacher's rating 'This child often is sleepy when he/she comes to school' (q224), daytime sleepiness rated by a teacher, which fills neither sleep-problem row; the parent survey asks bed and wake times only.",,
 hlth_bmi,compatible,BMI,BMI,"BMI (kg/m2) as released at waves 1, 3 and 4 from height and weight measured by school nurses; equals Weight_kg / (Height / 100)^2 on every row. No anthropometry at wave 2 (NA).",,
 hlth_bmi_measure,inferred,,"if_else(wave == ""2"", NA_character_, ""Measured"")","Waves 1, 3 and 4: height and weight measured by trained school nurses (doi:10.1186/1741-7015-7-49); NA at wave 2, which had no anthropometry.",,
 hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
 hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,compatible,"MatOffset, Height, TrueSitHt, LegLength, Weight_kg, Age_yrs, age_dob, Sex, wave","coalesce(
+  as.numeric(MatOffset),
+  if_else(
+    wave == ""4"",
+    if_else(
+      as.numeric(Sex) == 1,
+      -9.236 +
+        0.0002708 * (LegLength * TrueSitHt) -
+        0.001663 * (age_dob * LegLength) +
+        0.007216 * (age_dob * TrueSitHt) +
+        0.02292 * (Weight_kg / Height * 100),
+      -9.376 +
+        0.0001882 * (LegLength * TrueSitHt) +
+        0.0022 * (age_dob * LegLength) +
+        0.005841 * (age_dob * TrueSitHt) -
+        0.002658 * (age_dob * Weight_kg) +
+        0.07693 * (Weight_kg / Height * 100)
+    ),
+    NA_real_
+  )
+)","Waves 1, 3 and 4. Waves 1 and 3: the study's released maturity offset (MatOffset), years from predicted peak height velocity. It reproduces the Mirwald (2002) sex-specific equation computed from the occasion's measured stature (Height), sitting height (TrueSitHt), leg length (LegLength), weight (Weight_kg) and age at measurement (Age_yrs): exactly at wave 3 and within 0.025 years at wave 1, where the released age is rounded to 0.1 year. Wave 4 (no offset released, the measures taken): computed in the expression with the same Mirwald (2002) sex-specific equation (Sex) from the wave-4 Height, TrueSitHt, LegLength and Weight_kg and the decimal age from date of birth to the child survey date (age_dob), the age that age_years uses at wave 4; the released wave-4 age (Age_W4, in Age_yrs) is not used because it is about one year above the date-based age. 1,037 wave-4 values; 9 lie outside -6 to 4 from implausible inputs (eight negative sitting heights; one SPSS-origin birth date, age_dob 424 years), kept and screened at analysis. estAPHV (age minus the offset) is unused. No anthropometry at wave 2. Every value kept; not carried.",,
 hlth_pa_days60,incompatible,"Mean_Wk_Ped, q041",,"Only device-measured activity (pedometer steps, Mean_Wk_Ped) and the child's rating of being more or less active than others (q041); no days-of-60-minutes item.",,
 hlth_birthweight,unavailable,,,Not collected.,,
 hlth_preterm,unavailable,,,Not collected.,,
 hlth_breastfed,unavailable,,,Not collected.,,
 hlth_prenatalsmoking,unavailable,,,Not collected.,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_chroniccond_diagnosed,unavailable,,,Not collected.,,
+hlth_disability,unavailable,,,Not collected.,,
 st_measure_type,inferred,,"""Continuous""","Open entry of hours per daypart, stored in tenths of an hour.",,parent
 st_measure_name,inferred,,"""Custom""",The study's own parent survey items (design paper doi:10.1186/1471-2458-8-223).,,parent
 st_responder,inferred,,"""Parent or carer""","The parent survey's report of the child's screen time, waves 1, 3 and 4 (no parent survey at wave 2); a second responder on the same occasion as the child's self-report.",,parent

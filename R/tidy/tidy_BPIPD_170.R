@@ -12,7 +12,12 @@
 #' - one tibble, one row per respondent per year, all years stacked
 tidy_BPIPD_170 <- function(raw_dataset, spec) {
   item_vars <- bp170_item_vars()
-  core_only_vars <- c("alcohol_30d", "cigarettes_30d", "cannabis_30d")
+  core_only_vars <- c(
+    "alcohol_30d",
+    "cigarettes_30d",
+    "cannabis_30d",
+    "hs_program"
+  )
   serial_pattern <- "ARCHIVE ID|R'?S +ID ?- ?SERIAL"
 
   var_labels <- function(df) {
@@ -325,7 +330,13 @@ bp170_item_vars <- function() {
     mother_education = "MOTHR EDUC LEVE",
     father_education = "FATHR EDUC LEVE",
     hshld_father = "HSHLD FATHE",
-    hshld_mother = "HSHLD MOTHE"
+    hshld_mother = "HSHLD MOTHE",
+    # 8th/10th grade 'present (or expected)', 12th grade 'present' programme.
+    hs_program = "HS PROGRAM",
+    # 8th/10th grade to 2021: does your mother have a paid job now.
+    mother_paid_job = "MOTHER PAID JOB",
+    # 12th grade: paid job while the respondent was growing up.
+    mother_job_growing_up = "MOTH PD JB"
   )
   # Time-use items: hours/WEEK up to 2017, hours/DAY from 2018.
   screen_week_vars <- c(
@@ -407,6 +418,11 @@ bp170_item_vars <- function() {
     parent_limit_screen = "#X PRNT LIMIT SCRN TIME",
     sleep_7hrs = "OFTN 7HRS SLEEP",
     sleep_less = "OFTN SLEEP ?<SHLD",
+    # 2010-2021: 8th/10th grade form 1, 12th grade form 5.
+    pa_days60 = "ACTV 60 MIN",
+    # Banded codes, released from 2024 (restricted-use before).
+    height_code = "CURRENT HEIGHT",
+    weight_code = "CURRENT WEIGHT",
     # Single items the schema rejects, kept for source_columns. 2019-2024.
     temper_control = "CONTROL TEMPER",
     worry_react = "HOW PPL REACT TO ME",

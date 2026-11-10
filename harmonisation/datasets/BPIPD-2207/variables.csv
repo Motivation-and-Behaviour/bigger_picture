@@ -6,10 +6,33 @@ rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,compatible,p_wt,as.numeric(p_wt),"Cross-sectional person weight p_wt as released (integrated-panel weight from 2019), recomputed every year; mean 1. The diary weight d_wt is identical (user guide p.26).",,
 survey_strata,unavailable,,,Not in the supplied extract.,,
 survey_cluster,unavailable,,,Not in the supplied extract.,,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,compatible,hid,"sprintf(""%.0f"", hid)","KISDI's integrated household id (hid), constant within pid in the release; every household member aged 6+ is a participant, so children, siblings, parents and other members of one household share it (7,499 households). Shared within a household: the household-questionnaire rows (fam_screenrules, fam_contentrules, fam_mediation_technical, ses_household, family_structure, urbanicity, region) and the parent figures' own education.",,
+sample_component,compatible,KMPS19,"if_else(KMPS19 %in% 1, ""2019 supplementary panel (KMPS19)"", ""original panel (KMPS11, recruited 2010-2011)"")","Release flag KMPS19 (1 = supplementary panel), constant within pid. Original panel (KMPS11; 134,369 rows, 17,206 persons): 3,085 households in Seoul, the capital area and six metropolitan cities surveyed in 2010, then 2,000 households in the other provinces plus replacements for lost 2010 households recruited in 2011, giving a 5,109-household nationwide panel under one 500-enumeration-district design on the 2005 census frame; the 2010 persons never followed into 2011 are included. 2019 supplementary panel (KMPS19; 13,546 rows, 2,634 persons): 1,027 households from 100 enumeration districts on the 2017 census frame, recruited because of panel ageing (user guide pp.6, 19-21).",,
 sample_population,inferred,,"""General population""",Nationwide probability sample of South Korean households from census enumeration districts (Korea Media Panel user guide).,,
-parent_respondent,in_progress,,,,,
+parent_respondent,compatible,"h_honum, housenum, p_rel, p_age1, .wave, h_m1_rel, h_m2_rel, h_m3_rel, h_m4_rel, h_m5_rel, h_m6_rel, h_m7_rel, h_m8_rel, h_m9_rel, h_m10_rel, h_m1_gen, h_m2_gen, h_m3_gen, h_m4_gen, h_m5_gen, h_m6_gen, h_m7_gen, h_m8_gen, h_m9_gen, h_m10_gen, h_m1_dob, h_m2_dob, h_m3_dob, h_m4_dob, h_m5_dob, h_m6_dob, h_m7_dob, h_m8_dob, h_m9_dob, h_m10_dob","local({
+  n <- length(p_rel)
+  rel <- cbind(h_m1_rel, h_m2_rel, h_m3_rel, h_m4_rel, h_m5_rel, h_m6_rel, h_m7_rel, h_m8_rel, h_m9_rel, h_m10_rel)
+  gen <- cbind(h_m1_gen, h_m2_gen, h_m3_gen, h_m4_gen, h_m5_gen, h_m6_gen, h_m7_gen, h_m8_gen, h_m9_gen, h_m10_gen)
+  dob <- cbind(h_m1_dob, h_m2_dob, h_m3_dob, h_m4_dob, h_m5_dob, h_m6_dob, h_m7_dob, h_m8_dob, h_m9_dob, h_m10_dob)
+  figure <- matrix((p_rel %in% 3 & rel %in% 1:2) | (p_rel %in% 5 & rel %in% 3:4), n)
+  mothers <- figure & matrix(gen %in% 2, n)
+  fathers <- figure & matrix(gen %in% 1, n)
+  k <- ifelse(h_honum %in% 1:10, h_honum, NA)
+  at <- cbind(seq_len(n), k)
+  born <- dob[at]
+  born[!born %in% 1880:2030] <- NA
+  minor <- 2000 + as.integer(.wave) - born <= 18
+  case_when(
+    is.na(p_age1) | p_age1 > 18 | is.na(k) ~ NA_character_,
+    k == housenum ~ NA_character_,
+    figure[at] & mothers[at] & rowSums(mothers) == 1 ~ ""Mother"",
+    figure[at] & fathers[at] & rowSums(fathers) == 1 ~ ""Father"",
+    figure[at] ~ ""Unknown"",
+    minor %in% TRUE ~ NA_character_,
+    rel[at] %in% 1:10 ~ ""Other carer"",
+    .default = ""Unknown""
+  )
+})","The household questionnaire's respondent (h_honum, member number) placed in that year's household roster (relation to the head h_m*_rel, sex h_m*_gen, birth year h_m*_dob) against the participant's relation to the head (p_rel). A parent figure as for maternal_education (head or spouse for a child of the head; the head's child or child-in-law for a grandchild) is Mother or Father by sex, Unknown where two figures of that sex leave the parent unidentified; grandparents, aunts and uncles, adult siblings, other relatives and cohabitants = Other carer. The household questionnaire is the only adult-answered component (screen time is the participant's own diary) and holds the parent-reported media-rule rows. Ages 0-18 only, as those rows; NA for ages 19+, rows with no household record, and where the participant (305 rows) or another member aged 18 or under answered it. Recorded per year, not carried.",,
 age_years,compatible,"p_age1, .wave","na_if(p_age1, 9999) +
   recode_values(
     as.character(.wave),
@@ -32,13 +55,35 @@ age_years,compatible,"p_age1, .wave","na_if(p_age1, 9999) +
 sex,compatible,"p_gender, pid","coalesce(modal_within(recode_values(p_gender, 1 ~ ""Male"", 2 ~ ""Female"", default = NA_character_), pid), ""Unknown"")","Self-reported sex (p_gender: 1 male, 2 female; no other option), participant's modal value across years.",,
 country,inferred,,"""South Korea""",Nationwide household panel of South Korea (KISDI user guide p.6; Seoul and metropolitan cities only in 2010).,,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,compatible,"h_area, p_area","local({
+  iso <- c(
+    ""KR-11"",
+    ""KR-26"",
+    ""KR-27"",
+    ""KR-28"",
+    ""KR-29"",
+    ""KR-30"",
+    ""KR-31"",
+    ""KR-41"",
+    ""KR-51"",
+    ""KR-43"",
+    ""KR-44"",
+    ""KR-52"",
+    ""KR-46"",
+    ""KR-47"",
+    ""KR-48"",
+    ""KR-49"",
+    ""KR-50""
+  )
+  code <- coalesce(h_area, p_area)
+  coalesce(iso[ifelse(code %in% 1:17, code, NA)], ""Unknown"")
+})","Household's province or metropolitan city (h_area; the person-file copy p_area where the household record is missing, 727 rows; the two agree on every row with both), one code list in every year (H codebook), as its current ISO 3166-2 code: 1 Seoul KR-11, 2 Busan KR-26, 3 Daegu KR-27, 4 Incheon KR-28, 5 Gwangju KR-29, 6 Daejeon KR-30, 7 Ulsan KR-31, 8 Gyeonggi KR-41, 9 Gangwon KR-51, 10 Chungbuk KR-43, 11 Chungnam KR-44, 12 Jeonbuk KR-52, 13 Jeonnam KR-46, 14 Gyeongbuk KR-47, 15 Gyeongnam KR-48, 16 Jeju KR-49, 17 Sejong KR-50 (from 2013). 2010 sampled Seoul, the capital area and the six metropolitan cities only. Asked every year, so nothing is carried.",,
 ethnicity,unavailable,,,Not collected.,,
 indigenous,unavailable,,,Not collected.,,
 minority,unavailable,,,Not collected.,,
 immigrant_background,unavailable,,,Not collected.,,
 born_in_country,unavailable,,,Not collected.,,
-home_language,in_progress,,,,,
+home_language,unavailable,,,Not collected.,,
 ses_area,unavailable,,,Not collected.,,
 ses_household,proximate,"h_h_income1, p_age1, .wave","local({
   band <- na_if(h_h_income1, 9999)
@@ -123,8 +168,22 @@ parental_education,proximate,"mother_school, mother_school2, father_school, fath
     default = ""Unknown""
   )
 })","Higher of the two parent figures' ranked levels; don't-know codes dropped first, so one known parent suffices. Parent figure's own highest level (p_school) and completion (p_school2) from their person row: the head and spouse for a child of the head, the head's child and child-in-law for a grandchild. Linked and carried in the tidier (earliest year with a value). University (code 5) graduates pool junior-college and four-year degrees; they go to Bachelor as the level assumed to hold most, hence proximate.",maternal_education,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,compatible,mother_job1,"recode_values(as.numeric(mother_job1), 1 ~ ""Employed"", 2 ~ ""Not employed"", default = ""Unknown"")","Mother figure as for maternal_education: the female head or spouse for a child of the head, the female child or child-in-law of the head for a grandchild, only where one member qualifies. Her own answer on her person questionnaire, every year 2010-2024, to 'has a job' (p_job1, current), linked from her person row in the tidier (mother_job1): 1 yes = Employed (wage workers, employers, own-account and unpaid family workers, p_job2); 2 no = Not employed (mostly full-time homemakers, also students and other, p_job4). Carried in the tidier as one record across gaps of 12 months or less (551 values); no mother figure or no linked person row = Unknown.",,
+maternal_age,compatible,"p_rel, .wave, d_mm1st, d_dd1st, h_m1_rel, h_m2_rel, h_m3_rel, h_m4_rel, h_m5_rel, h_m6_rel, h_m7_rel, h_m8_rel, h_m9_rel, h_m10_rel, h_m1_gen, h_m2_gen, h_m3_gen, h_m4_gen, h_m5_gen, h_m6_gen, h_m7_gen, h_m8_gen, h_m9_gen, h_m10_gen, h_m1_dob, h_m2_dob, h_m3_dob, h_m4_dob, h_m5_dob, h_m6_dob, h_m7_dob, h_m8_dob, h_m9_dob, h_m10_dob","local({
+  n <- length(p_rel)
+  rel <- cbind(h_m1_rel, h_m2_rel, h_m3_rel, h_m4_rel, h_m5_rel, h_m6_rel, h_m7_rel, h_m8_rel, h_m9_rel, h_m10_rel)
+  gen <- cbind(h_m1_gen, h_m2_gen, h_m3_gen, h_m4_gen, h_m5_gen, h_m6_gen, h_m7_gen, h_m8_gen, h_m9_gen, h_m10_gen)
+  dob <- cbind(h_m1_dob, h_m2_dob, h_m3_dob, h_m4_dob, h_m5_dob, h_m6_dob, h_m7_dob, h_m8_dob, h_m9_dob, h_m10_dob)
+  mothers <- matrix((p_rel %in% 3 & rel %in% 1:2) | (p_rel %in% 5 & rel %in% 3:4), n) & matrix(gen %in% 2, n)
+  born <- rowSums(ifelse(mothers, dob, 0))
+  born[rowSums(mothers) != 1 | !born %in% 1880:2030] <- NA
+  year <- 2000 + as.integer(.wave)
+  day <- as.Date(sprintf(""%d-%02d-%02d"", year, as.integer(d_mm1st), as.integer(d_dd1st)), format = ""%Y-%m-%d"")
+  frac <- (as.numeric(day - as.Date(sprintf(""%d-01-01"", year))) + 0.5) / 365.25
+  mid <- tapply(frac, .wave, stats::median, na.rm = TRUE)
+  frac <- ifelse(is.na(frac), mid[.wave], frac)
+  year - born + frac - 0.5
+})","Mother figure as for maternal_education: the female head or spouse for a child of the head, the female child or child-in-law of the head for a grandchild, only where one member qualifies. Her birth year from that year's household roster (h_m*_dob, household questionnaire; agrees with her own person-file birth year on all but 50 of 37,788 linked rows). Survey year minus birth year adjusted to the first diary day, which dates the interview (d_mm1st, d_dd1st; the wave's median diary day for 13 rows with no valid date): survey year + fraction of the year elapsed - (birth year + 0.5). Each year from its own roster, not carried; birth year 9999 = NA; values outside 12-70 kept as entered.",,
 urbanicity,proximate,"h_area_siz, p_area_siz","recode_values(coalesce(h_area_siz, p_area_siz), 1 ~ ""Urban"", 2 ~ ""Rural"", default = ""Unknown"")","Administrative area type of the household (h_area_siz; person-file copy p_area_siz where the household record is missing): 1 city (si-bu) = Urban, 2 county (gun-bu) = Rural. Proximate: binary city/county split, not a settlement-size typology.",,
 family_structure,proximate,parent_figures,"coalesce(
   recode_values(
@@ -205,8 +264,13 @@ school_grade,compatible,"p_school4, p_school6, p_school8","case_when(
   p_school6 %in% 1:3 ~ paste(""Middle School"", c(""1st"", ""2nd"", ""3rd"")[p_school6], ""Grade""),
   p_school8 %in% 1:3 ~ paste(""High School"", c(""1st"", ""2nd"", ""3rd"")[p_school8], ""Grade"")
 )","Self-reported current grade for enrolled elementary (p_school4, 1-6), middle (p_school6, 1-3) and high school (p_school8, 1-3) students; undocumented code 9 and 9999 = NA.",,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,incompatible,p_school9,,"Only the high-school type (p_school9: general, vocational, special-purpose, autonomous), not public or private management; see school_track. No sector item.",,
+school_track,proximate,"p_school4, p_school6, p_school9","case_when(
+  !is.na(p_school4) | !is.na(p_school6) ~ ""Not tracked"",
+  p_school9 %in% c(""1"", ""4"") ~ ""Academic"",
+  p_school9 %in% c(""2"", ""5"") ~ ""Vocational"",
+  .default = ""Unknown""
+)","Enrolled elementary (grade item p_school4) and middle-school students (p_school6) = Not tracked: Korea has a single-track 6-3-3-4 system whose school types (general, special-purpose, vocational, autonomous) are high-school types (Korean Education Centre in the UK, https://koreaneducentreinuk.org/en/education-in-korea/). High-school students by school type (p_school9, self-report): 2011-2016 general stream (1) = Academic, vocational (2) = Vocational; 2017-2024 general high school (4) = Academic, specialised (vocational) high school (5) = Vocational. Special-purpose (6) and autonomous (7) high schools, other (3) and 9999 = Unknown, as the codebook does not say which programme they follow; 2010 holds free text and 0 (151 rows) = Unknown; university students, students on leave and those not enrolled = Unknown. Proximate: the 2011-2016 codes do not separate special-purpose and autonomous schools, which may sit in the general or other codes. The 2011-2016 high-school department item (p_school10: humanities, natural sciences, engineering and so on) is not a track and is unused.",,
 st_measure_type,inferred,,"""Continuous""","Three-day media diary in 15-minute slots (main and simultaneous medium, activity and connection per slot); KISDI's per-day minutes per code.",,
 st_measure_name,inferred,,"""Time use diary""","KMPS media diary, three consecutive days per respondent, every year 2010-2024.",,
 st_responder,inferred,,"""Self""","Every household member aged 6+ keeps their own diary (user guide p.6, p.16).",,
@@ -318,21 +382,21 @@ st_educational,partial,"d_A_time42_wd, d_A_time46_wd, d_A_time42_we, d_A_time46_
   (5 * (d_A_time42_wd + d_A_time46_wd) + 2 * (d_A_time42_we + d_A_time46_we)) / 7 / 60,
   NA
 )","2020-2024 only (codes introduced 2020 and 2022). Sum of activity codes 42 learning videos and 46 online classes (DR-0002); partial: other screen study (document work, information search) cannot be separated from non-study use. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
-st_leisure_wd,in_progress,,,,,
-st_leisure_we,in_progress,,,,,
-st_leisure,in_progress,,,,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch_wd,unavailable,,,No weekday/weekend split.,,
+st_violent_watch_we,unavailable,,,No weekday/weekend split.,,
+st_violent_watch,incompatible,h_d01026,,"Only the household respondent's yes/no on whether violent scenes are among their concerns about the children's TV use (h_d01026, 2020-2024), an attitude to media violence with no hours; no row holds it. The diary does not code content.",,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,incompatible,h_d01026,,"Only the household respondent's yes/no concern about violent scenes in the children's TV use (h_d01026, 2020-2024), an attitude item with no titles or ratings; no row holds it.",,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch and st_violent_game.,,
+st_educontent_watch_wd,incompatible,d_A_time42_wd,,"Diary activity code 42, learning videos (2020-2024), already fills st_educational_wd as study use; no diary code classifies programmes as educational.",,
+st_educontent_watch_we,incompatible,d_A_time42_we,,"Diary activity code 42, learning videos (2020-2024), already fills st_educational_we as study use; no diary code classifies programmes as educational.",,
+st_educontent_watch,incompatible,"d_A_time42_wd, d_A_time42_we, p_d02001, p_d02002, p_d02003, p_d26045, p_d26063",,"Diary activity code 42, learning videos (2020-2024), already fills st_educational as study use, and no diary code classifies programmes as educational; the favourite TV genre ranks (p_d02001-p_d02003) and the main OTT content genre (p_d26045 2021, p_d26063 2022-2024), each offering education or learning, are preferences with no hours.",,
 st_work_wd,incompatible,"d_A_time24_wd, d_A_time24_we",,"Activity code 24 (document work: word processor, spreadsheet, slides) pools paid work with study; no item on work use.",,
 st_work_we,incompatible,"d_A_time24_wd, d_A_time24_we",,"Activity code 24 (document work: word processor, spreadsheet, slides) pools paid work with study; no item on work use.",,
 st_work,incompatible,"d_A_time24_wd, d_A_time24_we",,"Activity code 24 (document work: word processor, spreadsheet, slides) pools paid work with study; no item on work use.",,
@@ -343,20 +407,20 @@ st_internet,partial,"d_C_time9_wd, d_C_time10_wd, d_C_time11_wd, d_C_time12_wd, 
   2 * (d_C_time9_we + d_C_time10_we + d_C_time11_we + d_C_time12_we + d_C_time13_we + d_C_time21_we)) /
   7 /
   60","Sum of diary connection codes for internet routes: wired, mobile data, Wi-Fi, mobile router, WiBro and OTT app/web (9-13, 21; DR-0002). Partial: main and simultaneous media are each counted, so two online media in one slot count twice. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,compatible,"d_A_time44_wd, .wave","ifelse(as.integer(.wave) >= 21, d_A_time44_wd / 60, NA)","2021-2024 only: diary activity code 44, video calls (voice and video calls were one code, 16, before 2021). Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_videochat_we,compatible,"d_A_time44_we, .wave","ifelse(as.integer(.wave) >= 21, d_A_time44_we / 60, NA)","2021-2024 only: diary activity code 44, video calls (voice and video calls were one code, 16, before 2021). Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
 st_videochat,compatible,"d_A_time44_wd, d_A_time44_we, .wave","ifelse(as.integer(.wave) >= 21, (5 * d_A_time44_wd + 2 * d_A_time44_we) / 7 / 60, NA)","2021-2024 only: diary activity code 44, video calls (voice and video calls were one code, 16, before 2021). (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
 st_messaging_wd,compatible,"d_A_time17_wd, d_A_time19_wd",(d_A_time17_wd + d_A_time19_wd) / 60,Sum of diary activity codes 17 text messages and 19 chat/messenger (DR-0002). Tidier's mean over the diary days flagged as weekdays; minutes / 60.,,
 st_messaging_we,compatible,"d_A_time17_we, d_A_time19_we",(d_A_time17_we + d_A_time19_we) / 60,Sum of diary activity codes 17 text messages and 19 chat/messenger (DR-0002). Tidier's mean over the diary days flagged as weekend days; minutes / 60.,,
 st_messaging,compatible,"d_A_time17_wd, d_A_time19_wd, d_A_time17_we, d_A_time19_we",(5 * (d_A_time17_wd + d_A_time19_wd) + 2 * (d_A_time17_we + d_A_time19_we)) / 7 / 60,"Sum of diary activity codes 17 text messages and 19 chat/messenger (DR-0002). (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,partial,"d_A_time25_wd, d_A_time47_wd",(d_A_time25_wd + d_A_time47_wd) / 60,Sum of activity codes 25 graphics and programming work and 47 photo/video shooting and editing (from 2022) (DR-0002). Partial: content posted through social media sits in code 21. Tidier's mean over the diary days flagged as weekdays; minutes / 60.,,
+st_creating_we,partial,"d_A_time25_we, d_A_time47_we",(d_A_time25_we + d_A_time47_we) / 60,Sum of activity codes 25 graphics and programming work and 47 photo/video shooting and editing (from 2022) (DR-0002). Partial: content posted through social media sits in code 21. Tidier's mean over the diary days flagged as weekend days; minutes / 60.,,
 st_creating,partial,"d_A_time25_wd, d_A_time47_wd, d_A_time25_we, d_A_time47_we",(5 * (d_A_time25_wd + d_A_time47_wd) + 2 * (d_A_time25_we + d_A_time47_we)) / 7 / 60,"Sum of activity codes 25 graphics and programming work and 47 photo/video shooting and editing (from 2022) (DR-0002). Partial: content posted through social media sits in code 21. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,compatible,d_A_time18_wd,d_A_time18_wd / 60,"Diary activity code 18, e-mail. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_email_we,compatible,d_A_time18_we,d_A_time18_we / 60,"Diary activity code 18, e-mail. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
 st_email,compatible,"d_A_time18_wd, d_A_time18_we",(5 * d_A_time18_wd + 2 * d_A_time18_we) / 7 / 60,"Diary activity code 18, e-mail. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,partial,d_A_time22_wd,d_A_time22_wd / 60,"Diary activity code 22, online commerce; partial: the code also covers online banking, payments, bookings and taxi calls. Tidier's mean over the diary days flagged as weekdays; minutes / 60.",,
+st_shopping_we,partial,d_A_time22_we,d_A_time22_we / 60,"Diary activity code 22, online commerce; partial: the code also covers online banking, payments, bookings and taxi calls. Tidier's mean over the diary days flagged as weekend days; minutes / 60.",,
 st_shopping,partial,"d_A_time22_wd, d_A_time22_we",(5 * d_A_time22_wd + 2 * d_A_time22_we) / 7 / 60,"Diary activity code 22, online commerce; partial: the code also covers online banking, payments, bookings and taxi calls. (5 x weekday mean + 2 x weekend mean) / 7, NA unless the diary has both day types; minutes / 60.",,
 st_total_school,incompatible,"d_M_edutime3_wd, d_M_edutime7_wd, d_M_edutime19_wd",,No all-screen item; a sum of separately recorded media at an education facility is not a total (DR-0004).,,
 st_educational_school,partial,"d_A_edutime42_wd, d_A_edutime46_wd, .wave","ifelse(as.integer(.wave) >= 20, (d_A_edutime42_wd + d_A_edutime46_wd) / 60, NA)","2020-2024 only. Learning videos and online classes (activity 42, 46) at an education facility; sum (DR-0002). Minutes at an education facility (diary place code 4, which also covers private academies), averaged in the tidier over weekday diary days with any time there; minutes / 60.",,
@@ -714,7 +778,7 @@ wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
 wb_qol_chu9d_self,in_progress,,,,,
 wb_selfesteem_rosenberg_self,incompatible,"p_h01001, p_h01002, p_h01003, p_h01004, p_h01005, p_h01006, p_h01007, p_h01008, p_h01009, p_h01010",,"2015, 2020, 2021, ages 13+: the ten Rosenberg Self-Esteem Scale items use a 4-point truth-frequency scale (not really, average, mostly, always) instead of the published agreement scale; scored in wb_selfesteem_self (see wb_selfesteem_measure).",,
 wb_selfesteem_singleitem_self,in_progress,,,,,
-wb_selfesteem_self,compatible,"p_h01001, p_h01002, p_h01003, p_h01004, p_h01005, p_h01006, p_h01007, p_h01008, p_h01009, p_h01010","local({
+wb_selfesteem_self,compatible,"p_h01001, p_h01002, p_h01003, p_h01004, p_h01005, p_h01006, p_h01007, p_h01009, p_h01010","local({
   items <- cbind(
     p_h01001,
     p_h01002,
@@ -723,16 +787,15 @@ wb_selfesteem_self,compatible,"p_h01001, p_h01002, p_h01003, p_h01004, p_h01005,
     5 - p_h01005,
     p_h01006,
     p_h01007,
-    5 - p_h01008,
     5 - p_h01009,
     5 - p_h01010
   )
   items[!items %in% 1:4] <- NA
   rowSums(items)
-})","2015, 2020, 2021, ages 13+: Rosenberg Self-Esteem Scale, 10 items, 1-4 (not really, average, mostly, always), items 3, 5, 8, 9 and 10 (the negatively worded ones) reversed; sum 10-40, complete case.",,
+})","2015, 2020, 2021, ages 13+: Rosenberg Self-Esteem Scale, 9 of 10 items, 1-4 (not really, average, mostly, always), items 3, 5, 9 and 10 (negatively worded) reversed; sum 9-36, complete case. Item 8 ('I wish I could have more respect for myself', p_h01008) is dropped from this generic row: reversed per the published key, it correlates below zero with the sum of the other nine items in every wave (2015 -0.08, 2020 -0.17, 2021 -0.15).",,
 wb_selfesteem_measure,inferred,.wave,"ifelse(
   .wave %in% c(""15"", ""20"", ""21""),
-  ""Rosenberg Self-Esteem Scale, 10 of 10 items, 1-4 item scoring (range 10-40), sum; items 3, 5, 8, 9, 10 reversed; responses not really, average, mostly, always instead of strongly disagree to strongly agree"",
+  ""Rosenberg Self-Esteem Scale, 9 of 10 items, 1-4 item scoring (range 9-36), sum; items 3, 5, 9, 10 reversed; item 8 dropped (keyed item-total correlation below zero); responses not really, average, mostly, always instead of strongly disagree to strongly agree"",
   NA
 )","Waves 15, 20 and 21 (2015, 2020, 2021); see wb_selfesteem_self.",,
 wb_selfefficacy_gse_self,unavailable,,,GSE not administered; see wb_selfefficacy_self.,,
@@ -772,22 +835,26 @@ hlth_sleep_we,partial,d_sleep_we,d_sleep_we / 60,"2011-2024 (no sleep slots in 2
 hlth_sleep,partial,"d_sleep_wd, d_sleep_we",(5 * d_sleep_wd + 2 * d_sleep_we) / 7 / 60,"2011-2024 (no sleep slots in 2010): diary sleep flag per 15-minute slot, 1 = asleep, summed over the calendar day (midnight to midnight) in the tidier. Partial: counts naps and the end and start of two nights rather than one night. (5 x weekday + 2 x weekend) / 7, NA unless both day types are in the diary.",,
 hlth_sleepprob,unavailable,,,Not collected.,,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not collected.,,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,compatible,"p_g01019, p_g01020","local({
+  height <- ifelse(p_g01019 %in% 9999, NA, p_g01019)
+  weight <- ifelse(p_g01020 %in% 9999, NA, p_g01020)
+  weight / (height / 100)^2
+})","2014 only (health behaviour section), ages 13 and over (4 younger rows): the participant's own report of height in cm (p_g01019) and weight in kg (p_g01020) in the person questionnaire; kg / m2 computed. 9999 (don't know or no answer; 32 heights, 51 weights) = NA. Not carried.",,
+hlth_bmi_measure,inferred,"p_g01019, p_g01020","if_else(!is.na(p_g01019) | !is.na(p_g01020), ""Self-reported"", NA_character_)",2014 rows given the health behaviour section: height and weight reported by the participant in their own person questionnaire; NA elsewhere.,,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,incompatible,"p_g01001, p_g01004, p_g01007",,"2014 only: days in the past week of vigorous activity (p_g01001), moderate activity (p_g01004) and walking (p_g01007), each with its own daily time; not the days-of-60-minutes item. No row holds them.",,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,unavailable,,,Not collected.,,
+hlth_disability,incompatible,p_f05003,,"Only the 2017 EQ-5D usual-activities item (p_f05003: no problems, some problems, unable), a rating of health today with no long-term condition; no row holds it.",,
 st_measure_type,inferred,,"""Continuous""",Open hours and minutes per day in the person questionnaire.,,recall
 st_measure_name,inferred,,"""Custom""",KMPS person questionnaire items on SNS (2021-2024) and instant messenger (2024) time.,,recall
 st_responder,inferred,,"""Self""",Each household member aged 6+ answers their own person questionnaire.,,recall

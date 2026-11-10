@@ -6,15 +6,19 @@ rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,compatible,rakedw0,as.numeric(rakedw0),"Final raked weight of the child or adolescent file (rakedw0), every row, not rescaled. Replicate weights rakedw1-rakedw80 are not harmonised.",,
 survey_strata,unavailable,,,Not in the supplied extract; the public-use files withhold the geographic design variables.,,
 survey_cluster,unavailable,,,Not in the supplied extract; the public-use files withhold the geographic design variables.,,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,unavailable,,,Not in the supplied extract.,,
+sample_component,unavailable,,,Not in the supplied extract.,,
 sample_population,inferred,,"""General population""","Population-based telephone survey of California households (CHIS data dictionaries, section 2.1).",,
-parent_respondent,in_progress,,,,,
+parent_respondent,proximate,"cohort, srsex_a","case_when(
+  cohort == ""child"" ~ ""Unknown"",
+  as.numeric(haven::zap_labels(srsex_a)) == 2 ~ ""Mother"",
+  as.numeric(haven::zap_labels(srsex_a)) == 1 ~ ""Father""
+)","Child file (ages 0-11): the adult most knowledgeable about the child (MKA) answers the child interview, screen-time items included, and the public file releases neither the MKA's relationship nor sex = Unknown. Adolescent file: the screen items are self-reported and the parent values come from the sampled adult's interview (by design the adolescent's parent or legal guardian, data dictionaries s2.2-2.3), which records only that adult's sex (srsex_a): female = Mother, male = Father, proximate; no adult interview (-5) = NA. Not carried.",,
 age_years,compatible,"srage, srage_p","coalesce(as.numeric(srage), as.numeric(srage_p)) + 0.5","Completed years + 0.5: srage (2001), srage_p (2005-2009). Child file 0-11 (MKA-reported; 2001 code 0 = under 1 year), adolescent file 12-17 (self-reported).",,
 sex,compatible,srsex,"recode_values(as.numeric(srsex), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")","Gender item, male or female (srsex), all cycles; reported by the adult most knowledgeable about the child (MKA) in the child file and by the adolescent in the adolescent file.",,
 country,inferred,,"""USA""","No country variable; CHIS samples California households only (data dictionaries, s2.1).",,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,unavailable,,,"No residence item, and region takes no constant from study context.",,
 ethnicity,proximate,racedo_p,"lookup_values(
   recode_values(
     as.numeric(racedo_p),
@@ -49,7 +53,18 @@ born_in_country,compatible,"chcntrys, cntrys","recode_values(
   c(2, 3, 4, 5, 6, 7) ~ ""No"",
   default = ""Unknown""
 )","Country born in (chcntrys, 2001 child file; cntrys otherwise): United States = Yes, regions abroad = No; not ascertained or inapplicable (10 rows, 2001) = Unknown. MKA-reported for children.",,
-home_language,in_progress,,,,,
+home_language,compatible,"langhm_p, langhome, lnghme_p","local({
+  a <- as.numeric(haven::zap_labels(langhm_p))
+  b <- as.numeric(haven::zap_labels(langhome))
+  c9 <- as.numeric(haven::zap_labels(lnghme_p))
+  case_when(
+    a == 1 | b == 1 | c9 == 1 ~ ""Country language only"",
+    a %in% 2:5 | b %in% 2:7 | c9 %in% c(2, 3, 4, 10) ~ ""Another language only"",
+    a %in% 6:10 | b %in% 8:12 | c9 %in% 5:9 ~ ""Country language and another"",
+    a == 11 | b == 13 | c9 == 11 ~ ""Another language, country language not recorded"",
+    .default = ""Unknown""
+  )
+})","Languages spoken at home, every cycle: child file 'In general, what languages are spoken in (CHILD)'s home?' (MKA), adolescent file 'What languages do you speak at home?' (self), released as CHIS recodes (langhm_p 2001; langhome 2005-2009 child and 2005-2007 adolescent; lnghme_p 2009 adolescent); English counted as the country language. English only = Country language only; one other language only (Spanish, Chinese, Vietnamese, Korean, other) = Another language only; English and one other = Country language and another; 'other languages (2+)', which does not record whether English is among them = Another language, country language not recorded; not ascertained = Unknown. One row per participant, so nothing to carry. The interview language (intvlang) and English proficiency items are unused.",,
 ses_area,unavailable,,,Not collected.,,
 ses_household,compatible,"povll2_p, povll, .wave","case_when(
   .wave == ""2001"" ~ recode_values(as.numeric(povll), c(1, 2) ~ ""Low"", 3 ~ ""Medium"", 4 ~ ""High"", default = ""Unknown""),
@@ -135,8 +150,16 @@ paternal_education,proximate,"srsex_a, ahedu, aheduc, .wave","lookup_values(
   default = ""Unknown""
 )","As maternal_education, for a male sampled adult (srsex_a = 1); female adults and adult data not collected = Unknown. Proximate: relationship not released, so male guardians who are not fathers count, and the father is unobserved where the mother was sampled.",maternal_education,
 parental_education,incompatible,"ahedu, aheduc, cheduca_4lvl, cheduca_11lvl",,"Only one parent's or guardian's education per row: the sampled adult's (ahedu, aheduc; see maternal_education and paternal_education) and, in the child file, the MKA's (cheduca_4lvl, cheduca_11lvl), who may be the same person.",,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,proximate,"srsex_a, ak1","case_when(
+  as.numeric(haven::zap_labels(srsex_a)) == 2 & as.numeric(ak1) %in% c(1, 2) ~ ""Employed"",
+  as.numeric(haven::zap_labels(srsex_a)) == 2 & as.numeric(ak1) %in% c(3, 4) ~ ""Not employed"",
+  .default = ""Unknown""
+)","2001 and 2005 only: the sampled adult's work status last week (ak1): working at a job or business, or with one but not at work = Employed; looking for work, or not working and not looking = Not employed; used where that adult is female (srsex_a = 2; by design the child's or adolescent's parent or legal guardian, relationship not released). Male adults, no adult interview (-5) and 2007-2009 (no work-status item in the release) = Unknown. Proximate: a responding parent of unrecorded relationship used as the mother. One row per participant, so nothing is carried.",,
+maternal_age,partial,"srsex_a, agegrp_a","if_else(
+  as.numeric(haven::zap_labels(srsex_a)) == 2,
+  recode_values(as.numeric(haven::zap_labels(agegrp_a)), 1 ~ 29.5, 2 ~ 35, 3 ~ 45, 4 ~ 55, 5 ~ 60.5),
+  NA_real_
+)","Age group of the sampled adult (agegrp_a: under 30, 30-39, 40-49, 50-59, 60 and over), every cycle, used where that adult is female (srsex_a = 2; by design the child's or adolescent's parent or legal guardian, relationship not released): closed bands at (a + b + 1) / 2 (35, 45, 55), open bands at their inclusive bound + 0.5 (under 30 = 29.5, 60 and over = 60.5). Male adults and no adult interview (-5) = NA. Partial: multi-year bands (under 30 holds up to 19% of a cycle's mothers), and the respondent's relationship to the child is not recorded. Not carried.",,
 urbanicity,proximate,ur_clrt,"recode_values(as.numeric(ur_clrt), c(1, 2) ~ ""Urban"", 3 ~ ""Suburban"", c(4, 5) ~ ""Rural"", default = ""Unknown"")","Claritas urbanicity of the residential ZIP code (ur_clrt): urban and second city = Urban, suburban = Suburban, small town-exurban and rural (2001, 5 levels) or town and rural (2005-2009, 4 levels) = Rural; not ascertained (39 rows, 2001) = Unknown. Proximate: commercial typology, second cities placed in Urban.",,
 family_structure,proximate,"famtp_p, famt4","case_when(
   as.numeric(famtp_p) == 1 | as.numeric(famt4) == 3 ~ ""Two biological/adoptive parents"",
@@ -206,8 +229,8 @@ fam_home_cogstim,in_progress,,,,,
 fam_home_emotsupport,in_progress,,,,,
 fam_home_measure,in_progress,,,,,
 school_grade,unavailable,,,Not collected.,,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,compatible,sch_typ,"recode_values(as.numeric(haven::zap_labels(sch_typ)), 1 ~ ""Public"", 2 ~ ""Private"", default = ""Unknown"")","2005-2009 only: the study's type of school attended (sch_typ; children and adolescents attending school, MKA report for children, self-report for adolescents): public school = Public, private school = Private; other (2007-2009), inapplicable (not in school), not ascertained and 2001 (not in the release) = Unknown.",,
+school_track,unavailable,,,Not collected.,,
 st_measure_type,inferred,,"""Continuous""","Open entry of whole hours per day, with codes for more than 0 but less than 1 hour (94) and no TV or no PC access (93). The 2001 public-use file releases top-coded recodes (*_p).",,
 st_measure_name,inferred,,"""Custom""",Sedentary-time items written for the CHIS child and adolescent questionnaires.,,
 st_responder,inferred,cohort,"if_else(cohort == ""child"", ""Parent or carer"", ""Self"")","Child file (ages 0-11): the MKA, a parent or guardian, answers by proxy. Adolescent file (12-17): self-report. Cut by CHIS component (cohort).",,
@@ -320,41 +343,41 @@ st_socmedia,unavailable,,,Not collected.,,
 st_educational_wd,unavailable,,,Not collected.,,
 st_educational_we,unavailable,,,Not collected.,,
 st_educational,unavailable,,,Not collected.,,
-st_leisure_wd,in_progress,,,,,
-st_leisure_we,in_progress,,,,,
-st_leisure,in_progress,,,,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_leisure_wd,incompatible,"cg8_p, cg8, te12_p, te12, cg9_p, cg9, te13_p, te13",,"Single-device leisure items only on weekdays: free-time TV or video games (cg8_p, cg8, te12_p, te12; st_watch_wd) and computer for fun, not schoolwork (cg9_p, cg9, te13_p, te13; st_comp_wd); separately asked items are never summed (DR-0004).",,
+st_leisure_we,incompatible,"cg10_p, cg10, te14_p, te14, cg11_p, cg11, te15_p, te15",,"Single-device leisure items only on weekends: TV or video games (cg10_p, cg10, te14_p, te14; st_watch_we) and computer for fun, not schoolwork (cg11_p, cg11, te15_p, te15; st_comp_we); separately asked items are never summed (DR-0004).",,
+st_leisure,incompatible,"cg8_p, cg8, te12_p, te12, cg10_p, cg10, te14_p, te14, cg9_p, cg9, te13_p, te13, cg11_p, cg11, te15_p, te15",,"Single-device leisure items only: TV or video games (st_watch) and computer for fun, not schoolwork (st_comp), weekday and weekend; separately asked items are never summed (DR-0004).",,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch and st_violent_game.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
 st_internet_wd,unavailable,,,Not collected.,,
 st_internet_we,unavailable,,,Not collected.,,
 st_internet,unavailable,,,Not collected.,,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
 st_videochat,unavailable,,,Not collected.,,
 st_messaging_wd,unavailable,,,Not collected.,,
 st_messaging_we,unavailable,,,Not collected.,,
 st_messaging,unavailable,,,Not collected.,,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
 st_creating,unavailable,,,Not collected.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
 st_email,unavailable,,,Not collected.,,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,unavailable,,,No item on use at school.,,
 st_educational_school,unavailable,,,No item on use at school.,,
@@ -763,19 +786,57 @@ hlth_sleep_we,unavailable,,,Not collected.,,
 hlth_sleep,unavailable,,,Not collected.,,
 hlth_sleepprob,unavailable,,,Not collected.,,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not collected.,,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,compatible,"hghti, wghtp, hghti_p, wghtp_p","local({
+  inch <- coalesce(as.numeric(haven::zap_labels(hghti)), as.numeric(haven::zap_labels(hghti_p)))
+  lb <- coalesce(as.numeric(haven::zap_labels(wghtp)), as.numeric(haven::zap_labels(wghtp_p)))
+  inch <- if_else(inch > 0, inch, NA_real_)
+  lb <- if_else(lb > 0, lb, NA_real_)
+  703 * lb / inch^2
+})","Height (inches) and weight (pounds) at the interview, every cycle: child file reported by the MKA, adolescent file self-reported (hghti, wghtp 2001; PUF recodes hghti_p, wghtp_p 2005-2009); BMI = 703 x pounds / inches squared. Negative codes (inapplicable, mainly the youngest children, don't know, refused) = NA. The release bounds the entries (e.g. children 18-65 in and 6-175 lb, adolescents 42-77 in and up to 240-330 lb), each bound holding at most 1.1% of a cycle's values and taken at it. The study's own adolescent BMI (bmi 2001, bmi_p 2005-2009) and the BMI-for-age classes (rbmi, ovrwt) are unused. Never carried.",,
+hlth_bmi_measure,inferred,"cohort, hghti, wghtp, hghti_p, wghtp_p","local({
+  inch <- coalesce(as.numeric(haven::zap_labels(hghti)), as.numeric(haven::zap_labels(hghti_p)))
+  lb <- coalesce(as.numeric(haven::zap_labels(wghtp)), as.numeric(haven::zap_labels(wghtp_p)))
+  ok <- inch > 0 & lb > 0
+  case_when(!(ok %in% TRUE) ~ NA_character_, cohort == ""child"" ~ ""Parent-reported"", .default = ""Self-reported"")
+})","Rows with a BMI: child file = Parent-reported (the MKA's proxy report), adolescent file = Self-reported; NA elsewhere.",,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,proximate,"th27, srage_p","local({
+  m <- as.numeric(haven::zap_labels(th27))
+  age <- as.numeric(haven::zap_labels(srage_p))
+  case_when(m == 0 ~ 0, m > 0 & m <= age ~ 1, m > age ~ 0)
+})","2005 and 2007 adolescents, girls only, self-report: age at first menstrual period (th27), read against the age at the interview in completed years (srage_p): not started yet (0) or a later age = 0, at or below the current age = 1; boys (inapplicable), don't know and refused = NA. Proximate: menarche alone. Never carried.",,
+hlth_puberty_measure,inferred,"cohort, .wave","if_else(
+  cohort == ""teen"" & .wave %in% c(""2005"", ""2007""),
+  ""Study item on age at first menstrual period (self, girls), 1 of 1 items, read against age at interview: not started or later = 0, at or before = 1 (range 0-1), menarche indicator"",
+  NA_character_
+)","2005 and 2007 adolescent rows, where the menarche item was asked; NA elsewhere.",,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,partial,".wave, te8, te49, cc35","local({
+  past <- if_else(
+    .wave != ""2001"" & as.numeric(haven::zap_labels(te8)) %in% 0:7,
+    as.numeric(haven::zap_labels(te8)),
+    NA_real_
+  )
+  usual <- if_else(as.numeric(haven::zap_labels(te49)) %in% 0:7, as.numeric(haven::zap_labels(te49)), NA_real_)
+  child <- if_else(as.numeric(haven::zap_labels(cc35)) %in% 0:7, as.numeric(haven::zap_labels(cc35)), NA_real_)
+  coalesce(past, usual, child)
+})","Adolescents 2005-2009, self-report: 'Not including school PE, in the past 7 days, on how many days were you physically active for at least 60 minutes total per day?' (te8; in 2009 asked of adolescents in school or home-schooled the week before); the 2009 adolescents not asked te8 take 'During a typical week, on how many days are you physically active for at least 60 minutes total per day? Do not include PE.' (te49), which is unused in 2005-2007 where both were asked. Children 5 and older, 2009, MKA report: the same past-7-days item (cc35). Partial: school PE excluded. 2001 asked adolescents only about 20 minutes of vigorous activity (te8 in 2001, yes/no, unused); 2001 and 2005 children were not asked. Never carried.",,
+hlth_birthweight,compatible,birthwk,"if_else(as.numeric(haven::zap_labels(birthwk)) > 0, as.numeric(haven::zap_labels(birthwk)) * 1000, NA_real_)","2005 child file only, MKA recall: 'How much did {he/she} weigh at birth?' (answered in pounds and ounces or kilograms), released in kilograms (birthwk) x 1,000; the pounds version (birthwp) is unused. Observed 0.91-4.99 kg, 0.3% and 0.5% of values at those ends, kept. Negative codes (don't know, refused, not ascertained) = NA. One row per participant, so nothing to carry.",,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,compatible,ca14,"recode_values(as.numeric(haven::zap_labels(ca14)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","2005 child file only, children aged 3 and younger, MKA: 'Was (CHILD) ever breastfed or fed breast milk?' (ca14): yes = TRUE, no = FALSE; older children (inapplicable) = NA. The age breastfeeding stopped (brstfd) is unused. One row per participant, so nothing to carry.",,
+hlth_prenatalsmoking,incompatible,hhsmk,,"Only household smoking at the interview (hhsmk: none, some days, every day; 2005-2009), not the mother's smoking in pregnancy; no row holds it.",,
+hlth_chroniccond_diagnosed,partial,".wave, ca12, ca31, tb5, tb17, tb10","local({
+  asth <- coalesce(as.numeric(haven::zap_labels(ca12)), as.numeric(haven::zap_labels(tb5)))
+  still <- coalesce(as.numeric(haven::zap_labels(ca31)), as.numeric(haven::zap_labels(tb17)))
+  diab <- as.numeric(haven::zap_labels(tb10))
+  case_when(
+    .wave == ""2001"" ~ NA_character_,
+    (asth == 1 & still == 1) | diab %in% 1 ~ ""Currently diagnosed"",
+    asth == 1 & still == 2 ~ ""Previously diagnosed"",
+    asth == 2 ~ ""Never diagnosed""
+  )
+})","2005-2009: 'Has a doctor ever told you that (CHILD) has asthma?' (ca12, MKA; tb5, adolescent self-report) with 'Does {he/she} still have asthma?' (ca31, tb17): told and still = Currently, told and not still = Previously, not told = Never. Adolescents in 2005 and 2007 were also asked whether a doctor ever told them they have diabetes (tb10): told = Currently (no current follow-up; binary ever-told rule). Partial: asthma, plus diabetes for 2005-2007 adolescents, only. 2001 = NA: it asked only the ever-told item and daily asthma medication (ca12a, tb6), a weaker current proxy that does not fill the cycle. The condition-type recodes (ca10, ca10a_p, conphy_p) are unused.",,
+hlth_disability,partial,ca7,"recode_values(as.numeric(haven::zap_labels(ca7)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","Child file 2001, 2005 and 2009 (MKA): 'Does (CHILD) currently have any physical, behavioral or mental conditions that limit or prevent {him/her} from doing childhood activities usual for {his/her} age?' (ca7): yes = TRUE, no = FALSE; don't know and refused = NA. Partial: physical pooled with behavioral and mental conditions, with no long-term wording. Adolescents were not asked (NA). The school-limitation items (ca8, ca9) and condition-type follow-ups (ca10) are unused. Never carried.",,

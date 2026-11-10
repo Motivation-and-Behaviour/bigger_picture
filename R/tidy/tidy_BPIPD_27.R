@@ -6,7 +6,7 @@
 #'   cohort-member number and form the spine;
 #' - `hhgrid` holds one row per household member and is read at two grains:
 #'   the cohort member's own row joins the spine, the rest of the roster
-#'   supplies each responding parent's sex;
+#'   supplies each responding parent's sex and paid work;
 #' - family modules are keyed on family alone and are broadcast to every
 #'   cohort member in the family (MCS families can hold twins or triplets);
 #' - parent modules hold one row per responding parent, reduced to one row
@@ -445,6 +445,8 @@ bp27_prefix_shared_columns <- function(sweeps) {
     "mcs_cnum",
     "respondent_sex",
     "respondent_sex_PARTNER",
+    "respondent_paid_work",
+    "respondent_paid_work_PARTNER",
     "respondent_born_uk",
     "respondent_born_uk_PARTNER",
     ".wave",
@@ -510,7 +512,7 @@ bp27_hhgrid_cohort_members <- function(tbl) {
   tbl[!is.na(cnum) & cnum >= 1, !roles]
 }
 
-#' Each household member's sex, from the rest of the household grid
+#' Each household member's sex and paid work, from the rest of the household grid
 bp27_person_sex <- function(grids) {
   if (length(grids) == 0) {
     return(NULL)
@@ -519,22 +521,33 @@ bp27_person_sex <- function(grids) {
   tbl <- grids[[1]]
   cnum <- tbl[[bp27_cm_key(tbl)[2]]]
   sex <- grep("PSEX", names(tbl), value = TRUE)
-  if (length(sex) != 1) {
+  job <- grep("PJOB", names(tbl), value = TRUE)
+  if (length(sex) != 1 || length(job) != 1) {
     stop(
-      "BPIPD-27: expected one household-grid sex column, found ",
-      length(sex),
-      ".",
+      "BPIPD-27: expected one household-grid sex and one paid-work column.",
       call. = FALSE
     )
   }
 
-  roster <- tbl[is.na(cnum) | cnum < 1, c("MCSID", bp27_person_key(tbl), sex)]
+  roster <- tbl[
+    is.na(cnum) | cnum < 1,
+    c("MCSID", bp27_person_key(tbl), sex, job)
+  ]
   roster[[sex]] <- haven::labelled(
     bp27_plain(roster[[sex]]),
     c(Male = 1L, Female = 2L),
     label = "Sex of the responding parent, from the household grid"
   )
-  names(roster)[3] <- "respondent_sex"
+  # Asked of every adult in the grid at each sweep; leave counts as paid work.
+  roster[[job]] <- haven::labelled(
+    bp27_plain(roster[[job]]),
+    c(Yes = 1L, No = 2L),
+    label = paste(
+      "Whether the responding parent is currently in paid work",
+      "(on leave coded yes), from the household grid"
+    )
+  )
+  names(roster)[3:4] <- c("respondent_sex", "respondent_paid_work")
   roster
 }
 

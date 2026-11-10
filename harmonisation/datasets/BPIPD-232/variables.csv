@@ -6,15 +6,20 @@ rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,compatible,fwc,as.numeric(fwc),"FWC: selected-child weight released with each annual file, not rescaled.",,
 survey_strata,compatible,"year, fipsst, stratum","paste(year, fipsst, stratum, sep = ""_"")","State (FIPSST) by STRATUM, the NSCH variance strata, prefixed with the survey year.",,
 survey_cluster,compatible,hhid,"sprintf(""%.0f"", as.numeric(hhid))",HHID: the household is the NSCH sampling unit (one sampled child per household); IDs are unique across years.,,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,unavailable,,,One participant per family.,,
+sample_component,unavailable,,,Single sample.,,
 sample_population,inferred,,"""General population""","Randomly selected US household addresses screened for children, one child sampled per household (NSCH sampling and administration documentation).",,
-parent_respondent,in_progress,,,,,
+parent_respondent,compatible,"a1_relation, a1_sex","case_when(
+  as.numeric(a1_relation) %in% c(1, 2, 4) & as.numeric(a1_sex) == 2 ~ ""Mother"",
+  as.numeric(a1_relation) %in% c(1, 2, 4) & as.numeric(a1_sex) == 1 ~ ""Father"",
+  as.numeric(a1_relation) %in% c(3, 5, 6, 7) ~ ""Other carer"",
+  .default = ""Unknown""
+)","Adult 1 is the respondent who completes the whole questionnaire, screen-time items included ('How are you related to this child?', A1_RELATION, with 'What is your sex?', A1_SEX), every year. Biological or adoptive, step and foster parents (1, 2, 4) = Mother if female, Father if male; grandparent (3), aunt or uncle (5, 2016-2017), other relative (6) and other non-relative (7) = Other carer; relationship missing (99, blank) or a parent's sex missing = Unknown. Not carried (one row per child).",,
 age_years,compatible,sc_age_years,as.numeric(sc_age_years) + 0.5,"Caregiver-reported age of the sampled child in completed years (0-17), + 0.5.",,
 sex,compatible,sc_sex,"recode_values(as.numeric(sc_sex), 1 ~ ""Male"", 2 ~ ""Female"", default = ""Unknown"")",Caregiver-reported sex of the sampled child.,,
 country,inferred,,"""USA""",Nationally representative US survey (50 states and DC).,,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,compatible,fipsst,"lookup_values(as.character(as.numeric(fipsst)), lookup_region_fips, default = ""Unknown"")","State of residence (FIPSST, the state FIPS code; 50 states and the District of Columbia, every row) as its ISO 3166-2 code through the dataset lookup region_fips. One row per child, so nothing is carried.",region_fips,
 ethnicity,proximate,"sc_hispanic_r, sc_race_r","lookup_values(
   case_when(
     as.numeric(sc_hispanic_r) == 1 ~ ""Hispanic"",
@@ -46,7 +51,12 @@ immigrant_background,partial,"bornusa, a1_relation, a1_born, a2_relation, a2_bor
   )
 })","Child's and parents' US birth (BORNUSA, A#_BORN; parents = A#_RELATION 1/2/4). Native if either parent US-born, else by child's birthplace. Partial: only the two listed household caregivers count, so a parent outside the household is never observed.",,
 born_in_country,compatible,bornusa,"recode_values(as.numeric(bornusa), 1 ~ ""Yes"", 2 ~ ""No"", default = ""Unknown"")","BORNUSA: 'Was this child born in the United States?', caregiver-reported, all waves. Code 99 and blanks Unknown.",,
-home_language,in_progress,,,,,
+home_language,proximate,hhlanguage,"recode_values(
+  as.numeric(hhlanguage),
+  1 ~ ""Country language only"",
+  c(2, 3) ~ ""Another language, country language not recorded"",
+  default = ""Unknown""
+)","Screener, caregiver, every year: 'What is the primary language spoken in the household?' (HHLANGUAGE: English, Spanish, other); English counted as the country language. Proximate: the main home language, so English = Country language only (bilingual homes whose main language is English included) and Spanish or other = Another language, country language not recorded; 99 and blank = Unknown. One row per child, so nothing to carry.",,
 ses_area,unavailable,,,Not collected.,,
 ses_household,proximate,povlev4_nschyr,"lookup_values(
   recode_values(
@@ -118,8 +128,39 @@ parental_education,compatible,"a1_grade, a2_grade","lookup_values(
   target_variable = ""maternal_education"",
   default = ""Unknown""
 )","Highest A#_GRADE code (1-9; 95 no second adult and 99 missing dropped) of the 1-2 listed caregivers, non-parent carers included, A1_GRADE imputed where missing. Rebuilt from the raw codes instead of the DRC's HIGRADE_TVIS, which it matches except that code 4 (completed a vocational, trade or business school program) goes to Post-secondary rather than high school. Mapped through lookups/maternal_education.csv.",maternal_education,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,proximate,"a1_relation, a1_sex, a1_k11q50_r, a1_employed, a1_employed_r, a2_relation, a2_sex, a2_k11q50_r, a2_employed, a2_employed_r","local({
+  e1 <- case_when(
+    as.numeric(a1_k11q50_r) == 1 |
+      as.numeric(a1_employed) %in% c(1, 2) |
+      as.numeric(a1_employed_r) %in% c(1, 2) ~ ""Employed"",
+    as.numeric(a1_k11q50_r) == 2 |
+      as.numeric(a1_employed) %in% 3:5 |
+      as.numeric(a1_employed_r) %in% 3:6 ~ ""Not employed"",
+    .default = ""Unknown""
+  )
+  e2 <- case_when(
+    as.numeric(a2_k11q50_r) == 1 |
+      as.numeric(a2_employed) %in% c(1, 2) |
+      as.numeric(a2_employed_r) %in% c(1, 2) ~ ""Employed"",
+    as.numeric(a2_k11q50_r) == 2 |
+      as.numeric(a2_employed) %in% 3:5 |
+      as.numeric(a2_employed_r) %in% 3:6 ~ ""Not employed"",
+    .default = ""Unknown""
+  )
+  case_when(
+    as.numeric(a1_relation) %in% c(1, 2, 4) & as.numeric(a1_sex) == 2 ~ e1,
+    as.numeric(a2_relation) %in% c(1, 2, 4) & as.numeric(a2_sex) == 2 ~ e2,
+    .default = ""Unknown""
+  )
+})","Employment of the caregiver meeting the maternal_education mother definition (A#_RELATION 1/2/4, A#_SEX = 2), Adult 1 first, as reported by the respondent (Adult 1). 2016-2019: 'Were you employed at least 50 out of the past 52 weeks?' (A#_K11Q50_R): yes = Employed, no = Not employed. 2020-2022: 'Which of the following best describes your current employment status?' (A#_EMPLOYED): employed full-time or part-time = Employed; working without pay (not paid work, and not identified as a family business), not employed but looking, and not employed and not looking = Not employed; 2023 (A#_EMPLOYED_R) adds retired = Not employed. 99 and no mother figure = Unknown. Proximate: the 52-week window in 2016-2019. One row per child, so nothing is carried.",,
+maternal_age,compatible,"a1_relation, a1_sex, a1_age, a2_relation, a2_sex, a2_age","local({
+  age1 <- if_else(as.numeric(a1_age) %in% 18:75, as.numeric(a1_age), NA_real_)
+  age2 <- if_else(as.numeric(a2_age) %in% 18:75, as.numeric(a2_age), NA_real_)
+  case_when(
+    as.numeric(a1_relation) %in% c(1, 2, 4) & as.numeric(a1_sex) == 2 ~ age1 + 0.5,
+    as.numeric(a2_relation) %in% c(1, 2, 4) & as.numeric(a2_sex) == 2 ~ age2 + 0.5
+  )
+})","Age in completed years ('What is your age?', A#_AGE) of the caregiver meeting the maternal_education mother definition (A#_RELATION 1/2/4 and A#_SEX = 2: biological, adoptive, step or foster mother), Adult 1 first, + 0.5; the respondent gives Adult 1's age (her own) and Adult 2's. Top codes '75 or older' (2016-2022) and '70 or older' (2023) taken at the bound + 0.5 (0.06% of mothers); 99 and 999 missing and no mother figure = NA. MOMAGE (mother's age at the child's birth, ends banded at 18 and 45, not in 2023) is unused.",,
 urbanicity,proximate,"metro_yn, mpc_yn","case_when(
   as.numeric(mpc_yn) == 1 ~ ""Urban"",
   as.numeric(metro_yn) == 1 & as.numeric(mpc_yn) == 2 ~ ""Suburban"",
@@ -190,8 +231,8 @@ fam_home_cogstim,in_progress,,,,,
 fam_home_emotsupport,in_progress,,,,,
 fam_home_measure,in_progress,,,,,
 school_grade,unavailable,,,Not collected.,,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,unavailable,,,Not collected.,,
+school_track,unavailable,,,Not collected.,,
 st_measure_type,inferred,,"""Categorical""",All NSCH screen-time items are caregiver-reported hour bands.,,
 st_measure_name,inferred,,"""Custom""","Bespoke items: separate TV (K7Q60_R) and device (K7Q91_R) questions in 2016-17, replaced by one combined SCREENTIME question from 2018.",,
 st_responder,inferred,,"""Parent or carer""",A parent or other caregiver completes the questionnaire. The harmoniser sets NA where no st_ value exists.,,
@@ -246,38 +287,38 @@ st_leisure_wd,partial,"screentime, k7q91_r","coalesce(
 )","2016-2023, caregiver-reported, average weekday, schoolwork excluded. 2018-2023: SCREENTIME, time 'in front of a TV, computer, cellphone or other electronic device watching programs, playing games, accessing the internet or using social media' ('Do not include time spent doing schoolwork'; all devices); less than 1 hour = 0.5 (no 'none' option). 2016-2017: K7Q91_R, time with 'computers, cell phones, handheld video games, and other electronic devices, doing things other than schoolwork' (TV excluded; the TV item K7Q60_R goes to st_watch_wd and is never added); none = 0, less than 1 hour = 0.5. Point labels at their value; top band 4 or more hours = 4; code 99 NA. Partial: TV excluded in 2016-2017 (level shift at 2018).",,
 st_leisure_we,unavailable,,,No weekend item.,,
 st_leisure,incompatible,"screentime, k7q91_r",,Weekday items only; no usual-day value.,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch and st_violent_game.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
 st_internet_wd,incompatible,"k7q91_r, screentime",,Only inside the pooled K7Q91_R (2016-2017) or SCREENTIME (2018-2023) items; both mapped to st_leisure_wd (partial).,,
 st_internet_we,unavailable,,,No weekend item.,,
 st_internet,incompatible,"k7q91_r, screentime",,Weekday items only; no usual-day value. Internet use only inside pooled items; see st_internet_wd.,,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
 st_videochat,unavailable,,,Not collected.,,
 st_messaging_wd,unavailable,,,Not collected.,,
 st_messaging_we,unavailable,,,Not collected.,,
 st_messaging,unavailable,,,Not collected.,,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
 st_creating,unavailable,,,Not collected.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
 st_email,unavailable,,,Not collected.,,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,unavailable,,,No item on use at school.,,
 st_educational_school,unavailable,,,No item on use at school.,,
@@ -678,19 +719,91 @@ hlth_sleep_we,unavailable,,,No weekend or non-school-night item.,,
 hlth_sleep,partial,hoursleep05,"recode_values(as.numeric(hoursleep05), 1 ~ 6.5, 2 ~ 7, 3 ~ 8, 4 ~ 9, 5 ~ 10, 6 ~ 11, 7 ~ 12)","Ages 0-5 only. HOURSLEEP05: past-week hours of sleep 'during an average day (count both nighttime sleep and naps)', caregiver-reported. Point labels at their value, less than 7 hours = 6.5, top band 12 or more hours = 12; codes 90 and 99 NA. Partial: 24-hour sleep including naps. The ages 6-17 weeknight item is on hlth_sleep_wd.",,
 hlth_sleepprob,incompatible,bedtime,,Caregiver-rated single item only: how often the child goes to bed at about the same time on weeknights (bedtime); no sleep-problems scale.,,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not collected.,,
+hlth_sleepprob_singleitem_parent,incompatible,bedtime,,"Only how often the child goes to bed at about the same time on weeknights (bedtime, caregiver), a sleep-routine item, not a sleep problem; no row holds it.",,
+hlth_bmi,compatible,"height, weight","local({
+  cm <- if_else(as.numeric(height) > 0 & as.numeric(height) < 9990, as.numeric(height), NA_real_)
+  kg <- if_else(as.numeric(weight) > 0 & as.numeric(weight) < 9990, as.numeric(weight), NA_real_)
+  kg / (cm / 100)^2
+})","2020-2023 only, ages 6-17: the caregiver's report of the child's current height in cm (HEIGHT) and weight in kg (WEIGHT), 'Your best estimate is fine'; kg / m2 computed. 9990 (ages 0-5, not asked) and 9999 (missing) = NA. The release bounds the entries (80-230 cm and 5-150 kg in 2020, 96-209 cm and 8-140 kg in 2022-2023); under 0.1% sit at the extremes, kept as released. 2016-2019 release only the BMI-for-age percentile class (BMICLASS, ages 10-17), unused. Never carried.",,
+hlth_bmi_measure,inferred,"height, weight","local({
+  cm <- if_else(as.numeric(height) > 0 & as.numeric(height) < 9990, as.numeric(height), NA_real_)
+  kg <- if_else(as.numeric(weight) > 0 & as.numeric(weight) < 9990, as.numeric(weight), NA_real_)
+  if_else(!is.na(kg / (cm / 100)^2), ""Parent-reported"", NA_character_)
+})",2020-2023 rows with a BMI: height and weight reported by the caregiver respondent; NA elsewhere.,,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,partial,physactiv,"recode_values(as.numeric(physactiv), 1 ~ 0, 2 ~ 2, 3 ~ 5, 4 ~ 7)","Ages 6-17, caregiver, every year: 'DURING THE PAST WEEK, on how many days did this child exercise, play a sport, or participate in physical activity for at least 60 minutes?' (PHYSACTIV). 0 days = 0, 1-3 days = 2, 4-6 days = 5, every day = 7; 90 (ages 0-5) and 99 = NA. Partial: day bands. Never carried.",,
+hlth_birthweight,compatible,birthwt_oz_s,"if_else(as.numeric(birthwt_oz_s) > 0 & as.numeric(birthwt_oz_s) < 9999, as.numeric(birthwt_oz_s) * 28.35, NA_real_)","Caregiver recall, every year: 'How much did he or she weigh when born?', released standardised to ounces (BIRTHWT_OZ_S) and converted at x 28.35 g. Bottom-coded at 72 oz (2,041 g; 3.4% of values) and top-coded at 155 oz (4,394 g; 2.9%), each taken at its bound; 9999 and blank = NA. The low-birth-weight flags BIRTHWT, BIRTHWT_L and BIRTHWT_VL are unused. One row per child, so nothing to carry.",,
+hlth_preterm,compatible,k2q05,"recode_values(as.numeric(k2q05), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","Caregiver recall, every year: 'Was this child born more than 3 weeks before his or her due date?' (K2Q05; the release label reads '3 or More Weeks' from 2020, the question text keeps 'more than 3 weeks'). Yes = TRUE, no = FALSE; 99 and blank = NA. One row per child, so nothing to carry.",,
+hlth_breastfed,compatible,k6q40,"recode_values(as.numeric(k6q40), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","Ages 0-5 only, caregiver, every year: 'Was this child EVER breastfed or fed breast milk?' (K6Q40). Yes = TRUE, no = FALSE; 90 (ages 6-17) and 99 = NA. One row per child, so nothing to carry.",,
+hlth_prenatalsmoking,incompatible,"k9q40, k9q41",,"Only current household tobacco use ('Does anyone living in your household use cigarettes, cigars, or pipe tobacco?', K9Q40; smoking inside, K9Q41), not the mother's smoking in pregnancy; no row holds them.",,
+hlth_chroniccond_diagnosed,partial,"year, k2q40a, k2q40b, arthritis, arthritis_curr, k2q61a, k2q61b, k2q41a, k2q41b, diabetes, diabetes_curr, autoimmune, k2q42a, k2q42b, heart, heart_curr, blood, blood_curr, cystfib, cystfib_curr","local({
+  told <- cbind(
+    as.numeric(k2q40a) == 1,
+    as.numeric(arthritis) == 1,
+    as.numeric(k2q61a) == 1,
+    as.numeric(k2q41a) == 1,
+    as.numeric(diabetes) == 1,
+    as.numeric(autoimmune) == 1,
+    as.numeric(k2q42a) == 1,
+    as.numeric(heart) == 1,
+    as.numeric(blood) == 1,
+    as.numeric(cystfib) == 1
+  )
+  no <- cbind(
+    as.numeric(k2q40a) == 2,
+    as.numeric(arthritis) == 2,
+    as.numeric(k2q61a) == 2,
+    as.numeric(k2q41a) == 2,
+    as.numeric(diabetes) == 2,
+    as.numeric(autoimmune) == 2,
+    as.numeric(k2q42a) == 2,
+    as.numeric(heart) == 2,
+    as.numeric(blood) == 2,
+    as.numeric(cystfib) == 2
+  )
+  binary <- as.numeric(year) >= 2018
+  current <- cbind(
+    as.numeric(k2q40b) == 1,
+    as.numeric(arthritis_curr) == 1,
+    as.numeric(k2q61b) == 1 | (as.numeric(k2q61a) == 1 & as.numeric(year) >= 2022),
+    as.numeric(k2q41b) == 1,
+    as.numeric(diabetes_curr) == 1,
+    as.numeric(autoimmune) == 1,
+    as.numeric(k2q42b) == 1,
+    as.numeric(heart_curr) == 1,
+    as.numeric(blood_curr) == 1 | (as.numeric(blood) == 1 & binary),
+    as.numeric(cystfib_curr) == 1 | (as.numeric(cystfib) == 1 & binary)
+  )
+  past <- cbind(
+    as.numeric(k2q40b) == 2,
+    as.numeric(arthritis_curr) == 2,
+    as.numeric(k2q61b) == 2,
+    as.numeric(k2q41b) == 2,
+    as.numeric(diabetes_curr) == 2,
+    FALSE,
+    as.numeric(k2q42b) == 2,
+    as.numeric(heart_curr) == 2,
+    as.numeric(blood_curr) == 2,
+    as.numeric(cystfib_curr) == 2
+  )
+  told[is.na(told)] <- FALSE
+  no[is.na(no)] <- FALSE
+  current[is.na(current)] <- FALSE
+  past[is.na(past)] <- FALSE
+  n_told <- rowSums(told)
+  n_split <- rowSums(told & (current | past))
+  case_when(
+    rowSums(told & current) > 0 ~ ""Currently diagnosed"",
+    n_told > 0 & n_split == n_told ~ ""Previously diagnosed"",
+    n_told == 0 & rowSums(no) > 0 ~ ""Never diagnosed""
+  )
+})","Caregiver: 'Has a doctor or other health care provider EVER told you that this child has...' with 'Does this child CURRENTLY have the condition?', every year: asthma (K2Q40A/B), arthritis (2016-2021), cerebral palsy (K2Q61A/B), diabetes (K2Q41A/B 2016-2021; type 2 diabetes DIABETES/_CURR 2022-2023), autoimmune disease such as type 1 diabetes, celiac or juvenile idiopathic arthritis (2022-2023), epilepsy (K2Q42A/B), heart condition (HEART/_CURR), blood disorders and cystic fibrosis (BLOOD, CYSTFIB; their current follow-ups 2016-2017 only). Told of any = told; Currently if any told condition is current, Previously if every told condition has a no; NA where a told condition's current answer is missing; Never if none is told and at least one is answered. Items with no current follow-up in a year (blood disorders and cystic fibrosis 2018-2023, cerebral palsy 2022-2023, autoimmune disease) count told as Currently, the binary ever-told rule. Partial: a condition list with no 'other long-standing condition' item, which changes across years. Unused: allergies, frequent or severe headaches, Tourette syndrome, brain injury or concussion, Down syndrome, other genetic conditions, hearing and vision, and the mental, developmental and learning conditions (their own rows).",,
+hlth_disability,partial,"sc_k2q16, sc_k2q17, sc_k2q18","case_when(
+  as.numeric(sc_k2q16) == 1 & as.numeric(sc_k2q17) == 1 & as.numeric(sc_k2q18) == 1 ~ ""TRUE"",
+  as.numeric(sc_k2q16) == 2 | as.numeric(sc_k2q17) == 2 | as.numeric(sc_k2q18) == 2 ~ ""FALSE""
+)","Screener, caregiver, every year: 'Is this child limited or prevented in any way in his or her ability to do the things most children of the same age can do?' (SC_K2Q16), 'because of ANY medical, behavioral, or other health condition?' (SC_K2Q17) and 'a condition that has lasted or is expected to last 12 months or longer?' (SC_K2Q18). Yes to all three = TRUE; no to any = FALSE; 99 and blank = NA. Partial: medical pooled with behavioral conditions. HCABILITY and HCEXTENT (how often and how much health conditions affect the child's abilities) and the functional-difficulty items are unused. Never carried.",,

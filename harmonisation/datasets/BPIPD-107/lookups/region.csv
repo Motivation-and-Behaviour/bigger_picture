@@ -1,0 +1,183 @@
+source_value,harmonised_value,notes
+2015 0560100,BE: Flemish Community,PISA 2015 SUBNATIO: Belgium - Flemish community
+2015 7240100,ES-AN,PISA 2015 SUBNATIO: Spain - Andalusia
+2015 7240200,ES-AR,PISA 2015 SUBNATIO: Spain - Aragon
+2015 7240300,ES-AS,PISA 2015 SUBNATIO: Spain - Asturias
+2015 7240400,ES-IB,PISA 2015 SUBNATIO: Spain - Balearic Islands
+2015 7240500,ES-CN,PISA 2015 SUBNATIO: Spain - Canary Islands
+2015 7240600,ES-CB,PISA 2015 SUBNATIO: Spain - Cantabria
+2015 7240700,ES-CL,PISA 2015 SUBNATIO: Spain - Castile and Leon
+2015 7240800,ES-CM,PISA 2015 SUBNATIO: Spain - Castile-La Mancha
+2015 7240900,ES-CT,PISA 2015 SUBNATIO: Spain - Catalonia
+2015 7241000,ES-EX,PISA 2015 SUBNATIO: Spain - Extremadura
+2015 7241100,ES-GA,PISA 2015 SUBNATIO: Spain - Galicia
+2015 7241200,ES-RI,PISA 2015 SUBNATIO: Spain - La Rioja
+2015 7241300,ES-MD,PISA 2015 SUBNATIO: Spain - Madrid
+2015 7241400,ES-MC,PISA 2015 SUBNATIO: Spain - Murcia
+2015 7241500,ES-NC,PISA 2015 SUBNATIO: Spain - Navarre
+2015 7241600,ES-PV,PISA 2015 SUBNATIO: Spain - Basque Country
+2015 7241700,ES-VC,PISA 2015 SUBNATIO: Spain - Comunidad Valenciana
+2015 9700000,CN: Beijing-Shanghai-Jiangsu-Guangdong,PISA 2015 SUBNATIO: B-S-J-G (China)
+2018 0560100,BE: Flemish Community,PISA 2018 SUBNATIO: Belgium: Flemish community
+2018 9810000,RU-MOW,PISA 2018 SUBNATIO: Moscow City (RUS)
+2018 9820000,RU-MOS,PISA 2018 SUBNATIO: Moscow Region (RUS)
+2018 9830000,RU-TA,PISA 2018 SUBNATIO: Tatarstan (RUS)
+2022 3100,AZ-BA,PISA 2022 REGION: Baku (Azerbaijan)
+2022 5601,BE: Flemish Community,PISA 2022 REGION: Belgium: Flemish community
+2022 5602,BE: French Community,PISA 2022 REGION: Belgium: French community
+2022 5603,BE: German-speaking Community,PISA 2022 REGION: Belgium: German community
+2022 7601,BR: North,PISA 2022 REGION: Brazil: North
+2022 7602,BR: Northeast,PISA 2022 REGION: Brazil: Northeast
+2022 7603,BR: South,PISA 2022 REGION: Brazil: South
+2022 7604,BR: Southeast,PISA 2022 REGION: Brazil: Southeast
+2022 7605,BR: Middle-West,PISA 2022 REGION: Brazil: Middle-West
+2022 12401,CA-NL,PISA 2022 REGION: Canada: Newfoundland and Labrador
+2022 12402,CA-PE,PISA 2022 REGION: Canada: Prince Edward Island
+2022 12403,CA-NS,PISA 2022 REGION: Canada: Nova Scotia
+2022 12404,CA-NB,PISA 2022 REGION: Canada: New Brunswick
+2022 12405,CA-QC,PISA 2022 REGION: Canada: Quebec
+2022 12406,CA-ON,PISA 2022 REGION: Canada: Ontario
+2022 12407,CA-MB,PISA 2022 REGION: Canada: Manitoba
+2022 12408,CA-SK,PISA 2022 REGION: Canada: Saskatchewan
+2022 12409,CA-AB,PISA 2022 REGION: Canada: Alberta
+2022 12410,CA-BC,PISA 2022 REGION: Canada: British Columbia
+2022 17001,CO-DC,PISA 2022 REGION: Colombia: Bogota
+2022 39801,KZ-71,PISA 2022 REGION: Kazakhstan: Astana
+2022 39802,KZ-75,PISA 2022 REGION: Kazakhstan: Almaty
+2022 39803,KZ-11,PISA 2022 REGION: Kazakhstan: Akmola region
+2022 39804,KZ-15,PISA 2022 REGION: Kazakhstan: Aktobe region
+2022 39805,KZ-19,PISA 2022 REGION: Kazakhstan: Almaty region
+2022 39806,KZ-23,PISA 2022 REGION: Kazakhstan: Atyrau region
+2022 39807,KZ-27,PISA 2022 REGION: Kazakhstan: West-Kazakhstan region
+2022 39808,KZ-31,PISA 2022 REGION: Kazakhstan: Zhambyl region
+2022 39809,KZ-35,PISA 2022 REGION: Kazakhstan: Karagandy region
+2022 39810,KZ-39,PISA 2022 REGION: Kazakhstan: Kostanay region
+2022 39811,KZ-43,PISA 2022 REGION: Kazakhstan: Kyzyl-Orda region
+2022 39812,KZ-47,PISA 2022 REGION: Kazakhstan: Mangistau region
+2022 39813,KZ-61,PISA 2022 REGION: Kazakhstan: Turkestan region
+2022 39814,KZ-55,PISA 2022 REGION: Kazakhstan: Pavlodar region
+2022 39815,KZ-59,PISA 2022 REGION: Kazakhstan: North-Kazakhstan region
+2022 39816,KZ-63,PISA 2022 REGION: Kazakhstan: East-Kazakhstan region
+2022 39817,KZ-79,PISA 2022 REGION: Kazakhstan: Shymkent
+2022 49601,MN: Central,PISA 2022 REGION: Mongolia: Central
+2022 49602,MN: Khangai,PISA 2022 REGION: Mongolia: Khangai
+2022 49603,MN: Western,PISA 2022 REGION: Mongolia: Western
+2022 72401,ES-AN,PISA 2022 REGION: Spain: Andalusia
+2022 72402,ES-AR,PISA 2022 REGION: Spain: Aragon
+2022 72403,ES-AS,PISA 2022 REGION: Spain: Asturias
+2022 72404,ES-IB,PISA 2022 REGION: Spain: Balearic Islands
+2022 72405,ES-CN,PISA 2022 REGION: Spain: Canary Islands
+2022 72406,ES-CB,PISA 2022 REGION: Spain: Cantabria
+2022 72407,ES-CL,PISA 2022 REGION: Spain: Castile and Leon
+2022 72408,ES-CM,PISA 2022 REGION: Spain: Castile-La Mancha
+2022 72409,ES-CT,PISA 2022 REGION: Spain: Catalonia
+2022 72410,ES-EX,PISA 2022 REGION: Spain: Extremadura
+2022 72411,ES-GA,PISA 2022 REGION: Spain: Galicia
+2022 72412,ES-RI,PISA 2022 REGION: Spain: La Rioja
+2022 72413,ES-MD,PISA 2022 REGION: Spain: Madrid
+2022 72414,ES-MC,PISA 2022 REGION: Spain: Murcia
+2022 72415,ES-NC,PISA 2022 REGION: Spain: Navarre
+2022 72416,ES-PV,PISA 2022 REGION: Spain: Basque Country
+2022 72417,ES-VC,PISA 2022 REGION: Spain: Comunidad Valenciana
+2022 72418,ES-CE,PISA 2022 REGION: Spain: Ceuta
+2022 72419,ES-ML,PISA 2022 REGION: Spain: Melilla
+2025 3101,AZ-BA,PISA 2025 REGION: Azerbaijan: Baku
+2025 3201,AR-C,PISA 2025 REGION: Argentina: CABA
+2025 3202,AR-X,PISA 2025 REGION: Argentina: Córdoba
+2025 3203,AR-M,PISA 2025 REGION: Argentina: Mendoza
+2025 5601,BE: Flemish Community,PISA 2025 REGION: Belgium: Flemish community
+2025 5602,BE: French Community,PISA 2025 REGION: Belgium: French community
+2025 5603,BE: German-speaking Community,PISA 2025 REGION: Belgium: German-speaking community
+2025 7601,BR-AC,PISA 2025 REGION: Brazil: Acre
+2025 7602,BR-AL,PISA 2025 REGION: Brazil: Alagoas
+2025 7603,BR-AP,PISA 2025 REGION: Brazil: Amapá
+2025 7604,BR-AM,PISA 2025 REGION: Brazil: Amazonas
+2025 7605,BR-BA,PISA 2025 REGION: Brazil: Bahia
+2025 7606,BR-CE,PISA 2025 REGION: Brazil: Ceará
+2025 7607,BR-DF,PISA 2025 REGION: Brazil: Distrito Federal
+2025 7608,BR-ES,PISA 2025 REGION: Brazil: Espírito Santo
+2025 7609,BR-GO,PISA 2025 REGION: Brazil: Goiás
+2025 7610,BR-MA,PISA 2025 REGION: Brazil: Maranhão
+2025 7611,BR-MT,PISA 2025 REGION: Brazil: Mato Grosso
+2025 7612,BR-MS,PISA 2025 REGION: Brazil: Mato Grosso do Sul
+2025 7613,BR-MG,PISA 2025 REGION: Brazil: Minas Gerais
+2025 7614,BR-PA,PISA 2025 REGION: Brazil: Pará
+2025 7615,BR-PB,PISA 2025 REGION: Brazil: Paraíba
+2025 7616,BR-PR,PISA 2025 REGION: Brazil: Paraná
+2025 7617,BR-PE,PISA 2025 REGION: Brazil: Pernambuco
+2025 7618,BR-PI,PISA 2025 REGION: Brazil: Piauí
+2025 7619,BR-RJ,PISA 2025 REGION: Brazil: Rio de Janeiro
+2025 7620,BR-RN,PISA 2025 REGION: Brazil: Rio Grande do Norte
+2025 7621,BR-RS,PISA 2025 REGION: Brazil: Rio Grande do Sul
+2025 7622,BR-RO,PISA 2025 REGION: Brazil: Rondônia
+2025 7623,BR-RR,PISA 2025 REGION: Brazil: Roraima
+2025 7624,BR-SC,PISA 2025 REGION: Brazil: Santa Catarina
+2025 7625,BR-SP,PISA 2025 REGION: Brazil: São Paulo
+2025 7626,BR-SE,PISA 2025 REGION: Brazil: Sergipe
+2025 7627,BR-TO,PISA 2025 REGION: Brazil: Tocantins
+2025 15600,CN: Beijing-Shanghai-Jiangsu-Zhejiang,PISA 2025 REGION: B-S-J-Z (China)
+2025 17001,CO-DC,PISA 2025 REGION: Colombia: Bogotá
+2025 21801,EC: Costa-Galápagos,PISA 2025 REGION: Ecuador: Costa-Galápagos
+2025 21802,EC: Sierra-Amazonía,PISA 2025 REGION: Ecuador: Sierra-Amazonía
+2025 36001,ID-BB,PISA 2025 REGION: Indonesia: Bangka Belitung
+2025 36002,ID-YO,PISA 2025 REGION: Indonesia: DI Yogyakarta
+2025 36003,ID-JK,PISA 2025 REGION: Indonesia: DKI Jakarta
+2025 36800,IQ: Kurdistan Region,PISA 2025 REGION: Kurdistan Region (Iraq)
+2025 38001,IT-32,PISA 2025 REGION: Italy: Bolzano
+2025 38002,IT: Centre,PISA 2025 REGION: Italy: Centre
+2025 38003,IT: North West,PISA 2025 REGION: Italy: North West
+2025 38004,IT: Rest of North East,PISA 2025 REGION: Italy: Rest of North East
+2025 38005,IT: South,PISA 2025 REGION: Italy: South
+2025 38006,IT: South and Island,PISA 2025 REGION: Italy: South and Island
+2025 39801,KZ-10,PISA 2025 REGION: Kazakhstan: Abai region
+2025 39802,KZ-11,PISA 2025 REGION: Kazakhstan: Akmola region
+2025 39803,KZ-15,PISA 2025 REGION: Kazakhstan: Aktobe region
+2025 39804,KZ-75,PISA 2025 REGION: Kazakhstan: Almaty city
+2025 39805,KZ-19,PISA 2025 REGION: Kazakhstan: Almaty region
+2025 39806,KZ-71,PISA 2025 REGION: Kazakhstan: Astana city
+2025 39807,KZ-23,PISA 2025 REGION: Kazakhstan: Atyrau region
+2025 39808,KZ-63,PISA 2025 REGION: Kazakhstan: East-Kazakhstan region
+2025 39809,KZ-35,PISA 2025 REGION: Kazakhstan: Karagandy region
+2025 39810,KZ-39,PISA 2025 REGION: Kazakhstan: Kostanay region
+2025 39811,KZ-43,PISA 2025 REGION: Kazakhstan: Kyzylorda region
+2025 39812,KZ-47,PISA 2025 REGION: Kazakhstan: Mangistau region
+2025 39813,KZ-59,PISA 2025 REGION: Kazakhstan: North-Kazakhstan region
+2025 39814,KZ-55,PISA 2025 REGION: Kazakhstan: Pavlodar region
+2025 39815,KZ-79,PISA 2025 REGION: Kazakhstan: Shymkent city
+2025 39816,KZ-61,PISA 2025 REGION: Kazakhstan: Turkestan region
+2025 39817,KZ-62,PISA 2025 REGION: Kazakhstan: Ulytau region
+2025 39818,KZ-27,PISA 2025 REGION: Kazakhstan: West-Kazakhstan region
+2025 39819,KZ-31,PISA 2025 REGION: Kazakhstan: Zhambyl region
+2025 39820,KZ-33,PISA 2025 REGION: Kazakhstan: Zhetisu region
+2025 41701,KG-GB,PISA 2025 REGION: Kyrgyzstan: Bishkek city
+2025 41702,KG-C,PISA 2025 REGION: Kyrgyzstan: Chuy oblast
+2025 41703,KG-J,PISA 2025 REGION: Kyrgyzstan: Jalal-Abad oblast
+2025 41704,KG-O,PISA 2025 REGION: Kyrgyzstan: Osh oblast
+2025 49601,MN: Central,PISA 2025 REGION: Mongolia: Central
+2025 49602,MN: Khangai,PISA 2025 REGION: Mongolia: Khangai
+2025 70401,VN: Mekong Delta,PISA 2025 REGION: Viet Nam: Mekong Delta
+2025 70402,"VN: North Central, Central Coast, and Central Highlands","PISA 2025 REGION: Viet Nam: North Central, Central Coast, and Central Highlands"
+2025 70403,VN: Northern Midlands and Mountains,PISA 2025 REGION: Viet Nam: Northern Midlands and Mountains
+2025 70404,VN: Red River Delta,PISA 2025 REGION: Viet Nam: Red River Delta
+2025 70405,VN: Southeast,PISA 2025 REGION: Viet Nam: Southeast
+2025 72401,ES-AN,PISA 2025 REGION: Spain: Andalusia
+2025 72402,ES-AR,PISA 2025 REGION: Spain: Aragon
+2025 72403,ES-AS,PISA 2025 REGION: Spain: Asturias
+2025 72404,ES-IB,PISA 2025 REGION: Spain: Balearic Islands
+2025 72405,ES-PV,PISA 2025 REGION: Spain: Basque Country
+2025 72406,ES-CN,PISA 2025 REGION: Spain: Canary Islands
+2025 72407,ES-CB,PISA 2025 REGION: Spain: Cantabria
+2025 72408,ES-CL,PISA 2025 REGION: Spain: Castile and Leon
+2025 72409,ES-CM,PISA 2025 REGION: Spain: Castile - La Mancha
+2025 72410,ES-CT,PISA 2025 REGION: Spain: Catalonia
+2025 72411,ES-CE,PISA 2025 REGION: Spain: Ceuta
+2025 72412,ES-VC,PISA 2025 REGION: Spain: Comunidad Valenciana
+2025 72413,ES-EX,PISA 2025 REGION: Spain: Extremadura
+2025 72414,ES-GA,PISA 2025 REGION: Spain: Galicia
+2025 72415,ES-RI,PISA 2025 REGION: Spain: La Rioja
+2025 72416,ES-MD,PISA 2025 REGION: Spain: Madrid
+2025 72417,ES-ML,PISA 2025 REGION: Spain: Melilla
+2025 72418,ES-MC,PISA 2025 REGION: Spain: Murcia
+2025 72419,ES-NC,PISA 2025 REGION: Spain: Navarre
+2025 76200,TJ-DU,PISA 2025 REGION: Dushanbe (Tajikistan)
+2025 86001,UZ-TK,PISA 2025 REGION: Uzbekistan: Tashkent city

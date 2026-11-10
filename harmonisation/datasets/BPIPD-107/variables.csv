@@ -9,10 +9,23 @@ survey_cluster,compatible,".wave, CNTSCHID","local({
   id <- as.numeric(CNTSCHID)
   if_else(is.na(id) | id %% 100000 == 0, NA_character_, paste(.wave, sprintf(""%.0f"", id)))
 })",International school id (CNTSCHID); schools are PISA's first-stage sampling units. Prefixed with the cycle because ids recur across cycles. Placeholder ids ending 00000 (three 2015 US-state samples) and 2025 ids withheld in five countries are NA.,,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,unavailable,,,Not collected.,,
+sample_component,unavailable,,,Single sample.,,
 sample_population,inferred,,"""General population""","Two-stage sample of schools and then 15-year-old students within them, in each participating country (OECD PISA technical reports).",,
-parent_respondent,in_progress,,,,,
+parent_respondent,proximate,"PA001Q01TA, PA001Q02TA, PA001Q03TA, PA202Q01DA","local({
+  mother <- as.numeric(PA001Q01TA) %in% 1
+  father <- as.numeric(PA001Q02TA) %in% 1
+  other <- as.numeric(PA001Q03TA) %in% 1
+  answered <- !is.na(PA001Q01TA) | !is.na(PA001Q02TA) | !is.na(PA001Q03TA)
+  case_when(
+    mother & !father & !other ~ ""Mother"",
+    father & !mother & !other ~ ""Father"",
+    mother & father & !other ~ ""Both parents"",
+    other & !mother & !father ~ ""Other carer"",
+    answered | !is.na(PA202Q01DA) ~ ""Unknown"",
+    .default = NA_character_
+  )
+})","Optional parent questionnaire, 'Who will complete this questionnaire?' tick boxes (PA001Q01TA-Q03TA; 2015-2022 checked/not checked, 2025 yes/no), all cycles: mother or other female guardian alone = Mother and father or other male guardian alone = Father (each pools other guardians of that sex, proximate), both = Both parents, other alone = Other carer (relationship not recorded); any other combination, none ticked, or a 2025 parent answer (PA202Q01DA) with the item blank = Unknown; NA where no parent questionnaire was returned.",,
 age_years,compatible,AGE,as.numeric(AGE),OECD-derived age at testing in years with months as decimals.,,
 sex,proximate,"ST004D01T, MALE","coalesce(
   recode_values(as.numeric(ST004D01T), 1 ~ ""Female"", 2 ~ ""Male""),
@@ -29,7 +42,39 @@ country,compatible,"CNT, STRATUM, .wave","local({
   coalesce(nation, lookup_values(cnt, lookup_country, default = ""Unknown""))
 })","CNT through lookups/country.csv. UK rows take their nation (England, Scotland, Wales, Northern Ireland) from the cycle's sampling stratum; undisclosed UK strata stay United Kingdom. Sub-national samples map to their country (Baku, Moscow City/Region, Tatarstan, Chinese provinces, US states, Buenos Aires, Spanish/Ukrainian regions, Kurdistan, Dushanbe).",country,
 state,compatible,"STRATUM, .wave","lookup_values(paste(.wave, STRATUM), lookup_state, default = NA_character_)",Australian strata encode state and sector; undisclosed stratum = Unknown; non-AU rows NA.,state,
-region,in_progress,,,,,
+region,proximate,"CNT, SUBNATIO, REGION, STRATUM, .wave","local({
+  cnt <- as.character(haven::zap_labels(CNT))
+  key <- if_else(
+    .wave %in% c(""2015"", ""2018""),
+    paste(.wave, as.character(haven::zap_labels(SUBNATIO))),
+    paste(.wave, sprintf(""%.0f"", as.numeric(REGION)))
+  )
+  au <- lookup_values(paste(.wave, STRATUM), lookup_state, default = NA_character_)
+  nation <- lookup_values(paste(.wave, STRATUM), lookup_country, default = NA_character_)
+  case_when(
+    cnt == ""AUS"" ~ recode_values(
+      au,
+      ""NSW"" ~ ""AU-NSW"",
+      ""VIC"" ~ ""AU-VIC"",
+      ""QLD"" ~ ""AU-QLD"",
+      ""SA"" ~ ""AU-SA"",
+      ""WA"" ~ ""AU-WA"",
+      ""TAS"" ~ ""AU-TAS"",
+      ""NT"" ~ ""AU-NT"",
+      ""ACT"" ~ ""AU-ACT"",
+      default = ""Unknown""
+    ),
+    cnt == ""GBR"" ~ recode_values(
+      nation,
+      ""England"" ~ ""GB-ENG"",
+      ""Scotland"" ~ ""GB-SCT"",
+      ""Wales"" ~ ""GB-WLS"",
+      ""Northern Ireland"" ~ ""GB-NIR"",
+      default = ""Unknown""
+    ),
+    .default = lookup_values(key, lookup_region, default = ""Unknown"")
+  )
+})","Region of the sampled school, PISA's adjudicated sub-national samples: SUBNATIO (2015, 2018) and REGION (2022, 2025), keyed on cycle and code through lookups/region.csv (codes are renumbered between cycles). First-level units take their ISO 3166-2 code: Spanish autonomous communities and cities, Canadian provinces, Brazilian states (2025), Argentine, Indonesian, Kyrgyz and Kazakh units, Bogota, Baku, Tashkent, Dushanbe, Moscow City, Moscow Region and Tatarstan; Bolzano is aggregated to IT-32; Kazakhstan's 2022 Almaty, Karagandy and East-Kazakhstan regions take the codes of the units of those names, before the 2022 splits. The study's groupings take the country code and their name: Belgian language communities, Brazilian macro-regions (2022), Italian macro-areas, Mongolian and Viet Nam regions, Ecuadorian region pairs, Beijing-Shanghai-Jiangsu-Guangdong/Zhejiang and Iraq's Kurdistan Region. Australian rows take the AU- code of state (from the stratum, as state), and UK rows their nation from the stratum, as country. 'Rest of the country' samples, Ukraine's '17 of 27 regions', Hong Kong, Macao and every country with no sub-national sample are Unknown. Proximate: school location stands in for residence, and several countries give only groupings.",region,
 ethnicity,incompatible,"IMMIG, ST019AQ01T, ST022Q01TA",,"No ethnic-group item; birthplace (ST019AQ01T, 2015-2022; IMMIG, mapped to immigrant_background) and home language (ST022Q01TA) only.",,
 indigenous,unavailable,,,Not in the supplied extract; the AU national file carries it.,,
 minority,proximate,IMMIG,"recode_values(as.numeric(IMMIG), 1 ~ ""Non-minority"", c(2, 3) ~ ""Minority"", default = ""Unknown"")","Immigrant background as proxy: first/second-generation (student or both parents born abroad) = Minority, native = Non-minority. Ethnicity not collected.",,
@@ -39,7 +84,7 @@ born_in_country,compatible,"ST019AQ01T, BICT_S","coalesce(
   recode_values(as.numeric(BICT_S), 1 ~ ""Yes"", 0 ~ ""No""),
   ""Unknown""
 )","Student's own birthplace, country of test or other country (ST019AQ01T, 2015-2022; 2022 'I don't know' is Unknown); 2025 releases only the OECD flag derived from it (BICT_S). The UK samples' country of test is the UK.",,
-home_language,in_progress,,,,,
+home_language,proximate,"LANGN, CNT, .wave","lookup_values(paste(.wave, as.character(haven::zap_labels(CNT)), LANGN), lookup_home_language, default = ""Unknown"")","Main language at home, 'What language do you speak at home most of the time?' (LANGN, the national language code of ST022Q01TA), student report, all cycles; proximate: a country language = Country language only (bilingual homes included), another language = Another language, country language not recorded. The lookup on cycle, country and code counts languages official across the country or a whole first-level region (e.g. Catalan, Basque, Galician in Spain; Welsh and Gaelic in the UK; Romansh in Switzerland; Hungarian and Slovak in Serbia's Vojvodina; Gagauz and Russian in Moldova's Gagauzia; Irish in the UK from 2025) and dialects the source labels as dialects of a country language; municipal-only languages are another language, national other-language codes count as another language though they may hold unlisted country languages (e.g. Tatar under Russia's code), and codes pooling country with other languages, of unsettled status, or missing are Unknown; each code's basis is in the lookup notes.",home_language,
 ses_area,unavailable,,,Not collected.,,
 ses_household,compatible,"ESCS, CNT, .wave","case_when(
   is.na(ESCS) ~ ""Unknown"",
@@ -169,10 +214,16 @@ parental_education,proximate,"HISCED_isced97, HISCED_isced11, HISCED_2025","coal
   ),
   ""Unknown""
 )","OECD highest-parent index HISCED, the study's own highest-parent variable, through the shared education lookup: ISCED-97 in 2015/2018, ISCED-2011 in 2022 and 2025 (2025 renumbers the codes; recoded per cycle). ISCED 4 sits in Secondary for 2015/2018 (ISCED-97 '3A or 4') but in Post-secondary from 2022; proximate.",maternal_education,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,incompatible,,,"Only the ISCO-08 code of the mother's main job (OCOD1, 2015-2022 raw student file, not in the tidied table; not released in 2025), from 'What is your mother's main job?' with the instruction 'If she is not working now, please tell us her last main job' (ST014): the occupation of a current or last job, not employment status.",,
+maternal_age,unavailable,,,Not collected.,,
 urbanicity,proximate,SC001Q01TA,"recode_values(as.numeric(SC001Q01TA), 1 ~ ""Rural"", c(2, 3) ~ ""Suburban"", c(4, 5, 6) ~ ""Urban"", default = ""Unknown"")","Principal's report of the school community's size: village (under 3,000) Rural; small town (3,000-15,000) and town (15,000-100,000) Suburban; city (100,000+), large city and, from 2022, megacity Urban. School location and size bands stand in for residence (proximate).",,
-family_structure,proximate,ST403Q01DA,"recode_values(as.numeric(ST403Q01DA), 1 ~ ""Other"", 2 ~ ""Single parent"", 3 ~ ""Two biological/adoptive parents"")","2025 'how many parents and/or guardians do you have' (ST403Q01DA; co-residence not asked), mapped to the category each count forces: None = Other, One = Single parent, Two = Two biological/adoptive parents (step not separable); Three and Four or more force no single category and stay NA.",,
+family_structure,proximate,ST403Q01DA,"recode_values(
+  as.numeric(ST403Q01DA),
+  1 ~ ""Other"",
+  2 ~ ""Single parent"",
+  3 ~ ""Two biological/adoptive parents"",
+  default = ""Unknown""
+)","2025 'how many parents and/or guardians do you have' (ST403Q01DA; co-residence not asked), mapped to the category each count forces: None = Other, One = Single parent, Two = Two biological/adoptive parents (step not separable); Three and Four or more force no single category = Unknown; 2015-2022 not asked = Unknown.",,
 fam_siblings_n,in_progress,,,,,
 fam_siblings_any,in_progress,,,,,
 fam_screenrules,compatible,PA202Q01DA,"case_when(as.numeric(PA202Q01DA) == 1 ~ TRUE, as.numeric(PA202Q01DA) == 2 ~ FALSE, .default = NA)","2025 only, optional parent questionnaire, parent report: 'I define rules about how long or when my child is allowed to use <digital resources>' (PA202Q01DA), yes/no; all digital devices.",,
@@ -228,8 +279,8 @@ school_grade,compatible,ST001D01T,"recode_values(
   96 ~ ""Ungraded"",
   default = NA_character_
 )",International grade; invalid and missing codes become NA.,,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,proximate,SC013Q01TA,"recode_values(as.numeric(SC013Q01TA), 1 ~ ""Public"", 2 ~ ""Private"", default = ""Unknown"")","Principal's report, every cycle: 'Is your school a public or a private school?' (SC013Q01TA; PISA defines a public school as managed by a public education authority and a private school as managed by a non-government organisation): public = Public, private = Private; no school questionnaire or no answer (11.8%) = Unknown. Proximate: government-dependent private schools are inside Private.",,
+school_track,proximate,"PROGN, ISCEDL, ISCEDO, ISCEDP, .wave","lookup_values(paste(.wave, PROGN), lookup_school_track, default = ""Unknown"")","Study programme the student attends (PROGN, the national programme code, with its ISCED level and orientation ISCEDL/ISCEDO 2015-2018, ISCEDP 2022-2025), all cycles; the lookup on cycle and code orders each country's programmes: general university-preparatory programmes and selective academic school types = Academic; technical, arts and 4+-year vocational programmes leading to university entrance and middle lower-secondary streams = Intermediate; trade, apprenticeship and 3-year-or-shorter vocational programmes and basic or pre-vocational streams = Vocational; comprehensive stages with no tracks = Not tracked; special-needs, adult, international, religious-specialist and preparatory programmes, codes pooling several tracks and missing codes = Unknown. Proximate: adjacent levels folded and programme codes stand in for the student's track; each code's label and reason are in the lookup notes.",school_track,
 st_measure_type,inferred,,"""Categorical""",Duration bands in every cycle.,,
 st_measure_name,inferred,,"""Custom""",Items written for PISA: ICT familiarity questionnaire internet-time items IC005-IC007 (2015/2018); ST326 digital-resource hours and ICT questionnaire leisure items IC177/IC178 (2022/2025).,,
 st_responder,inferred,,"""Self""",The student self-completes the student and ICT familiarity questionnaires.,,
@@ -313,21 +364,27 @@ st_educational,compatible,"ST326Q01JA, ST326Q02JA, ST326Q03JA","((recode_values(
   (recode_values(as.numeric(ST326Q03JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)) *
     2) /
   7",5:2 mean of st_educational_wd and st_educational_we.,,
-st_leisure_wd,in_progress,,,,,
-st_leisure_we,in_progress,,,,,
-st_leisure,in_progress,,,,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_leisure_wd,partial,"ST326Q04JA, ST326Q05JA","recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q05JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)","2022/2025: the leisure part of ST326 ('This school year, how many hours/day do you use [digital resources]'), sum of ST326Q04JA, ST326Q05JA (DR-0002), for leisure at school and before or after school on a school day; NA if either part is blank. Band midpoints ('up to 1 hour' 0.5); top band 'more than 7 hours' = 7. Partial: digital devices only, TV left out. 2015/2018 have no leisure item (NA).",,
+st_leisure_we,partial,ST326Q06JA,"recode_values(as.numeric(ST326Q06JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)","2022/2025: ST326 leisure hours on a weekend day (ST326Q06JA); bands as st_leisure_wd (top band 7). Partial: digital devices only, TV left out.",,
+st_leisure,partial,"ST326Q04JA, ST326Q05JA, ST326Q06JA","((recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
+  recode_values(as.numeric(ST326Q05JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)) *
+  5 +
+  recode_values(as.numeric(ST326Q06JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) *
+    2) /
+  7","2022/2025: (5 x st_leisure_wd + 2 x st_leisure_we) / 7, the leisure part of the ST326 digital-resource item (its learning part is on st_educational, and both parts on st_total); bands and top band (7) as st_leisure_wd. Partial: digital devices only, TV left out.",,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,incompatible,IC177Q06JA,,"Only 'Read, listen to or view informational materials to learn how to do something (e.g. tutorial, podcast)' on a typical weekday (IC177Q06JA, 2022/2025): reading and listening are bundled with viewing, and how-to tutorials are not content made to educate children; mapped nowhere.",,
+st_educontent_watch_we,incompatible,IC178Q06JA,,"Only 'Read, listen to or view informational materials to learn how to do something (e.g. tutorial, podcast)' on a typical weekend day (IC178Q06JA, 2022/2025): reading and listening are bundled with viewing, and how-to tutorials are not content made to educate children; mapped nowhere.",,
+st_educontent_watch,incompatible,"IC177Q06JA, IC178Q06JA",,"Only 'Read, listen to or view informational materials to learn how to do something (e.g. tutorial, podcast)' (IC177Q06JA, IC178Q06JA, 2022/2025): reading and listening are bundled with viewing, and how-to tutorials are not content made to educate children; mapped nowhere.",,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
@@ -339,23 +396,23 @@ st_internet,compatible,"IC005Q01TA, IC006Q01TA, IC007Q01TA","((recode_values(as.
   5 +
   (recode_values(as.numeric(IC007Q01TA), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 3, 6 ~ 5, 7 ~ 6)) * 2) /
   7",5:2 mean of st_internet_wd and st_internet_we; NA in 2022/2025 (see st_internet_wd).,,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,incompatible,IC177Q05JA,,"Calls not separable from messaging and sharing on any communication platform, typical weekday (IC177Q05JA, 2022/2025; see st_messaging_wd).",,
+st_videochat_we,incompatible,IC178Q05JA,,"Calls not separable from messaging and sharing on any communication platform, typical weekend day (IC178Q05JA, 2022/2025; see st_messaging_we).",,
 st_videochat,incompatible,"IC177Q05JA, IC178Q05JA",,"Calls not separable from messaging and sharing on any communication platform (IC177Q05JA, IC178Q05JA, 2022/2025; see st_messaging).",,
 st_messaging_wd,incompatible,IC177Q05JA,,"Communicating and sharing on social networks or any communication platform (IC177Q05JA, 2022/2025) bundles messaging with social networks; unused (see st_socmedia_wd).",,
 st_messaging_we,incompatible,IC178Q05JA,,"Communicating and sharing on social networks or any communication platform (IC178Q05JA, 2022/2025) bundles messaging with social networks; unused (see st_socmedia_wd).",,
 st_messaging,incompatible,"IC177Q05JA, IC178Q05JA, WB160Q01HA",,"Duration items IC177Q05JA, IC178Q05JA bundle messaging with social networks and are unused (see st_socmedia_wd); WB160 (contact with friends by phone, text or social media) is a frequency.",,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,partial,IC177Q07JA,"recode_values(as.numeric(IC177Q07JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)","2022/2025: 'Create or edit my own digital content (pictures, videos, music, computer programs)', typical weekday (IC177Q07JA, the item st_creating weights 5); bands as st_game_wd ('between 1 and 3 hours' 2; top band 'more than 7 hours a day' = 7). Partial: no posting, and programming is included.",,
+st_creating_we,partial,IC178Q07JA,"recode_values(as.numeric(IC178Q07JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)","2022/2025: the same item for a typical weekend day (IC178Q07JA, the item st_creating weights 2); bands and partial as st_creating_wd (top band 7).",,
 st_creating,partial,"IC177Q07JA, IC178Q07JA","((recode_values(as.numeric(IC177Q07JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) *
   5 +
   (recode_values(as.numeric(IC178Q07JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 4, 5 ~ 6, 6 ~ 7)) * 2) /
   7","2022/2025: creating or editing own digital content (pictures, videos, music, computer programs), weekday and weekend (IC177Q07JA, IC178Q07JA), 5:2 mean; bands as st_game_wd (top band 7). No posting; includes programming (partial).",,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,No weekday/weekend split.,,
+st_email_we,unavailable,,,No weekday/weekend split.,,
 st_email,incompatible,IC008Q03TA,,2015/2018 frequency of email use outside school (IC008Q03TA) only; no duration.,,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,incompatible,IC177Q04JA,,"Buying bundled with finding places and booking tickets in 'look for practical information online', typical weekday (IC177Q04JA, 2022/2025); mapped nowhere.",,
+st_shopping_we,incompatible,IC178Q04JA,,"Buying bundled with finding places and booking tickets in 'look for practical information online', typical weekend day (IC178Q04JA, 2022/2025); mapped nowhere.",,
 st_shopping,incompatible,"IC177Q04JA, IC178Q04JA",,"Buying bundled with finding places and booking tickets in looking for practical information online (IC177Q04JA, IC178Q04JA, 2022/2025); mapped nowhere.",,
 st_total_school,partial,"ST326Q01JA, ST326Q04JA","recode_values(as.numeric(ST326Q01JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7) +
   recode_values(as.numeric(ST326Q04JA), 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 2.5, 5 ~ 3.5, 6 ~ 4.5, 7 ~ 5.5, 8 ~ 6.5, 9 ~ 7)",2022/2025: ST326 learning plus leisure hours at school on a school day (2 parts); blank-part rule and top band (7) as st_total_wd.,,
@@ -412,7 +469,7 @@ beh_temp_negaffect_parent,in_progress,,,,,
 beh_temp_surgency_parent,in_progress,,,,,
 beh_temp_measure,in_progress,,,,,
 beh_bullied,unavailable,,,Not collected.,,
-beh_beenbullied,compatible,"ST038Q03NA, ST038Q04NA, ST038Q05NA, ST038Q06NA, ST038Q07NA, ST038Q08NA, ST038Q11JA","case_when(
+beh_beenbullied,partial,"ST038Q03NA, ST038Q04NA, ST038Q05NA, ST038Q06NA, ST038Q07NA, ST038Q08NA, ST038Q11JA","case_when(
   pmax(
     as.numeric(ST038Q03NA),
     as.numeric(ST038Q04NA),
@@ -436,10 +493,10 @@ beh_beenbullied,compatible,"ST038Q03NA, ST038Q04NA, ST038Q05NA, ST038Q06NA, ST03
   ) ==
     1 ~ FALSE,
   .default = NA
-)","Past 12 months, in school: TRUE if any peer-victimisation item (left out, made fun of, threatened, things taken or destroyed, hit or pushed, nasty rumours; 2022 adds giving money under threat, ST038Q11JA) happened a few times a year or more; FALSE if every answered item is never or almost never. 2025 asks 4 of the 6 core items; OECD suppressed the 2015 called-names and picked-on items.",,
-beh_beenbullied_online,partial,ST038Q12DA,"case_when(as.numeric(ST038Q12DA) >= 2 ~ TRUE, as.numeric(ST038Q12DA) == 1 ~ FALSE, .default = NA)","2025 only: upsetting information about me published online without my consent, a few times a year or more in the past 12 months (ST038Q12DA). One act type (partial).",,
+)","Past 12 months, in school: TRUE if any peer-victimisation item (left out, made fun of, threatened, things taken or destroyed, hit or pushed, nasty rumours; 2022 adds giving money under threat, ST038Q11JA) happened a few times a year or more; FALSE if every answered item is never or almost never. Partial: the bottom anchor 'never or almost never' pools rare victimisation with never. 2025 asks 4 of the 6 core items; OECD suppressed the 2015 called-names and picked-on items.",,
+beh_beenbullied_online,partial,ST038Q12DA,"case_when(as.numeric(ST038Q12DA) >= 2 ~ TRUE, as.numeric(ST038Q12DA) == 1 ~ FALSE, .default = NA)","2025 only: upsetting information about me published online without my consent, a few times a year or more in the past 12 months (ST038Q12DA). Partial: one act type, and the bottom anchor 'never or almost never' (FALSE) pools rare occurrence with never.",,
 beh_bullied_online,unavailable,,,Not collected.,,
-beh_fight,partial,ST038Q09JA,"case_when(as.numeric(ST038Q09JA) >= 2 ~ TRUE, as.numeric(ST038Q09JA) == 1 ~ FALSE, .default = NA)",2022 only: in a physical fight on school property a few times a year or more in the past 12 months (ST038Q09JA). School property only (partial).,,
+beh_fight,partial,ST038Q09JA,"case_when(as.numeric(ST038Q09JA) >= 2 ~ TRUE, as.numeric(ST038Q09JA) == 1 ~ FALSE, .default = NA)","2022 only: in a physical fight on school property a few times a year or more in the past 12 months (ST038Q09JA). Partial: school property only, and the bottom anchor 'never or almost never' (FALSE) pools rare fights with never.",,
 beh_truancy,compatible,"ST062Q01TA, ST062Q02TA","case_when(
   pmax(as.numeric(ST062Q01TA), as.numeric(ST062Q02TA), na.rm = TRUE) >= 2 ~ ""TRUE"",
   pmax(as.numeric(ST062Q01TA), as.numeric(ST062Q02TA), na.rm = TRUE) == 1 ~ ""FALSE"",
@@ -808,19 +865,34 @@ hlth_sleep_we,unavailable,,,Not collected.,,
 hlth_sleep,unavailable,,,Not collected.,,
 hlth_sleepprob,incompatible,WB154Q07HA,,"Only the HBSC-SCL item 'difficulties in getting to sleep' (WB154Q07HA, 2018/2022), which stays on wb_psychcomplaints_diffsleep; no sleep-problems scale.",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,incompatible,WB154Q07HA,,"Only the HBSC-SCL item 'difficulties in getting to sleep' (WB154Q07HA, past six months, 2018/2022 well-being option), which stays on wb_psychcomplaints_diffsleep.",,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,compatible,"WB151Q01HA, WB152Q01HA","local({
+  weight <- as.numeric(WB151Q01HA)
+  height <- as.numeric(WB152Q01HA)
+  weight[weight >= 99995] <- NA
+  height[height >= 99995] <- NA
+  weight / (height / 100)^2
+})","Well-being questionnaire option, 2018 and 2022: self-reported 'How much do you weigh? (kilograms)' (WB151Q01HA) and 'How tall are you? (centimeters)' (WB152Q01HA); BMI = kg / (cm / 100)^2 after clearing missing codes 99995-99999. Released values run 30-250 kg and 90-230 cm; kept as entered. NA in 2015, 2025 and country-cycles without the option.",,
+hlth_bmi_measure,inferred,".wave, CNT, WB151Q01HA, WB152Q01HA","if_else(
+  .wave %in%
+    c(""2018"", ""2022"") &
+    stats::ave(!is.na(WB151Q01HA) | !is.na(WB152Q01HA), .wave, as.character(haven::zap_labels(CNT)), FUN = any),
+  ""Self-reported"",
+  NA_character_
+)",Describes hlth_bmi: the student's own report of height and weight in the well-being questionnaire option; filled in the 2018 and 2022 country-cycles that fielded the items.,,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,partial,"ST032Q01NA, WB032Q01NA","local({
+  days <- coalesce(as.numeric(ST032Q01NA), as.numeric(WB032Q01NA))
+  if_else(days %in% 1:8, days - 1, NA_real_)
+})","Self-report, past 7 days, outside of school: days of moderate physical activities for a total of at least 60 minutes per day (2015 ST032Q01NA, stem per doi:10.1186/s12966-019-0897-z; 2018 and 2022 well-being option WB032Q01NA, 'e.g., walking, climbing stairs, riding a bike to school'); codes 1-8 = 0-7 days, value minus 1. Partial: moderate activities only (vigorous activity is a separate item) and outside school only.",,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,unavailable,,,Not collected.,,
+hlth_disability,unavailable,,,Not collected.,,
