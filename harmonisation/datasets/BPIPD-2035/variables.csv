@@ -15,10 +15,11 @@ age_years,partial,"students_2020_SQ3, students_2020_SQ3_1, students_2021_SQ6, ad
     students_2020_SQ3 == 1 ~ students_2020_SQ3_1 + 6,
     students_2020_SQ3 == 2 ~ students_2020_SQ3_1 + 12,
     students_2020_SQ3 == 3 ~ students_2020_SQ3_1 + 15
-  ),
-  2021 - as.numeric(students_2021_SQ6),
-  2023 - as.numeric(adolescents_2023_DQ2_2)
-)","2021/2023: survey year minus birth year. 2020: modal age for school level and grade, not individual.",,
+  ) +
+    0.32,
+  2021 - as.numeric(students_2021_SQ6) + 0.28,
+  2023 - as.numeric(adolescents_2023_DQ2_2) + 0.29
+)","Survey year minus birth year + (fieldwork midpoint as a fraction of the year - 0.5). 2021 and 2023: the student's birth year (SQ6, DQ2_2). 2020 has no age or birth-year item: the survey year minus birth year of a student on time for the school level and grade (elementary grade + 6, middle + 12, high + 15), modal for the grade, not individual. Student fieldwork per the Korea Communications Commission's survey overviews: 6 October-13 November 2020 (release of 4 February 2021; midpoint 25 October, +0.32), 9 September-13 November 2021 (release of 7 April 2022; midpoint 11 October, +0.28), 11 September-17 November 2023 (release of 26 March 2024; midpoint 15 October, +0.29). Partial: the 2020 ages are assigned from grade.",,
 sex,compatible,"students_2020_SQ1, students_2021_SQ5, adolescents_2023_DQ2_1","coalesce(
   recode_values(
     coalesce(as.numeric(students_2020_SQ1), as.numeric(students_2021_SQ5), as.numeric(adolescents_2023_DQ2_1)),
@@ -451,7 +452,7 @@ beh_beenbullied_online,compatible,"students_2020_Q11_1, students_2020_Q11_2, stu
     ) <
       9
   )
-)","Eight online acts, same in all years (verbal abuse, false rumours, unwanted repeated messages or visits, unwanted sexual content, spreading personal details, trapping or excluding in chats, extortion of game money, data or items, coercion); TRUE if any answered item is above never (2020 code 1, 2021/2023 code 9). Recall: 2020 past 6 months ('cyber violence'), 2021 Sep 2020-Aug 2021 (framed as 괴롭힘, bullying), 2023 not printed (lowest option once or twice a year).",,
+)","Eight online acts, same in all years (verbal abuse, false rumours, unwanted repeated messages or visits, unwanted sexual content, spreading personal details, trapping or excluding in chats, extortion of game money, data or items, coercion); TRUE if any answered item is above never (2020 code 1, 2021/2023 code 9). Recall: 2020 past 6 months ('cyber violence'), 2021 Sep 2020-Aug 2021 (framed as 괴롭힘, bullying), 2023 Sep 2022-Aug 2023 (stem '최근 1년간(2022. 9. 1.~ 2023. 8. 31.)' in the investigators' 2023 survey report; the supplied codebook prints only the item statements); bounded windows that differ between years leave the status unchanged.",,
 beh_bullied_online,compatible,"students_2020_Q19_1, students_2020_Q19_2, students_2020_Q19_3, students_2020_Q19_4, students_2020_Q19_5, students_2020_Q19_6, students_2020_Q19_7, students_2020_Q19_8, students_2021_Q9a_1, students_2021_Q9a_2, students_2021_Q9a_3, students_2021_Q9a_4, students_2021_Q9a_5, students_2021_Q9a_6, students_2021_Q9a_7, students_2021_Q9a_8, adolescents_2023_q9, adolescents_2023_q9_n2, adolescents_2023_q9_n3, adolescents_2023_q9_n4, adolescents_2023_q9_n5, adolescents_2023_q9_n6, adolescents_2023_q9_n7, adolescents_2023_q9_n8","coalesce(
   as.character(
     pmax(
@@ -495,7 +496,7 @@ beh_bullied_online,compatible,"students_2020_Q19_1, students_2020_Q19_2, student
     ) <
       9
   )
-)","The same eight online acts with the student as actor (2021 framed as 'the following behaviours'); TRUE if any answered item is above never (2020 code 1, 2021/2023 code 9). Recall: 2020 past 6 months, 2021 Sep 2020-Aug 2021, 2023 not printed (lowest option once or twice a year).",,
+)","The same eight online acts with the student as actor (2021 framed as 'the following behaviours'); TRUE if any answered item is above never (2020 code 1, 2021/2023 code 9). Recall: 2020 past 6 months, 2021 Sep 2020-Aug 2021, 2023 Sep 2022-Aug 2023 (stem in the investigators' 2023 survey report; the supplied codebook prints only the item statements); bounded windows that differ between years leave the status unchanged.",,
 beh_fight,unavailable,,,Not collected.,,
 beh_truancy,unavailable,,,Not collected.,,
 beh_suspended,in_progress,,,,,
@@ -791,10 +792,10 @@ wb_negaffect_measure,in_progress,,,,,
 wb_eudaimonic_self,unavailable,,,Not collected.,,
 wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
 wb_socsupport_family_self,incompatible,"students_2020_Q29_1, students_2020_Q29_2, students_2020_Q29_3, students_2021_Q12_1, students_2021_Q12_2, students_2021_Q12_3",,"Student report on parents or guardians (2020 Q29, 2021 Q12: encourage my own decisions, ask about my school life, listen and respond; 4-point agreement). Parenting behaviours, not support the child receives or can call on; child-reported parenting items belong to fam_parentchild_rel_self, not yet mapped.",,
-wb_socsupport_friends_self,compatible,"students_2020_Q27_1, students_2020_Q27_2, students_2020_Q27_3, students_2021_Q11_1, students_2021_Q11_2, students_2021_Q11_3","coalesce(
+wb_socsupport_friends_self,partial,"students_2020_Q27_1, students_2020_Q27_2, students_2020_Q27_3, students_2021_Q11_1, students_2021_Q11_2, students_2021_Q11_3","coalesce(
   as.numeric(students_2020_Q27_1) + as.numeric(students_2020_Q27_2) + as.numeric(students_2020_Q27_3),
   as.numeric(students_2021_Q11_1) + as.numeric(students_2021_Q11_2) + as.numeric(students_2021_Q11_3)
-)","2020-2021 only. Student report: friends respect my views when we disagree, listen with interest to what I say, and I confide my worries and problems to them (2020 Q27, 2021 Q11); 4-point agreement scored 1-4, complete-case sum (range 3-12). The 2023 q4 items on friends' online reactions (likes, quick replies, supportive messages) are a different scale and are not used.",,
+)","2020-2021 only. Student report: friends respect my views when we disagree, listen with interest to what I say, and I confide my worries and problems to them (2020 Q27, 2021 Q11); 4-point agreement scored 1-4, complete-case sum (range 3-12). Partial: one of the three items, respect for my views when we disagree, is respect in disagreement, not support received. The 2023 q4 items on friends' online reactions (likes, quick replies, supportive messages) are a different scale and are not used.",,
 wb_socsupport_measure,inferred,wave,"if_else(
   wave %in% c(""2020"", ""2021""),
   ""Custom support items; friends: 3 items, 1-4 item scoring (range 3-12), sum"",

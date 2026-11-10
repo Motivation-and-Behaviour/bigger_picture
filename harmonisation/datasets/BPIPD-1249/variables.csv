@@ -198,28 +198,9 @@ st_total,incompatible,"q534a1, q534a2, q534a3, q537a1, q537a2, q537a3, q195",,"N
 st_watch_wd,unavailable,,,No weekday/weekend split.,,
 st_watch_we,unavailable,,,No weekday/weekend split.,,
 st_watch,incompatible,Mq5761,,"Only whether a TV is in the bedroom (Mq5761, used on fam_bedroomscreen); no viewing time.",,
-st_game_wd,partial,"q534a1, q534a2, q534a3, q515","if_else(
-  as.numeric(q515) == 8,
-  0,
-  (q534a1 + q534a2 + q534a3) *
-    recode_values(as.numeric(q515), 1 ~ 7, 2 ~ 5.5, 3 ~ 3.5, 4 ~ 1.5, 5 ~ 24 / 52, 6 ~ 12 / 52, 7 ~ 6 / 52) /
-    7
-)","Q534 'How long do you play video games on a typical weekday...?' by daypart (wake-up to lunch, lunch to dinner, dinner to bed), youth report: sum of q534a1, q534a2, q534a3 (DR-0002), released as hours with the values 0, 0.25, 0.75, 1.25, 1.75, 2.5, 3.5, 4.5, 5.5 and 6 (band scores; labels not released); top value 6 per daypart. Read as time on a day of use, because youth who play less than weekly report weekday time: x days played per week / 7 from q515 (at least once a day 7, 5 or 6 times a week 5.5, 3 or 4 times 3.5, once or twice 1.5, a couple of times a month 24/52, about once a month 12/52, less than once a month 6/52). Never-players (q515 = 8) 0 (non-users rule). The item names no device. Partial: day-of-use reading.",,
-st_game_we,partial,"q537a1, q537a2, q537a3, q515","if_else(
-  as.numeric(q515) == 8,
-  0,
-  (q537a1 + q537a2 + q537a3) *
-    recode_values(as.numeric(q515), 1 ~ 7, 2 ~ 5.5, 3 ~ 3.5, 4 ~ 1.5, 5 ~ 24 / 52, 6 ~ 12 / 52, 7 ~ 6 / 52) /
-    7
-)","Q537 'How long do you play video games on a typical weekend...?', same dayparts and values as st_game_wd (top value 6 per daypart): sum of q537a1, q537a2, q537a3 (DR-0002), taken as hours per weekend day, not halved, because the daypart frame describes one day. Time on a day of use x days played per week / 7 from q515, codes as st_game_wd. Never-players (q515 = 8) 0. Partial: day-of-use reading.",,
-st_game,partial,"q534a1, q534a2, q534a3, q537a1, q537a2, q537a3, q515","if_else(
-  as.numeric(q515) == 8,
-  0,
-  ((q534a1 + q534a2 + q534a3) * 5 + (q537a1 + q537a2 + q537a3) * 2) /
-    7 *
-    recode_values(as.numeric(q515), 1 ~ 7, 2 ~ 5.5, 3 ~ 3.5, 4 ~ 1.5, 5 ~ 24 / 52, 6 ~ 12 / 52, 7 ~ 6 / 52) /
-    7
-)","(5 x weekday + 2 x weekend daypart sums) / 7 x days played per week / 7 from q515 (codes as st_game_wd), so (5 x st_game_wd + 2 x st_game_we) / 7. Never-players (q515 = 8) 0. Partial: day-of-use reading; the study's vg_wk / 7 is the value before the days-played weighting.",,
+st_game_wd,compatible,"q534a1, q534a2, q534a3, q515","if_else(as.numeric(q515) == 8, 0, q534a1 + q534a2 + q534a3)","Q534 'How long do you play video games on a typical weekday...?' by daypart (wake-up to lunch, lunch to dinner, dinner to bed), youth report: sum of q534a1, q534a2, q534a3 (DR-0002), released as hours with the values 0, 0.25, 0.75, 1.25, 1.75, 2.5, 3.5, 4.5, 5.5 and 6 (band scores; labels not released); top value 6 per daypart. 'Typical weekday' asks about a usual day, so the daypart sum is hours per weekday and is not scaled by how often the youth plays (Q515 'How often do you play video games?', q515). Never-players (q515 = 8 'I never play video games', routed past the dayparts) 0 (non-users rule). The item names no device.",,
+st_game_we,compatible,"q537a1, q537a2, q537a3, q515","if_else(as.numeric(q515) == 8, 0, q537a1 + q537a2 + q537a3)","Q537 'How long do you play video games on a typical weekend...?', same dayparts and values as st_game_wd (top value 6 per daypart): sum of q537a1, q537a2, q537a3 (DR-0002), taken as hours per weekend day, not halved, because the daypart frame describes one day. 'Typical weekend' asks about a usual weekend day, so the sum is not scaled by how often the youth plays (q515). Never-players (q515 = 8, routed past the dayparts) 0 (non-users rule).",,
+st_game,compatible,"q534a1, q534a2, q534a3, q537a1, q537a2, q537a3, q515","if_else(as.numeric(q515) == 8, 0, ((q534a1 + q534a2 + q534a3) * 5 + (q537a1 + q537a2 + q537a3) * 2) / 7)","(5 x weekday + 2 x weekend daypart sums) / 7, so (5 x st_game_wd + 2 x st_game_we) / 7, equal to the study's weekly score vg_wk / 7; usual-day items, not scaled by how often the youth plays (q515). Never-players (q515 = 8, routed past the dayparts) 0 (non-users rule).",,
 st_game_comp_wd,unavailable,,,No device split; see st_game_wd.,,
 st_game_comp_we,unavailable,,,No device split; see st_game_we.,,
 st_game_comp,unavailable,,,No device split; see st_game.,,

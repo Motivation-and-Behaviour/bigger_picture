@@ -778,12 +778,12 @@ wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
 wb_selfratedhealth_self,compatible,WB150Q01HA,"recode_values(as.numeric(WB150Q01HA), 1 ~ ""Excellent"", 2 ~ ""Good"", 3 ~ ""Fair"", 4 ~ ""Poor"")","Well-being option (2018/2022); 4-level wording, so 'Very good' is unused.",,
 wb_selfratedmentalhealth_self,in_progress,,,,,
 wb_generalhealth_parent,incompatible,WB150Q01HA,,"Only the student's self-rated health (WB150Q01HA, 2018/2022 well-being option), mapped to wb_selfratedhealth_self; no parent rating.",,
-wb_posaffect_self,compatible,"ST186Q05HA, ST186Q01HA, ST186Q03HA, ST186Q07HA",as.numeric(ST186Q05HA) + as.numeric(ST186Q01HA) + as.numeric(ST186Q03HA) + as.numeric(ST186Q07HA),"2018 only: how often normally feels happy, joyful, cheerful, lively (OECD positive-affect index items); NA if any unanswered.",,
-wb_posaffect_measure,inferred,".wave, CNT, ST186Q05HA","if_else(
-  .wave == ""2018"" & stats::ave(!is.na(ST186Q05HA), .wave, as.character(haven::zap_labels(CNT)), FUN = any),
-  ""PISA 2018 positive affect items (happy, joyful, cheerful, lively), 4 of 4 items, 1-4 item scoring from never to always, sum (range 4-16)"",
+wb_posaffect_self,compatible,SWBP,as.numeric(SWBP),"2018 only: OECD positive-affect index SWBP, a WLE of the three ST186 items on how often the student normally feels happy, joyful and cheerful (never, rarely, sometimes, always), as released; present only where all 3 items were answered, and not released for Morocco or for part of Italy's sample (NA). The study-supplied score of the published scale is used; lively (ST186Q07HA), a vitality item outside the index, is unused. Standardise within dataset.",,
+wb_posaffect_measure,inferred,".wave, CNT, SWBP","if_else(
+  .wave == ""2018"" & stats::ave(!is.na(SWBP), .wave, as.character(haven::zap_labels(CNT)), FUN = any),
+  ""PISA 2018 positive affect (ST186: happy, joyful, cheerful), 3 of 3 items, 1-4 item scoring (never to always; no fixed range), OECD WLE index SWBP, present for students answering all 3 items"",
   NA_character_
-)",Describes wb_posaffect_self; 2018 country-cycles that fielded the items only.,,
+)",Describes wb_posaffect_self; 2018 country-cycles with a released index only.,,
 wb_negaffect_self,in_progress,,,,,
 wb_negaffect_measure,in_progress,,,,,
 wb_eudaimonic_self,partial,"ST185Q01HA, ST185Q02HA, ST185Q03HA",as.numeric(ST185Q01HA) + as.numeric(ST185Q02HA) + as.numeric(ST185Q03HA),"2018 only: the 3 meaning-in-life items behind the OECD eudaemonia index (EUDMO); NA if any unanswered. Partial: meaning/purpose only, not self-discovery or effortful engagement.",,

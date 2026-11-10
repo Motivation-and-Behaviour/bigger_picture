@@ -302,13 +302,10 @@ beh_vandalism,unavailable,,,Not collected.,,
 beh_alcohol_self,compatible,"drink30d, alc30d_2","case_when(coalesce(drink30d, alc30d_2) >= 2 ~ TRUE, coalesce(drink30d, alc30d_2) == 1 ~ FALSE)",2010 and 2014 only (optional items): occasions (2010) or days (2014) of drinking alcohol in the last 30 days; TRUE for 1-2 or more. The 2002-2006 'at present' frequency items (no recall period) are not used.,,
 beh_tobacco_self,compatible,"smoke30d, smok30d_2","case_when(coalesce(smoke30d, smok30d_2) >= 2 ~ TRUE, coalesce(smoke30d, smok30d_2) == 1 ~ FALSE)",2010 and 2014 only (optional items): occasions (2010) or days (2014) of smoking cigarettes in the last 30 days; TRUE for 1-2 or more. The all-wave 'How often do you smoke tobacco at present?' item (no recall period) is not used.,,
 beh_vaping_self,in_progress,,,,,
-beh_cannabis_self,compatible,"surveyyear, cannabis12m, cannabis30d, cannabis30d_2","local({
-  use <- na_if(
-    case_when(surveyyear == 2002 ~ cannabis12m, surveyyear == 2014 ~ cannabis30d_2, .default = cannabis30d),
-    0
-  )
+beh_cannabis_self,compatible,"surveyyear, cannabis30d, cannabis30d_2","local({
+  use <- na_if(case_when(surveyyear == 2014 ~ cannabis30d_2, surveyyear %in% c(2006, 2010) ~ cannabis30d), 0)
   case_when(use >= 2 ~ TRUE, use == 1 ~ FALSE)
-})","15-year-olds only (code 0, inapplicable, is NA). 'Have you ever taken cannabis...': 2002 in the last 12 months (times), 2006-2010 in the last 30 days (times), 2014 in the last 30 days (days); TRUE for 1-2 or more.",,
+})","2006-2014 only; 15-year-olds only (code 0, inapplicable, is NA). 'Have you ever taken cannabis... in the last 30 days', self-report: 2006-2010 in times, 2014 in days; TRUE for 1-2 or more. 2002 asked no 30-day item and is NA; the 12-month item (cannabis12m, asked 2002-2010) and the lifetime items (cannabisltm, cannabisltm_2) are unused, since a different recall window never fills a wave on a yes/no row.",,
 beh_drugs_self,in_progress,,,,,
 beh_conduct_sdq_parent,unavailable,,,Not collected.,,
 beh_hyper_sdq_parent,unavailable,,,Not collected.,,

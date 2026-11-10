@@ -479,7 +479,10 @@ acc_academachment_teacherrated,partial,"DQ2162, DQ2164, DQ2166, DQ2167, EQ2A, EQ
   c(4, 5) ~ ""Below average""
 )","Teacher report, sweeps 4-5 (ages 7, 11): mean of the core-subject ratings against the age group (sweep 4 reading, writing, science, maths; sweep 5 English, maths, science), all required, rounded half toward the poorer rating. Welsh/Gaelic/Irish-medium duplicates, speaking and listening, PE, ICT and arts excluded. Five levels: well above -> Very good, above -> Good, average -> Average, below and well below -> Below average. Partial: subject composite.",,
 acc_academachment_parentrated,in_progress,,,,,
-acc_numeracy_stdtest,partial,DCNSCO00,as.numeric(DCNSCO00),"Sweep 4 only (age 7). NFER Number Skills raw score (0-15); no standardised or age-adjusted form, hence partial. Standardise within dataset and wave at analysis.",,
+acc_numeracy_stdtest,compatible,DCMATHS7SA,"local({
+  score <- as.numeric(DCMATHS7SA)
+  if_else(score >= 0, score, NA_real_)
+})","Sweep 4 only (age 7). NFER Progress in Maths, Millennium Cohort Study adaptive edition (a first section routes each child to an easier, medium or harder section): standardised age score (mean 100, SD 15, 2004 UK national standardisation) from the Rasch-scaled score equated to the original 28-mark test; negative codes NA. Routed raw total DCNSCO00 unused: it does not compare across routes. Standardise within dataset and wave at analysis.",,
 acc_numeracy_bas_numberskills,in_progress,,,,,
 acc_literacy_stdtest,compatible,DCWRSD00,as.numeric(DCWRSD00),"Sweep 4 only (age 7). BAS II Word Reading standard score, age-normed (mean 100, SD 15). Ability score (DCWRAB00) and raw total (DCWRSC00) are not age-comparable.",,
 acc_literacy_bas_wordreading,in_progress,,,,,
@@ -522,11 +525,11 @@ beh_beenbullied,partial,"DCSC0036, ECQ56X00, FCHURT00","local({
 beh_beenbullied_online,partial,FCCYBU00,"recode_values(as.numeric(FCCYBU00), 6 ~ ""FALSE"", c(1, 2, 3, 4, 5) ~ ""TRUE"")","Sweep 6 only, self-report: 'How often have other children bullied you online?', most days to never; TRUE for any occurrence. Partial: FCCYBU00 states no reference period.",,
 beh_bullied_online,partial,FCCYBO00,"recode_values(as.numeric(FCCYBO00), 6 ~ ""FALSE"", c(1, 2, 3, 4, 5) ~ ""TRUE"")","Sweep 6 only, self-report: 'How often have you bullied other children online?'; scale and threshold as beh_beenbullied_online. Partial: FCCYBO00 states no reference period.",,
 beh_fight,partial,"FCHITT00, GCHITT00","recode_values(coalesce(as.numeric(FCHITT00), as.numeric(GCHITT00)), 2 ~ ""FALSE"", 1 ~ ""TRUE"")","Sweeps 6-7, self-report: 'In the last 12 months have you pushed or shoved, hit, slapped or punched someone?' Partial: any push, shove or hit counts.",,
-beh_truancy,partial,"ECQ45X00, FCTRUA00","recode_values(coalesce(as.numeric(ECQ45X00), as.numeric(FCTRUA00)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","'Missed school without your parents' permission, even for half a day or one lesson', yes/no: lifetime at sweep 5, past 12 months at sweep 6. Partial for the lifetime recall at sweep 5.",,
+beh_truancy,compatible,FCTRUA00,"recode_values(as.numeric(FCTRUA00), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","Sweep 6 only (age 14). Self-report, yes/no: 'In the last 12 months, have you ever missed school without your parents' permission even if only for half a day or a single lesson?' (not asked in care homes); 12-month recall. Sweep-5 'Have you ever missed school without your parents' permission' (ECQ45X00, lifetime) unused: a yes/no row never fills a wave the 12-month item missed with a lifetime item.",,
 beh_suspended,in_progress,,,,,
-beh_stealing,partial,"ECQ26X00, FCSTOL00, GCSTOL00, FCSTLN00, GCSTLN00, GCJYRD00, GCCRED00","local({
+beh_stealing,compatible,"FCSTOL00, GCSTOL00, FCSTLN00, GCSTLN00, GCJYRD00, GCCRED00","local({
   items <- cbind(
-    coalesce(as.numeric(ECQ26X00), as.numeric(FCSTOL00), as.numeric(GCSTOL00)),
+    coalesce(as.numeric(FCSTOL00), as.numeric(GCSTOL00)),
     coalesce(as.numeric(FCSTLN00), as.numeric(GCSTLN00)),
     as.numeric(GCJYRD00),
     as.numeric(GCCRED00)
@@ -536,18 +539,18 @@ beh_stealing,partial,"ECQ26X00, FCSTOL00, GCSTOL00, FCSTLN00, GCSTLN00, GCJYRD00
     rowSums(items == 2, na.rm = TRUE) > 0 ~ ""FALSE"",
     .default = NA_character_
   )
-})","Self-report, yes/no: shoplifting (sweep 5 ever; sweeps 6-7 last 12 months), stolen something from someone (sweeps 6-7), stolen a vehicle and used someone else's card or bank details (sweep 7). TRUE if any answered item is yes, FALSE if every answered item is no. Burglary to steal or damage (FCROBH00, GCROBH00) excluded. Partial: sweep 5 asks only shoplifting, ever.",,
-beh_vandalism,partial,"ECQ27X00, FCSPRY00, GCSPRY00, ECQ28X00, FCDAMG00, GCDAMG00","local({
+})","Sweeps 6-7 only. Self-report, yes/no, last 12 months: taken something from a shop without paying and stolen something from someone, e.g. a mobile phone or money (sweeps 6-7); stolen a vehicle and used someone else's card or bank details without permission (sweep 7). TRUE if any answered item is yes, FALSE if every answered item is no. Burglary to steal or damage (FCROBH00, GCROBH00) excluded. Sweep-5 'Have you ever taken something from a shop without paying for it?' (ECQ26X00, lifetime) unused: a yes/no row never fills a wave the 12-month items missed with a lifetime item.",,
+beh_vandalism,compatible,"FCSPRY00, GCSPRY00, FCDAMG00, GCDAMG00","local({
   items <- cbind(
-    coalesce(as.numeric(ECQ27X00), as.numeric(FCSPRY00), as.numeric(GCSPRY00)),
-    coalesce(as.numeric(ECQ28X00), as.numeric(FCDAMG00), as.numeric(GCDAMG00))
+    coalesce(as.numeric(FCSPRY00), as.numeric(GCSPRY00)),
+    coalesce(as.numeric(FCDAMG00), as.numeric(GCDAMG00))
   )
   case_when(
     rowSums(items == 1, na.rm = TRUE) > 0 ~ ""TRUE"",
     rowSums(items == 2, na.rm = TRUE) > 0 ~ ""FALSE"",
     .default = NA_character_
   )
-})","Self-report, yes/no: written or spray painted on a building, fence or train, or deliberately damaged something in a public place (sweep 5 ever; sweeps 6-7 last 12 months). TRUE if either answered item is yes, FALSE if every answered item is no. Fire-setting with no property named (GCFIRE00) excluded. Partial: lifetime recall at sweep 5.",,
+})","Sweeps 6-7 only. Self-report, yes/no, last 12 months: written things or spray painted on a building, fence or train where you shouldn't have, or on purpose damaged anything in a public place that didn't belong to you. TRUE if either answered item is yes, FALSE if every answered item is no. Fire-setting with no property named (GCFIRE00) excluded. Sweep-5 lifetime items 'Have you ever written things or sprayed paint on a building, fence or train' (ECQ27X00) and 'Have you ever on purpose damaged anything in a public place' (ECQ28X00) unused: a yes/no row never fills a wave the 12-month items missed with lifetime items.",,
 beh_alcohol_self,compatible,"ECQ61X00, ECQ64X00, FCALCD00, FCALNF00, GCALCD00, GCALNF00","local({
   ever <- coalesce(as.numeric(ECQ61X00), as.numeric(FCALCD00), as.numeric(GCALCD00))
   month <- coalesce(as.numeric(ECQ64X00), as.numeric(FCALNF00), as.numeric(GCALNF00))
@@ -558,22 +561,17 @@ beh_alcohol_self,compatible,"ECQ61X00, ECQ64X00, FCALCD00, FCALNF00, GCALCD00, G
     .default = NA_character_
   )
 })","Self-report, sweeps 5-7: 'How many times have you had an alcoholic drink in the last 4 weeks?' (never to 40 or more); TRUE for any. Asked of those who ever had more than a few sips; never-drinkers FALSE.",,
-beh_tobacco_self,partial,"ECQ59X00, FCSMOK00, GCSMOK00","coalesce(
-  recode_values(as.numeric(ECQ59X00), 1 ~ ""TRUE"", 2 ~ ""FALSE""),
-  recode_values(coalesce(as.numeric(FCSMOK00), as.numeric(GCSMOK00)), c(1, 2, 3) ~ ""FALSE"", c(4, 5, 6) ~ ""TRUE"")
-)","Self-report. Sweep 5: 'Have you ever tried a cigarette, even if it was only a single puff?' (lifetime). Sweeps 6-7: smoking-status statement; smokes sometimes or weekly now TRUE, never, tried once or used to FALSE; e-cigarettes excluded. Partial: lifetime at sweep 5 and no stated window at sweeps 6-7.",,
+beh_tobacco_self,partial,"FCSMOK00, GCSMOK00","recode_values(coalesce(as.numeric(FCSMOK00), as.numeric(GCSMOK00)), 1 ~ ""FALSE"", c(2, 3, 4, 5, 6) ~ ""TRUE"")","Sweeps 6-7 only. Self-report smoking-status statement, 'decide which one best describes you', e-cigarettes excluded (never smoked; only ever tried once; used to smoke sometimes, never now; sometimes now, less than weekly; 1-6 a week; more than 6 a week): never FALSE, every other level TRUE. Partial: a status ladder gives lifetime occurrence, no recall window. Sweep-5 'Have you ever tried a cigarette, even if it was only a single puff?' (ECQ59X00) unused: a yes/no row never fills a wave the status item missed with a different item.",,
 beh_vaping_self,in_progress,,,,,
-beh_cannabis_self,partial,"FCCANB00, GCDRUA00, GCDRAN00","local({
+beh_cannabis_self,compatible,"GCDRUA00, GCDRAN00","local({
   year <- as.numeric(GCDRAN00)
   case_when(
     year %in% c(1, 2, 3, 4) ~ ""TRUE"",
     year == 5 ~ ""FALSE"",
     as.numeric(GCDRUA00) == 2 ~ ""FALSE"",
-    as.numeric(FCCANB00) == 1 ~ ""TRUE"",
-    as.numeric(FCCANB00) == 2 ~ ""FALSE"",
     .default = NA_character_
   )
-})","Self-report. Sweep 6: ever tried cannabis (lifetime). Sweep 7: times taken cannabis in the past year, asked of ever-users; never-users FALSE. Partial: lifetime recall at sweep 6.",,
+})","Sweep 7 only (age 17). Self-report: 'In the past year how many times have you taken cannabis?' (once or twice to more than ten times TRUE; not taken in last year FALSE), asked of those who answered yes to 'Have you ever taken any of the following? Cannabis'; never-users FALSE; 12-month recall. Sweep-6 'Have you ever tried ... Cannabis' (FCCANB00, lifetime) unused: a yes/no row never fills a wave the past-year item missed with a lifetime item.",,
 beh_drugs_self,in_progress,,,,,
 beh_conduct_sdq_parent,compatible,"BCONDUCT, CCONDUCT, DDCONDUCT, ECONDUCT, FCONDUCT, GCONDUCT","coalesce(
   as.numeric(BCONDUCT),

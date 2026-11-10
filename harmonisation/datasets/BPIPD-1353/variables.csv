@@ -274,14 +274,14 @@ st_internet_wd,partial,"YEAR, INT_WD, INT_WD_MM, INT_WD_MM2","case_when(
   YEAR %in% 2011:2016 & as.numeric(INT_WD) == 1 ~ 0,
   YEAR %in% 2011:2016 ~ as.numeric(INT_WD_MM2) / 60,
   .default = NA_real_
-)","2008-2016, 2018-2019 only. Internet use on an average weekday, past 30 days, minutes/60; use/no-use gate: no-use = 0. 2008 INT_WD_MM covers all purposes; from 2009 non-study use only (INT_WD_MM 2009-2010 and 2018-2019; INT_WD_MM2, the non-study part, 2011-2016). Partial: purpose-restricted from 2009.",,
+)","2008-2016, 2018-2019 only. Internet use on an average weekday, past 30 days, minutes/60; use/no-use gate: no-use = 0. 2008 INT_WD_MM covers all purposes; from 2009 non-study use only (INT_WD_MM 2009-2010 and 2018-2019; INT_WD_MM2, the non-study part, 2011-2016). The 2011-2016 study part (INT_WD_MM1) is not added to the non-study part, so that those years match the non-study items of 2009-2010 and 2018-2019; it is mapped on st_educational_wd. Partial: purpose-restricted from 2009.",,
 st_internet_we,partial,"YEAR, INT_WK, INT_WK_MM, INT_WK_MM2","case_when(
   YEAR %in% c(2008:2010, 2018, 2019) & as.numeric(INT_WK) == 1 ~ 0,
   YEAR %in% c(2008:2010, 2018, 2019) ~ as.numeric(INT_WK_MM) / 60,
   YEAR %in% 2011:2016 & as.numeric(INT_WK) == 1 ~ 0,
   YEAR %in% 2011:2016 ~ as.numeric(INT_WK_MM2) / 60,
   .default = NA_real_
-)","Internet use on an average weekend day; items, waves and gate as st_internet_wd.",,
+)","Internet use on an average weekend day; items, waves and gate as st_internet_wd. The 2011-2016 study part (INT_WK_MM1) is not added, so that those years match the non-study items of 2009-2010 and 2018-2019; it is mapped on st_educational_we.",,
 st_internet,partial,"YEAR, INT_WD, INT_WK, INT_WD_MM, INT_WK_MM, INT_WD_MM2, INT_WK_MM2","((case_when(
   YEAR %in% c(2008:2010, 2018, 2019) & as.numeric(INT_WD) == 1 ~ 0,
   YEAR %in% c(2008:2010, 2018, 2019) ~ as.numeric(INT_WD_MM) / 60,
@@ -298,7 +298,7 @@ st_internet,partial,"YEAR, INT_WD, INT_WK, INT_WD_MM, INT_WK_MM, INT_WD_MM2, INT
     .default = NA_real_
   )) *
     2) /
-  7","(5 x st_internet_wd + 2 x st_internet_we) / 7; 2008 all purposes, non-study use from 2009 (partial).",,
+  7","(5 x st_internet_wd + 2 x st_internet_we) / 7; 2008 all purposes, non-study use from 2009 (partial). The 2011-2016 study parts are not added, so that those years match the non-study items of 2009-2010 and 2018-2019; they are mapped on st_educational.",,
 st_videochat_wd,in_progress,,,,,
 st_videochat_we,in_progress,,,,,
 st_videochat,unavailable,,,Not collected.,,

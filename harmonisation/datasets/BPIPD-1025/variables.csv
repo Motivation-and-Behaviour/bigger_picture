@@ -413,8 +413,7 @@ beh_truancy,compatible,"jb13, yp_q16, wave","case_when(
   wave == ""child2004"" ~ recode_values(as.numeric(yp_q16), 1 ~ ""FALSE"", c(2, 3, 4) ~ ""TRUE"", default = NA_character_)
 )","Self-report. age16: 'Have you stayed away from school at all since September 1985 for reasons other than illness when you should have been there?' (jb13, this school year; boarders NA). child2004 (ages 10-16): times skipped or bunked off school in the last year (yp_q16; don't know and not at school NA). TRUE for any occurrence.",,
 beh_suspended,in_progress,,,,,
-beh_stealing,partial,"q22.7, q22.21, q22.9, q22.13, q22.15, q22.17, q22.19, q22.23, yp_q35, wave","case_when(
-  wave == ""child2004"" ~ recode_values(as.numeric(yp_q35), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_),
+beh_stealing,compatible,"q22.7, q22.21, q22.9, q22.13, q22.15, q22.17, q22.19, q22.23","case_when(
   as.numeric(q22.7) <= 4 |
     as.numeric(q22.21) <= 4 |
     as.numeric(q22.9) <= 4 |
@@ -431,36 +430,12 @@ beh_stealing,partial,"q22.7, q22.21, q22.9, q22.13, q22.15, q22.17, q22.19, q22.
     !is.na(q22.17) |
     !is.na(q22.19) |
     !is.na(q22.23) ~ ""FALSE""
-)","age16, self-report, past year: shoplifting over or under 5 pounds, taking a bike, breaking open a cash dispenser, stealing from a car or bike, burglary to steal, stealing from a shed or garage, taking something left lying about (q22.*); TRUE if any done in the past year, FALSE if every answered item is 'no' or 'not in the past year'. Force or threat to get money (q22.3, q22.5) excluded. child2004 (ages 12-16): 'ever stolen from a store' (yp_q35). Partial: child2004 is lifetime shoplifting only.",,
+)","age16 only, self-report, past year: shoplifting over or under 5 pounds, taking a bike, breaking open a cash dispenser, stealing from a car or bike, burglary to steal, stealing from a shed or garage, taking something left lying about (q22.*); TRUE if any done in the past year, FALSE if every answered item is 'no' or 'not in the past year'. Force or threat to get money (q22.3, q22.5) excluded. The child2004 item 'Have you ever stolen something from a shop, supermarket or department store?' (yp_q35; lifetime shoplifting) is not used: a yes/no row keeps the past-year series alone.",,
 beh_vandalism,compatible,q22.1,"recode_values(as.numeric(q22.1), 1:4 ~ ""TRUE"", c(5, 6) ~ ""FALSE"", default = NA_character_)","age16 only, self-report: 'broken windows or smashed property not yours' in the past year (q22.1); once or more in the past year TRUE, 'yes but not in the past year' and 'no' FALSE.",,
-beh_alcohol_self,partial,"hd1, yp_q32, wave","case_when(
-  wave == ""age16"" ~ recode_values(as.numeric(hd1), 1:6 ~ ""TRUE"", 7 ~ ""FALSE"", default = NA_character_),
-  wave == ""child2004"" ~ recode_values(
-    as.numeric(yp_q32),
-    c(4, 5) ~ ""TRUE"",
-    c(1, 2, 3) ~ ""FALSE"",
-    default = NA_character_
-  )
-)","age16: 'How often in the past year have you drunk alcohol?' (hd1); any frequency, special occasions included, TRUE, 'never drink' FALSE. child2004 (ages 12-16): drinking-status statement (yp_q32); drinks sometimes or weekly TRUE, never, once or twice only, or used to FALSE. Partial: the child2004 statement has no stated window.",,
-beh_tobacco_self,partial,"gh1, yp_q31, wave","case_when(
-  wave == ""age16"" ~ recode_values(as.numeric(gh1), c(3, 4) ~ ""TRUE"", c(1, 2) ~ ""FALSE"", default = NA_character_),
-  wave == ""child2004"" ~ recode_values(
-    as.numeric(yp_q31),
-    c(4, 5) ~ ""TRUE"",
-    c(1, 2, 3) ~ ""FALSE"",
-    default = NA_character_
-  )
-)","Self-report. age16: 'What kind of smoker are you?' (gh1); smokes now (under or over one a week) TRUE, never or not for 3 months FALSE. child2004 (ages 12-16): smoking-status statement (yp_q31); sometimes or weekly TRUE, never, once or twice, or used to FALSE. Partial: no stated window at child2004.",,
+beh_alcohol_self,compatible,hd1,"recode_values(as.numeric(hd1), 1:6 ~ ""TRUE"", 7 ~ ""FALSE"", default = NA_character_)","age16 only, self-report: 'How often in the past year have you drunk alcohol?' (hd1); any frequency, special occasions included, TRUE, 'never drink' FALSE; past 12 months. The child2004 drinking-status statement (yp_q32: never, once or twice only, used to, sometimes, once a week or more; no recall window) is not used: a yes/no row keeps the past-year series alone.",,
+beh_tobacco_self,compatible,gh1,"recode_values(as.numeric(gh1), c(3, 4) ~ ""TRUE"", c(1, 2) ~ ""FALSE"", default = NA_character_)","age16 only, self-report: 'Please tell us what kind of smoker you are' (gh1); smokes sometimes (less than one cigarette a week) or at least one a week TRUE, never smoked or 'used to smoke but I haven't for 3 months or more' FALSE, so the window is the past 3 months. The child2004 smoking-status statement (yp_q31: never, once or twice only, used to, sometimes, once a week or more; no recall window) is not used: a yes/no row keeps the 3-month series alone.",,
 beh_vaping_self,in_progress,,,,,
-beh_cannabis_self,partial,"q31.7, yp_q33, wave","case_when(
-  wave == ""age16"" ~ recode_values(as.numeric(q31.7), 3:5 ~ ""TRUE"", c(1, 2) ~ ""FALSE"", default = NA_character_),
-  wave == ""child2004"" ~ recode_values(
-    as.numeric(yp_q33),
-    c(4, 5) ~ ""TRUE"",
-    c(1, 2, 3) ~ ""FALSE"",
-    default = NA_character_
-  )
-)","age16: 'Have you ever tried taking cannabis?' (q31.7); once or more in the past year TRUE, never or not in the past year FALSE. child2004 (ages 12-16): cannabis-status statement (yp_q33); sometimes or weekly TRUE, never, once or twice, or used to FALSE. Partial: no stated window at child2004.",,
+beh_cannabis_self,compatible,q31.7,"recode_values(as.numeric(q31.7), 3:5 ~ ""TRUE"", c(1, 2) ~ ""FALSE"", default = NA_character_)","age16 only, self-report: 'Have you ever tried taking cannabis?' (q31.7); once or more in the past year TRUE, never or 'yes, not in the past year' FALSE; past 12 months. The child2004 cannabis-status statement (yp_q33: never, once or twice only, used to, sometimes, once a week or more; no recall window) is not used: a yes/no row keeps the past-year series alone.",,
 beh_drugs_self,in_progress,,,,,
 beh_conduct_sdq_parent,compatible,"sdq_p05, sdq_p07, sdq_p12, sdq_p18, sdq_p22","if_else(
   rowSums(cbind(!is.na(sdq_p05), !is.na(sdq_p07), !is.na(sdq_p12), !is.na(sdq_p18), !is.na(sdq_p22))) >= 3,

@@ -48,18 +48,10 @@ survey_weight,compatible,"CH97PRWT, CH02PRWT, CH07PRWT, X14CHWGT, X19CHWGT, X19C
 })","The study's child cross-sectional weight for each wave, as released: CH97PRWT (1997 child-level weight), CH02PRWT, CH07PRWT (2007 primary caregiver/child weight), X14CHWGT, X19CHWGT (CDS-2019 child cross-sectional weight, which the 2019 user guide names for all analyses of PCG-child data) and X19CVWGT (the CDS-2020 child weight, on the 2020 rows); 0 (no weight) set to NA. Household, in-home, time-diary, interview and longitudinal weights are unused.",,
 survey_strata,unavailable,,,Not in the supplied extract.,,
 survey_cluster,unavailable,,,Not in the supplied extract.,,
-family_id,compatible,"DEMID97, X14YRID, X19YRID","local({
-  s <- case_when(
-    .wave == ""1997"" ~ paste0(""1997_"", sprintf(""%.0f"", as.numeric(DEMID97))),
-    .wave == ""2014"" ~ paste0(""2013_"", sprintf(""%.0f"", as.numeric(X14YRID))),
-    .default = NA_character_
-  )
-  t <- if_else(.wave == ""2019"", paste0(""2019_"", sprintf(""%.0f"", as.numeric(X19YRID))), NA_character_)
-  coalesce(
-    carry_within(s, participant_id, order = as.numeric(.wave)),
-    carry_within(t, participant_id, order = as.numeric(.wave))
-  )
-})","The PSID family the child was sampled from: the 1997 family interview number for the original cohort (DEMID97; up to two children per family) and the 2013 family interview number for the CDS-2014 generation (X14YRID; all children of the family), or the 2019 family for children who entered in 2019 (X19YRID), prefixed by the year and carried within participant so it is constant. Children of one family who entered in different waves get different ids. Siblings share the PCG-household answers (PCGHH files).",,
+family_id,compatible,"DEMID97, family_unit","local({
+  s <- if_else(.wave == ""1997"", paste0(""1997_"", sprintf(""%.0f"", as.numeric(DEMID97))), NA_character_)
+  coalesce(carry_within(s, participant_id, order = as.numeric(.wave)), family_unit)
+})","The PSID family the child was sampled from: the 1997 family interview number for the original cohort (DEMID97; up to two children per family), carried within participant; for the CDS-2014 generation, the tidier's family_unit, which links the 2013 family interview number (X14YRID; all children of the family) and the 2019 family interview number (X19YRID) wherever a child is in both, so children who entered in 2019 share the id of their siblings in the same 2019 family and 2013 families whose children share a 2019 family become one. Ids are prefixed by year and constant within participant. Siblings share the PCG-household answers (PCGHH files).",,
 sample_component,compatible,cohort,as.character(cohort),"The two separately selected child samples (tidier column cohort): the original cohort, up to two children aged 0-12 per PSID family in 1997 and followed in 2002 and 2007 with no new entrants; and the CDS-2014 generation, all children aged 0-17 in PSID families interviewed in 2013, with children newly aged 0-4 added in 2019 (CDS-2019 User Guide p. 2). The PSID's own family samples within each cohort (including the 1997 immigrant refresher, NEWIMMI) were selected under one CDS design and are not split.",,
 sample_population,inferred,,"""General population""","Children sampled from families in the PSID, a nationally representative US household panel (CDS-2019 User Guide p. 2).",,
 parent_respondent,compatible,"RELPCG97, RELPCG02, RELPCG07, X14PCGRLSP, X19PCGRLSP","local({

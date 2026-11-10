@@ -190,29 +190,9 @@ st_watch,partial,"tv_weekday, passive_weekday, child_access, child_access_wave2,
     7 /
     60
 })","(5 x st_watch_wd + 2 x st_watch_we) / 7. Sum of tv_*, passive_* (DR-0002); partial as those rows; top code 450 minutes = 7.5 h.",,
-st_game_wd,partial,"gaming_weekday, intentertain_weekday, child_access, child_access_wave2, childfreq_entertain_wave2","local({
-  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
-  (gaming_weekday +
-    if_else(is.na(intentertain_weekday) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekday)) /
-    60
-})","Both waves, parent report, typical weekday: sum of gaming_weekday and intentertain_weekday (smartphone or tablet 'Interactive entertainment (e.g., game)', Table 2) (DR-0002). The gaming item's wording is not in the folder; it is asked of all children beside the TV and laptop items, and at baseline only 14 of the 79 users with interactive entertainment time report any gaming, so it is not mainly phone and tablet games; but 10 of those 14 give the same minutes on both, so the sum may count some play twice (one child holds the top code on both, 15 h). Mobile part 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_entertain_wave2 = 1 (never). Partial: computer games are left out and interactive entertainment may hold more than games. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
-st_game_we,partial,"gaming_weekend, intentertain_weekend, child_access, child_access_wave2, childfreq_entertain_wave2","local({
-  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
-  (gaming_weekend +
-    if_else(is.na(intentertain_weekend) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekend)) /
-    60
-})","Both waves, parent report, typical weekend day: sum of gaming_weekend and intentertain_weekend (smartphone or tablet 'Interactive entertainment (e.g., game)', Table 2) (DR-0002). The gaming item's wording is not in the folder; it is asked of all children beside the TV and laptop items, and at baseline only 24 of the 98 users with weekend interactive entertainment time report any weekend gaming, so it is not mainly phone and tablet games; but 7 of those 24 give the same minutes on both, so the sum may count some play twice (one child holds the top code on both, 15 h). Mobile part 0 where a filter establishes non-use: child_access = 0 (baseline non-users, 180), child_access_wave2 = 0 (follow-up, 22) or childfreq_entertain_wave2 = 1 (never). Partial: computer games are left out and interactive entertainment may hold more than games. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
-st_game,partial,"gaming_weekday, intentertain_weekday, child_access, child_access_wave2, childfreq_entertain_wave2, gaming_weekend, intentertain_weekend","local({
-  nonuser <- child_access %in% 0 | child_access_wave2 %in% 0
-  (5 *
-    (gaming_weekday +
-      if_else(is.na(intentertain_weekday) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekday)) +
-    2 *
-      (gaming_weekend +
-        if_else(is.na(intentertain_weekend) & (nonuser | childfreq_entertain_wave2 %in% 1), 0, intentertain_weekend))) /
-    7 /
-    60
-})","(5 x st_game_wd + 2 x st_game_we) / 7. Sum of gaming_*, intentertain_* (DR-0002); partial as those rows; top code 450 minutes = 7.5 h.",,
+st_game_wd,partial,gaming_weekday,gaming_weekday / 60,"Both waves, parent report, typical weekday: gaming_weekday, asked of all children beside the TV and laptop items; its wording is not in the folder. Partial: the item's device scope is undocumented, and 63 of the 79 baseline children (34 of 41 at follow-up) with phone or tablet interactive-entertainment time report 0 here, so mobile play may be undercounted. The smartphone or tablet item 'Interactive entertainment (e.g., game)' (intentertain_weekday, Table 2) is named unused: it is bundled (it may hold more than games) and is never added to a row with a direct item, and of the children with both reported, 10 of 14 at baseline and 4 of 7 at follow-up give the same minutes on both, so a sum would count play twice; it is mapped to st_game_phone_wd. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_game_we,partial,gaming_weekend,gaming_weekend / 60,"Both waves, parent report, typical weekend day: gaming_weekend, asked of all children beside the TV and laptop items; its wording is not in the folder. Partial: the item's device scope is undocumented, and 72 of the 98 baseline children (38 of 50 at follow-up) with phone or tablet interactive-entertainment time report 0 here, so mobile play may be undercounted. The smartphone or tablet item 'Interactive entertainment (e.g., game)' (intentertain_weekend, Table 2) is named unused: it is bundled (it may hold more than games) and is never added to a row with a direct item, and of the children with both reported, 7 of 24 at baseline and 3 of 12 at follow-up give the same minutes on both, so a sum would count play twice; it is mapped to st_game_phone_we. Minutes / 60; answers come from a fixed response list the study scored in minutes (0, 7.5, 15, 30 ... 450); wording and labels are not in the folder; top code 450 minutes = 7.5 h.",,
+st_game,partial,"gaming_weekday, gaming_weekend",((5 * gaming_weekday) + (2 * gaming_weekend)) / 7 / 60,"(5 x st_game_wd + 2 x st_game_we) / 7 from gaming_weekday and gaming_weekend; partial as those rows. intentertain_weekday and intentertain_weekend are named unused (bundled, mapped to st_game_phone). Top code 450 minutes = 7.5 h.",,
 st_game_comp_wd,unavailable,,,Not collected.,,
 st_game_comp_we,unavailable,,,Not collected.,,
 st_game_comp,unavailable,,,Not collected.,,

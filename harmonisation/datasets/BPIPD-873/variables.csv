@@ -580,28 +580,11 @@ beh_truancy,compatible,"class_absence, class_cut, education_child","if_else(
 beh_suspended,in_progress,,,,,
 beh_stealing,unavailable,,,Not collected.,,
 beh_vandalism,unavailable,,,Not collected.,,
-beh_alcohol_self,partial,"activity_1, activity_2, activity_3, activity_4, activity_5, activity_6, drank_12m","local({
-  acts <- sapply(list(activity_1, activity_2, activity_3, activity_4, activity_5, activity_6), as.numeric)
-  listed <- case_when(
-    rowSums(acts == 3, na.rm = TRUE) > 0 ~ ""TRUE"",
-    rowSums(!is.na(acts)) > 0 ~ ""FALSE"",
-    .default = NA_character_
-  )
-  coalesce(listed, recode_values(as.numeric(drank_12m), 1 ~ ""TRUE"", 5 ~ ""FALSE"", default = NA_character_))
-})","Ages 10-15, self-report. 2010 and 2014: 'Have you ever' drunk alcohol, from a list of activities (lifetime); 2016: drank alcohol in the past 12 months. The adult item (drinking 3+ times a week, past month) is not used.",,
-beh_tobacco_self,partial,"smoked_month, activity_1, activity_2, activity_3, activity_4, activity_5, activity_6, smoked_12m","local({
-  acts <- sapply(list(activity_1, activity_2, activity_3, activity_4, activity_5, activity_6), as.numeric)
-  listed <- case_when(
-    rowSums(acts == 4, na.rm = TRUE) > 0 ~ ""TRUE"",
-    rowSums(!is.na(acts)) > 0 ~ ""FALSE"",
-    .default = NA_character_
-  )
-  coalesce(
-    recode_values(as.numeric(smoked_month), 1 ~ ""TRUE"", c(0, 5) ~ ""FALSE"", default = NA_character_),
-    listed,
-    recode_values(as.numeric(smoked_12m), 1 ~ ""TRUE"", 5 ~ ""FALSE"", default = NA_character_)
-  )
-})","Self-report. Smoked cigarettes in the past month (ages 16-19 in 2010-2016, 10-19 in 2018-2022); ages 10-15: 'Have you ever' smoked, from a list of activities (2010, 2014; lifetime) and smoked in the past 12 months (2016).",,
+beh_alcohol_self,compatible,drank_12m,"recode_values(as.numeric(drank_12m), 1 ~ ""TRUE"", 5 ~ ""FALSE"", default = NA_character_)","2016 only, ages 10-15, self-report: 'In the past year, did you drink alcohol?' (drank_12m); yes TRUE, no FALSE; past 12 months. The 2010 and 2014 checklist 'Have you ever participated in any of the following activities?' (activity_1 to activity_6, drink alcohol; lifetime) is not used: a yes/no row keeps the 12-month series alone. The adult item (drinking 3+ times a week, past month) is not used.",,
+beh_tobacco_self,compatible,"smoked_month, smoked_12m","coalesce(
+  recode_values(as.numeric(smoked_month), 1 ~ ""TRUE"", c(0, 5) ~ ""FALSE"", default = NA_character_),
+  recode_values(as.numeric(smoked_12m), 1 ~ ""TRUE"", 5 ~ ""FALSE"", default = NA_character_)
+)","Self-report. 'Did you smoke cigarettes in the past month?' (smoked_month; ages 16-19 in 2010-2016, 10-19 in 2018-2022) and, at ages 10-15 in 2016, 'In the past year, did you smoke cigarettes?' (smoked_12m); yes TRUE, no FALSE; recall past month, or past 12 months at ages 10-15 in 2016. The 2010 and 2014 checklist 'Have you ever participated in any of the following activities?' (activity_1 to activity_6, smoke cigarettes; lifetime) is not used, so ages 10-15 in 2010 and 2014 stay NA: a yes/no row never fills them from a lifetime item.",,
 beh_vaping_self,in_progress,,,,,
 beh_cannabis_self,unavailable,,,Not collected.,,
 beh_drugs_self,in_progress,,,,,

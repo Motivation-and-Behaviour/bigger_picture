@@ -478,21 +478,14 @@ school_track,inferred,survey_year,"if_else(survey_year %in% 2015:2020, ""Not tra
 st_measure_type,inferred,,"""Continuous""","Open hours (minutes in 2010-2011) per weekday, weekend day or average day, written into daily time-use grids and media-time items.",,
 st_measure_name,inferred,,"""Custom""",Study's own time-use grid and media-time items (KICCE questionnaires); no published instrument named.,,
 st_responder,inferred,survey_year,"if_else(survey_year >= 2021, ""Self"", ""Parent or carer"")","2010 mother questionnaire, 2011-2020 caregiver CAPI (D questionnaire; the codebook's subject column reads 'child' from 2018 but names whom the item is about), 2021-2023 the child's own questionnaire (J).",,
-st_total_wd,partial,"DChdlc021, DChdlc022, DChdsc006a","coalesce(
-  na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdlc021)), 99999999), 88888888), 9998) +
-    na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdlc022)), 99999999), 88888888), 9998),
-  na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006a)), 99999999), 88888888), 9998)
-)","2013-2014: weekday hours of education using electronic media plus play using electronic media (DChdlc021 + DChdlc022, caregiver report), the two purpose parts of one all-device item (DR-0004); 2015: weekday hours of 'media' (DChdsc006a), caregiver time-use grid. Partial: 'media' is not defined in the codebook and is asked beside TV watching, so it may leave TV out.",,
-st_total_we,partial,DChdsc006b,"na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006b)), 99999999), 88888888), 9998)","2015 only. Weekend-day hours of 'media' (DChdsc006b), caregiver time-use grid. Partial: 'media' is not defined and is asked beside TV watching, so it may leave TV out.",,
-st_total,partial,"DChdsc006a, DChdsc006b, DChmid017, JChmid017a, JChmid017b","coalesce(
-  (5 *
-    na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006a)), 99999999), 88888888), 9998) +
-    2 * na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006b)), 99999999), 88888888), 9998)) /
-    7,
+st_total_wd,compatible,"DChdlc021, DChdlc022","na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdlc021)), 99999999), 88888888), 9998) +
+  na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdlc022)), 99999999), 88888888), 9998)","2013-2014 only: weekday hours of education using electronic media plus play using electronic media ('전자매체를 이용한 교육시간' + '전자매체를 이용한 놀이시간', DChdlc021 + DChdlc022, caregiver report), the two purpose parts of one all-device item (DR-0004). Open hours. The 2015 'media' cell of the time-use grid (DChdsc006a), a residual beside TV watching, is on st_internet_wd.",,
+st_total_we,incompatible,DChdsc006b,,"Only the 2015 'media' cell of the caregiver's time-use grid (DChdsc006b), a residual beside TV watching, not an item on all screen use; mapped to st_internet_we.",,
+st_total,partial,"DChmid017, JChmid017a, JChmid017b","coalesce(
   na_if(na_if(na_if(as.numeric(haven::zap_labels(DChmid017)), 99999999), 88888888), 9998),
   na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017a)), 99999999), 88888888), 9998) +
     na_if(na_if(na_if(as.numeric(haven::zap_labels(JChmid017b)), 99999999), 88888888), 9998) / 60
-)","2015-2023 only: the caregiver's 2015 weekday and weekend hours of 'media' (DChdsc006a/b, in the time-use grid beside TV watching), the caregiver's hours per average day of smartphone and PC use (DChmid017, 2016-2017; 2018 item not in the codebook, 25 rows with the undefined code 9998 set to NA) and of media use (2019-2020; 'don't know' set to NA), and the child's media use per average day in hours and minutes (JChmid017a + JChmid017b / 60, 2021-2023); 2015 as (5 x weekday + 2 x weekend) / 7. Partial: TV is not named, 2016-2017 counts smartphone and PC only, the scope of 'media' is not defined, and the series splices three items (caregiver to 2020, child from 2021). 2013-2014 are weekday only (st_total_wd).",,
+)","2016-2023 only: the caregiver's hours per average day of smartphone and PC use (DChmid017, 2016-2017; 2018 item not in the codebook, 25 rows with the undefined code 9998 set to NA) and of media use (2019-2020; 'don't know' set to NA), and the child's media use per average day in hours and minutes (JChmid017a + JChmid017b / 60, 2021-2023). Partial: TV is not named, 2016-2017 counts smartphone and PC only, the scope of 'media' is not defined, and the series splices items (caregiver to 2020, child from 2021). 2013-2014 are weekday only (st_total_wd); the 2015 'media' cells of the time-use grid (DChdsc006a/b), a residual beside TV watching, are on st_internet.",,
 st_watch_wd,partial,"EChdlc001, EChdlc002, EChdlc003, EChdlc004, EChdlc005, EChdlc006, EChdlc007, EChdlc008, EChdlc009, EChdlc010, EChdlc011, EChdlc012, EChdlc013, DChdlc008_min, DChdlc008, DChdsc005a, JChdsc005a","local({
   g <- sapply(
     list(
@@ -667,9 +660,12 @@ st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
-st_internet_wd,unavailable,,,Not collected.,,
-st_internet_we,unavailable,,,Not collected.,,
-st_internet,unavailable,,,Not collected.,,
+st_internet_wd,partial,DChdsc006a,"na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006a)), 99999999), 88888888), 9998)","2015 only. Weekday hours of 'media' ('미디어', DChdsc006a) in the caregiver's daily time-use grid, whose cells are mutually exclusive activities summing to 24 hours, with TV watching a separate cell (DChdsc005a, st_watch_wd); so media use other than TV. Partial: a residual beside a watching item, and 'media' is not defined further. Open hours.",,
+st_internet_we,partial,DChdsc006b,"na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006b)), 99999999), 88888888), 9998)","2015 only. Weekend-day hours of 'media' ('미디어', DChdsc006b) in the caregiver's daily time-use grid, whose cells are mutually exclusive activities summing to 24 hours, with TV watching a separate cell (DChdsc005b, st_watch_we); so media use other than TV. Partial: a residual beside a watching item, and 'media' is not defined further. Open hours.",,
+st_internet,partial,"DChdsc006a, DChdsc006b","(5 *
+  na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006a)), 99999999), 88888888), 9998) +
+  2 * na_if(na_if(na_if(as.numeric(haven::zap_labels(DChdsc006b)), 99999999), 88888888), 9998)) /
+  7","2015 only. (5 x st_internet_wd + 2 x st_internet_we) / 7: the caregiver's weekday and weekend hours of 'media' (DChdsc006a/b) in the daily time-use grid beside a separate TV-watching cell, media use other than TV. Partial: a residual beside a watching item, and 'media' is not defined further.",,
 st_videochat_wd,unavailable,,,Not collected.,,
 st_videochat_we,unavailable,,,Not collected.,,
 st_videochat,unavailable,,,Not collected.,,

@@ -42,6 +42,7 @@ tidy_BPIPD_46 <- function(raw_dataset, spec) {
 
   df <- bp46_carry_to_2020(df, bp46_household_columns(df))
   df <- bp46_repeat_grade(df, waves)
+  df <- bp46_family_unit(df)
 
   # CDS-2021 asked only frequency screen items (no diary or duration item), so
   # its rows go once they have served as donors to the CDS-2020 carries.
@@ -640,5 +641,33 @@ bp46_repeat_grade <- function(df, waves) {
     " in their own waves; a yes is carried to every later wave attended"
   )
   df$repeat_grade_ever <- x
+  df
+}
+
+#' One family per CDS-2014-generation child, linking 2013 and 2019 families
+bp46_family_unit <- function(df) {
+  rows <- which(df$.wave %in% c("2014", "2019"))
+  family <- ifelse(
+    df$.wave[rows] == "2014",
+    paste0("2013_", sprintf("%.0f", df$X14YRID[rows])),
+    paste0("2019_", sprintf("%.0f", df$X19YRID[rows]))
+  )
+  child <- df$participant_id[rows]
+  # Families that share a child form one group, named by its first id in sort
+  # order, a 2013 id wherever the group has one.
+  unit <- family
+  repeat {
+    linked <- stats::ave(stats::ave(unit, child, FUN = min), family, FUN = min)
+    if (identical(linked, unit)) {
+      break
+    }
+    unit <- linked
+  }
+  df$family_unit <- unit[match(df$participant_id, child)]
+  attr(df$family_unit, "label") <- paste(
+    "PSID family of a CDS-2014-generation child: 2013 (X14YRID) and 2019",
+    "(X19YRID) family interview numbers, prefixed by year, with families that",
+    "share a child linked into one group named by its first id in sort order"
+  )
   df
 }

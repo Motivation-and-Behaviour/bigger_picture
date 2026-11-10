@@ -1,6 +1,6 @@
 dataset_id: "871"
 dataset_name: "Positive Body & Sex Project"
-status: "in_progress"
+status: "blocked"
 resources:
   # --- DATA ---
   - name: "Analytical Dataset (Flat Format)"
