@@ -2,8 +2,8 @@
 #'
 #' Slices each wave out of the single wide release using the column map in
 #' `bp31_wave_columns()`, stacks the slices long, fills parent education and
-#' clears Woodcock-Johnson floor scores, then `bp31_apply_labels()` re-attaches
-#' labels.
+#' the mother's Year 15 age and work, clears Woodcock-Johnson floor scores,
+#' then `bp31_apply_labels()` re-attaches labels.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -20,6 +20,7 @@ tidy_BPIPD_31 <- function(raw_dataset, spec) {
   }
   raw <- bp31_add_cbcl_scores(raw_dataset$data[[1]])
   raw <- bp31_add_parentstress_mother(raw)
+  raw <- bp31_add_told_conditions(raw)
 
   constants <- bp31_constant_columns()
   wave_map <- bp31_wave_columns()
@@ -42,6 +43,7 @@ tidy_BPIPD_31 <- function(raw_dataset, spec) {
     stacked$pcg_relationship
   )
   stacked <- bp31_fill_parent_education(stacked)
+  stacked <- bp31_fill_mother_y15(stacked)
   stacked <- bp31_drop_wj_floor(stacked)
 
   if (anyDuplicated(stacked[c("participant_id", "wave")]) > 0L) {
@@ -74,7 +76,11 @@ bp31_constant_columns <- function() {
     ethnicity_mother = "CM1ETHRACE",
     ethnicity_youth = "CK6ETHRACE",
     mother_born_us = "M1H2",
-    father_born_us = "F1H2"
+    father_born_us = "F1H2",
+    city_sample = "CM1CITSM",
+    prenatal_cigarettes = "M1G4",
+    breastfed_mother = "M2B12",
+    breastfed_father = "F2B12"
   )
 }
 
@@ -148,6 +154,25 @@ bp31_wave_columns <- function() {
       "School grade the child is enrolled in",
       y9 = "P5L1",
       y15 = "P6C3"
+    ),
+    school_type = bp31_entry(
+      "PCG report: type of school (Year 9 the school attended last school year; Year 15 the school attends): 1 public, 2 private, 3 parochial or religious, 4 home school, 5 not attending; the wordings differ, so the column carries no value labels",
+      y9 = "P5L1A",
+      y15 = "P6C1"
+    ),
+    mother_age = bp31_entry(
+      "Mother's age in completed years (Years 3-9 constructed; Year 15 the PCG's age where the PCG is the biological mother, else her Year 9 age plus the child's change in age)",
+      y3 = "CM3AGE",
+      y5 = "CM4AGE",
+      y9 = "CM5AGE",
+      y15 = "CP6AGE"
+    ),
+    mother_worked_last_week = bp31_entry(
+      "Mother did any regular work for pay last week (her own report at Years 3-9; Year 15 the PCG's report where the PCG is the biological mother)",
+      y3 = "M3K4",
+      y5 = "M4K4",
+      y9 = "M5I4",
+      y15 = "P6K6"
     ),
     # --- family structure ---------------------------------------------------
     married_to_other_parent = bp31_entry(
@@ -522,6 +547,203 @@ bp31_wave_columns <- function() {
       "PCG report: child/youth has a television in the bedroom (1 yes, 2 no; Years 9 and 15 only)",
       y9 = "P5I14",
       y15 = "P6D7"
+    ),
+    # --- body size, puberty and physical activity ---------------------------
+    child_height_cm = bp31_entry(
+      "Child's height in cm from the in-home measurements (Year 15: the in-home subsample only)",
+      y3 = "CH3CHTCM",
+      y5 = "CH4CHTCM",
+      y9 = "CH5CHTCM",
+      y15 = "CH6CHTCM"
+    ),
+    child_weight_kg = bp31_entry(
+      "Child's weight in kg from the in-home measurements (Year 15: the in-home subsample only)",
+      y3 = "CH3CWTKG",
+      y5 = "CH4CWTKG",
+      y9 = "CH5CWTKG",
+      y15 = "CH6CWTKG"
+    ),
+    child_weight_source = bp31_entry(
+      "In-home record of the child's weight: measured, or reported instead of measured (Year 9 only)",
+      y9 = "H5W9"
+    ),
+    child_height_source = bp31_entry(
+      "In-home record of the child's height: measured, or reported instead of measured (Year 9 only)",
+      y9 = "H5W11"
+    ),
+    youth_height_ft = bp31_entry(
+      "Youth self-report: height, feet (Year 15 only)",
+      y15 = "K6D5"
+    ),
+    youth_height_in = bp31_entry(
+      "Youth self-report: height, inches (Year 15 only)",
+      y15 = "K6D6"
+    ),
+    youth_weight_lb = bp31_entry(
+      "Youth self-report: weight, pounds (Year 15 only)",
+      y15 = "K6D7"
+    ),
+    pds_growth_spurt = bp31_entry(
+      "PCG report, Pubertal Development Scale: growth spurt (1 no - 4 development completed; Year 9 only)",
+      y9 = "P5H17"
+    ),
+    pds_body_hair = bp31_entry(
+      "PCG report, Pubertal Development Scale: underarm or pubic hair (1 no - 4 development completed; Year 9 only)",
+      y9 = "P5H17A"
+    ),
+    pds_skin = bp31_entry(
+      "PCG report, Pubertal Development Scale: skin changes, especially pimples (1 no - 4 development completed; Year 9 only)",
+      y9 = "P5H17B"
+    ),
+    pds_voice = bp31_entry(
+      "PCG report, Pubertal Development Scale, boys: deepening of the voice (1 no - 4 development completed; Year 9 only)",
+      y9 = "P5H19"
+    ),
+    pds_facial_hair = bp31_entry(
+      "PCG report, Pubertal Development Scale, boys: facial hair (1 no - 4 development completed; Year 9 only)",
+      y9 = "P5H19A"
+    ),
+    pds_breasts = bp31_entry(
+      "PCG report, Pubertal Development Scale, girls: breast growth (1 no - 4 development completed; Year 9 only)",
+      y9 = "P5H21"
+    ),
+    pds_menarche = bp31_entry(
+      "PCG report, Pubertal Development Scale, girls: first menstrual period (1 yes, 2 no; Year 9 only)",
+      y9 = "P5H22"
+    ),
+    youth_menarche = bp31_entry(
+      "Youth self-report, girls: begun to menstruate (1 yes, 2 no; Year 15 only)",
+      y15 = "K6D9"
+    ),
+    youth_pa_days60 = bp31_entry(
+      "Youth self-report: days physically active for 60+ minutes in the past week (0-7; Year 15 only)",
+      y15 = "K6D37"
+    ),
+    # --- doctor-told conditions (Year 5 rebased by bp31_add_told_conditions)
+    dx_asthma = bp31_entry(
+      "PCG report: a doctor or health professional diagnosed the child with asthma",
+      y5 = "BP31DX_Y5_P4A2_H",
+      y9 = "P5H1B",
+      y15 = "P6B2"
+    ),
+    dx_cerebral_palsy = bp31_entry(
+      "PCG report: a doctor diagnosed the child with cerebral palsy (Years 5 and 9)",
+      y5 = "BP31DX_Y5_P4A2_D",
+      y9 = "P5H2D"
+    ),
+    dx_sickle_cell = bp31_entry(
+      "PCG report: a doctor diagnosed the child with sickle cell anemia (Years 5 and 9)",
+      y5 = "BP31DX_Y5_P4A2_E",
+      y9 = "P5H2E"
+    ),
+    dx_heart = bp31_entry(
+      "PCG report: a doctor diagnosed the child with congenital heart disease or a heart condition",
+      y5 = "BP31DX_Y5_P4A2_G",
+      y9 = "P5H2G",
+      y15 = "P6B4"
+    ),
+    dx_limbs = bp31_entry(
+      "PCG report: a doctor diagnosed the child with problems with limbs",
+      y5 = "BP31DX_Y5_P4A2_N",
+      y9 = "P5H2M",
+      y15 = "P6B7"
+    ),
+    dx_anemia = bp31_entry(
+      "PCG report: a doctor diagnosed the youth with anemia (Year 15 only)",
+      y15 = "P6B3"
+    ),
+    dx_diabetes = bp31_entry(
+      "PCG report: a doctor diagnosed the youth with diabetes (Year 15 only)",
+      y15 = "P6B6"
+    ),
+    dx_seizures = bp31_entry(
+      "PCG report: a doctor diagnosed the youth with seizures (Year 15 only)",
+      y15 = "P6B8"
+    ),
+    dx_other = bp31_entry(
+      "PCG report: a doctor diagnosed the youth with another condition (Year 15 only)",
+      y15 = "P6B9"
+    ),
+    dx_other_headache = bp31_entry(
+      "Other diagnosed condition specified: headache or migraines (Year 15 only)",
+      y15 = "P6B9_101"
+    ),
+    dx_other_overweight = bp31_entry(
+      "Other diagnosed condition specified: overweight or obese (Year 15 only)",
+      y15 = "P6B9_102"
+    ),
+    dx_other_allergies = bp31_entry(
+      "Other diagnosed condition specified: allergies (Year 15 only)",
+      y15 = "P6B9_103"
+    ),
+    dx_other_eczema = bp31_entry(
+      "Other diagnosed condition specified: eczema (Year 15 only)",
+      y15 = "P6B9_104"
+    ),
+    dx_other_blood_pressure = bp31_entry(
+      "Other diagnosed condition specified: blood pressure or cholesterol (Year 15 only)",
+      y15 = "P6B9_105"
+    ),
+    dx_other_scoliosis = bp31_entry(
+      "Other diagnosed condition specified: scoliosis (Year 15 only)",
+      y15 = "P6B9_106"
+    ),
+    dx_other_unspecified = bp31_entry(
+      "Other diagnosed condition specified: unspecified (Year 15 only)",
+      y15 = "P6B9_107"
+    ),
+    # --- disability and activity limitation ---------------------------------
+    physical_disability = bp31_entry(
+      "PCG report: child has any physical disabilities (Year 3 only; disab_* follow up a yes)",
+      y3 = "P3A2"
+    ),
+    disab_cerebral_palsy = bp31_entry(
+      "PCG report: child has cerebral palsy (Year 3 only)",
+      y3 = "P3A3_1"
+    ),
+    disab_blind_total = bp31_entry(
+      "PCG report: child has total blindness (Year 3 only)",
+      y3 = "P3A3_2"
+    ),
+    disab_blind_partial = bp31_entry(
+      "PCG report: child has partial blindness (Year 3 only)",
+      y3 = "P3A3_3"
+    ),
+    disab_deaf_total = bp31_entry(
+      "PCG report: child has total deafness (Year 3 only)",
+      y3 = "P3A3_4"
+    ),
+    disab_deaf_partial = bp31_entry(
+      "PCG report: child has partial deafness (Year 3 only)",
+      y3 = "P3A3_5"
+    ),
+    disab_downs = bp31_entry(
+      "PCG report: child has Down's syndrome (Year 3 only)",
+      y3 = "P3A3_6"
+    ),
+    disab_limbs = bp31_entry(
+      "PCG report: child has a problem with limbs (Year 3 only)",
+      y3 = "P3A3_7"
+    ),
+    disab_other = bp31_entry(
+      "PCG report: child has another physical disability (Year 3 only)",
+      y3 = "P3A3_0"
+    ),
+    disab_other_breathing = bp31_entry(
+      "Other physical disability specified: asthma or other breathing problem (Year 3 only)",
+      y3 = "P3A3_101"
+    ),
+    disab_other_speech = bp31_entry(
+      "Other physical disability specified: speech problem (Year 3 only)",
+      y3 = "P3A3_102"
+    ),
+    disab_other_problem = bp31_entry(
+      "Other physical disability specified: other problem (Year 3 only)",
+      y3 = "P3A3_103"
+    ),
+    health_limits_activities = bp31_entry(
+      "PCG report: health problems limit the youth's usual activities (1 yes, 2 no; Year 15 only)",
+      y15 = "P6B20"
     ),
     # --- sleep duration: PCG hours (Years 5, 9); youth clock times (Year 15:
     # --- hour 1-12, minutes 0-59, 1 am / 2 pm) -------------------------------
@@ -972,6 +1194,35 @@ bp31_fill_parent_education <- function(tidied) {
   tidied
 }
 
+#' Mother's age and paid work at Year 15
+#'
+#' Year 15 asks the PCG about herself, which describes the mother only where
+#' the PCG is the biological mother; otherwise her age is projected from Year 9.
+bp31_fill_mother_y15 <- function(tidied) {
+  waves <- bp31_waves()
+  not_mother <- tidied$wave == waves[["y15"]] &
+    !tidied$pcg_relationship %in% 1
+  tidied$mother_worked_last_week[not_mother] <- NA_real_
+
+  child_age <- dplyr::coalesce(tidied$age_months, tidied$age_months_alt) / 12
+  at_y9 <- which(tidied$wave == waves[["y9"]])
+  y9 <- at_y9[match(tidied$participant_id, tidied$participant_id[at_y9])]
+  projected <- tidied$mother_age[y9] + child_age - child_age[y9]
+  tidied$mother_age[not_mother] <- projected[not_mother]
+
+  tidied
+}
+
+#' Year 5 doctor-told items recoded from 0 no, 1 yes to the 1 yes, 2 no of
+#' Years 9 and 15
+bp31_add_told_conditions <- function(raw) {
+  for (item in c("P4A2_D", "P4A2_E", "P4A2_G", "P4A2_H", "P4A2_N")) {
+    values <- bp31_decode(raw[[item]])
+    raw[[paste0("BP31DX_Y5_", item)]] <- dplyr::if_else(values == 0, 2, values)
+  }
+  raw
+}
+
 #' Woodcock-Johnson III standard scores are not interpretable at a raw score
 #' of 0, so those are cleared
 bp31_drop_wj_floor <- function(tidied) {
@@ -1031,7 +1282,11 @@ bp31_apply_labels <- function(tidied, raw, constants, wave_map) {
     ethnicity_mother = "Mother's race/ethnicity, own report at baseline",
     ethnicity_youth = "Youth's self-described race/ethnicity at Year 15",
     mother_born_us = "Mother born in the US, own report at baseline",
-    father_born_us = "Father born in the US, own report at baseline (missing where the father was not interviewed)"
+    father_born_us = "Father born in the US, own report at baseline (missing where the father was not interviewed)",
+    city_sample = "In the 20-city core sample (0 = one of the 109 baseline cases not randomly selected for the core sample, some for the TLC3 study)",
+    prenatal_cigarettes = "Mother's own report at baseline: cigarettes smoked a day during the pregnancy",
+    breastfed_mother = "Mother's report at Year 1: child was ever breastfed",
+    breastfed_father = "Father's report at Year 1: child was ever breastfed"
   )
   for (stem in names(constants)) {
     tidied[[stem]] <- bp31_label_column(

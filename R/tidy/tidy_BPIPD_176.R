@@ -96,6 +96,16 @@ tidy_BPIPD_176 <- function(raw_dataset, spec) {
     )
   }
 
+  # Stream was asked at wave 1 only; Secondary 1-2 are lower secondary (UNESCO
+  # IBE World Data on Education 2010/11), so Secondary 1 pupils keep it at wave 2.
+  first <- match(paste(long$sn, 1L), paste(long$sn, wave))
+  lower <- wave == 2L & haven::zap_labels(long$education) %in% 7
+  long$stream[lower] <- long$stream[first[lower]]
+  attr(long$stream, "label") <- paste(
+    "Secondary course or primary class ability, asked at wave 1;",
+    "carried to wave 2 for Secondary 1 pupils (still in lower secondary)"
+  )
+
   long
 }
 

@@ -2,7 +2,7 @@
 #'
 #' One wide student file holds every round; the two screen rounds are sliced out
 #' through a column map, stacked, and labelled from the record layout. The
-#' school file adds the 2004 school's control and locale.
+#' school file adds the 2004 school's control, locale and region.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -24,8 +24,8 @@ tidy_BPIPD_1294 <- function(raw_dataset, spec) {
     function(round) bp1294_round_frame(raw, fixed, round)
   ))
 
-  # Nothing is carried: parent education is complete on every kept row, and the
-  # rounds are 18-31 months apart, beyond the 12-month SES and family window.
+  # Only the high school program is carried (below): parent education is
+  # complete, and the rounds are beyond the 12-month SES and family window.
   if (anyDuplicated(tidied[c("STU_ID", "wave")]) > 0L) {
     stop(
       "BPIPD-1294: `STU_ID` and `wave` do not uniquely identify rows.",
@@ -37,16 +37,38 @@ tidy_BPIPD_1294 <- function(raw_dataset, spec) {
     tidied,
     grep("BYF3PSTSTU", raw_dataset$docs, value = TRUE)
   )
-  bp1294_add_f1_school(tidied, raw_dataset$data$els_byf1sch)
+  tidied <- bp1294_add_f1_school(tidied, raw_dataset$data$els_byf1sch)
+  bp1294_carry_program(tidied)
 }
 
-#' Fill the 2004 rows' school control and locale from the first follow-up school
+#' Carry the 2002 high school program to the 2004 rows still in high school
+bp1294_carry_program <- function(tidied) {
+  # School track carries within a school stage: F1QSTAT 1-4 are 2004 students
+  # (transfers included), unlike dropouts, early graduates and the homeschooled.
+  by <- tidied$wave == bp1294_rounds()$by$label
+  f1 <- tidied$wave == bp1294_rounds()$f1$label &
+    haven::zap_labels(tidied$f1_questionnaire_status) %in% 1:4
+  at <- match(tidied$STU_ID[f1], tidied$STU_ID[by])
+  tidied$school_program[f1] <- tidied$school_program[by][at]
+  attr(tidied$school_program, "label") <- paste(
+    attr(tidied$school_program, "label"),
+    "(2004 rows still in high school: the 2002 value)"
+  )
+  tidied
+}
+
+#' Fill the 2004 rows' school control, locale and region from the first
+#' follow-up school
 bp1294_add_f1_school <- function(tidied, school) {
   # The student file classifies only the 2002 school; the school file holds the
   # same frame codes for every school `F1SCH_ID` links to (-8 = no such school).
   f1 <- tidied$wave == bp1294_rounds()$f1$label
   at <- match(haven::zap_labels(tidied$school_id_f1[f1]), school$SCH_ID)
-  columns <- c(school_control = "bysctrl", school_urbanicity = "byurban")
+  columns <- c(
+    school_control = "bysctrl",
+    school_urbanicity = "byurban",
+    school_region = "byregion"
+  )
   for (stem in names(columns)) {
     tidied[[stem]][f1] <- school[[columns[[stem]]]][at]
     attr(tidied[[stem]], "label") <- paste(
@@ -120,16 +142,29 @@ bp1294_columns <- function() {
     # parent questionnaire: respondent's and spouse's relationship, past-week work
     parent_relation = c(by = "BYP01"),
     spouse_relation = c(by = "BYP04"),
+    parent_birth_year = c(by = "BYP11"),
+    spouse_birth_year = c(by = "BYP12"),
     parent_work_week = c(by = "BYP36"),
     parent_work_status = c(by = "BYP37"),
     spouse_work_week = c(by = "BYP40"),
     spouse_work_status = c(by = "BYP41"),
     grandparent_education = c(by = "bygpared"),
     home_literacy_resources = c(by = "byhomlit"),
+    # parent's opinion of the tenth grader's disabilities (base year)
+    parent_thinks_disability = c(by = "BYP49"),
+    disability_learning = c(by = "BYP50A"),
+    disability_speech_language = c(by = "BYP50B"),
+    disability_mental_retardation = c(by = "BYP50C"),
+    disability_emotional = c(by = "BYP50D"),
+    disability_hearing = c(by = "BYP50E"),
+    disability_orthopedic = c(by = "BYP50F"),
+    disability_visual = c(by = "BYP50G"),
+    disability_other = c(by = "BYP50H"),
     # base-year school context; bp1294_add_f1_school() fills 2004 control, locale
     school_urbanicity = c(by = "byurban"),
     school_region = c(by = "byregion"),
     school_control = c(by = "bysctrl"),
+    school_program = c(by = "byschprg"),
     school_pct_free_lunch = c(by = "BY10FLP"),
     school_enrolment_band = c(by = "byscenp"),
     school_academic_climate = c(by = "byacclim"),

@@ -44,8 +44,8 @@ survey_weight,compatible,"CH97PRWT, CH02PRWT, CH07PRWT, X14CHWGT, X19CHWGT, X19C
     as.numeric(X14CHWGT),
     if_else(.wave == ""2020"", as.numeric(X19CVWGT), as.numeric(X19CHWGT))
   )
-  if_else(w > 0, w, NA_real_)
-})","The study's child cross-sectional weight for each wave, as released: CH97PRWT (1997 child-level weight), CH02PRWT, CH07PRWT (2007 primary caregiver/child weight), X14CHWGT, X19CHWGT (CDS-2019 child cross-sectional weight, which the 2019 user guide names for all analyses of PCG-child data) and X19CVWGT (the CDS-2020 child weight, on the 2020 rows); 0 (no weight) set to NA. Household, in-home, time-diary, interview and longitudinal weights are unused.",,
+  if_else(w >= 0, w, NA_real_)
+})","The study's child cross-sectional weight for each wave, as released: CH97PRWT (1997 child-level weight), CH02PRWT, CH07PRWT (2007 primary caregiver/child weight), X14CHWGT, X19CHWGT (CDS-2019 child cross-sectional weight, which the 2019 user guide names for all analyses of PCG-child data) and X19CVWGT (the CDS-2020 child weight, on the 2020 rows); a released zero weight is kept as 0, outside the weighted population (15 rows in 2007, CH07PRWT 0 'PCG eligible for but did not complete PCG Interview'). Household, in-home, time-diary, interview and longitudinal weights are unused.",,
 survey_strata,unavailable,,,Not in the supplied extract.,,
 survey_cluster,unavailable,,,Not in the supplied extract.,,
 family_id,compatible,"DEMID97, family_unit","local({
@@ -632,16 +632,13 @@ st_responder,compatible,"WD_A1, WE_A1, Q28WD_A1, Q28WE_A1, Q38WD_A1, Q38WE_A1, D
   b <- cat_day[, 2]
   k <- cat_day[, 3]
   lab <- case_when(
-    a == 1 ~ ""Parent or carer"",
-    a == 2 ~ ""Self"",
+    a %in% c(1, 2) ~ ""Parent or carer"",
     a == 3 ~ ""Self"",
     a == 4 ~ ""Other"",
-    b %in% c(1, 5) ~ ""Parent or carer"",
-    b == 2 ~ ""Self"",
+    b %in% c(1, 2, 5) ~ ""Parent or carer"",
     b == 3 ~ ""Self"",
     b == 7 ~ ""Other"",
-    k %in% c(2, 4) ~ ""Parent or carer"",
-    k %in% c(3, 5) ~ ""Self"",
+    k %in% c(2, 3, 4, 5) ~ ""Parent or carer"",
     k %in% c(1, 6) ~ ""Self"",
     k == 7 ~ ""Other"",
     .default = NA_character_
@@ -655,7 +652,7 @@ st_responder,compatible,"WD_A1, WE_A1, Q28WD_A1, Q28WE_A1, Q38WD_A1, Q38WE_A1, D
     !is.na(we) ~ we,
     .default = ""Unknown""
   )
-})","Who completed each diary day (WD_A1/WE_A1 1997, Q28WD_A1/WE_A1 2002, Q38WD_A1/WE_A1 2007, D14/D19/D20WDWHO and WEWHO from 2014): the child alone or with the interviewer = Self; the PCG, mother, father or other caregiver alone = Parent or carer; the child with the PCG, mother or father together = Self (the child's own diary, completed with help); another person = Other; NA, refused and inap. Unknown. One responder per row: where the two days' completers differ in category the row is Unknown; where only one day has a completer, that day's.",,
+})","Who completed each diary day (WD_A1/WE_A1 1997, Q28WD_A1/WE_A1 2002, Q38WD_A1/WE_A1 2007, D14/D19/D20WDWHO and WEWHO from 2014): the child alone or with the interviewer = Self; the PCG, mother, father or other caregiver alone = Parent or carer; the child with the PCG, mother or father together (1997 and 2002 code 2, from 2007 codes 3 and 5) = Parent or carer, as a form the child completed together with a parent (3,855 of 19,886 diary days with a completer recorded on rows with diary time, 19.4%); another person = Other; NA, refused and inap. Unknown. One responder per row: where the two days' completers differ in category the row is Unknown; where only one day has a completer, that day's.",,
 st_total_wd,incompatible,"WD97_919, WD97_879, WD97_502, WD97_503, tdact_screen_secs_wd",,"The diary records separate activities; no all-screen item, and a sum of separately coded screen activities (including the tidier's tdact_screen_secs_wd) is not a total (DR-0004).",,
 st_total_we,incompatible,"WE97_919, WE97_879, WE97_502, WE97_503, tdact_screen_secs_we",,"The diary records separate activities; no all-screen item, and a sum of separately coded screen activities (including the tidier's tdact_screen_secs_we) is not a total (DR-0004).",,
 st_total,incompatible,"tdact_screen_secs_wd, tdact_screen_secs_we",,"The diary records separate activities; no all-screen item, and a sum of separately coded screen activities is not a total (DR-0004).",,
@@ -1302,11 +1299,11 @@ st_phone,partial,"WD075021, WD075031, WD075051, WD075081, WD075101, WD075111, td
 st_socmedia_wd,partial,"WD145051, WD195051, WD205051","local({
   x <- coalesce(as.numeric(WD145051), as.numeric(WD195051), as.numeric(WD205051))
   if_else(x >= 0 & x <= 86400, x, NA_real_) / 3600
-})","2014-2020 only: weekday diary code 5051 'social media communication (e.g. Facebook)', defined in the codebook as 'communication other than phone conversations: e-mail, chatrooms, MySpace, Facebook, blogging, text messaging'. Partial: bundles social media with messaging. The 2007 code 5051 (the same communication on a cell phone only) goes to the phone rows and is not spliced here. Seconds / 3600.",,
+})","2014-2020 only: weekday diary code 5051 'social media communication (e.g. Facebook)', defined in the codebook as 'communication other than phone conversations -- e-mail, chatrooms, MySpace, Facebook, blogging, text messaging, e-cards using a cell phone'. Partial: a bundle of social media with e-mail, chat and messaging that names social-network sites. The 2007 code 5051 (the same communication on a cell phone only) goes to the phone rows and is not spliced here; code 505/5050 'computer communication' (e-mail, chatrooms, instant messaging) names no social-network site and is unused (see st_email). Seconds / 3600.",,
 st_socmedia_we,partial,"WE145051, WE195051, WE205051","local({
   x <- coalesce(as.numeric(WE145051), as.numeric(WE195051), as.numeric(WE205051))
   if_else(x >= 0 & x <= 86400, x, NA_real_) / 3600
-})","2014-2020 only: weekend diary code 5051 'social media communication (e.g. Facebook)', bundled with other non-voice communication in its definition. Partial: bundled. Seconds / 3600.",,
+})","2014-2020 only: weekend diary code 5051 'social media communication (e.g. Facebook)', defined in the codebook as 'communication other than phone conversations- e-mail, chatrooms, MySpace, Facebook, blogging, text messaging, e-cards using a cell phone'. Partial: a bundle of social media with e-mail, chat and messaging that names social-network sites. The 2007 code 5051 (the same communication on a cell phone only) goes to the phone rows and is not spliced here; code 505/5050 'computer communication' (e-mail, chatrooms, instant messaging) names no social-network site and is unused (see st_email). Seconds / 3600.",,
 st_socmedia,partial,"WD145051, WE145051, WD195051, WE195051, WD205051, WE205051","(5 *
   local({
     x <- coalesce(as.numeric(WD145051), as.numeric(WD195051), as.numeric(WD205051))
@@ -1317,7 +1314,7 @@ st_socmedia,partial,"WD145051, WE145051, WD195051, WE195051, WD205051, WE205051"
       x <- coalesce(as.numeric(WE145051), as.numeric(WE195051), as.numeric(WE205051))
       if_else(x >= 0 & x <= 86400, x, NA_real_) / 3600
     })) /
-  7","2014-2020 only: (5 x weekday + 2 x weekend) / 7 of diary code 5051 'social media communication', bundled with other non-voice communication in its definition; NA unless both days were returned. Partial: bundled.",,
+  7","2014-2020 only: (5 x weekday + 2 x weekend) / 7 of diary code 5051 'social media communication (e.g. Facebook)', a bundle of social media with e-mail, chat and messaging; NA unless both days were returned. Partial: bundled. Code 505/5050 'computer communication' (e-mail, chatrooms, instant messaging) names no social-network site and is unused (see st_email).",,
 st_educational_wd,partial,"WD97_504, WD025040, WD075040, tdact_5200_secs_wd, tdact_homework_device_secs_wd","local({
   x <- coalesce(
     as.numeric(WD97_504),
@@ -1482,68 +1479,24 @@ st_internet,partial,"WD97_503, WE97_503, WD02_503, WE02_503, WD07_503, WE07_503,
       if_else(x >= 0 & x <= 86400, x, NA_real_) / 3600
     })) /
   7","(5 x weekday + 2 x weekend) / 7 of diary code 503, residual other recreational computer or device activities; NA unless both days were returned. Partial: a residual that also holds video watched on a computer.",,
-st_videochat_wd,incompatible,"WD97_505, WD025050, WD075050, WD145050, WD195050, WD205050",,"Diary code 505/5050 'computer communication: e-mail, computer/video/speaker phone, Internet phone, teleconferencing, chatrooms, instant messaging' pools video calls with e-mail and chat; mapped to st_email.",,
-st_videochat_we,incompatible,"WD97_505, WD025050, WD075050, WD145050, WD195050, WD205050",,"Diary code 505/5050 'computer communication: e-mail, computer/video/speaker phone, Internet phone, teleconferencing, chatrooms, instant messaging' pools video calls with e-mail and chat; mapped to st_email.",,
-st_videochat,incompatible,"WD97_505, WD025050, WD075050, WD145050, WD195050, WD205050",,"Diary code 505/5050 'computer communication: e-mail, computer/video/speaker phone, Internet phone, teleconferencing, chatrooms, instant messaging' pools video calls with e-mail and chat; mapped to st_email.",,
-st_messaging_wd,compatible,tdact_5052_secs_wd,"if_else(as.numeric(tdact_5052_secs_wd) >= 0, as.numeric(tdact_5052_secs_wd) / 3600, NA_real_)","2014-2020 only: weekday diary code 5052 'texting using a cell phone, smartphone, tablet or other device', seconds summed per diary day by the tidier from the activity file (the aggregate file has no 5052 column); 0 on a returned day with no texting. Seconds / 3600.",,
-st_messaging_we,compatible,tdact_5052_secs_we,"if_else(as.numeric(tdact_5052_secs_we) >= 0, as.numeric(tdact_5052_secs_we) / 3600, NA_real_)","2014-2020 only: weekend diary code 5052 'texting', summed per diary day by the tidier from the activity file. Seconds / 3600.",,
+st_videochat_wd,incompatible,"WD97_505, WD025050, WD075050, WD145050, WD195050, WD205050",,"Weekday diary code 505/5050 'computer communication: e-mail, computer/video/speaker phone, Internet phone, teleconferencing, chatrooms, instant messaging, e-cards' pools video calls with e-mail, chat and messaging, which cannot be separated; unused (see st_email).",,
+st_videochat_we,incompatible,"WE97_505, WE025050, WE075050, WE145050, WE195050, WE205050",,"Weekend diary code 505/5050 'computer communication: e-mail, computer/video/speaker phone, Internet phone, teleconferencing, chatrooms, instant messaging, e-cards' pools video calls with e-mail, chat and messaging, which cannot be separated; unused (see st_email).",,
+st_videochat,incompatible,"WD97_505, WE97_505, WD025050, WE025050, WD075050, WE075050, WD145050, WE145050, WD195050, WE195050, WD205050, WE205050",,"Diary code 505/5050 'computer communication: e-mail, computer/video/speaker phone, Internet phone, teleconferencing, chatrooms, instant messaging, e-cards' pools video calls with e-mail, chat and messaging, which cannot be separated; unused (see st_email).",,
+st_messaging_wd,compatible,tdact_5052_secs_wd,"if_else(as.numeric(tdact_5052_secs_wd) >= 0, as.numeric(tdact_5052_secs_wd) / 3600, NA_real_)","2014-2020 only: weekday diary code 5052 'texting using a cell phone, smartphone, tablet or other device', seconds summed per diary day by the tidier from the activity file (the aggregate file has no 5052 column); 0 on a returned day with no texting. Code 505/5050 'computer communication', a bundle of e-mail, chatrooms and instant messaging that cannot be separated, is not spliced onto this row in any wave and is unused (see st_email); code 5051 'social media communication', which bundles messaging with social media, is on st_socmedia. Seconds / 3600.",,
+st_messaging_we,compatible,tdact_5052_secs_we,"if_else(as.numeric(tdact_5052_secs_we) >= 0, as.numeric(tdact_5052_secs_we) / 3600, NA_real_)","2014-2020 only: weekend diary code 5052 'texting', summed per diary day by the tidier from the activity file. Code 505/5050 'computer communication', a bundle of e-mail, chatrooms and instant messaging that cannot be separated, is not spliced onto this row in any wave and is unused (see st_email); code 5051 'social media communication', which bundles messaging with social media, is on st_socmedia. Seconds / 3600.",,
 st_messaging,compatible,"tdact_5052_secs_wd, tdact_5052_secs_we","(5 *
   if_else(as.numeric(tdact_5052_secs_wd) >= 0, as.numeric(tdact_5052_secs_wd) / 3600, NA_real_) +
   2 * if_else(as.numeric(tdact_5052_secs_we) >= 0, as.numeric(tdact_5052_secs_we) / 3600, NA_real_)) /
-  7",2014-2020 only: (5 x weekday + 2 x weekend) / 7 of diary code 5052 'texting'; NA unless both days were returned.,,
+  7","2014-2020 only: (5 x weekday + 2 x weekend) / 7 of diary code 5052 'texting'; NA unless both days were returned. Code 505/5050 'computer communication', a bundle of e-mail, chatrooms and instant messaging that cannot be separated, is unused (see st_email); code 5051 'social media communication' is on st_socmedia.",,
 st_creating_wd,compatible,tdact_5053_secs_wd,"if_else(as.numeric(tdact_5053_secs_wd) >= 0, as.numeric(tdact_5053_secs_wd) / 3600, NA_real_)","2014-2020 only: weekday diary code 5053 'creating and uploading internet content', summed per diary day by the tidier from the activity file. Seconds / 3600.",,
 st_creating_we,compatible,tdact_5053_secs_we,"if_else(as.numeric(tdact_5053_secs_we) >= 0, as.numeric(tdact_5053_secs_we) / 3600, NA_real_)","2014-2020 only: weekend diary code 5053 'creating and uploading internet content', summed per diary day by the tidier. Seconds / 3600.",,
 st_creating,compatible,"tdact_5053_secs_wd, tdact_5053_secs_we","(5 *
   if_else(as.numeric(tdact_5053_secs_wd) >= 0, as.numeric(tdact_5053_secs_wd) / 3600, NA_real_) +
   2 * if_else(as.numeric(tdact_5053_secs_we) >= 0, as.numeric(tdact_5053_secs_we) / 3600, NA_real_)) /
   7",2014-2020 only: (5 x weekday + 2 x weekend) / 7 of diary code 5053 'creating and uploading internet content'; NA unless both days were returned.,,
-st_email_wd,partial,"WD97_505, WD025050, WD075050, WD145050, WD195050, WD205050","local({
-  x <- coalesce(
-    as.numeric(WD97_505),
-    as.numeric(WD025050),
-    as.numeric(WD075050),
-    as.numeric(WD145050),
-    as.numeric(WD195050),
-    as.numeric(WD205050)
-  )
-  if_else(x >= 0 & x <= 86400, x, NA_real_) / 3600
-})","Weekday diary code 505/5050 'computer communication: e-mail, computer/video/speaker phone, Internet phone, teleconferencing, chatrooms, instant messaging, e-cards' (computer, from 2014 any electronic device). Partial: bundles e-mail with video calls, chat and instant messaging. Seconds / 3600.",,
-st_email_we,partial,"WE97_505, WE025050, WE075050, WE145050, WE195050, WE205050","local({
-  x <- coalesce(
-    as.numeric(WE97_505),
-    as.numeric(WE025050),
-    as.numeric(WE075050),
-    as.numeric(WE145050),
-    as.numeric(WE195050),
-    as.numeric(WE205050)
-  )
-  if_else(x >= 0 & x <= 86400, x, NA_real_) / 3600
-})","Weekend diary code 505/5050 'computer communication', e-mail bundled with video calls, chat and instant messaging. Partial: bundled. Seconds / 3600.",,
-st_email,partial,"WD97_505, WE97_505, WD025050, WE025050, WD075050, WE075050, WD145050, WE145050, WD195050, WE195050, WD205050, WE205050","(5 *
-  local({
-    x <- coalesce(
-      as.numeric(WD97_505),
-      as.numeric(WD025050),
-      as.numeric(WD075050),
-      as.numeric(WD145050),
-      as.numeric(WD195050),
-      as.numeric(WD205050)
-    )
-    if_else(x >= 0 & x <= 86400, x, NA_real_) / 3600
-  }) +
-  2 *
-    local({
-      x <- coalesce(
-        as.numeric(WE97_505),
-        as.numeric(WE025050),
-        as.numeric(WE075050),
-        as.numeric(WE145050),
-        as.numeric(WE195050),
-        as.numeric(WE205050)
-      )
-      if_else(x >= 0 & x <= 86400, x, NA_real_) / 3600
-    })) /
-  7","(5 x weekday + 2 x weekend) / 7 of diary code 505/5050 'computer communication', e-mail bundled with video calls, chat and instant messaging; NA unless both days were returned. Partial: bundled.",,
+st_email_wd,incompatible,"WD97_505, WD025050, WD075050, WD145050, WD195050, WD205050",,"Weekday diary code 505/5050 'computer communication: e-mail, computer/video/speaker phone, Internet phone, teleconferencing, chatrooms, instant messaging, e-cards' is a bundle of e-mail, chat and messaging that cannot be separated; unused, as code 5052 texting fills st_messaging in 2014-2020.",,
+st_email_we,incompatible,"WE97_505, WE025050, WE075050, WE145050, WE195050, WE205050",,"Weekend diary code 505/5050 'computer communication: e-mail, computer/video/speaker phone, Internet phone, teleconferencing, chatrooms, instant messaging, e-cards' is a bundle of e-mail, chat and messaging that cannot be separated; unused, as code 5052 texting fills st_messaging in 2014-2020.",,
+st_email,incompatible,"WD97_505, WE97_505, WD025050, WE025050, WD075050, WE075050, WD145050, WE145050, WD195050, WE195050, WD205050, WE205050",,"Diary code 505/5050 'computer communication: e-mail, computer/video/speaker phone, Internet phone, teleconferencing, chatrooms, instant messaging, e-cards' is a bundle of e-mail, chat and messaging that cannot be separated; unused, as code 5052 texting fills st_messaging in 2014-2020.",,
 st_shopping_wd,compatible,"WD97_508, WD025080, WD075080, WD075081","local({
   x <- coalesce(as.numeric(WD97_508), as.numeric(WD025080), as.numeric(WD075080) + as.numeric(WD075081))
   if_else(x >= 0 & x <= 86400, x, NA_real_) / 3600

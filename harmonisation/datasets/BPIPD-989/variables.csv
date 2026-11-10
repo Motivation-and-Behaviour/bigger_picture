@@ -192,7 +192,7 @@ st_game,partial,"v091, v006, questionnaire_id, child","if_else(
     !(as.numeric(v091) %in% c(983, 984)),
   as.numeric(v091) / 10,
   NA_real_
-)","'Approximately how many hours a day do your children play computer or video games?' (Q14, v091, parent report, open entry stored as hours x 10): household item on your children, used only where one child lives at home (v006 = 1 and no oldest-child row); where siblings live at home NA, because the answer is not that child's own time. Undefined codes 983 and 984 = NA. Partial: household item, and it names computer and video games, leaving out phones and tablets. The frequency item q5h (how often play) is named unused.",,
+)","'Approximately how many hours a day do your children play computer or video games?' (Q14, v091, parent report, open entry stored as hours x 10): household item on your children, used only where one child lives at home (v006 = 1 and no oldest-child row); where siblings live at home NA, because the answer is not that child's own time. Undefined codes 983 and 984 = NA. 'Computer or video games' names no device. Partial: household item. The frequency item q5h (how often play) is named unused.",,
 st_game_comp_wd,unavailable,,,No device split; see st_game.,,
 st_game_comp_we,unavailable,,,No device split; see st_game.,,
 st_game_comp,unavailable,,,No device split; see st_game.,,

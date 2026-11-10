@@ -26,10 +26,48 @@ survey_strata,compatible,"BDPTY200, participant_id, .wave","carry_within(
   .wave
 )","Sweep 2 stratum (BDPTY200, 9 codes: advantaged and disadvantaged wards per UK country, plus England ethnic-minority wards), fixed at sampling; carried within participant to every sweep, no wave prefix.",,
 survey_cluster,unavailable,,,Not in the supplied extract.,,
-family_id,in_progress,,,,,
+family_id,compatible,MCSID,as.character(MCSID),"MCS family identifier (MCSID), the same at every sweep and constant within cohort member: twins and triplets of one family share it (participant_id adds the cohort-member number).",,
 sample_component,in_progress,,,,,
 sample_population,inferred,,"""General population""","UK birth cohort sampled from families eligible for child benefit, a stratified clustered random sample (MCS user guide).",,
-parent_respondent,in_progress,,,,,
+parent_respondent,compatible,"BDDREL00, CDDREL00, DDDREL00, EDREL00, FDREL00, GDREL00, BDDREL00_PARTNER, CDDREL00_PARTNER, DDDREL00_PARTNER, EDREL00_PARTNER, FDREL00_PARTNER, GDREL00_PARTNER, respondent_sex, respondent_sex_PARTNER, G_OUT_PARQUEST, .wave","local({
+  sweep <- as.numeric(sub(""sweep_"", """", .wave))
+  rel <- coalesce(
+    as.numeric(haven::zap_labels(BDDREL00)),
+    as.numeric(haven::zap_labels(CDDREL00)),
+    as.numeric(haven::zap_labels(DDDREL00)),
+    as.numeric(haven::zap_labels(EDREL00)),
+    as.numeric(haven::zap_labels(FDREL00)),
+    as.numeric(haven::zap_labels(GDREL00))
+  )
+  rel_partner <- coalesce(
+    as.numeric(haven::zap_labels(BDDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(CDDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(DDDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(EDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(FDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(GDREL00_PARTNER))
+  )
+  use_main <- !is.na(rel)
+  code <- if_else(use_main, rel, rel_partner)
+  sex <- if_else(
+    use_main,
+    as.numeric(haven::zap_labels(respondent_sex)),
+    as.numeric(haven::zap_labels(respondent_sex_PARTNER))
+  )
+  case_when(
+    sweep <= 4 & code %in% c(1, 4, 7, 10) ~ ""Mother"",
+    sweep <= 4 & code %in% c(2, 5, 8, 11) ~ ""Father"",
+    sweep <= 4 & code %in% c(3, 6, 9, 12) & sex %in% 2 ~ ""Mother"",
+    sweep <= 4 & code %in% c(3, 6, 9, 12) & sex %in% 1 ~ ""Father"",
+    sweep <= 4 & code %in% 13:18 ~ ""Other carer"",
+    sweep >= 5 & code %in% 7:10 & sex %in% 2 ~ ""Mother"",
+    sweep >= 5 & code %in% 7:10 & sex %in% 1 ~ ""Father"",
+    sweep >= 5 & code %in% 11:20 ~ ""Other carer"",
+    !is.na(code) ~ ""Unknown"",
+    !is.na(G_OUT_PARQUEST) ~ ""Unknown"",
+    .default = NA_character_
+  )
+})","The main respondent, who answered the main parent interview and, at sweeps 2-5, the child's screen-time items: the derived respondent relationship to the cohort member (BDDREL00-DDDREL00, EDREL00-GDREL00) with the respondent's sex from the household grid (respondent_sex, built in the tidier). Sweeps 2-4: natural, adoptive, foster and step mother = Mother, the same fathers = Father, parents of unrecorded sex by sex, grandparents and other relatives or carers = Other carer; sweeps 5-7: natural, adoptive, foster and step-parent (or partner of a parent) by sex, siblings, grandparents, other relatives, a nanny and non-relatives = Other carer; other codes Unknown. With no main interview, the partner respondent (19 to 61 rows a sweep at sweeps 2-6). Sweep 7 rows whose only parent component is the paper parent SDQ (1,751) = Unknown; rows with no parent component NA.",,
 age_years,compatible,"BHCAGE00, CHCAGE00, DCMCS4AGE, EMCS5AGE, ECAGE0000, FCMCS6AG, GCMCS7AG","coalesce(
   as.numeric(BHCAGE00) / 365.25,
   as.numeric(CHCAGE00) / 365.25,
@@ -67,7 +105,22 @@ country,compatible,"BACTRY00, CACTRY00, DACTRY00, EACTRY00, FACTRY00, GACTRY00, 
   default = ""Unknown""
 )","Family-level administrative country at each sweep. Sweep 7 has none: household grid (GACTRY00), then interviewer-recorded country (G_COUNTRY).",,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,compatible,"BACTRY00, CACTRY00, DACTRY00, EACTRY00, FACTRY00, GACTRY00, G_COUNTRY","recode_values(
+  coalesce(
+    as.numeric(haven::zap_labels(BACTRY00)),
+    as.numeric(haven::zap_labels(CACTRY00)),
+    as.numeric(haven::zap_labels(DACTRY00)),
+    as.numeric(haven::zap_labels(EACTRY00)),
+    as.numeric(haven::zap_labels(FACTRY00)),
+    as.numeric(haven::zap_labels(GACTRY00)),
+    as.numeric(haven::zap_labels(G_COUNTRY))
+  ),
+  1 ~ ""GB-ENG"",
+  2 ~ ""GB-WLS"",
+  3 ~ ""GB-SCT"",
+  4 ~ ""GB-NIR"",
+  default = ""Unknown""
+)","The UK nation the family lives in, from the same source as country: the family-level administrative country at each sweep (BACTRY00-GACTRY00; sweep 7 household grid, else the interviewer-recorded country G_COUNTRY) as its ISO 3166-2 code (GB-ENG, GB-WLS, GB-SCT, GB-NIR); missing = Unknown.",,
 ethnicity,compatible,"BDC06E00, CDC06E00, DDC06E00, FDCE0600, participant_id, .wave","coalesce(
   lookup_values(
     recode_values(
@@ -110,7 +163,47 @@ immigrant_background,partial,"respondent_born_uk, respondent_born_uk_PARTNER, pa
   coalesce(carry_within(v, participant_id, .wave), ""Unknown"")
 })","'Were you born in the UK?' for the main and partner respondents (all at sweep 2, new respondents at sweeps 3-6, looked up by person number). Native if either was; Second-generation if none was and at least one was born abroad. Carried within participant from the earliest sweep, then Unknown. Partial: respondents may be resident carers rather than parents, and the cohort member's birthplace is not released (assumed UK).",,
 born_in_country,unavailable,,,"Not collected. Eligibility includes children born abroad who were resident in the UK by age 9 months, so recruitment does not guarantee UK birth.",,
-home_language,in_progress,,,,,
+home_language,proximate,"BDHLAN00, CDHLAN00, DDHLAN00, EHLAN00, FDHLAN00, GCHLAN0A, GCHLAN0B, GCHLAN0C, GCHLAN0D, GCHLAN0E, GCHLAN0F, GCHLAN0G, GCHLAN0H, GCHLAN0I, GCHLAN0K, GCHLAN0L, GCHLAN0O, GCHLAN0P, GCHLAN0Q, GCHLAN0R, GCHLAN0S, participant_id, .wave","local({
+  sweep <- as.numeric(sub(""sweep_"", """", .wave))
+  sweep2 <- as.numeric(haven::zap_labels(BDHLAN00))
+  dv <- coalesce(
+    as.numeric(haven::zap_labels(CDHLAN00)),
+    as.numeric(haven::zap_labels(DDHLAN00)),
+    as.numeric(haven::zap_labels(EHLAN00)),
+    as.numeric(haven::zap_labels(FDHLAN00))
+  )
+  country <- as.numeric(haven::zap_labels(GCHLAN0A)) %in%
+    1 |
+    as.numeric(haven::zap_labels(GCHLAN0B)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0C)) %in% 1
+  other <- as.numeric(haven::zap_labels(GCHLAN0D)) %in%
+    1 |
+    as.numeric(haven::zap_labels(GCHLAN0E)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0F)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0G)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0H)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0I)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0K)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0L)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0O)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0P)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0Q)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0R)) %in% 1 |
+    as.numeric(haven::zap_labels(GCHLAN0S)) %in% 1
+  value <- case_when(
+    sweep2 == 1 ~ ""Country language only"",
+    sweep2 == 2 ~ ""Country language and another"",
+    sweep2 == 3 ~ ""Another language only"",
+    dv == 1 ~ ""Country language only"",
+    dv %in% 2:4 ~ ""Country language and another"",
+    dv == 5 ~ ""Another language only"",
+    country & other ~ ""Country language and another"",
+    country ~ ""Country language only"",
+    other ~ ""Another language only"",
+    .default = NA_character_
+  )
+  coalesce(carry_within(value, participant_id, order = sweep), ""Unknown"")
+})","Country languages: English, Welsh and Scottish Gaelic. Sweeps 2-6, main respondent: the study's derived language spoken in the household (BDHLAN00, CDHLAN00, DDHLAN00, EHLAN00, FDHLAN00), from 'is English the language usually spoken at home? Is that English only, or other languages as well?'; it keeps the most recent answer since sweep 1. Sweep 2 has the question's three codes (English only = Country language only; English and other = Country language and another; other only = Another language only; the release's shared labels for codes 2-3 are wrong); sweeps 3-6 English only = Country language only, mostly English, half and half, or mostly other with some English = Country language and another, other only = Another language only. Sweep 7, cohort member: 'Which languages do you speak at home?' (GCHLAN0A-S, code all): English, Welsh or Gaelic with another = Country language and another, only those = Country language only, only others = Another language only. Proximate: the sweep 2-6 item files Welsh and Gaelic as other languages. Carried within participant (carry-forward rule); otherwise Unknown. Wales-only DHLANH00 (sweep 4) is unused.",,
 ses_area,compatible,"BIMDSCOE, BIWIMDSC, BISIMDSC, BIMDSCON, CIMDSCOE, CIWIMDSC, CISIMDSC, CIMDSCON, DIMDSCOE, DIWIMDSC, DISIMDSC, DIMDSCON, EIMDSCOE, EIWIMDSC, EISIMDSC, EIMDSCON, FIMDSCOE, FIWIMDSC, FISIMDSC, FIMDSCON","recode_values(
   coalesce(
     as.numeric(BIMDSCOE),
@@ -189,8 +282,78 @@ parental_education,proximate,"respondent_nvq, respondent_nvq_PARTNER","local({
     ""Unknown""
   )
 })","Higher NVQ level of the main and partner respondents at the sweep, whatever their relationship (grandparents and other carers count); none ranks below NVQ 1 and overseas-only is dropped, so one known level suffices. Levels, lookup and sweep-7 carry as maternal_education; proximate for NVQ 4.",maternal_education,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,compatible,"BDDREL00, CDDREL00, DDDREL00, EDREL00, FDREL00, GDREL00, BDDREL00_PARTNER, CDDREL00_PARTNER, DDDREL00_PARTNER, EDREL00_PARTNER, FDREL00_PARTNER, GDREL00_PARTNER, respondent_sex, respondent_sex_PARTNER, respondent_paid_work, respondent_paid_work_PARTNER, .wave","local({
+  sweep <- as.numeric(sub(""sweep_"", """", .wave))
+  rel <- coalesce(
+    as.numeric(haven::zap_labels(BDDREL00)),
+    as.numeric(haven::zap_labels(CDDREL00)),
+    as.numeric(haven::zap_labels(DDDREL00)),
+    as.numeric(haven::zap_labels(EDREL00)),
+    as.numeric(haven::zap_labels(FDREL00)),
+    as.numeric(haven::zap_labels(GDREL00))
+  )
+  rel_partner <- coalesce(
+    as.numeric(haven::zap_labels(BDDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(CDDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(DDDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(EDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(FDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(GDREL00_PARTNER))
+  )
+  main <- if_else(sweep <= 4, rel %in% 1:12, rel %in% 7:10) & as.numeric(haven::zap_labels(respondent_sex)) %in% 2
+  partner <- !main &
+    if_else(sweep <= 4, rel_partner %in% 1:12, rel_partner %in% 7:10) &
+    as.numeric(haven::zap_labels(respondent_sex_PARTNER)) %in% 2
+  work <- case_when(
+    main ~ as.numeric(haven::zap_labels(respondent_paid_work)),
+    partner ~ as.numeric(haven::zap_labels(respondent_paid_work_PARTNER)),
+    .default = NA_real_
+  )
+  recode_values(work, 1 ~ ""Employed"", 2 ~ ""Not employed"", default = ""Unknown"")
+})","Mother figure as for maternal_education: a female natural, adoptive, foster or step parent respondent, main respondent first (BDDREL00-GDREL00 and partner, with sex from the household grid). Her household-grid answer at every sweep, reported by the main respondent: 'Is [name] currently in paid work? If on leave, code yes' (respondent_paid_work, built in the tidier from BHPJOB00-GHPJOB00): yes = Employed, no = Not employed; no mother figure among the respondents, or no answer, = Unknown. The derived work status (BDDWRK00, DDDWRK00-FDWRK00) agrees on about 98% of rows and is missing at sweeps 3 and 7; unused.",,
+maternal_age,compatible,"BDDREL00, CDDREL00, DDDREL00, EDREL00, FDREL00, GDREL00, BDDREL00_PARTNER, CDDREL00_PARTNER, DDDREL00_PARTNER, EDREL00_PARTNER, FDREL00_PARTNER, GDREL00_PARTNER, respondent_sex, respondent_sex_PARTNER, BDDAGI00, CDDAGI00, DDDAGI00, EDAGI00, FDAGI00, GDAGI00, BDDAGI00_PARTNER, CDDAGI00_PARTNER, DDDAGI00_PARTNER, EDAGI00_PARTNER, FDAGI00_PARTNER, GDAGI00_PARTNER, .wave","local({
+  sweep <- as.numeric(sub(""sweep_"", """", .wave))
+  rel <- coalesce(
+    as.numeric(haven::zap_labels(BDDREL00)),
+    as.numeric(haven::zap_labels(CDDREL00)),
+    as.numeric(haven::zap_labels(DDDREL00)),
+    as.numeric(haven::zap_labels(EDREL00)),
+    as.numeric(haven::zap_labels(FDREL00)),
+    as.numeric(haven::zap_labels(GDREL00))
+  )
+  rel_partner <- coalesce(
+    as.numeric(haven::zap_labels(BDDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(CDDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(DDDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(EDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(FDREL00_PARTNER)),
+    as.numeric(haven::zap_labels(GDREL00_PARTNER))
+  )
+  main <- if_else(sweep <= 4, rel %in% 1:12, rel %in% 7:10) & as.numeric(haven::zap_labels(respondent_sex)) %in% 2
+  partner <- !main &
+    if_else(sweep <= 4, rel_partner %in% 1:12, rel_partner %in% 7:10) &
+    as.numeric(haven::zap_labels(respondent_sex_PARTNER)) %in% 2
+  age <- case_when(
+    main ~ coalesce(
+      as.numeric(haven::zap_labels(BDDAGI00)),
+      as.numeric(haven::zap_labels(CDDAGI00)),
+      as.numeric(haven::zap_labels(DDDAGI00)),
+      as.numeric(haven::zap_labels(EDAGI00)),
+      as.numeric(haven::zap_labels(FDAGI00)),
+      as.numeric(haven::zap_labels(GDAGI00))
+    ),
+    partner ~ coalesce(
+      as.numeric(haven::zap_labels(BDDAGI00_PARTNER)),
+      as.numeric(haven::zap_labels(CDDAGI00_PARTNER)),
+      as.numeric(haven::zap_labels(DDDAGI00_PARTNER)),
+      as.numeric(haven::zap_labels(EDAGI00_PARTNER)),
+      as.numeric(haven::zap_labels(FDAGI00_PARTNER)),
+      as.numeric(haven::zap_labels(GDAGI00_PARTNER))
+    ),
+    .default = NA_real_
+  )
+  if_else(age >= 0, age + 0.5, NA_real_)
+})","Mother figure as for maternal_education: a female natural, adoptive, foster or step parent respondent, main respondent first. Her derived age at interview (BDDAGI00-GDAGI00, or the partner's), completed years + 0.5, every sweep; negative codes and rows with no mother figure NA. Values above 70 kept as entered.",,
 urbanicity,proximate,"bmorpcde, cmorpcde, dmorpcde, EMORPCDE, FIERURUR, FIWRURUR, BISRURUR, CISRURUR, DISRURUR, EISRURUR, FISRURUR, BINRURUR, CINRURUR, DINRURUR, EINRURUR, FINRURUR","coalesce(
   recode_values(
     coalesce(as.numeric(bmorpcde), as.numeric(cmorpcde), as.numeric(dmorpcde), as.numeric(EMORPCDE)),
@@ -336,8 +499,25 @@ school_grade,partial,"DPSTSC00, DPDIFY00, EPSTSC00, EPDIFY00, FPSTSC00, FPDIFY00
     4 ~ ""Other year""
   )
 )","Parent confirms the sweep's modal school year, else gives the year; label built from both, kept as MCS writes it (England/Wales year with Scottish/NI equivalent). Sweeps 2-3 predate the item; sweep 7 asks the cohort member. Not attending school (code 3) stays missing.",,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,proximate,"CPSCTY00, DPSCTY00, EPSCTY00, FPSCTY00","recode_values(
+  coalesce(
+    as.numeric(haven::zap_labels(CPSCTY00)),
+    as.numeric(haven::zap_labels(DPSCTY00)),
+    as.numeric(haven::zap_labels(EPSCTY00)),
+    as.numeric(haven::zap_labels(FPSCTY00))
+  ),
+  1 ~ ""Private"",
+  2 ~ ""Public"",
+  default = ""Unknown""
+)","Main respondent, 'School fees applicable' for the school the child attends: sweeps 3, 4 and 6 (CPSCTY00, DPSCTY00, FPSCTY00), and sweep 5 only for children at a different school since sweep 4 (EPSCTY00): fees = Private, no fees = Public. Proximate: whether fees are paid stands in for management (state-funded academies and faith schools read as Public). Sweeps 2 and 7, other sweep-5 rows, children not at school and don't know or refused = Unknown. Sweep 5's fee item for the coming secondary school (EPSSTY00) is unused.",,
+school_track,compatible,"CPSTSC00, DPSTSC00, DPDIFY00, EPSTSC00, EPDIFY00","case_when(
+  as.numeric(haven::zap_labels(CPSTSC00)) == 1 ~ ""Not tracked"",
+  as.numeric(haven::zap_labels(DPSTSC00)) == 1 ~ ""Not tracked"",
+  as.numeric(haven::zap_labels(DPSTSC00)) == 2 & as.numeric(haven::zap_labels(DPDIFY00)) %in% 1:3 ~ ""Not tracked"",
+  as.numeric(haven::zap_labels(EPSTSC00)) == 1 ~ ""Not tracked"",
+  as.numeric(haven::zap_labels(EPSTSC00)) == 2 & as.numeric(haven::zap_labels(EPDIFY00)) %in% c(1, 3) ~ ""Not tracked"",
+  .default = ""Unknown""
+)","Primary school, a stage with no tracks, from the main respondent's school-year items: sweep 3 started reception class (CPSTSC00); sweep 4 in Year 2/Primary 3, or another year at age 7 (DPSTSC00, DPDIFY00); sweep 5 in Year 6/Primary 7, Year 5/Primary 6 or another primary year (EPSTSC00, EPDIFY00) = Not tracked. Not yet at school, not attending, secondary years at sweep 5, and sweeps 2, 6 and 7 = Unknown: no item records the secondary school's type or track. The sweep-5 types of secondary school applied to (EPTYSC0A-J, EPTYSO0A-H) describe applications, not the school attended, and are unused.",,
 st_measure_type,inferred,,"""Categorical""",Banded hours items at every sweep.,,
 st_measure_name,inferred,,"""Custom""",Items written for MCS.,,
 st_responder,inferred,.wave,"case_match(.wave, c(""sweep_2"", ""sweep_3"", ""sweep_4"", ""sweep_5"") ~ ""Parent or carer"", c(""sweep_6"", ""sweep_7"") ~ ""Self"")","Main parent respondent at sweeps 2-5 (ages 3-11); cohort member at sweeps 6-7 (ages 14, 17), by design.",,
@@ -399,41 +579,41 @@ st_socmedia,incompatible,"FCSOME00, GCSOME00",,Weekday items only; no usual-day 
 st_educational_wd,unavailable,,,No weekday/weekend split.,,
 st_educational_we,unavailable,,,No weekday/weekend split.,,
 st_educational,incompatible,"ECQ07X00, EPHWKM00, FCHWKM00",,"Only how often the child uses the internet for homework (ECQ07X00, sweep 5, frequency) and homework hours that do not name screens (EPHWKM00, FCHWKM00).",,
-st_leisure_wd,in_progress,,,,,
-st_leisure_we,in_progress,,,,,
-st_leisure,in_progress,,,,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch and st_violent_game.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
 st_internet_wd,compatible,FCINTH00,"recode_values(as.numeric(FCINTH00), 1 ~ 0, 2 ~ 0.25, 3 ~ 0.75, 4 ~ 1.5, 5 ~ 2.5, 6 ~ 4, 7 ~ 6, 8 ~ 7)","Self, sweep 6 only: 'On a normal week day during term time, how many hours do you spend using the internet?', any device, homework included, use at school excluded. FCINTH00's label is wrong. Band midpoints; top band '7 hours or more' = 7.",,
 st_internet_we,unavailable,,,No weekend item.,,
 st_internet,incompatible,"FCINTH00, ECQ06X00",,Weekday items only; no usual-day value (sweep-5 ECQ06X00 is frequency only).,,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
 st_videochat,unavailable,,,Not collected.,,
 st_messaging_wd,incompatible,"FCSOME00, GCSOME00, ECQ08X00",,Bundled with social networking in FCSOME00/GCSOME00 (mapped to st_socmedia_wd); sweep-5 ECQ08X00 is frequency only.,,
 st_messaging_we,unavailable,,,No weekend item.,,
 st_messaging,incompatible,"FCSOME00, GCSOME00",,Weekday items only; no usual-day value.,,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
 st_creating,unavailable,,,Not collected.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
 st_email,unavailable,,,Not collected.,,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,unavailable,,,No item on use at school.,,
 st_educational_school,unavailable,,,No item on use at school.,,
@@ -1061,22 +1241,129 @@ hlth_sleep,partial,"FCSLWK00, FCWUWK00, FCSLWE00, FCWUWE00","(5 *
   7",5:2 weighted mean of hlth_sleep_wd and hlth_sleep_we (sweep 6); partial as they are (banded onset and waking times).,,
 hlth_sleepprob,incompatible,"FCSLLN00, FCSLTR00, GCSQLT00, CPSLPP00",,"No sleep-problems scale: only sleep latency and night waking items (sweep 6), overall sleep quality (sweep 7) and a parent rating of sleeping habits as a problem (sweep 3).",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,proximate,FCSLTR00,"recode_values(
+  as.numeric(haven::zap_labels(FCSLTR00)),
+  1 ~ ""Always"",
+  c(2, 3) ~ ""Often"",
+  4 ~ ""Sometimes"",
+  5 ~ ""Rarely"",
+  6 ~ ""Never"",
+  default = NA_character_
+)","Sweep 6 only, young person self-completion: 'During the last four weeks, how often did you awaken during your sleep time and have trouble falling back to sleep again?' (FCSLTR00; recall 4 weeks). All of the time = Always; most and a good bit of the time = Often (both below a top 'all of the time'); some of the time = Sometimes; a little of the time = Rarely; none of the time = Never. Proximate: six levels folded onto five. Scored in no mapped scale. Unused: time taken to fall asleep (FCSLLN00, latency) and the sweep-7 overall sleep-quality rating (GCSQLT00). Not carried.",,
+hlth_sleepprob_singleitem_parent,incompatible,"CPSLPP00, BPWHSD00, CPWHSD00, DPWHSD00, EPWHSD00",,"Only the sweep-3 rating of whether the child's sleeping habits are a large, moderate, small or no problem (CPSLPP00), a problem-size rating, and how often wheezing disturbed the child's sleep (BPWHSD00-EPWHSD00), which names a cause; no frequency item on sleep problems.",,
+hlth_bmi,compatible,"BCHTCM00, BCHTMM00, BCWTKM00, BCWTGM00, CCHTCM00, CCWTCM00, DCHTCM00, DCWTCM00, ECHTCMA0, ECWTCMA0, FCHTCMPE, FCWTCMPE, GCHTCM00, GCWTCM00","local({
+  height <- coalesce(
+    as.numeric(haven::zap_labels(BCHTCM00)) + as.numeric(haven::zap_labels(BCHTMM00)) / 10,
+    as.numeric(haven::zap_labels(CCHTCM00)),
+    as.numeric(haven::zap_labels(DCHTCM00)),
+    as.numeric(haven::zap_labels(ECHTCMA0)),
+    as.numeric(haven::zap_labels(FCHTCMPE)),
+    as.numeric(haven::zap_labels(GCHTCM00))
+  )
+  weight <- coalesce(
+    as.numeric(haven::zap_labels(BCWTKM00)) + as.numeric(haven::zap_labels(BCWTGM00)) / 10,
+    as.numeric(haven::zap_labels(CCWTCM00)),
+    as.numeric(haven::zap_labels(DCWTCM00)),
+    as.numeric(haven::zap_labels(ECWTCMA0)),
+    as.numeric(haven::zap_labels(FCWTCMPE)),
+    as.numeric(haven::zap_labels(GCWTCM00))
+  )
+  height[height <= 0] <- NA
+  weight[weight <= 0] <- NA
+  weight / (height / 100)^2
+})","Height (cm) and weight (kg) measured by the interviewer at every sweep, BMI = weight / (height / 100)^2 from the measurements as entered: sweep 2 cm plus mm and kg plus 100 g parts (BCHTCM00, BCHTMM00, BCWTKM00, BCWTGM00), sweep 3 CCHTCM00, CCWTCM00, sweep 4 DCHTCM00, DCWTCM00, sweep 5 ECHTCMA0, ECWTCMA0, sweep 6 the pre-edit FCHTCMPE, FCWTCMPE, sweep 7 GCHTCM00, GCWTCM00. Unused: the study's cleaned heights and weights, the CLS-calculated BMIs built from them (BCBMIN00, BMIN3, DCBMIN4, EBMIN5, FCBMIN6, GCBMIN7) and the corrected or edited sweep 5-6 values (ECHTCMB0, ECWTCMB0, FCHTCM00, FCWTCM00). Every value kept as entered, screened at analysis.",,
+hlth_bmi_measure,inferred,,"""Measured""",Height and weight are measured by the interviewer at every sweep (MCS CAPI physical measurements).,,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,proximate,"EPPUHG00, EPPUBH00, EPPUSK00, EPPUVC00, EPPUFH00, EPPUBR00, EPPUMN00, FCPUHG00, FCPUBH00, FCPUSK00, FCPUVC00, FCPUFH00, FCPUBR00, FCPUMN00, GCPUMN00","local({
+  parent <- cbind(
+    as.numeric(haven::zap_labels(EPPUHG00)),
+    as.numeric(haven::zap_labels(EPPUBH00)),
+    as.numeric(haven::zap_labels(EPPUSK00)),
+    as.numeric(haven::zap_labels(EPPUVC00)),
+    as.numeric(haven::zap_labels(EPPUFH00)),
+    as.numeric(haven::zap_labels(EPPUBR00))
+  )
+  parent[!(parent %in% 1:3)] <- NA
+  self <- cbind(
+    as.numeric(haven::zap_labels(FCPUHG00)),
+    as.numeric(haven::zap_labels(FCPUBH00)),
+    as.numeric(haven::zap_labels(FCPUSK00)),
+    as.numeric(haven::zap_labels(FCPUVC00)),
+    as.numeric(haven::zap_labels(FCPUFH00)),
+    as.numeric(haven::zap_labels(FCPUBR00))
+  )
+  self[!(self %in% 1:4)] <- NA
+  menarche_parent <- recode_values(as.numeric(haven::zap_labels(EPPUMN00)), 1 ~ 4, 2 ~ 1, default = NA_real_)
+  menarche_self <- recode_values(as.numeric(haven::zap_labels(FCPUMN00)), 1 ~ 4, 2 ~ 1, default = NA_real_)
+  coalesce(
+    (parent[, 1] + parent[, 2] + parent[, 3] + parent[, 4] + parent[, 5]) / 5,
+    (parent[, 1] + parent[, 2] + parent[, 3] + parent[, 6] + menarche_parent) / 5,
+    (self[, 1] + self[, 2] + self[, 3] + self[, 4] + self[, 5]) / 5,
+    (self[, 1] + self[, 2] + self[, 3] + self[, 6] + menarche_self) / 5,
+    recode_values(as.numeric(haven::zap_labels(GCPUMN00)), 1 ~ 1, 2 ~ 0, default = NA_real_)
+  )
+})","Sweep 5, parent report, and sweep 6, self-report: the Pubertal Development Scale, the mean of the five sex-specific items, complete-case (growth spurt, body hair, skin changes, then voice and facial hair for boys, breast growth and menarche for girls; menarche no = 1, yes = 4); sweep 5 items have three levels (not yet begun, barely started, definitely started; no 'seems complete' option) and sweep 6 four. Don't know and no answer NA. Sweep 7, girls' self-report, menarche alone ('Have you started your periods?', GCPUMN00): started = 1, not started = 0; boys NA. Proximate: the sweep-7 menarche item alone; the PDS sweeps are compatible. Ages at menarche (EPAGMN00, FCAGMN0A, GCAGMN00) unused. Not carried.",,
+hlth_puberty_measure,inferred,.wave,"recode_values(
+  .wave,
+  ""sweep_5"" ~ ""Pubertal Development Scale (parent), 5 of 5 sex-specific items, 1-3 item scoring (not yet begun, barely started, definitely started; no 'seems complete' option), menarche no = 1, yes = 4 (range 1-3.2), mean; boys growth spurt, body hair, skin, voice, facial hair; girls growth spurt, body hair, skin, breasts, menarche"",
+  ""sweep_6"" ~ ""Pubertal Development Scale (self), 5 of 5 sex-specific items, 1-4 item scoring, menarche no = 1, yes = 4 (range 1-4), mean; items by sex as at sweep 5"",
+  ""sweep_7"" ~ ""Menarche (self), girls only, 1 item, started = 1, not started = 0, menarche indicator"",
+  default = NA_character_
+)","Describes hlth_puberty_status at sweeps 5-7, where a pubertal measure was given; NA at sweeps 2-4.",,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,partial,"FCPHEX00, GCPHEX00","recode_values(
+  coalesce(as.numeric(haven::zap_labels(FCPHEX00)), as.numeric(haven::zap_labels(GCPHEX00))),
+  1 ~ 7,
+  2 ~ 5.5,
+  3 ~ 3.5,
+  4 ~ 1.5,
+  5 ~ 0,
+  default = NA_real_
+)","Sweeps 6 and 7, cohort member's self-report, past week: 'On how many days in the last week did you do a total of at least an hour of moderate to vigorous physical activity?' (FCPHEX00, GCPHEX00). Every day = 7, 5-6 days = 5.5, 3-4 days = 3.5, 1-2 days = 1.5, not at all = 0. Partial: day bands at their midpoints. The parent's sweep 3-5 'days per week CM does sport/exercise' (CPSEHO00, DPSEHO00, EPSEHO00) is unused. Not carried.",,
+hlth_birthweight,compatible,"BPBIWT00, BPWTKG00, BPWTLB00, BPWTOU00, participant_id, .wave","local({
+  unit <- as.numeric(haven::zap_labels(BPBIWT00))
+  kilos <- as.numeric(haven::zap_labels(BPWTKG00))
+  pounds <- as.numeric(haven::zap_labels(BPWTLB00))
+  ounces <- as.numeric(haven::zap_labels(BPWTOU00))
+  grams <- case_when(
+    unit == 1 & kilos > 0 ~ kilos * 1000,
+    unit == 2 & pounds > 0 ~ (pounds * 16 + ounces) * 28.35,
+    .default = NA_real_
+  )
+  carry_within(grams, participant_id, order = as.numeric(sub(""sweep_"", """", .wave)))
+})","Sweep 2 new families only (families eligible at sweep 1 but first interviewed at sweep 2), natural mother's report, Red Book consulted if available: 'How much did [CM] weigh when he/she was born?' in kilos and grams (BPWTKG00, x 1,000) or pounds and ounces (BPWTLB00, BPWTOU00, (lb x 16 + oz) x 28.35), unit in BPBIWT00; a zero entry is NA. The rest of the cohort reported birth weight at sweep 1, which is not in the supplied extract. Carried within participant (carry-forward rule). Values kept as entered (including kg entries such as 99.6), screened at analysis.",,
+hlth_preterm,incompatible,BPICUN00,,"Only whether the child was taken to special care, neonatal or intensive care after birth (BPICUN00, sweep 2 new families), a neonatal-care item; no gestational age or preterm item in the supplied sweeps.",,
+hlth_breastfed,incompatible,"BPBFEA00, BPBFMT00, CPBFEA00, CPBFEY00, CPBFEM00",,"Only the age the child last had breast milk, asked of children still breastfed at the previous interview (BPBFEA00, BPBFMT00 at sweep 2; CPBFEA00, CPBFEY00, CPBFEM00 at sweep 3), a subsample with no never-breastfed answer.",,
+hlth_prenatalsmoking,unavailable,,,Not in the supplied extract.,,
+hlth_chroniccond_diagnosed,incompatible,"BPASMA00, CPASMA00, DPASMA00, EPASMA00, FPASMA00, BPCLSI00",,"Asthma is asked as 'Has [CM] ever had asthma?' (sweeps 2-5) and 'Does [CM] have asthma?' (sweep 6), not attributed to a health professional; sweep 2's 'long-term conditions diagnosed by a health professional' (BPCLSI00) pools mental and developmental with physical conditions. The long-standing condition items go to hlth_disability.",,
+hlth_disability,partial,"BPCLSI00, BPCLSL00, CPCLSI00, CPCLSL00, DPCLSI00, DPCLSL00, EPCLSI00, EPCLSL00, FPCLSI00, FPCLSL00, GCCLSI00, GCCLSL00, .wave","local({
+  sweep <- as.numeric(sub(""sweep_"", """", .wave))
+  has <- coalesce(
+    as.numeric(haven::zap_labels(BPCLSI00)),
+    as.numeric(haven::zap_labels(CPCLSI00)),
+    as.numeric(haven::zap_labels(DPCLSI00)),
+    as.numeric(haven::zap_labels(EPCLSI00)),
+    as.numeric(haven::zap_labels(FPCLSI00)),
+    as.numeric(haven::zap_labels(GCCLSI00))
+  )
+  limit <- coalesce(
+    as.numeric(haven::zap_labels(BPCLSL00)),
+    as.numeric(haven::zap_labels(CPCLSL00)),
+    as.numeric(haven::zap_labels(DPCLSL00)),
+    as.numeric(haven::zap_labels(EPCLSL00)),
+    as.numeric(haven::zap_labels(FPCLSL00)),
+    as.numeric(haven::zap_labels(GCCLSL00))
+  )
+  case_when(
+    has == 2 ~ ""FALSE"",
+    has == 1 & sweep <= 4 & limit == 1 ~ ""TRUE"",
+    has == 1 & sweep <= 4 & limit == 2 ~ ""FALSE"",
+    has == 1 & sweep >= 5 & limit %in% c(1, 2) ~ ""TRUE"",
+    has == 1 & sweep >= 5 & limit == 3 ~ ""FALSE"",
+    .default = NA_character_
+  )
+})","Parent report at sweeps 2-6, the cohort member's own at sweep 7. Sweep 2: 'Does [CM] have long-term conditions that have been diagnosed by a health professional?' (at least 3 months) and 'Does this limit him/her at play or from joining in any other activity normal for a child his/her age?'; sweeps 3-4: 'any longstanding illness, disability or infirmity' and whether it limits the child's activity in any way (yes/no); sweeps 5-7: 'any physical or mental health conditions or illnesses lasting or expected to last 12 months or more' and whether they reduce the ability to carry out day-to-day activities (a lot or a little = TRUE, not at all = FALSE). No condition = FALSE; don't know and refused NA. Partial: sweeps 5-7 pool physical with mental conditions, and sweep 2 counts diagnosed conditions only. Not carried.",,
 st_measure_type,inferred,,"""Continuous""","Time-use diary: activities recorded in 10-minute slots over a full day, summed to minutes per diary day in the tidier (bp27_tud_minutes()).",,diary
 st_measure_name,inferred,,"""Time use diary""","Sweep-6 time-use diary (app, web or paper), one weekday and one weekend day per cohort member; harmonised activity codes.",,diary
 st_responder,inferred,,"""Self""",Completed by the cohort member.,,diary

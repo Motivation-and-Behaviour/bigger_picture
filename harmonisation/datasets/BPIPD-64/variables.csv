@@ -6,15 +6,63 @@ rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,compatible,gewichtung_mitonlinefragebogen,as.numeric(gewichtung_mitonlinefragebogen),"Overall cross-sectional weight for all 4,405 participants, online-only respondents included: trimmed at the 2.5th and 97.5th percentiles of the original distribution and normalised to the sample (codebook). gewichtung_ohneonlinefragebogen (on-site participants only) and gewichtung_design (unnormalised design weight) not used.",,
 survey_strata,unavailable,,,Not collected; the protocol describes no explicit stratification.,,
 survey_cluster,compatible,testort_gemeindeschluessel,as.character(testort_gemeindeschluessel),"Official municipality key (AGS) of the sampled test location, 171 values; municipalities were the first-stage units, drawn with probability proportional to the population aged 4-17 (Woll et al. 2025, BMJ Open 15:e094895, doi:10.1136/bmjopen-2024-094895). A city drawn for several sample points shares one key. Residence keys (ort_gemeindeschluessel, ort_regionalschluessel) not used. Single occasion, so no prefix.",,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,unavailable,,,Not collected; participants are drawn individually from municipal registers and no family or household identifier is released.,,
+sample_component,unavailable,,,Single sample.,,
 sample_population,inferred,,"""General population""","Two-stage random sample of residents aged 4-17 from sampled German municipalities (MoMo 2.0 protocol, doi:10.1136/bmjopen-2024-094895).",,
-parent_respondent,in_progress,,,,,
+parent_respondent,compatible,"stamm_fragebogenausgefuelltvon, stamm_fragebogenausgefuelltvonoffen, stamm_interviewausgefuelltvon, stamm_interviewausgefuelltvonoffen, stamm_onlineausgefuelltvon, stamm_onlineausgefuelltvonoffen, sdqeltern_emotionaleprobleme, sdqeltern_verhaltensprobleme, sdqeltern_hyperaktivitaet, sdqeltern_peerprobleme, sdqeltern_prosozialesverhalten","local({
+  parent_sdq <- !is.na(sdqeltern_emotionaleprobleme) |
+    !is.na(sdqeltern_verhaltensprobleme) |
+    !is.na(sdqeltern_hyperaktivitaet) |
+    !is.na(sdqeltern_peerprobleme) |
+    !is.na(sdqeltern_prosozialesverhalten)
+  x <- do.call(
+    coalesce,
+    Map(
+      function(code, text) {
+        txt <- gsub(""freund der m.tter|gro.(mutter|vater|eltern)"", ""carer"", tolower(text))
+        mother <- grepl(""m.tter|mama"", txt)
+        father <- grepl(""vater|papa"", txt)
+        code <- as.numeric(as.character(code))
+        case_when(
+          code == 2 ~ ""Mother"",
+          code == 3 ~ ""Father"",
+          code == 4 & (grepl(""eltern|m.ttern"", txt) | (mother & father)) ~ ""Both parents"",
+          code == 4 & mother ~ ""Mother"",
+          code == 4 & father ~ ""Father"",
+          code == 4 & grepl(""carer|oma|opa|tante|betreuer"", txt) ~ ""Other carer"",
+          .default = NA_character_
+        )
+      },
+      list(stamm_fragebogenausgefuelltvon, stamm_interviewausgefuelltvon, stamm_onlineausgefuelltvon),
+      list(stamm_fragebogenausgefuelltvonoffen, stamm_interviewausgefuelltvonoffen, stamm_onlineausgefuelltvonoffen)
+    )
+  )
+  if_else(is.na(x) & parent_sdq, ""Unknown"", x)
+})","The adult recorded as completing the questionnaire with the participant: first the activity questionnaire, which holds the screen items and the parent SDQ (stamm_fragebogenausgefuelltvon, 'Who fills in the activity questionnaire?'), else the face-to-face health interview, the main parent interview (SES, migration and household items, parents preferred; stamm_interviewausgefuelltvon), else the online questionnaire of participants not tested on site (stamm_onlineausgefuelltvon). Mother with participant = Mother, father with participant = Father; 'participant with another person' resolved from the open text: both parents = Both parents, one parent or a step-parent = that parent, grandparents, an aunt, a godmother, a carer or the mother's friend = Other carer; a sibling, friend, test instructor, interpreter or removed name records no parent or carer and passes to the next questionnaire. Participant alone everywhere: Unknown where a parent SDQ subscale (4-10 parent form) is scored, else NA. Mother 2,334, Father 731, Both parents 16, Other carer 25 (2,389 from the activity questionnaire, 495 from the health interview, 222 online), Unknown 494, NA 805. Single occasion.",,
 age_years,compatible,stamm_alter,as.numeric(stamm_alter),"Decimal age from date of birth and survey date (stamm_alter, codebook), 4.0-18.8; the 12 participants aged 18 or over are kept.",,
 sex,compatible,stamm_geschlecht,"recode_values(as.numeric(as.character(stamm_geschlecht)), 1 ~ ""Male"", 2 ~ ""Female"", 3 ~ ""Other"", default = ""Unknown"")","Biological sex from the study's core data (stamm_geschlecht: male, female, diverse); the 3 'diverse' rows -> Other. None missing; the Unknown default is a guard only.",,
 country,inferred,,"""Germany""","Nationally representative sample of residents of Germany aged 4-17 from all 16 federal states (Woll et al. 2025, BMJ Open 15:e094895, doi:10.1136/bmjopen-2024-094895).",,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,compatible,ort_bundesland,"recode_values(
+  as.numeric(as.character(ort_bundesland)),
+  1 ~ ""DE-SH"",
+  2 ~ ""DE-HH"",
+  3 ~ ""DE-NI"",
+  4 ~ ""DE-HB"",
+  5 ~ ""DE-NW"",
+  6 ~ ""DE-HE"",
+  7 ~ ""DE-RP"",
+  8 ~ ""DE-BW"",
+  9 ~ ""DE-BY"",
+  10 ~ ""DE-SL"",
+  11 ~ ""DE-BE"",
+  12 ~ ""DE-BB"",
+  13 ~ ""DE-MV"",
+  14 ~ ""DE-SN"",
+  15 ~ ""DE-ST"",
+  16 ~ ""DE-TH"",
+  default = ""Unknown""
+)","Federal state of residence from the home address (ort_bundesland, 16 Länder) as its ISO 3166-2 code: Schleswig-Holstein DE-SH, Hamburg DE-HH, Niedersachsen DE-NI, Bremen DE-HB, Nordrhein-Westfalen DE-NW, Hessen DE-HE, Rheinland-Pfalz DE-RP, Baden-Württemberg DE-BW, Bayern DE-BY, Saarland DE-SL, Berlin DE-BE, Brandenburg DE-BB, Mecklenburg-Vorpommern DE-MV, Sachsen DE-SN, Sachsen-Anhalt DE-ST, Thüringen DE-TH. None missing; the Unknown default is a guard only. Single occasion, so carry-forward is moot.",,
 ethnicity,incompatible,"migrant_landmutter, migrant_landvater, migrant_geborenindeutschland, migrant_sprachekategorie",,"No ethnic-group item; only parents' birthplaces and the participant's residence since birth, which feed immigrant_background and minority, and home language (on home_language), none of which are ethnic groups.",,
 indigenous,unavailable,,,Not collected.,,
 minority,proximate,"migrant_landmutter, migrant_landvater, migrant_geborenindeutschland","local({
@@ -105,7 +153,7 @@ parental_education,compatible,"bildung_berufmutter, bildung_berufvater","local({
   )
 })","Higher of the two parents' vocational qualifications: maximum of the ordered codes 1-7 (8 'other' and not answered dropped, so one known parent suffices), then the shared education lookup. Unknown when neither parent has a rankable code, including adult-version rows.",maternal_education,
 maternal_employment,incompatible,beruf_stellungmutter,,"Only the mother's occupational position in her main (or last) job ('Welche berufliche Stellung hat deine Mutter in ihrer Haupterwerbstätigkeit?', employee, civil servant, self-employed, ..., never employed): the occupation of a current or most recent job, not current employment status.",,
-maternal_age,in_progress,,,,,
+maternal_age,unavailable,,,Not collected.,,
 urbanicity,proximate,ort_gemeindetyp,"recode_values(
   as.numeric(as.character(ort_gemeindetyp)),
   1 ~ ""Rural"",
@@ -159,20 +207,22 @@ fam_home_emotsupport,in_progress,,,,,
 fam_home_measure,in_progress,,,,,
 school_grade,unavailable,,,Not collected.,,
 school_sector,unavailable,,,Not collected.,,
-school_track,in_progress,,,,,
+school_track,unavailable,,,Not in the supplied extract.,,
 st_measure_type,inferred,,"""Categorical""","All media time items are nine-band categorical responses ((almost) never, 30 minutes, 1-5 hours, 6 hours or more daily), scored as hours.",,
 st_measure_name,inferred,,"""Custom""","Study items adapted from the KiGGS media-use questionnaire (Woll et al. 2025, BMJ Open 15:e094895, doi:10.1136/bmjopen-2024-094895, Table 4), activity questionnaire; not a published standalone instrument.",,
-st_responder,compatible,"stamm_fragebogenausgefuelltvon, daten_aktivitaetsfragebogen, stamm_alter","local({
+st_responder,compatible,"stamm_fragebogenausgefuelltvon, stamm_fragebogenausgefuelltvonoffen, daten_aktivitaetsfragebogen","local({
   who <- as.numeric(as.character(stamm_fragebogenausgefuelltvon))
+  with_whom <- tolower(stamm_fragebogenausgefuelltvonoffen)
   case_when(
     who == 1 ~ ""Self"",
-    who %in% 2:4 & stamm_alter >= 8 ~ ""Self"",
     who %in% 2:3 ~ ""Parent or carer"",
+    who == 4 & grepl(""eltern|mutter|vater|oma|opa|tante|betreuer"", with_whom) ~ ""Parent or carer"",
+    who == 4 & grepl(""testleit"", with_whom) ~ ""Self"",
     who == 4 ~ ""Other"",
     as.numeric(as.character(daten_aktivitaetsfragebogen)) == 3 ~ ""Self"",
     .default = ""Unknown""
   )
-})","Per row from the who-answered item for the activity questionnaire, which holds every screen item (stamm_fragebogenausgefuelltvon, 'Who fills in the activity questionnaire?', preschool and school versions). One responder per row, and the questionnaire, completed with or by a parent, counts as the participant's own report from age 8, as on the _self rows: participant alone = Self (1,427, kept as recorded, 511 of them under 8 and 504 on the preschool version); mother or father with the participant = Self from age 8 (1,729) and Parent or carer below 8 (632); participant with another person (grandparent, sibling, carer) = Self from age 8 (27) and Other below 8 (5); adult version (no who-answered item; the participant's own questionnaire) = Self (42). Counts are of the 3,862 rows with an on-site screen value; the harmoniser sets NA where no st_ value exists, including the 410 online-questionnaire rows.",,
+})","Per row from the who-answered item for the activity questionnaire, which holds every screen item (stamm_fragebogenausgefuelltvon, 'Who fills in the activity questionnaire?', preschool and school versions). One responder per row, and a form the child completed together with a parent takes Parent or carer at every age: participant alone = Self (1,427, as recorded, 511 of them under 8 and 504 on the preschool version); mother or father with the participant = Parent or carer (2,361, 61.1% of the 3,862 rows); participant with another person, resolved from the open text (stamm_fragebogenausgefuelltvonoffen): parents, a step-parent, grandparents, an aunt, a godmother or a carer = Parent or carer (21), the test instructor = Self (1), a sibling, a friend or a removed name = Other (10); adult version (no who-answered item; the participant's own questionnaire) = Self (42). Counts are of the 3,862 rows with an on-site screen value; the harmoniser sets NA where no st_ value exists, including the 410 online-questionnaire rows.",,
 st_total_wd,incompatible,"medien_fernsehenwoche, medien_spielenwoche, medien_internetwoche",,"No all-screen item; the TV, gaming and internet school-day items are separately asked and are never summed (DR-0002, DR-0004); mapped to st_watch_wd, st_game_wd and st_internet_wd.",,
 st_total_we,incompatible,"medien_fernsehenwochenende, medien_spielenwochenende, medien_internetwochenende",,"No all-screen item; the TV, gaming and internet weekend items are separately asked and are never summed (DR-0002, DR-0004); mapped to st_watch_we, st_game_we and st_internet_we.",,
 st_total,incompatible,"medien_freizeitdigital, medien_fernsehenwoche, medien_fernsehenwochenende, medien_spielenwoche, medien_spielenwochenende, medien_internetwoche, medien_internetwochenende",,"The study's 'digital media use in leisure time (min/day)' (medien_freizeitdigital) is 60 x the sum of the 5:2 TV, gaming and internet values, a total of separately asked items (DR-0002, DR-0004); its online values also read the undocumented online codes as hours.",,
@@ -227,8 +277,8 @@ st_educational,unavailable,,,Not collected.,,
 st_leisure_wd,incompatible,"medien_fernsehenwoche, medien_spielenwoche, medien_internetwoche",,"No all-device leisure item; the TV, gaming and internet items are separately asked and are never summed (DR-0002, DR-0004); mapped to st_watch_wd, st_game_wd and st_internet_wd.",,
 st_leisure_we,incompatible,"medien_fernsehenwochenende, medien_spielenwochenende, medien_internetwochenende",,"No all-device leisure item; the TV, gaming and internet items are separately asked and are never summed (DR-0002, DR-0004); mapped to st_watch_we, st_game_we and st_internet_we.",,
 st_leisure,incompatible,medien_freizeitdigital,,"The study's 'digital media use in leisure time (min/day)' (medien_freizeitdigital) is a sum of the separately asked TV, gaming and internet items, never mapped here (DR-0002, DR-0004); the residual internet item stays on st_internet.",,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
 st_violent_watch,unavailable,,,Not collected.,,
 st_violent_game_wd,unavailable,,,Not collected.,,
 st_violent_game_we,unavailable,,,Not collected.,,
@@ -236,9 +286,9 @@ st_violent_game,unavailable,,,Not collected.,,
 st_violent_watch_index,unavailable,,,Not collected.,,
 st_violent_game_index,unavailable,,,Not collected.,,
 st_violent_measure,unavailable,,,See st_violent_watch.,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
@@ -248,20 +298,20 @@ st_internet,partial,"medien_internetwoche, medien_internetwochenende","(5 *
   na_if(as.numeric(as.character(medien_internetwoche)), -9) +
   2 * na_if(as.numeric(as.character(medien_internetwochenende)), -9)) /
   7","(5 x school day + 2 x weekend) / 7 of st_internet_wd and st_internet_we; internet use for entertainment, top band 6. Partial: restricted to entertainment and a residual beside the separate TV and gaming items; bundles online video, social networks, chatting and browsing (st_socmedia, st_messaging and st_videochat incompatible). On-site questionnaire only; the 410 online-questionnaire rows (medien_internetwoche_online, medien_internetwochenende_online, codes 1-8 undocumented) are NA pending the contributor.",,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,incompatible,medien_internetwoche,,"Only the bundled school-day 'internet use for entertainment (e.g. streaming, YouTube, video calls/chatting, social networks, browsing)' item, whose examples include video calls, mapped to st_internet_wd (partial).",,
+st_videochat_we,incompatible,medien_internetwochenende,,"Only the bundled weekend 'internet use for entertainment (e.g. streaming, YouTube, video calls/chatting, social networks, browsing)' item, whose examples include video calls, mapped to st_internet_we (partial).",,
 st_videochat,incompatible,"medien_internetwoche, medien_internetwochenende",,"Only the bundled 'internet use for entertainment' item, whose examples include video calls, mapped to st_internet (partial).",,
 st_messaging_wd,incompatible,medien_internetwoche,,"Only the bundled 'internet use for entertainment' item, whose examples include video calls/chatting, mapped to st_internet_wd (partial).",,
 st_messaging_we,incompatible,medien_internetwochenende,,"Only the bundled 'internet use for entertainment' item, whose examples include video calls/chatting, mapped to st_internet_we (partial).",,
 st_messaging,incompatible,"medien_internetwoche, medien_internetwochenende",,"Only the bundled 'internet use for entertainment' item, whose examples include video calls/chatting, mapped to st_internet (partial).",,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
 st_creating,unavailable,,,Not collected.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
 st_email,unavailable,,,Not collected.,,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,unavailable,,,No item on use at school.,,
 st_educational_school,unavailable,,,No item on use at school.,,
@@ -861,19 +911,19 @@ hlth_sleep_we,unavailable,,,Not in the supplied extract.,,
 hlth_sleep,unavailable,,,Not in the supplied extract.,,
 hlth_sleepprob,unavailable,,,Not collected.,,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not in the supplied extract.,,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
 hlth_bmi,unavailable,,,Not in the supplied extract.,,
 hlth_bmi_measure,unavailable,,,See hlth_bmi.,,
 hlth_bmi_z,unavailable,,,Not in the supplied extract.,,
 hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not in the supplied extract.,,
 hlth_pa_days60,unavailable,,,Not in the supplied extract.,,
 hlth_birthweight,unavailable,,,Not collected.,,
 hlth_preterm,unavailable,,,Not collected.,,
 hlth_breastfed,unavailable,,,Not collected.,,
 hlth_prenatalsmoking,unavailable,,,Not collected.,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_chroniccond_diagnosed,unavailable,,,Not in the supplied extract.,,
+hlth_disability,unavailable,,,Not in the supplied extract.,,

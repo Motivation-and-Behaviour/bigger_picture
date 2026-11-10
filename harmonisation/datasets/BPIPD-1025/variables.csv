@@ -21,10 +21,18 @@ rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,unavailable,,,Not a survey sample.,,
 survey_strata,unavailable,,,Not a survey sample.,,
 survey_cluster,unavailable,,,Not a survey sample.,,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,compatible,bcsid,as.character(bcsid),"The cohort member's identifier (bcsid): a cohort member's age16 row and that cohort member's children in child2004 share it, so children of one parent (the cohort member, their mother or father) share an id; 2,846 cohort members have children in child2004, 1,761 of them two or more. The 222 twins of the age-16 sample cannot be linked to each other: the release records twin status (tc2) but no twin-pair identifier. Siblings share the cohort member's household and parent items (e.g. ses_household, maternal_education, maternal_employment).",,
+sample_component,compatible,wave,"recode_values(wave, ""age16"" ~ ""Cohort members"", ""child2004"" ~ ""Cohort members' children"")","Two separately recruited samples, split by the tidier's sweep files. 'Cohort members' (age16): the 1970 British Cohort Study birth cohort, people born in Britain on 5-11 April 1970 (with those born abroad in that week added at later sweeps), observed at 16 in 1986. 'Cohort members' children' (child2004): the co-resident natural or adopted children aged under 17 of a one-in-two sample of cohort members, recruited through them in the 2004 Parent and Child survey and given their own instruments. Each participant has one row, so the label is constant within participant.",,
 sample_population,inferred,,"""General population""","Nationally representative birth cohort of people born in Britain in one week of 1970, and their children in the 2004 Parent and Child survey (BCS70 user guides).",,
-parent_respondent,in_progress,,,,,
+parent_respondent,compatible,"resp, flag_o, flag_p, flag_t, bd7sex, wave","case_when(
+  wave == ""child2004"" ~ recode_values(as.numeric(bd7sex), 2 ~ ""Mother"", 1 ~ ""Father"", default = ""Unknown""),
+  as.numeric(resp) == 1 ~ ""Mother"",
+  as.numeric(resp) == 2 ~ ""Father"",
+  as.numeric(resp) %in% 3:5 ~ ""Other carer"",
+  as.numeric(resp) == 6 ~ ""Both parents"",
+  as.numeric(flag_o) == 1 | as.numeric(flag_p) == 1 | as.numeric(flag_t) == 1 ~ ""Unknown"",
+  .default = NA_character_
+)","age16: 'Status of respondent(s)' on the parental interview (resp, Document O, the main parent interview; the screen-time items are the teenager's own): mother figure = Mother, father figure = Father, mother and father = Both parents, other female, male or sex not known = Other carer (relationship not recorded). Unknown on 1,231 rows with Document O but no status and 1,055 rows with only the maternal self-completion or family follow-up form (Documents P and T, which record no respondent); NA on 976 rows with no 1986 parent document. child2004: the cohort member answered the parent interview and self-completion forms and is the child's natural or adoptive parent by design, so Mother when the cohort member is female and Father when male (bd7sex). Not carried.",,
 age_years,compatible,"dob86, fdoc_yr, fdoc_mt, gdoc_yr, gdoc_mt, hdoc_yr, hdoc_mt, qdoc_yr, qdoc_mt, odoc_yr, odoc_mt, pdoc_yr, pdoc_mt, tdoc_yr, tdoc_mt, rdoc_yr, rdoc_mt, ldoc_yr, ldoc_mt, b7age, b7nmonth, wave","case_when(
   wave == ""age16"" ~ 1900 +
     coalesce(
@@ -51,7 +59,14 @@ country,compatible,"BD4CNTRY, land86, BD7CNTRY","recode_values(
   default = ""Unknown""
 )","Study-derived country of interview (BD4CNTRY 1986; BD7CNTRY 2004, the parent's household for child2004 rows); at age16 the cohort member's 'which country in Great Britain' (land86, codes 1-3 unlabelled, matching BD4CNTRY) fills gaps. Great Britain sample; Northern Ireland never occurs.",,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,compatible,"BD4CNTRY, land86, BD7CNTRY","recode_values(
+  coalesce(as.numeric(BD4CNTRY), as.numeric(land86), as.numeric(BD7CNTRY)),
+  1 ~ ""GB-ENG"",
+  2 ~ ""GB-WLS"",
+  3 ~ ""GB-SCT"",
+  4 ~ ""GB-NIR"",
+  default = ""Unknown""
+)","UK nation code from the source that fills country: age16 the study-derived country of interview (BD4CNTRY), else the cohort member's 'which country in Great Britain' (land86); child2004 the cohort member's household (BD7CNTRY). England GB-ENG, Wales GB-WLS, Scotland GB-SCT; Northern Ireland never occurs. The study's government office and standard regions (BD4GOR, BD7GOR) lie within the nations. One row per participant, so nothing to carry.",,
 ethnicity,proximate,"oa3.1, a12.1, a12.4, a12.7, b7pcethe, b7pcethw, b7pceths","coalesce(
   lookup_values(
     case_when(
@@ -102,7 +117,26 @@ minority,compatible,"oa3.1, a12.1, a12.4, a12.7, b7pcethe, b7pcethw, b7pceths","
 )","From the same items and lookup as ethnicity. Any White group (English, Welsh, Scottish, Northern Irish, United Kingdom, Irish, other European) -> Non-minority; every other group, including Mixed, -> Minority; the merged Mixed/other codes are Minority either way.",ethnicity,
 immigrant_background,incompatible,"oa2.1, a2.1",,"Only the cohort member's own country of birth (oa2.1, a2.1; mapped to born_in_country); parents' birthplaces not asked, so Native cannot be separated from Second-generation.",,
 born_in_country,compatible,"oa2.1, a2.1","recode_values(coalesce(as.numeric(oa2.1), as.numeric(a2.1)), c(1, 2, 3, 4) ~ ""Yes"", c(5, 6) ~ ""No"", default = ""Unknown"")","age16: cohort member's country of birth from the 1986 parental interview (oa2.1), else the 1980 interview carried to the age-16 row by the tidier (a2.1). England, Wales, Scotland or Northern Ireland -> Yes (UK as a whole); Irish Republic or other country -> No; 'not known' Unknown. Not a constant: children born abroad in the birth week joined at later sweeps. child2004 rows Unknown (the child's birthplace was not asked).",,
-home_language,in_progress,,,,,
+home_language,proximate,"oa6.1, b7lang, bd7lang, wave","coalesce(
+  case_when(
+    wave == ""age16"" ~ recode_values(
+      as.numeric(oa6.1),
+      1 ~ ""Country language only"",
+      c(2, 3) ~ ""Country language and another"",
+      4 ~ ""Another language only"",
+      default = NA_character_
+    ),
+    wave == ""child2004"" & as.numeric(bd7lang) %in% 1 ~ ""Country language only"",
+    wave == ""child2004"" ~ recode_values(
+      as.numeric(b7lang),
+      1 ~ ""Country language only"",
+      2 ~ ""Country language and another"",
+      3 ~ ""Another language only"",
+      default = NA_character_
+    )
+  ),
+  ""Unknown""
+)","English and Welsh are the country languages. age16: parental interview 'What language is usually spoken in your home?' (oa6.1): English only = Country language only; mainly English but also another, or another language with some English = Country language and another; another language without English = Another language only. child2004: the cohort member's 'is English the language usually spoken at home?' (b7lang: English only, English and another, another only) with the other language named (bd7lang): Welsh (83 rows, all in Wales) is a country language, so English with Welsh or Welsh alone = Country language only; Scottish Gaelic (1 row), without official status across Scotland in 2004, is another language. Proximate: the 1986 item is coded against English and files Welsh as another language (81 Wales rows outside English only). Not stated and no parent interview = Unknown. One row per participant, so nothing to carry.",,
 ses_area,unavailable,,,Not in the supplied extract.,,
 ses_household,proximate,"oe2, bd7ns8, wave","case_when(
   wave == ""age16"" ~ recode_values(
@@ -153,8 +187,66 @@ parental_education,proximate,parents_highest_qual,"coalesce(
   ),
   ""Unknown""
 )","Higher of the mother and father figures' qualifications from the same grids (parents_highest_qual, built in the tidier); one known parent suffices. Lookup as maternal_education. child2004 Unknown: only the cohort member's own qualifications were asked.",maternal_education,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,compatible,"t8.2, bd7ecact, bd7potha, bd7sex, b7rtok12, b7rtok13, b7rtok14, b7rtok15, b7rtok16, b7rtok17, b7rtok18, b7rtok19, b7rtok20, b7sex12, b7sex13, b7sex14, b7sex15, b7sex16, b7sex17, b7sex18, b7sex19, b7sex20, wave","local({
+  partner_female <- Reduce(
+    `|`,
+    lapply(12:20, function(i) {
+      as.numeric(tbl[[sprintf(""b7rtok%d"", i)]]) %in% c(1, 2) & as.numeric(tbl[[sprintf(""b7sex%d"", i)]]) %in% 2
+    })
+  )
+  case_when(
+    wave == ""age16"" ~ recode_values(as.numeric(t8.2), 1:3 ~ ""Employed"", 4:9 ~ ""Not employed"", default = ""Unknown""),
+    wave == ""child2004"" & as.numeric(bd7sex) == 2 ~ recode_values(
+      as.numeric(bd7ecact),
+      1:4 ~ ""Employed"",
+      c(5, 6, 8, 9, 10, 11) ~ ""Not employed"",
+      default = ""Unknown""
+    ),
+    wave == ""child2004"" & partner_female ~ recode_values(
+      as.numeric(bd7potha),
+      c(1:4, 12:14, 17) ~ ""Employed"",
+      c(5, 6, 8:11, 15, 16, 18, 19) ~ ""Not employed"",
+      default = ""Unknown""
+    ),
+    .default = ""Unknown""
+  )
+})","Mother figure's present activity. age16: family follow-up form (Document T, parent) 'present employment situation of teenager's mother' (t8.2): in a regular paid job or family business (even if temporarily absent), occasional or casual work, and other employment situation (all under 'working') = Employed; out of work and seeking work, out of work through sickness, looking after home or family, permanently sick, full-time student and retired = Not employed; no mother figure and no form Unknown. child2004: a female cohort member's own main activity (bd7ecact); for a male cohort member, his resident female spouse or partner's main activity as he reported it (bd7potha; partner and her sex from the household grid, b7rtok and b7sex): employee or self-employed, full- or part-time, employed with status unclear or unpaid, and maternity leave = Employed; unemployed, full- or part-time education, sick or disabled, looking after home or family, retired, voluntary work, travelling and prison = Not employed; a government employment-training scheme, 'other' and uncoded answers Unknown; male cohort members with no resident female partner Unknown. Each participant has one row, so nothing to carry.",,
+maternal_age,compatible,"oa72.1, oa72.4, oa72.5a, oa72.5b, oa73.1, oa73.4, oa73.5a, oa73.5b, oa74.1, oa74.4, oa74.5a, oa74.5b, oa75.1, oa75.4, oa75.5a, oa75.5b, oa76.1, oa76.4, oa76.5a, oa76.5b, oa77.1, oa77.4, oa77.5a, oa77.5b, oa78.1, oa78.4, oa78.5a, oa78.5b, oa79.1, oa79.4, oa79.5a, oa79.5b, oa710.1, oa710.4, oa710.5a, oa710.5b, oa711.1, oa711.4, oa711.5a, oa711.5b, oa712.1, oa712.4, oa712.5a, oa712.5b, odoc_mt, odoc_yr, pdoc_mt, pdoc_yr, tdoc_mt, tdoc_yr, bd7sex, b7rage11, b7rage12, b7rage13, b7rage14, b7rage15, b7rage16, b7rage17, b7rage18, b7rage19, b7rage20, b7rtok12, b7rtok13, b7rtok14, b7rtok15, b7rtok16, b7rtok17, b7rtok18, b7rtok19, b7rtok20, b7sex12, b7sex13, b7sex14, b7sex15, b7sex16, b7sex17, b7sex18, b7sex19, b7sex20, wave","local({
+  people <- sprintf(""oa7%d"", 2:12)
+  person <- rep(NA_character_, nrow(tbl))
+  for (code in c(2, 14, 22)) {
+    for (p in people) {
+      hit <- is.na(person) &
+        as.numeric(tbl[[paste0(p, "".1"")]]) %in% code &
+        (code != 22 | as.numeric(tbl[[paste0(p, "".4"")]]) %in% 2)
+      person[hit] <- p
+    }
+  }
+  birth_year <- rep(NA_real_, nrow(tbl))
+  birth_month <- rep(NA_real_, nrow(tbl))
+  for (p in people) {
+    sel <- person %in% p
+    birth_year[sel] <- as.numeric(tbl[[paste0(p, "".5b"")]])[sel]
+    birth_month[sel] <- as.numeric(tbl[[paste0(p, "".5a"")]])[sel]
+  }
+  born <- birth_year + if_else(is.na(birth_month), 0.5, (birth_month - 0.5) / 12)
+  asked <- coalesce(
+    as.numeric(odoc_yr) + (as.numeric(odoc_mt) - 0.5) / 12,
+    as.numeric(pdoc_yr) + (as.numeric(pdoc_mt) - 0.5) / 12,
+    as.numeric(tdoc_yr) + (as.numeric(tdoc_mt) - 0.5) / 12
+  )
+  partner_age <- rep(NA_real_, nrow(tbl))
+  for (i in 12:20) {
+    hit <- is.na(partner_age) &
+      as.numeric(tbl[[sprintf(""b7rtok%d"", i)]]) %in% c(1, 2) &
+      as.numeric(tbl[[sprintf(""b7sex%d"", i)]]) %in% 2
+    partner_age[hit] <- as.numeric(tbl[[sprintf(""b7rage%d"", i)]])[hit]
+  }
+  case_when(
+    wave == ""age16"" ~ asked - born,
+    wave == ""child2004"" ~ if_else(as.numeric(bd7sex) %in% 2, as.numeric(b7rage11), partner_age) + 0.5
+  )
+})","Mother figure's age at the occasion. age16: the parental interview's household grid (Document O; relationship, sex and birth month and two-digit year of each person, oa72-oa712): the first person recorded as Mother, else Step-Mother, else a female Foster Parent; age = completion date of Document O (else Document P, else Document T) minus her birth date, both taken at mid-month (birth year only: mid-year). No mother figure in the household NA. child2004: a female cohort member's own age (b7rage11, completed years + 0.5); for a male cohort member, his resident female spouse or partner's age from the household grid (b7rage, completed years + 0.5); no resident female partner NA. Informants: the parent interviewed (age16), the cohort member (child2004). Values outside 12-70 kept as entered.",,
 urbanicity,proximate,c6.13,"recode_values(as.numeric(c6.13), 1 ~ ""Urban"", 2 ~ ""Suburban"", c(3, 4) ~ ""Rural"", default = ""Unknown"")","age16: cohort member's 'do you live in a big city, town, village or the country' (c6.13): big city Urban, town Suburban, village and country Rural. child2004 Unknown. Proximate: self-described settlement type, not an official typology.",,
 family_structure,compatible,"oa9.1, oa10.1, c6.7, bd7spphh, partner_natural_parent, wave","case_when(
   wave == ""child2004"" & as.numeric(bd7spphh) == 0 ~ ""Single parent"",
@@ -230,8 +322,25 @@ fam_home_cogstim,in_progress,,,,,
 fam_home_emotsupport,in_progress,,,,,
 fam_home_measure,in_progress,,,,,
 school_grade,compatible,f3,"if_else(as.numeric(f3) %in% 1:7, paste(""Year group"", as.numeric(f3)), NA_character_)","age16 only: cohort member's 'Which year group are you in?' (Document F), the study's secondary-school year labels (Year group 5 = final compulsory year, 3,641; Year group 6 = first sixth-form year, 1,284). Not asked in child2004.",,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,compatible,"BDSTYPE, b7pcscp1, wave","case_when(
+  wave == ""age16"" ~ recode_values(
+    as.numeric(BDSTYPE),
+    c(1, 2, 3, 5, 8) ~ ""Public"",
+    c(4, 6) ~ ""Private"",
+    default = ""Unknown""
+  ),
+  wave == ""child2004"" ~ recode_values(as.numeric(b7pcscp1), 1 ~ ""Public"", 2 ~ ""Private"", default = ""Unknown"")
+)","age16: CLS's derived type of the secondary school attended at 16 (BDSTYPE: the 1986 head teacher questionnaire, else the 1986 School Census, else the cohort member's recall at 42): education-authority comprehensive, grammar, secondary modern or technical, special and Scottish education-authority schools = Public; independent private and independent special schools = Private; 'other' and missing Unknown. child2004: the cohort member's 'is it a state school, including grant-maintained, an independent or private school, or another type of school?' about the child's current school (b7pcscp1): state = Public, independent or private = Private; another type, and children not at school, Unknown.",,
+school_track,proximate,"BDSTYPE, wave","case_when(
+  wave == ""age16"" ~ recode_values(
+    as.numeric(BDSTYPE),
+    1 ~ ""Not tracked"",
+    2 ~ ""Academic"",
+    3 ~ ""Vocational"",
+    default = ""Unknown""
+  ),
+  .default = ""Unknown""
+)","age16 only: type of secondary school attended at 16 (BDSTYPE, the study's full-cohort derived variable from the 1986 head teacher questionnaire, else the 1986 School Census, else recall at age 42), kept for those in the sixth form at the time of the questionnaire. Grammar = Academic; secondary modern/technical (one code, the few technical schools pooled with secondary moderns) = Vocational, as the non-selective school of a selective area; comprehensive = Not tracked; independent private, LEA and independent special, Scottish LEA, other and not derived = Unknown. child2004: no school-type item, Unknown. Proximate: the school types of a selective two-tier system folded onto the track levels.",,
 st_measure_type,inferred,"b7age, wave","if_else(wave == ""age16"" | as.numeric(b7age) >= 10, ""Categorical"", NA_character_)","Banded duration items: age16 Document F (0 to more than 5 hours), child2004 young-person form (none to 7 hours or more). NA for child2004 children under 10, who had no screen-time instrument.",,
 st_measure_name,inferred,"b7age, wave","if_else(wave == ""age16"" | as.numeric(b7age) >= 10, ""Custom"", NA_character_)",Items written for the study's own questionnaires (1986 Document F after-school items; 2004 young-person self-completion).,,
 st_responder,inferred,"b7age, wave","if_else(wave == ""age16"" | as.numeric(b7age) >= 10, ""Self"", NA_character_)","Self-completion by the participant: the cohort member at age16, the cohort member's child aged 10-16 in child2004.",,
@@ -271,7 +380,7 @@ st_game_wd,partial,"f15, yp_q2, wave","case_when(
 )","age16: f15 'how long did you spend playing computer games after school yesterday', bands as st_watch_wd (top band 'more than 5 hours' = 5). child2004 (ages 10-16): 'on a normal school day, how many hours do you spend playing computer games on your computer at home?', bands as st_watch_wd (top band '7 hours or more' = 7); 'don't play computer games at home' and 'no computer I can use at home' 0 (non-users rule). Partial: age16 is after school on one school day; child2004 covers only the home computer.",,
 st_game_we,unavailable,,,No weekend item.,,
 st_game,incompatible,"f15, yp_q2, c5j14a",,Weekday items only; no usual-day value. c5j14a (age16) is frequency only.,,
-st_game_comp_wd,compatible,yp_q2,"recode_values(as.numeric(yp_q2), 1 ~ 0.5, 2 ~ 2, 3 ~ 5, 4 ~ 7, c(5, 6) ~ 0, default = NA_real_)",child2004 only (ages 10-16): computer games on the child's home computer on a normal school day; bands and non-users as st_game_wd (top band '7 hours or more' = 7). The age16 f15 names no device (st_game_wd).,,
+st_game_comp_wd,partial,yp_q2,"recode_values(as.numeric(yp_q2), 1 ~ 0.5, 2 ~ 2, 3 ~ 5, 4 ~ 7, c(5, 6) ~ 0, default = NA_real_)","child2004 only (ages 10-16): 'On a normal school day, how many hours do you spend playing computer games on your computer at home?'; bands and non-users as st_game_wd (top band '7 hours or more' = 7). Partial: limited to use at home. The age16 f15 names no device (st_game_wd).",,
 st_game_comp_we,unavailable,,,No weekend item.,,
 st_game_comp,incompatible,yp_q2,,Weekday items only; no usual-day value.,,
 st_game_console_wd,unavailable,,,No device split; see st_game_wd.,,
@@ -307,41 +416,41 @@ st_socmedia,unavailable,,,Not collected.,,
 st_educational_wd,incompatible,f16,,"Only time spent doing homework after school yesterday (f16, age16), which does not name screens.",,
 st_educational_we,unavailable,,,No weekend item.,,
 st_educational,incompatible,f16,,"Only homework time that does not name screens (f16, age16).",,
-st_leisure_wd,in_progress,,,,,
-st_leisure_we,in_progress,,,,,
-st_leisure,in_progress,,,,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch_wd,unavailable,,,No weekday/weekend split.,,
+st_violent_watch_we,unavailable,,,No weekday/weekend split.,,
+st_violent_watch,incompatible,"ja5, c5n14, c5n18, gf1.2",,"No hours of violent viewing (age16): only the share of television viewed that is violent programmes (ja5, most of it to none of it), how much the teenager watches crime and violence programmes and horror films (c5n14, c5n18, view as little as I can to as much as I can) and how often a 'video nasty' was seen in the last month (gf1.2): share, preference and frequency items.",,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,incompatible,"ja5, c5n14, c5n18, gf1.2",,"No violent-viewing index: only single items on the share of viewing that is violent (ja5), preference for crime, violence and horror programmes (c5n14, c5n18) and how often a video nasty was seen (gf1.2), age16; see st_violent_watch.",,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
 st_internet_wd,unavailable,,,Not collected.,,
 st_internet_we,unavailable,,,Not collected.,,
 st_internet,unavailable,,,Not collected.,,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
 st_videochat,unavailable,,,Not collected.,,
 st_messaging_wd,unavailable,,,Not collected.,,
 st_messaging_we,unavailable,,,Not collected.,,
 st_messaging,unavailable,,,Not collected.,,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
 st_creating,unavailable,,,Not collected.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
 st_email,unavailable,,,Not collected.,,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,unavailable,,,No item on use at school.,,
 st_educational_school,unavailable,,,No item on use at school.,,
@@ -366,9 +475,9 @@ acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
 acc_academachment_numgrades,incompatible,jb15aa3,,"Only grades of individual exams taken by July 1986 (jb15aa3 onwards), where known; no overall grade.",,
 acc_academachment_teacherrated,unavailable,,,Not collected.,,
 acc_academachment_parentrated,in_progress,,,,,
-acc_numeracy_stdtest,partial,"mathscore, basnsA, wave","case_when(wave == ""age16"" ~ as.numeric(mathscore), wave == ""child2004"" ~ as.numeric(basnsA))","age16: 16-year arithmetic test number correct (mathscore, 60 items; supplementary release, 3,676 rows). child2004 (ages 6-16): BAS II Number Skills ability score (basnsA), as acc_numeracy_bas_numberskills. Partial: no age-normed scores; forms differ by sweep, so standardise within wave.",,
+acc_numeracy_stdtest,partial,"mathscore, basnsA, wave","case_when(wave == ""age16"" ~ as.numeric(mathscore), wave == ""child2004"" ~ as.numeric(basnsA))","age16: 16-year arithmetic test number correct (mathscore, 60 items; supplementary release, 3,676 rows). child2004 (ages 6-16): BAS II Number Skills ability score (basnsA), as acc_numeracy_bas_numberskills. Partial: no age-normed scores, and the score form changes between waves (number correct at age16, ability score at child2004), so standardise within wave.",,
 acc_numeracy_bas_numberskills,partial,basnsA,as.numeric(basnsA),"child2004 only (ages 6-16): BAS II Number Skills ability score (basnsA, 10-208), interviewer-administered. Partial: no standard score released, so the ability score is the fallback and lies outside the standard-score metric; standardise within dataset at analysis.",,
-acc_literacy_stdtest,partial,"BD4RREAD, baswrA, wave","case_when(wave == ""age16"" ~ as.numeric(BD4RREAD), wave == ""child2004"" ~ as.numeric(baswrA))","age16: the sweep's vocabulary test number correct (BD4RREAD, 75 items; CLS derives a reading age from it). child2004 (ages 6-16): BAS II Word Reading ability score (baswrA), as acc_literacy_bas_wordreading. Partial: no age-normed scores; the age16 test is reading vocabulary; forms differ by sweep, so standardise within wave. The study's within-sample z-score (BD4READ) and the 1986 reading-test item scores are not used.",,
+acc_literacy_stdtest,partial,"BD4RREAD, baswrA, wave","case_when(wave == ""age16"" ~ as.numeric(BD4RREAD), wave == ""child2004"" ~ as.numeric(baswrA))","age16: the sweep's vocabulary test number correct (BD4RREAD, 75 items; CLS derives a reading age from it). child2004 (ages 6-16): BAS II Word Reading ability score (baswrA), as acc_literacy_bas_wordreading. Partial: no age-normed scores; the age16 test is reading vocabulary; the score form changes between waves (number correct at age16, ability score at child2004), so standardise within wave. The study's within-sample z-score (BD4READ) and the 1986 reading-test item scores are not used.",,
 acc_literacy_bas_wordreading,partial,baswrA,as.numeric(baswrA),"child2004 only (ages 6-16): BAS II Word Reading ability score (baswrA, 10-222), interviewer-administered. Partial: no standard score released, so the ability score is the fallback and lies outside the standard-score metric; standardise within dataset at analysis. The 2004 spelling test was a shortened, rescaled version of BAS II Spelling and is not mapped.",,
 acc_learningdisab_diagnosed,incompatible,"pg7.1, pg5.1, l14.6",,"age16 only: the parent's 'Has anyone ever told you that your teenager, your husband, yourself or any relatives were dyslexic?' (pg7.1, teenager ticked), which names no health professional; the parent's report that the teenager has or had reading difficulties (pg5.1: in learning to read, in reading now, neither, or both), a difficulty with no told diagnosis; and the teacher's 'Pupil appears to have dyslexia' (l14.6), a teacher's impression. None is a diagnosis attributed to a health professional.",,
 acc_learningdisab_diagnosed_severity,in_progress,,,,,
@@ -825,9 +934,9 @@ mh_stress_measure,in_progress,,,,,
 mh_lonely_self,incompatible,"c5h23, f22e",,"Only 'I am lonely' (c5h23, applies very much to does not apply) and yes/no 'do you often feel lonely at school' (f22e), age16; no frequency rating.",,
 mh_lonely_scale_self,incompatible,"c5h23, f22e",,No loneliness scale; only single items (see mh_lonely_self).,,
 mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
-mh_sad_self,partial,c5o3,"recode_values(as.numeric(c5o3), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Rarely"", default = NA_character_)","age16 only, self-completion Malaise item 'Do you feel miserable or depressed?' (no recall period): most of the time -> Always, some of the time -> Sometimes, rarely or never -> Rarely; Often and Never unused. Partial: 'miserable or depressed' wording, three levels. Also scored in mh_distress_malaise_self.",,
-mh_worry_self,partial,c5o5,"recode_values(as.numeric(c5o5), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Rarely"", default = NA_character_)","age16 only, self-completion Malaise item 'Do things worry you?' (no recall period), anchors as mh_sad_self. Partial: worry without 'very', three levels, topic unstated. Also scored in mh_distress_malaise_self.",,
-mh_irritable_self,partial,c5o14,"recode_values(as.numeric(c5o14), 1 ~ ""Always"", 2 ~ ""Sometimes"", 3 ~ ""Rarely"", default = NA_character_)","age16 only, self-completion Malaise item 'Are you easily upset or irritated?' (no recall period), anchors as mh_sad_self. Partial: pools being upset with irritability; three levels. Also scored in mh_distress_malaise_self.",,
+mh_sad_self,partial,c5o3,"recode_values(as.numeric(c5o3), 1 ~ ""Often"", 2 ~ ""Sometimes"", 3 ~ ""Rarely"", default = NA_character_)","age16 only, self-completion Malaise item 'Do you feel miserable or depressed?' (no recall period): most of the time -> Often (top anchor, nothing offered above it), some of the time -> Sometimes, rarely or never -> Rarely; Always and Never unused. Partial: 'miserable or depressed' wording, three levels. Also scored in mh_distress_malaise_self.",,
+mh_worry_self,partial,c5o5,"recode_values(as.numeric(c5o5), 1 ~ ""Often"", 2 ~ ""Sometimes"", 3 ~ ""Rarely"", default = NA_character_)","age16 only, self-completion Malaise item 'Do things worry you?' (no recall period), anchors as mh_sad_self. Partial: worry without 'very', three levels, topic unstated. Also scored in mh_distress_malaise_self.",,
+mh_irritable_self,partial,c5o14,"recode_values(as.numeric(c5o14), 1 ~ ""Often"", 2 ~ ""Sometimes"", 3 ~ ""Rarely"", default = NA_character_)","age16 only, self-completion Malaise item 'Are you easily upset or irritated?' (no recall period), anchors as mh_sad_self. Partial: pools being upset with irritability; three levels. Also scored in mh_distress_malaise_self.",,
 mh_nobodycares_self,unavailable,,,Not collected.,,
 mh_lifenotworth_self,unavailable,,,Not collected.,,
 mh_suicide_ideation_self,incompatible,rc4.7,,"Only the medical officer's record of 'any evidence of suicide attempts or threats' (rc4.7, age16): not self-report, pools attempts with threats.",,
@@ -955,22 +1064,96 @@ hlth_sleep_we,unavailable,,,No weekend item.,,
 hlth_sleep,partial,"total_activity_16, total_duration",as.numeric(total_activity_16) / (as.numeric(total_duration) / 1440) / 60,"age16 only: 1986 time-use diary sleep minutes per recorded day (total_activity_16 over the recorded minutes / 1,440), naps included. Partial: the diary covers a Friday-to-Monday run, so weekend nights weigh about half rather than 2/7.",,
 hlth_sleepprob,incompatible,"pa4.1, c5o6",,"No sleep-problems scale; only single items: mother's 'has the teenager any sleeping difficulty' (pa4.1) and the Malaise item 'great difficulty sleeping' (c5o6), age16.",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,partial,c5o6,"recode_values(as.numeric(c5o6), 1 ~ ""Often"", 2 ~ ""Sometimes"", 3 ~ ""Rarely"", default = NA_character_)","age16 only, self-completion Malaise item 'Do you have great difficulty sleeping?' (c5o6, no recall period): most of the time -> Often (top anchor, nothing offered above it), some of the time -> Sometimes, rarely or never -> Rarely; Always and Never unused. Partial: 'great difficulty' wording and three levels. Also scored in mh_distress_malaise_self. The Malaise item on waking unnecessarily early in the morning (c5o7) is not one of the row's complaints and is not used.",,
+hlth_sleepprob_singleitem_parent,incompatible,"pa4.1, pa4.2",,"Only the maternal self-completion form's 'has the teenager any sleeping difficulty?' (pa4.1: yes at present, yes in the past only, no never) and its follow-up 'can't get off to sleep' (pa4.2, ticked), age16: yes/no items, not frequency ratings.",,
+hlth_bmi,compatible,"rd4.1, rd2.1, ha1.1, ha1.2","coalesce(as.numeric(rd4.1) / as.numeric(rd2.1)^2, as.numeric(ha1.1) / as.numeric(ha1.2)^2)","age16 only: weight (kg) / height (m)^2, measured at the 1986 medical examination (rd4.1, rd2.1; Document R), else the teenager's self-reported present weight and height (ha1.1, ha1.2; Document H); the self-report is named unused where the examination measured both. The study removed implausible outliers before release and releases no uncleaned version; every released value is kept. child2004 has no child height or weight (the 2004 heights and weights are the cohort member's own). Not carried.",,
+hlth_bmi_measure,inferred,"rd4.1, rd2.1, ha1.1, ha1.2","case_when(
+  !is.na(as.numeric(rd4.1) / as.numeric(rd2.1)^2) ~ ""Measured"",
+  !is.na(as.numeric(ha1.1) / as.numeric(ha1.2)^2) ~ ""Self-reported""
+)","Follows the hlth_bmi source per row: Measured where it comes from the medical examination (the examining medical officer measured height and weight, Document R), Self-reported where it comes from the teenager's own report (Document H); NA where hlth_bmi is NA.",,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,proximate,"ha7, pm1.1, b7pcpeod, wave","case_when(
+  wave == ""age16"" & as.numeric(ha7) == 1 ~ 1,
+  wave == ""age16"" & as.numeric(ha7) == 2 ~ 0,
+  wave == ""age16"" & as.numeric(pm1.1) %in% c(1:6, 8) ~ 1,
+  wave == ""age16"" & as.numeric(pm1.1) == 7 ~ 0,
+  wave == ""child2004"" & as.numeric(b7pcpeod) == 1 ~ 1,
+  wave == ""child2004"" & as.numeric(b7pcpeod) == 2 ~ 0
+)","Menarche alone, girls only: started = 1, not started = 0. age16: the teenager's 'Have you started your monthly period?' (ha7, Document H), else the parent's age at the teenager's first menstrual period (pm1.1, Document P: any age or 'commenced, age not known' = 1, 'not yet commenced' = 0), named unused where the teenager answered. child2004 (girls aged 8-16): the cohort member's report of whether the child has had her first menstrual period (b7pcpeod). Boys NA. Proximate: a menarche item alone. Not carried.",,
+hlth_puberty_measure,inferred,wave,"recode_values(
+  wave,
+  ""age16"" ~ ""Menarche (self, else parent), 1 of 1 item, 0-1 item scoring (range 0-1), menarche indicator; girls only: the teenager's 'Have you started your monthly period?' first, else the parent's age at first menstrual period with 'not yet commenced' = 0"",
+  ""child2004"" ~ ""Menarche (parent), 1 of 1 item, 0-1 item scoring (range 0-1), menarche indicator; girls aged 8-16: whether the child has had her first menstrual period""
+)",Describes hlth_puberty_status by sweep.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,incompatible,"f20a21, f20b21, jc22, c5g12, yp_q4c",,"No days-of-60-minutes item: age16 has only how often each sport or exercise was done in and out of school in the past year (e.g. fitness exercise, f20a21, f20b21), whether any exercise was taken last Saturday (jc22) and exercise compared with others (c5g12); child2004 has only how often a sports club or lessons were attended (yp_q4c).",,
+hlth_birthweight,compatible,"b7chdid, b7lhhn11, b7lhhn12, b7lhhn13, b7prgd11, b7prgd12, b7prgd13, b7poun11, b7poun12, b7poun13, b7ounc11, b7ounc12, b7ounc13, b7kilo11, b7kilo12, b7kilo13, b7gram11, b7gram12, b7gram13, wave","local({
+  grams <- rep(NA_real_, nrow(tbl))
+  for (b in 1:3) {
+    same <- as.numeric(tbl[[paste0(""b7lhhn1"", b)]]) == as.numeric(b7chdid)
+    same[is.na(same)] <- FALSE
+    value <- case_when(
+      as.numeric(tbl[[paste0(""b7prgd1"", b)]]) == 1 ~ (as.numeric(tbl[[paste0(""b7poun1"", b)]]) *
+        16 +
+        as.numeric(tbl[[paste0(""b7ounc1"", b)]])) *
+        28.35,
+      as.numeric(tbl[[paste0(""b7prgd1"", b)]]) == 2 ~ as.numeric(tbl[[paste0(""b7kilo1"", b)]]) *
+        1000 +
+        as.numeric(tbl[[paste0(""b7gram1"", b)]])
+    )
+    grams[is.na(grams) & same] <- value[is.na(grams) & same]
+  }
+  if_else(wave == ""child2004"", grams, NA_real_)
+})","child2004 only, children of the cohort member's most recent pregnancy since the previous interview (1,466 children linked by the birth's household person number, b7lhhn11-b7lhhn13 = b7chdid; nearly all aged 0-4): the cohort member's recall of 'how much did [child] weigh at birth?' in pounds and ounces ((lb x 16 + oz) x 28.35) or kilograms and grams (kg x 1,000 + g). Births of earlier pregnancies carry no person number and are not linked; the age-16 cohort members' own birth weights are in the 1970 birth survey, not in the supplied extract. One row per participant, so nothing to carry.",,
+hlth_preterm,partial,"b7chdid, b7lhhn11, b7lhhn12, b7lhhn13, b7prgf11, b7prgf12, b7prgf13, b7prgg11, b7prgg12, b7prgg13, wave","local({
+  early <- rep(NA, nrow(tbl))
+  for (b in 1:3) {
+    same <- as.numeric(tbl[[paste0(""b7lhhn1"", b)]]) == as.numeric(b7chdid)
+    same[is.na(same)] <- FALSE
+    value <- case_when(
+      as.numeric(tbl[[paste0(""b7prgf1"", b)]]) == 1 & as.numeric(tbl[[paste0(""b7prgg1"", b)]]) >= 4 ~ TRUE,
+      as.numeric(tbl[[paste0(""b7prgf1"", b)]]) == 1 & as.numeric(tbl[[paste0(""b7prgg1"", b)]]) %in% 1:3 ~ FALSE,
+      as.numeric(tbl[[paste0(""b7prgf1"", b)]]) %in% c(2, 3) ~ FALSE
+    )
+    early[is.na(early) & same] <- value[is.na(early) & same]
+  }
+  if_else(wave == ""child2004"", as.character(early), NA_character_)
+})","child2004 only, children of the cohort member's most recent pregnancy since the previous interview, linked as for hlth_birthweight: the cohort member's 'was the birth early, late or at the expected time?' and 'how many weeks early?' (b7prgf, b7prgg, whole weeks, under one week entered as 1): 4 or more weeks early (more than 3 weeks before the due date) = TRUE; 1-3 weeks early, on time or late = FALSE; early with no weeks NA. Partial: the whole-week format forces the cut, so a birth 3 weeks and some days early counts as FALSE. One row per participant, so nothing to carry.",,
+hlth_breastfed,compatible,b7pcbfe1,"recode_values(as.numeric(b7pcbfe1), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_)","child2004 only: the cohort member's '[Did you / Did the child's mother] breast feed [child] at all?' (b7pcbfe1). The age-16 cohort members' own infant feeding is not in the supplied extract. One row per participant, so nothing to carry.",,
+hlth_prenatalsmoking,compatible,"b7chdid, b7lhhn11, b7lhhn12, b7lhhn13, bd7smk12, bd7smk13, wave","local({
+  linked <- Reduce(
+    `|`,
+    lapply(1:3, function(b) {
+      same <- as.numeric(tbl[[paste0(""b7lhhn1"", b)]]) == as.numeric(b7chdid)
+      !is.na(same) & same
+    })
+  )
+  smoked <- case_when(
+    as.numeric(bd7smk12) == 1 | as.numeric(bd7smk13) == 1 ~ ""TRUE"",
+    as.numeric(bd7smk12) == 0 & as.numeric(bd7smk13) == 0 ~ ""FALSE""
+  )
+  if_else(wave == ""child2004"" & linked, smoked, NA_character_)
+})","child2004 only, children of the most recent pregnancy since the previous interview of a female cohort member (linked as for hlth_birthweight): her own report of smoking in months 1-5 and months 6-9 of the pregnancy (bd7smk12, bd7smk13, study-derived from one show-card item); smoked in either part = TRUE, in neither = FALSE. Smoking in the 3 months before the pregnancy (bd7smk11) is not used. Male cohort members were not asked. One row per participant, so nothing to carry.",,
+hlth_chroniccond_diagnosed,partial,"b7pchea1, b7xche2a, b7xche2b, b7xche2c, b7xche2d, rc3.6, rc3.10, wave","local({
+  codes <- cbind(as.character(b7xche2a), as.character(b7xche2b), as.character(b7xche2c), as.character(b7xche2d))
+  codes[is.na(codes)] <- """"
+  counted_code <- grepl(""^[A-Z][0-9]"", codes) & !grepl(""^(F|R48|R62|L2|L30|J30|T78)"", codes)
+  counted <- rowSums(matrix(counted_code, nrow = nrow(codes))) > 0
+  case_when(
+    wave == ""child2004"" & as.numeric(b7pchea1) == 1 & counted ~ ""Currently diagnosed"",
+    wave == ""child2004"" & as.numeric(b7pchea1) %in% 1:2 ~ ""Never diagnosed"",
+    wave == ""age16"" & (as.numeric(rc3.6) %in% c(1, 6) | as.numeric(rc3.10) %in% c(1, 6)) ~ ""Currently diagnosed"",
+    wave == ""age16"" & (as.numeric(rc3.6) == 2 | as.numeric(rc3.10) == 2) ~ ""Previously diagnosed"",
+    wave == ""age16"" & as.numeric(rc3.6) == 4 & as.numeric(rc3.10) == 4 ~ ""Never diagnosed""
+  )
+})","child2004 (ages 1-16, parent interview): 'Does [child] have any longstanding physical, emotional or mental conditions that have been diagnosed by a health professional?' (b7pchea1; had or expected for at least 3 months), with the conditions written in and ICD-10-coded by the study (b7xche2a-b7xche2d). Yes with a counted code = Currently diagnosed; No, and Yes with only uncounted or uncoded conditions (171 rows), = Never diagnosed. Not counted: mental, behavioural and developmental codes (F, R48 dyslexia, R62 developmental delay), eczema and dermatitis (L2, L30), hay fever (J30) and allergy (T78); eye and ear conditions are counted. age16: Document R, completed by the community medical officer or school nurse from the examination, school medical records and the parental interview, 'Has this teenager ever had any of the following conditions?' for asthma (rc3.6) and a pathological heart condition (rc3.10): yes in the past 12 months on either = Currently diagnosed; otherwise yes before the past 12 months on either = Previously diagnosed; no never on both = Never diagnosed; age not known, not known and no form NA unless the other item places the child. Partial: the 2004 item asks about current conditions, so Never pools resolved conditions with never-diagnosed ones; age16 covers two conditions, with the past 12 months as proxy for current. The 2004 'ever had' health-problems card (b7pchl01-b7pchl07) names no health professional and is not used, nor are the other Document R conditions (eczema, hay fever, acute illnesses, enuresis, retardation, 'any other significant illness or disability').",,
+hlth_disability,partial,"od7.1, od7.2, od7.3, od7.4, b7pchea1, b7pchea3, b7pche51, wave","case_when(
+  wave == ""age16"" & (as.numeric(od7.3) == 1 | as.numeric(od7.4) == 1) ~ ""TRUE"",
+  wave == ""age16"" & (as.numeric(od7.1) == 1 | as.numeric(od7.2) == 1) ~ ""FALSE"",
+  wave == ""child2004"" & (as.numeric(b7pchea3) %in% 1:2 | as.numeric(b7pche51) %in% 2:3) ~ ""TRUE"",
+  wave == ""child2004"" & (as.numeric(b7pchea1) == 2 | as.numeric(b7pchea3) == 3) ~ ""FALSE""
+)","Parent report. age16: parental interview 'Does your teenager have an impairment, a disability or a handicap?' (od7.1-od7.4; a disability is 'difficulty in doing one or more mental or physical activities that average 16 year olds can do', a handicap a disability that limits opportunities): disability or handicap ticked = TRUE; none, or an impairment only, = FALSE; not known or nothing ticked NA. child2004 (children aged 1-16): the cohort member's 'do any of these conditions limit [child] from joining in any usual childhood activities such as play, sport or games?' about long-standing physical, emotional or mental conditions diagnosed by a health professional (b7pchea1, b7pchea3): severe or mild limitation, or registered blind or deaf (b7pche51), = TRUE; no such condition, or no limitation, = FALSE; registration for 'another type of disability' does not count alone. Partial: both items pool physical with mental conditions. Not carried.",,
 st_measure_type,inferred,,"""Continuous""","1986 leisure and television diary: episodes recorded over up to four consecutive days, aggregated by the study to minutes per activity (bcs4_leisure_diary_aggregate).",,diary
 st_measure_name,inferred,,"""Time use diary""","BCS70 age-16 leisure diary (UKDA 8949), a Friday-Saturday-Sunday-Monday diary kept by 7,242 cohort members.",,diary
 st_responder,inferred,,"""Self""",Completed by the cohort member.,,diary

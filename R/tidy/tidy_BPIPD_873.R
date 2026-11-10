@@ -1,8 +1,9 @@
 #' Tidier for BPIPD-873 (China Family Panel Studies)
 #'
 #' Each wave joins the child questionnaire to the adult (2010-2016) or person
-#' (2018-2022) questionnaire on `pid`, then joins the family roster and the
-#' household economy file onto the result.
+#' (2018-2022) questionnaire on `pid`, then joins the family roster, the
+#' household economy file and the roster mother's own adult/person record onto
+#' the result.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -36,11 +37,30 @@ tidy_BPIPD_873 <- function(raw_dataset, spec) {
     )
     roster <- bp873_take(raw_dataset, wave$famconf, wave$famconf_vars, "pid")
     economy <- bp873_take(raw_dataset, wave$famecon, wave$famecon_vars, "fid")
+    mother <- bp873_take(
+      raw_dataset,
+      wave$individual,
+      wave$mother_vars,
+      "mother_pid"
+    )
+    child <- dplyr::left_join(
+      child,
+      bp873_proxy_relation(raw_dataset, wave),
+      by = "pid",
+      relationship = "one-to-one"
+    )
 
     # The child and self-report files overlap only from 2018
-    bp873_merge(child, individual, "pid") |>
+    joined <- bp873_merge(child, individual, "pid") |>
       bp873_add_roster(roster) |>
       dplyr::left_join(economy, by = "fid", relationship = "many-to-one")
+    joined$mother_pid <- as.numeric(haven::zap_labels(joined$mother_pid))
+    dplyr::left_join(
+      joined,
+      mother,
+      by = "mother_pid",
+      relationship = "many-to-one"
+    )
   })
 
   df <- bp873_relabel(bp873_bind_waves(waves), raw_dataset)
@@ -74,6 +94,12 @@ tidy_BPIPD_873 <- function(raw_dataset, spec) {
 #' Some items are carried only so that incompatible rows in `variables.csv`
 #' can name them (frequency or yes/no screen items, agreement-rated behaviour
 #' items, parent grade ratings and the like).
+#'
+#' Height, weight and the public-school item also carry the responder in
+#' their name: the proxy module reports on children to 15 and the person file
+#' asks 10-15s themselves from 2018. `proxy` names the proxy respondent and the
+#' child's roster parents in the child file, and `mother_vars` the roster
+#' mother's own adult/person record.
 bp873_waves <- function() {
   list(
     list(
@@ -155,7 +181,25 @@ bp873_waves <- function() {
         k6_child2010_restless = "wn403",
         k6_child2010_hopeless = "wn404",
         k6_child2010_effort = "wn405",
-        k6_child2010_meaningless = "wn406"
+        k6_child2010_meaningless = "wn406",
+        gestation_months = "wa101",
+        birth_weight_jin = "wa102",
+        child_weight_jin_parent = "wa103",
+        child_height_cm_parent = "wa104",
+        breastfed_months = "wa105",
+        school_type_2010 = "wf305",
+        disability_2010 = "wc6",
+        disability_type_2010 = "wc601_lbl",
+        home_language_2010 = "wk2"
+      ),
+      # The 2010 proxy is a position in the family list, whose codes run from
+      # 101 (`code_a_p`).
+      proxy = list(
+        id = "waproxy",
+        offset = 100,
+        mother = "code_a_m",
+        father = "code_a_f",
+        roster = "code_a_p"
       ),
       individual = "cfps2010adult",
       individual_vars = c(
@@ -201,8 +245,12 @@ bp873_waves <- function() {
         k6_restless = "qq603",
         k6_hopeless = "qq604",
         k6_effort = "qq605",
-        k6_meaningless = "qq606"
+        k6_meaningless = "qq606",
+        birth_weight_jin = "qa101",
+        child_height_cm_self = "qp1",
+        child_weight_jin_self = "qp2"
       ),
+      mother_vars = c(mother_pid = "pid", mother_employ_2010 = "qg3"),
       famconf = "cfps2010famconf",
       famconf_vars = c(
         pid = "pid",
@@ -216,7 +264,12 @@ bp873_waves <- function() {
         father_resident = "tb6_a_f",
         mother_resident = "tb6_a_m",
         father_alive = "alive_a_f",
-        mother_alive = "alive_a_m"
+        mother_alive = "alive_a_m",
+        mother_pid = "pid_m",
+        mother_birth_year = "tb1y_a_m",
+        mother_birth_month = "tb1m_a_m",
+        # CFPS's aggregate also covers mothers with no roster birth year
+        mother_birth_year_2010 = "mbirthy"
       ),
       famecon = "cfps2010famecon",
       famecon_vars = c(
@@ -285,7 +338,20 @@ bp873_waves <- function() {
         k6_restless = "wq603",
         k6_hopeless = "wq604",
         k6_effort = "wq605",
-        k6_meaningless = "wq606"
+        k6_meaningless = "wq606",
+        gestation_months = "wa101",
+        birth_weight_jin = "wa102",
+        child_weight_jin_parent = "wa103",
+        child_height_cm_parent = "wa104",
+        breastfed_now = "wa105a",
+        breastfed_months = "wa105b"
+      ),
+      proxy = list(
+        id = "resppid",
+        offset = 0,
+        mother = "pid_m",
+        father = "pid_f",
+        roster = "pid"
       ),
       individual = "cfps2014adult",
       individual_vars = c(
@@ -338,8 +404,12 @@ bp873_waves <- function() {
         k6_restless = "qq603",
         k6_hopeless = "qq604",
         k6_effort = "qq605",
-        k6_meaningless = "qq606"
+        k6_meaningless = "qq606",
+        birth_weight_jin = "qa101",
+        child_height_cm_self = "qp101",
+        child_weight_jin_self = "qp102"
       ),
+      mother_vars = c(mother_pid = "pid", mother_employ = "employ2014"),
       famconf = "cfps2014famconf",
       famconf_vars = c(
         pid = "pid",
@@ -354,7 +424,10 @@ bp873_waves <- function() {
         father_resident = "tb6_a14_f",
         mother_resident = "tb6_a14_m",
         father_alive = "alive_a14_f",
-        mother_alive = "alive_a14_m"
+        mother_alive = "alive_a14_m",
+        mother_pid = "pid_m",
+        mother_birth_year = "tb1y_a_m",
+        mother_birth_month = "tb1m_a_m"
       ),
       famecon = "cfps2014famecon",
       famecon_vars = c(
@@ -421,7 +494,22 @@ bp873_waves <- function() {
         rse_7 = "pm107m",
         rse_8 = "pm108m",
         rse_9 = "pm109m",
-        rse_10 = "pm110m"
+        rse_10 = "pm110m",
+        gestation_months = "pa102",
+        birth_weight_jin = "pa101",
+        child_weight_jin_parent = "wa103",
+        child_height_cm_parent = "wa104",
+        breastfed_now = "wa105a",
+        breastfed_months = "wa105b",
+        school_public_parent = "ps601_b_1",
+        school_public_self = "ps601_b_2"
+      ),
+      proxy = list(
+        id = "resppid",
+        offset = 0,
+        mother = "pid_m",
+        father = "pid_f",
+        roster = "pid"
       ),
       individual = "cfps2016adult",
       individual_vars = c(
@@ -474,8 +562,13 @@ bp873_waves <- function() {
         rse_6 = "pm106m",
         rse_7 = "pm107m",
         rse_8 = "pm108m",
-        rse_10 = "pm110m"
+        rse_10 = "pm110m",
+        birth_weight_jin = "pa101",
+        child_height_cm_self = "qp101",
+        child_weight_jin_self = "qp102",
+        school_public_self = "ps601"
       ),
+      mother_vars = c(mother_pid = "pid", mother_employ = "employ"),
       famconf = "cfps2016famconf",
       famconf_vars = c(
         pid = "pid",
@@ -490,7 +583,10 @@ bp873_waves <- function() {
         father_resident = "tb6_a16_f",
         mother_resident = "tb6_a16_m",
         father_alive = "alive_a16_f",
-        mother_alive = "alive_a16_m"
+        mother_alive = "alive_a16_m",
+        mother_pid = "pid_m",
+        mother_birth_year = "tb1y_a_m",
+        mother_birth_month = "tb1m_a_m"
       ),
       famecon = "cfps2016famecon",
       famecon_vars = c(
@@ -523,7 +619,21 @@ bp873_waves <- function() {
         ethnicity_code = "wa701code",
         tv_week_hours_parent = "wb9",
         grade_chinese_parent = "wf501",
-        grade_maths_parent = "wf502"
+        grade_maths_parent = "wf502",
+        gestation_months = "wa102",
+        birth_weight_jin = "wa101",
+        child_weight_jin_parent = "wa103",
+        child_height_cm_parent = "wa104",
+        breastfed_now = "wa105a",
+        breastfed_months = "wa105b",
+        school_public_parent = "ws601"
+      ),
+      proxy = list(
+        id = "respc1pid",
+        offset = 0,
+        mother = "pid_a_m",
+        father = "pid_a_f",
+        roster = "pid"
       ),
       individual = "cfps2018person",
       individual_vars = c(
@@ -588,8 +698,13 @@ bp873_waves <- function() {
         ext_distracted = "qext006",
         ext_homework = "qext008",
         int_worry_school = "qint009",
-        ext_fight = "qext013"
+        ext_fight = "qext013",
+        birth_weight_jin = "qa101",
+        child_height_cm_self = "qp101",
+        child_weight_jin_self = "qp102",
+        school_public_self = "qs601"
       ),
+      mother_vars = c(mother_pid = "pid", mother_employ = "employ"),
       famconf = "cfps2018famconf",
       famconf_vars = c(
         pid = "pid",
@@ -604,7 +719,10 @@ bp873_waves <- function() {
         father_resident = "tb6_a18_f",
         mother_resident = "tb6_a18_m",
         father_alive = "alive_a18_f",
-        mother_alive = "alive_a18_m"
+        mother_alive = "alive_a18_m",
+        mother_pid = "pid_a_m",
+        mother_birth_year = "tb1y_a_m",
+        mother_birth_month = "tb1m_a_m"
       ),
       famecon = "cfps2018famecon",
       famecon_vars = c(
@@ -641,7 +759,21 @@ bp873_waves <- function() {
         internet_day_mins_parent = "wu401",
         learning_online_day_mins_parent = "wu501",
         grade_chinese_parent = "wf501",
-        grade_maths_parent = "wf502"
+        grade_maths_parent = "wf502",
+        gestation_months = "wa102",
+        birth_weight_jin = "wa101",
+        child_weight_jin_parent = "wa103",
+        child_height_cm_parent = "wa104",
+        breastfed_now = "wa105a",
+        breastfed_months = "wa105b",
+        school_public_parent = "ws601"
+      ),
+      proxy = list(
+        id = "respc1pid",
+        offset = 0,
+        mother = "pid_a_m",
+        father = "pid_a_f",
+        roster = "pid"
       ),
       individual = "cfps2020person",
       individual_vars = c(
@@ -687,8 +819,13 @@ bp873_waves <- function() {
         cesd_notgoing = "qn420",
         happiness = "qm2016",
         life_satisfaction = "qn12012",
-        number_series_w = "ns_w"
+        number_series_w = "ns_w",
+        birth_weight_jin = "qa101",
+        child_height_cm_self = "qp101",
+        child_weight_jin_self = "qp102",
+        school_public_self = "qs601"
       ),
+      mother_vars = c(mother_pid = "pid", mother_employ = "employ"),
       famconf = "cfps2020famconf",
       famconf_vars = c(
         pid = "pid",
@@ -703,7 +840,10 @@ bp873_waves <- function() {
         father_resident = "tb6_a20_f",
         mother_resident = "tb6_a20_m",
         father_alive = "alive_a20_f",
-        mother_alive = "alive_a20_m"
+        mother_alive = "alive_a20_m",
+        mother_pid = "pid_a_m",
+        mother_birth_year = "tb1y_a_m",
+        mother_birth_month = "tb1m_a_m"
       ),
       famecon = "cfps2020famecon",
       famecon_vars = c(
@@ -738,7 +878,21 @@ bp873_waves <- function() {
         internet_day_mins_parent = "wu401",
         learning_online_day_mins_parent = "wu501",
         grade_chinese_parent = "wf501",
-        grade_maths_parent = "wf502"
+        grade_maths_parent = "wf502",
+        gestation_months = "wa102",
+        birth_weight_jin = "wa101",
+        child_weight_jin_parent = "wa103",
+        child_height_cm_parent = "wa104",
+        breastfed_now = "wa105a",
+        breastfed_months = "wa105b",
+        school_public_parent = "ws601"
+      ),
+      proxy = list(
+        id = "respc1pid",
+        offset = 0,
+        mother = "pid_a_m",
+        father = "pid_a_f",
+        roster = "pid"
       ),
       individual = "cfps2022person",
       individual_vars = c(
@@ -795,8 +949,13 @@ bp873_waves <- function() {
         ext_distracted = "qext006",
         ext_homework = "qext008",
         int_worry_school = "qint009",
-        ext_fight = "qext013"
+        ext_fight = "qext013",
+        birth_weight_jin = "qa101",
+        child_height_cm_self = "qp101",
+        child_weight_jin_self = "qp102",
+        school_public_self = "qs601"
       ),
+      mother_vars = c(mother_pid = "pid", mother_employ = "employ"),
       famconf = "cfps2022famconf",
       famconf_vars = c(
         pid = "pid",
@@ -811,7 +970,10 @@ bp873_waves <- function() {
         father_resident = "tb6_a22_f",
         mother_resident = "tb6_a22_m",
         father_alive = "alive_a22_f",
-        mother_alive = "alive_a22_m"
+        mother_alive = "alive_a22_m",
+        mother_pid = "pid_m",
+        mother_birth_year = "tb1y_a_m",
+        mother_birth_month = "tb1m_a_m"
       ),
       famecon = "cfps2022famecon",
       famecon_vars = c(
@@ -898,6 +1060,53 @@ bp873_add_roster <- function(tbl, roster) {
   joined[setdiff(names(joined), ".on_roster")]
 }
 
+#' Match the child file's proxy respondent to the roster parents and family
+bp873_proxy_relation <- function(raw_dataset, wave) {
+  p <- wave$proxy
+  child <- bp873_take(
+    raw_dataset,
+    wave$child,
+    c(
+      pid = "pid",
+      fid = wave$child_vars[["fid"]],
+      id = p$id,
+      mother = p$mother,
+      father = p$father
+    ),
+    "pid"
+  )
+  roster <- bp873_take(
+    raw_dataset,
+    wave$famconf,
+    c(fid = wave$famconf_vars[["fid"]], id = p$roster),
+    "fid"
+  )
+  key <- function(fid, id) sprintf("%.0f-%.0f", as.numeric(fid), id)
+  id <- as.numeric(child$id) + p$offset
+
+  relation <- dplyr::case_when(
+    is.na(id) ~ 5,
+    id == as.numeric(child$mother) ~ 1,
+    id == as.numeric(child$father) ~ 2,
+    key(child$fid, id) %in% key(roster$fid, as.numeric(roster$id)) ~ 3,
+    .default = 4
+  )
+  tibble::tibble(
+    pid = child$pid,
+    proxy_respondent_relation = haven::labelled(
+      relation,
+      labels = c(
+        "Roster mother" = 1,
+        "Roster father" = 2,
+        "Other member of the family roster" = 3,
+        "Not on the family roster" = 4,
+        "Not recorded" = 5
+      ),
+      label = "Proxy respondent's relation to the child (family roster)"
+    )
+  )
+}
+
 #' Restore one variable label per mapped column after binding
 bp873_label_wording_ok <- c(
   "education_child",
@@ -922,7 +1131,9 @@ bp873_label_wording_ok <- c(
   "ext_fight",
   "subpopulation",
   "smoked_month",
-  "birth_address_2014"
+  "birth_address_2014",
+  # Only the unobserved code 79 differs
+  "breastfed_now"
 )
 
 #' Bind the waves, allowing only the reviewed value-label wording differences
@@ -956,9 +1167,16 @@ bp873_bind_waves <- function(waves) {
 
 bp873_relabel <- function(df, raw_dataset) {
   labels <- list()
+  sources <- c(
+    child = "child",
+    individual = "individual",
+    famconf = "famconf",
+    famecon = "famecon",
+    mother = "individual"
+  )
   for (wave in bp873_waves()) {
-    for (part in c("child", "individual", "famconf", "famecon")) {
-      tbl <- raw_dataset$data[[wave[[part]]]]
+    for (part in names(sources)) {
+      tbl <- raw_dataset$data[[wave[[sources[[part]]]]]]
       vars <- wave[[paste0(part, "_vars")]]
       if (is.null(tbl)) {
         next

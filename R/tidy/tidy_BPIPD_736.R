@@ -3,8 +3,9 @@
 #' One wide Stata file holds all three assessments of the German SEYLE site;
 #' wave is carried in the column prefix (`pb`/`pm`/`py`), item number in the
 #' rest of the name. Pivoted to one row per pupil per wave. The household
-#' roster (item 3a), skipped by the 3-month questionnaire, is carried into
-#' that wave from the same pupil's baseline answers.
+#' roster (item 3a) and the parents' jobs (items 4a, 4b), skipped by the
+#' 3-month questionnaire, are carried into that wave from the same pupil's
+#' baseline answers.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -80,9 +81,12 @@ tidy_BPIPD_736 <- function(raw_dataset, spec) {
     )
   }
 
-  # Family structure is carried across gaps of 12 months or less, so the
-  # 3-month wave takes the roster the pupil gave three months earlier.
-  bp736_carry_baseline(long, grep("^q3a_[0-9]+$", names(long), value = TRUE))
+  # Family structure and maternal employment are carried across gaps of 12
+  # months or less, so the 3-month wave takes the baseline answers.
+  bp736_carry_baseline(
+    long,
+    c(grep("^q3a_[0-9]+$", names(long), value = TRUE), "q4a", "q4b")
+  )
 }
 
 #' Fill skipped 3-month items with the same pupil's baseline answers

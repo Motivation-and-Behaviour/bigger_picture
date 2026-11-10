@@ -14,10 +14,34 @@ rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,compatible,"ythscus_xw, ythscub_xw, ythscui_xw, ythscg2_xw, ypwght","coalesce(ythscus_xw, ythscub_xw, ythscui_xw, ythscg2_xw, ypwght)","UKHLS cross-sectional youth interview weight for the wave's sample component (ythscus_xw GPS+EMB, ythscub_xw combined general population, ythscui_xw BHPS+UKHLS+IEMB, ythscg2_xw GPS2) or the BHPS youth weight (ypwght). Exactly one is non-missing per row (0 missing overall).",,
 survey_strata,compatible,strata,"if_else(as.numeric(strata) > 0, as.character(strata), NA_character_)","UKHLS youth files carry strata directly; BHPS rows take it from the household sample-design file (b*_hhsamp), coded on the same UKHLS scheme. Unlabelled -9 (no stratum assigned; 731 BHPS rows, waves 8-11) is NA. Codes are stable across waves in this panel, so not wave-prefixed.",,
 survey_cluster,compatible,psu,"if_else(as.numeric(psu) > 0, as.character(psu), NA_character_)","UKHLS youth files carry psu directly; BHPS rows take it from the household sample-design file (b*_hhsamp), coded on the same UKHLS scheme. Unlabelled -9 (no PSU assigned; 731 BHPS rows, waves 8-11) is NA. Codes are stable across waves in this panel, so not wave-prefixed.",,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,compatible,"mother_pidp, father_pidp, pidp","local({
+  mother <- modal_within(as.numeric(mother_pidp), pidp)
+  father <- modal_within(as.numeric(father_pidp), pidp)
+  case_when(
+    !is.na(mother) ~ paste0(""m"", sprintf(""%.0f"", mother)),
+    !is.na(father) ~ paste0(""f"", sprintf(""%.0f"", father)),
+    .default = paste0(""p"", sprintf(""%.0f"", as.numeric(pidp)))
+  )
+})","Children of one mother: the mother figure's cross-wave person id (mother_pidp: the natural, step or adoptive mother the youth record names, mnspno joined to her adult interview, else the youth file's mnspid), the participant's modal value across waves; else the modal father figure's id (father_pidp); else the youth's own pidp. Prefixed m, f or p; constant within participant. The household id (hidp) is wave-specific and not used. Siblings with one mother share her adult-interview items (maternal rows) and, in one household, the household-file items (ses_household, household composition).",,
+sample_component,compatible,memorig,"recode_values(
+  as.numeric(memorig),
+  c(1, 2) ~ ""UKHLS general population sample 2009-10"",
+  3 ~ ""BHPS original sample 1991"",
+  4 ~ ""BHPS Scotland extension 1999"",
+  5 ~ ""BHPS Wales extension 1999"",
+  6 ~ ""BHPS Northern Ireland extension 2001"",
+  7 ~ ""UKHLS ethnic minority boost 2009-10"",
+  8 ~ ""UKHLS immigrant and ethnic minority boost 2014-15"",
+  c(14, 15) ~ ""BHPS ECHP low-income sample 1997"",
+  c(21, 22) ~ ""UKHLS general population sample 2 2022-23""
+)","Individual sample origin (memorig): UKHLS from the youth file, BHPS from the household roster (indall), joined in the tidier; recorded on every row and constant within participant. UKHLS general population sample 2009-10 (GB and Northern Ireland, codes 1-2); BHPS original GB sample 1991 (3); BHPS Scotland and Wales extensions 1999 (4, 5) and Northern Ireland extension 2001 (6); BHPS ECHP low-income sample 1997 (UK ECHP panel households selected on low-income characteristics and added at BHPS wave 7, codes 14-15); UKHLS ethnic minority boost 2009-10 (7); UKHLS immigrant and ethnic minority boost 2014-15 (8); UKHLS general population sample 2 2022-23 (GB and Northern Ireland, 21-22). Each was drawn separately (BHPS user manual, harmonised BHPS user guide).",,
 sample_population,inferred,,"""General population""",Youth in UK household probability samples: the Understanding Society general population sample and the BHPS households (Understanding Society main survey user guide).,,
-parent_respondent,in_progress,,,,,
+parent_respondent,compatible,"rapno2, mnspno, fnspno, schsta, stillstate, stillpriv","case_when(
+  !(as.numeric(schsta) %in% c(1, 2) | as.numeric(stillstate) %in% 1 | as.numeric(stillpriv) %in% 1) ~ NA_character_,
+  as.numeric(rapno2) == as.numeric(mnspno) ~ ""Mother"",
+  as.numeric(rapno2) == as.numeric(fnspno) ~ ""Father"",
+  .default = ""Unknown""
+)","The parent who answered the school questions in the adult interview (rapno2; BHPS: the responding parent whose answer the tidier kept), on the rows with a school_sector value: Mother where that is the youth's natural, step or adoptive mother (mnspno), Father where the father (fnspno), Unknown for another adult. NA on other rows, which hold no parent's report on the youth (the youth reports screen time; the maternal and household rows come from the adults' own interviews). Not carried.",,
 age_years,compatible,"dvage, age_dv, age","coalesce(as.numeric(dvage), as.numeric(age_dv), as.numeric(age)) + 0.5","Completed years at interview + 0.5 (no birth month in the release). UKHLS: dvage, falling back to age_dv. BHPS: age at interview from the household roster (indall), joined in the tidier. Ages 10-16.",,
 sex,compatible,"sex_dv, ypsex, pidp","coalesce(
   modal_within(
@@ -38,7 +62,11 @@ country,compatible,"country, gor_dv","coalesce(
   )
 )",UKHLS: country of residence from the youth file. BHPS: household Government Office Region (gor_dv); its nine English regions become England.,,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,compatible,"country, gor_dv","coalesce(
+  recode_values(as.numeric(country), 1 ~ ""GB-ENG"", 2 ~ ""GB-WLS"", 3 ~ ""GB-SCT"", 4 ~ ""GB-NIR""),
+  recode_values(as.numeric(gor_dv), 1:9 ~ ""GB-ENG"", 10 ~ ""GB-WLS"", 11 ~ ""GB-SCT"", 12 ~ ""GB-NIR""),
+  ""Unknown""
+)","The UK nation the participant lives in, as its code (GB-ENG, GB-WLS, GB-SCT, GB-NIR), from the same sources as country: UKHLS country of residence (youth file); BHPS household Government Office Region (gor_dv), its nine English regions aggregated to GB-ENG. Unknown where neither is recorded. Recorded at every wave, so nothing is carried.",,
 ethnicity,compatible,ethn_dv,"coalesce(
   lookup_values(
     haven::as_factor(ethn_dv),
@@ -69,7 +97,7 @@ immigrant_background,partial,"bornuk_dv, mother_bornuk_dv, father_bornuk_dv, pid
   coalesce(carry_within(observed, pidp, wave_order), ""Unknown"")
 })","Born in the UK (bornuk_dv, xwavedat) for the youth and the resident mother and father figures (natural, step or adoptive). Native if either parent was born in the UK; otherwise generation by the youth's birthplace. Waves where it cannot be determined take the participant's earliest determined value (carry-forward), else Unknown. Partial: resident parent figures only; youth birthplace (asked from age 16) missing for a third of rows.",,
 born_in_country,compatible,bornuk_dv,"case_when(bornuk_dv == 1 ~ ""Yes"", bornuk_dv == 2 ~ ""No"", .default = ""Unknown"")","Born in the UK (bornuk_dv, cross-wave person file), constant within participant. Unknown for about a third of rows (birthplace asked from age 16). UK is the sovereign state.",,
-home_language,in_progress,,,,,
+home_language,unavailable,,,Not collected.,,
 ses_area,unavailable,,,No area deprivation index in the EUL release.,,
 ses_household,compatible,"fihhmngrs_dv, ieqmoecd_dv, hhsize, nkids_dv, wave","local({
   scale <- coalesce(
@@ -114,8 +142,13 @@ parental_education,compatible,"mother_hiqual_dv, father_hiqual_dv","local({
     ""Unknown""
   )
 })","Higher of the resident mother's and father's highest qualification (hiqual_dv, 1 degree to 9 none, so the lower code), or whichever is known; mapped through the shared education lookup as maternal_education.",maternal_education,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,compatible,mother_jbstat,"recode_values(
+  as.numeric(mother_jbstat),
+  c(1, 2, 5, 10, 11, 12, 13, 14, 15) ~ ""Employed"",
+  c(3, 4, 6, 7, 8) ~ ""Not employed"",
+  default = ""Unknown""
+)","The mother figure (natural, step or adoptive mother resident in the household, joined via mnspno) reports her current economic activity in her own adult interview that wave (mother_jbstat). Self-employed, paid employment, maternity, shared parental or adoption leave, unpaid work in a family business, apprenticeship, furlough and temporary lay-off or short-time working = Employed; unemployed, retired, family care or home, full-time student and long-term sick or disabled = Not employed. Government training scheme (38 rows) and doing something else = Unknown, as neither places her in or out of paid work. A wave the mother was not resident or not interviewed takes her answer from the participant's nearest wave interviewed 12 months or less away (filled in the tidier), else Unknown.",,
+maternal_age,compatible,"mother_age_dv, mother_age","coalesce(as.numeric(mother_age_dv), as.numeric(mother_age)) + 0.5","The mother figure's (natural, step or adoptive mother resident in the household) age in completed years from her own adult interview that wave, + 0.5: UKHLS mother_age_dv (from date of birth and interview date), BHPS mother_age (age at interview). NA where the mother is not resident or not interviewed. Each wave takes that wave's age; values outside 12-70 kept.",,
 urbanicity,proximate,urban_dv,"recode_values(as.numeric(urban_dv), 1 ~ ""Urban"", 2 ~ ""Rural"", default = ""Unknown"")","UKHLS only. Urban or rural classification of the address (urban_dv); binary, so Suburban is never emitted. BHPS rows Unknown (no BHPS urban/rural column read).",,
 family_structure,proximate,"survey, mnspno, fnspno, mnpno, fnpno","local({
   mother <- as.numeric(mnspno) > 0
@@ -174,8 +207,14 @@ fam_home_cogstim,in_progress,,,,,
 fam_home_emotsupport,in_progress,,,,,
 fam_home_measure,in_progress,,,,,
 school_grade,unavailable,,,No school year or grade in the youth files.,,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,compatible,"schsta, stillstate, stillpriv","case_when(
+  as.numeric(schsta) == 1 ~ ""Public"",
+  as.numeric(schsta) == 2 ~ ""Private"",
+  as.numeric(stillstate) == 1 ~ ""Public"",
+  as.numeric(stillpriv) == 1 ~ ""Private"",
+  .default = ""Unknown""
+)","A parent's report in the adult interview (child files, joined in the tidier): 'Is [child]'s school a state school or is it a private, fee paying school?' (schsta): state = Public, private = Private, spontaneous 'not at school' = Unknown. UKHLS waves 1, 3, 5, 7, 8, 9, 11, 13 and 15 and BHPS waves 12 and 17 (the BHPS wave 13 file matches no youth). From UKHLS wave 3 schsta is asked only where the child has changed school or none was recorded; a child the parent says is still attending the state or private school recorded last time (stillstate, stillpriv) takes that sector. Where both BHPS parents answered, the tidier keeps the mother's answer. Unknown in other waves and where unanswered; not carried.",,
+school_track,unavailable,,,Not collected.,,
 st_measure_type,inferred,,"""Categorical""",Every screen-time item is a banded hours question.,,
 st_measure_name,inferred,,"""Custom""","Bespoke BHPS/UKHLS items, not a named instrument.",,
 st_responder,inferred,,"""Self""",Youth self-completion questionnaire.,,
@@ -229,11 +268,11 @@ st_game_wd,partial,"ypcpgs, ypcomp, ypconstm, ypconsol, wave","local({
 })","UKHLS waves 1, 3, 5, 7, 10: sum of ypcpgs, ypconstm (DR-0002), non-users 0 as in st_game_comp_wd and st_game_console_wd. NA when computer or console hours are unanswered (193 rows); left for imputation. Partial: no phone, tablet or handheld gaming asked, and computer gaming is on the home computer only. Bands as st_game_comp_wd (7 or more hours = 7).",,
 st_game_we,unavailable,,,No weekday/weekend split.,,
 st_game,incompatible,"ypcpgs, ypconstm",,Weekday items only; no usual-day value.,,
-st_game_comp_wd,compatible,"ypcpgs, ypcomp, wave","case_when(
+st_game_comp_wd,partial,"ypcpgs, ypcomp, wave","case_when(
   !wave %in% c(""a"", ""c"", ""e"", ""g"", ""j"") ~ NA_real_,
   as.numeric(ypcomp) %in% c(2, 3) ~ 0,
   .default = recode_values(as.numeric(ypcpgs), 1 ~ 0, 2 ~ 0.5, 3 ~ 2, 4 ~ 5, 5 ~ 7)
-)","UKHLS waves 1, 3, 5, 7, 10: hours using the home computer for games on a normal school day (ypcpgs). No home computer or not using one (ypcomp 2, 3) is routed past the item: 0. Bands: none 0, less than an hour 0.5, 1-3 hours 2, 4-6 hours 5, 7 or more hours 7. BHPS asks frequency only.",,
+)","UKHLS waves 1, 3, 5, 7, 10: 'How many hours do you spend using the computer at home for playing games on a normal school day?' (ypcpgs). No home computer or not using one (ypcomp 2, 3) is routed past the item: 0. Partial: use of the computer at home only. Bands: none 0, less than an hour 0.5, 1-3 hours 2, 4-6 hours 5, 7 or more hours 7. BHPS asks frequency only.",,
 st_game_comp_we,unavailable,,,See st_game_we.,,
 st_game_comp,incompatible,ypcpgs,,Weekday items only; no usual-day value.,,
 st_game_console_wd,compatible,"ypconstm, ypconsol, wave","case_when(
@@ -290,41 +329,41 @@ st_socmedia,partial,"ypnetcht, ypnetchtw, ypsocweb, wave","local({
 st_educational_wd,unavailable,,,No weekday/weekend split.,,
 st_educational_we,unavailable,,,No weekday/weekend split.,,
 st_educational,incompatible,"yppchw, ypdvhm",,"Frequency of computer/device use for schoolwork (UKHLS waves 1-10, 12, 14), every day to never; not a duration.",,
-st_leisure_wd,in_progress,,,,,
-st_leisure_we,in_progress,,,,,
-st_leisure,in_progress,,,,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
 st_internet_wd,unavailable,,,No weekday/weekend split.,,
 st_internet_we,unavailable,,,No weekday/weekend split.,,
 st_internet,incompatible,"ypcintnt, yppcnt",,"Frequency of home internet use (UKHLS waves 1-10) or PC internet/email use (BHPS), every day to never; not a duration.",,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,unavailable,,,No weekday/weekend split.,,
+st_videochat_we,unavailable,,,No weekday/weekend split.,,
 st_videochat,incompatible,ypdvvc,,"Frequency of video-calling device use (UKHLS waves 12, 14), every day to never; not a duration.",,
 st_messaging_wd,unavailable,,,Not collected.,,
 st_messaging_we,unavailable,,,Not collected.,,
 st_messaging,unavailable,,,Not collected.,,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,No weekday/weekend split.,,
+st_creating_we,unavailable,,,No weekday/weekend split.,,
 st_creating,incompatible,ypdvcrt,,"Frequency of posting pictures/videos (UKHLS waves 12, 14), every day to never; not a duration.",,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,No weekday/weekend split.,,
+st_email_we,unavailable,,,No weekday/weekend split.,,
 st_email,incompatible,yppcnt,,"BHPS asks frequency of PC internet/email use (yppcnt), not duration.",,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,unavailable,,,No item on use at school.,,
 st_educational_school,unavailable,,,No item on use at school.,,
@@ -789,19 +828,50 @@ hlth_sleep,partial,"ypsleep1, ypsleep2, ypsleep3, ypsleep4","local({
 })","UKHLS waves 12-13, youth self-completion: 5:2 weighted mean of hlth_sleep_wd and hlth_sleep_we, recomputed from the same sleep/wake bands. Partial as those rows.",,
 hlth_sleepprob,incompatible,"ypsleep5, ypsleep6",,"Only two single items, time to fall asleep and trouble getting back to sleep in the last 4 weeks (ypsleep5, ypsleep6; UKHLS waves 12-13); not a scale.",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,proximate,ypsleep6,"recode_values(
+  as.numeric(ypsleep6),
+  1 ~ ""Always"",
+  c(2, 3) ~ ""Often"",
+  4 ~ ""Sometimes"",
+  5 ~ ""Rarely"",
+  6 ~ ""Never"",
+  default = NA_character_
+)","UKHLS waves 12-13, youth self-completion: 'During the last four weeks, how often did you awaken during your sleep time and have trouble falling back to sleep again?' (ypsleep6; recall 4 weeks). All of the time = Always; most and a good bit of the time = Often (both below a top 'all of the time'); some of the time = Sometimes; a little of the time = Rarely; none of the time = Never. Proximate: six levels folded onto five. Scored in no mapped scale. Unused: time taken to fall asleep (ypsleep5, latency) and BHPS nights lost sleep through worry (ypwor, a cause). Not carried.",,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,compatible,"yphtc, yphtf, yphfi, yphti, ypwtk, ypwts, ypwtp","local({
+  inches <- coalesce(as.numeric(yphfi), as.numeric(yphti))
+  height <- coalesce(as.numeric(yphtc), as.numeric(yphtf) * 30.48 + inches * 2.54)
+  weight <- coalesce(as.numeric(ypwtk), (as.numeric(ypwts) * 14 + as.numeric(ypwtp)) * 0.45359237)
+  weight / (height / 100)^2
+})","BHPS waves 14, 16 and 18 (bn, bp, br), youth self-report: height in centimetres (yphtc) or feet and inches (yphtf with yphfi, or yphti at br; x 30.48 and x 2.54) and weight in kilograms (ypwtk) or stones and pounds (ypwts, ypwtp; x 14, then pounds x 0.45359237), kg / m2; incomplete imperial answers NA; values kept as entered (1.1-128.1). The study's derived height (yphlhtcm_dv) holds feet, not centimetres, for imperial answers, so it and the derived weight (yphlwtkg_dv) are unused. Never carried.",,
+hlth_bmi_measure,inferred,wave,"if_else(wave %in% c(""bn"", ""bp"", ""br""), ""Self-reported"", NA_character_)","BHPS waves 14, 16 and 18: the youth self-completion questionnaire asks the young person's own height and weight; NA in other waves.",,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,incompatible,"yppsprt, ypsprt, ypfspor",,"Only how often the young person plays sport: UKHLS days a week (yppsprt: every day, 5-6, 3-4 or 1-2 days, less often, never) and BHPS frequency items (ypsprt, ypfspor); days of sport, not days of 60 minutes of activity.",,
+hlth_birthweight,compatible,"bwtkn_bh, bwtlb_bh, bwtoz_bh, bwtgm_bh, bwt, bwtlb, bwtoz, bwtk","coalesce(
+  case_when(
+    as.numeric(bwtkn_bh) == 1 ~ (as.numeric(bwtlb_bh) * 16 + as.numeric(bwtoz_bh)) * 28.35,
+    as.numeric(bwtkn_bh) == 2 ~ as.numeric(bwtgm_bh)
+  ),
+  case_when(
+    as.numeric(bwt) == 1 ~ (as.numeric(bwtlb) * 16 + as.numeric(bwtoz)) * 28.35,
+    as.numeric(bwt) == 2 ~ as.numeric(bwtk) * 1000
+  )
+)","The mother's recall, asked about a child born into the panel (UKHLS at her next interview after the birth), from the cross-wave person file (joined to the youth in the tidier, so the same on every wave): 'How much did [child] weigh when they were born?' (UKHLS wording of an item taken from BHPS), in pounds and ounces (BHPS bwtlb_bh, bwtoz_bh; UKHLS bwtlb, bwtoz) or in grams (BHPS bwtgm_bh) or kilograms (UKHLS bwtk, x 1,000), as the mother chose (bwtkn_bh, bwt). Pounds and ounces (lb x 16 + oz) x 28.35; values kept as entered. NA where the ounces are missing (40 BHPS youths) or the weight was not known; BHPS taken where both surveys recorded one (1 youth).",,
+hlth_preterm,partial,"bwtxp_bh, bwtel_bh, bwtwk_bh, bwtxp, bwtel, bwtwk","coalesce(
+  case_when(
+    as.numeric(bwtxp_bh) == 1 | as.numeric(bwtel_bh) == 2 ~ ""FALSE"",
+    as.numeric(bwtel_bh) == 1 ~ if_else(as.numeric(bwtwk_bh) >= 4, ""TRUE"", ""FALSE"")
+  ),
+  case_when(
+    as.numeric(bwtxp) == 1 | as.numeric(bwtel) == 2 ~ ""FALSE"",
+    as.numeric(bwtel) == 1 ~ if_else(as.numeric(bwtwk) >= 4, ""TRUE"", ""FALSE"")
+  )
+)","The mother's recall, asked about a child born into the panel (UKHLS at her next interview after the birth), from the cross-wave person file (joined to the youth in the tidier, so the same on every wave): 'Was [child] born within one week of the expected due date?' (BHPS bwtxp_bh, UKHLS bwtxp), then 'early or late?' (bwtel_bh, bwtel) and how many weeks (bwtwk_bh, bwtwk; UKHLS wording of items taken from BHPS, half weeks rounded up). 4 or more weeks early = TRUE; within a week of the due date, late, or 1-3 weeks early = FALSE; early with no weeks = NA. Partial: the whole-week answer forces the cut, so a birth a little over 3 weeks early can count as FALSE. BHPS taken where both surveys recorded one.",,
+hlth_breastfed,unavailable,,,Not in the supplied extract.,,
+hlth_prenatalsmoking,unavailable,,,Not in the supplied extract.,,
+hlth_chroniccond_diagnosed,incompatible,ypltdis,,"Only a long-term health problem or disability that limits day-to-day activities (ypltdis), with no diagnosis by a health professional; mapped to hlth_disability.",,
+hlth_disability,compatible,ypltdis,"recode_values(as.numeric(ypltdis), c(1, 2) ~ ""TRUE"", 3 ~ ""FALSE"", default = NA_character_)","UKHLS waves 9-15, youth self-report: 'Do you have a long-term health problem or disability that limits your day-to-day activities? By long term we mean anything that has lasted, or is expected to last, at least 3 months.' (ypltdis): yes, limited a lot or a little = TRUE; no = FALSE. Never carried.",,

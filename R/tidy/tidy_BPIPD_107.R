@@ -26,8 +26,13 @@ tidy_BPIPD_107 <- function(raw_dataset, spec) {
 
   # `bind_rows()` appends later cycles' new columns at the end; restore
   # the column map's order.
-  ordered <- intersect(bp107_column_map()$column, names(df))
+  map <- bp107_column_map()
+  ordered <- intersect(map$column, names(df))
   df <- df[c(ordered, "pisa_source", ".wave", ".wave_label")]
+  # Binding drops the variable label of the label-zapped columns.
+  for (col in intersect(bp107_cycle_specific_codes, names(df))) {
+    attr(df[[col]], "label") <- map$label[map$column == col]
+  }
 
   df <- bp107_drop_screenless(df)
 
@@ -361,6 +366,16 @@ bp107_column_map <- function() {
         "Language spoken at home is the language of the test",
         c("2015", "2018", "2022", "2025")
       ),
+      LANGN = bp107_entry(
+        "Language spoken at home most of the time (3-digit code)"
+      ),
+      PA001Q01TA = bp107_entry(
+        "Parent questionnaire completed by: mother or other female guardian"
+      ),
+      PA001Q02TA = bp107_entry(
+        "Parent questionnaire completed by: father or other male guardian"
+      ),
+      PA001Q03TA = bp107_entry("Parent questionnaire completed by: other"),
       ST403Q01DA = bp107_entry(
         "Number of parents and/or guardians (none to four or more)",
         "2025"
@@ -381,6 +396,19 @@ bp107_column_map <- function() {
         c("2018", "2022", "2025")
       ),
       REPEAT = bp107_entry("Ever repeated a grade"),
+      PROGN = bp107_entry("Unique national study programme code"),
+      ISCEDL = bp107_entry(
+        "ISCED level of the study programme (1-5)",
+        c("2015", "2018")
+      ),
+      ISCEDO = bp107_entry(
+        "ISCED orientation of the study programme",
+        c("2015", "2018")
+      ),
+      ISCEDP = bp107_entry(
+        "ISCED 2011 level, orientation and destination of the study programme",
+        c("2022", "2025")
+      ),
       HISCED_isced97 = bp107_entry(
         "Highest parental education, ISCED-97 levels 0-6",
         source = c("2015" = "HISCED", "2018" = "HISCED")
@@ -827,6 +855,16 @@ bp107_column_map <- function() {
         "2018"
       ),
       WB150Q01HA = bp107_entry("Self-rated health", c("2018", "2022")),
+      WB151Q01HA = bp107_entry("Weight (kilograms)", c("2018", "2022")),
+      WB152Q01HA = bp107_entry("Height (centimetres)", c("2018", "2022")),
+      ST032Q01NA = bp107_entry(
+        "Past 7 days: days of moderate physical activity for at least 60 minutes",
+        "2015"
+      ),
+      WB032Q01NA = bp107_entry(
+        "Outside school, past 7 days: days of moderate physical activity for at least 60 minutes",
+        c("2018", "2022")
+      ),
       WB153Q01HA = bp107_entry(
         "Body image: I like my look just the way it is",
         c("2018", "2022")
@@ -1093,11 +1131,12 @@ bp107_select_columns <- function(tbl, wave) {
 
 # Value-label safety across cycles --------------------------------------------
 
-#' Columns whose codes are cycle-specific (sampling strata): the same code
-#' means different things per cycle, so value labels are dropped before
-#' binding; codes and the variable label stay, and that cycle's codebook
-#' gives the meaning.
-bp107_cycle_specific_codes <- c("STRATUM")
+#' Columns whose codes are cycle-specific (sampling strata, programme and
+#' language codes): the same code means different things per cycle, so value
+#' labels are dropped before binding; codes and the variable label stay, and
+#' that cycle's codebook gives the meaning. ISCEDL is here because 2015
+#' labels 5 'Valid Skip' where 2018 has ISCED level 5.
+bp107_cycle_specific_codes <- c("STRATUM", "PROGN", "LANGN", "ISCEDL")
 
 bp107_zap_cycle_labels <- function(tbl) {
   cols <- intersect(bp107_cycle_specific_codes, names(tbl))
@@ -1119,7 +1158,10 @@ bp107_label_conflicts_ok <- c(
   "ST062Q03TA",
   "IMMIG",
   "REPEAT",
-  "SC013Q01TA"
+  "SC013Q01TA",
+  "PA001Q01TA",
+  "PA001Q02TA",
+  "PA001Q03TA"
 )
 
 #' Stop if a shared column's value labels disagree between cycles

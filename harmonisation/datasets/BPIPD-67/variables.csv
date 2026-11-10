@@ -23,10 +23,23 @@ survey_cluster,compatible,"VARSTRAT, VARPSU","if_else(
   NA_character_,
   paste(sprintf(""%.0f"", VARSTRAT), sprintf(""%.0f"", VARPSU), sep = ""_"")
 )","Variance-estimation PSU (VARPSU), numbered 1-2 within stratum, so prefixed with VARSTRAT; coverage and carry as survey_strata.",,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,partial,"PARENT_PERSONID, PERSONID, wave","coalesce(
+  carry_within(
+    if_else(grepl('^P', trimws(as.character(PARENT_PERSONID))), trimws(as.character(PARENT_PERSONID)), NA_character_),
+    PERSONID,
+    order = as.numeric(wave)
+  ),
+  PERSONID
+)","Household unit: the PERSONID of the parent who answered the wave-4 parent interview (PARENT_PERSONID, released at wave 4 only; valid 'P' ids), carried to the youth's other waves; youth with no wave-4 parent id, mostly those never interviewed at wave 4, take their own PERSONID, so any sibling of theirs is unlinked, and a former PATH youth who answered as the parent links to the younger sibling through that own id. Partial: one wave's parent link only. Siblings share the household items (household income R_Y_PM0130, parent education).",,
+sample_component,compatible,sample_component,sample_component,"Recruitment sample, built in the tidier from the ever/never reference files' PERSONIDs (User Guide 1.1, 2.1, 2.3, 2.9, 7.1); constant within youth. Wave 1 sample: the Wave 1 Cohort, a national address probability sample interviewed Sep 2013-Dec 2014 (youth 12-17 and shadow youth 9-11 interviewed as youth from age 12), listed in the Wave 3 reference file (DS3503). Wave 4 replenishment sample: youth 12-17 and shadow youth 10-11 recruited at Wave 4 (Dec 2016-Jan 2018) from addresses not selected for Wave 1, added in the Wave 4 reference file (DS4503). Wave 7 replenishment sample: youth 12-17 and shadow youth 9-11 recruited at Wave 7 (Jan 2022-Apr 2023) from addresses not selected before, in neither file (all first interviewed at wave 7 or later).",,
 sample_population,inferred,,"""General population""",Household probability sample of youth aged 12-17 from the US civilian noninstitutionalized population (PATH user guide).,,
-parent_respondent,in_progress,,,,,
+parent_respondent,proximate,"parent_relationship, wave, PT0009, PT0021, PT0029, PR1045, R_Y_PT0047","case_when(
+  is.na(PT0009) & is.na(PT0021) & is.na(PT0029) & is.na(PR1045) & is.na(R_Y_PT0047) ~ NA_character_,
+  parent_relationship == ""Biological mother"" ~ ""Mother"",
+  parent_relationship == ""Biological father"" ~ ""Father"",
+  parent_relationship == ""Other"" & wave %in% c(""1"", ""2"", ""3"", ""4"") ~ ""Other carer"",
+  .default = ""Unknown""
+)","The adult who completed the parent interview on the occasion, from their relationship to the youth (parent_relationship, built in the tidier from R_Y_PT0001 and its recodes; PATH asks it only when a different parent answers than at the PATH wave just before, so the tidier takes that same parent's earlier answer). Biological mother = Mother, biological father = Father; 'Other' at waves 1-4 (foster parent, grandparent, aunt, uncle, other relative or non-relative) = Other carer. Unknown: adoptive and step parents, whose sex the public-use recodes drop; 'Other' from wave 4.5, which also pools adoptive and step parents; wave 8's 'Biological parent' (sex not recorded); unanswered. NA where no parent item is answered (no parent interview, or an emancipated youth at wave 1). Proximate: the recodes pool foster parents with other carers and drop the sex of adoptive and step parents. No parent component reports screen time (st_responder Self).",,
 age_years,partial,R_Y_AGECAT2,"recode_values(readr::parse_number(as.character(R_Y_AGECAT2)), 1 ~ 13.5, 2 ~ 16.5)","Age at interview in two completed-year bands only (R_Y_AGECAT2: 12-14, 15-17; exact age is withheld from the public-use files), scored (a + b + 1) / 2 = 13.5 and 16.5; 3 wave-1 rows missing. Partial: three-year bands.",,
 sex,compatible,"R_Y_SEX, PERSONID","coalesce(
   modal_within(recode_values(readr::parse_number(as.character(R_Y_SEX)), 1 ~ ""Male"", 2 ~ ""Female""), PERSONID),
@@ -34,7 +47,16 @@ sex,compatible,"R_Y_SEX, PERSONID","coalesce(
 )","Youth-reported sex ('What is your sex?', derived as R_Y_SEX: male, female; no other option), each participant's modal value across waves (no ties); the 140 youth who never answered are Unknown. The imputed R_Y_SEX_IMP is not used.",,
 country,inferred,,"""USA""",Nationally representative sample of the US civilian non-institutionalised population; no country variable.,,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,proximate,X_CB_REGION,"coalesce(
+  recode_values(
+    readr::parse_number(as.character(X_CB_REGION)),
+    1 ~ ""US: Northeast"",
+    2 ~ ""US: Midwest"",
+    3 ~ ""US: South"",
+    4 ~ ""US: West""
+  ),
+  ""Unknown""
+)","Census region (X_CB_REGION, the Census Bureau region in which the respondent was sampled, User Guide 7.4), released at the recruitment waves 1, 4 and 7 and updated there (93 of the 5,607 youth interviewed at waves 1 and 4 change region): US: Northeast, US: Midwest, US: South, US: West, the finest grouping released (no state or division). Proximate: a grouping of states. No interview dates are released, so the gap is judged from the field periods (User Guide Table 1.2): carried in the tidier to the wave just after (2, 4.5, 7.5), about 12 months later, never over an observed value. Unknown at waves 3, 5, 5.5, 6 and 8, two years or more after a released region; at waves 2, 4.5 and 7.5 for youth not interviewed at the wave before; and for 1 wave-1 row withheld at the respondent's request.",,
 ethnicity,proximate,"R_Y_HISP, R_Y_RACECAT3, PERSONID, wave","coalesce(
   lookup_values(
     carry_within(
@@ -69,7 +91,18 @@ minority,compatible,"R_Y_HISP, R_Y_RACECAT3, PERSONID, wave","coalesce(
 )","US reference: non-Hispanic White alone is Non-minority; Hispanic, Black and other or multiracial non-Hispanic youth are Minority. Same items and carry-forward as ethnicity.",,
 immigrant_background,incompatible,"R_Y_PM0065_V2, R_Y_PM0065, R_Y_PM0069, R_Y_YM0065_V2",,"Only years lived in the US and US citizenship, for the parent respondent and the youth; no birthplace for either parent, and the other parent is never asked.",,
 born_in_country,incompatible,"R_Y_YM0065_V2, R_Y_YM0065, R_Y_YM0069",,"Residence, not birthplace: 'About how many years have you lived in the United States?' with a whole-life button (R_Y_YM0065_V2, R_Y_YM0065). Entering a number of years counts as not whole life, so 24% of wave-4 youth fall there and 32% of youth answering twice switch between the two; citizenship (R_Y_YM0069) is not birthplace.",,
-home_language,in_progress,,,,,
+home_language,compatible,"YM0071, PERSONID, wave","coalesce(
+  carry_within(
+    recode_values(
+      readr::parse_number(as.character(YM0071)),
+      1 ~ ""Another language, country language not recorded"",
+      2 ~ ""Country language only""
+    ),
+    PERSONID,
+    order = as.numeric(wave)
+  ),
+  ""Unknown""
+)","Youth self-report, waves 3-8: 'Do you speak a language other than English at home?' (YM0071), English counted as the country language. No = Country language only; Yes = Another language, country language not recorded (the item does not ask whether English is spoken too). Not asked at waves 1-2: carried within participant (carry-forward rule), observed answers kept and other waves taking the earliest observed answer, else Unknown. Not used: the parent respondent's own item (PM0071, waves 4-8; proximate here) and the parent's English-proficiency items (PM0066, PM0070, PM0073).",,
 ses_area,unavailable,,,Not collected.,,
 ses_household,proximate,"R_Y_PM0130, wave","coalesce(
   if_else(
@@ -108,8 +141,8 @@ parental_education,compatible,parent_educ_highest,"coalesce(
   ),
   ""Unknown""
 )","Highest education of the parent respondent and resident spouse or guardian (parent_educ_highest, built in the tidier on one five-level scale), via lookups/maternal_education.csv. Waves 4.5-8: PATH's own highest of parent, spouse and guardian (R_P_PARSP_EDUC, R_P_PARSP_EDUC_V2); waves 2-4: the higher of parent (R_Y_PM0001) and spouse/guardian (R_Y_PM0118). Wave 1 asked about one parent: the parent's value where no spouse or partner lives in the household (PT0045), otherwise the highest including values the tidier carried from later waves, else Unknown (3,064 wave-1 rows).",maternal_education,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,unavailable,,,Not collected.,,
+maternal_age,unavailable,,,Not in the supplied extract.,,
 urbanicity,unavailable,,,Not collected.,,
 family_structure,proximate,"parent_relationship, PT0045, R_P_OTHPAR_INHH, other_parent_relationship","recode_values(
   paste(
@@ -203,8 +236,8 @@ school_grade,proximate,"R_Y_YM0018, R_Y_YM0018_V2","recode_values(
   ""10th grade"" ~ ""Grade 10"",
   ""11th grade"" ~ ""Grade 11""
 )","Youth-reported grade (the grade being entered during breaks), every wave, as 'Grade N'. Proximate: the lowest level is an open band ('Grade 6 or below' at waves 1-4, 'Grade 7 or below' at waves 4.5-5, 'Grade 8 or below' from wave 5.5), and 'Other' (12th grade, ungraded, home schooled, not enrolled, college) is NA.",,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,unavailable,,,Not collected.,,
+school_track,unavailable,,,Not collected.,,
 st_measure_type,inferred,,"""Categorical""",Every screen item is a banded duration question.,,
 st_measure_name,inferred,,"""Custom""",Items written for the PATH Study youth questionnaire.,,
 st_responder,inferred,,"""Self""","Youth self-report at every wave, including the social-media filter item.",,
@@ -386,41 +419,41 @@ st_socmedia,compatible,"YX0320, YX0315, YX0062, YX0317, YX0370, YX0371, wave","c
 st_educational_wd,unavailable,,,Not collected.,,
 st_educational_we,unavailable,,,Not collected.,,
 st_educational,unavailable,,,Not collected.,,
-st_leisure_wd,in_progress,,,,,
-st_leisure_we,in_progress,,,,,
-st_leisure,in_progress,,,,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_leisure_wd,unavailable,,,Not collected.,,
+st_leisure_we,unavailable,,,Not collected.,,
+st_leisure,unavailable,,,Not collected.,,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,Not collected.,,
+st_violent_game_we,unavailable,,,Not collected.,,
+st_violent_game,unavailable,,,Not collected.,,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,unavailable,,,Not collected.,,
+st_violent_measure,unavailable,,,See st_violent_watch.,,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
 st_internet_wd,unavailable,,,No weekday/weekend split.,,
 st_internet_we,unavailable,,,No weekday/weekend split.,,
 st_internet,incompatible,"YX0486, YX0315",,"Only how often the youth uses the internet (YX0486, wave 1) and whether they ever go online (YX0315, waves 2-3); no duration.",,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
 st_videochat,unavailable,,,Not collected.,,
 st_messaging_wd,unavailable,,,Not collected.,,
 st_messaging_we,unavailable,,,Not collected.,,
 st_messaging,unavailable,,,Not collected.,,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
 st_creating,unavailable,,,Not collected.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
 st_email,unavailable,,,Not collected.,,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,unavailable,,,No item on use at school.,,
 st_educational_school,unavailable,,,No item on use at school.,,
@@ -877,19 +910,51 @@ hlth_sleep_we,unavailable,,,No weekday/weekend split; see hlth_sleep.,,
 hlth_sleep,partial,YX0106,as.numeric(YX0106),"Wave 8 only, youth self-report: 'On average, how many hours of sleep do you get in a 24-hour period?' (YX0106), whole hours as entered (2-16; PATH removed improbable answers). Partial: a 24-hour total that includes naps.",,
 hlth_sleepprob,incompatible,YX0162,,"Only one screener item ('significant problems with sleep trouble, such as bad dreams, sleeping restlessly or falling asleep during the day', recency rating); no sleep-problems scale; scored in mh_distress_self.",,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,incompatible,"YX0162, YX0049, YX0229",,"Only 'When was the last time you had significant problems with sleep trouble, such as bad dreams, sleeping restlessly or falling asleep during the day?' (YX0162), a recency rating, not a frequency, that pools nightmares and daytime sleepiness and is scored in mh_distress_self; and items blaming the sleep complaint on wheezing (YX0049) or asthma symptoms (YX0229), which no row holds.",,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,compatible,R_Y_BMI,as.numeric(R_Y_BMI),"PATH's derived BMI (R_Y_BMI, every wave): 703 x pounds / inches squared from the parent's report of the youth's height without shoes and weight without clothes or shoes (parent interview), with the youth's own report substituted item by item where the parent's is missing (waves 2-8; at wave 1 only emancipated youth report their own). The height and weight items are withheld from the public-use files, so the youth's own report cannot be taken first and is not available on its own. PATH top-codes BMI at 60 (20 rows at 60, under 0.1%), except at wave 4.5, whose four values of 60.3-79.1 are kept as released; the 30 values below 10 are kept and screened at analysis.",,
+hlth_bmi_measure,inferred,"R_Y_BMI, PT0009, PT0021, PT0029, PR1045, R_Y_PT0047","case_when(
+  is.na(R_Y_BMI) ~ NA_character_,
+  !is.na(PT0009) | !is.na(PT0021) | !is.na(PT0029) | !is.na(PR1045) | !is.na(R_Y_PT0047) ~ ""Parent-reported"",
+  .default = ""Self-reported""
+)","Follows hlth_bmi's derivation: Parent-reported where the parent interview took place (any parent item answered); Self-reported where it did not (721 rows: the youth's own report at waves 2-8, an emancipated youth's at wave 1). Rows where the parent did not give the height or weight take the youth's answer in PATH's derivation but cannot be identified, and stay Parent-reported.",,
+hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,compatible,YX0241,readr::parse_number(as.character(YX0241)) - 1,"Youth self-report, waves 2-8: 'During the past 7 days, on how many days were you physically active for a total of at least 60 minutes per day?' (YX0241; activity that increased the heart rate and made you breathe hard some of the time), 0-7 days (codes 1-8 minus 1). Not asked at wave 1.",,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,partial,"PT0031_12M, PT0050_12M, PT0051_12M, PT0281_12M, PT0031_NB, PT0050_NB, PT0051_NB, PT0281_NB, chronic_told_before, wave","local({
+  past_year <- cbind(
+    readr::parse_number(as.character(PT0031_12M)),
+    readr::parse_number(as.character(PT0050_12M)),
+    readr::parse_number(as.character(PT0051_12M)),
+    readr::parse_number(as.character(PT0281_12M))
+  )
+  ever <- cbind(
+    readr::parse_number(as.character(PT0031_NB)),
+    readr::parse_number(as.character(PT0050_NB)),
+    readr::parse_number(as.character(PT0051_NB)),
+    readr::parse_number(as.character(PT0281_NB))
+  )
+  current <- rowSums(past_year == 1, na.rm = TRUE) > 0
+  none_past_year <- !current & rowSums(past_year == 2, na.rm = TRUE) > 0
+  never_ever <- rowSums(ever == 1, na.rm = TRUE) == 0 & rowSums(ever == 2, na.rm = TRUE) > 0
+  case_when(
+    wave == ""1"" ~ NA_character_,
+    current ~ ""Currently diagnosed"",
+    none_past_year & chronic_told_before %in% TRUE ~ ""Previously diagnosed"",
+    none_past_year & chronic_told_before %in% FALSE ~ ""Never diagnosed"",
+    never_ever ~ ""Never diagnosed""
+  )
+})","Waves 2-8 and the half-waves, parent report: 'In the past 12 months, has [child] been told by a doctor, nurse or other health professional that [he/she] has' asthma, high blood pressure, high cholesterol, or 'diabetes, sugar diabetes, high blood sugar, or borderline diabetes' (PT0031_12M, PT0050_12M, PT0051_12M, PT0281_12M; parents of continuing youth): told of any = Currently. Otherwise Previously if told of any at an earlier wave (chronic_told_before, built in the tidier), Never if the youth's first interview recorded none told and no later wave reported one. Parents of new baseline youth are asked 'ever been told' instead (PT0031_NB, PT0050_NB, PT0051_NB, PT0281_NB): none told = Never; told of any = NA (current and previous not separable). Any answered yes counts as told, never told needs no yes and one or more no. Partial: told in the past 12 months stands in for current, a diagnosis given during a skipped wave can be missed, and the checklist has four conditions and no 'other condition' item. Wave 1 asks ever told only (R_Y_PY0031, R_Y_PY0050, R_Y_PY0051, R_Y_PY0281), so wave 1 is NA: a binary ever-told item does not fill waves of a row whose other waves separate current from previous diagnosis. Not counted: bronchitis, pneumonia or chronic cough (R_Y_PY0033, R_Y_PY0040, PT0033, PT0040_NB; acute illnesses pooled), dental health issues (R_Y_PY0049, R_Y_PY0044, PT0049, PT0044_NB), seizures (PX0247, PX0247_12M, PX0247_NB; not attributed to a health professional), schizophrenia and psychotic illness (PX0756, PX0761 and their _12M and _NB items; mental conditions), ADHD (beh_adhd_diagnosed) and the youth's own asthma items (YT0031_12M, YT0031_NB).",,
+hlth_disability,partial,"R_Y_PY0188, PX0188_NB, R_Y_PY0187, PX0187_NB","case_when(
+  (readr::parse_number(coalesce(as.character(R_Y_PY0188), as.character(PX0188_NB))) %in% 1) |
+    (readr::parse_number(coalesce(as.character(R_Y_PY0187), as.character(PX0187_NB))) %in% 1) ~ ""TRUE"",
+  (readr::parse_number(coalesce(as.character(R_Y_PY0188), as.character(PX0188_NB))) %in% 2) |
+    (readr::parse_number(coalesce(as.character(R_Y_PY0187), as.character(PX0187_NB))) %in% 2) ~ ""FALSE""
+)","Parent report at the youth's first interview: wave 1 (R_Y_PY0188, R_Y_PY0187, which also hold emancipated youth's own answers) and new respondents at waves 2-8 (PX0188_NB; PX0187_NB from wave 4); continuing youth are not asked again and are NA (never carried). 'Does [child] have difficulty dressing or bathing?' and, for youth aged 15 or older, 'Because of a physical, mental, or emotional condition, does [child] have difficulty doing errands alone such as visiting a doctor's office or shopping?' TRUE if either is yes, FALSE if every answered item is no. Partial: two of the six disability items asked (the walking, seeing and hearing items are withheld from the public-use files), no long-term wording, and the errands item pools physical with mental and emotional conditions. Not counted: the item on serious difficulty concentrating, remembering or making decisions (R_Y_PY0189, PX0189_NB), a cognitive item; the youth's own answers at waves 2-8 are withheld.",,

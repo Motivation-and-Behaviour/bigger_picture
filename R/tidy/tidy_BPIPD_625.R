@@ -397,6 +397,48 @@ bp625_items <- function() {
       "2017" = "q68",
       "2019" = "q67"
     ),
+    # CDC sets implausible heights and weights to missing; 2013+ also
+    # release the unedited answers.
+    height_m = bp625_entry(
+      "How tall are you without your shoes on? (metres, CDC-edited)",
+      "1999" = "q5",
+      "2003" = "q5",
+      "2005" = "q5",
+      "2007" = "q6",
+      "2009" = "q6",
+      "2011" = "q6",
+      "2013" = "q6",
+      "2015" = "q6",
+      "2017" = "q6",
+      "2019" = "q6"
+    ),
+    weight_kg = bp625_entry(
+      "How much do you weigh without your shoes on? (kilograms, CDC-edited)",
+      "1999" = "q6",
+      "2003" = "q6",
+      "2005" = "q6",
+      "2007" = "q7",
+      "2009" = "q7",
+      "2011" = "q7",
+      "2013" = "q7",
+      "2015" = "q7",
+      "2017" = "q7",
+      "2019" = "q7"
+    ),
+    height_orig = bp625_entry(
+      "How tall are you without your shoes on? (unedited answer as scanned: feet, then two digits of inches, e.g. 508 = 5 ft 8 in)",
+      "2013" = "q6orig",
+      "2015" = "q6orig",
+      "2017" = "q6orig",
+      "2019" = "q6orig"
+    ),
+    weight_orig = bp625_entry(
+      "How much do you weigh without your shoes on? (unedited answer as scanned, pounds)",
+      "2013" = "q7orig",
+      "2015" = "q7orig",
+      "2017" = "q7orig",
+      "2019" = "q7orig"
+    ),
     bmi_percentile = bp625_entry(
       "Body mass index percentile for age and sex, computed by CDC",
       "2005" = "bmipct",
@@ -407,6 +449,43 @@ bp625_items <- function() {
       "2015" = "bmipct",
       "2017" = "bmipct",
       "2019" = "bmipct"
+    ),
+    # 1999 and 2003 ask only days of 20 minutes of vigorous and 30 minutes of
+    # moderate activity.
+    pa_days60 = bp625_entry(
+      "During the past 7 days, on how many days were you physically active for a total of at least 60 minutes per day? (1 = 0 days ... 8 = 7 days)",
+      "2005" = "q80",
+      "2007" = "q80",
+      "2009" = "q80",
+      "2011" = "q79",
+      "2013" = "q80",
+      "2015" = "q80",
+      "2017" = "q79",
+      "2019" = "q78"
+    ),
+    asthma_told = bp625_entry(
+      "Has a doctor or nurse ever told you that you have asthma? (1 = Yes, 2 = No, 3 = Not sure)",
+      "2003" = "q96",
+      "2005" = "q86",
+      "2007" = "q86",
+      "2009" = "q86",
+      "2011" = "q85",
+      "2013" = "q86",
+      "2015" = "q87",
+      "2017" = "q87",
+      "2019" = "q87"
+    ),
+    # Two current-asthma items with different options; 2013+ ask neither.
+    asthma_episode_12m = bp625_entry(
+      "During the past 12 months, have you had an episode of asthma or an asthma attack? (1 = I do not have asthma, 2 = No, I have asthma but have not had an episode, 3 = Yes, 4 = Not sure)",
+      "2003" = "q97",
+      "2005" = "q87"
+    ),
+    asthma_still = bp625_entry(
+      "Do you still have asthma? (1 = I have never had asthma, 2 = Yes, 3 = No, 4 = Not sure)",
+      "2007" = "q87",
+      "2009" = "q87",
+      "2011" = "q86"
     ),
     # --- geography and survey design ---------------------------------------
     metro_status = bp625_entry(

@@ -70,12 +70,33 @@ tidy_BPIPD_838 <- function(raw_dataset, spec) {
   # as if they were observations.
   long <- long[!is.na(long$participated), , drop = FALSE]
 
-  # Carry T1-only items forward: parent education always; income and partner
-  # status as T5 is 12 months on. The study's T5 age is T1 + 1, so age fills T2-T4.
-  bp838_carry_from_t1(
+  # Carry T1-only items: parent education always; income, partner status and
+  # the mother's employment as T5 is 12 months on; age (T5 is T1 + 1) to T2-T4.
+  long <- bp838_carry_from_t1(
     long,
-    c("Edu_mother", "Edu_father", "Household_income_gp", "S1", "Age_child")
+    c(
+      "Edu_mother",
+      "Edu_father",
+      "Household_income_gp",
+      "S1",
+      "EAS_mother",
+      "Age_child"
+    )
   )
+
+  # T2-T4 record no class but fall within a year of T1, so a child in
+  # Primary 1-5 at T1 is still in primary school; Primary 6 may have moved on.
+  t1 <- long$wave == "T1"
+  t1_class <- long$Class[t1][match(long$SC, long$SC[t1])]
+  long$school_stage <- dplyr::case_when(
+    long$Class %in% 1:6 ~ "primary",
+    long$wave %in% c("T2", "T3", "T4") & t1_class %in% 1:5 ~ "primary"
+  )
+  attr(long$school_stage, "label") <- paste(
+    "School stage: primary where Class is Primary 1-6 (T1, T5), and at",
+    "T2-T4 where Class was Primary 1-5 at T1"
+  )
+  long
 }
 
 #' Fill each participant's missing values in `cols` with their T1 value

@@ -2,7 +2,8 @@
 #'
 #' Stacks the Youth / Parent files of ICPSR 36498 (waves 1-8) and 37786 (the
 #' half-waves 4.5, 5.5 and 7.5) after stripping each column's wave prefix, with
-#' each wave's cross-sectional weight joined on.
+#' each wave's cross-sectional weight joined on; the ever/never reference files
+#' only place each youth in its recruitment sample.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -11,7 +12,8 @@
 #' Output:
 #' - one tibble, one row per youth per wave interviewed, keyed on `PERSONID` and `wave`
 tidy_BPIPD_67 <- function(raw_dataset, spec) {
-  tables <- lapply(raw_dataset$data, bp67_prepare)
+  is_reference <- startsWith(names(raw_dataset$data), "evernever_")
+  tables <- lapply(raw_dataset$data[!is_reference], bp67_prepare)
   is_weights <- startsWith(names(tables), "weights_")
   weights <- tables[is_weights]
   names(weights) <- vapply(weights, function(tbl) tbl$wave[[1]], character(1))
@@ -108,6 +110,32 @@ tidy_BPIPD_67 <- function(raw_dataset, spec) {
     "had told them the youth has ADHD or ADD (from R_Y_PY0052, PT0052_NB and",
     "PT0052_12M); FALSE if the youth's first interview recorded never told and",
     "no later wave reported it; NA at the first interview"
+  )
+
+  df$chronic_told_before <- bp67_chronic_told_before(df, wave_order)
+  attr(df$chronic_told_before, "label") <- paste(
+    "DERIVED - Parent reported at an earlier wave that a health professional",
+    "had told them the youth has asthma, high blood pressure, high cholesterol",
+    "or diabetes (from R_Y_PY0031, R_Y_PY0050, R_Y_PY0051, R_Y_PY0281 and the",
+    "PT0031, PT0050, PT0051 and PT0281 _NB and _12M items); FALSE if the",
+    "youth's first interview recorded none of the four told and at least one",
+    "never told, and no later wave reported one; NA at the first interview"
+  )
+
+  label <- attr(df$X_CB_REGION, "label")
+  df$X_CB_REGION <- bp67_carry_region(df)
+  attr(df$X_CB_REGION, "label") <- paste0(
+    label,
+    "; carried within youth to the wave just after a recruitment wave (1 to",
+    " 2, 4 to 4.5, 7 to 7.5), about 12 months later"
+  )
+
+  df$sample_component <- bp67_sample_component(df$PERSONID, raw_dataset$data)
+  attr(df$sample_component, "label") <- paste(
+    "DERIVED - Sample the youth was recruited in: Wave 1 sample if listed in",
+    "the Wave 3 ever/never reference file (DS3503, the Wave 1 Cohort), Wave 4",
+    "replenishment sample if added in the Wave 4 file (DS4503), otherwise Wave",
+    "7 replenishment sample"
   )
 
   if (anyDuplicated(df[c("PERSONID", "wave")]) > 0) {
@@ -238,9 +266,32 @@ bp67_adhd_told_before <- function(df, wave_order) {
     (code(df$PT0052_NB) %in% 1) |
     (code(df$PT0052_12M) %in% 1)
   never <- (code(df$R_Y_PY0052) %in% 2) | (code(df$PT0052_NB) %in% 2)
+  bp67_told_before(told, never, df$PERSONID, wave_order)
+}
 
-  o <- order(df$PERSONID, wave_order)
-  id <- df$PERSONID[o]
+#' Whether any of the four chronic conditions was reported at an earlier wave
+bp67_chronic_told_before <- function(df, wave_order) {
+  code <- function(x) readr::parse_number(as.character(x))
+  items <- c("0031", "0050", "0051", "0281")
+  ever <- lapply(items, function(item) {
+    dplyr::coalesce(
+      code(df[[paste0("R_Y_PY", item)]]),
+      code(df[[paste0("PT", item, "_NB")]])
+    )
+  })
+  past_year <- lapply(items, function(item) {
+    code(df[[paste0("PT", item, "_12M")]])
+  })
+  told <- Reduce(`|`, lapply(c(ever, past_year), `%in%`, 1))
+  # Never told: no condition told and at least one answered never told.
+  never <- !told & Reduce(`|`, lapply(ever, `%in%`, 2))
+  bp67_told_before(told, never, df$PERSONID, wave_order)
+}
+
+#' Told at an earlier wave, or never told at the first interview and since
+bp67_told_before <- function(told, never, id, wave_order) {
+  o <- order(id, wave_order)
+  id <- id[o]
   first <- !duplicated(id)
   told_so_far <- stats::ave(as.integer(told[o]), id, FUN = cumsum)
   told_earlier <- (told_so_far - told[o]) > 0
@@ -250,6 +301,30 @@ bp67_adhd_told_before <- function(df, wave_order) {
   out[!first & never_at_first] <- FALSE
   out[told_earlier] <- TRUE
   out[order(o)]
+}
+
+#' Census region carried to the wave just after each recruitment wave
+bp67_carry_region <- function(df) {
+  # Released at waves 1, 4 and 7 only (User Guide 7.1).
+  from <- c("2" = "1", "4.5" = "4", "7.5" = "7")[df$wave]
+  key <- match(paste(df$PERSONID, from), paste(df$PERSONID, df$wave))
+  region <- df$X_CB_REGION
+  fill <- is.na(region) & !is.na(key)
+  region[fill] <- region[key[fill]]
+  region
+}
+
+#' The sample a youth was recruited in, from the ever/never reference files
+bp67_sample_component <- function(personid, data) {
+  # DS3503 lists the Wave 1 Cohort; DS4503 adds the Wave 4 recruits (User
+  # Guide 7.1), so anyone else was recruited at Wave 7.
+  wave1 <- trimws(as.character(data$evernever_w3$PERSONID))
+  wave4 <- trimws(as.character(data$evernever_w4$PERSONID))
+  dplyr::case_when(
+    personid %in% wave1 ~ "Wave 1 sample",
+    personid %in% wave4 ~ "Wave 4 replenishment sample",
+    .default = "Wave 7 replenishment sample"
+  )
 }
 
 #' One wave's file, with the wave prefix stripped from its column names

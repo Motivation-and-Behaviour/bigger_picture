@@ -6,10 +6,10 @@ rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,unavailable,,,Not collected.,,
 survey_strata,unavailable,,,Not collected.,,
 survey_cluster,unavailable,,,Not collected.,,
-family_id,in_progress,,,,,
-sample_component,in_progress,,,,,
+family_id,unavailable,,,One participant per family.,,
+sample_component,unavailable,,,Single sample.,,
 sample_population,inferred,,"""General population""","Quota sample of British 14- and 15-year-olds and their carers from an online panel, matched to the 2011 census (Przybylski & Weinstein 2019, doi:10.1098/rsos.171474).",,
-parent_respondent,in_progress,,,,,
+parent_respondent,compatible,d7,"recode_values(as.numeric(d7), 1 ~ ""Mother"", 2 ~ ""Father"", c(3, 4) ~ ""Other carer"", default = ""Unknown"")","The carer who answered the carer questionnaire (SDQ and demographics): 'What is the relationship between you and [child]?' (d7). Mother = Mother (582), Father = Father (393), 'Guardian/main caregiver' (17) and 'Other' (11; relationship not named) = Other carer, 'Prefer not to say' (1) = Unknown. Single occasion; the gaming items are the adolescent's own.",,
 age_years,compatible,dagechildfinal,as.numeric(as.character(haven::as_factor(dagechildfinal))) + 0.5,"Carer-reported child age in completed years (14 or 15), + 0.5.",,
 sex,compatible,d8,"recode_values(d8, 1 ~ ""Male"", 2 ~ ""Female"", 3 ~ ""Other"", 4 ~ ""Unknown"", default = ""Unknown"")","Carer-reported child gender (D8); 'Another way' -> Other, 'Prefer not to say' -> Unknown.",,
 country,compatible,gor,"recode_values(
@@ -22,7 +22,14 @@ country,compatible,gor,"recode_values(
   default = ""Unknown""
 )","UK Government Office Region (gor) collapsed to nation; Channel Islands (code 14, none observed) -> Unknown.",,
 state,unavailable,,,Not an Australian dataset.,,
-region,in_progress,,,,,
+region,compatible,gor,"recode_values(
+  as.numeric(gor),
+  1 ~ ""GB-SCT"",
+  7 ~ ""GB-WLS"",
+  c(2, 3, 4, 5, 6, 8, 9, 10, 11) ~ ""GB-ENG"",
+  12 ~ ""GB-NIR"",
+  default = ""Unknown""
+)","Government Office Region of residence (gor, from the panel sample or 'Which of these do you live in?') aggregated to its UK nation, as for country: the nine English regions GB-ENG (892), Scotland GB-SCT (68), Wales GB-WLS (44); Northern Ireland GB-NIR, and the Isle of Man and Channel Islands (Unknown, outside the UK nations), none observed. Single occasion.",,
 ethnicity,proximate,d5,"coalesce(
   lookup_values(haven::as_factor(d5), lookup_ethnicity, dataset_id = spec$dataset_id, target_variable = ""ethnicity""),
   ""Unknown""
@@ -36,7 +43,7 @@ minority,proximate,d5,"recode_values(
 )","Carer's own ethnic group (D5) stands in for the child; any White group Non-minority, all other groups Minority, 'Would rather not say' Unknown.",,
 immigrant_background,unavailable,,,Not collected.,,
 born_in_country,unavailable,,,Not collected.,,
-home_language,in_progress,,,,,
+home_language,unavailable,,,Not collected.,,
 ses_area,unavailable,,,Not collected.,,
 ses_household,compatible,d3,"lookup_values(
   haven::as_factor(d3),
@@ -49,8 +56,8 @@ ses_hukou,unavailable,,,Hukou not asked.,,
 maternal_education,unavailable,,,Not collected.,,
 paternal_education,unavailable,,,Not collected.,,
 parental_education,unavailable,,,Not collected.,,
-maternal_employment,in_progress,,,,,
-maternal_age,in_progress,,,,,
+maternal_employment,unavailable,,,Not collected.,,
+maternal_age,compatible,"age, d7","if_else(as.numeric(d7) == 1, as.numeric(age) + 0.5, NA_real_)","The responding carer's own age where the carer is the child's mother (d7 = Mother, 582 rows): 'Age - from DOB' (age), completed years from the panel member's date of birth, + 0.5. Rows answered by a father, guardian, other carer or 'prefer not to say' are NA. Values kept as entered (23-80).",,
 urbanicity,incompatible,gor,,Only Government Office Region collected; can't be collapsed to Urban/Suburban/Rural.,,
 family_structure,unavailable,,,Not collected.,,
 fam_siblings_n,in_progress,,,,,
@@ -97,8 +104,8 @@ fam_home_cogstim,in_progress,,,,,
 fam_home_emotsupport,in_progress,,,,,
 fam_home_measure,in_progress,,,,,
 school_grade,unavailable,,,Not collected.,,
-school_sector,in_progress,,,,,
-school_track,in_progress,,,,,
+school_sector,unavailable,,,Not collected.,,
+school_track,unavailable,,,Not collected.,,
 st_measure_type,inferred,,"""Categorical""",Hours-per-day bands per named game (none to 7+ hours),,
 st_measure_name,inferred,,"""Custom""","Bespoke: usual daily hours for each of top-3 most-played games, past month.",,
 st_responder,inferred,,"""Self""",Gaming items (section A) go to the adolescent; carer answers SDQ and demographics.,,
@@ -219,41 +226,99 @@ st_socmedia,unavailable,,,Not collected.,,
 st_educational_wd,unavailable,,,Not collected.,,
 st_educational_we,unavailable,,,Not collected.,,
 st_educational,unavailable,,,Not collected.,,
-st_leisure_wd,in_progress,,,,,
-st_leisure_we,in_progress,,,,,
-st_leisure,in_progress,,,,,
-st_violent_watch_wd,in_progress,,,,,
-st_violent_watch_we,in_progress,,,,,
-st_violent_watch,in_progress,,,,,
-st_violent_game_wd,in_progress,,,,,
-st_violent_game_we,in_progress,,,,,
-st_violent_game,in_progress,,,,,
-st_violent_watch_index,in_progress,,,,,
-st_violent_game_index,in_progress,,,,,
-st_violent_measure,in_progress,,,,,
-st_educontent_watch_wd,in_progress,,,,,
-st_educontent_watch_we,in_progress,,,,,
-st_educontent_watch,in_progress,,,,,
+st_leisure_wd,unavailable,,,No weekday/weekend split.,,
+st_leisure_we,unavailable,,,No weekday/weekend split.,,
+st_leisure,incompatible,"a6_1, a6_2, a6_3",,"Only single-activity leisure items: usual free-time hours a day playing each named game (a6_1, a6_2, a6_3), on st_game; no all-device leisure item.",,
+st_violent_watch_wd,unavailable,,,Not collected.,,
+st_violent_watch_we,unavailable,,,Not collected.,,
+st_violent_watch,unavailable,,,Not collected.,,
+st_violent_game_wd,unavailable,,,No weekday/weekend split.,,
+st_violent_game_we,unavailable,,,No weekday/weekend split.,,
+st_violent_game,partial,"a2, a4_1, a4_2, a4_3, a6_1, a6_2, a6_3, rc_game_01_rating_PEGI, rc_game_01_violence_PEGI, rc_game_02_rating_PEGI, rc_game_02_violence_PEGI, rc_game_03_rating_PEGI, rc_game_03_violence_PEGI","case_when(
+  as.numeric(a2) == 2 ~ 0,
+  is.na(a4_1) ~ NA,
+  is.na(rc_game_01_rating_PEGI) &
+    is.na(rc_game_01_violence_PEGI) &
+    is.na(rc_game_02_rating_PEGI) &
+    is.na(rc_game_02_violence_PEGI) &
+    is.na(rc_game_03_rating_PEGI) &
+    is.na(rc_game_03_violence_PEGI) ~ NA,
+  .default = if_else(
+    coalesce(as.numeric(a4_1), 0) %in% c(1, 2, 3) & coalesce(as.numeric(rc_game_01_violence_PEGI), 0) == 1,
+    recode_values(as.numeric(a6_1), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
+    0
+  ) +
+    if_else(
+      coalesce(as.numeric(a4_2), 0) %in% c(1, 2, 3) & coalesce(as.numeric(rc_game_02_violence_PEGI), 0) == 1,
+      recode_values(as.numeric(a6_2), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
+      0
+    ) +
+    if_else(
+      coalesce(as.numeric(a4_3), 0) %in% c(1, 2, 3) & coalesce(as.numeric(rc_game_03_violence_PEGI), 0) == 1,
+      recode_values(as.numeric(a6_3), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
+      0
+    )
+)","Adolescent self-report, single occasion: usual free-time hours a day ('About how many hours a day do you usually play [game] in your free time?', a6_1-a6_3) in each of the three games played most in the past month whose PEGI rating carries the violence content descriptor ('The game contains depictions of violence'; official rating coded by the study team, rc_game_0k_violence_PEGI), sum over games (DR-0002), scored as st_game: point labels at their value, half an hour 0.5, top band 'About 7 or more hours a day' = 7. Non-players (a2 = No) 0 (non-users rule); NA where no game was named or no named game has a PEGI rating. Reproduces the study's game_violent_time on all 749 rows where both are set; the study's ESRB-descriptor version (violent_game_time_esrb) is unused, PEGI being the rating its main predictor uses. Partial: the three most-played games only; games without a rating count as non-violent.",,
+st_violent_watch_index,unavailable,,,Not collected.,,
+st_violent_game_index,compatible,"a2, a4_1, a4_2, a4_3, a6_1, a6_2, a6_3, rc_game_01_rating_PEGI, rc_game_01_violence_PEGI, rc_game_02_rating_PEGI, rc_game_02_violence_PEGI, rc_game_03_rating_PEGI, rc_game_03_violence_PEGI","local({
+  answered <- cbind(!is.na(a4_1) | !is.na(a6_1), !is.na(a4_2) | !is.na(a6_2), !is.na(a4_3) | !is.na(a6_3))
+  products <- do.call(
+    cbind,
+    Map(
+      function(a4, a6, rating, violence) {
+        grade <- case_when(
+          is.na(rating) ~ NA_real_,
+          as.numeric(rating) %in% 6 ~ 3,
+          as.numeric(rating) %in% c(4, 5) ~ 2,
+          as.numeric(violence) %in% 1 ~ 1,
+          .default = 0
+        )
+        hours <- if_else(
+          coalesce(as.numeric(a4), 0) %in% c(1, 2, 3),
+          recode_values(as.numeric(a6), 1 ~ 0, 2 ~ 0.5, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5, 8 ~ 6, 9 ~ 7),
+          0
+        )
+        grade * hours
+      },
+      list(a4_1, a4_2, a4_3),
+      list(a6_1, a6_2, a6_3),
+      list(rc_game_01_rating_PEGI, rc_game_02_rating_PEGI, rc_game_03_rating_PEGI),
+      list(rc_game_01_violence_PEGI, rc_game_02_violence_PEGI, rc_game_03_violence_PEGI)
+    )
+  )
+  products[!answered] <- NA
+  rated <- rowSums(!is.na(products))
+  case_when(
+    as.numeric(a2) == 2 ~ 0,
+    rowSums(answered) == 0 ~ NA_real_,
+    2 * rated >= rowSums(answered) ~ rowSums(products, na.rm = TRUE),
+    .default = NA_real_
+  )
+})","Adolescent self-report, single occasion: the study's preregistered PEGI sensitivity score rebuilt from the items, because the released game_sensitive_time multiplies every game by the third game's hours. For each of the three games played most in the past month, a grade from its official PEGI rating as coded by the study team (3 PEGI 18, code 6; 2 PEGI 16 or 17, codes 4-5; 1 violence descriptor 'The game contains depictions of violence'; 0 otherwise; code 6 in games 2-3 is labelled 'PEGI 17' but holds PEGI 18 titles and the study scores it 3) times usual free-time hours a day in it (a6_1-a6_3, scored as st_game: half an hour 0.5, top band 'About 7 or more hours a day' = 7), summed over rated games (range 0-63), higher = more exposure. Used where at least half the games answered about (device or hours given) have a PEGI rating; non-players (a2 = No) 0, the index's no-exposure value; NA where no game was named. Hours of violent gaming (game_violent_time, violent_game_time_esrb) are on st_violent_game.",,
+st_violent_measure,inferred,,"""st_violent_game: 3 named titles (games played most in the past month), hours per day (usual free-time hours a day per game; half an hour 0.5, top band '7 or more' 7), official rating descriptor (PEGI violence descriptor, coded by the study team), sum over titles (range 0-21); items written for the study; games without a PEGI rating count as non-violent; st_violent_game_index: 3 named titles, hours per day, official rating descriptor and age level (PEGI; 0-3), product per title, sum over titles (range 0-63); the study's sensitivity scoring, used where at least half the games answered about have a PEGI rating""","Describes st_violent_game and st_violent_game_index; single occasion, so a constant.",,
+st_educontent_watch_wd,unavailable,,,Not collected.,,
+st_educontent_watch_we,unavailable,,,Not collected.,,
+st_educontent_watch,unavailable,,,Not collected.,,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
 st_internet_wd,unavailable,,,Not collected.,,
 st_internet_we,unavailable,,,Not collected.,,
 st_internet,unavailable,,,Not collected.,,
-st_videochat_wd,in_progress,,,,,
-st_videochat_we,in_progress,,,,,
+st_videochat_wd,unavailable,,,Not collected.,,
+st_videochat_we,unavailable,,,Not collected.,,
 st_videochat,unavailable,,,Not collected.,,
 st_messaging_wd,unavailable,,,Not collected.,,
 st_messaging_we,unavailable,,,Not collected.,,
 st_messaging,unavailable,,,Not collected.,,
-st_creating_wd,in_progress,,,,,
-st_creating_we,in_progress,,,,,
+st_creating_wd,unavailable,,,Not collected.,,
+st_creating_we,unavailable,,,Not collected.,,
 st_creating,unavailable,,,Not collected.,,
-st_email_wd,in_progress,,,,,
-st_email_we,in_progress,,,,,
+st_email_wd,unavailable,,,Not collected.,,
+st_email_we,unavailable,,,Not collected.,,
 st_email,unavailable,,,Not collected.,,
-st_shopping_wd,in_progress,,,,,
-st_shopping_we,in_progress,,,,,
+st_shopping_wd,unavailable,,,Not collected.,,
+st_shopping_we,unavailable,,,Not collected.,,
 st_shopping,unavailable,,,Not collected.,,
 st_total_school,unavailable,,,No item on use at school.,,
 st_educational_school,unavailable,,,No item on use at school.,,
@@ -692,19 +757,19 @@ hlth_sleep_we,unavailable,,,Not collected.,,
 hlth_sleep,unavailable,,,Not collected.,,
 hlth_sleepprob,unavailable,,,Not collected.,,
 hlth_sleepprob_measure,unavailable,,,See hlth_sleepprob.,,
-hlth_sleepprob_singleitem_self,in_progress,,,,,
-hlth_sleepprob_singleitem_parent,in_progress,,,,,
-hlth_bmi,in_progress,,,,,
-hlth_bmi_measure,in_progress,,,,,
-hlth_bmi_z,in_progress,,,,,
-hlth_bmi_z_measure,in_progress,,,,,
-hlth_puberty_status,in_progress,,,,,
-hlth_puberty_measure,in_progress,,,,,
-hlth_maturity_offset,in_progress,,,,,
-hlth_pa_days60,in_progress,,,,,
-hlth_birthweight,in_progress,,,,,
-hlth_preterm,in_progress,,,,,
-hlth_breastfed,in_progress,,,,,
-hlth_prenatalsmoking,in_progress,,,,,
-hlth_chroniccond_diagnosed,in_progress,,,,,
-hlth_disability,in_progress,,,,,
+hlth_sleepprob_singleitem_self,unavailable,,,Not collected.,,
+hlth_sleepprob_singleitem_parent,unavailable,,,Not collected.,,
+hlth_bmi,unavailable,,,Not collected.,,
+hlth_bmi_measure,unavailable,,,See hlth_bmi.,,
+hlth_bmi_z,unavailable,,,Not collected.,,
+hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
+hlth_puberty_status,unavailable,,,Not collected.,,
+hlth_puberty_measure,unavailable,,,See hlth_puberty_status.,,
+hlth_maturity_offset,unavailable,,,Not collected.,,
+hlth_pa_days60,unavailable,,,Not collected.,,
+hlth_birthweight,unavailable,,,Not collected.,,
+hlth_preterm,unavailable,,,Not collected.,,
+hlth_breastfed,unavailable,,,Not collected.,,
+hlth_prenatalsmoking,unavailable,,,Not collected.,,
+hlth_chroniccond_diagnosed,unavailable,,,Not collected.,,
+hlth_disability,unavailable,,,Not collected.,,
