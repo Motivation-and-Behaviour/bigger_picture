@@ -644,7 +644,7 @@ mh_dep_self,compatible,"dep_meaningless, dep_enjoy_life, dep_hopeless, dep_cant_
   na_if(dep_hopeless, -9) +
   na_if(dep_cant_do_right, -9) +
   na_if(dep_life_not_useful, -9)","MTF depressive symptoms scale: 6 Bentler (BMPFI) items, 1-5 agreement (doi:10.1177/2167702617723376). 'I enjoy life as much as anyone' and 'It feels good to be alive' reversed; sum, range 6-30, all six required.",,
-mh_dep_measure,inferred,"dep_enjoy_life, dep_meaningless, dep_good_alive, dep_hopeless, dep_cant_do_right, dep_life_not_useful","""MTF depressive symptoms scale (Bentler items), 6 of 6 items, 1-5 item scoring (range 6-30); 'I enjoy life as much as anyone' and 'It feels good to be alive' reverse-scored""",Describes mh_dep_self.,,
+mh_dep_measure,inferred,"dep_enjoy_life, dep_meaningless, dep_good_alive, dep_hopeless, dep_cant_do_right, dep_life_not_useful","""MTF depressive symptoms scale (Bentler items), 6 of 6 items, 1-5 item scoring (range 6-30), sum; 'I enjoy life as much as anyone' and 'It feels good to be alive' reverse-scored""",Describes mh_dep_self.,,
 mh_anx_self,incompatible,anxious,,No anxiety scale; only the single agreement item 'I often feel anxious' (2019-2024).,,
 mh_anx_measure,unavailable,,,See mh_anx_self.,,
 mh_socanx_self,in_progress,,,,,
@@ -663,7 +663,7 @@ mh_stress_scale_self,in_progress,,,,,
 mh_stress_measure,in_progress,,,,,
 mh_lonely_self,incompatible,dep_lonely,,"'A lot of times I feel lonely' is an agreement item, not a frequency; scored in mh_lonely_scale_self.",,
 mh_lonely_scale_self,compatible,"dep_lonely, lonely_left_out, lonely_wish_friends","na_if(dep_lonely, -9) + na_if(lonely_left_out, -9) + na_if(lonely_wish_friends, -9)","Sum of 3 loneliness items (feel lonely, feel left out, wish for more good friends), 1-5 agreement; range 3-15, all three required. Support-availability items excluded.",,
-mh_lonely_measure,inferred,"dep_lonely, lonely_left_out, lonely_wish_friends","""MTF loneliness items, 3 items ('A lot of times I feel lonely', 'I often feel left out of things', 'I often wish I had more good friends'), 1-5 item scoring (range 3-15), sum""",Describes mh_lonely_scale_self.,,
+mh_lonely_measure,inferred,"dep_lonely, lonely_left_out, lonely_wish_friends","""MTF loneliness items, 3 of 6 items ('A lot of times I feel lonely', 'I often feel left out of things', 'I often wish I had more good friends'; the three support-availability items not used), 1-5 item scoring (range 3-15), sum""",Describes mh_lonely_scale_self.,,
 mh_sad_self,incompatible,covid_sad_change,,"Only a 2021 item on change in sadness since COVID-19, not a frequency rating.",,
 mh_worry_self,incompatible,"anxious, worry_react, covid_worried_change",,"Only 1-5 agreement items, 2019-2024 ('I often feel anxious', 'I often worry about how other people react to me'), and a 2021 item on change in worry since COVID-19; no frequency rating.",,
 mh_irritable_self,incompatible,"temper_control, covid_angry_change, covid_annoyed_change",,"Only an agreement item ('I have trouble controlling my temper', 2019-2024) and 2021 items on change in anger and annoyance since COVID-19; no frequency rating.",,

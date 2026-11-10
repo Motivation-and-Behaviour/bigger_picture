@@ -47,14 +47,14 @@ tidy_BPIPD_2309 <- function(raw_dataset, spec) {
 
   df <- dplyr::bind_rows(
     bp2309_summarise_burst(
-      bp2309_add_totals(burst1, bp2309_platforms_e1()),
+      bp2309_add_totals(burst1, bp2309_platforms_e1(), "StateE1"),
       "E1",
       c(bp2309_items_e1(), bp2309_items_totals()),
       "StateE1",
       "WeekNE1"
     ),
     bp2309_summarise_burst(
-      bp2309_add_totals(burst2, bp2309_platforms_e2()),
+      bp2309_add_totals(burst2, bp2309_platforms_e2(), "StateE2"),
       "E2",
       c(bp2309_items_e2(), bp2309_items_totals()),
       "StateE2",
@@ -136,15 +136,23 @@ bp2309_summarise_burst <- function(beeps, wave, items, state, weekday) {
 }
 
 #' Per-survey platform and set totals in minutes, each capped at 60, as the burst's own paper built them
-bp2309_add_totals <- function(beeps, platforms) {
+bp2309_add_totals <- function(beeps, platforms, state) {
   # A platform sum needs all its items; only the 423 surveys kept from the Valkenburg ESM release answer some and not others.
-  # A set total needs every platform in the set answered, so an adolescent routed past one has none; items are answered only where asked.
-  sets <- c(
-    platforms,
-    list(
-      insta_snap_total = c("instagram_total", "snapchat_total"),
-      three_platform_total = names(platforms)
-    )
+  # A platform's items were asked only of adolescents using it more than once a week, so the others score it 0 on answered surveys.
+  answered <- beeps[[state]] %in% c("completed", "partially completed")
+  flags <- c(
+    instagram_total = "ING01S",
+    whatsapp_total = "WAG01S",
+    snapchat_total = "SNG01S"
+  )
+  for (total in names(platforms)) {
+    beeps[[total]] <- pmin(rowSums(beeps[platforms[[total]]]), 60)
+    beeps[[total]][answered & beeps[[flags[[total]]]] %in% 0] <- 0
+  }
+  # A set total needs every platform in the set answered or routed past.
+  sets <- list(
+    insta_snap_total = c("instagram_total", "snapchat_total"),
+    three_platform_total = names(platforms)
   )
   for (total in names(sets)) {
     beeps[[total]] <- pmin(rowSums(beeps[sets[[total]]]), 60)
@@ -309,31 +317,41 @@ bp2309_items_e2 <- function() {
 #' Wording of the per-survey platform and set totals, the same names in both bursts
 bp2309_items_totals <- function() {
   total <- "%s minutes in the past hour, per survey, capped at 60 (E1 as Valkenburg et al. 2021, J Commun 71(1), pp. 63-64; E2 as Valkenburg et al. 2021, TMB 2(2), Method): %s"
+  routed <- "; 0 on the answered surveys of adolescents not asked (%s = 0, no use more than once a week)"
   c(
     instagram_total = sprintf(
       total,
       "Instagram",
-      "E1 INP01E1 (viewing posts/stories) + INP02E1 (reading direct messages) + INA01E1 (sending direct messages), E2 ING01E2 (time on Instagram)"
+      paste0(
+        "E1 INP01E1 (viewing posts/stories) + INP02E1 (reading direct messages) + INA01E1 (sending direct messages), E2 ING01E2 (time on Instagram)",
+        sprintf(routed, "ING01S")
+      )
     ),
     whatsapp_total = sprintf(
       total,
       "WhatsApp",
-      "E1 WAP01E1 (reading messages) + WAA01E1 (sending messages), E2 WAG01E2 (time on WhatsApp)"
+      paste0(
+        "E1 WAP01E1 (reading messages) + WAA01E1 (sending messages), E2 WAG01E2 (time on WhatsApp)",
+        sprintf(routed, "WAG01S")
+      )
     ),
     snapchat_total = sprintf(
       total,
       "Snapchat",
-      "E1 SNP01E1 (viewing stories) + SNP02E1 (viewing snaps) + SNA01E1 (sending snaps), not SNP03E1 or SNA02E1, E2 SNG01E2 (time on Snapchat)"
+      paste0(
+        "E1 SNP01E1 (viewing stories) + SNP02E1 (viewing snaps) + SNA01E1 (sending snaps), not SNP03E1 or SNA02E1, E2 SNG01E2 (time on Snapchat)",
+        sprintf(routed, "SNG01S")
+      )
     ),
     insta_snap_total = sprintf(
       total,
       "Instagram plus Snapchat",
-      "instagram_total + snapchat_total, only on surveys answering both (adolescents asked about both platforms)"
+      "instagram_total + snapchat_total, NA on surveys missing either (a platform the adolescent was not asked about counts 0)"
     ),
     three_platform_total = sprintf(
       total,
       "Instagram, WhatsApp and Snapchat",
-      "the three platform totals summed, only on surveys answering all three (adolescents asked about all three platforms); the papers' 'time spent with social media' summed the platforms answered"
+      "the three platform totals summed, NA on surveys missing any (a platform the adolescent was not asked about counts 0); the papers' 'time spent with social media' summed the platforms answered"
     )
   )
 }

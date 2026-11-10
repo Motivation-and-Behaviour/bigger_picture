@@ -152,16 +152,16 @@ st_watch_wd,partial,"child_tv_hours_wd, home_a_tv_hours_wd, home_b_tv_hours_wd, 
     )])
   ) >
     0
-  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_wd"")], function(x) replace(x, x %in% 95, 0))
+  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_wd"")], function(x) {
+    replace(replace(x, x %in% 0 & wave %in% c(""1990"", ""1992"", ""1998""), 0.5), x %in% 95, 0)
+  })
   lo <- do.call(pmin, c(forms, na.rm = TRUE))
   hi <- do.call(pmax, c(forms, na.rm = TRUE))
   home <- if_else(lo == hi, lo, NA_real_)
-  if_else(
-    self,
-    replace(replace(child_tv_hours_wd, child_tv_hours_wd %in% 96 & wave == ""1996"", NA), child_tv_hours_wd %in% 95, 0),
-    home
-  )
-})","Self-report rows (any child or young-adult screen hours answered): the child's 'How much time do you spend watching TV on a typical weekday?' (1990-2014); other rows: the mother's HOME report of the child's weekday TV hours, in the home or elsewhere (forms A-D by age, 1990-2016). 95 'do not have a TV' = 0 (non-users rule); the child's undocumented 1996 code 96 = NA; 0 ('< 1' or 'less than 1 hour' in 1990-1998) kept as 0; HOME where 2-4 forms are answered and disagree (1990-2000: 104 weekday, 124 weekend rows), NA. Values above 24 kept. Partial: TV set only.",,
+  child <- replace(child_tv_hours_wd, child_tv_hours_wd %in% 96 & wave == ""1996"", NA)
+  child <- replace(child, child %in% 0 & wave %in% c(""1990"", ""1992"", ""1994"", ""1996"", ""1998"", ""2002""), 0.5)
+  if_else(self, replace(child, child %in% 95, 0), home)
+})","Self-report rows (any child or young-adult screen hours answered): the child's 'How much time do you spend watching TV on a typical weekday?' (1990-2014); other rows: the mother's HOME report of the child's weekday TV hours, in the home or elsewhere (forms A-D by age, 1990-2016). 95 'do not have a TV' = 0 (non-users rule); the child's undocumented 1996 code 96 = NA; code 0 where the codebook labels it '< 1' or 'less than 1 hour' (child 1990-1998 and 2002, HOME 1990, 1992 and 1998) = 0.5 (band rule), and 0 stays 0 where it is unlabelled (child 2004-2014, HOME 1994-1996) or a decimal entry (2000 on); HOME where 2-4 forms are answered and disagree (1990-2000: 104 weekday, 124 weekend rows), NA. Values above 24 kept. Partial: TV set only.",,
 st_watch_we,partial,"child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, home_a_tv_hours_we, home_b_tv_hours_we, home_c_tv_hours_we, home_d_tv_hours_we, child_tv_hours_wd, child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, child_comp_hours_week_workschool, child_comp_hours_week_leisure, ya_tv_hours_week_band, ya_game_hours_week_band, ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure","local({
   self <- rowSums(
     !is.na(tbl[grepl(
@@ -170,12 +170,16 @@ st_watch_we,partial,"child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, 
     )])
   ) >
     0
-  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_we"")], function(x) replace(x, x %in% 95, 0))
+  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_we"")], function(x) {
+    replace(replace(x, x %in% 0 & wave %in% c(""1990"", ""1992"", ""1998""), 0.5), x %in% 95, 0)
+  })
   lo <- do.call(pmin, c(forms, na.rm = TRUE))
   hi <- do.call(pmax, c(forms, na.rm = TRUE))
   home <- if_else(lo == hi, lo, NA_real_)
   child_tv <- lapply(list(child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun), function(x) {
-    replace(replace(x, x %in% 96 & wave == ""1996"", NA), x %in% 95, 0)
+    x <- replace(x, x %in% 96 & wave == ""1996"", NA)
+    x <- replace(x, x %in% 0 & wave %in% c(""1990"", ""1992"", ""1994"", ""1996"", ""1998"", ""2002""), 0.5)
+    replace(x, x %in% 95, 0)
   })
   child_we <- coalesce(child_tv[[2]], (child_tv[[3]] + child_tv[[4]]) / 2)
   if_else(self, child_we, home)
@@ -189,13 +193,17 @@ st_watch,partial,"child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, chil
   ) >
     0
   home_tv <- lapply(c(""wd"", ""we""), function(d) {
-    forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_"", d)], function(x) replace(x, x %in% 95, 0))
+    forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_"", d)], function(x) {
+      replace(replace(x, x %in% 0 & wave %in% c(""1990"", ""1992"", ""1998""), 0.5), x %in% 95, 0)
+    })
     lo <- do.call(pmin, c(forms, na.rm = TRUE))
     hi <- do.call(pmax, c(forms, na.rm = TRUE))
     if_else(lo == hi, lo, NA_real_)
   })
   child_tv <- lapply(list(child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun), function(x) {
-    replace(replace(x, x %in% 96 & wave == ""1996"", NA), x %in% 95, 0)
+    x <- replace(x, x %in% 96 & wave == ""1996"", NA)
+    x <- replace(x, x %in% 0 & wave %in% c(""1990"", ""1992"", ""1994"", ""1996"", ""1998"", ""2002""), 0.5)
+    replace(x, x %in% 95, 0)
   })
   child_we <- coalesce(child_tv[[2]], (child_tv[[3]] + child_tv[[4]]) / 2)
   ya <- c(0, 2.5, 7, 12, 17, 22, 27, 32, 35)[as.numeric(ya_tv_hours_week_band)] / 7
@@ -631,7 +639,7 @@ wb_lifesat_swls_self,unavailable,,,Not in the supplied extract.,,
 wb_lifesat_singleitem_self,unavailable,,,Not in the supplied extract.,,
 wb_lifesat_self,unavailable,,,Not in the supplied extract.,,
 wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
-wb_happiness_singleitem_self,partial,child_feels_happy_freq,4 - as.numeric(child_feels_happy_freq),"1994 only, child self-report (Child Self-Administered Supplement): 'how often do you feel happy', 3 points, reversed (4 - x) so 3 = often, 2 = sometimes, 1 = hardly ever; no recall period stated. Partial: a frequency of feeling happy, not a general happiness rating. Also scored in wb_posaffect_self.",,
+wb_happiness_singleitem_self,incompatible,child_feels_happy_freq,,"Only the 1994 child item 'how often do you feel happy', a frequency of a feeling and an item of the positive-feeling scale scored in wb_posaffect_self, which the schema note excludes; no general happiness rating.",,
 wb_happiness_singleitem_parent,unavailable,,,Not in the supplied extract.,,
 wb_domainsat_schoolwork_self,unavailable,,,Not in the supplied extract.,,
 wb_domainsat_appearance_self,unavailable,,,Not in the supplied extract.,,
@@ -725,12 +733,14 @@ st_watch_wd,partial,"home_a_tv_hours_wd, home_b_tv_hours_wd, home_c_tv_hours_wd,
     )])
   ) >
     0
-  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_wd"")], function(x) replace(x, x %in% 95, 0))
+  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_wd"")], function(x) {
+    replace(replace(x, x %in% 0 & wave %in% c(""1990"", ""1992"", ""1998""), 0.5), x %in% 95, 0)
+  })
   lo <- do.call(pmin, c(forms, na.rm = TRUE))
   hi <- do.call(pmax, c(forms, na.rm = TRUE))
   home <- if_else(lo == hi, lo, NA_real_)
   if_else(self, home, NA_real_)
-})","The mother's HOME weekday TV hours (forms A-D by age) on self-report rows. 95 'do not have a TV' = 0; 0 ('< 1' or 'less than 1 hour' in 1990-1998) kept as 0; where 2-4 forms are answered and disagree (1990-2000: 104 weekday, 124 weekend rows), NA. Values above 24 kept. Partial: TV set only.",,parent
+})","The mother's HOME weekday TV hours (forms A-D by age) on self-report rows. 95 'do not have a TV' = 0; code 0 where the codebook labels it '< 1' or 'less than 1 hour' (1990, 1992 and 1998) = 0.5 (band rule), and 0 stays 0 where it is unlabelled (1994-1996) or a decimal entry (2000 on); where 2-4 forms are answered and disagree (1990-2000: 104 weekday, 124 weekend rows), NA. Values above 24 kept. Partial: TV set only.",,parent
 st_watch_we,partial,"home_a_tv_hours_we, home_b_tv_hours_we, home_c_tv_hours_we, home_d_tv_hours_we, child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, child_tv_hours_sun, child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, child_comp_hours_week_workschool, child_comp_hours_week_leisure, ya_tv_hours_week_band, ya_game_hours_week_band, ya_comp_hours_week_band, ya_comp_hours_week_workschool, ya_comp_hours_week_leisure","local({
   self <- rowSums(
     !is.na(tbl[grepl(
@@ -739,7 +749,9 @@ st_watch_we,partial,"home_a_tv_hours_we, home_b_tv_hours_we, home_c_tv_hours_we,
     )])
   ) >
     0
-  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_we"")], function(x) replace(x, x %in% 95, 0))
+  forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_we"")], function(x) {
+    replace(replace(x, x %in% 0 & wave %in% c(""1990"", ""1992"", ""1998""), 0.5), x %in% 95, 0)
+  })
   lo <- do.call(pmin, c(forms, na.rm = TRUE))
   hi <- do.call(pmax, c(forms, na.rm = TRUE))
   home <- if_else(lo == hi, lo, NA_real_)
@@ -754,7 +766,9 @@ st_watch,partial,"home_a_tv_hours_wd, home_a_tv_hours_we, home_b_tv_hours_wd, ho
   ) >
     0
   home_tv <- lapply(c(""wd"", ""we""), function(d) {
-    forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_"", d)], function(x) replace(x, x %in% 95, 0))
+    forms <- lapply(tbl[paste0(""home_"", c(""a"", ""b"", ""c"", ""d""), ""_tv_hours_"", d)], function(x) {
+      replace(replace(x, x %in% 0 & wave %in% c(""1990"", ""1992"", ""1998""), 0.5), x %in% 95, 0)
+    })
     lo <- do.call(pmin, c(forms, na.rm = TRUE))
     hi <- do.call(pmax, c(forms, na.rm = TRUE))
     if_else(lo == hi, lo, NA_real_)

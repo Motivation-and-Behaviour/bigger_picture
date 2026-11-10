@@ -600,7 +600,7 @@ mh_dep_self,compatible,"YPSY4E01, YPSY4E02, YPSY4E03, YPSY4E04, YPSY4E05, YPSY4E
   as.numeric(YPSY4E08) +
   as.numeric(YPSY4E09) +
   as.numeric(YPSY4E10))",Same total as mh_dep_scl_self.,,
-mh_dep_measure,inferred,,"""SCL-90-R depression subscale, Korean 10-item short form, 10 of 10 items, 1-4 item scoring from strongly disagree to strongly agree (range 10-40), no reverse-scored items""",Describes mh_dep_self.,,
+mh_dep_measure,inferred,,"""SCL-90-R depression subscale, Korean 10-item short form, 10 of 10 items, 1-4 item scoring from strongly disagree to strongly agree (range 10-40), sum, no reverse-scored items""",Describes mh_dep_self.,,
 mh_anx_self,incompatible,YPSY4E03,,"Only 'worry a lot' (YPSY4E03), a 1-4 agreement item scored in mh_dep_scl_self; see mh_worry_self.",,
 mh_anx_measure,unavailable,,,See mh_anx_self.,,
 mh_socanx_self,in_progress,,,,,
@@ -699,7 +699,7 @@ wb_selfesteem_self,compatible,"YPSY3A01, YPSY3A02, YPSY3A03, YPSY3A04, YPSY3A05,
   (5 - as.numeric(YPSY3A08)) +
   (5 - as.numeric(YPSY3A09)) +
   as.numeric(YPSY3A10))",Same total as wb_selfesteem_rosenberg_self.,,
-wb_selfesteem_measure,inferred,,"""Rosenberg Self-Esteem Scale, 10 of 10 items, 1-4 item scoring (range 10-40), items 2, 5, 6, 8 and 9 reverse-scored""",Describes wb_selfesteem_self.,,
+wb_selfesteem_measure,inferred,,"""Rosenberg Self-Esteem Scale, 10 of 10 items, 1-4 item scoring (range 10-40), sum, items 2, 5, 6, 8 and 9 reverse-scored""",Describes wb_selfesteem_self.,,
 wb_selfefficacy_gse_self,unavailable,,,GSE not administered; see wb_selfefficacy_self.,,
 wb_selfefficacy_self,incompatible,"YINT2A09, YINT2A10, YINT2A11, YINT2A12",,"Only the efficacy items of the academic enthusiasm scale (YINT2A09-A12), mapped to wb_selfefficacy_academic_self; no general self-efficacy measure.",,
 wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,

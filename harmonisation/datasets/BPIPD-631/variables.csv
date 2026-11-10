@@ -390,10 +390,7 @@ beh_beenbullied,compatible,"ypfrpbulli, ypfrobulli","local({
 beh_beenbullied_online,compatible,ypnetbulli,"recode_values(as.numeric(ypnetbulli), 1 ~ ""FALSE"", c(2, 3, 4) ~ ""TRUE"")","UKHLS waves 13, 15: how often bullied online (e.g. hurtful names, nasty stories). Scale as beh_bullied; TRUE for any occurrence.",,
 beh_bullied_online,compatible,ypnetbully,"recode_values(as.numeric(ypnetbully), 1 ~ ""FALSE"", c(2, 3, 4) ~ ""TRUE"")","UKHLS waves 13, 15: bullies others online (e.g. hurtful names, nasty stories). Scale as beh_bullied; TRUE for any occurrence.",,
 beh_fight,compatible,ypfght,"recode_values(as.numeric(ypfght), 1 ~ ""FALSE"", c(2, 3, 4, 5) ~ ""TRUE"")","'Number of times fighting in the past month', every BHPS wave and UKHLS waves 3, 5, 7, 10, 12, 14. TRUE for any fight.",,
-beh_truancy,partial,"yptruant, yptrun","coalesce(
-  recode_values(as.numeric(yptruant), 1 ~ ""TRUE"", 2 ~ ""FALSE""),
-  recode_values(as.numeric(yptrun), 1 ~ ""FALSE"", c(2, 3, 4) ~ ""TRUE"")
-)","UKHLS every wave: played truant in the last 12 months, even a half day or single lesson (yes/no). BHPS waves 7-18: 'played truant from school' (never/once or twice/several times/often), TRUE for any occurrence. Partial: BHPS recall period undocumented (likely past year, asked beside the past-year vandalism item).",,
+beh_truancy,compatible,yptruant,"recode_values(as.numeric(yptruant), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","UKHLS only, every wave, self-report: 'In the last 12 months, have you ever played truant, that is missed school without permission, even if it was only for a half day or single lesson?' (yptruant, yes/no); past 12 months. The BHPS item 'played truant from school' (yptrun, waves 7-18; never, once or twice, several times, often) is not used: the supplied documentation gives no recall period for it, and a yes/no row keeps the 12-month series alone.",,
 beh_suspended,in_progress,,,,,
 beh_stealing,partial,ypshop,"recode_values(as.numeric(ypshop), 1 ~ ""FALSE"", c(2, 3, 4) ~ ""TRUE"")","UKHLS waves 3, 5, 7, 10, 12, 14: taken something from a shop without paying, past year (never/once or twice/several times/often); TRUE for any occurrence. Partial: shoplifting only. BHPS has no stealing item.",,
 beh_vandalism,compatible,ypvand,"recode_values(as.numeric(ypvand), 1 ~ ""FALSE"", c(2, 3, 4) ~ ""TRUE"")","UKHLS waves 3, 5, 7, 10, 12, 14: deliberately broken or damaged property not yours, past year. BHPS waves 7-11, 17: 'vandalised property in past year'. Both never/once or twice/several times/often; TRUE for any occurrence.",,
@@ -406,14 +403,14 @@ beh_alcohol_self,compatible,"ypdklm, ypevralc, ypdklm_bh","case_when(
   .default = NA
 )","UKHLS: times had an alcoholic drink in the last 4 weeks (ypdklm); never-drinkers (ypevralc 2) routed past it are FALSE. BHPS waves 5-8, 15, 17-18: alcoholic drinks in the past month (ypdklm_bh). TRUE for any occurrence. Recall 4 weeks / 1 month.",,
 beh_tobacco_self,partial,"ypevrsmo, ypsmofrq, ypsmof, ypsmev","case_when(
+  ypevrsmo == 1 | ypsmofrq %in% 1:5 ~ TRUE,
   ypevrsmo == 2 ~ FALSE,
-  ypsmofrq %in% 1:2 ~ FALSE,
-  ypsmofrq %in% 3:5 ~ TRUE,
-  ypsmof %in% 1:3 ~ FALSE,
-  ypsmof %in% 4:5 ~ TRUE,
+  ypsmof %in% 2:5 ~ TRUE,
+  ypsmof == 1 ~ FALSE,
+  ypsmev == 1 ~ TRUE,
   ypsmev == 2 ~ FALSE,
   .default = NA
-)","Current cigarette smoking. UKHLS: ever smoked (ypevrsmo) then smoking frequency (ypsmofrq); BHPS: how often do you smoke (ypsmof), never-tried (ypsmev 2) FALSE. Sometimes or regularly TRUE; never, once or twice, or used to FALSE. Current status with no stated recall, so partial.",,
+)","Self-report smoking-status ladders, read as lifetime occurrence: every level above never is TRUE. UKHLS: 'Do you ever smoke cigarettes at all?' (ypevrsmo; no FALSE), then the statement that describes you best (ypsmofrq: smoked only once or twice, used to smoke but don't now, sometimes but not every week, 1-6 a week, more than 6 a week), all TRUE. BHPS: 'how often do you smoke?' (ypsmof: never smoked FALSE; only once or twice, used to and given it up, sometimes, regularly TRUE); 'have you ever tried a cigarette?' (ypsmev) fills only where ypsmof is unanswered. Partial: lifetime occurrence, no recall window.",,
 beh_vaping_self,in_progress,,,,,
 beh_cannabis_self,partial,ypdrgmj,"case_when(ypdrgmj == 1 ~ TRUE, ypdrgmj == 2 ~ FALSE, .default = NA)","UKHLS waves 2, 4, ..., 14: 'Have you ever tried any of the following? Cannabis' (ypdrgmj), yes/no. Lifetime, so partial.",,
 beh_drugs_self,in_progress,,,,,
@@ -620,8 +617,8 @@ mh_stress_scale_self,in_progress,,,,,
 mh_stress_measure,in_progress,,,,,
 mh_lonely_self,proximate,"yplonely, yplone","coalesce(
   recode_values(as.numeric(yplonely), 1 ~ ""Rarely"", 2 ~ ""Sometimes"", 3 ~ ""Always""),
-  recode_values(as.numeric(yplone), 1 ~ ""Always"", 2 ~ ""Often"", 3 ~ ""Sometimes"", 4 ~ ""Rarely"")
-)","UKHLS waves 12-15: 'How often do you feel lonely?' (hardly ever or never, some of the time, all of the time). BHPS waves 5-11: very often, quite often, occasionally, hardly ever. No recall period. Proximate: neither scale has five levels; hardly ever or never = Rarely, Never unused.",,
+  recode_values(as.numeric(yplone), 1 ~ ""Always"", c(2, 3) ~ ""Sometimes"", 4 ~ ""Rarely"")
+)","UKHLS waves 12-15: 'How often do you feel lonely?' (hardly ever or never, some of the time, all of the time). BHPS waves 5-11: 'how often feel lonely?' (very often, quite often, occasionally, hardly ever); 'quite often' sits under the intensified 'very often', so it steps down to Sometimes beside occasionally. No recall period. Proximate: neither scale has five levels; hardly ever or never = Rarely; Often and Never unused.",,
 mh_lonely_scale_self,incompatible,"yplonely, yplone",,Single loneliness items only; mapped to mh_lonely_self.,,
 mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
 mh_sad_self,proximate,ypsad_bd,"recode_values(as.numeric(ypsad_bd), 1 ~ ""Never"", 2 ~ ""Rarely"", 3 ~ ""Sometimes"", 4 ~ ""Often"")","BHPS waves 4-11, 16: 'how many days have you felt unhappy?' (none, 1-3, 4-10, 11+); recall period undocumented. Bands map to Never/Rarely/Sometimes/Often; Always never emitted. BHPS wave 18 ypsad (days felt depressed) not used: different wording, one wave.",,

@@ -5,7 +5,7 @@ data_year,inferred,,2018,"No per-row date. Fieldwork over three years, 2017-2019
 rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,unavailable,,,Not a survey sample.,,
 survey_strata,unavailable,,,Not a survey sample.,,
-survey_cluster,unavailable,,,Not a survey sample.,,
+survey_cluster,partial,SC_School,as.character(as.numeric(SC_School)),"'School of participant' (SC_School), 19 codes; code 12, labelled only 'a' (62 students), is kept as one school: its rows share one School Vulnerability Index (SC_SVI 40.34) and school type (voucher) that no named school has, and one block of case numbers. Partial: schools were the recruitment units (open invitation to schools), but how they were chosen is not documented, so the school id stands as the cluster until the design is confirmed.",,
 family_id,unavailable,,,Not collected.,,
 sample_component,unavailable,,,Single sample.,,
 sample_population,inferred,,"""General population""","Students from public, voucher and private schools in Valparaiso, Chile, recruited by open invitation to schools (Cogni-Action protocol, Solis-Urra et al.).",,

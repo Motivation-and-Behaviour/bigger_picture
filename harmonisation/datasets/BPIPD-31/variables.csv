@@ -374,19 +374,19 @@ beh_beenbullied,compatible,"bullied_mean, bullied_hit, bullied_took, bullied_exc
 )","Years 9 and 15 only. Self-reported four-item peer-victimisation checklist (picked on or said mean things, hit or threatened, took things, left out): TRUE if any is above never, FALSE if every answered item is never, NA if none is answered. Year 9 past month; Year 15 this school year, kids at school (home-schooled code 7 becomes NA).",,
 beh_beenbullied_online,unavailable,,,Not collected.,,
 beh_bullied_online,unavailable,,,Not collected.,,
-beh_fight,partial,"fist_fight, serious_fight","case_when(
-  as.numeric(fist_fight) %in% 1 ~ ""TRUE"",
-  as.numeric(fist_fight) %in% 2 ~ ""FALSE"",
+beh_fight,partial,serious_fight,"case_when(
   as.numeric(serious_fight) %in% c(2, 3, 4) ~ ""TRUE"",
   as.numeric(serious_fight) %in% 1 ~ ""FALSE"",
   .default = NA_character_
-)","Self-reported fighting, Years 9 and 15. Year 9: ever had a fist fight (yes/no); Year 15: times in a serious physical fight (Add Health frequency scale), TRUE for one or more. Partial: different items and windows; Year 9's lifetime frame reads higher than a bounded window.",,
-beh_truancy,partial,skipped_school,"recode_values(as.numeric(skipped_school), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_)","Years 9 and 15 only. Year 9 'skipped school without an excuse' (yes/no, no recall period); Year 15 skipped school during the school year (K6B27; home-schooled becomes NA). Partial: no recall period at Year 9.",,
+)","Year 15 only. Youth self-report, past 12 months (Add Health delinquency item): times gotten into a serious physical fight (never, 1 or 2, 3 or 4, 5 or more times); TRUE for one or more. Partial: serious fights only. Year 9 'had a fist fight with another person' (fist_fight, yes/no, no recall period) unused: a yes/no row never fills a wave the 12-month item missed with an item of no recall period.",,
+beh_truancy,compatible,"skipped_school, wave","if_else(
+  wave == ""Year 15"",
+  recode_values(as.numeric(skipped_school), 1 ~ ""TRUE"", 2 ~ ""FALSE"", default = NA_character_),
+  NA_character_
+)","Year 15 only. Youth self-report, yes/no: 'ever skipped school during school year?' (K6B27; home-schooled becomes NA); school-year recall. Year 9 'skipped school without an excuse' (K5F1I, yes/no, no recall period), which shares the skipped_school column, unused: a yes/no row never fills a wave the school-year item missed with an item of no recall period.",,
 beh_suspended,in_progress,,,,,
-beh_stealing,partial,"ever_stole, ever_took_money_home, shoplifted, stole_over_50, stole_under_50, burgled","if_else(
+beh_stealing,compatible,"shoplifted, stole_over_50, stole_under_50, burgled","if_else(
   sum_nonmissing(
-    2 - as.numeric(ever_stole),
-    2 - as.numeric(ever_took_money_home),
     as.numeric(shoplifted) - 1,
     as.numeric(stole_over_50) - 1,
     as.numeric(stole_under_50) - 1,
@@ -395,19 +395,8 @@ beh_stealing,partial,"ever_stole, ever_took_money_home, shoplifted, stole_over_5
     0,
   ""TRUE"",
   ""FALSE""
-)","Years 9 and 15 only. Year 9 stolen from a person or store, or taken money at home (yes/no, no recall period); Year 15 shoplifting, theft under or over $50, or burglary, past 12 months. TRUE for any occurrence. Excluded: fare evasion (K5F1P), using a weapon to get something (K6D61I), driving a car without permission (K6D61F). Partial: no recall period at Year 9.",,
-beh_vandalism,partial,"ever_damaged_property, ever_graffiti, ever_set_fire, graffiti, damaged_property","if_else(
-  sum_nonmissing(
-    2 - as.numeric(ever_damaged_property),
-    2 - as.numeric(ever_graffiti),
-    2 - as.numeric(ever_set_fire),
-    as.numeric(graffiti) - 1,
-    as.numeric(damaged_property) - 1
-  ) >
-    0,
-  ""TRUE"",
-  ""FALSE""
-)","Years 9 and 15 only. Year 9 purposely damaged property, wrote or sprayed graffiti, or set fire to a building, car or other property (yes/no, no recall period); Year 15 graffiti or deliberate damage to others' property, past 12 months. TRUE for any occurrence. Partial: no recall period at Year 9.",,
+)","Year 15 only. Youth self-report, past 12 months (Add Health delinquency items, never to 5 or more times): taken something from a store without paying, stolen something worth more or less than $50, or gone into a house or building to steal something. TRUE if any is once or more, FALSE if every answered item is never. Excluded: using a weapon to get something (K6D61I), driving a car without permission (K6D61F). Year 9 'taken or stolen something from another person or from a store' (ever_stole) and 'taken money at home' (ever_took_money_home), yes/no with no recall period, unused: a yes/no row never fills a wave the 12-month items missed with items of no recall period.",,
+beh_vandalism,compatible,"graffiti, damaged_property","if_else(sum_nonmissing(as.numeric(graffiti) - 1, as.numeric(damaged_property) - 1) > 0, ""TRUE"", ""FALSE"")","Year 15 only. Youth self-report, past 12 months (Add Health delinquency items, never to 5 or more times): painted graffiti or signs on someone else's property or in a public place, or deliberately damaged property that didn't belong to you. TRUE if either is once or more, FALSE if every answered item is never. Year 9 'purposely damaged or destroyed property that wasn't yours', 'written things or spray painted on walls or sidewalks or cars' and 'purposely set fire to a building, a car, or other property or tried to do so' (ever_damaged_property, ever_graffiti, ever_set_fire), yes/no with no recall period, unused: a yes/no row never fills a wave the 12-month items missed with items of no recall period.",,
 beh_alcohol_self,partial,"teen_alcohol_ever, teen_alcohol_freq30d","case_when(
   as.numeric(teen_alcohol_ever) == 2 ~ ""FALSE"",
   as.numeric(teen_alcohol_ever) == 1 & as.numeric(teen_alcohol_freq30d) == 1 ~ ""FALSE"",
@@ -436,7 +425,7 @@ beh_aggphys_bpaq_self,unavailable,,,The Buss-Perry Aggression Questionnaire was 
 beh_aggverb_bpaq_self,unavailable,,,The Buss-Perry Aggression Questionnaire was not administered.,,
 beh_agganger_bpaq_self,unavailable,,,The Buss-Perry Aggression Questionnaire was not administered.,,
 beh_agghostility_bpaq_self,unavailable,,,The Buss-Perry Aggression Questionnaire was not administered.,,
-beh_agg_self,incompatible,"fist_fight, serious_fight",,"Fighting items only, mapped to beh_fight; no aggression scale.",,
+beh_agg_self,incompatible,"fist_fight, serious_fight",,"Fighting items only (serious_fight mapped to beh_fight; Year 9 fist_fight unused there); no aggression scale.",,
 beh_agg_measure,unavailable,,,See beh_agg_self.,,
 beh_aggphys_self,in_progress,,,,,
 beh_aggphys_measure,in_progress,,,,,
@@ -473,13 +462,7 @@ beh_persistence_finishwork,proximate,follows_through,"recode_values(
   default = NA_character_
 )","Year 9 only. Child self-report 'I follow things through to the end', mapped by rank: never -> Never, rarely -> Sometimes, sometimes -> Usually, always -> Always. Proximate: the source anchors never/rarely/sometimes/always match the middle levels by position, not wording.",,
 beh_emotreg_stayscalm,incompatible,selfdesc_angry_learning,,"Nearest item, Year 9 child 'I feel angry when I have trouble learning something' (truth rating), is about the reaction rather than its regulation; mapped nowhere.",,
-beh_peerprob_makefriends,proximate,makes_friends_easily,"recode_values(
-  as.numeric(makes_friends_easily),
-  3 ~ ""No difficulty"",
-  2 ~ ""A little difficulty"",
-  1 ~ ""A lot of difficulty"",
-  default = NA_character_
-)","Year 15 self-report 'I make friends easily', from the FFCWS adaptation of the Social Skills Rating System assertion scale, reversed onto the schema's difficulty wording. Proximate: the item asks about ease of making friends only, not keeping them, and carries no same-age-peer comparison. Year 15 only.",,
+beh_peerprob_makefriends,incompatible,makes_friends_easily,,"Only Year 15 youth self-report 'I make friends easily', a truth rating (not true, sometimes true, often true) from the study's adaptation of the SSRS assertion items; truth-rated items are incompatible on this row.",,
 beh_conduct_diagnosed,unavailable,,,Diagnosed behavioural or conduct problems are not asked about.,,
 beh_conduct_diagnosed_severity,unavailable,,,Diagnosed behavioural or conduct problems are not asked about.,,
 beh_adhd_diagnosed,in_progress,,,,,

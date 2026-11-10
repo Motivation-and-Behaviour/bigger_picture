@@ -531,9 +531,24 @@ beh_socialskills_parent,in_progress,,,,,
 beh_prosocial_singleitem_teacher,in_progress,,,,,
 beh_empathy_self,in_progress,,,,,
 beh_empathy_measure,in_progress,,,,,
-beh_problematicuse_self,compatible,"DCaddictMN, QC144a, QC144b, QC144c, QC144d, QC144e",as.numeric(haven::zap_labels(DCaddictMN)),"Ages 11-16 only. DCaddictMN: study's mean of the five excessive internet use items QC144a-e (past 12 months; never/almost never 1 to very often 4 after reversing the source codes), scored when at least 2 of 5 are answered (checked against the items).",,
+beh_problematicuse_self,compatible,"DCaddictMN, QC144a, QC144b, QC144c, QC144d, QC144e","if_else(
+  rowSums(
+    cbind(
+      as.numeric(haven::zap_labels(QC144a)),
+      as.numeric(haven::zap_labels(QC144b)),
+      as.numeric(haven::zap_labels(QC144c)),
+      as.numeric(haven::zap_labels(QC144d)),
+      as.numeric(haven::zap_labels(QC144e))
+    ) >
+      0,
+    na.rm = TRUE
+  ) >=
+    3,
+  as.numeric(haven::zap_labels(DCaddictMN)),
+  NA_real_
+)","Ages 11-16 only. DCaddictMN: study's mean of the five excessive internet use items QC144a-e (past 12 months; never/almost never 1 to very often 4 after reversing the source codes), released when at least 2 of 5 are answered (checked against the items) and used only where at least 3 of 5 were answered (codes above 0).",,
 beh_problematicuse_parent,in_progress,,,,,
-beh_problematicuse_measure,inferred,DCaddictMN,"""EU Kids Online excessive internet use scale (internet), 5 of 5 items, 1-4 item scoring (range 1-4), mean, supplied already keyed (source item codes reversed by the study); past 12 months""",Names the source measure behind beh_problematicuse_self.,,
+beh_problematicuse_measure,inferred,DCaddictMN,"""EU Kids Online excessive internet use scale (internet), 5 of 5 items, 1-4 item scoring (range 1-4), mean of the answered items, used only where at least 3 of 5 were answered, supplied already keyed (source item codes reversed by the study); past 12 months""",Names the source measure behind beh_problematicuse_self.,,
 cog_execfunc_basc2,unavailable,,,BASC-2 not administered.,,
 cog_langexec_nepsy,unavailable,,,No cognitive testing.,,
 cog_phono_nepsy,unavailable,,,No cognitive testing.,,
@@ -719,8 +734,22 @@ wb_selfesteem_singleitem_self,in_progress,,,,,
 wb_selfesteem_self,unavailable,,,Not collected.,,
 wb_selfesteem_measure,unavailable,,,Not collected.,,
 wb_selfefficacy_gse_self,incompatible,"QC104a, QC104h, QC106c, QC106f",,"4 of 10 GSE items on a 3-point truth scale, so no 10-40 total. Subset mapped to wb_selfefficacy_self.",,
-wb_selfefficacy_self,compatible,"DCSEMN, QC104a, QC104h, QC106c, QC106f","na_if(DCSEMN, -96)","Study's mean DCSEMN of four GSE items (unexpected problems, stick to aims, think of something to do, handle new situations), Not true/A bit true/Very true = 1/2/3, none reversed. Mean of the answered items, scored when at least 1 of 4 is answered (checked against the items); -96 (none answered) = NA.",,
-wb_selfefficacy_measure,inferred,DCSEMN,"""General Self-Efficacy Scale, 4 of 10 items, 1-3 item scoring (range 1-3), mean, no reverse-scored items; 3-point truth scale (not true, a bit true, very true) instead of the published 4-point scale""",Names the source measure behind wb_selfefficacy_self.,,
+wb_selfefficacy_self,compatible,"DCSEMN, QC104a, QC104h, QC106c, QC106f","if_else(
+  rowSums(
+    cbind(
+      as.numeric(haven::zap_labels(QC104a)),
+      as.numeric(haven::zap_labels(QC104h)),
+      as.numeric(haven::zap_labels(QC106c)),
+      as.numeric(haven::zap_labels(QC106f))
+    ) >
+      0,
+    na.rm = TRUE
+  ) >=
+    2,
+  na_if(DCSEMN, -96),
+  NA_real_
+)","Study's mean DCSEMN of four GSE items (unexpected problems, stick to aims, think of something to do, handle new situations), Not true/A bit true/Very true = 1/2/3, none reversed. Mean of the answered items, released when at least 1 of 4 is answered (checked against the items) and used only where at least 2 of 4 were answered (codes above 0); -96 (none answered) = NA.",,
+wb_selfefficacy_measure,inferred,DCSEMN,"""General Self-Efficacy Scale, 4 of 10 items, 1-3 item scoring (range 1-3), mean of the answered items, used only where at least 2 of 4 were answered, no reverse-scored items; 3-point truth scale (not true, a bit true, very true) instead of the published 4-point scale""",Names the source measure behind wb_selfefficacy_self.,,
 wb_selfefficacy_academic_self,in_progress,,,,,
 wb_selfefficacy_academic_measure,in_progress,,,,,
 wb_control_self,in_progress,,,,,

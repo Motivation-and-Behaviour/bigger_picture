@@ -1,7 +1,7 @@
 target_variable,status,source_columns,expression,notes,lookup_table,measure
-participant_id,compatible,FID,"sprintf(""%.0f"", FID)","Family ID (FID, 1001-1613), numeric; one child per family, same id at every wave.",,
-wave,compatible,wave,as.character(wave),"Study's assessment token from the wave-suffixed source columns: 1 = baseline, then 4, 8 and 12 months after baseline. The 2-week assessment in the measures list is not in the extract.",,
-data_year,inferred,,2015,"No interview dates in the file or the study folder. The paper reports the data were collected in 2014-2015, with follow-ups 4, 8 and 12 months after baseline (Rojo-Wissar et al. 2024, doi:10.1111/camh.12665, Method and Limitations); 2015 is the midpoint of that window, one constant for every wave.",,
+participant_id,compatible,FID,"sprintf(""%.0f"", FID)","Family ID (FID, 1001-1613), numeric; one child per family.",,
+wave,unavailable,,,"Single collection occasion: only the baseline is harmonised; the 4-, 8- and 12-month follow-ups asked no disaggregated screen-time item.",,
+data_year,inferred,,2015,"No interview dates in the file or the study folder. The paper reports the data were collected in 2014-2015, with follow-ups 4, 8 and 12 months after baseline (Rojo-Wissar et al. 2024, doi:10.1111/camh.12665, Method and Limitations); 2015 is the midpoint of that window, one constant for the baseline rows.",,
 rct_arm,unavailable,,,Not a randomised trial.,,
 survey_weight,unavailable,,,Not a survey sample.,,
 survey_strata,unavailable,,,Not a survey sample.,,
@@ -10,43 +10,28 @@ family_id,in_progress,,,,,
 sample_component,in_progress,,,,,
 sample_population,inferred,,"""General population""","US parents of children aged 3-17 recruited through Amazon Mechanical Turk, a community sample with no clinical screening (Rojo-Wissar et al. 2024, doi:10.1111/camh.12665).",,
 parent_respondent,in_progress,,,,,
-age_years,partial,"agechild_1, FID, wave","agechild_1 + if_else(FID %in% FID[wave == ""1"" & agechild_1 %% 1 != 0], 0, 0.5)","Parent report 'How old is child in years' (agechild_1): completed years at baseline (3-17), + 0.5; one child's baseline entry of 4.5, a decimal age, is taken as entered at every wave (no + 0.5). Waves 4, 8 and 12 hold baseline age + months since baseline / 12, filled in the tidier because no follow-up asked age, so the row is partial.",,
-sex,compatible,"genderC_1, FID","coalesce(
-  modal_within(recode_values(as.numeric(haven::zap_labels(genderC_1)), 1 ~ ""Female"", 2 ~ ""Male""), FID),
-  ""Unknown""
-)","Parent report 'What is this child's gender?' (genderC_1: 1 Female, 2 Male), asked at baseline only; every wave takes the participant's modal value (carry-forward rule).",,
+age_years,compatible,agechild_1,"agechild_1 + if_else(agechild_1 %% 1 != 0, 0, 0.5)","Parent report 'How old is child in years' (agechild_1), baseline: completed years (3-17), + 0.5; one child's entry of 4.5, a decimal age, is taken as entered (no + 0.5).",,
+sex,compatible,genderC_1,"coalesce(recode_values(as.numeric(haven::zap_labels(genderC_1)), 1 ~ ""Female"", 2 ~ ""Male""), ""Unknown"")","Parent report 'What is this child's gender?' (genderC_1: 1 Female, 2 Male), baseline.",,
 country,inferred,,"""USA""","No country variable; families recruited online through Amazon Mechanical Turk with a US-residency requirement (Rojo-Wissar et al. 2024, doi:10.1111/camh.12665, Method).",,
 state,unavailable,,,Not an Australian dataset.,,
 region,in_progress,,,,,
-ethnicity,proximate,"raceP_1, FID, wave","coalesce(
-  carry_within(
-    lookup_values(
-      haven::as_factor(raceP_1),
-      lookup_ethnicity,
-      dataset_id = spec$dataset_id,
-      target_variable = ""ethnicity""
-    ),
-    FID,
-    order = as.numeric(wave)
+ethnicity,proximate,raceP_1,"coalesce(
+  lookup_values(
+    haven::as_factor(raceP_1),
+    lookup_ethnicity,
+    dataset_id = spec$dataset_id,
+    target_variable = ""ethnicity""
   ),
   ""Unknown""
-)","The responding parent's own group ('Which of the following groups describe you?', raceP_1, one answer per parent, baseline only), used for the child as the study's paper does; carried to later waves. Shared ethnicity lookup: White, Black/African American, Asian and Hispanic as named (a US sample); American Indian or Alaska Native, Native Hawaiian and Other Pacific Islander = Other. No mixed option. Missing (3 children) = Unknown. Proximate: a parent's own ethnicity used for the child.",ethnicity,
-indigenous,partial,"raceP_1, FID, wave","coalesce(
-  carry_within(
-    recode_values(as.numeric(haven::zap_labels(raceP_1)), 3 ~ ""Indigenous"", c(1, 2, 4, 5, 6, 7) ~ ""Non-Indigenous""),
-    FID,
-    order = as.numeric(wave)
-  ),
+)","The responding parent's own group ('Which of the following groups describe you?', raceP_1, one answer per parent, baseline), used for the child as the study's paper does. Shared ethnicity lookup: White, Black/African American, Asian and Hispanic as named (a US sample); American Indian or Alaska Native, Native Hawaiian and Other Pacific Islander = Other. No mixed option. Missing (3 children) = Unknown. Proximate: a parent's own ethnicity used for the child.",ethnicity,
+indigenous,partial,raceP_1,"coalesce(
+  recode_values(as.numeric(haven::zap_labels(raceP_1)), 3 ~ ""Indigenous"", c(1, 2, 4, 5, 6, 7) ~ ""Non-Indigenous""),
   ""Unknown""
-)","Follows ethnicity (raceP_1, the parent's own group, carried): American Indian or Alaska Native = Indigenous, every other answer Non-Indigenous, missing Unknown. Partial: the parent's group stands in for the child's, and the one-answer item forces multi-heritage respondents to one group.",,
-minority,proximate,"raceP_1, FID, wave","coalesce(
-  carry_within(
-    recode_values(as.numeric(haven::zap_labels(raceP_1)), 1 ~ ""Non-minority"", c(2, 3, 4, 5, 6, 7) ~ ""Minority""),
-    FID,
-    order = as.numeric(wave)
-  ),
+)","Follows ethnicity (raceP_1, the parent's own group): American Indian or Alaska Native = Indigenous, every other answer Non-Indigenous, missing Unknown. Partial: the parent's group stands in for the child's, and the one-answer item forces multi-heritage respondents to one group.",,
+minority,proximate,raceP_1,"coalesce(
+  recode_values(as.numeric(haven::zap_labels(raceP_1)), 1 ~ ""Non-minority"", c(2, 3, 4, 5, 6, 7) ~ ""Minority""),
   ""Unknown""
-)","Follows ethnicity (raceP_1, the parent's own group, carried): White = Non-minority (Hispanic is a separate option, so White reads as non-Hispanic White), every other group Minority, missing Unknown. Proximate: the parent's group stands in for the child's.",,
+)","Follows ethnicity (raceP_1, the parent's own group): White = Non-minority (Hispanic is a separate option, so White reads as non-Hispanic White), every other group Minority, missing Unknown. Proximate: the parent's group stands in for the child's.",,
 immigrant_background,unavailable,,,Not collected.,,
 born_in_country,unavailable,,,Not collected.,,
 home_language,unavailable,,,Not collected.,,
@@ -57,35 +42,27 @@ ses_household,compatible,INCOME_1,"recode_values(
   c(6, 7) ~ ""Medium"",
   c(8, 9, 10, 11, 12) ~ ""High"",
   default = ""Unknown""
-)","Parent report 'What was your household's combined income last year, before taxes?' (INCOME_1), 12 bands from under $5,000 to $100,000 or more, baseline, carried in the tidier across the documented intervals of 12 months or less. Bands placed by unweighted ridit within wave: under $40,000 (bands 1-5, ridits up to 0.30) Low, $40,000-59,999 (0.43-0.58) Medium, $60,000 or more (0.64 and above) High, the same cut in every wave (Low 37-39%, Medium 23-25%, High 37-40%). The study's composite SES (poverty + college or less + no coparent) and poverty flag are unused.",,
-ses_household_measure,inferred,,"""Income: combined annual household income before taxes, 12 bands""","Names the measure behind ses_household (INCOME_1, parent report, baseline, carried) on every row.",,
+)","Parent report 'What was your household's combined income last year, before taxes?' (INCOME_1), 12 bands from under $5,000 to $100,000 or more, baseline. Bands placed by unweighted ridit: under $40,000 (bands 1-5, ridits up to 0.30) Low, $40,000-59,999 (0.44-0.56) Medium, $60,000 or more (0.66 and above) High (Low 38%, Medium 24%, High 38%). The study's composite SES (poverty + college or less + no coparent) and poverty flag are unused.",,
+ses_household_measure,inferred,,"""Income: combined annual household income before taxes, 12 bands""","Names the measure behind ses_household (INCOME_1, parent report, baseline) on every row.",,
 ses_hukou,unavailable,,,Hukou not asked.,,
-maternal_education,proximate,"EDUp_1, genderP_1, FID, wave","coalesce(
+maternal_education,proximate,"EDUp_1, genderP_1","coalesce(
   lookup_values(
-    if_else(
-      carry_within(as.numeric(haven::zap_labels(genderP_1)), FID, order = as.numeric(wave)) %in% 1,
-      as.character(haven::as_factor(EDUp_1)),
-      NA_character_
-    ),
+    if_else(as.numeric(haven::zap_labels(genderP_1)) %in% 1, as.character(haven::as_factor(EDUp_1)), NA_character_),
     lookup_maternal_education,
     dataset_id = spec$dataset_id,
     target_variable = ""maternal_education""
   ),
   ""Unknown""
-)","The responding parent's own highest completed schooling ('What is the highest level of school you completed?', EDUp_1, baseline, carried in the tidier), used where the respondent is female (genderP_1 = 1, carried within participant); male respondents = Unknown, as the other parent's education was not asked. Shared education lookup: did not complete high school and high school degree (or GED) = Secondary school or less; some college = Post-secondary; college degree, some graduate school and graduate degree = Bachelor degree or higher. Proximate: the respondent's relationship to the child is not recorded, and 'College degree' may include associate degrees, placed by the bachelor-or-higher majority.",maternal_education,
-paternal_education,proximate,"EDUp_1, genderP_1, FID, wave","coalesce(
+)","The responding parent's own highest completed schooling ('What is the highest level of school you completed?', EDUp_1, baseline), used where the respondent is female (genderP_1 = 1); male respondents = Unknown, as the other parent's education was not asked. Shared education lookup: did not complete high school and high school degree (or GED) = Secondary school or less; some college = Post-secondary; college degree, some graduate school and graduate degree = Bachelor degree or higher. Proximate: the respondent's relationship to the child is not recorded, and 'College degree' may include associate degrees, placed by the bachelor-or-higher majority.",maternal_education,
+paternal_education,proximate,"EDUp_1, genderP_1","coalesce(
   lookup_values(
-    if_else(
-      carry_within(as.numeric(haven::zap_labels(genderP_1)), FID, order = as.numeric(wave)) %in% 2,
-      as.character(haven::as_factor(EDUp_1)),
-      NA_character_
-    ),
+    if_else(as.numeric(haven::zap_labels(genderP_1)) %in% 2, as.character(haven::as_factor(EDUp_1)), NA_character_),
     lookup_maternal_education,
     dataset_id = spec$dataset_id,
     target_variable = ""maternal_education""
   ),
   ""Unknown""
-)","As maternal_education for a male respondent (genderP_1 = 2, carried within participant); female respondents = Unknown. Shared education lookup: did not complete high school and high school degree (or GED) = Secondary school or less; some college = Post-secondary; college degree, some graduate school and graduate degree = Bachelor degree or higher. Proximate: the respondent's relationship to the child is not recorded, and 'College degree' may include associate degrees.",maternal_education,
+)","As maternal_education for a male respondent (genderP_1 = 2); female respondents = Unknown. Shared education lookup: did not complete high school and high school degree (or GED) = Secondary school or less; some college = Post-secondary; college degree, some graduate school and graduate degree = Bachelor degree or higher. Proximate: the respondent's relationship to the child is not recorded, and 'College degree' may include associate degrees.",maternal_education,
 parental_education,incompatible,EDUp_1,,"Only the responding parent's own education (EDUp_1; see maternal_education and paternal_education); the other parent's was not asked, so the highest across parents cannot be formed.",,
 maternal_employment,unavailable,,,Not collected.,,
 maternal_age,in_progress,,,,,
@@ -97,7 +74,7 @@ family_structure,proximate,MARITAL_1,"coalesce(
     c(2, 3) ~ ""Two biological/adoptive parents""
   ),
   ""Unknown""
-)","Responding parent's marital status (MARITAL_1; baseline, carried in the tidier across the documented intervals of 12 months or less): single, not living with a romantic partner = Single parent; married or cohabiting = Two biological/adoptive parents (step families not separable); missing = Unknown. The coparent item (x2_1) and the study's derived single are unused. Proximate.",,
+)","Responding parent's marital status (MARITAL_1; baseline): single, not living with a romantic partner = Single parent; married or cohabiting = Two biological/adoptive parents (step families not separable); missing = Unknown. The coparent item (x2_1) and the study's derived single are unused. Proximate.",,
 fam_siblings_n,in_progress,,,,,
 fam_siblings_any,in_progress,,,,,
 fam_screenrules,unavailable,,,Not collected.,,
@@ -149,12 +126,12 @@ fam_home_measure,in_progress,,,,,
 school_grade,unavailable,,,Not collected.,,
 school_sector,unavailable,,,Not collected.,,
 school_track,in_progress,,,,,
-st_measure_type,inferred,,"""Continuous""","Open hours and minutes boxes per device (Technology Questionnaire, Parent 2014); the questionnaire was given at every wave (waves 4, 8 and 12 carry only the study sum TECH_child), device items at baseline only.",,
+st_measure_type,inferred,,"""Continuous""","Open hours and minutes boxes per device (Technology Questionnaire, Parent 2014), baseline.",,
 st_measure_name,inferred,,"""Custom""","The study investigator's own Technology Questionnaire (Parent, 2014, per the measures list), items written for the study.",,
-st_responder,inferred,,"""Parent or carer""","The parent answers every screen item about the child; the harmoniser sets NA on rows with no st_ value (waves 4, 8 and 12).",,
+st_responder,inferred,,"""Parent or carer""","The parent answers every screen item about the child; the harmoniser sets NA on the one row with no st_ value.",,
 st_total_wd,incompatible,ST_week,,"Only the study's weekday sum of the device items (ST_week, 'W1 week ST', baseline), a sum of separately asked items, not an all-screen item (DR-0004); the devices are on their own rows.",,
 st_total_we,incompatible,ST_weekend,,"Only the study's weekend sum of the device items (ST_weekend, 'W1 weekend ST', baseline), a sum of separately asked items, not an all-screen item (DR-0004); the devices are on their own rows.",,
-st_total,incompatible,"TECH_child, ST_week, ST_weekend",,"Only study sums of the device items: TECH_child ('child average hours per day', the device 5:2 averages summed; every wave, and the only screen value at waves 4, 8 and 12), ST_week and ST_weekend. Sums of separately asked items are not all-screen items (DR-0004).",,
+st_total,incompatible,"TECH_child, ST_week, ST_weekend",,"Only study sums of the device items: TECH_child ('child average hours per day', the device 5:2 averages summed), ST_week and ST_weekend, baseline. Sums of separately asked items are not all-screen items (DR-0004).",,
 st_watch_wd,partial,"TECH2_a_hrs, TECH2_a_mins",(haven::zap_labels(TECH2_a_hrs) + haven::zap_labels(TECH2_a_mins) / 60),"Parent report, baseline only: 'On a typical weekday, how much time does [child] spend doing each of the following at home? Enter 0 if it is none or if there is not access to a given device.' Watching TV or DVDs (TECH2_a hours and minutes boxes), h + m / 60; 0 is a reported value. Partial: TV set and DVDs only. At home. Values above 24 kept.",,
 st_watch_we,partial,"TECH3_a_hrs, TECH3_a_mins",(haven::zap_labels(TECH3_a_hrs) + haven::zap_labels(TECH3_a_mins) / 60),"Parent report, baseline only: the same question for a typical weekend at home, watching TV or DVDs (TECH3_a), h + m / 60; 0 is a reported value. Partial: TV set and DVDs only. Values above 24 kept.",,
 st_watch,partial,"TECH2_a_hrs, TECH2_a_mins, TECH3_a_hrs, TECH3_a_mins","local({
@@ -296,7 +273,7 @@ acc_academachment_parentrated,partial,Academic,"local({
     Academic >= 1 ~ ""Below average"",
     .default = NA_character_
   )
-})","Parent report, CBCL academic competence (Academic, 'Academic Competence'; 4 subject ratings per the measures list), waves 1, 4, 8 and 12, released as the mean of the answered subjects on 1-4, read as the CBCL anchors failing, below average, average, above average (coding not documented). Mean placed at the nearest anchor, half toward the poorer level: above 3.5 Good (above average), above 2.5 to 3.5 Average, 2.5 or below Below average (failing and below average); Very good unused. Means in thirds (3 of 4 subjects answered, 14 rows) NA, as every subject is required; a mean over 2 subjects cannot be told from one over 4. No enrolment item: every rated child is kept, including 3- and 4-year-olds whose parents rated them. Partial: a mean of subject ratings, all subjects not verifiable.",,
+})","Parent report, CBCL academic competence (Academic, 'Academic Competence'; 4 subject ratings per the measures list), baseline, released as the mean of the answered subjects on 1-4, read as the CBCL anchors failing, below average, average, above average (coding not documented). Mean placed at the nearest anchor, half toward the poorer level: above 3.5 Good (above average), above 2.5 to 3.5 Average, 2.5 or below Below average (failing and below average); Very good unused. Means in thirds (3 of 4 subjects answered, 3 rows) NA, as every subject is required; a mean over 2 subjects cannot be told from one over 4. No enrolment item: every rated child is kept, including 3- and 4-year-olds whose parents rated them. Partial: a mean of subject ratings, all subjects not verifiable.",,
 acc_numeracy_stdtest,unavailable,,,Not collected.,,
 acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered.,,
 acc_literacy_stdtest,unavailable,,,Not collected.,,
@@ -315,8 +292,8 @@ beh_impulsivity_self,incompatible,BPM_att,,"No self-report impulsivity scale; on
 beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
 beh_selfreg_htks,unavailable,,,HTKS not administered.,,
 beh_selfreg_parent,incompatible,"BPM_att, BPM_ext, ECBI_severity, ERC_emotionreg",,"No self-regulation scale; only parent-rated problem scales, the Brief Problem Monitor attention problems (BPM_att, on beh_adhdsymp_parent) and externalizing (BPM_ext, on beh_ext_parent) scales and the ECBI oppositional intensity scale (ECBI_severity, on beh_opp_parent), and the ERC emotion regulation subscale (ERC_emotionreg), an emotion-regulation competence scale, on beh_emotreg_parent.",,
-beh_emotdysreg_parent,compatible,ERC_negativity,ERC_negativity,"Parent report, Emotion Regulation Checklist lability/negativity subscale (ERC_negativity; 15 items 1-4, range 15-60, observed 15-50), waves 1, 4, 8 and 12. Study-supplied sum used as released, supplied already keyed (items not released, so keying not checked), missing-item rule not documented. The ERC emotion regulation subscale (ERC_emotionreg), keyed the other way, is incompatible here and is mapped on beh_emotreg_parent.",,
-beh_emotreg_parent,compatible,ERC_emotionreg,ERC_emotionreg,"Parent report, Emotion Regulation Checklist emotion regulation subscale (ERC_emotionreg; 8 items 1-4, range 8-32, observed 10-32), waves 1, 4, 8 and 12. Study-supplied sum used as released, keyed higher = better regulation (items not released, so keying not checked), missing-item rule not documented. The lability/negativity subscale (ERC_negativity) is on beh_emotdysreg_parent and is not reversed here.",,
+beh_emotdysreg_parent,compatible,ERC_negativity,ERC_negativity,"Parent report, Emotion Regulation Checklist lability/negativity subscale (ERC_negativity; 15 items 1-4, range 15-60, observed 15-50), baseline. Study-supplied sum used as released, supplied already keyed (items not released, so keying not checked), missing-item rule not documented. The ERC emotion regulation subscale (ERC_emotionreg), keyed the other way, is incompatible here and is mapped on beh_emotreg_parent.",,
+beh_emotreg_parent,compatible,ERC_emotionreg,ERC_emotionreg,"Parent report, Emotion Regulation Checklist emotion regulation subscale (ERC_emotionreg; 8 items 1-4, range 8-32, observed 10-32), baseline. Study-supplied sum used as released, keyed higher = better regulation (items not released, so keying not checked), missing-item rule not documented. The lability/negativity subscale (ERC_negativity) is on beh_emotdysreg_parent and is not reversed here.",,
 beh_selfreg_self,incompatible,"BPM_att, BPM_ext, ECBI_severity",,"No self-report self-control scale; only parent-rated problem scales, the Brief Problem Monitor attention problems (BPM_att, on beh_adhdsymp_parent) and externalizing (BPM_ext, on beh_ext_parent) scales and the ECBI oppositional intensity scale (ECBI_severity, on beh_opp_parent).",,
 beh_emotreg_self,incompatible,ERC_emotionreg,,"No self-report emotion regulation scale; only the parent-rated Emotion Regulation Checklist emotion regulation subscale (ERC_emotionreg), on beh_emotreg_parent.",,
 beh_emotdysreg_self,incompatible,ERC_negativity,,"No self-report emotion dysregulation scale; only the parent-rated Emotion Regulation Checklist lability/negativity subscale (ERC_negativity), on beh_emotdysreg_parent.",,
@@ -343,7 +320,7 @@ beh_cannabis_self,unavailable,,,Not collected.,,
 beh_drugs_self,in_progress,,,,,
 beh_conduct_sdq_parent,unavailable,,,SDQ conduct items not administered.,,
 beh_hyper_sdq_parent,unavailable,,,SDQ hyperactivity items not administered; see beh_adhdsymp_parent.,,
-beh_peerprob_sdq_parent,compatible,SDQ_peer,SDQ_peer,"Parent report, SDQ peer problems subscale (SDQ_peer; the only SDQ subscale given, per the measures list), 5 items 0-2, range 0-10 (observed 0-10), waves 1, 4, 8 and 12. Study-supplied score used as released; items not released, so the reversals (items 11, 14) and the missing-item rule could not be verified; form version (2-4 or 4-17) not documented, children aged 3-17.",,
+beh_peerprob_sdq_parent,compatible,SDQ_peer,SDQ_peer,"Parent report, SDQ peer problems subscale (SDQ_peer; the only SDQ subscale given, per the measures list), 5 items 0-2, range 0-10 (observed 0-9), baseline. Study-supplied score used as released; items not released, so the reversals (items 11, 14) and the missing-item rule could not be verified; form version (2-4 or 4-17) not documented, children aged 3-17.",,
 beh_prosocial_sdq_parent,unavailable,,,SDQ prosocial items not administered.,,
 beh_aggphys_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
 beh_aggverb_bpaq_self,unavailable,,,BPAQ not administered; see beh_agg_self.,,
@@ -408,20 +385,16 @@ beh_conduct_self,in_progress,,,,,
 beh_ext_measure,unavailable,,,See beh_ext_self.,,
 beh_atten_parent,incompatible,BPM_att,,No inattention-only scale; the Brief Problem Monitor attention problems scale (BPM_att) mixes inattention with hyperactivity-impulsivity items and is on beh_adhdsymp_parent.,,
 beh_hyper_parent,incompatible,BPM_att,,No hyperactivity-impulsivity scale free of inattention items; the Brief Problem Monitor attention problems scale (BPM_att) mixes them and is on beh_adhdsymp_parent.,,
-beh_adhdsymp_parent,compatible,BPM_att,BPM_att,"Parent report, Brief Problem Monitor parent form attention problems scale (BPM_att; 6 items 0-2, range 0-12, observed 0-12), which mixes inattention with hyperactivity-impulsivity items; waves 1, 4, 8 and 12. Study-supplied sum used as released, missing-item rule not documented.",,
-beh_opp_parent,compatible,ECBI_severity,ECBI_severity,"Parent report, Eyberg Child Behavior Inventory oppositional-defiant subscale ('ODD subscale only', 10 items, per the measures list), intensity scale (ECBI_severity; 1-7, range 10-70, observed 10-70), waves 1, 4, 8 and 12. Study-supplied sum used as released, missing-item rule not documented. The yes/no problem count of the same items (ECBI_problem, 0-10) is the dichotomised score and is unused.",,
+beh_adhdsymp_parent,compatible,BPM_att,BPM_att,"Parent report, Brief Problem Monitor parent form attention problems scale (BPM_att; 6 items 0-2, range 0-12, observed 0-12), which mixes inattention with hyperactivity-impulsivity items; baseline. Study-supplied sum used as released, missing-item rule not documented.",,
+beh_opp_parent,compatible,ECBI_severity,ECBI_severity,"Parent report, Eyberg Child Behavior Inventory oppositional-defiant subscale ('ODD subscale only', 10 items, per the measures list), intensity scale (ECBI_severity; 1-7, range 10-70, observed 10-70), baseline. Study-supplied sum used as released, missing-item rule not documented. The yes/no problem count of the same items (ECBI_problem, 0-10) is the dichotomised score and is unused.",,
 beh_conduct_parent,incompatible,"BPM_ext, ECBI_severity, ECBI_problem",,"No conduct-problems scale in hand: the Brief Problem Monitor externalizing scale (BPM_ext) is broadband (beh_ext_parent) and the ECBI scales (ECBI_severity, ECBI_problem) are oppositional (beh_opp_parent). The CSEQ aggression subscales named in the measures list are not in the extract.",,
-beh_ext_parent,compatible,BPM_ext,BPM_ext,"Parent report, Brief Problem Monitor parent form externalizing scale (BPM_ext; 7 items 0-2, range 0-14, observed 0-14), waves 1, 4, 8 and 12. Study-supplied sum used as released, missing-item rule not documented.",,
-beh_parent_measure,inferred,wave,"if_else(
-  wave == ""4"",
-  ""Parent report (the responding mother or father), children aged 3-17; combined ADHD: Brief Problem Monitor parent form (BPM) attention problems, 6 of 6 items, 0-2 item scoring (range 0-12), sum; oppositional: Eyberg Child Behavior Inventory oppositional-defiant subscale, intensity scale, 10 of 10 items, 1-7 item scoring (range 10-70), sum; externalising: BPM externalizing, 7 of 7 items, 0-2 item scoring (range 0-14), sum; internalising: BPM internalizing, 6 of 6 items, 0-2 item scoring (range 0-12), sum; anxiety: RCADS-25 parent form anxiety, 15 of 15 items, 0-3 item scoring (range 0-45), sum; depression: RCADS-25 parent form depression, 10 of 10 items, 0-3 item scoring (range 0-30), sum; emotion dysregulation: Emotion Regulation Checklist lability/negativity, 15 of 15 items, 1-4 item scoring (range 15-60), sum; emotion regulation: Emotion Regulation Checklist emotion regulation, 8 of 8 items, 1-4 item scoring (range 8-32), sum; supplied already keyed; study-supplied scores, missing-item rule not documented; every form given at every age, the BPM below its published 6-18 range"",
-  ""Parent report (the responding mother or father), children aged 3-17; combined ADHD: Brief Problem Monitor parent form (BPM) attention problems, 6 of 6 items, 0-2 item scoring (range 0-12), sum; oppositional: Eyberg Child Behavior Inventory oppositional-defiant subscale, intensity scale, 10 of 10 items, 1-7 item scoring (range 10-70), sum; externalising: BPM externalizing, 7 of 7 items, 0-2 item scoring (range 0-14), sum; internalising: BPM internalizing, 6 of 6 items, 0-2 item scoring (range 0-12), sum; anxiety: RCADS-25 parent form anxiety, 15 of 15 items, 0-3 item scoring (range 0-45), sum; depression: RCADS-25 parent form depression, 10 of 10 items, 0-3 item scoring (range 0-30), sum; emotion dysregulation: Emotion Regulation Checklist lability/negativity, 15 of 15 items, 1-4 item scoring (range 15-60), sum; emotion regulation: Emotion Regulation Checklist emotion regulation, 8 of 8 items, 1-4 item scoring (range 8-32), sum; prosocial: Children's Social Experience Questionnaire (Casas et al., 2006) prosocial behavior subscale, 4 items (from the 4-20 range), 1-5 item scoring (range 4-20), sum; supplied already keyed; study-supplied scores, missing-item rule not documented; every form given at every age, the BPM below its published 6-18 range""
-)","Describes beh_adhdsymp_parent, beh_opp_parent, beh_ext_parent, mh_int_parent, mh_anx_parent, mh_dep_parent, beh_emotdysreg_parent, beh_emotreg_parent (every wave) and beh_prosocial_parent (waves 1, 8 and 12; the CSEQ was not given at wave 4). Item counts from the measures list and the published forms.",,
+beh_ext_parent,compatible,BPM_ext,BPM_ext,"Parent report, Brief Problem Monitor parent form externalizing scale (BPM_ext; 7 items 0-2, range 0-14, observed 0-14), baseline. Study-supplied sum used as released, missing-item rule not documented.",,
+beh_parent_measure,inferred,,"""Parent report (the responding mother or father), children aged 3-17; combined ADHD: Brief Problem Monitor parent form (BPM) attention problems, 6 of 6 items, 0-2 item scoring (range 0-12), sum; oppositional: Eyberg Child Behavior Inventory oppositional-defiant subscale, intensity scale, 10 of 10 items, 1-7 item scoring (range 10-70), sum; externalising: BPM externalizing, 7 of 7 items, 0-2 item scoring (range 0-14), sum; internalising: BPM internalizing, 6 of 6 items, 0-2 item scoring (range 0-12), sum; anxiety: RCADS-25 parent form anxiety, 15 of 15 items, 0-3 item scoring (range 0-45), sum; depression: RCADS-25 parent form depression, 10 of 10 items, 0-3 item scoring (range 0-30), sum; emotion dysregulation: Emotion Regulation Checklist lability/negativity, 15 of 15 items, 1-4 item scoring (range 15-60), sum; emotion regulation: Emotion Regulation Checklist emotion regulation, 8 of 8 items, 1-4 item scoring (range 8-32), sum; prosocial: Children's Social Experience Questionnaire (Casas et al., 2006) prosocial behavior subscale, 4 items (from the 4-20 range), 1-5 item scoring (range 4-20), sum; supplied already keyed; study-supplied scores, missing-item rule not documented; every form given at every age, the BPM below its published 6-18 range""","Describes beh_adhdsymp_parent, beh_opp_parent, beh_ext_parent, mh_int_parent, mh_anx_parent, mh_dep_parent, beh_emotdysreg_parent, beh_emotreg_parent and beh_prosocial_parent, all given at baseline. Item counts from the measures list and the published forms.",,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
 beh_prosocial_self,incompatible,CSEQ_prosocial,,No self-report prosocial scale; only the parent-rated CSEQ prosocial behaviour scale (CSEQ_prosocial); see beh_prosocial_parent.,,
 beh_prosocial_measure,unavailable,,,See beh_prosocial_self.,,
-beh_prosocial_parent,compatible,CSEQ_prosocial,CSEQ_prosocial,"Parent report, Children's Social Experience Questionnaire prosocial behavior subscale (CSEQ_prosocial, 'CSEQ Prosocial Behavior'; listed with physical and relational aggression, Casas et al., 2006, per the measures list), 4 items 1-5 (range 4-20, from the observed range; observed 4-20), waves 1, 8 and 12 (not 4). Taken as the child's own prosocial behaviour toward others, as the aggression subscales it was given with rate the child's own acts; items not released, so content and keying not checked. Study-supplied sum used as released, missing-item rule not documented.",,
+beh_prosocial_parent,compatible,CSEQ_prosocial,CSEQ_prosocial,"Parent report, Children's Social Experience Questionnaire prosocial behavior subscale (CSEQ_prosocial, 'CSEQ Prosocial Behavior'; listed with physical and relational aggression, Casas et al., 2006, per the measures list), 4 items 1-5 (range 4-20, from the observed range; observed 4-20), baseline. Taken as the child's own prosocial behaviour toward others, as the aggression subscales it was given with rate the child's own acts; items not released, so content and keying not checked. Study-supplied sum used as released, missing-item rule not documented.",,
 beh_socialskills_self,in_progress,,,,,
 beh_socialskills_measure,in_progress,,,,,
 beh_socialskills_parent,in_progress,,,,,
@@ -530,9 +503,9 @@ mh_anx_self,incompatible,RCADS_anxiety,,"No self-report anxiety scale; only the 
 mh_anx_measure,unavailable,,,See mh_anx_self.,,
 mh_socanx_self,unavailable,,,Not collected.,,
 mh_socanx_measure,unavailable,,,See mh_socanx_self.,,
-mh_int_parent,compatible,BPM_int,BPM_int,"Parent report, Brief Problem Monitor parent form internalizing scale (BPM_int; 6 items 0-2, range 0-12, observed 0-12), waves 1, 4, 8 and 12. Study-supplied sum used as released, missing-item rule not documented.",,
-mh_anx_parent,compatible,RCADS_anxiety,RCADS_anxiety,"Parent report, RCADS-25 parent form anxiety scale (RCADS_anxiety; 15 items 0-3, range 0-45, observed 0-34; 'RCADS-short (Ebesutani et al., 2012)' in the measures list), waves 1, 4, 8 and 12. Study-supplied sum used as released, missing-item rule not documented.",,
-mh_dep_parent,compatible,RCADS_dep,RCADS_dep,"Parent report, RCADS-25 parent form depression subscale (RCADS_dep; 10 items 0-3, range 0-30, observed 0-25), waves 1, 4, 8 and 12. Study-supplied sum used as released, missing-item rule not documented.",,
+mh_int_parent,compatible,BPM_int,BPM_int,"Parent report, Brief Problem Monitor parent form internalizing scale (BPM_int; 6 items 0-2, range 0-12, observed 0-10), baseline. Study-supplied sum used as released, missing-item rule not documented.",,
+mh_anx_parent,compatible,RCADS_anxiety,RCADS_anxiety,"Parent report, RCADS-25 parent form anxiety scale (RCADS_anxiety; 15 items 0-3, range 0-45, observed 0-34; 'RCADS-short (Ebesutani et al., 2012)' in the measures list), baseline. Study-supplied sum used as released, missing-item rule not documented.",,
+mh_dep_parent,compatible,RCADS_dep,RCADS_dep,"Parent report, RCADS-25 parent form depression subscale (RCADS_dep; 10 items 0-3, range 0-30, observed 0-25), baseline. Study-supplied sum used as released, missing-item rule not documented.",,
 mh_totalprob_parent,unavailable,,,"Derive at analysis from beh_adhdsymp_parent, beh_ext_parent, mh_int_parent.",,
 mh_int_teacher,in_progress,,,,,
 mh_anx_teacher,in_progress,,,,,
@@ -641,7 +614,7 @@ hlth_sleep_wd,partial,"CSHQ1_1_hrs, CSHQ1_1_min, CSHQ1_3_hrs, CSHQ1_3_min","loca
   wake_h <- as.numeric(haven::zap_labels(CSHQ1_3_hrs))
   wake <- if_else(wake_h %in% 0:23, wake_h, NA_real_) + as.numeric(haven::zap_labels(CSHQ1_3_min)) / 60
   (wake - bed) %% 24
-})","Parent report, waves 1, 4 and 8 (no bed or wake times at wave 12): usual weeknight bedtime ('What is [child]'s usual bedtime on weeknights?', CSHQ1_1) to usual weekday wake time (CSHQ1_3), hours and minutes boxes, (wake - bed) mod 24. Hour boxes labelled PM 1-12 for bedtime and AM 1-12 for waking, with a dropdown that ran past 12: bedtimes 5-11 read as PM, 12 (and 0 or 24) as midnight, 1-4 as after midnight, 13-23 as the 24-hour clock; wake times 1-12 as written (12 = noon) and 0-23 as the 24-hour clock; other codes (bedtime 25, 40; wake 34, 37) NA. Partial: bedtime, not sleep onset. Durations under 4 or over 16 hours kept.",,
+})","Parent report, baseline: usual weeknight bedtime ('What is [child]'s usual bedtime on weeknights?', CSHQ1_1) to usual weekday wake time (CSHQ1_3), hours and minutes boxes, (wake - bed) mod 24. Hour boxes labelled PM 1-12 for bedtime and AM 1-12 for waking, with a dropdown that ran past 12: bedtimes 5-11 read as PM, 12 (and 0 or 24) as midnight, 1-4 as after midnight, 13-23 as the 24-hour clock; wake times 1-12 as written (12 = noon) and 0-23 as the 24-hour clock; other codes (bedtime 25) NA. Partial: bedtime, not sleep onset. Durations under 4 or over 16 hours kept.",,
 hlth_sleep_we,partial,"CSHQ1_2_hrs, CSHQ1_2_min, CSHQ1_4_hrs, CSHQ1_4_min","local({
   bed_h <- as.numeric(haven::zap_labels(CSHQ1_2_hrs))
   bed <- case_when(
@@ -655,7 +628,7 @@ hlth_sleep_we,partial,"CSHQ1_2_hrs, CSHQ1_2_min, CSHQ1_4_hrs, CSHQ1_4_min","loca
   wake_h <- as.numeric(haven::zap_labels(CSHQ1_4_hrs))
   wake <- if_else(wake_h %in% 0:23, wake_h, NA_real_) + as.numeric(haven::zap_labels(CSHQ1_4_min)) / 60
   (wake - bed) %% 24
-})","Parent report, waves 1, 4 and 8: usual weekend bedtime (CSHQ1_2) to usual weekend wake time (CSHQ1_4), hours and minutes boxes, (wake - bed) mod 24; clock reading as hlth_sleep_wd. Partial: bedtime, not sleep onset. Durations under 4 or over 16 hours kept.",,
+})","Parent report, baseline: usual weekend bedtime (CSHQ1_2) to usual weekend wake time (CSHQ1_4), hours and minutes boxes, (wake - bed) mod 24; clock reading as hlth_sleep_wd. Partial: bedtime, not sleep onset. Durations under 4 or over 16 hours kept.",,
 hlth_sleep,partial,"CSHQ1_1_hrs, CSHQ1_1_min, CSHQ1_3_hrs, CSHQ1_3_min, CSHQ1_2_hrs, CSHQ1_2_min, CSHQ1_4_hrs, CSHQ1_4_min","local({
   bed_h_wd <- as.numeric(haven::zap_labels(CSHQ1_1_hrs))
   bed_wd <- case_when(
@@ -681,13 +654,13 @@ hlth_sleep,partial,"CSHQ1_1_hrs, CSHQ1_1_min, CSHQ1_3_hrs, CSHQ1_3_min, CSHQ1_2_
   wake_we <- if_else(wake_h_we %in% 0:23, wake_h_we, NA_real_) + as.numeric(haven::zap_labels(CSHQ1_4_min)) / 60
   avg <- (5 * ((wake_wd - bed_wd) %% 24) + 2 * ((wake_we - bed_we) %% 24)) / 7
   avg
-})","Waves 1, 4 and 8 only: (5 x hlth_sleep_wd + 2 x hlth_sleep_we) / 7, parent-reported bedtime to waking (clock reading as hlth_sleep_wd). Wave 12 has no bed or wake times and is NA: its only sleep item, the study's 'Sleep per day hours' (CSHQ_hours, usual sleep per day including naps), is a different item, which fills a missed wave only on rows standardised within wave. Partial: bedtime rather than sleep onset. CSHQ_hours, its items (CSHQ1_5) and the study's s_dur_m are unused. Durations under 4 or over 16 hours kept.",,
-hlth_sleepprob,compatible,CSHQ_sleepTOT,CSHQ_sleepTOT,"Parent report, abbreviated Children's Sleep Habits Questionnaire total sleep disturbances (CSHQ_sleepTOT): 7 items (consistent bedtime, falls asleep within 20 minutes, consistent sleep duration, restless sleep, night wakings, daytime tiredness, falling asleep during activities) on a 4-point usually-to-never scale, higher = more disturbance (Rojo-Wissar et al. 2024, doi:10.1111/camh.12665, Measures); range 7-28, observed 7-25; waves 1, 4, 8 and 12. Study-supplied sum used as released, missing-item rule not documented. The study's s_dis_m (mean of the 4- and 8-month totals) is unused.",,
-hlth_sleepprob_measure,inferred,,"""CSHQ abbreviated (parent report), 7 of 33 items, 1-4 item scoring (range 7-28), sum; 4-point usually-to-never format in place of the published 3-point usually-sometimes-rarely; supplied already keyed""",Describes hlth_sleepprob; the abbreviated CSHQ was given at every wave.,,
+})","Baseline: (5 x hlth_sleep_wd + 2 x hlth_sleep_we) / 7, parent-reported bedtime to waking (clock reading as hlth_sleep_wd). Partial: bedtime rather than sleep onset. The study's 'Sleep per day hours' (CSHQ_hours, usual sleep per day including naps), its items (CSHQ1_5) and the study's s_dur_m are unused. Durations under 4 or over 16 hours kept.",,
+hlth_sleepprob,compatible,CSHQ_sleepTOT,CSHQ_sleepTOT,"Parent report, abbreviated Children's Sleep Habits Questionnaire total sleep disturbances (CSHQ_sleepTOT): 7 items (consistent bedtime, falls asleep within 20 minutes, consistent sleep duration, restless sleep, night wakings, daytime tiredness, falling asleep during activities) on a 4-point usually-to-never scale, higher = more disturbance (Rojo-Wissar et al. 2024, doi:10.1111/camh.12665, Measures); range 7-28, observed 7-21; baseline. Study-supplied sum used as released, missing-item rule not documented. The study's s_dis_m (mean of the 4- and 8-month totals) is unused.",,
+hlth_sleepprob_measure,inferred,,"""CSHQ abbreviated (parent report), 7 of 33 items, 1-4 item scoring (range 7-28), sum; 4-point usually-to-never format in place of the published 3-point usually-sometimes-rarely; supplied already keyed""",Describes hlth_sleepprob; the abbreviated CSHQ was given at baseline.,,
 hlth_sleepprob_singleitem_self,in_progress,,,,,
 hlth_sleepprob_singleitem_parent,in_progress,,,,,
 hlth_bmi,compatible,BMI_C,BMI_C,"Child BMI (BMI_C, unlabelled, child range), baseline only; parents reported the child's BMI (Rojo-Wissar et al. 2024, doi:10.1111/camh.12665, Measures). As released, every value kept (0.10 to 107.6; screened at analysis). The unlabelled adult-range BMI (BMI) is taken to be the parent's own and is unused.",,
-hlth_bmi_measure,inferred,wave,"if_else(wave == ""1"", ""Parent-reported"", NA_character_)","Parent-reported at baseline (paper: 'Parents reported youth race, ethnicity, sex, BMI'); NA at waves 4, 8 and 12, where hlth_bmi is not measured.",,
+hlth_bmi_measure,inferred,,"""Parent-reported""","Parent-reported at baseline (paper: 'Parents reported youth race, ethnicity, sex, BMI').",,
 hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
 hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
 hlth_puberty_status,in_progress,,,,,

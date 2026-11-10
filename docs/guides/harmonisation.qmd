@@ -227,6 +227,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - On the binary prevalence rows for suicidal ideation, suicide attempt and depression screening, any recall other than 12 months is partial.
 - A weaker item fills waves the better item missed only on score rows standardised within wave (partial, waves in notes).
 - Yes/no prevalence rows keep the better series alone; they never splice in a different recall window or a pooled item.
+- On yes/no rows, the same item asked with a different bounded recall window keeps its status, but a different item, or an item with a lifetime or unstated window, never fills waves or age groups the main series missed: those stay NA and the item is named as unused.
 - Every unavailable or incompatible row has a one-line note.
 - Standard notes are 'Not collected.', 'Not in the supplied extract.', 'No weekday/weekend split.', 'No device split; see \<row>.', 'No item on use at school.', '\<instrument> not administered; see \<row>.', 'Derive at analysis from \<rows>.', 'Not an Australian dataset.', 'Hukou not asked.', 'Not a randomised trial.', 'Single collection occasion.', 'Not a survey sample.' (survey design rows), 'One participant per family.' (`family_id`), 'Single sample.' (`sample_component`) and 'No cognitive testing.' (cognitive test rows in studies that gave no test; not the speech or language diagnosis rows or the parent-report early-language row)
 - An unavailable note never describes an item in hand and never lists the study's other instruments.
@@ -257,8 +258,10 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - With no day split, `_wd` and `_we` are unavailable even when the unsuffixed row is incompatible.
 - `*_school` rows take use while at school only; an item about a whole school day goes to `_wd`.
 - **Non-users:** 0 when a filter establishes non-use (routed past the item, 'not at all', or no device with use unanswered); NA when not asked or not answered; a filter never overrides a reported duration.
+- A routing filter that asks an item only of those who use the platform or device at least weekly establishes non-use, so the routed-out part is 0; respondents not asked for any other reason stay NA.
 - Keep values above 24 hours; they are excluded at analysis, with a sensitivity analysis that keeps them.
 - **Day-of-use rule:** minutes on a day of use are multiplied by the share of days used (days per week / 7) and marked partial; minutes with no frequency answer are NA.
+- Items that ask the time spent in each part of a typical weekday, usual school day or weekend day (morning, afternoon, evening) are usual-day items: their sum is hours per day and is never scaled by a separate how-often item.
 - Frequency-only, rank, most-used, yes/no and ownership items give no hours, so the row is incompatible, item named.
 - Sum only sub-categories of one row (DR-0002): devices within gaming, sources within watching, gaming and non-gaming within computer, activities within one device, locations within one content row.
 - Write 'Sum of A, B (DR-0002)' in the notes of a summed row.
@@ -296,10 +299,12 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Study or homework time that does not name screens goes to `acc_homework_time` and is incompatible on the `st_*` rows, except during fully remote schooling (partial on `st_educational`).
 - A row that splices instruments with a documented level shift is partial.
 - Screen-time doubles never use proximate.
+- Experience-sampling values scaled to hours per day are partial, with the scaling in notes.
 - `st_measure_type` records the format behind the row's core `st_` variables.
 - `st_measure_name` takes one controlled label: a published instrument name, 'Time use diary', 'Custom' or 'Unknown'.
 - `st_measure_type` and `st_measure_name` are filled wherever the instrument was administered; the harmoniser sets only `st_responder` to NA on primary rows with no `st_` value.
 - One responder per row, including any filter that sets a value to zero; responders are never combined within a row or a variable.
+- Where a column records who answered, `st_responder` is derived from it per row (compatible).
 - The study's main series is primary, and a second responder, instrument or diary on the same occasion is a tagged block.
 - Block tags are `diary`, `parent`, `child`, `device` and `recall`, and every block maps `st_measure_type`, `st_measure_name` and `st_responder`.
 - A `recall` block covers the same occasion with a different reference period; its other variables belong to the occasion, so concurrent analyses exclude it.
@@ -335,6 +340,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - `hlth_bmi_measure` and `cog_earlylang_measure` are the exceptions: they are entity participant and their value follows the row (the height-and-weight source, or the child's form or age interval), and `hlth_bmi_measure` is compatible where a source column records the source per row.
 - A `*_measure` row says 'Unknown' only when a score exists but its instrument cannot be identified.
 - Use a study-supplied score as released and record its missing-item rule ('rule not documented' if unknown).
+- A study-imputed outcome score is NA wherever a flag identifies it as imputed; study-imputed covariates are used as released.
 - A released score prorated or averaged over answered items is used only where at least half the scale's items were answered.
 - A favourite-titles index counts the titles the respondent answered about as its items: a title counts where any per-title answer (frequency, time or rating) is given, and the index is used only where at least half of those titles were rated, so a respondent who names fewer titles is not penalised.
 - Sums computed in the expression are complete-case (`+`), unless the manual prescribes proration.
@@ -377,6 +383,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - Subject composites (grades, teacher and parent ratings) average every academic subject reported, not arts, PE or ICT, and need every component (partial).
 - Self-concept and self-efficacy are never averaged across subjects: maths, verbal and science self-concept go to their own rows, a composite across subjects fills no self-concept row, and subject self-efficacy scales are incompatible on `wb_selfefficacy_academic_self`, which does take a published academic efficacy subscale whose items each name a subject.
 - Respondent suffixes are literal, respondents are never coalesced, and the CBCL and BASC-2 rows are parent report only.
+- `_self` rows filled from a questionnaire completed with or by a parent take values only from age 8, and are NA below.
 - `_parent` rows take a rating of the child by a parent or other family caregiver (ratings by preschool, kindergarten or child-care staff fill only the teacher rows), with the rater named in the notes, and a score averaged over two parents' ratings is the one exception to never coalescing respondents: it maps as partial, with the averaging named in `beh_parent_measure` or in the row's own measure row (e.g. `beh_temp_measure`, `beh_problematicuse_measure`).
 - The family rows of the parent's own practices and of family relationships (`fam_parenting_warmth_parent`, `fam_parenting_harsh_parent`, `fam_parenting_inconsistent_parent`, `fam_monitoring_parent`, `fam_functioning_parent`, `fam_conflict_parent`, `fam_parentchild_rel_parent`, `fam_parentchild_conflict_parent`) are not ratings of the child: they take a published scale or subscale, or a study's released scale, as compatible and the mean of a study's own two or more graded items as partial, never single items, and where two parents each report on one occasion they take the parent recorded in `parent_respondent` (the screen-time reporter, else the main parent interview) and name the other as unused, never an average.
 - Their self-report twins (`fam_monitoring_self`, `fam_functioning_self`, `fam_conflict_self`) follow the same rules for the child's report; `fam_parentchild_rel_self` averages the child's ratings of mother and father where both are rated; true/false items count toward a study's item mean only on the two monitoring rows; and family functioning and family conflict, or parent-child closeness and conflict, keep separate rows that are never reversed onto each other.
@@ -450,6 +457,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - `fam_firstscreen_age` takes the age at first use of any screen; one device or activity (the earliest of those asked) or the current age minus a reported duration of use is partial, and both onset rows are NA where the child has not started, never 0 or the current age.
 - `fam_siblings_n` counts all the child's siblings, resident or not: a count of the family's children that includes the child maps as the count minus one, counts of children living in the household or limited by age are partial, and a yes/no has-siblings item goes to `fam_siblings_any`, which is unavailable wherever the count is mapped ('Derive at analysis from fam_siblings_n.').
 - Binary behaviour rows are TRUE for any occurrence (the lowest response above never) and FALSE for never; yes/no items map directly.
+- A status ladder (never, once or twice, used to, sometimes, weekly) follows the same rule, so every level above never is TRUE, and the row is partial: lifetime occurrence with no recall window.
 - A multi-item composite is TRUE if any answered item is positive, FALSE if every answered item is never, and NA if none is answered; study missing codes count as unanswered.
 - Use self-report where it exists; a parent-reported occurrence item is partial.
 - `beh_suspended` is the exception: a parent's report and school records of suspension or expulsion are compatible, and where two or more informants report on one occasion a compatible report is used over a partial one, then the screen-time respondent's report, as for `acc_graderepeated`.

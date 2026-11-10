@@ -162,7 +162,17 @@ school_sector,unavailable,,,Not collected.,,
 school_track,in_progress,,,,,
 st_measure_type,inferred,,"""Categorical""","All media time items are nine-band categorical responses ((almost) never, 30 minutes, 1-5 hours, 6 hours or more daily), scored as hours.",,
 st_measure_name,inferred,,"""Custom""","Study items adapted from the KiGGS media-use questionnaire (Woll et al. 2025, BMJ Open 15:e094895, doi:10.1136/bmjopen-2024-094895, Table 4), activity questionnaire; not a published standalone instrument.",,
-st_responder,inferred,,"""Self""","Self by design: the activity questionnaire is the participant's self-report, which a parent may help complete (protocol). Of the 3,862 rows with an on-site screen value, the who-answered item (stamm_fragebogenausgefuelltvon) records participant 1,427 (504 of them preschool), mother with participant 1,799, father with participant 562, participant with another person 32, and adult version (no item) 42. The harmoniser sets this row to NA where no st_ value exists, including the 410 online-questionnaire rows.",,
+st_responder,compatible,"stamm_fragebogenausgefuelltvon, daten_aktivitaetsfragebogen, stamm_alter","local({
+  who <- as.numeric(as.character(stamm_fragebogenausgefuelltvon))
+  case_when(
+    who == 1 ~ ""Self"",
+    who %in% 2:4 & stamm_alter >= 8 ~ ""Self"",
+    who %in% 2:3 ~ ""Parent or carer"",
+    who == 4 ~ ""Other"",
+    as.numeric(as.character(daten_aktivitaetsfragebogen)) == 3 ~ ""Self"",
+    .default = ""Unknown""
+  )
+})","Per row from the who-answered item for the activity questionnaire, which holds every screen item (stamm_fragebogenausgefuelltvon, 'Who fills in the activity questionnaire?', preschool and school versions). One responder per row, and the questionnaire, completed with or by a parent, counts as the participant's own report from age 8, as on the _self rows: participant alone = Self (1,427, kept as recorded, 511 of them under 8 and 504 on the preschool version); mother or father with the participant = Self from age 8 (1,729) and Parent or carer below 8 (632); participant with another person (grandparent, sibling, carer) = Self from age 8 (27) and Other below 8 (5); adult version (no who-answered item; the participant's own questionnaire) = Self (42). Counts are of the 3,862 rows with an on-site screen value; the harmoniser sets NA where no st_ value exists, including the 410 online-questionnaire rows.",,
 st_total_wd,incompatible,"medien_fernsehenwoche, medien_spielenwoche, medien_internetwoche",,"No all-screen item; the TV, gaming and internet school-day items are separately asked and are never summed (DR-0002, DR-0004); mapped to st_watch_wd, st_game_wd and st_internet_wd.",,
 st_total_we,incompatible,"medien_fernsehenwochenende, medien_spielenwochenende, medien_internetwochenende",,"No all-screen item; the TV, gaming and internet weekend items are separately asked and are never summed (DR-0002, DR-0004); mapped to st_watch_we, st_game_we and st_internet_we.",,
 st_total,incompatible,"medien_freizeitdigital, medien_fernsehenwoche, medien_fernsehenwochenende, medien_spielenwoche, medien_spielenwochenende, medien_internetwoche, medien_internetwochenende",,"The study's 'digital media use in leisure time (min/day)' (medien_freizeitdigital) is 60 x the sum of the 5:2 TV, gaming and internet values, a total of separately asked items (DR-0002, DR-0004); its online values also read the undocumented online codes as hours.",,
@@ -711,26 +721,34 @@ mh_depanx_diagnosed,unavailable,,,Not in the supplied extract.,,
 mh_stress_self,unavailable,,,Not collected.,,
 mh_stress_scale_self,unavailable,,,Not in the supplied extract.,,
 mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
-mh_lonely_self,compatible,kidscreen_einsam,"recode_values(
-  as.numeric(as.character(kidscreen_einsam)),
-  1 ~ ""Never"",
-  2 ~ ""Rarely"",
-  3 ~ ""Sometimes"",
-  4 ~ ""Often"",
-  5 ~ ""Always"",
-  default = NA_character_
-)","KIDSCREEN-10 'Thinking about the last week... Have you felt lonely?', never, seldom, sometimes, often, always -> Never to Always one-to-one; -9 -> NA. Self-report in the activity questionnaire, all three versions and all ages (a parent may help); also scored in wb_qol_kidscreen10_self.",,
+mh_lonely_self,compatible,"kidscreen_einsam, stamm_alter","if_else(
+  stamm_alter >= 8,
+  recode_values(
+    as.numeric(as.character(kidscreen_einsam)),
+    1 ~ ""Never"",
+    2 ~ ""Rarely"",
+    3 ~ ""Sometimes"",
+    4 ~ ""Often"",
+    5 ~ ""Always"",
+    default = NA_character_
+  ),
+  NA_character_
+)","Ages 8 and over only. KIDSCREEN-10 'Thinking about the last week... Have you felt lonely?', never, seldom, sometimes, often, always -> Never to Always one-to-one; -9 -> NA. Self-report in the activity questionnaire (school and adult versions, one preschool-version row), which a parent may help complete; NA below age 8 (stamm_alter), as the questionnaire is completed with or by a parent. Also scored in wb_qol_kidscreen10_self.",,
 mh_lonely_scale_self,incompatible,kidscreen_einsam,,"Only the single KIDSCREEN item 'Have you felt lonely?', mapped to mh_lonely_self; no loneliness scale.",,
 mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
-mh_sad_self,compatible,kidscreen_traurig,"recode_values(
-  as.numeric(as.character(kidscreen_traurig)),
-  1 ~ ""Never"",
-  2 ~ ""Rarely"",
-  3 ~ ""Sometimes"",
-  4 ~ ""Often"",
-  5 ~ ""Always"",
-  default = NA_character_
-)","KIDSCREEN-10 'Thinking about the last week... Have you felt sad?', never, seldom, sometimes, often, always -> Never to Always one-to-one; -9 -> NA. Self-report in the activity questionnaire, all three versions and all ages (a parent may help); also scored in wb_qol_kidscreen10_self.",,
+mh_sad_self,compatible,"kidscreen_traurig, stamm_alter","if_else(
+  stamm_alter >= 8,
+  recode_values(
+    as.numeric(as.character(kidscreen_traurig)),
+    1 ~ ""Never"",
+    2 ~ ""Rarely"",
+    3 ~ ""Sometimes"",
+    4 ~ ""Often"",
+    5 ~ ""Always"",
+    default = NA_character_
+  ),
+  NA_character_
+)","Ages 8 and over only. KIDSCREEN-10 'Thinking about the last week... Have you felt sad?', never, seldom, sometimes, often, always -> Never to Always one-to-one; -9 -> NA. Self-report in the activity questionnaire (school and adult versions, one preschool-version row), which a parent may help complete; NA below age 8 (stamm_alter), as the questionnaire is completed with or by a parent. Also scored in wb_qol_kidscreen10_self.",,
 mh_worry_self,incompatible,sdqkind_sorgen,,"Only the SDQ item 'I worry a lot', a three-point truth rating scored in mh_emotsymp_sdq_self.",,
 mh_irritable_self,incompatible,sdqkind_wuetend,,"Only the SDQ item 'I get very angry and often lose my temper', a three-point truth rating scored in beh_conduct_sdq_self.",,
 mh_nobodycares_self,unavailable,,,Not collected.,,
@@ -778,16 +796,20 @@ wb_qol_pedsql_emotional_parent,unavailable,,,PedsQL not administered.,,
 wb_qol_pedsql_social_parent,unavailable,,,PedsQL not administered.,,
 wb_qol_pedsql_school_parent,unavailable,,,PedsQL not administered.,,
 wb_qol_pedsql_psychosocial_parent,unavailable,,,PedsQL not administered.,,
-wb_qol_kidscreen10_self,compatible,"kidscreen_fitundwohl, kidscreen_energie, kidscreen_traurig, kidscreen_einsam, kidscreen_zeitfuersich, kidscreen_freizeit, kidscreen_elterngerecht, kidscreen_spassmitfreunden, kidscreen_zurechtgekommen, kidscreen_aufpassen","na_if(as.numeric(as.character(kidscreen_fitundwohl)), -9) +
-  na_if(as.numeric(as.character(kidscreen_energie)), -9) +
-  (6 - na_if(as.numeric(as.character(kidscreen_traurig)), -9)) +
-  (6 - na_if(as.numeric(as.character(kidscreen_einsam)), -9)) +
-  na_if(as.numeric(as.character(kidscreen_zeitfuersich)), -9) +
-  na_if(as.numeric(as.character(kidscreen_freizeit)), -9) +
-  na_if(as.numeric(as.character(kidscreen_elterngerecht)), -9) +
-  na_if(as.numeric(as.character(kidscreen_spassmitfreunden)), -9) +
-  na_if(as.numeric(as.character(kidscreen_zurechtgekommen)), -9) +
-  na_if(as.numeric(as.character(kidscreen_aufpassen)), -9)","KIDSCREEN-10 (last week), activity questionnaire, all three versions (preschool, school, adult) and all ages 4-18, self-report that a parent may help complete (of the 3,781 scored rows, the who-answered item stamm_fragebogenausgefuelltvon records participant 1,391 (485 of them preschool), mother with participant 1,769, father with participant 551, participant with another person 31, and adult version (no item) 39). Ten items 1-5 on the published anchors, sad and lonely reversed as 6 - x, -9 -> NA; raw sum 10-50, higher = better, all ten required. Study's Rasch scores (kidscreen_rasch, kidscreen_twerte) not used.",,
+wb_qol_kidscreen10_self,compatible,"kidscreen_fitundwohl, kidscreen_energie, kidscreen_traurig, kidscreen_einsam, kidscreen_zeitfuersich, kidscreen_freizeit, kidscreen_elterngerecht, kidscreen_spassmitfreunden, kidscreen_zurechtgekommen, kidscreen_aufpassen, stamm_alter","if_else(
+  stamm_alter >= 8,
+  na_if(as.numeric(as.character(kidscreen_fitundwohl)), -9) +
+    na_if(as.numeric(as.character(kidscreen_energie)), -9) +
+    (6 - na_if(as.numeric(as.character(kidscreen_traurig)), -9)) +
+    (6 - na_if(as.numeric(as.character(kidscreen_einsam)), -9)) +
+    na_if(as.numeric(as.character(kidscreen_zeitfuersich)), -9) +
+    na_if(as.numeric(as.character(kidscreen_freizeit)), -9) +
+    na_if(as.numeric(as.character(kidscreen_elterngerecht)), -9) +
+    na_if(as.numeric(as.character(kidscreen_spassmitfreunden)), -9) +
+    na_if(as.numeric(as.character(kidscreen_zurechtgekommen)), -9) +
+    na_if(as.numeric(as.character(kidscreen_aufpassen)), -9),
+  NA_real_
+)","Ages 8 and over only. KIDSCREEN-10 (last week), activity questionnaire (school and adult versions, one preschool-version row), self-report that a parent may help complete; NA below age 8 (stamm_alter), as the questionnaire is completed with or by a parent. Of the 2,668 scored rows, the who-answered item stamm_fragebogenausgefuelltvon records participant 899, mother with participant 1,276, father with participant 427, participant with another person 27, and adult version (no item) 39. Ten items 1-5 on the published anchors, sad and lonely reversed as 6 - x, -9 -> NA; raw sum 10-50, higher = better, all ten required. Study's Rasch scores (kidscreen_rasch, kidscreen_twerte) not used.",,
 wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 proxy version not administered; see wb_qol_kidscreen10_self.,,
 wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
 wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered.,,
@@ -810,17 +832,21 @@ wb_selfconcept_measure,unavailable,,,See wb_selfconcept_academic_self.,,
 wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
 wb_happiness_shs_self,unavailable,,,Subjective Happiness Scale not administered.,,
 wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
-wb_selfratedhealth_self,proximate,gesund_zustandallgemein,"recode_values(
-  as.numeric(as.character(gesund_zustandallgemein)),
-  1 ~ ""Excellent"",
-  2 ~ ""Very good"",
-  3 ~ ""Good"",
-  4 ~ ""Fair"",
-  5 ~ ""Poor"",
-  default = NA_character_
-)","MEHM 'How would you describe your health in general?' (very good, good, fair, poor, very poor), health interview or online questionnaire, all ages and versions, online rows included; the participant's own rating, which a parent may help give (of the 4,273 answers, the who-answered items record participant 1,244, mother with participant 2,180, father with participant 703, with another person 94, adult version 52). Symmetric five levels mapped by rank (very good -> Excellent ... very poor -> Poor), proximate; -9 -> NA.",,
+wb_selfratedhealth_self,proximate,"gesund_zustandallgemein, stamm_alter","if_else(
+  stamm_alter >= 8,
+  recode_values(
+    as.numeric(as.character(gesund_zustandallgemein)),
+    1 ~ ""Excellent"",
+    2 ~ ""Very good"",
+    3 ~ ""Good"",
+    4 ~ ""Fair"",
+    5 ~ ""Poor"",
+    default = NA_character_
+  ),
+  NA_character_
+)","Ages 8 and over only. MEHM 'How would you describe your health in general?' (very good, good, fair, poor, very poor), health interview or online questionnaire, all versions, online rows included; the participant's own rating, which a parent may help give; NA below age 8 (stamm_alter), as the interview and online questionnaire are completed with or by a parent. Of the 3,010 answers, the who-answered items (stamm_interviewausgefuelltvon, stamm_onlineausgefuelltvon) record participant 672, mother with participant 1,645, father with participant 577, with another person 66, adult version 50. Symmetric five levels mapped by rank (very good -> Excellent ... very poor -> Poor), proximate; -9 -> NA.",,
 wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
-wb_generalhealth_parent,incompatible,gesund_zustandallgemein,,"Child-worded item, parent may help; mapped to wb_selfratedhealth_self.",,
+wb_generalhealth_parent,incompatible,gesund_zustandallgemein,,"Child-worded item, parent may help; mapped to wb_selfratedhealth_self from age 8.",,
 wb_posaffect_self,unavailable,,,Not collected.,,
 wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
 wb_negaffect_self,incompatible,"kidscreen_traurig, kidscreen_einsam",,"No negative-affect scale; only the single KIDSCREEN mood items 'Have you felt sad?' and 'Have you felt lonely?', mapped to mh_sad_self and mh_lonely_self.",,

@@ -17,18 +17,6 @@ bp911_background <- c(
   "RACE"
 )
 
-#' Baseline columns carried to the follow-ups, with the rule each follows
-bp911_carried <- c(
-  EDUp_1 = "parent education, always",
-  edu_d = "parent education, always",
-  INCOME_1 = "household SES, gap of 12 months or less",
-  poverty = "household SES, gap of 12 months or less",
-  SES = "household SES, gap of 12 months or less",
-  MARITAL_1 = "family structure, gap of 12 months or less",
-  x2_1 = "family structure, gap of 12 months or less",
-  single = "family structure, gap of 12 months or less"
-)
-
 #' The fullest variable label each wave-suffixed stem carries
 bp911_stem_labels <- function(df, wave_cols) {
   vapply(
@@ -57,14 +45,15 @@ bp911_set_labels <- function(df, labels) {
 #' Tidier for BPIPD-911 (Rojo-Wissar, MAP Study Stage 3)
 #'
 #' One wide SPSS file with the assessment as a column suffix: `_1` baseline,
-#' `_4`, `_8`, `_12` the month of follow-up (Stage 3 Measures List).
+#' `_4`, `_8`, `_12` the month of follow-up (Stage 3 Measures List); only
+#' baseline asked the device items, so the follow-ups are dropped.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
 #' - `spec`: parsed dataset YAML
 #'
 #' Output:
-#' - one tibble, one row per child per assessment attended
+#' - one tibble, one row per child at baseline (key `FID` + `wave`)
 tidy_BPIPD_911 <- function(raw_dataset, spec) {
   df <- tibble::as_tibble(raw_dataset$data$data)
 
@@ -104,27 +93,15 @@ tidy_BPIPD_911 <- function(raw_dataset, spec) {
   # The file has no participation flag, so a child attended where any stem is measured.
   long <- long[rowSums(!is.na(long[names(stem_labels)])) > 0L, , drop = FALSE]
 
-  # The pivot repeats the baseline columns on every row; keep them at baseline.
-  months <- c(`1` = 0, `4` = 4, `8` = 8, `12` = 12)[long$wave]
-  long[long$wave != "1", bp911_background] <- NA
-
-  for (col in names(bp911_carried)) {
-    long[[col]] <- carry_within(long[[col]], long$FID, months)
-    attr(long[[col]], "label") <- paste0(
-      attr(long[[col]], "label"),
-      " [carried from baseline: ",
-      bp911_carried[[col]],
-      "]"
-    )
-  }
-
-  # Age was asked at baseline only; follow-ups add the months since baseline.
-  long$agechild_1 <- carry_within(long$agechild_1, long$FID, months) +
-    unname(months) / 12
-  attr(long$agechild_1, "label") <- paste0(
-    "How old is child in years",
-    " [follow-ups: baseline age + months since baseline / 12]"
+  # Drop-wave rule: waves 4, 8 and 12 hold only the study's device sum
+  # `TECH_child`, not a device item (`TECH2_c`/`TECH3_c` are print media).
+  device_items <- grep(
+    "^TECH[23]_[abdefg]_(hrs|mins)$",
+    names(long),
+    value = TRUE
   )
+  answered <- rowSums(!is.na(long[device_items])) > 0L
+  long <- long[long$wave %in% long$wave[answered], , drop = FALSE]
 
   long <- dplyr::relocate(long, dplyr::all_of(c("FID", "wave")))
 

@@ -597,8 +597,9 @@ bp27_cognitive_scores <- function(tables, wave) {
     sweep_2 = "^.D",
     # BAS ability scores, T-scores and test raw totals.
     sweep_3 = "ABIL$|TSCORE$|SCO00$",
-    # BAS ability, standard and T-scores, and section/test raw totals.
-    sweep_4 = "AB00$|SD00$|SC00$|SCO00$|TS00$"
+    # BAS ability, standard and T-scores, section/test raw totals, and the
+    # Progress in Maths standardised age score.
+    sweep_4 = "AB00$|SD00$|SC00$|SCO00$|TS00$|MATHS7SA$"
   )[[wave]]
 
   if (is.null(keep)) {
