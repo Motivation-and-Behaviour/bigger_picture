@@ -1,0 +1,10 @@
+dataset_id: "2941"
+dataset_name: "Konok"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "Konok et al 2024 data for Bigger Picture.xlsx"
+    sheet: "Data"
+    reader: "excel"
