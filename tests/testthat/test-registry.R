@@ -903,6 +903,20 @@ test_that("text_columns reads the named Excel columns as text", {
   )
 })
 
+test_that("a text-format rda reads a number stopping at its exponent marker", {
+  x <- data.frame(score = c(1.5, 77), code = c("1E", "ok"))
+  path <- fs::path(withr::local_tempdir(), "data.rda")
+  save(x, file = path, ascii = TRUE, version = 2, compress = FALSE)
+  text <- rawToChar(readBin(path, "raw", file.size(path)))
+  writeBin(charToRaw(sub("\n77\n", "\n7E\n", text, fixed = TRUE)), path)
+
+  tbl <- read_tabular_file(path, "rda", list(object = "x"))
+
+  expect_identical(tbl$score, c(1.5, 7))
+  # A string with the same shape as the bad number keeps its text.
+  expect_identical(tbl$code, c("1E", "ok"))
+})
+
 test_that("a read with parse failures errors instead of returning NAs", {
   path <- fs::path(withr::local_tempdir(), "data.csv")
   writeLines(c("id,score,note", "1,12.5,a", "2,n/a,b", "3,.,c"), path)
