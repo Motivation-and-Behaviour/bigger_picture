@@ -46,13 +46,18 @@ The numeric prefix preserves chronological ordering.
 | ID      | Title | Status | Date |
 | ------- | ----- | ------ | ---- |
 | DR-0001 | [Experimental designs](DR-0001-experimental-designs.md) | Accepted | 2026-03-16 |
-| DR-0002 | [Screen-time summation](DR-0002-screen-time-summation.md) | Proposed | 2026-03-19 |
+| DR-0002 | [Screen-time summation](DR-0002-screen-time-summation.md) | Accepted | 2026-03-19 |
 | DR-0003 | [One harmonised row per participant, wave and screen-time measure](DR-0003-multiple-screen-time-measures.md) | Accepted | 2026-09-17 |
 | DR-0004 | [Total screen time comes only from a dedicated item](DR-0004-total-screen-time.md) | Accepted | 2026-09-24 |
 | DR-0005 | [Data year falls back to the earliest publication](DR-0005-data-year-fallback.md) | Accepted | 2026-10-20 |
-| DR-0006 | [`analysis_data` is stored as Parquet with categorical columns as factors](DR-0006-analysis-data-storage.md) | Proposed | 2026-10-20 |
+| DR-0006 | [`analysis_data` is stored as Parquet with categorical columns as factors](DR-0006-analysis-data-storage.md) | Accepted | 2026-10-20 |
 | DR-0007 | [The analysis runs in this repository's pipeline, on the data the pipeline holds](DR-0007-analysis-in-the-pipeline.md) | Accepted | 2026-11-09 |
 | DR-0008 | [The outcome registry decides which outcomes go forward and how they combine](DR-0008-outcome-registry.md) | Accepted | 2026-11-11 |
+| DR-0009 | [The analysis estimates the average within-unit association per extra hour of screen use](DR-0009-estimand.md) | Accepted | 2026-11-11 |
+| DR-0010 | [Two-stage analysis is primary, with a multilevel random-effects second stage and no fallback](DR-0010-two-stage-primary.md) | Accepted | 2026-11-11 |
+| DR-0011 | [Primary analyses exclude only implausible values; the 3-MAD rule is a sensitivity analysis](DR-0011-exclusions.md) | Accepted | 2026-11-11 |
+| DR-0012 | [Age eligibility is decided row by row, keeping rows aged under 19](DR-0012-age-eligibility.md) | Accepted | 2026-11-11 |
+| DR-0013 | [The analysis derives total screen time, and the harmonised row stays dedicated items only](DR-0013-analysis-total-screen-time.md) | Accepted | 2026-11-11 |
 
 When adding a new decision:
 
