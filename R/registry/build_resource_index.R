@@ -21,7 +21,8 @@ flatten_spec_resources <- function(dataset_dir, spec) {
           col_positions = resolve_col_positions(res$col_positions, spec),
           lines_per_record = res$lines_per_record %||% NULL,
           encoding = res$encoding %||% NULL,
-          columns = res$columns %||% NULL
+          columns = res$columns %||% NULL,
+          text_columns = res$text_columns %||% NULL
         ),
         wave = wave,
         wave_label = wave_label

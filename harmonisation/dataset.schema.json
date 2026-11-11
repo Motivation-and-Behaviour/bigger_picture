@@ -154,6 +154,14 @@
           "minItems": 1,
           "description": "Read only these columns (stata, spss, por, sas). Each entry is a regular expression matched against the whole column name, so a plain name selects just that column and a pattern such as \"[a-f]_household_id\" covers a name with a per-file prefix. Every entry must match at least one column. Refused for other readers."
         },
+        "text_columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Excel columns to read as the cells' raw text instead of guessing their type, for a column whose cells the reader would otherwise drop or coerce (a date before 1900, a stray boolean in a numeric column). Exact column names; every entry must match a column. The tidier converts the text. Refused for other readers."
+        },
         "wave_from": {
           "type": "string",
           "enum": [
@@ -234,6 +242,11 @@
                 {
                   "required": [
                     "columns"
+                  ]
+                },
+                {
+                  "required": [
+                    "text_columns"
                   ]
                 }
               ]

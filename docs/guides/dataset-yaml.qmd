@@ -45,6 +45,7 @@ Each item in `resources` describes one file — or one group of related files �
 | `reader` | **Only for `role: data`** | How to read the file (see the reader table). |
 | `sheet` | Excel only | Sheet name or 1-based index. |
 | `range` | Excel only, optional | A cell range, e.g. `"A1:H200"`. |
+| `text_columns` | Excel only, optional | Exact names of columns to read as the cells' raw text instead of guessing their type, for a column whose cells the reader would otherwise drop or coerce (a date before 1900 is stored as a negative serial number, a stray `FALSE` in a numeric column). The tidier converts the text. |
 | `table` | Access (`mdb`) only | The table to read; may be omitted when the file contains exactly one table. |
 | `object` | `rda` only | The object to extract; may be omitted when the file contains exactly one object. |
 | `col_names` | `csv`/`csv2`/`tsv` only, optional | Whether the first row is a header. Default `true`; set `false` for a headerless file, whose columns are then named `X1`, `X2`, … for the tidier to rename (see [Headerless delimited files](#headerless-delimited-files)). |
@@ -59,7 +60,7 @@ Each item in `resources` describes one file — or one group of related files �
 |------|---------|
 | `data` | The actual dataset file(s) — `.sav`, `.dta`, `.csv`, `.xlsx`, etc. **Requires a `reader`.** Read into R and passed to the tidier. |
 | `codebook` | Data dictionaries and variable documentation. The file path is recorded for reference, but the file is **not read into R**. |
-| `docs` | Anything else: technical reports, user guides, questionnaires, syntax files. Paths only — must not have a `reader` or any reader option (`sheet`, `range`, `table`, `object`, `col_names`, `col_positions`, `lines_per_record`, `encoding`, `columns`). |
+| `docs` | Anything else: technical reports, user guides, questionnaires, syntax files. Paths only — must not have a `reader` or any reader option (`sheet`, `range`, `table`, `object`, `col_names`, `col_positions`, `lines_per_record`, `encoding`, `columns`, `text_columns`). |
 
 ### Globs
 
@@ -106,7 +107,7 @@ readers <- tibble::tribble(
   "`object` (optional if the file holds one object)",
   "parquet", "`.parquet` (Apache Parquet)", "",
   "excel", "`.xlsx` / `.xls` (Excel)",
-  "`sheet` (recommended), `range` (optional)",
+  "`sheet` (recommended), `range`, `text_columns` (both optional)",
   "mdb", "`.mdb` / `.accdb` (Microsoft Access)",
   "`table` (optional if the file holds one table)"
 )
