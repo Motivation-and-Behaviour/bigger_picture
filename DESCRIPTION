@@ -18,6 +18,7 @@ Imports:
     dplyr,
     fs,
     haven,
+    httr2,
     mdbr,
     qs2,
     quarto,
