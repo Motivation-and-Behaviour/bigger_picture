@@ -1,0 +1,50 @@
+dataset_id: "2591"
+dataset_name: "Kowert"
+status: "in_progress"
+
+resources:
+  - name: "panel"
+    role: "data"
+    glob: "ZA5246_v1-0-0_en.sav"
+    reader: "spss"
+  - name: "codebook"
+    role: "codebook"
+    glob: "ZA5246_cod (1).xls"
+  - name: "questionnaires"
+    role: "docs"
+    glob: "ZA5246_fb.pdf"
+
+notes: |
+  GESIS ZA5246 v1.0.0 (doi:10.4232/1.12813), GameStat - Longitudinal Data on
+  the Use of Computer- and Video-Games in Germany 2011-2013: a three-wave
+  annual CATI panel, released as one wide file with one row per participant
+  (ID, "Teilnahme-ID") and items suffixed _T1, _T2 and _T3.
+
+  Design: T1 holds 4,500 gamers and 500 non-gamers aged 14 and over, drawn
+  disproportionately (a stratified random sample) from an omnibus telephone
+  screening of about 50,000 people (DataCite record for the DOI; Kowert,
+  Domahidi & Quandt 2014, PMC4080869). Gamers are oversampled and the release
+  has no weight, stratum or cluster variable, so estimates are unweighted.
+
+  Declared:
+  - panel: ZA5246_v1-0-0_en.sav, 5,084 rows x 708 columns. The folder also
+    holds the same data as ZA5246_v1-0-0_en.dta; the two copies have the same
+    rows, column names, values (as the pipeline reads them) and value labels,
+    so only the SPSS copy is declared. It was chosen because the Stata copy
+    truncates 176 variable labels to 80 characters, while the SPSS copy keeps
+    the full item wording. Labels are German despite the _en suffix.
+  - codebook: ZA5246_cod (1).xls, the project's scale and item list ("Scales &
+    items panel surveys SOFOGA"; sheets All waves, Wave 1, Wave 2, Wave 3) with
+    German and English wording, sources, waves and variable names. It has no
+    frequency tables.
+  - questionnaires: ZA5246_fb.pdf, the three German CATI questionnaires (one
+    per wave, in sequence).
+
+  Missing values: the SPSS file declares -77, -88 and -99 as user-missing on
+  686 columns, and the spss reader reads them as NA. None of the three codes is
+  labelled or defined in the folder; see BPIPD-2591_notes.md for the patterns
+  seen in the data. gamspend_T3 also holds 100 values of -1, not declared
+  missing and not labelled.
+
+  Apart from the Stata duplicate above, nothing in the folder is left
+  undeclared.
