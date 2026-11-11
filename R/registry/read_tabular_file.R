@@ -92,6 +92,41 @@ read_haven_file <- function(path, reader, opts) {
   read(col_select = dplyr::all_of(available[Reduce(`|`, hits)]))
 }
 
+#' Load an `.rda` file, tolerating numbers that stop at their exponent marker
+load_rda_file <- function(path, envir) {
+  header <- readBin(path, "raw", 7L)
+  if (!identical(header[c(1:3, 5:7)], charToRaw("RDA\nA\n"))) {
+    return(load(path, envir = envir))
+  }
+
+  bytes <- readBin(path, "raw", file.size(path))
+  markers <- grepRaw("[0-9.][eE]\n", bytes, all = TRUE) + 1L
+  bare <- vapply(markers, rda_is_bare_exponent, logical(1), bytes = bytes)
+  if (!any(bare)) {
+    return(load(path, envir = envir))
+  }
+
+  con <- rawConnection(bytes[-markers[bare]])
+  on.exit(close(con), add = TRUE)
+  load(con, envir = envir)
+}
+
+#' Does the marker at `at` end a number with no exponent, outside any string?
+#'
+#' In the text format a string is its type flags (type 9 in the low byte), then
+#' its length, then its text, each on one line, so the two lines before a token
+#' tell a string such as "1E" from a number.
+rda_is_bare_exponent <- function(bytes, at) {
+  window <- rawToChar(bytes[max(1L, at - 150L):at])
+  lines <- strsplit(window, "\n", fixed = TRUE, useBytes = TRUE)[[1]]
+  token <- lines[[length(lines)]]
+  if (!grepl("^[-+]?[0-9.]+[eE]$", token, useBytes = TRUE)) {
+    return(FALSE)
+  }
+  before <- suppressWarnings(as.integer(lines[length(lines) - 2:1]))
+  !(before[[1]] %% 256L %in% 9L && before[[2]] %in% nchar(token, "bytes"))
+}
+
 #' Read one Excel sheet, keeping the columns the spec names as text
 #'
 #' readxl turns a date cell it cannot represent into NA, and coerces a stray
@@ -508,7 +543,7 @@ read_tabular_file <- function(path, reader, opts = list()) {
     },
     "rda" = {
       env <- new.env(parent = emptyenv())
-      objects <- load(path, envir = env)
+      objects <- load_rda_file(path, env)
       object <- opts$object
       if (is.null(object)) {
         if (length(objects) == 0) {
