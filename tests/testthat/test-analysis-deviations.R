@@ -26,11 +26,18 @@ test_that("deviations.csv cites decision records that exist", {
     file.path(repo_root, bp_deviations_path()),
     bp_deviations_columns()
   )
-  cited <- unlist(strsplit(stats::na.omit(ledger$decision_record), "|", fixed = TRUE))
+  cited <- unlist(strsplit(
+    stats::na.omit(ledger$decision_record),
+    "|",
+    fixed = TRUE
+  ))
   on_disk <- sub(
     "^(DR-[0-9]{4}).*$",
     "\\1",
-    list.files(file.path(repo_root, "docs", "decisions"), pattern = "^DR-[0-9]{4}")
+    list.files(
+      file.path(repo_root, "docs", "decisions"),
+      pattern = "^DR-[0-9]{4}"
+    )
   )
   expect_true(all(cited %in% on_disk))
 })
