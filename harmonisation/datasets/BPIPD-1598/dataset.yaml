@@ -1,6 +1,6 @@
 dataset_id: "1598"
 dataset_name: "Social Distancing and Development Project"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "screentime_additional_measures_ngg_data"

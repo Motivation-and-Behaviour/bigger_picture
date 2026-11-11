@@ -1,6 +1,6 @@
 dataset_id: "1346"
 dataset_name: "High School Longitudinal Study of 2009"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "school_data"

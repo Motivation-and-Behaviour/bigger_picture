@@ -1,6 +1,6 @@
 dataset_id: "873"
 dataset_name: "China Family Panel Studies"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "cfps2022_stata_archive"

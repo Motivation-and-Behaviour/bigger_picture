@@ -38,7 +38,28 @@ tidy_BPIPD_1294 <- function(raw_dataset, spec) {
     grep("BYF3PSTSTU", raw_dataset$docs, value = TRUE)
   )
   tidied <- bp1294_add_f1_school(tidied, raw_dataset$data$els_byf1sch)
+  tidied <- bp1294_add_grade_repeated(tidied, raw)
   bp1294_carry_program(tidied)
+}
+
+#' Grade repetition by round: a repetition reaches every 2004 row, a 'never'
+#' only the 2002 rows
+bp1294_add_grade_repeated <- function(tidied, raw) {
+  # BYGRDRPT counts grades repeated K-10 from the 2002 parent questionnaire,
+  # or the 2004 new-participant supplement for members who joined then; a
+  # 'never' asked of a 2004 twelfth grader leaves grades 11-12 uncovered.
+  repeated <- haven::zap_labels(raw$bygrdrpt)[match(tidied$STU_ID, raw$STU_ID)]
+  f1 <- tidied$wave == bp1294_rounds()$f1$label
+  repeated[f1 & !repeated %in% c(1, 2, 97)] <- NA
+  tidied$grade_repeated_ever <- bp1294_label_column(
+    repeated,
+    paste(
+      "Number of grades repeated (K-10), BYGRDRPT; 2004 rows keep only a",
+      "repetition (1, 2, 97), from 2002 or the 2004 new-participant supplement"
+    ),
+    attr(tidied$grades_repeated, "labels")
+  )
+  tidied
 }
 
 #' Carry the 2002 high school program to the 2004 rows still in high school
@@ -124,6 +145,7 @@ bp1294_columns <- function() {
     generational_status = c(by = "bygnstat"),
     family_composition = c(by = "byfcomp", f1 = "F1FCOMP"),
     siblings_in_home = c(by = "bysibhom"),
+    siblings_count = c(by = "BYP08"),
     birthplace_parent_report = c(by = "BYP23"),
     mother_birthplace = c(by = "BYP17"),
     father_birthplace = c(by = "BYP20"),
@@ -150,6 +172,10 @@ bp1294_columns <- function() {
     spouse_work_status = c(by = "BYP41"),
     grandparent_education = c(by = "bygpared"),
     home_literacy_resources = c(by = "byhomlit"),
+    # parent's monitoring of the tenth grader (base year; never to always)
+    parent_checks_homework = c(by = "BYP55A"),
+    parent_knows_whereabouts = c(by = "BYP55C"),
+    parent_enforces_curfew = c(by = "BYP55D"),
     # parent's opinion of the tenth grader's disabilities (base year)
     parent_thinks_disability = c(by = "BYP49"),
     disability_learning = c(by = "BYP50A"),

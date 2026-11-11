@@ -1,6 +1,6 @@
 dataset_id: "64"
 dataset_name: "MoMo"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "momo_dataset"

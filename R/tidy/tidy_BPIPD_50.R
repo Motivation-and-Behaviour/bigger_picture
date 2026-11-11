@@ -41,6 +41,7 @@ tidy_BPIPD_50 <- function(raw_dataset, spec) {
     c(names(constants), "wave", names(items), scores),
     names(stacked)
   )]
+  stacked$maternal_siblings_n <- bp50_maternal_siblings(fixed, stacked)
 
   if (anyDuplicated(stacked[c("CPUBID", "wave")]) > 0L) {
     stop(
@@ -708,6 +709,35 @@ bp50_item_map <- function() {
       "2016" = "Y3648100"
     )
   )
+}
+
+#' Count of the mother's other children in the release born by the survey year
+bp50_maternal_siblings <- function(fixed, stacked) {
+  # The release holds every biological child of each NLSY79 mother (CPUBID
+  # universe), so other CPUBID with the child's MPUBID are maternal siblings.
+  children <- dplyr::select(
+    fixed,
+    "MPUBID",
+    sibling = "CPUBID",
+    sibling_cyrb = "CYRB"
+  )
+  counts <- stacked[c("CPUBID", "MPUBID", "wave")] |>
+    dplyr::left_join(children, by = "MPUBID", relationship = "many-to-many") |>
+    dplyr::summarise(
+      n = sum(sibling != CPUBID & sibling_cyrb <= as.integer(wave)),
+      .by = c("CPUBID", "wave")
+    )
+  n <- dplyr::left_join(
+    stacked[c("CPUBID", "wave")],
+    counts,
+    by = c("CPUBID", "wave"),
+    relationship = "one-to-one"
+  )$n
+  attr(n, "label") <- paste(
+    "Number of the mother's other biological children in the release",
+    "(same MPUBID) born in or before the survey year (CYRB)"
+  )
+  n
 }
 
 #' Source reference numbers for every stem measured in one survey year

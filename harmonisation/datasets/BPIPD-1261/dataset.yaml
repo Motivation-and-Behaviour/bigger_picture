@@ -1,6 +1,6 @@
 dataset_id: "1261"
 dataset_name: "JTUC Research Institute for Advancement of Living Standards"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "haha_csv"

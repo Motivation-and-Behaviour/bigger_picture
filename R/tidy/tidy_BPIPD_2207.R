@@ -22,7 +22,13 @@ tidy_BPIPD_2207 <- function(raw_dataset, spec) {
   # The survey is annual (user guide p.6); the diary's first day dates the interview.
   diary_month <- ifelse(df$d_mm1st %in% 1:12, df$d_mm1st, NA)
   interview_month <- 12 * (2000 + as.integer(df$.wave)) + diary_month
-  carried <- c("h_h_income1", "h_h_income2", "h_fly_typ", "parent_figures")
+  carried <- c(
+    "h_h_income1",
+    "h_h_income2",
+    "h_fly_typ",
+    "parent_figures",
+    "siblings_home"
+  )
   for (col in carried) {
     df[[col]] <- bp2207_carry_gap(df[[col]], df$pid, interview_month)
   }
@@ -49,6 +55,15 @@ tidy_BPIPD_2207 <- function(raw_dataset, spec) {
       " `pid` from the nearest year interviewed 12 months or less away"
     )
   }
+  for (col in names(bp2207_parent_mh)) {
+    attr(df[[col]], "label") <- paste0(
+      "Parent's own answer, past month: ",
+      bp2207_parent_mh[[col]],
+      ", from the mother figure's person row, else, for a participant aged 18",
+      " or under with no mother figure, from the father figure who answered the",
+      " household questionnaire; not carried"
+    )
+  }
 
   if (anyDuplicated(df[c("pid", ".wave")]) > 0) {
     stop(
@@ -69,6 +84,18 @@ bp2207_mother_job <- c(
   mother_job2 = "employment status if working (`p_job2`)",
   mother_job4 = "kind of non-employment if not working (`p_job4`)"
 )
+
+#' A parent's own PHQ-2 and GAD-2 items (2021) linked from their person row
+bp2207_parent_mh <- c(
+  parent_f07007 = "little interest or pleasure in doing things (`p_f07007`)",
+  parent_f07008 = "no motivation, feeling down, depressed or hopeless (`p_f07008`)",
+  parent_f07009 = "feeling nervous, anxious or on edge (`p_f07009`)",
+  parent_f07010 = "not being able to stop or control worrying (`p_f07010`)"
+)
+
+#' Diary media codes that are screens: TVs, computers, tablet, PDA, phones,
+#' portable video player, consoles and VR
+bp2207_parent_screen_codes <- c(3, 5:11, 17:19, 30:32, 41)
 
 #' Person columns that are free text in some years and numeric in others
 bp2207_text_columns <- c(
@@ -343,13 +370,15 @@ bp2207_label <- function(tbl, codebook) {
   tbl
 }
 
-#' Parents' own education, the mother figure's job items and the number of
-#' parent figures in the household
+#' Parents' own education, the mother figure's job items, a parent's own
+#' mental-health items, the household respondent's own diary screen minutes,
+#' and the numbers of parent figures and siblings in the household
 #'
 #' The roster, indexed by `housenum`, gives each member's relation to the head.
 #' A child of the head (code 3) has the head and spouse (1, 2) as parent figures
 #' and a grandchild (5) the head's child and child-in-law (3, 4); a mother or
-#' father is taken only when one member of that sex qualifies.
+#' father is taken only when one member of that sex qualifies. Siblings are the
+#' other members sharing the participant's relation, child (3) or grandchild (5).
 bp2207_parents <- function(df) {
   n <- nrow(df)
   rel <- as.matrix(df[paste0("h_m", 1:10, "_rel")])
@@ -368,6 +397,22 @@ bp2207_parents <- function(df) {
   attr(df$parent_figures, "label") <- paste(
     "Resident parent figures in the household roster (0-2): head and spouse",
     "for a child of the head, head's child and child-in-law for a grandchild"
+  )
+
+  # Members who left (11) or died (12) carry no relation, so only co-resident
+  # siblings are counted; the participant's own roster entry must agree.
+  slot <- matrix(rep(1:10, each = n), n) == df$housenum
+  kin <- ifelse(df$p_rel %in% c(3, 5), df$p_rel, NA)
+  own <- rowSums(slot & rel == kin, na.rm = TRUE) == 1
+  df$siblings_home <- ifelse(
+    own,
+    rowSums(!slot & rel == kin, na.rm = TRUE),
+    NA
+  )
+  attr(df$siblings_home, "label") <- paste(
+    "Co-resident siblings in the household roster: the other children of the",
+    "head for a child of the head, the other grandchildren of the head for a",
+    "grandchild (cousins included); NA for other relations to the head"
   )
 
   person <- paste(df$hid, df$.wave, df$housenum)
@@ -403,6 +448,46 @@ bp2207_parents <- function(df) {
   from[is.na(member) | is.na(df$p_job1[from])] <- NA
   for (col in names(bp2207_mother_job)) {
     df[[col]] <- df[[sub("^mother_", "p_", col)]][from]
+  }
+
+  # A parent's own PHQ-2 and GAD-2 items: the mother figure's, else, for a
+  # participant aged 18 or under with no mother figure, those of the one father
+  # figure where he answered the household questionnaire (`h_honum`).
+  k <- ifelse(df$h_honum %in% 1:10, df$h_honum, NA)
+  father_answered <- rowSums(mothers) == 0 &
+    rowSums(fathers) == 1 &
+    fathers[cbind(seq_len(n), k)] %in% TRUE &
+    df$p_age1 <= 18
+  member <- ifelse(father_answered, k, member)
+  from <- match(paste(df$hid, df$.wave, member), person)
+  for (col in names(bp2207_parent_mh)) {
+    df[[col]] <- df[[sub("^parent_", "p_", col)]][from]
+  }
+
+  # The household respondent's own diary for participants aged 18 or under, as
+  # on `parent_respondent`: never the participant's or another minor's.
+  at <- cbind(seq_len(n), k)
+  born <- as.matrix(df[paste0("h_m", 1:10, "_dob")])[at]
+  born[!born %in% 1880:2030] <- NA
+  minor <- 2000 + as.integer(df$.wave) - born <= 18
+  answered <- !is.na(k) &
+    df$p_age1 <= 18 &
+    !(k == df$housenum) %in% TRUE &
+    (figure[at] | !minor %in% TRUE)
+  from <- match(paste(df$hid, df$.wave, k), person)
+  from[!answered %in% TRUE] <- NA
+  for (day in c("wd", "we")) {
+    screens <- paste0("d_M_time", bp2207_parent_screen_codes, "_", day)
+    col <- paste0("parent_screen_", day)
+    df[[col]] <- Reduce(`+`, df[screens])[from]
+    attr(df[[col]], "label") <- paste0(
+      "Household questionnaire respondent's own mean minutes per ",
+      if (day == "wd") "weekday" else "weekend",
+      " diary day on screen media (codes ",
+      paste(bp2207_parent_screen_codes, collapse = ", "),
+      "; main and simultaneous media each counted), from their person row;",
+      " participants aged 18 or under; not carried"
+    )
   }
   df
 }

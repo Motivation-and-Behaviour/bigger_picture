@@ -1,6 +1,6 @@
 dataset_id: "2395"
 dataset_name: "Tardif-Grenier"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data"

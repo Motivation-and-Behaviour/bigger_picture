@@ -1,6 +1,6 @@
 dataset_id: "938"
 dataset_name: "Kasap"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "IAT Prosocial Data"

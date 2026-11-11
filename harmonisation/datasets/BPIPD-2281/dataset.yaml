@@ -1,6 +1,6 @@
 dataset_id: "2281"
 dataset_name: "Grao-Cruces"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "Grao-Cruces Excel Dataset"

@@ -3,7 +3,10 @@
 #' Slices each wave out of the single wide release using the column map in
 #' `bp31_wave_columns()`, stacks the slices long, fills parent education and
 #' the mother's Year 15 age and work, clears Woodcock-Johnson floor scores,
-#' then `bp31_apply_labels()` re-attaches labels.
+#' carries a repeated grade forward, then `bp31_apply_labels()` re-attaches
+#' labels. Scales whose item sets change by wave or need documented item
+#' lists (CBCL, teacher SSRS and Conners, ASBI, delinquency) are scored on
+#' the raw table first, and the CTSPC items are put on one coding.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -21,6 +24,15 @@ tidy_BPIPD_31 <- function(raw_dataset, spec) {
   raw <- bp31_add_cbcl_scores(raw_dataset$data[[1]])
   raw <- bp31_add_parentstress_mother(raw)
   raw <- bp31_add_told_conditions(raw)
+  raw$BP31RX_Y15_P6B27_1 <- dplyr::if_else(
+    bp31_decode(raw$P6B27_1) == 0,
+    2,
+    bp31_decode(raw$P6B27_1)
+  )
+  raw <- bp31_add_teacher_scales(raw)
+  raw <- bp31_add_asbi_scores(raw)
+  raw <- bp31_add_delinquency_scores(raw)
+  raw <- bp31_add_cts_items(raw)
 
   constants <- bp31_constant_columns()
   wave_map <- bp31_wave_columns()
@@ -45,6 +57,7 @@ tidy_BPIPD_31 <- function(raw_dataset, spec) {
   stacked <- bp31_fill_parent_education(stacked)
   stacked <- bp31_fill_mother_y15(stacked)
   stacked <- bp31_drop_wj_floor(stacked)
+  stacked <- bp31_carry_grade_repeated(stacked)
 
   if (anyDuplicated(stacked[c("participant_id", "wave")]) > 0L) {
     stop(
@@ -318,6 +331,473 @@ bp31_wave_columns <- function() {
       y9 = "BP31CBCL_Y9_EXTERNALISING",
       y15 = "BP31CBCL_Y15_EXTERNALISING"
     ),
+    cbcl_withdrawn_dep_y9 = bp31_entry(
+      "CBCL/6-18 Withdrawn/Depressed syndrome scale, caregiver report, mean item score (Year 9 only; scored for the internalising composite, carried here for its own row)",
+      y9 = "BP31CBCL_Y9_WITHDRAWN"
+    ),
+    cbcl_somatic = bp31_entry(
+      "CBCL Somatic Complaints syndrome scale, caregiver report, mean item score (Year 9 only; the other waves did not ask the scale)",
+      y9 = "BP31CBCL_Y9_SOMATIC"
+    ),
+    cbcl_emotreact = bp31_entry(
+      "CBCL/1.5-5 Emotionally Reactive items, caregiver report, mean item score over the 4 of 9 items asked (Year 3 only)",
+      y3 = "BP31CBCL_Y3_EMOTREACT"
+    ),
+    cbcl_socprob = bp31_entry(
+      "CBCL Social Problems syndrome scale, caregiver report, mean item score (Year 5 CBCL/4-18, Year 9 CBCL/6-18)",
+      y5 = "BP31CBCL_Y5_SOCPROB",
+      y9 = "BP31CBCL_Y9_SOCPROB"
+    ),
+    cbcl_total = bp31_entry(
+      "CBCL/6-18 Total Problems, caregiver report, mean item score over the 111 problem items asked (Year 9 only)",
+      y9 = "BP31CBCL_Y9_TOTAL"
+    ),
+    # --- Year 9 teacher survey scales (scored in bp31_add_teacher_scales) ---
+    teacher_ssrs_social_skills = bp31_entry(
+      "Teacher report, Social Skills Rating System total social skills (cooperation, assertion and self-control, 25 items 0-3, sum)",
+      y9 = "BP31TCH_Y9_SSRS_SOCIAL"
+    ),
+    teacher_ssrs_externalising = bp31_entry(
+      "Teacher report, Social Skills Rating System externalizing problem behaviours (6 items 0-3, sum)",
+      y9 = "BP31TCH_Y9_SSRS_EXT"
+    ),
+    teacher_ssrs_internalising = bp31_entry(
+      "Teacher report, Social Skills Rating System internalizing problem behaviours (6 items 0-3, sum)",
+      y9 = "BP31TCH_Y9_SSRS_INT"
+    ),
+    teacher_conners_cognitive = bp31_entry(
+      "Teacher report, Conners' Teacher Rating Scale-Revised short form cognitive problems/inattention (5 items 0-3, sum)",
+      y9 = "BP31TCH_Y9_CONNERS_COGNITIVE"
+    ),
+    teacher_conners_hyperactivity = bp31_entry(
+      "Teacher report, Conners' Teacher Rating Scale-Revised short form hyperactivity (7 items 0-3, sum)",
+      y9 = "BP31TCH_Y9_CONNERS_HYPERACTIVITY"
+    ),
+    teacher_conners_adhd_index = bp31_entry(
+      "Teacher report, Conners' Teacher Rating Scale-Revised short form ADHD index (12 items 0-3, sum)",
+      y9 = "BP31TCH_Y9_CONNERS_ADHD"
+    ),
+    teacher_comforts_helps = bp31_entry(
+      "Teacher report: child comforts or helps other children (1 never - 4 very often; Year 9 only)",
+      y9 = "T5B1AD"
+    ),
+    # --- caregiver-rated social skills (scored in bp31_add_asbi_scores) ---
+    pcg_asbi_mean = bp31_entry(
+      "PCG report, Adaptive Social Behavior Inventory Express items (Year 9: with Social Skills Rating System assertion items), mean item score 0-2",
+      y3 = "BP31ASBI_Y3",
+      y5 = "BP31ASBI_Y5",
+      y9 = "BP31ASBI_Y9"
+    ),
+    # --- youth self-report social skills, Year 15 (1 not true - 3 often true)
+    youth_ssk_understands_feelings = bp31_entry(
+      "Youth self-report: I understand others' feelings like when they are happy, sad, or mad",
+      y15 = "K6D1A"
+    ),
+    youth_ssk_comforts_others = bp31_entry(
+      "Youth self-report: I try to comfort others when they are upset",
+      y15 = "K6D1B"
+    ),
+    youth_ssk_open_direct = bp31_entry(
+      "Youth self-report: I am open and direct about what I want",
+      y15 = "K6D1C"
+    ),
+    youth_ssk_joins_groups = bp31_entry(
+      "Youth self-report: I join group activities without being told to",
+      y15 = "K6D1D"
+    ),
+    youth_ssk_self_confident = bp31_entry(
+      "Youth self-report: I am self-confident in social situations",
+      y15 = "K6D1F"
+    ),
+    youth_ssk_changes_activity = bp31_entry(
+      "Youth self-report: I easily change from one activity to another",
+      y15 = "K6D1G"
+    ),
+    youth_ssk_interests = bp31_entry(
+      "Youth self-report: I show interest in a variety of things",
+      y15 = "K6D1H"
+    ),
+    youth_ssk_starts_conversations = bp31_entry(
+      "Youth self-report: I start conversations rather than waiting for others to talk first",
+      y15 = "K6D1I"
+    ),
+    youth_ssk_liked = bp31_entry(
+      "Youth self-report: I am liked by others",
+      y15 = "K6D1J"
+    ),
+    youth_ssk_invites_others = bp31_entry(
+      "Youth self-report: I invite others to my home",
+      y15 = "K6D1K"
+    ),
+    youth_ssk_reports_accidents = bp31_entry(
+      "Youth self-report: I report accidents to appropriate persons",
+      y15 = "K6D1L"
+    ),
+    # --- youth self-report impulsivity, Year 15 (Dickman dysfunctional
+    # --- impulsivity items, 1 strongly agree - 4 strongly disagree) ---------
+    dickman_not_thinking_over = bp31_entry(
+      "Dickman impulsivity: I don't spend enough time thinking over a situation before I act",
+      y15 = "K6D2A"
+    ),
+    dickman_without_consequences = bp31_entry(
+      "Dickman impulsivity: I often say and do things without considering the consequences",
+      y15 = "K6D2P"
+    ),
+    dickman_plans_fail = bp31_entry(
+      "Dickman impulsivity: the plans I make don't work out because I haven't gone over them carefully enough",
+      y15 = "K6D2R"
+    ),
+    dickman_mind_up_quickly = bp31_entry(
+      "Dickman impulsivity: I often make up my mind without taking the time to consider the situation from all angles",
+      y15 = "K6D2Z"
+    ),
+    dickman_says_whatever = bp31_entry(
+      "Dickman impulsivity: I often say whatever comes into my head without thinking first",
+      y15 = "K6D2AB"
+    ),
+    dickman_trouble_not_thinking = bp31_entry(
+      "Dickman impulsivity: I often get into trouble because I don't think before I act",
+      y15 = "K6D2AJ"
+    ),
+    # --- self-reported delinquency (scored in bp31_add_delinquency_scores) --
+    youth_delinquency = bp31_entry(
+      "Self-reported delinquency: Year 9 count of 17 'Things That You Have Done' acts ever done (yes/no); Year 15 sum of 13 Add Health acts in the past 12 months (0 never - 3 five or more times)",
+      y9 = "BP31DELINQ_Y9",
+      y15 = "BP31DELINQ_Y15"
+    ),
+    youth_other_drugs_ever = bp31_entry(
+      "Youth self-report: ever tried illegal drugs other than marijuana (1 yes, 2 no; gates the drug-type items; Year 15 only)",
+      y15 = "K6F68"
+    ),
+    youth_tried_hallucinogens = bp31_entry(
+      "Youth self-report: tried hallucinogens (1 yes, 2 no; Year 15 only)",
+      y15 = "K6F69A"
+    ),
+    youth_tried_cocaine = bp31_entry(
+      "Youth self-report: tried cocaine or crack (1 yes, 2 no; Year 15 only)",
+      y15 = "K6F69B"
+    ),
+    youth_tried_heroin = bp31_entry(
+      "Youth self-report: tried heroin (1 yes, 2 no; Year 15 only)",
+      y15 = "K6F69C"
+    ),
+    youth_tried_meth = bp31_entry(
+      "Youth self-report: tried methamphetamine (1 yes, 2 no; Year 15 only)",
+      y15 = "K6F69D"
+    ),
+    youth_tried_cough_medicine = bp31_entry(
+      "Youth self-report: tried non-prescription cough or cold medicine (1 yes, 2 no; Year 15 only)",
+      y15 = "K6F69E"
+    ),
+    youth_tried_inhalants = bp31_entry(
+      "Youth self-report: tried glue, aerosol sprays, gases, fumes or sprays (1 yes, 2 no; Year 15 only)",
+      y15 = "K6F69F"
+    ),
+    youth_tried_ecstasy = bp31_entry(
+      "Youth self-report: tried ecstasy or MDMA (1 yes, 2 no; Year 15 only)",
+      y15 = "K6F69F1"
+    ),
+    youth_tried_other_drugs = bp31_entry(
+      "Youth self-report: tried other types of illegal drugs (1 yes, 2 no; Year 15 only)",
+      y15 = "K6F69G"
+    ),
+    # --- school ---------------------------------------------------------------
+    grade_repeated = bp31_entry(
+      "PCG report: child has repeated a grade (Year 9 ever; Year 15 since the last interview); 1 yes, 2 no; a yes is carried to every later wave",
+      y9 = "P5L15",
+      y15 = "P6C25"
+    ),
+    youth_suspended = bp31_entry(
+      "Self-report: suspended or expelled from school (Year 9 ever, no time frame; Year 15 in the past 2 years, code 7 = homeschooled)",
+      y9 = "K5F1M",
+      y15 = "K6B29"
+    ),
+    youth_homework_hours_wd = bp31_entry(
+      "Youth self-report: hours spent doing homework each weekday (Year 15 only)",
+      y15 = "K6B6"
+    ),
+    youth_homework_hours_we = bp31_entry(
+      "Youth self-report: hours spent doing homework each weekend day (Year 15 only)",
+      y15 = "K6B7"
+    ),
+    # --- doctor-diagnosed developmental conditions, PCG report (1 yes, 2 no;
+    # --- Year 5 rebased by bp31_add_told_conditions) --------------------------
+    dx_adhd = bp31_entry(
+      "PCG report: a doctor or health professional diagnosed the child with ADD/ADHD",
+      y5 = "BP31DX_Y5_P4A2_A",
+      y9 = "P5H2A",
+      y15 = "P6B10"
+    ),
+    rx_adhd = bp31_entry(
+      "PCG report: child takes medication for ADD/ADHD, 1 yes, 2 no (asked of children taking prescribed medication, see rx_any; Year 15 rebased from 0 no, 1 yes)",
+      y9 = "P5H3B1_1",
+      y15 = "BP31RX_Y15_P6B27_1"
+    ),
+    rx_any = bp31_entry(
+      "PCG report: child takes medicine for which a prescription was needed (Year 9) or regularly takes prescription medicine (Year 15); 1 yes, 2 no; gates rx_adhd",
+      y9 = "P5H3A1",
+      y15 = "P6B26"
+    ),
+    dx_autism = bp31_entry(
+      "PCG report: a doctor or health professional diagnosed the child with autism",
+      y5 = "BP31DX_Y5_P4A2_F",
+      y9 = "P5H2F",
+      y15 = "P6B11"
+    ),
+    dx_speech_language = bp31_entry(
+      "PCG report: a doctor or health professional diagnosed the child with a speech or language problem (Years 5 and 9)",
+      y5 = "BP31DX_Y5_P4A2_M",
+      y9 = "P5H2L"
+    ),
+    dx_learning_disability = bp31_entry(
+      "PCG report: a doctor diagnosed the youth with another learning disability (Year 15 only; specified as speech problem, developmental delay, dyslexia, reading or math difficulty, or other)",
+      y15 = "P6B12"
+    ),
+    # --- cognitive tasks ----------------------------------------------------
+    leiter_attention_scaled = bp31_entry(
+      "Leiter-R Attention Sustained adjusted total correct scaled score (mean 10, SD 3; Year 5 in-home assessment)",
+      y5 = "CH4LR_ADJSCOR"
+    ),
+    walk_line_baseline = bp31_entry(
+      "Walk-a-Line motor-control task, baseline trial at normal speed, seconds (Year 3 in-home study, 18 cities only)",
+      y3 = "CH3WALKC1B"
+    ),
+    walk_line_slow1 = bp31_entry(
+      "Walk-a-Line motor-control task, first trial walking the line very slowly, seconds (Year 3 in-home study, 18 cities only)",
+      y3 = "CH3WALKC2ST"
+    ),
+    walk_line_slow2 = bp31_entry(
+      "Walk-a-Line motor-control task, second trial walking the line very slowly, seconds (Year 3 in-home study, 18 cities only)",
+      y3 = "CH3WALKC3ST"
+    ),
+    # --- family: siblings ----------------------------------------------------
+    mother_hh_children = bp31_entry(
+      "Number of children under 18 in the mother's household, the focal child included where the child lives with her (Years 3-9)",
+      y3 = "CM3KIDS",
+      y5 = "CM4KIDS",
+      y9 = "CM5KIDS"
+    ),
+    youth_full_siblings = bp31_entry(
+      "Youth self-report: number of full siblings living with youth (Year 15 only)",
+      y15 = "K6C42"
+    ),
+    youth_half_siblings = bp31_entry(
+      "Youth self-report: number of half siblings living with youth (Year 15 only)",
+      y15 = "K6C43"
+    ),
+    youth_step_siblings = bp31_entry(
+      "Youth self-report: number of step siblings living with youth (Year 15 only)",
+      y15 = "K6C44"
+    ),
+    # --- family: co-viewing, reading and books ------------------------------
+    mother_coview_tv_days = bp31_entry(
+      "Mother's own report: days per week you watch TV or a video together with the child (0-7; Year 5 only)",
+      y5 = "M4B4A8"
+    ),
+    pcg_coview_tv_freq = bp31_entry(
+      "PCG report: how often you watched TV or videos with the child in the past month (1 not once - 5 every day; Year 9 only)",
+      y9 = "P5I1C"
+    ),
+    pcg_coplay_games_freq = bp31_entry(
+      "PCG report: how often you played video or computer games with the child in the past month (1 not once - 5 every day; Year 9 only)",
+      y9 = "P5I1D"
+    ),
+    mother_read_days = bp31_entry(
+      "Mother's own report: days per week you read stories to the child (0-7; Years 3 and 5)",
+      y3 = "M3B4F",
+      y5 = "M4B4A2"
+    ),
+    mother_father_read_days = bp31_entry(
+      "Mother's report: days per week the child's father reads stories to the child (0-7; Years 3 and 5)",
+      y3 = "M3C3F",
+      y5 = "M4C3B"
+    ),
+    mother_partner_read_days = bp31_entry(
+      "Mother's report: days per week her current partner reads stories to the child (0-7; Years 3 and 5)",
+      y3 = "M3E18F",
+      y5 = "M4E18B"
+    ),
+    pcg_read_freq = bp31_entry(
+      "PCG report: how often you read books or talked about books with the child in the past month (1 not once - 5 every day; Year 9 only)",
+      y9 = "P5I1E"
+    ),
+    pcg_father_read_freq = bp31_entry(
+      "PCG report: how often the child's father read books or talked about books with the child in the past month (1 not once - 5 every day; Year 9 only)",
+      y9 = "P5I31E"
+    ),
+    pcg_partner_read_freq = bp31_entry(
+      "PCG report: how often the PCG's partner read books or talked about books with the child in the past month (1 not once - 5 every day; Year 9 only)",
+      y9 = "P5I40E"
+    ),
+    child_books_y3 = bp31_entry(
+      "PCG report: how many books the child has (1 none, 2 1-2, 3 3-4, 4 5 or more; Year 3 only)",
+      y3 = "P3C1F"
+    ),
+    child_own_books = bp31_entry(
+      "PCG report: how many books are the child's own (Year 5, asked where the child has any; Year 9) (1 none, 2 1-10, 3 11-20, 4 more than 20)",
+      y5 = "P4C12",
+      y9 = "P5I20B"
+    ),
+    child_books_for_age_any = bp31_entry(
+      "PCG report: are there any books for the child's age (0 no, 1 yes; gates child_has_own_books; Year 5 only)",
+      y5 = "P4C9"
+    ),
+    child_has_own_books = bp31_entry(
+      "PCG report: are any of the books for the child's age the child's own (0 no, 1 yes; gates child_own_books; Year 5 only)",
+      y5 = "P4C11"
+    ),
+    # --- family: parenting --------------------------------------------------
+    mother_hug_days = bp31_entry(
+      "Mother's own report: days per week you hug or show physical affection to the child (0-7; Year 3 only)",
+      y3 = "M3B4B"
+    ),
+    mother_say_love_days = bp31_entry(
+      "Mother's own report: days per week you tell the child that you love him/her (0-7; Year 3 only)",
+      y3 = "M3B4C"
+    ),
+    mother_appreciate_days = bp31_entry(
+      "Mother's own report: days per week you tell the child you appreciate something he/she did (0-7; Years 3 and 5)",
+      y3 = "M3B4I",
+      y5 = "M4B4A5"
+    ),
+    cts_shouted = bp31_entry(
+      "PCG's Conflict Tactics Scale (CTSPC) item: shouted, yelled or screamed at the child; past-year times band (0 not in the past year, 1 once, 2 twice, 3 3-5, 4 6-10, 5 11-20, 6 more than 20)",
+      y3 = "BP31CTS_Y3_SHOUTED",
+      y5 = "BP31CTS_Y5_SHOUTED",
+      y9 = "BP31CTS_Y9_SHOUTED"
+    ),
+    cts_swore = bp31_entry(
+      "PCG's CTSPC item: swore or cursed at the child; past-year times band (0 not in the past year - 6 more than 20)",
+      y3 = "BP31CTS_Y3_SWORE",
+      y5 = "BP31CTS_Y5_SWORE",
+      y9 = "BP31CTS_Y9_SWORE"
+    ),
+    cts_send_away = bp31_entry(
+      "PCG's CTSPC item: said would send the child away or kick the child out of the house; past-year times band (0 not in the past year - 6 more than 20)",
+      y3 = "BP31CTS_Y3_SEND_AWAY",
+      y5 = "BP31CTS_Y5_SEND_AWAY",
+      y9 = "BP31CTS_Y9_SEND_AWAY"
+    ),
+    cts_threatened_spank = bp31_entry(
+      "PCG's CTSPC item: threatened to spank or hit the child but did not; past-year times band (0 not in the past year - 6 more than 20)",
+      y3 = "BP31CTS_Y3_THREATENED_SPANK",
+      y5 = "BP31CTS_Y5_THREATENED_SPANK",
+      y9 = "BP31CTS_Y9_THREATENED_SPANK"
+    ),
+    cts_called_names = bp31_entry(
+      "PCG's CTSPC item: called the child dumb, lazy or a similar name; past-year times band (0 not in the past year - 6 more than 20)",
+      y3 = "BP31CTS_Y3_CALLED_NAMES",
+      y5 = "BP31CTS_Y5_CALLED_NAMES",
+      y9 = "BP31CTS_Y9_CALLED_NAMES"
+    ),
+    cts_shook = bp31_entry(
+      "PCG's CTSPC item: shook the child; past-year times band (0 not in the past year - 6 more than 20)",
+      y3 = "BP31CTS_Y3_SHOOK",
+      y5 = "BP31CTS_Y5_SHOOK",
+      y9 = "BP31CTS_Y9_SHOOK"
+    ),
+    cts_hit_object = bp31_entry(
+      "PCG's CTSPC item: hit the child on the bottom with a belt or other hard object; past-year times band (0 not in the past year - 6 more than 20)",
+      y3 = "BP31CTS_Y3_HIT_OBJECT",
+      y5 = "BP31CTS_Y5_HIT_OBJECT",
+      y9 = "BP31CTS_Y9_HIT_OBJECT"
+    ),
+    cts_spanked = bp31_entry(
+      "PCG's CTSPC item: spanked the child on the bottom with a bare hand; past-year times band (0 not in the past year - 6 more than 20)",
+      y3 = "BP31CTS_Y3_SPANKED",
+      y5 = "BP31CTS_Y5_SPANKED",
+      y9 = "BP31CTS_Y9_SPANKED"
+    ),
+    cts_slapped = bp31_entry(
+      "PCG's CTSPC item: slapped the child on the hand, arm or leg; past-year times band (0 not in the past year - 6 more than 20)",
+      y3 = "BP31CTS_Y3_SLAPPED",
+      y5 = "BP31CTS_Y5_SLAPPED",
+      y9 = "BP31CTS_Y9_SLAPPED"
+    ),
+    cts_pinched = bp31_entry(
+      "PCG's CTSPC item: pinched the child; past-year times band (0 not in the past year - 6 more than 20)",
+      y3 = "BP31CTS_Y3_PINCHED",
+      y5 = "BP31CTS_Y5_PINCHED",
+      y9 = "BP31CTS_Y9_PINCHED"
+    ),
+    youth_pcg_hit_slapped = bp31_entry(
+      "Youth self-report: PCG hit or slapped you (1 never, 2 sometimes, 3 often; Year 15 only)",
+      y15 = "K6C9D"
+    ),
+    pcg_hit_slapped = bp31_entry(
+      "PCG report: hit or slapped the youth in the past year (1 never, 2 sometimes, 3 often; Year 15 only)",
+      y15 = "P6D29"
+    ),
+    # --- family: monitoring, relationships and media rules ------------------
+    child_pcg_knows_free_time = bp31_entry(
+      "Child self-report: how often the PCG knows what you do during your free time (0 never - 3 always; Year 9 only)",
+      y9 = "K5A1A"
+    ),
+    child_pcg_knows_friends = bp31_entry(
+      "Child self-report: how often the PCG knows which friends you hang out with during free time (0 never - 3 always; Year 9 only)",
+      y9 = "K5A1B"
+    ),
+    child_pcg_asks = bp31_entry(
+      "Child self-report: how often the PCG asks about things that happened when you are not with her/him (0 never - 3 always; Year 9 only)",
+      y9 = "K5A1C"
+    ),
+    child_pcg_where_going = bp31_entry(
+      "Child self-report: how often the PCG makes you tell where you are going and with whom (0 never - 3 always; Year 9 only)",
+      y9 = "K5A1D"
+    ),
+    child_pcg_knows_spending = bp31_entry(
+      "Child self-report: how often the PCG knows what you spend money on (0 never - 3 always; Year 9 only)",
+      y9 = "K5A1E"
+    ),
+    youth_pcg_knows_free_time = bp31_entry(
+      "Youth self-report: PCG knows what you do during your free time (1 never, 2 sometimes, 3 often; Year 15 only)",
+      y15 = "K6C6A"
+    ),
+    youth_pcg_knows_spending = bp31_entry(
+      "Youth self-report: PCG knows what you spend money on (1 never, 2 sometimes, 3 often; Year 15 only)",
+      y15 = "K6C6B"
+    ),
+    pcg_knows_free_time = bp31_entry(
+      "PCG report: how often knows what the youth does during free time (1 never, 2 sometimes, 3 often; Year 15 only)",
+      y15 = "P6D24"
+    ),
+    pcg_knows_spending = bp31_entry(
+      "PCG report: how often knows what the youth spends money on (1 never, 2 sometimes, 3 often; Year 15 only)",
+      y15 = "P6D25"
+    ),
+    close_to_mother = bp31_entry(
+      "Child/youth self-report: how close you feel to your (biological) mother (1 extremely close - 4 not very close)",
+      y9 = "K5A2E",
+      y15 = "K6C17"
+    ),
+    share_ideas_mother = bp31_entry(
+      "Child/youth self-report: how well you and your mother share ideas or talk about things that matter (1 extremely well - 4 not very well)",
+      y9 = "K5A2F",
+      y15 = "K6C18"
+    ),
+    close_to_father = bp31_entry(
+      "Child/youth self-report: how close you feel to your (biological) father (1 extremely close - 4 not very close)",
+      y9 = "K5A3E",
+      y15 = "K6C28"
+    ),
+    share_ideas_father = bp31_entry(
+      "Child/youth self-report: how well you and your father share ideas or talk about things that matter (1 extremely well - 4 not very well)",
+      y9 = "K5A3F",
+      y15 = "K6C29"
+    ),
+    pcg_close_to_child = bp31_entry(
+      "PCG report: how close you feel to the child (1 extremely close - 4 not very close; Years 9 and 15)",
+      y9 = "P5K1F",
+      y15 = "P6D37"
+    ),
+    pcg_share_ideas_child = bp31_entry(
+      "PCG report: how well you and the child share ideas or talk about things that matter (1 extremely well - 4 not very well; Year 9 only)",
+      y9 = "P5K1G"
+    ),
+    youth_tv_decides = bp31_entry(
+      "Youth self-report: who decides what kinds of TV shows and movies you can watch (1 parents/guardians, 2 youth, 3 jointly; Year 15 only)",
+      y15 = "K6C7B"
+    ),
     # --- Year 15 teen BSI-18 anxiety (1 strongly agree - 4 strongly disagree)
     bsi_terror = bp31_entry(
       "BSI-18 anxiety: I have spells of terror or panic",
@@ -349,6 +829,11 @@ bp31_wave_columns <- function() {
       y3 = "CH3PPVTSTD",
       y5 = "CH4PPVTSTD",
       y9 = "CH5PPVTSS"
+    ),
+    ppvt_pct_missing = bp31_entry(
+      "PPVT-III, child: percent of items for the total score missing (Years 3 and 5)",
+      y3 = "CH3PVPERCOM",
+      y5 = "CH4PVPERCOM"
     ),
     tvip_standard = bp31_entry(
       "TVIP (Spanish) receptive vocabulary standard score, child",
@@ -1216,7 +1701,17 @@ bp31_fill_mother_y15 <- function(tidied) {
 #' Year 5 doctor-told items recoded from 0 no, 1 yes to the 1 yes, 2 no of
 #' Years 9 and 15
 bp31_add_told_conditions <- function(raw) {
-  for (item in c("P4A2_D", "P4A2_E", "P4A2_G", "P4A2_H", "P4A2_N")) {
+  items <- c(
+    "P4A2_A",
+    "P4A2_D",
+    "P4A2_E",
+    "P4A2_F",
+    "P4A2_G",
+    "P4A2_H",
+    "P4A2_M",
+    "P4A2_N"
+  )
+  for (item in items) {
     values <- bp31_decode(raw[[item]])
     raw[[paste0("BP31DX_Y5_", item)]] <- dplyr::if_else(values == 0, 2, values)
   }
@@ -1408,7 +1903,10 @@ bp31_cbcl_items <- function() {
         "P3M41",
         "P3M44",
         "P3M48"
-      )
+      ),
+      # 4 of the 9 CBCL/1.5-5 Emotionally Reactive items were asked (P3M7A
+      # and P3M40A in 18 cities only); scored only for its own row
+      emotreact = c("P3M7A", "P3M40", "P3M40A", "P3M49")
     ),
     y5 = list(
       anxdep = c(
@@ -1484,6 +1982,17 @@ bp31_cbcl_items <- function() {
         "P4L50",
         "P4L54",
         "P4L64"
+      ),
+      # CBCL/4-18 (1991) Social Problems, 8 of 8 items (Year 5 Table 27)
+      socprob = c(
+        "M4B4B19",
+        "M4B4B3",
+        "M4B4B6",
+        "P4L22",
+        "P4L28",
+        "P4L31",
+        "P4L35",
+        "P4L37"
       )
     ),
     # Somatic complaints are scored only here, for the CBCL/6-18 internalising
@@ -1577,6 +2086,21 @@ bp31_cbcl_items <- function() {
         "P5Q3CT",
         "P5Q3CX",
         "P5Q3CY"
+      ),
+      # CBCL/6-18 Social Problems, 11 of 11 items, matched to the sample
+      # profile by wording as the other Year 9 lists
+      socprob = c(
+        "P5Q3J",
+        "P5Q3K",
+        "P5Q3W",
+        "P5Q3Y",
+        "P5Q3AG",
+        "P5Q3AI",
+        "P5Q3AK",
+        "P5Q3AT",
+        "P5Q3BH",
+        "P5Q3BJ",
+        "P5Q3BX"
       )
     ),
     y15 = list(
@@ -1608,6 +2132,41 @@ bp31_cbcl_items <- function() {
         "P6B67"
       )
     )
+  )
+}
+
+#' Year 9 CBCL Total Problems items: all 111 CBCL/6-18 problem items asked
+#'
+#' The user guide's Total CBCL (Table 32, note 3) leaves out only the 8 items
+#' Year 9 did not ask; its Table 32 statistics also count the 13 ASBI items
+#' (P5Q3DC-P5Q3DO), which are not CBCL items and are left out here.
+bp31_cbcl_total_items_y9 <- function() {
+  c(
+    unlist(bp31_cbcl_items()$y9, use.names = FALSE),
+    # Problem items on no syndrome scale scored above, Thought Problems included
+    "P5Q3F",
+    "P5Q3H",
+    "P5Q3N",
+    "P5Q3Q",
+    "P5Q3AM",
+    "P5Q3AR",
+    "P5Q3AY",
+    "P5Q3BA",
+    "P5Q3BB8",
+    "P5Q3BD",
+    "P5Q3BE",
+    "P5Q3BF",
+    "P5Q3BL",
+    "P5Q3BP",
+    "P5Q3BT",
+    "P5Q3BV",
+    "P5Q3CB",
+    "P5Q3CD",
+    "P5Q3CE",
+    "P5Q3CL",
+    "P5Q3CM",
+    "P5Q3CS",
+    "P5Q3CZ"
   )
 }
 
@@ -1644,7 +2203,11 @@ bp31_cbcl_composites <- function(subscales) {
 #' Score the CBCL subscales and composites and append them to the raw table
 bp31_add_cbcl_scores <- function(raw) {
   absent <- setdiff(
-    unique(c(unlist(bp31_cbcl_items()), unlist(bp31_cbcl_single_items()))),
+    unique(c(
+      unlist(bp31_cbcl_items()),
+      unlist(bp31_cbcl_single_items()),
+      bp31_cbcl_total_items_y9()
+    )),
     names(raw)
   )
   if (length(absent) > 0L) {
@@ -1683,6 +2246,8 @@ bp31_add_cbcl_scores <- function(raw) {
       raw[[column]] <- bp31_cbcl_item(raw, single[[item]][[wave]])
     }
   }
+
+  raw$BP31CBCL_Y9_TOTAL <- bp31_cbcl_mean(raw, bp31_cbcl_total_items_y9())
 
   raw
 }
@@ -1781,4 +2346,168 @@ bp31_cbcl_rescale <- function(column) {
   }
 
   values
+}
+
+#' Year 9 teacher survey scales, scored by the user guide (sections 18.4 and
+#' 18.5)
+#'
+#' The guide prints only example items, so the item lists follow the published
+#' forms by wording and reproduce every N, mean and SD of the guide's Tables
+#' 77, 78 and 83: the Social Skills Rating System elementary teacher form
+#' (25 of its 30 social skills items, 12 problem behaviour items) and the
+#' Conners' Teacher Rating Scale-Revised short form. Items are rescaled to
+#' start at 0 and summed, complete cases only, as the guide scores them;
+#' scored here because the item lists need this documentation.
+bp31_teacher_scale_items <- function() {
+  ssrs <- function(x) paste0("T5B1", x)
+  problems <- function(x) paste0("T5B3", x)
+  conners <- function(n) paste0("T5B4", c(LETTERS, "AA", "AB")[n])
+  list(
+    SSRS_SOCIAL = ssrs(c(
+      # cooperation
+      "F",
+      "G",
+      "L",
+      "M",
+      "P",
+      "Q",
+      "U",
+      "V",
+      "W",
+      "X",
+      # assertion
+      "D",
+      "E",
+      "H",
+      "O",
+      "S",
+      # self-control
+      "A",
+      "B",
+      "C",
+      "I",
+      "J",
+      "K",
+      "N",
+      "R",
+      "T",
+      "Y"
+    )),
+    SSRS_EXT = problems(c("A", "C", "G", "H", "I", "J")),
+    SSRS_INT = problems(c("B", "D", "E", "F", "K", "L")),
+    CONNERS_COGNITIVE = conners(c(4, 8, 13, 18, 22)),
+    CONNERS_HYPERACTIVITY = conners(c(3, 7, 11, 17, 21, 24, 27)),
+    CONNERS_ADHD = conners(c(1, 5, 9, 12, 14, 16, 19, 23, 25, 26, 27, 28))
+  )
+}
+
+#' Score the Year 9 teacher scales and append them to the raw table
+bp31_add_teacher_scales <- function(raw) {
+  scales <- bp31_teacher_scale_items()
+  for (scale in names(scales)) {
+    items <- do.call(
+      cbind,
+      lapply(scales[[scale]], function(name) bp31_cbcl_rescale(raw[[name]]))
+    )
+    raw[[paste0("BP31TCH_Y9_", scale)]] <- rowSums(items)
+  }
+  raw
+}
+
+#' Caregiver-rated Adaptive Social Behavior Inventory Express items, mean
+#' item score on 0-2, complete cases only
+#'
+#' The item set changes with the wave (user guides: Year 3 Table 30, 9 items;
+#' Year 5 Table 29, 13 items; Year 9 Table 33, 3 ASBI items with 10 Social
+#' Skills Rating System assertion items, coded 1-3), so it is scored here.
+#' Year 5 'in social activities, tends to just watch others' (P4L32) is
+#' worded against the scale and correlates negatively with every other item,
+#' so it is reversed.
+bp31_add_asbi_scores <- function(raw) {
+  items <- list(
+    Y3 = paste0("P3M", c(4, 8, 12, 15, 20, 24, 27, 34, 43)),
+    Y5 = paste0("P4L", c(3, 11, 15, 30, 32, 41, 48, 51, 55, 58, 60, 63, 66)),
+    Y9 = paste0("P5Q3D", LETTERS[3:15])
+  )
+  reversed <- "P4L32"
+  for (wave in names(items)) {
+    scored <- do.call(
+      cbind,
+      lapply(items[[wave]], function(name) {
+        values <- bp31_cbcl_rescale(raw[[name]])
+        if (name %in% reversed) 2 - values else values
+      })
+    )
+    raw[[paste0("BP31ASBI_", wave)]] <- rowMeans(scored)
+  }
+  raw
+}
+
+#' Self-reported delinquency scores, complete cases only
+#'
+#' Year 9: count of the 17 'Things That You Have Done' acts answered yes
+#' (K5F1A-K5F1Q, 1 yes, 2 no; user guide Table 42). Year 15: sum of the 13
+#' Add Health acts in the past 12 months (K6D61A-K6D61M, 1 never - 4 five or
+#' more times, scored 0-3; user guide section 2.4). The item sets differ by
+#' wave, so they are scored here.
+bp31_add_delinquency_scores <- function(raw) {
+  y9 <- do.call(
+    cbind,
+    lapply(paste0("K5F1", LETTERS[1:17]), function(name) {
+      as.numeric(bp31_decode(raw[[name]]) == 1)
+    })
+  )
+  raw$BP31DELINQ_Y9 <- rowSums(y9)
+
+  y15 <- do.call(
+    cbind,
+    lapply(paste0("K6D61", LETTERS[1:13]), function(name) {
+      bp31_decode(raw[[name]]) - 1
+    })
+  )
+  raw$BP31DELINQ_Y15 <- rowSums(y15)
+  raw
+}
+
+#' PCG's Parent-Child Conflict Tactics Scales items on one past-year coding
+#'
+#' Years 3 and 5 code 0 never, 1-6 times bands and 7 'not in the past year';
+#' Year 9 codes 1-6, 7 'not in the past year' and 8 never. Both become the
+#' past-year times band 0-6, 0 = not in the past year.
+bp31_add_cts_items <- function(raw) {
+  items <- list(
+    SHOUTED = c(Y3 = "P3J6", Y5 = "P4G6", Y9 = "P5Q1F"),
+    SWORE = c(Y3 = "P3J8", Y5 = "P4G8", Y9 = "P5Q1H"),
+    SEND_AWAY = c(Y3 = "P3J9", Y5 = "P4G9", Y9 = "P5Q1I"),
+    THREATENED_SPANK = c(Y3 = "P3J10", Y5 = "P4G10", Y9 = "P5Q1J"),
+    CALLED_NAMES = c(Y3 = "P3J14", Y5 = "P4G14", Y9 = "P5Q1N"),
+    SHOOK = c(Y3 = "P3J3", Y5 = "P4G3", Y9 = "P5Q1C"),
+    HIT_OBJECT = c(Y3 = "P3J4", Y5 = "P4G4", Y9 = "P5Q1D"),
+    SPANKED = c(Y3 = "P3J7", Y5 = "P4G7", Y9 = "P5Q1G"),
+    SLAPPED = c(Y3 = "P3J11", Y5 = "P4G11", Y9 = "P5Q1K"),
+    PINCHED = c(Y3 = "P3J13", Y5 = "P4G13", Y9 = "P5Q1M")
+  )
+  for (item in names(items)) {
+    for (wave in names(items[[item]])) {
+      values <- bp31_decode(raw[[items[[item]][[wave]]]])
+      values[values %in% c(7, 8)] <- 0
+      raw[[paste("BP31CTS", wave, item, sep = "_")]] <- values
+    }
+  }
+  raw
+}
+
+#' A grade repeated stays repeated: a yes is carried to every later wave the
+#' child attended, over a later no too; a no is never carried
+bp31_carry_grade_repeated <- function(tidied) {
+  order_in_wave <- match(tidied$wave, bp31_waves())
+  repeated <- tidied$grade_repeated %in% 1
+  first_yes <- tapply(
+    ifelse(repeated, order_in_wave, NA_real_),
+    tidied$participant_id,
+    function(x) suppressWarnings(min(x, na.rm = TRUE))
+  )
+  later <- order_in_wave > first_yes[tidied$participant_id]
+  tidied$grade_repeated[!is.na(later) & later] <- 1
+  tidied
 }

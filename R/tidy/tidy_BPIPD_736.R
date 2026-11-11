@@ -83,10 +83,22 @@ tidy_BPIPD_736 <- function(raw_dataset, spec) {
 
   # Family structure and maternal employment are carried across gaps of 12
   # months or less, so the 3-month wave takes the baseline answers.
-  bp736_carry_baseline(
+  long <- bp736_carry_baseline(
     long,
     c(grep("^q3a_[0-9]+$", names(long), value = TRUE), "q4a", "q4b")
   )
+
+  # Sibling counts are carried the same way. They go into new columns so that
+  # q3ch_1 and q3ch_2 keep the answers as given (none at 3 months).
+  long$brothers_n <- as.numeric(long$q3ch_1)
+  long$sisters_n <- as.numeric(long$q3ch_2)
+  long <- bp736_carry_baseline(long, c("brothers_n", "sisters_n"))
+  attr(long$brothers_n, "label") <-
+    "Brothers (item 3ch_1); 3-month rows carried from baseline"
+  attr(long$sisters_n, "label") <-
+    "Sisters (item 3ch_2); 3-month rows carried from baseline"
+
+  long
 }
 
 #' Fill skipped 3-month items with the same pupil's baseline answers

@@ -1,6 +1,6 @@
 dataset_id: "2303"
 dataset_name: "MiMic project"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "Mplus Dat Dataset"

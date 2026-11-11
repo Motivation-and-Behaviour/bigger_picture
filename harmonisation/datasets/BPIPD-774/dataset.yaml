@@ -1,6 +1,6 @@
 dataset_id: "774"
 dataset_name: "Young Minds Matter"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "ymm_survey_users_guide"

@@ -1,6 +1,6 @@
 dataset_id: "1927"
 dataset_name: "ActiveBrains and GENOBEX"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "activebrains_genobex_data"

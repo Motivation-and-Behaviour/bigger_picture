@@ -1,6 +1,6 @@
 dataset_id: "625"
 dataset_name: "YRBSS"
-status: "in_progress"
+status: "harmonised"
 
 waves:
   - wave: "1999"

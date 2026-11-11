@@ -1,6 +1,6 @@
 dataset_id: "1612"
 dataset_name: "Konok"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data_t1"

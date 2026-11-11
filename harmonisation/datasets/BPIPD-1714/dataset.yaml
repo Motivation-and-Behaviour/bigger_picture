@@ -1,6 +1,6 @@
 dataset_id: "1714"
 dataset_name: "Alloway"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data"

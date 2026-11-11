@@ -1,6 +1,6 @@
 dataset_id: "666"
 dataset_name: "Mallawaarachchi"
-status: "in_progress"
+status: "harmonised"
 resources:
   - name: "Quantitative Metadata"
     role: "docs"

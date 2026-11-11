@@ -280,22 +280,9 @@ fam_screenrules,partial,"Q2A31A, Q21B35A, Q31B35A, Q22J36A, Q22J36B, Q22J36C, Q2
   rn <- case_when(rowSums(matrix(h %in% 1:3, nrow = nrow(h))) > 0 ~ TRUE, rowSums(!is.na(h)) > 0 ~ FALSE, .default = NA)
   as.character(coalesce(r97, r02, rn))
 })","PCG. 1997 (household interview): how often 'set limits on how much time your child(ren) can watch TV in a day' (very often to seldom TRUE, never FALSE). 2002, 2007: 'Do you have rules about how much time CHILD can watch TV in a day?' (yes/no) and, in the household interview, how often the PCG sets limits on the video games, computer games, internet and e-mail of the household's children (hardly ever to often TRUE, never FALSE), TRUE if any. 2014 and 2019 (household interview, asked about the household's children): rules on the amount of TV, of device time for shows and videos, and of device time for games; TRUE if any rule (clear and enforced, general and monitored, or rules but child chooses), FALSE if no rule on every answered item; 'child too young/too old' and DK NA. Partial: TV only in 1997, the 2002-2007 limits items pool amount with content, and household items.",,
-fam_contentrules,partial,"Q2A31B, Q21B35B, Q31B35B, Q22J36A, Q22J36B, Q22J36C, Q22J36D, Q32J36A, Q32J36B, Q32J36C, Q32J36D, H14S12, H14S14H, H14S14K, H19S12, H19S14H, H19S14K","local({
-  y97 <- as.numeric(Q2A31B)
-  r97 <- case_when(y97 %in% 1:4 ~ TRUE, y97 == 5 ~ FALSE, .default = NA)
+fam_contentrules,partial,"Q21B35B, Q31B35B, H14S12, H14S14H, H14S14K, H19S12, H19S14H, H19S14K","local({
   tv <- as.numeric(coalesce(Q21B35B, Q31B35B))
-  g <- cbind(
-    as.numeric(coalesce(Q22J36A, Q32J36A)),
-    as.numeric(coalesce(Q22J36B, Q32J36B)),
-    as.numeric(coalesce(Q22J36C, Q32J36C)),
-    as.numeric(coalesce(Q22J36D, Q32J36D))
-  )
-  g[!(g %in% 1:4)] <- NA
-  r02 <- case_when(
-    tv == 1 | rowSums(g >= 2, na.rm = TRUE) > 0 ~ TRUE,
-    tv == 5 | (rowSums(!is.na(g)) > 0 & rowSums(g >= 2, na.rm = TRUE) == 0) ~ FALSE,
-    .default = NA
-  )
+  r02 <- case_when(tv == 1 ~ TRUE, tv == 5 ~ FALSE, .default = NA)
   h <- cbind(
     as.numeric(coalesce(H14S12, H19S12)),
     as.numeric(coalesce(H14S14H, H19S14H)),
@@ -303,8 +290,8 @@ fam_contentrules,partial,"Q2A31B, Q21B35B, Q31B35B, Q22J36A, Q22J36B, Q22J36C, Q
   )
   h[!(h %in% c(1, 2, 3, 5))] <- NA
   rn <- case_when(rowSums(matrix(h %in% 1:3, nrow = nrow(h))) > 0 ~ TRUE, rowSums(!is.na(h)) > 0 ~ FALSE, .default = NA)
-  as.character(coalesce(r97, r02, rn))
-})","PCG. 1997 (household interview): how often 'set limits on the kinds of TV programs' (very often to seldom TRUE, never FALSE). 2002, 2007: rules on the kinds of TV programs CHILD can watch (yes/no) and how often the PCG sets limits on the video games, computer games, internet and e-mail (hardly ever to often TRUE), TRUE if any. 2014 and 2019 (household interview): rules on which TV programs, which shows or videos on devices and which games; TRUE if any rule, FALSE if no rule on every answered item; 'too young/too old' and DK NA. Partial: TV only in 1997, the 2002-2007 limits items pool content with amount, and household items answered once for the household's children.",,
+  as.character(coalesce(r02, rn))
+})","2002, 2007, 2014 and 2019 only, PCG report. 2002, 2007 (child interview): 'Do you have rules about what TV programs CHILD watches?' (yes = TRUE, no = FALSE; DK and refused NA). 2014 and 2019 (household interview): rules on what TV programs, the types of shows, videos or movies watched on devices and the types of games played, each answered yes (clear rules that are enforced, general rules that are monitored, or rules but the child makes own choices) or no; TRUE if any rule, FALSE if no rule on every answered item; 'too young/too old', DK and refused NA. 1997 is NA: its only item asks how often the PCG sets limits on what TV programs the child watches (Q2A31B), a graded item scored in fam_mediation_restrict. The 2002-2007 household items on how often the PCG sets limits on video games, computer games, the internet and e-mail are graded and likewise stay on fam_mediation_restrict. Partial: TV only in 2002 and 2007, and household items answered once for the household's children in 2014 and 2019.",,
 fam_bedroomscreen,partial,"Q22J28B, Q32J28A, H14S5, H19S5, Q22J27, Q32J27, H14S1, H19S1, Q22CDSHID, Q22CDSHPIN, Q32CDSHID, Q32CDSHPIN, H14CDSHID, H14PCGHH, H19CDSHID, H19PCGHH","local({
   hh <- case_when(
     .wave == ""2002"" & !is.na(Q22CDSHID) ~ paste(""2002"", Q22CDSHID, Q22CDSHPIN),

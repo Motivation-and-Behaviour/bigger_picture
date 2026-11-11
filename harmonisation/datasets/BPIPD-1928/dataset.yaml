@@ -1,6 +1,6 @@
 dataset_id: "1928"
 dataset_name: "PeNSE (Pesquisa Nacional de Saude do Escolar)"
-status: "in_progress"
+status: "harmonised"
 
 waves:
   - wave: "2009"

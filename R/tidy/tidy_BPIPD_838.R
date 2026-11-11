@@ -96,6 +96,18 @@ tidy_BPIPD_838 <- function(raw_dataset, spec) {
     "School stage: primary where Class is Primary 1-6 (T1, T5), and at",
     "T2-T4 where Class was Primary 1-5 at T1"
   )
+
+  # The respondent's children, counted from the T1 roster that records each
+  # child's sex (I15a-I15e, the sampled child first) and carried to T2-T5
+  # like the other T1 background items. The study's count (I15, Child_no)
+  # stops at 4, though two respondents list five children.
+  roster <- long[t1, c("I15a", "I15b", "I15c", "I15d", "I15e"), drop = FALSE]
+  listed <- rowSums(!is.na(roster))
+  long$children_listed <- unname(listed[match(long$SC, long$SC[t1])])
+  attr(long$children_listed, "label") <- paste(
+    "Number of the respondent's children listed at T1 (I15a-I15e, the",
+    "sampled child included), carried to T2-T5"
+  )
   long
 }
 

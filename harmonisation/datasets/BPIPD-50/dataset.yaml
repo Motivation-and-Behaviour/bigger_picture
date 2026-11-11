@@ -1,6 +1,6 @@
 dataset_id: "50"
 dataset_name: "NLSY-Child"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "Main Dataset (CSV Format)"

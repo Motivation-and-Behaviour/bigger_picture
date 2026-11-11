@@ -1,6 +1,6 @@
 dataset_id: "2583"
 dataset_name: "CSTADS"
-status: "in_progress"
+status: "harmonised"
 
 waves:
   - wave: "2002"

@@ -410,12 +410,38 @@ fam_parent_mh_measure,inferred,mk6s,"if_else(
   ""distress: Kessler K6, 6 of 6 items, 0-4 item scoring (range 0-24), sum, mother figure in the home (P1 or P2); released as 1-5 items (6-30), rescaled"",
   NA_character_
 )","Waves 1-8 (not the mail-outs), where fam_parent_distress is mapped.",,
-fam_parenting_warmth_parent,compatible,awarm,"if_else(as.numeric(awarm) >= 1, as.numeric(awarm), NA_real_)","Waves 1-8 (B) and 1-6 (K). Parent 1's released warm parenting scale (awarm; items pa03a1-pa03a6 'display physical affection', 'hug', 'express happiness to SC', 'warm encounters', 'enjoy doing things with', 'close when happy or upset'), mean of items scored 1-5. P2 and mother/father versions named unused.",,
-fam_parenting_harsh_parent,compatible,"aanga, aang","local({
+fam_parenting_warmth_parent,compatible,"awarm, pa03a1, pa03a2, pa03a3, pa03a4, pa03a5, pa03a6","local({
+  items <- cbind(
+    as.numeric(pa03a1),
+    as.numeric(pa03a2),
+    as.numeric(pa03a3),
+    as.numeric(pa03a4),
+    as.numeric(pa03a5),
+    as.numeric(pa03a6)
+  )
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 5)
+  if_else(as.numeric(awarm) >= 1 & answered >= 3, as.numeric(awarm), NA_real_)
+})","Waves 1-8 (B) and 1-6 (K). Parent 1's released warm parenting scale (awarm; items pa03a1-pa03a6 'display physical affection', 'hug', 'express happiness to SC', 'warm encounters', 'enjoy doing things with', 'close when happy or upset'), mean of the answered items scored 1-5, used only where at least 3 of the 6 are answered (11 scores on 1-2 items set to NA). P2 and mother/father versions named unused.",,
+fam_parenting_harsh_parent,compatible,"aanga, aang, pa13a2, pa13a3, pa13a4, pa13a5, pa13a6, pa13a7","local({
   x <- coalesce(as.numeric(aanga), as.numeric(aang))
-  if_else(x >= 1, x, NA_real_)
-})","Parent 1's released angry parenting scale: version 2 (aanga, K waves 2-7, B waves 3-8) and version 1 at K wave 1 (aang), mean of items scored 1-5 (higher = more angry, harsh parenting). The infant hostile parenting scales (ahost, ahostb, ahostc, B waves 1-2) and P2 versions are named unused. Standardise within wave where the version changes.",,
-fam_parenting_inconsistent_parent,compatible,acons,"if_else(as.numeric(acons) >= 1, 6 - as.numeric(acons), NA_real_)","Parent 1's released consistency scale (acons, K waves 1-7, B waves 3-8; items pa11a1-pa11a5 such as 'SC gets away unpunished', 'SC ignores punishment'), mean of items scored 1-5, reversed as 6 - x so higher = more inconsistent.",,
+  v2 <- cbind(
+    as.numeric(pa13a2),
+    as.numeric(pa13a3),
+    as.numeric(pa13a4),
+    as.numeric(pa13a5),
+    as.numeric(pa13a6),
+    as.numeric(pa13a7)
+  )
+  answered <- rowSums(!is.na(v2) & v2 >= 1 & v2 <= 5)
+  answered_v1 <- rowSums(!is.na(v2[, 1:4, drop = FALSE]) & v2[, 1:4, drop = FALSE] >= 1 & v2[, 1:4, drop = FALSE] <= 5)
+  enough <- if_else(is.na(aanga), answered_v1 >= 2, answered >= 3)
+  if_else(x >= 1 & enough, x, NA_real_)
+})","Parent 1's released angry parenting scale: version 2 (aanga, K waves 2-7, B waves 3-8; pa13a2 reversed and pa13a3-pa13a7, 6 items) and version 1 at K wave 1 (aang; pa13a2 reversed and pa13a3-pa13a5, 4 items), mean of the answered items scored 1-5 (higher = more angry, harsh parenting), used only where at least half the items are answered (3 of 6, 2 of 4; 26 scores set to NA). The infant hostile parenting scales (ahost, ahostb, ahostc, B waves 1-2) and P2 versions are named unused. Standardise within wave where the version changes.",,
+fam_parenting_inconsistent_parent,compatible,"acons, pa11a1, pa11a2, pa11a3, pa11a4, pa11a5","local({
+  items <- cbind(as.numeric(pa11a1), as.numeric(pa11a2), as.numeric(pa11a3), as.numeric(pa11a4), as.numeric(pa11a5))
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 5)
+  if_else(as.numeric(acons) >= 1 & answered >= 3, 6 - as.numeric(acons), NA_real_)
+})","Parent 1's released consistency scale (acons, K waves 1-7, B waves 3-8; items pa11a1-pa11a5 such as 'SC gets away unpunished', 'SC ignores punishment', pa11a3-pa11a5 reversed in the released scale), mean of the answered items scored 1-5, used only where at least 3 of the 5 are answered (61 scores on 1-2 items set to NA), reversed as 6 - x so higher = more inconsistent.",,
 fam_monitoring_parent,compatible,"aparmon, aparmonb","local({
   x <- coalesce(as.numeric(aparmon), as.numeric(aparmonb))
   if_else(x >= 1, 6 - x, NA_real_)
@@ -455,20 +481,20 @@ fam_parenting_measure,inferred,"awarm, aanga, aang, acons, aparmon, aparmonb, pa
     cohort == ""K"" & .wave == ""8"" ~ NA_character_,
     cohort == ""K"" &
       .wave ==
-        ""1"" ~ ""LSAC parenting scales (Parent 1); warmth: warm parenting, 6 items, 1-5 item scoring (range 1-5), mean; harsh: angry parenting version 1, 1-5 item scoring (range 1-5), mean; inconsistent: consistency scale, 5 items, 1-5 item scoring (range 1-5), mean, reversed (6 - x); supplied as released means"",
+        ""1"" ~ ""LSAC parenting scales (Parent 1); warmth: warm parenting, 6 items, 1-5 item scoring (range 1-5), mean; harsh: angry parenting version 1, 4 items, 1-5 item scoring (range 1-5), mean; inconsistent: consistency scale, 5 items, 1-5 item scoring (range 1-5), mean, reversed (6 - x); supplied as released means of answered items, each used where at least half its items were answered"",
     cohort == ""B"" &
       .wave %in%
         c(
           ""1"",
           ""2""
-        ) ~ ""LSAC parenting scales (Parent 1); warmth: warm parenting, 6 items, 1-5 item scoring (range 1-5), mean; supplied as released means"",
+        ) ~ ""LSAC parenting scales (Parent 1); warmth: warm parenting, 6 items, 1-5 item scoring (range 1-5), mean; supplied as released means of answered items, each used where at least half its items were answered"",
     cohort == ""K"" &
       .wave ==
-        ""7"" ~ ""LSAC parenting scales (Parent 1); harsh: angry parenting version 2, 1-5 item scoring (range 1-5), mean; inconsistent: consistency scale, 5 items, 1-5 item scoring (range 1-5), mean, reversed (6 - x); supplied as released means"",
-    .default = ""LSAC parenting scales (Parent 1); warmth: warm parenting, 6 items, 1-5 item scoring (range 1-5), mean; harsh: angry parenting version 2, 1-5 item scoring (range 1-5), mean; inconsistent: consistency scale, 5 items, 1-5 item scoring (range 1-5), mean, reversed (6 - x); supplied as released means""
+        ""7"" ~ ""LSAC parenting scales (Parent 1); harsh: angry parenting version 2, 6 items, 1-5 item scoring (range 1-5), mean; inconsistent: consistency scale, 5 items, 1-5 item scoring (range 1-5), mean, reversed (6 - x); supplied as released means of answered items, each used where at least half its items were answered"",
+    .default = ""LSAC parenting scales (Parent 1); warmth: warm parenting, 6 items, 1-5 item scoring (range 1-5), mean; harsh: angry parenting version 2, 6 items, 1-5 item scoring (range 1-5), mean; inconsistent: consistency scale, 5 items, 1-5 item scoring (range 1-5), mean, reversed (6 - x); supplied as released means of answered items, each used where at least half its items were answered""
   )
   if_else(is.na(base), NA_character_, paste0(base, mon, monself))
-})",One value per wave naming the scales mapped there; the angry parenting item count is not documented in the supplied files.,,
+})",One value per wave naming the scales mapped there; the angry parenting item sets are identified from the released means.,,
 fam_physpunish,unavailable,,,Not collected.,,
 fam_parentchild_rel_self,incompatible,"pa21a4, pa21b4",,"Only single items on feeling close to mum and to dad (pa21a4, pa21b4, young person, K waves 5-7, B waves 7-8).",,
 fam_parentchild_rel_parent,unavailable,,,Not collected.,,
@@ -1079,13 +1105,26 @@ acc_academachment_stdtest,compatible,"y3test, y3write, y5test, y5write, y7test, 
 })","Writing, the subject other than reading and numeracy (spelling and grammar and punctuation named unused). Linked NAPLAN results (lsacnaplan, repeated on every row by the tidier): the Year 3, 5, 7 or 9 test whose test year (y*test) equals the main wave's fieldwork year (2004 + 2 x (wave - 1), waves 1-8); NAPLAN scale score, first sitting (repeat sittings ry* unused), year level in the test; -9 (did not sit) and absent, exempt or withdrawn = NA. Off-year tests (K: 2009, 2011, 2013; B: 2011-2019 odd years) match no row and are unused. Standardise within dataset and wave at analysis.",,
 acc_schoolengage_caresschool,unavailable,,,Not collected.,,
 acc_schoolengage_homework,unavailable,,,Not collected.,,
-acc_schoolengage_self,compatible,scheng,"if_else(as.numeric(scheng) >= 0, as.numeric(scheng), NA_real_)","Young person's school engagement scale as released (scheng 'School Engagement'), K waves 5-6 and B waves 7-8.",,
-acc_schoolengage_teacher,unavailable,,,Not collected.,,
+acc_schoolengage_self,incompatible,scheng,,"Only the teacher-rated school engagement scale (scheng, items lc15a1-lc15a8 from the teacher questionnaire), on acc_schoolengage_teacher; no self-report engagement scale.",,
+acc_schoolengage_teacher,compatible,"scheng, lc15a1, lc15a2, lc15a3, lc15a4, lc15a5, lc15a6, lc15a7, lc15a8","local({
+  items <- cbind(
+    as.numeric(lc15a1),
+    as.numeric(lc15a2),
+    as.numeric(lc15a3),
+    as.numeric(lc15a4),
+    as.numeric(lc15a5),
+    as.numeric(lc15a6),
+    as.numeric(lc15a7),
+    as.numeric(lc15a8)
+  )
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 5)
+  if_else(as.numeric(scheng) >= 0 & answered >= 4, as.numeric(scheng), NA_real_)
+})","The study's released school engagement scale (scheng 'School Engagement'), K waves 5-6 and B waves 7-8, rated by the study child's teacher in the teacher questionnaire (lc15a1-lc15a8, 'T/C - Teach 19.1-19.8' at age 12-13 and 'Teach 23.1-23.8' at age 14-15: works hard, relates well to other students, passive and withdrawn, attentive, disruptive, late, absent, completes homework; 1 Never to 5 All of the time). It equals the mean of the answered items with passive and withdrawn, disruptive, late and absent reversed in every row, every keyed item correlating positively with it, and is used only where at least 4 of the 8 are answered (12 scores set to NA). Which teacher answered is not stated in the supplied files.",,
 acc_schoolengage_measure,inferred,scheng,"if_else(
   as.numeric(scheng) >= 0,
-  ""LSAC school engagement scale (self-report), released score; item count not documented in the supplied files"",
+  ""teacher: LSAC school engagement scale (school teacher), 8 of 8 items, 1-5 item scoring (range 1-5), mean of answered items; reversed: passive and withdrawn, disruptive, late, absent; used where at least 4 of the 8 items were answered"",
   NA_character_
-)",Where the scale was given.,,
+)","Describes acc_schoolengage_teacher where the teacher rated the scale (K waves 5-6, B waves 7-8).",,
 acc_homework_time,compatible,he26b,"if_else(as.numeric(he26b) >= 0, as.numeric(he26b) / 7, NA_real_)","K waves 3-4 and B waves 5-6 only. Parent 1: 'Hours/week homework' (he26b) / 7. The young person's banded 'Hours spent on homework' (he26f, he26c6a, K waves 5-8, B waves 7-8) states no period in the supplied documentation and is named unused.",,
 acc_schoolpressure_self,unavailable,,,Not collected.,,
 acc_schoolstress_self,unavailable,,,Not collected.,,
@@ -1129,7 +1168,7 @@ beh_atten_measure,unavailable,,,See beh_atten_self.,,
 beh_atten_singleitem_teacher,unavailable,,,Not collected.,,
 beh_impulsivity_self,unavailable,,,Not collected.,,
 beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
-beh_selfreg_htks,unavailable,,,Not collected.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
 beh_selfreg_parent,partial,"ascont, ascont2","local({
   x <- coalesce(as.numeric(ascont), as.numeric(ascont2))
   if_else(x >= 0, x, NA_real_)
@@ -1143,13 +1182,21 @@ beh_emotreg_suppression_self,unavailable,,,Not collected.,,
 beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
 beh_emotaware_self,unavailable,,,Not collected.,,
 beh_selfreg_measure,unavailable,,,See beh_selfreg_self.,,
-beh_temp_negaffect_parent,partial,reacta,"if_else(as.numeric(reacta) >= 1, as.numeric(reacta), NA_real_)","Parent 1's reactivity scale (reacta, version 1), K waves 1-2 and B waves 3-4, as released. Partial: a single facet of negative affectivity.",,
-beh_temp_surgency_parent,partial,social,"if_else(as.numeric(social) >= 1, as.numeric(social), NA_real_)","Parent 1's sociability scale (social), K waves 1-2 and B waves 3-4, as released. Partial: sociability alone.",,
+beh_temp_negaffect_parent,partial,"reacta, se01f1, se01f2, se01f3, se01f4","local({
+  items <- cbind(as.numeric(se01f1), as.numeric(se01f2), as.numeric(se01f3), as.numeric(se01f4))
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 6)
+  if_else(as.numeric(reacta) >= 1 & answered >= 2, as.numeric(reacta), NA_real_)
+})","Parent 1's reactivity scale (reacta, version 1), K waves 1-2 and B waves 3-4, as released: the mean of the answered items se01f1 (reversed) and se01f2-se01f4 (1-6), used only where at least 2 of the 4 are answered (8 one-item scores set to NA). Partial: a single facet of negative affectivity.",,
+beh_temp_surgency_parent,partial,"social, se01d1, se01d2, se01d3, se01d4","local({
+  items <- cbind(as.numeric(se01d1), as.numeric(se01d2), as.numeric(se01d3), as.numeric(se01d4))
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 6)
+  if_else(as.numeric(social) >= 1 & answered >= 2, as.numeric(social), NA_real_)
+})","Parent 1's sociability scale (social), K waves 1-2 and B waves 3-4, as released: the mean of the answered items se01d1-se01d4 (se01d1 and se01d2 reversed; 1-6), used only where at least 2 of the 4 are answered (4 one-item scores set to NA). Partial: sociability alone.",,
 beh_temp_measure,inferred,"social, reacta","if_else(
   !is.na(social) | !is.na(reacta),
-  ""LSAC short temperament scales (Parent 1); negative affectivity: reactivity (version 1), released mean; surgency: sociability, released mean; persistence named unused"",
+  ""LSAC short temperament scales (Parent 1); negative affectivity: reactivity (version 1), 4 items, 1-6 item scoring (range 1-6), released mean of answered items; surgency: sociability, 4 items, 1-6 item scoring (range 1-6), released mean of answered items; each used where at least 2 of the 4 items were answered; persistence named unused"",
   NA_character_
-)",Where the temperament scales were given; item counts not documented in the supplied files.,,
+)",Where the temperament scales were given; item sets identified from the released means.,,
 beh_bullied,compatible,"re22l, re22m, re22n, re22o, re22p, re22q, re22r, re22s, re22t, re22u, re22v","local({
   m <- cbind(
     if_else(as.numeric(re22l) == 1, 1, if_else(as.numeric(re22l) == 2, 0, NA_real_)),
@@ -1398,7 +1445,7 @@ cog_speed_task,unavailable,,,Not collected.,,
 cog_speed_task_measure,unavailable,,,See cog_speed_task.,,
 cog_wm_digitspan,unavailable,,,Digit Span not administered; see cog_wm_task.,,
 cog_iq_fullscale,unavailable,,,Not collected.,,
-cog_nonverbalreason_task,compatible,matreas,"if_else(as.numeric(matreas) >= 1, as.numeric(matreas), NA_real_)","Matrix Reasoning, child-performed, K waves 2-4 and B waves 4-6 (matreas, age-scaled score, observed 1-19; the raw score mrraw, 0-35, is named unused; one age 10-11 file labels it 'Matrix reasoning imputed').",,
+cog_nonverbalreason_task,compatible,"matreas, mrrawi","if_else(as.numeric(matreas) >= 1 & !(as.numeric(mrrawi) %in% 1), as.numeric(matreas), NA_real_)","Matrix Reasoning, child-performed, K waves 2-4 and B waves 4-6 (matreas, age-scaled score, observed 1-19; the raw score mrraw, 0-35, is named unused; one age 10-11 file labels it 'Matrix reasoning imputed'). NA where the study flags the raw score as imputed (mrrawi = 1 'Imputed', wave 4 of both cohorts: 411 scores); the other waves carry no imputation flag.",,
 cog_nonverbalreason_task_measure,inferred,matreas,"if_else(
   as.numeric(matreas) >= 1,
   ""Matrix Reasoning subtest, 35 items (raw 0-35), scaled score (observed 1-19), age-normed, as released"",
@@ -1424,12 +1471,22 @@ cog_spatial_bas_pattern,unavailable,,,BAS II not administered; see cog_nonverbal
 cog_verbalreason_bas_versim,unavailable,,,BAS II not administered; see cog_nonverbalreason_task.,,
 cog_earlynumber_bas_enc,unavailable,,,BAS II not administered; see cog_nonverbalreason_task.,,
 cog_schoolread_bracken,unavailable,,,Bracken not administered.,,
-cog_earlylang_parent,compatible,csbsspc,"if_else(as.numeric(csbsspc) >= 0, as.numeric(csbsspc), NA_real_)","B wave 1 only: the parent-completed CSBS speech composite raw score (csbsspc, observed 0-14), a published parent-completed communication scale for infants; the standard score and percentile (csbssps, csbsspp) are named unused.",,
+cog_earlylang_parent,compatible,"csbsspc, lc01b1a, lc01b1b, lc01b1c, lc01b2a, lc01b2b","local({
+  items <- cbind(
+    as.numeric(lc01b1a),
+    as.numeric(lc01b1b),
+    as.numeric(lc01b1c),
+    as.numeric(lc01b2a),
+    as.numeric(lc01b2b)
+  )
+  answered <- rowSums(!is.na(items) & items >= 0)
+  if_else(as.numeric(csbsspc) >= 0 & answered >= 3, as.numeric(csbsspc), NA_real_)
+})","B wave 1 only: the parent-completed CSBS speech composite raw score (csbsspc, observed 0-14), a published parent-completed communication scale for infants; the standard score and percentile (csbssps, csbsspp) are named unused. It equals the sum of its five items (lc01b1a-lc01b1c, lc01b2a, lc01b2b, rebased to start at 0) wherever all are answered, and is used only where at least 3 of the 5 are answered: 31 scores whose items all carry a missing code are set to NA, as their source cannot be traced.",,
 cog_earlylang_measure,inferred,csbsspc,"if_else(
   as.numeric(csbsspc) >= 0,
-  ""CSBS speech composite (parent-completed), B cohort age 0-1, raw score"",
+  ""CSBS speech composite (parent-completed), B cohort age 0-1, 5 items, raw score (sum), used where at least 3 of the 5 items were answered"",
   NA_character_
-)",B wave 1 only; item counts not documented in the supplied files.,,
+)",B wave 1 only; item set identified from the released raw score.,,
 cog_creativethinking_stdtest,unavailable,,,Not collected.,,
 cog_speechlang_diagnosed,incompatible,f17cm1,,"f17cm1 asks whether the child has speech problems, not whether a speech or language disorder was diagnosed.",,
 cog_speechlang_diagnosed_severity,unavailable,,,Not collected.,,
@@ -1463,7 +1520,25 @@ mh_totaldiff_sdq_teacher,compatible,"temot, tcondb, tconda, thypr, tpeer","if_el
 mh_int_sdq_parent,unavailable,,,Derive at analysis from the subscale rows.,,
 mh_int_sdq_self,unavailable,,,Derive at analysis from the subscale rows.,,
 mh_int_sdq_teacher,unavailable,,,Derive at analysis from the subscale rows.,,
-mh_dep_smfq_self,compatible,smfq,"if_else(as.numeric(smfq) >= 0, as.numeric(smfq), NA_real_)","Short Mood and Feelings Questionnaire, self-report, K waves 5-7 and B waves 7-8 (smfq, released total of 13 items scored 0-2, range 0-26); it sums the answered items (15 rows with items missing).",,
+mh_dep_smfq_self,compatible,"smfq, se21c1, se21c2, se21c3, se21c4, se21c5, se21c6, se21c7, se21c8, se21c9, se21c10, se21c11, se21c12, se21c13","local({
+  items <- cbind(
+    as.numeric(se21c1),
+    as.numeric(se21c2),
+    as.numeric(se21c3),
+    as.numeric(se21c4),
+    as.numeric(se21c5),
+    as.numeric(se21c6),
+    as.numeric(se21c7),
+    as.numeric(se21c8),
+    as.numeric(se21c9),
+    as.numeric(se21c10),
+    as.numeric(se21c11),
+    as.numeric(se21c12),
+    as.numeric(se21c13)
+  )
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 3)
+  if_else(as.numeric(smfq) >= 0 & answered >= 7, as.numeric(smfq), NA_real_)
+})","Short Mood and Feelings Questionnaire, self-report, K waves 5-7 and B waves 7-8 (smfq, released total of 13 items se21c1-se21c13 scored 0-2, range 0-26); it sums the answered items and is used only where at least 7 of the 13 are answered (6 scores on 1-6 items set to NA; 9 partial sums on 7-12 items kept).",,
 mh_dep_smfq_parent,unavailable,,,SMFQ parent form not administered; see mh_dep_smfq_self.,,
 mh_dep_cdi_self,unavailable,,,CDI not administered; see mh_dep_self.,,
 mh_dep_cesd_self,unavailable,,,CES-D not administered; see mh_dep_self.,,
@@ -1505,18 +1580,49 @@ mh_somatic_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_
 mh_emotreact_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_parent.,,
 mh_int_cbcl_parent,unavailable,,,CBCL not administered; see mh_emotsymp_sdq_parent.,,
 mh_dep_binary_self,incompatible,smfqc,,"Only the SMFQ cut-off flag (smfqc), a scale total; see mh_dep_smfq_self.",,
-mh_dep_self,compatible,smfq,"if_else(as.numeric(smfq) >= 0, as.numeric(smfq), NA_real_)",Repeats mh_dep_smfq_self.,,
+mh_dep_self,compatible,"smfq, se21c1, se21c2, se21c3, se21c4, se21c5, se21c6, se21c7, se21c8, se21c9, se21c10, se21c11, se21c12, se21c13","local({
+  items <- cbind(
+    as.numeric(se21c1),
+    as.numeric(se21c2),
+    as.numeric(se21c3),
+    as.numeric(se21c4),
+    as.numeric(se21c5),
+    as.numeric(se21c6),
+    as.numeric(se21c7),
+    as.numeric(se21c8),
+    as.numeric(se21c9),
+    as.numeric(se21c10),
+    as.numeric(se21c11),
+    as.numeric(se21c12),
+    as.numeric(se21c13)
+  )
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 3)
+  if_else(as.numeric(smfq) >= 0 & answered >= 7, as.numeric(smfq), NA_real_)
+})",Repeats mh_dep_smfq_self.,,
 mh_dep_measure,inferred,smfq,"if_else(
   as.numeric(smfq) >= 0,
-  ""Short Mood and Feelings Questionnaire (self-report), 13 of 13 items, 0-2 item scoring (range 0-26), sum"",
+  ""Short Mood and Feelings Questionnaire (self-report), 13 of 13 items, 0-2 item scoring (range 0-26), sum of answered items, used where at least 7 of the 13 items were answered"",
   NA_character_
 )",Where the SMFQ was given.,,
-mh_anx_self,compatible,spenceanx,"if_else(as.numeric(spenceanx) >= 0, as.numeric(spenceanx), NA_real_)","Spence Children's Anxiety Scale short form, self-report, K waves 5-7 and B waves 7-8 (spenceanx 'Spence Anxiety Scale', released sum, observed 0-24); missing-item rule not documented.",,
+mh_anx_self,compatible,"spenceanx, se16b1, se16b2, se16b3, se16b4, se16b5, se16b6, se16b7, se16b8","local({
+  items <- cbind(
+    as.numeric(se16b1),
+    as.numeric(se16b2),
+    as.numeric(se16b3),
+    as.numeric(se16b4),
+    as.numeric(se16b5),
+    as.numeric(se16b6),
+    as.numeric(se16b7),
+    as.numeric(se16b8)
+  )
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 4)
+  if_else(as.numeric(spenceanx) >= 0 & answered >= 4, as.numeric(spenceanx), NA_real_)
+})","Spence Children's Anxiety Scale short form, self-report, K waves 5-7 and B waves 7-8 (spenceanx 'Spence Anxiety Scale', released sum of the answered items se16b1-se16b8 rebased to 0-3, observed 0-24). Used only where at least 4 of the 8 items are answered: 802 scores set to NA, 799 of them zeros the study stored where no item was answered; 4 sums on 7 items are kept.",,
 mh_anx_measure,inferred,spenceanx,"if_else(
   as.numeric(spenceanx) >= 0,
-  ""Spence Children's Anxiety Scale, short form (released range 0-24), 0-3 item scoring (range 0-24)"",
+  ""Spence Children's Anxiety Scale, short form, 8 items, 0-3 item scoring (range 0-24), sum of answered items, used where at least 4 of the 8 items were answered"",
   NA_character_
-)",Where the Spence short form was given; the item count is not documented in the supplied files (eight items scored 0-3 would give the released range).,,
+)",Where the Spence short form was given; the released sum equals the eight items se16b1-se16b8 rebased to 0-3 wherever all are answered.,,
 mh_socanx_self,unavailable,,,Not collected.,,
 mh_socanx_measure,unavailable,,,See mh_socanx_self.,,
 mh_int_parent,incompatible,aemot,,"Only the SDQ parent emotional symptoms subscale (aemot), which stays on mh_emotsymp_sdq_parent.",,
@@ -1540,10 +1646,14 @@ mh_lonely_self,compatible,sc34c4,"recode_values(
   5 ~ ""Always"",
   default = NA_character_
 )","Young person: 'Felt lonely' (sc34c4, Never to Always, mapped by wording), 9C1 and wave 10; also scored in mh_lonely_scale_self. The truth-rated 'Lonely' item at K waves 5-7 and B waves 7-8 (se21c10) is incompatible and named unused.",,
-mh_lonely_scale_self,compatible,clone,"if_else(as.numeric(clone) >= 0, as.numeric(clone), NA_real_)","Young person's loneliness scale at 9C1 and wave 10 (clone, released score of four items sc34c1-sc34c4 scored 1 Never to 5 Always; observed 1-20; it sums the answered items, so 25 rows with one to three of the four items answered hold a partial sum); the restriction-period version (clonecrp) is named unused.",,
+mh_lonely_scale_self,compatible,"clone, sc34c1, sc34c2, sc34c3, sc34c4","local({
+  items <- cbind(as.numeric(sc34c1), as.numeric(sc34c2), as.numeric(sc34c3), as.numeric(sc34c4))
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 5)
+  if_else(as.numeric(clone) >= 0 & answered >= 2, as.numeric(clone), NA_real_)
+})","Young person's loneliness scale at 9C1 and wave 10 (clone, released score of four items sc34c1-sc34c4 scored 1 Never to 5 Always; observed 4-20 where used); it sums the answered items and is used only where at least 2 of the 4 are answered (2 one-item sums set to NA; 23 partial sums on 2-3 items kept); the restriction-period version (clonecrp) is named unused.",,
 mh_lonely_measure,inferred,clone,"if_else(
   as.numeric(clone) >= 0,
-  ""LSAC loneliness scale (young person), 4 of 4 items, 1-5 item scoring (range 4-20)"",
+  ""LSAC loneliness scale (young person), 4 of 4 items, 1-5 item scoring (range 4-20), sum of answered items, used where at least 2 of the 4 items were answered"",
   NA_character_
 )","Where the scale was given (9C1, wave 10).",,
 mh_sad_self,incompatible,"se03c3c, smfq",,"Only the truth-rated SDQ item 'Often unhappy' (se03c3c) and the SMFQ score (smfq, see mh_dep_smfq_self).",,
@@ -1647,8 +1757,28 @@ wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
 wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
 wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
 wb_qol_pedsql_physical_parent,compatible,pedsphy,"if_else(as.numeric(pedsphy) >= 0, as.numeric(pedsphy), NA_real_)","Parent 1's PedsQL 4.0 Generic Core Scales report on the child (P1 self-complete questionnaire, gd04 items scored Never to Almost always; 'Not sure' is NA), B waves 2-8 and K waves 1-7; age forms and recall period not stated in the supplied files. Physical Functioning, 8 items (gd04a1-gd04a8), released score (pedsphy, 0-100); it equals the items transformed 0-4 to 100-0 and averaged over answered items, at least half answered, in every row. The teen physical score (pedsphyb, K waves 6-7, B wave 8) is named unused.",,
-wb_qol_pedsql_emotional_parent,compatible,pedsef,"if_else(as.numeric(pedsef) >= 0, as.numeric(pedsef), NA_real_)","Parent 1's PedsQL 4.0 Generic Core Scales report on the child (P1 self-complete questionnaire, gd04 items scored Never to Almost always; 'Not sure' is NA), B waves 2-8 and K waves 1-7; age forms and recall period not stated in the supplied files. Emotional Functioning, 5 items (gd04b1a-gd04b1e), released score (pedsef, 0-100); it equals the item scoring in every row where at least half the items are answered.",,
-wb_qol_pedsql_social_parent,compatible,pedssof,"if_else(as.numeric(pedssof) >= 0, as.numeric(pedssof), NA_real_)","Parent 1's PedsQL 4.0 Generic Core Scales report on the child (P1 self-complete questionnaire, gd04 items scored Never to Almost always; 'Not sure' is NA), B waves 2-8 and K waves 1-7; age forms and recall period not stated in the supplied files. Social Functioning, 5 items (gd04b2a-gd04b2e), released score (pedssof, 0-100); it equals the item scoring in every row where at least half the items are answered.",,
+wb_qol_pedsql_emotional_parent,compatible,"pedsef, gd04b1a, gd04b1b, gd04b1c, gd04b1d, gd04b1e","local({
+  items <- cbind(
+    as.numeric(gd04b1a),
+    as.numeric(gd04b1b),
+    as.numeric(gd04b1c),
+    as.numeric(gd04b1d),
+    as.numeric(gd04b1e)
+  )
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 5)
+  if_else(as.numeric(pedsef) >= 0 & answered >= 3, as.numeric(pedsef), NA_real_)
+})","Parent 1's PedsQL 4.0 Generic Core Scales report on the child (P1 self-complete questionnaire, gd04 items scored Never to Almost always; 'Not sure' is NA), B waves 2-8 and K waves 1-7; age forms and recall period not stated in the supplied files. Emotional Functioning, 5 items (gd04b1a-gd04b1e), released score (pedsef, 0-100); it equals the items transformed 0-4 to 100-0 and averaged over answered items in every row, and is used only where at least 3 of the 5 are answered (7 scores on 2 items set to NA).",,
+wb_qol_pedsql_social_parent,compatible,"pedssof, gd04b2a, gd04b2b, gd04b2c, gd04b2d, gd04b2e","local({
+  items <- cbind(
+    as.numeric(gd04b2a),
+    as.numeric(gd04b2b),
+    as.numeric(gd04b2c),
+    as.numeric(gd04b2d),
+    as.numeric(gd04b2e)
+  )
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 5)
+  if_else(as.numeric(pedssof) >= 0 & answered >= 3, as.numeric(pedssof), NA_real_)
+})","Parent 1's PedsQL 4.0 Generic Core Scales report on the child (P1 self-complete questionnaire, gd04 items scored Never to Almost always; 'Not sure' is NA), B waves 2-8 and K waves 1-7; age forms and recall period not stated in the supplied files. Social Functioning, 5 items (gd04b2a-gd04b2e), released score (pedssof, 0-100); it equals the items transformed 0-4 to 100-0 and averaged over answered items in every row, and is used only where at least 3 of the 5 are answered (26 K wave 1 scores on 2 items set to NA).",,
 wb_qol_pedsql_school_parent,partial,"pedsscc, pedssca","coalesce(
   if_else(as.numeric(pedsscc) >= 0, as.numeric(pedsscc), NA_real_),
   if_else(as.numeric(pedssca) >= 0, as.numeric(pedssca), NA_real_)
@@ -1662,12 +1792,25 @@ wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN-10 not administered.,,
 wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
 wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered; see wb_selfesteem_self.,,
 wb_selfesteem_singleitem_self,unavailable,,,Not collected.,,
-wb_selfesteem_self,compatible,marshgs,"if_else(as.numeric(marshgs) >= 0, as.numeric(marshgs), NA_real_)","Self Description Questionnaire general-self scale (marshgs 'Marsh General-Self Scale'), the child's own report, K waves 3-4 and B waves 5-6, as released.",,
+wb_selfesteem_self,compatible,"marshgs, se10i, se10j, se10k, se10l, se10m, se10n, se10o, se10p","local({
+  items <- cbind(
+    as.numeric(se10i),
+    as.numeric(se10j),
+    as.numeric(se10k),
+    as.numeric(se10l),
+    as.numeric(se10m),
+    as.numeric(se10n),
+    as.numeric(se10o),
+    as.numeric(se10p)
+  )
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 5)
+  if_else(as.numeric(marshgs) >= 0 & answered >= 4, as.numeric(marshgs), NA_real_)
+})","Self Description Questionnaire general-self scale (marshgs 'Marsh General-Self Scale'), the child's own report, K waves 3-4 and B waves 5-6, as released: the mean of the answered items se10i-se10p (1 False to 5 True), used only where at least 4 of the 8 are answered (1 score on 1 item set to NA).",,
 wb_selfesteem_measure,inferred,marshgs,"if_else(
   as.numeric(marshgs) >= 0,
-  ""Self Description Questionnaire general-self scale (Marsh), released score"",
+  ""Self Description Questionnaire general-self scale (Marsh), 8 items, 1-5 item scoring (range 1-5), released mean of answered items, used where at least 4 of the 8 items were answered"",
   NA_character_
-)",Where the scale was given; item count and scoring not documented in the supplied files.,,
+)",Where the scale was given; the released score equals the mean of se10i-se10p in every row.,,
 wb_selfefficacy_gse_self,unavailable,,,General Self-Efficacy Scale not administered.,,
 wb_selfefficacy_self,unavailable,,,Not collected.,,
 wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
@@ -1679,12 +1822,29 @@ wb_selfconcept_academic_self,compatible,academic,"if_else(as.numeric(academic) >
 wb_selfconcept_maths_self,unavailable,,,Not collected.,,
 wb_selfconcept_verbal_self,unavailable,,,Not collected.,,
 wb_selfconcept_science_self,unavailable,,,Not collected.,,
-wb_selfconcept_social_self,compatible,marshpr,"if_else(as.numeric(marshpr) >= 0, as.numeric(marshpr), NA_real_)","Self Description Questionnaire peer-relations scale (marshpr 'Marsh Peer Relations Scale'), the child's own report, K waves 3-4 and B waves 5-6, as released.",,
+wb_selfconcept_social_self,compatible,"marshpr, se10a, se10b, se10c, se10d, se10e, se10f, se10g, se10h, se10q","local({
+  items <- cbind(
+    as.numeric(se10a),
+    as.numeric(se10b),
+    as.numeric(se10c),
+    as.numeric(se10d),
+    as.numeric(se10e),
+    as.numeric(se10f),
+    as.numeric(se10g),
+    as.numeric(se10h)
+  )
+  answered <- rowSums(!is.na(items) & items >= 1 & items <= 5)
+  b6 <- cohort == ""B"" & .wave == ""6""
+  answered <- answered + (b6 & as.numeric(se10q) %in% 1:5)
+  needed <- if_else(b6, 5, 4)
+  if_else(as.numeric(marshpr) >= 0 & answered >= needed, as.numeric(marshpr), NA_real_)
+})","Self Description Questionnaire peer-relations scale (marshpr 'Marsh Peer Relations Scale'), the child's own report, K waves 3-4 and B waves 5-6, as released: the mean of the answered items se10a-se10h (1 False to 5 True); at B wave 6 the released score also averages se10q 'Get into trouble with other kids', not reversed. Used only where at least half the items are answered (4 of 8, 5 of 9 at B wave 6; 6 scores set to NA).",,
 wb_selfconcept_measure,inferred,"marshpr, academic","case_when(
-  as.numeric(marshpr) >= 0 ~ ""social: Self Description Questionnaire peer relations (Marsh), released score"",
+  as.numeric(marshpr) >=
+    0 ~ ""social: Self Description Questionnaire peer relations (Marsh), 8 items (9 at B wave 6, adding 'Get into trouble with other kids', not reversed), 1-5 item scoring (range 1-5), released mean of answered items, used where at least half the items were answered"",
   as.numeric(academic) >= 0 ~ ""academic: LSAC general academic self-concept scale, released score"",
   .default = NA_character_
-)",One segment per row where the scale was given; item counts not documented in the supplied files.,,
+)","One segment per row where the scale was given; the peer-relations item set is identified from the released score, and the academic item count is not documented in the supplied files.",,
 wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
 wb_happiness_shs_self,unavailable,,,Subjective Happiness Scale not administered.,,
 wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
@@ -1730,13 +1890,42 @@ hlth_bmi,compatible,cbmi,"if_else(as.numeric(cbmi) > 0, as.numeric(cbmi), NA_rea
 hlth_bmi_measure,inferred,cbmi,"if_else(as.numeric(cbmi) > 0, if_else(.wave == ""10"", ""Self-reported"", ""Measured""), NA_character_)","Measured at waves 1-8 (interviewer measurement), self-reported at wave 10, by the height and weight item labels.",,
 hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
 hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
-hlth_puberty_status,compatible,"pubrtyb, pubrty, pubrtyc","local({
+hlth_puberty_status,compatible,"pubrtyb, pubrty, pubrtyc, zf02m1, hs36a, hs36b, hs36c, hs36d, hs36e, hs36f, hs36g, hs36h, hs36c10, hs36ai, hs36ci, hs36di, hs36ei, hs36fi, hs36gi","local({
   x <- coalesce(as.numeric(pubrtyb), as.numeric(pubrty), as.numeric(pubrtyc))
-  if_else(x >= 1, x, NA_real_)
-})","The study's released puberty scale (pubrtyb, K waves 3.5-8 and B waves 6-8; pubrty K wave 3, pubrtyc B wave 5), a mean score on 1-4 items (observed 1-4), higher = more advanced. Informant and items not documented in the supplied files.",,
+  male <- modal_within(recode_values(as.numeric(zf02m1), 1 ~ ""Male"", 2 ~ ""Female"", default = NA_character_), hicid) %in%
+    ""Male""
+  skin <- as.numeric(hs36a) %in% 1:4
+  odour <- as.numeric(hs36b) %in% 1:4
+  hair <- as.numeric(hs36c) %in% 1:4
+  breast <- as.numeric(hs36d) %in% 1:4
+  spurt <- as.numeric(hs36e) %in% 1:4
+  voice <- as.numeric(hs36f) %in% 1:4
+  facial <- as.numeric(hs36g) %in% 1:4
+  menses <- as.numeric(hs36h) %in% 1:2 | as.numeric(hs36c10) %in% 1:2
+  share <- case_when(
+    .wave == ""3.5"" & male ~ ((as.numeric(hs36ai) %in% 1:4) +
+      (as.numeric(hs36ci) %in% 1:4) +
+      (as.numeric(hs36ei) %in% 1:4) +
+      (as.numeric(hs36fi) %in% 1:4) +
+      (as.numeric(hs36gi) %in% 1:4)) /
+      5,
+    .wave == ""3.5"" ~ ((as.numeric(hs36ai) %in% 1:4) +
+      (as.numeric(hs36ci) %in% 1:4) +
+      (as.numeric(hs36di) %in% 1:4) +
+      (as.numeric(hs36ei) %in% 1:4)) /
+      4,
+    !is.na(pubrtyb) & male ~ (skin + hair + spurt + voice + facial) / 5,
+    !is.na(pubrtyb) ~ (skin + hair + breast + spurt + menses) / 5,
+    !is.na(pubrty) & male ~ (skin + odour + hair) / 3,
+    !is.na(pubrty) ~ (skin + odour + hair + breast) / 4,
+    male ~ (skin + hair + spurt) / 3,
+    .default = (skin + hair + breast + spurt + menses) / 5
+  )
+  if_else(x >= 1 & share >= 0.5, x, NA_real_)
+})","The study's released puberty scale (pubrtyb, K waves 3.5-8 and B waves 6-8; pubrty K wave 3, pubrtyc B wave 5), the mean of the answered sex-specific items scored 1-4 (observed 1-4; a yes to the menstruation item scores 4 and a no is left out of the mean), higher = more advanced. Used only where at least half the sex-specific items are answered (589 scores set to NA, 566 of them at wave 8, where many items carry a missing code): pubrtyb boys skin, body hair, growth spurt, voice and facial hair (hs36a, hs36c, hs36e, hs36f, hs36g; at wave 3.5 hs36ai, hs36ci, hs36ei, hs36fi, hs36gi), girls skin, body hair, breast growth, growth spurt and menstruation (hs36a, hs36c, hs36d, hs36e, and hs36h or hs36c10; at wave 3.5 hs36ai, hs36ci, hs36di, hs36ei, no menstruation item); pubrty skin, body odour and body hair, plus breast growth for girls (hs36a-hs36d); pubrtyc skin, body hair and growth spurt, plus breast growth and menstruation for girls. Sex from zf02m1, modal within child. Items identified from the released means; informant not documented in the supplied files.",,
 hlth_puberty_measure,inferred,"pubrtyb, pubrty, pubrtyc","if_else(
   coalesce(as.numeric(pubrtyb), as.numeric(pubrty), as.numeric(pubrtyc)) >= 1,
-  ""LSAC puberty scale (informant not documented), 1-4 item scoring (range 1-4), mean"",
+  ""LSAC puberty scale (informant not documented), 1-4 item scoring (range 1-4), mean of answered sex-specific items, used where at least half the sex-specific items were answered"",
   NA_character_
 )",Where a puberty score is released.,,
 hlth_maturity_offset,unavailable,,,Not collected.,,
