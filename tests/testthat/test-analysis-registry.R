@@ -32,19 +32,11 @@ test_that("invariants.csv names dataschema rows, once each", {
   expect_true(all(invariants$variable_name %in% repo_schema()$variable_name))
 })
 
-test_that("datasets.csv has one row per dataset with a spec", {
-  datasets <- read_registry_csv(
-    file.path(repo_root, bp_analysis_datasets_path()),
-    bp_analysis_datasets_columns(),
-    c("team_contributed", "signed_off")
+test_that("datasets.csv rows are unique and each has a spec", {
+  datasets <- read_analysis_datasets(
+    file.path(repo_root, bp_analysis_datasets_path())
   )
   expect_false(anyDuplicated(datasets$dataset_id) > 0)
-  spec_dirs <- file.path(
-    repo_root,
-    bp_dataset_specs_dir(),
-    paste0("BPIPD-", datasets$dataset_id)
-  )
-  expect_true(all(dir.exists(spec_dirs)))
   spec_ids <- sub(
     "^BPIPD-",
     "",
@@ -53,7 +45,33 @@ test_that("datasets.csv has one row per dataset with a spec", {
       type = "directory"
     ))
   )
-  expect_setequal(datasets$dataset_id, spec_ids)
+  expect_true(all(datasets$dataset_id %in% spec_ids))
+  # A warning, not a failure: dataset branches never edit analysis/, so a new
+  # spec has no row until one is added on main.
+  missing <- setdiff(spec_ids, datasets$dataset_id)
+  if (length(missing) > 0) {
+    warning(
+      "No row in datasets.csv for: ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+})
+
+test_that("a dataset missing from datasets.csv reads as a blank row", {
+  path <- withr::local_tempfile(fileext = ".csv")
+  writeLines(
+    c(
+      paste(bp_analysis_datasets_columns(), collapse = ","),
+      "9991,T1,,TRUE,,,A panel"
+    ),
+    path
+  )
+  datasets <- read_analysis_datasets(path, c("9991", "9992"))
+  expect_equal(datasets$dataset_id, c("9991", "9992"))
+  expect_equal(datasets$baseline_wave, c("T1", NA))
+  expect_equal(datasets$signed_off, c(TRUE, NA))
+  expect_equal(nrow(read_analysis_datasets(path)), 1)
 })
 
 test_that("the committed derivation rules pass their checks", {

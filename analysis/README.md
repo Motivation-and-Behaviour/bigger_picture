@@ -87,3 +87,7 @@ A test warns about any outcome row noted 'Derive at analysis' that has no rule h
 
 - `baseline_wave` is the panel's earliest wave in the data, a trial's pre-intervention wave, or blank;
 - `team_contributed`, `signed_off`, `overlap_group` and `risk_of_bias` are filled at later steps.
+
+A dataset with no row reads as a blank one, so it has no baseline and is not signed off.
+Dataset branches never edit this folder, so a new dataset gets its row on `main` after it merges; a test warns until it has one.
+The row matters for panels and trials, which need `baseline_wave`.

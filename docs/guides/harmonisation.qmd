@@ -245,7 +245,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 
 - Every `st_*` quantity is hours per day as a double.
 - The violent-content index rows (`st_violent_watch_index`, `st_violent_game_index`) are the one exception: they hold the study's exposure index in its own metric, standardised within dataset at analysis.
-- Minutes / 60; hours and minutes h + m / 60; weekly totals / 7; a total for both weekend days / 2.
+- Minutes / 60; hours and minutes h + m / 60; weekly totals / 7; a monthly total / (365.25 / 12); a total for the last year / 365.25; a total for both weekend days / 2.
 - Clear negative and sentinel codes to NA before any arithmetic.
 - Bands: 'none' = 0, closed bands at their midpoint, 'less than 1 hour' = 0.5, sub-hour bands at their midpoint ('less than 30 minutes' = 0.25), point labels ('about 2 hours') at the stated value.
 - 'Almost none' is 0, and a label that states a small amount of time ('a few minutes') takes the midpoint between zero and the next band.

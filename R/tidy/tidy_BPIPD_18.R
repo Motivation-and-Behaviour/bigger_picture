@@ -132,6 +132,7 @@ bp18_bind <- function(parts) {
   out <- lapply(cols, function(col) {
     pieces <- lapply(parts, `[[`, col)
     present <- !vapply(pieces, is.null, logical(1))
+    pieces[present] <- bp18_align_labels(pieces[present])
     ptype <- vctrs::vec_ptype_common(!!!pieces[present])
     pieces[!present] <- lapply(sizes[!present], vctrs::vec_init, x = ptype)
     x <- vctrs::vec_c(!!!pieces, .ptype = ptype)
@@ -140,6 +141,37 @@ bp18_bind <- function(parts) {
   })
   names(out) <- cols
   tibble::new_tibble(out, nrow = sum(sizes))
+}
+
+#' Give a code the first file's wording where later files only reword it, so
+#' that a code whose meaning changes still warns when the files are stacked
+bp18_align_labels <- function(pieces) {
+  kept <- character()
+  for (i in seq_along(pieces)) {
+    labels <- attr(pieces[[i]], "labels", exact = TRUE)
+    if (is.null(labels)) {
+      next
+    }
+    codes <- as.character(as.vector(labels))
+    known <- match(codes, names(kept))
+    reworded <- !is.na(known) & names(labels) != kept[known]
+    if (any(reworded)) {
+      same <- reworded &
+        bp18_label_key(names(labels)) == bp18_label_key(kept[known])
+      names(labels)[same] <- kept[known[same]]
+      attr(pieces[[i]], "labels") <- labels
+    }
+    new <- is.na(known) & !is.na(codes)
+    kept[codes[new]] <- names(labels)[new]
+  }
+  pieces
+}
+
+#' A value label without its case, punctuation or the files' two rewordings
+bp18_label_key <- function(x) {
+  x <- gsub("per week", "a week", tolower(x), fixed = TRUE)
+  x <- gsub("not yet started", "not started yet", x, fixed = TRUE)
+  gsub("[^a-z0-9]", "", x)
 }
 
 #' Columns without an age indicator in every main file (UG 5.6)

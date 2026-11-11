@@ -15,7 +15,8 @@ read_opt_readers <- function() {
     col_positions = "fwf",
     lines_per_record = "fwf",
     encoding = c("csv", "csv2", "tsv", "fwf", "stata", "spss", "sas"),
-    columns = haven_readers()
+    columns = haven_readers(),
+    text_columns = "excel"
   )
 }
 
@@ -89,6 +90,44 @@ read_haven_file <- function(path, reader, opts) {
     )
   }
   read(col_select = dplyr::all_of(available[Reduce(`|`, hits)]))
+}
+
+#' Read one Excel sheet, keeping the columns the spec names as text
+#'
+#' readxl turns a date cell it cannot represent into NA, and coerces a stray
+#' boolean in a numeric column, before a tidier can see either. `text_columns`
+#' hands those columns over as the cells' raw text, for the tidier to interpret.
+#' A name that matches no column is an error, as it is for `columns`.
+read_excel_file <- function(path, opts) {
+  # readxl types each column from the first 1000 rows by default, so a
+  # column that is blank early and populated later is typed `logical` and
+  # its values are silently read as NA. Guess from the whole sheet, as the
+  # delimited readers already do. `Inf` would work but warns on every
+  # read; excel_guess_max() is the ceiling readxl clamps it to anyway.
+  args <- list(path = path, guess_max = excel_guess_max())
+  if (!is.null(opts$sheet)) {
+    args$sheet <- opts$sheet
+  }
+  if (!is.null(opts$range)) {
+    args$range <- opts$range
+  }
+
+  text_columns <- as.character(unlist(opts$text_columns))
+  if (length(text_columns) > 0) {
+    available <- names(do.call(readxl::read_excel, c(args, n_max = 0)))
+    unmatched <- setdiff(text_columns, available)
+    if (length(unmatched) > 0) {
+      stop(
+        "`text_columns` name(s) matched no column in ",
+        path,
+        ": ",
+        paste0("`", unmatched, "`", collapse = ", "),
+        call. = FALSE
+      )
+    }
+    args$col_types <- ifelse(available %in% text_columns, "text", "guess")
+  }
+  do.call(readxl::read_excel, args)
 }
 
 read_locale <- function(opts) {
@@ -374,7 +413,8 @@ report_parse_problems <- function(out, path) {
 #'
 #' `opts` is the resource's `read_opts` from the resource index: the optional
 #' spec keys (`sheet`, `range`, `table`, `object`, `col_names`,
-#' `col_positions`, `lines_per_record`, `encoding`, `columns`) as a named list, absent keys being NULL. The
+#' `col_positions`, `lines_per_record`, `encoding`, `columns`,
+#' `text_columns`) as a named list, absent keys being NULL. The
 #' set of keys is closed by `harmonisation/dataset.schema.json`; passing them
 #' as a list just means a new option touches this file and the schema rather
 #' than every caller in between.
@@ -443,21 +483,7 @@ read_tabular_file <- function(path, reader, opts = list()) {
     "sas" = read_haven_file(path, reader, opts),
     "rds" = readRDS(path),
     "parquet" = arrow::read_parquet(path),
-    "excel" = {
-      # readxl types each column from the first 1000 rows by default, so a
-      # column that is blank early and populated later is typed `logical` and
-      # its values are silently read as NA. Guess from the whole sheet, as the
-      # delimited readers above already do. `Inf` would work but warns on every
-      # read; excel_guess_max() is the ceiling readxl clamps it to anyway.
-      args <- list(path = path, guess_max = excel_guess_max())
-      if (!is.null(opts$sheet)) {
-        args$sheet <- opts$sheet
-      }
-      if (!is.null(opts$range)) {
-        args$range <- opts$range
-      }
-      do.call(readxl::read_excel, args)
-    },
+    "excel" = read_excel_file(path, opts),
     "mdb" = {
       table <- opts$table
       if (is.null(table)) {

@@ -8,3 +8,7 @@ resources:
     glob: "repositorio.xlsx"
     reader: "excel"
     sheet: "Hoja1"
+    text_columns:
+      - "Fecha de nacimiento"
+      - "COMPUbedtime1D01"
+      - "COMPUbedtime2D01"

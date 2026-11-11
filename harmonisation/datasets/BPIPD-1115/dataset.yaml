@@ -1,0 +1,21 @@
+dataset_id: "1115"
+dataset_name: "Chen"
+status: "in_progress"
+
+resources:
+  - name: "online_survey_2020"
+    role: "data"
+    glob: "142datasetForShare.sav"
+    reader: "spss"
+
+notes: |
+  The folder holds two SPSS files and no codebook or other documentation; one is declared, as data, read with the spss reader.
+  There are no Stata, SAS or CSV copies, so there was no choice of format to make.
+
+  online_survey_2020 (142datasetForShare.sav, 2,026 rows x 34 columns) is an online survey of primary school children in three Sichuan schools taken almost entirely on 5-8 March 2020, during the COVID-19 school closure.
+  Its filter_$ == 1 subset (1,357 rows) reproduces the analytic sample of Chen CY, Chen IH, O'Brien, Latner & Lin (2021), Int J Obes 45:677-686, doi:10.1038/s41366-021-00741-5, to the published counts and means; the 657 rows with filter_$ == 0 are the children that paper excluded for misperceiving their weight status, and 12 rows have filter_$ missing.
+  ID is unique (1-2,026).
+
+  128datasetForShare.sav in the folder (1,063 rows x 28 columns, no ID column) matches Table 1 of Chen IH et al. (2020), Front Psychiatry 11:875, doi:10.3389/fpsyt.2020.00875 (classroom survey of grades 4-6 in three Sichuan schools), and is not declared.
+  Its own SPSS document record marks it a teaching demonstration file, not research data, derived from FPSY.sav, with deliberately altered Sex and Grade values (one Grade 3 case set to missing, 6 random Sex values recoded 0 to 1 and 6 random Grade values changed), "Do not use for analysis or publication".
+  Whether it, or the original FPSY.sav it was made from, can be used is being confirmed with the contributor.
