@@ -1,0 +1,13 @@
+dataset_id: "687"
+dataset_name: "Revuelta Domínguez"
+status: "in_progress"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "dataset-pretest-postest.xlsx"
+    reader: "excel"
+    sheet: "Hoja1"
+  - name: "codebook"
+    role: "codebook"
+    glob: "tables_code_dataset.pdf"
