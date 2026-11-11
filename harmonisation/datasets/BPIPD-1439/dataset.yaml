@@ -1,6 +1,6 @@
 dataset_id: "1439"
 dataset_name: "Bradt"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data"

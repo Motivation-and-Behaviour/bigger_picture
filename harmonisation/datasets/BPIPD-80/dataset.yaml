@@ -1,6 +1,6 @@
 dataset_id: "80"
 dataset_name: "ISCOLE"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "iscole_allsubjects_data_sas"

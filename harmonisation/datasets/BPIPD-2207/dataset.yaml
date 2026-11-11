@@ -1,6 +1,6 @@
 dataset_id: "2207"
 dataset_name: "Korean Panel Survey"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "kmp_user_guide_2025"

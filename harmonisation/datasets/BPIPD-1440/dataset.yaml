@@ -1,6 +1,6 @@
 dataset_id: "1440"
 dataset_name: "Coksan"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data"

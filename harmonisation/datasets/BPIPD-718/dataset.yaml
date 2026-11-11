@@ -1,6 +1,6 @@
 dataset_id: "718"
 dataset_name: "Tooth (ALSWH)"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "KLV_1973_78"

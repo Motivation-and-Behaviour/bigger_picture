@@ -1,6 +1,6 @@
 dataset_id: "18"
 dataset_name: "Longitudinal Study of Australian Children"
-status: "in_progress"
+status: "harmonised"
 
 waves:
   - wave: "1"

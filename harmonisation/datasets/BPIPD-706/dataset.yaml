@@ -1,6 +1,6 @@
 dataset_id: "706"
 dataset_name: "Tremolada"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data"

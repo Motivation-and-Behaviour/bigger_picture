@@ -1,6 +1,6 @@
 dataset_id: "1353"
 dataset_name: "2022 Korea Youth Risk Behavior Web-Based Survey"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "user_guidelines"

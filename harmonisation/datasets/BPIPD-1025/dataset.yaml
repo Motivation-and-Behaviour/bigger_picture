@@ -1,6 +1,6 @@
 dataset_id: "1025"
 dataset_name: "1970 British Cohort Study"
-status: "in_progress"
+status: "harmonised"
 
 waves:
   - wave: "3535"

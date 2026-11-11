@@ -1,6 +1,6 @@
 dataset_id: "278"
 dataset_name: "PSKC (Panel Study on Korean Children)"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "pskc_codebook"

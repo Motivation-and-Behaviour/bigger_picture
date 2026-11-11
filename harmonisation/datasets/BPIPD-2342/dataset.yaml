@@ -1,6 +1,6 @@
 dataset_id: "2342"
 dataset_name: "Samson"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data"

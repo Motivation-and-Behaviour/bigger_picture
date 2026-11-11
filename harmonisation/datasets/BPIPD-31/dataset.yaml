@@ -1,6 +1,6 @@
 dataset_id: "31"
 dataset_name: "FFCWS"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "Dataset Description and Citation"

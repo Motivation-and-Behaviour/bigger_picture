@@ -1,6 +1,6 @@
 dataset_id: "655"
 dataset_name: "Košir"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "Kosir_data_2014"

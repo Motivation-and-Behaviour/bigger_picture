@@ -1,6 +1,6 @@
 dataset_id: "535"
 dataset_name: "SWITCH"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data"

@@ -1,6 +1,6 @@
 dataset_id: "87"
 dataset_name: "Mendeley"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data"

@@ -1,6 +1,6 @@
 dataset_id: "728"
 dataset_name: "Marrero"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "Marrero Data"

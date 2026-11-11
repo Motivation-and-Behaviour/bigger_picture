@@ -1,6 +1,6 @@
 dataset_id: "2319"
 dataset_name: "Health behaviours of the Icelandic youth study"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "variable_dictionary_codebook_heilsuhegðun"

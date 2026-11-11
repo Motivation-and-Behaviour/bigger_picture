@@ -1,6 +1,6 @@
 dataset_id: "831"
 dataset_name: "Pastor-Ruiz"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data"

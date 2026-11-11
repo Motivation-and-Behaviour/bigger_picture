@@ -1,6 +1,6 @@
 dataset_id: "1721"
 dataset_name: "Cyr"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "Cyr Data"

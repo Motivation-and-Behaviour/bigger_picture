@@ -1,6 +1,6 @@
 dataset_id: "642"
 dataset_name: "Rose"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "data"

@@ -1,6 +1,6 @@
 dataset_id: "775"
 dataset_name: "ECLS-K"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "eclsk2011_k5_child"

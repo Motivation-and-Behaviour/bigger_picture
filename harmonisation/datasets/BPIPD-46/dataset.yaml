@@ -1,6 +1,6 @@
 dataset_id: "46"
 dataset_name: "PSID-CDS"
-status: "in_progress"
+status: "harmonised"
 
 resources:
   - name: "cdsind_2021"
