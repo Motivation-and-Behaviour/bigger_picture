@@ -16,7 +16,10 @@ tidy_BPIPD_170 <- function(raw_dataset, spec) {
     "alcohol_30d",
     "cigarettes_30d",
     "cannabis_30d",
-    "hs_program"
+    "hs_program",
+    "lsd_30d",
+    "psyd_30d",
+    "heroin_30d"
   )
   serial_pattern <- "ARCHIVE ID|R'?S +ID ?- ?SERIAL"
 
@@ -336,7 +339,10 @@ bp170_item_vars <- function() {
     # 8th/10th grade to 2021: does your mother have a paid job now.
     mother_paid_job = "MOTHER PAID JOB",
     # 12th grade: paid job while the respondent was growing up.
-    mother_job_growing_up = "MOTH PD JB"
+    mother_job_growing_up = "MOTH PD JB",
+    # 12th grade only: older plus younger brothers and sisters, released
+    # bracketed at 3 (three or more).
+    siblings_n = "# ?SIBLINGS"
   )
   # Time-use items: hours/WEEK up to 2017, hours/DAY from 2018.
   screen_week_vars <- c(
@@ -406,9 +412,25 @@ bp170_item_vars <- function() {
     sat_education = "SAT EDUC EXPRNC",
     sat_friends = "SAT OWN FRIENDS",
     sat_parents = "SAT GT ALNG PRN",
+    sat_yourself = "SAT YOURSELF",
     enjoy_school = "LSTYR/ENJOY SCHL",
     happy_school = "LSTYR/HAPPY IN SCH",
     best_work = "LSTYR/DO BEST WK",
+    # Past-year school items: hate every year; interest (8th/10th only) and
+    # not done to 2022; the rest from 2023, which replace the older items.
+    hate_school = "LSTYR/HATE SCHL",
+    work_interesting = "LSTYR/WK INTRSTG",
+    work_not_done = "LSTYR/WK NT DONE",
+    complete_work = "LSTYR/COMPLETE WORK",
+    follow_rules = "LSTYR/FOLLOW RULES",
+    get_in_trouble = "LSTYR/GET IN TRBL",
+    act_working = "LSTYR/ACT LK WRKNG",
+    pay_attention = "LSTYR/PAY ATTN",
+    excited_work = "LSTYR/EXCTD SCH WRK",
+    interested_work = "LSTYR/INTRSTD SCH WRK",
+    bored_school = "LSTYR/BORED IN SCH",
+    check_work = "LSTYR/CHK SCHWRK",
+    study_at_home = "LSTYR/STUDY AT HOME",
     # Past-30-day use; 12th grade from the core file only.
     alcohol_30d = "#X (DRNK/LAST30DA|ALC/30D SIPS)Y?( F[0-9]+)?$",
     cigarettes_30d = "#CIGS SMKD/30DA(Y)?( ?\\(CORE\\))?( F[0-9]+)?$",
@@ -441,6 +463,8 @@ bp170_item_vars <- function() {
     accept_life_happier = "ACPT LIFE->HAPPR",
     little_chance = "PPL LK ME -CHANC",
     master_fate = "PPL MASTER FATE",
+    luck_over_work = "LUCK>IMP HRD WRK",
+    try_ahead_stopped = "TRY GT AHD,STOPD",
     # Health-symptom-checklist items, 12th grade, past 30 days.
     trouble_concentrating_days = "#DA DFCT THINK",
     trouble_remembering_days = "#DA TRBL REMEM",
@@ -452,7 +476,54 @@ bp170_item_vars <- function() {
     symptom_coughing = "#DA COUGHING",
     symptom_coughphlegm = "#DA COUGH PHLM",
     symptom_shortbreath = "#DA SHORT BRTH",
-    symptom_wheezing = "#DA WHEEZING"
+    symptom_wheezing = "#DA WHEEZING",
+    # Ever held back a grade and ever suspended or expelled: 0/1 in the
+    # 8th/10th grade release, 1/2 on 12th grade form 6.
+    held_back = "EVER HELD BACK",
+    suspended = "EVER SUSPENDED",
+    # Non-prescription diet pills, past 30 days, 12th grade form 1.
+    dietpill_30d = "#X DIETPILL/30D",
+    # Illicit drugs other than cannabis, past 30 days (occasions, 1 = none).
+    # The dichotomous recodes released beside some items are left out by the
+    # end anchor.
+    lsd_30d = "#X ?LSD/ ?LAST ?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    psyd_30d = "#X ?PSYD/ ?LAST ?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    coke_30d = "#X ?COKE/ ?LAST ?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    crack_30d = "#X ?CRACK/ ?LAST ?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    other_coke_30d = "#X ?OTH ?COKE/ ?(LAST ?)?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    heroin_30d = "#X ?'?H'?/ ?LAST ?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    mdma_30d = "#X ?MDMA/ ?LAST ?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    meth_30d = "#X ?METHAMPH/ ?(LAST ?)?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    ice_30d = "#X ?ICE/ ?LAST ?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    inhalants_30d = "#X ?INHL/ ?LAST ?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    pcp_30d = "#X ?PCP/ ?LAST ?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    fentanyl_30d = "#X ?FENTANYL/ ?LAST ?30 ?D(A|AY)?( +F[0-9!]+)?$",
+    # E-cigarette and vaping use, past 30 days (1 = none). The item set
+    # changes: e-cigarettes 2014-2018, occasions of vaping nicotine,
+    # marijuana or flavoring 2017-2018, days from 2019.
+    ecig_30d_occ = "#X E-CIG/30DAY( +F[0-9!]+)?$",
+    ecig_30d_days = "(#DAYS E-CIG/(LAST)?30DA|E-CIG DAYS/30DA)( +F[0-9!]+)?$",
+    evap_30d = "#X E-VAP/LAST 30 DAYS( +F[0-9!]+)?$",
+    vape_nic_30d_occ = "#X VAPE NIC/LAST30DAY( +F[0-9!]+)?$",
+    vape_mj_30d_occ = "#X VAPE MJ/LAST30DAY( +F[0-9!]+)?$",
+    vape_flav_30d_occ = "#X VAPE FLAV/LAST30DAY( +F[0-9!]+)?$",
+    vape_nic_30d_days = "#DAYS VAPE NIC/30DA( +F[0-9!]+)?$",
+    vape_mj_30d_days = "#DAYS VAPE MJ/30DA( +F[0-9!]+)?$",
+    vape_flav_30d_days = "#DAYS VAPE FLAV/30DA( +F[0-9!]+)?$",
+    vaped_nic_30d = "VAPED NIC DAYS/30DA( +F[0-9!]+)?$",
+    vaped_mj_30d = "VAPED MJ DAYS/30DA( +F[0-9!]+)?$",
+    vaped_flav_30d = "VAPED FLAV DAYS/30DA( +F[0-9!]+)?$",
+    # Parents' knowledge of whereabouts, 8th/10th grade forms 3 and 4.
+    parents_know_after_school = "PRN KNW AFT SCHL",
+    parents_know_who_night = "PRN KNW WHO@NITE",
+    parents_know_where_night = "PRN KNW WHER@N",
+    # Single items the schema rejects, kept for source_columns.
+    talk_problems_parents = "TALK PROB W/PRNT",
+    kick_danger = "KICK DO DANGR TH",
+    like_risk = "LIKE RISK SOME X",
+    # 12th grade core.
+    school_ability_self = "RT SF SCH AB>AV",
+    intelligence_self = "RT SF INTELL>AV"
   )
   c(
     design_vars,

@@ -9,8 +9,10 @@
 #' few items); `bp696_deduplicate()` collapses these to one row per child per
 #' wave.
 #'
-#' Adds `dob_conflict` (dob blanked where the sheets disagree) and CBCL/1.5-5
-#' mean item scores (`cbcl_*_mean`) computed from the items.
+#' Adds `dob_conflict` (dob blanked where the sheets disagree), CBCL/1.5-5
+#' mean item scores (`cbcl_*_mean`), and CBCL/1.5-5 DSM-oriented and Total
+#' Problems raw sums (`cbcl_dsm_*_sum`, `cbcl_totalprob_sum`), all computed
+#' from the items.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -91,7 +93,7 @@ bp696_blank_conflicting_dob <- function(df) {
   tibble::add_column(df, dob_conflict = conflict, .after = "dob")
 }
 
-#' Add CBCL/1.5-5 mean item scores computed from the item columns
+#' Add CBCL/1.5-5 scale scores computed from the item columns
 #'
 #' The study's scale totals are not used: they count a missing item as 0, keep
 #' off-scale codes (items 30, 98 and 99 hold 4, 5 and 3 once each), and the
@@ -101,7 +103,9 @@ bp696_blank_conflicting_dob <- function(df) {
 #'
 #' Syndrome score: mean of the answered items, NA when fewer than 80% are
 #' answered. Composite: mean over the union of its syndromes' items, NA unless
-#' every syndrome meets its own 80% threshold.
+#' every syndrome meets its own 80% threshold. DSM-oriented scale and Total
+#' Problems (items 1-99 plus item 100, other problems): raw sum of the items,
+#' NA unless every item is answered.
 bp696_add_cbcl_scores <- function(df) {
   items <- bp696_cbcl_item_matrix(df)
   syndromes <- bp696_cbcl_syndromes()
@@ -132,7 +136,37 @@ bp696_add_cbcl_scores <- function(df) {
     c("emoreactive", "anxdep", "somatic", "withdrawn")
   )
 
+  dsm <- bp696_cbcl_dsm_scales()
+  for (scale in names(dsm)) {
+    df[[paste0("cbcl_dsm_", scale, "_sum")]] <-
+      rowSums(items[, dsm[[scale]], drop = FALSE])
+  }
+  df$cbcl_totalprob_sum <- rowSums(items) + bp696_cbcl_item_100(df)
+
   df
+}
+
+#' CBCL/1.5-5 item 100 (other problems written in), codes outside 0-2 set to NA
+bp696_cbcl_item_100 <- function(df) {
+  name <- grep("^Q100_", names(df), value = TRUE)
+  if (length(name) != 1L) {
+    stop("BPIPD-696: CBCL item 100 is not one column.", call. = FALSE)
+  }
+  item <- suppressWarnings(as.numeric(df[[name]]))
+  item[!item %in% c(0, 1, 2)] <- NA_real_
+  item
+}
+
+#' Published CBCL/1.5-5 DSM-oriented scales used by the dataschema, by item
+#' number: attention deficit/hyperactivity, oppositional defiant, anxiety and
+#' depressive (formerly affective) problems
+bp696_cbcl_dsm_scales <- function() {
+  list(
+    adh = c(5, 6, 8, 16, 36, 59),
+    odd = c(15, 20, 44, 81, 85, 88),
+    anx = c(10, 22, 28, 32, 37, 47, 48, 51, 87, 99),
+    dep = c(13, 24, 38, 43, 49, 50, 71, 74, 89, 90)
+  )
 }
 
 #' CBCL/1.5-5 items 1-99 as a numeric matrix, codes outside 0-2 set to NA

@@ -12,8 +12,9 @@
 #' - parent modules hold one row per responding parent, reduced to one row
 #'   per family before joining; at the earlier sweeps the main respondent
 #'   also reports the child's screen use;
-#' - `parent_interview` supplies only whether each respondent was born in the
-#'   UK, looked up across sweeps by person number.
+#' - `parent_interview` supplies whether each respondent was born in the UK,
+#'   looked up across sweeps by person number, plus a few items per sweep
+#'   (`bp27_parent_items()`) joined to each respondent by person number.
 #'
 #' Variables keep their original MCS spelling. Every column has a one-letter
 #' sweep prefix (`B` = sweep 2 ... `G` = sweep 7)
@@ -110,6 +111,7 @@ bp27_sweep <- function(raw_dataset, wave, born_uk) {
 
   parent_cm <- modules("parent_cm_interview")
   answering <- bp27_answering_parent(parent_cm)
+  parent_items <- bp27_parent_items(modules("parent_interview"), wave$wave)
 
   # `parent_derived` carries the parental education variables
   roster_sex <- bp27_person_sex(grid)
@@ -120,6 +122,10 @@ bp27_sweep <- function(raw_dataset, wave, born_uk) {
     }
     names(born_uk)[2] <- person[2]
     tbl <- bp27_add(tbl, born_uk, person)
+    if (!is.null(parent_items)) {
+      names(parent_items)[2] <- person[2]
+      tbl <- bp27_add(tbl, parent_items, person)
+    }
     base <- bp27_add(
       base,
       bp27_respondent(tbl, 1L, "MCSID", answering = answering),
@@ -584,6 +590,31 @@ bp27_born_uk <- function(raw_dataset) {
     label = "Whether the respondent was born in the UK (parent interview, sweeps 2-6)"
   )
   born[c("MCSID", "pnum", "respondent_born_uk")]
+}
+
+#' Parent-interview items kept for each respondent, keyed on person number
+#'
+#' The parent interview is otherwise read only for country of birth. Sweep 2
+#' asked the main respondent how often they smack and shout at the child when
+#' naughty (later sweeps ask it in the parent-child interview); sweep 7
+#' released each parent's own Kessler K6 items but no K6 score.
+bp27_parent_items <- function(tables, wave) {
+  keep <- list(
+    sweep_2 = "^BPDI(SM|SH)00$",
+    sweep_7 = "^GP(PDHE|PHHO|PHRF|PHEE|PHWO|PHNE)00$"
+  )[[wave]]
+
+  if (is.null(keep) || length(tables) == 0) {
+    return(NULL)
+  }
+
+  tbl <- tables[[1]]
+  items <- grep(keep, names(tbl), value = TRUE)
+  if (length(items) == 0) {
+    stop("BPIPD-27: no parent-interview items kept for ", wave, call. = FALSE)
+  }
+
+  tbl[c("MCSID", bp27_person_key(tbl), items)]
 }
 
 #' The `*PNUM00` person-number column for a table, e.g. `"BPNUM00"`

@@ -3,9 +3,11 @@
 #' Stacks the youth self-completion files of BHPS waves 4-18 and UKHLS waves
 #' 1-15, joining each youth (within wave) to their household, resident
 #' parents' adult interviews and, for BHPS, age and sample origin from the
-#' household roster; the cross-wave person file adds ethnicity, birthplace and
-#' birth weight and timing, and the child files a parent's report of the
-#' school type.
+#' household roster, and resident siblings counted from the BHPS household
+#' relationship files; the cross-wave person file adds ethnicity, birthplace
+#' and birth weight and timing, the child files a parent's report of the
+#' school type, and the parenting-style files one parent's parenting-style
+#' answers about a youth aged 10.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -39,6 +41,11 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
       bp631_stack(tables, "hhsamp"),
       c("survey", "wave", "hidp"),
       "many-to-one"
+    ) |>
+    bp631_add(
+      bp631_siblings(bp631_stack(tables, "egoalt")),
+      c("survey", "wave", "hidp", "pno"),
+      "one-to-one"
     ) |>
     dplyr::left_join(
       bp631_parent(indresp, "mother", c("survey", "wave", "hidp", "pno")),
@@ -76,6 +83,13 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
     relationship = "one-to-one"
   )
 
+  df <- dplyr::left_join(
+    df,
+    bp631_parstyle(bp631_stack(tables, "parstyle"), df),
+    by = c("survey", "wave", "hidp", "pno"),
+    relationship = "one-to-one"
+  )
+
   # The .dta labels of `ypnetchtw` are garbled (codes 3 and 4 both read 4-6
   # hours); the wave 15 youth questionnaire gives it the responses of `ypnetcht`.
   attr(df$ypnetchtw, "labels") <- attr(df$ypnetcht, "labels")
@@ -85,8 +99,13 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
   df$psu[df$psu < 0] <- NA
   df$strata[df$strata < 0] <- NA
 
-  # Fill household income and composition and the mother's activity missed at
-  # a wave from the nearest wave interviewed 12 months or less away.
+  attr(df$nnssib_dv, "label") <- paste0(
+    attr(df$nnssib_dv, "label"),
+    " (BHPS: natural, half, step or adopted, counted from egoalt)"
+  )
+
+  # Fill household income and composition, siblings and the mother's activity
+  # missed at a wave from the nearest wave interviewed 12 months or less away.
   interview_month <- 12 *
     dplyr::coalesce(bp631_num(df$intdaty_dv), bp631_num(df$intdatey)) +
     dplyr::coalesce(bp631_num(df$intdatm_dv), bp631_num(df$intdatem))
@@ -95,6 +114,7 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
     "ieqmoecd_dv",
     "hhsize",
     "nkids_dv",
+    "nnssib_dv",
     "mother_jbstat"
   )
   for (col in carried) {
@@ -252,6 +272,18 @@ bp631_add <- function(base, tbl, by, relationship) {
   out[setdiff(names(out), paste0(shared, ".fill"))]
 }
 
+#' Each BHPS household member's number of siblings in the household
+bp631_siblings <- function(egoalt) {
+  # `rel` 10 natural (incl. half), 11 other (adopted, step), 28 half brother or
+  # sister (BHPS User Manual, Volume A, Appendices 1.1.6 and 3.3)
+  egoalt$sibling <- unclass(egoalt$rel) %in% c(10, 11, 28)
+  dplyr::summarise(
+    egoalt,
+    nnssib_dv = as.numeric(sum(sibling)),
+    .by = c("survey", "wave", "hidp", "pno")
+  )
+}
+
 #' A column as plain numeric with negative (missing) codes set to NA
 bp631_num <- function(x) {
   x <- as.numeric(x)
@@ -328,4 +360,63 @@ bp631_child <- function(child, youth) {
   )
   child <- child[order(is.na(child$schsta), respondent), ]
   child[!duplicated(child[keys]), c(keys, items)]
+}
+
+#' One parenting-style report per youth from the parenting-style files, keyed
+#' on `hidp`/`pno`
+bp631_parstyle <- function(parstyle, youth) {
+  # Rows are one per responsible parent and child aged 10: `pno` is the
+  # parent's, `childpno` the child's
+  parstyle$ps_pno <- parstyle$pno
+  attr(parstyle$ps_pno, "label") <-
+    "pno of the parent who answered the parenting-style questions"
+  parstyle$pno <- parstyle$childpno
+
+  keys <- c("survey", "wave", "hidp", "pno")
+  items <- c(
+    grep("^ps[0-9]+$", names(parstyle), value = TRUE),
+    "psdqa_dv",
+    "psdqb_dv",
+    "psdqc_dv"
+  )
+  for (col in items) {
+    attr(parstyle[[col]], "label") <- paste0(
+      "Parenting style (parent about youth aged 10): ",
+      attr(parstyle[[col]], "label")
+    )
+  }
+  context <- c(
+    "mnspno",
+    "fnspno",
+    "rapno2",
+    "adresp15_dv",
+    "schsta",
+    "stillstate",
+    "stillpriv"
+  )
+  parstyle <- dplyr::inner_join(
+    parstyle[c(keys, items, "ps_pno")],
+    youth[c(keys, context)],
+    by = keys,
+    relationship = "many-to-one"
+  )
+  # Where two parents answered about the youth, keep the report of the parent
+  # parent_respondent records (who answered the school questions, on rows with
+  # a school type), else of the youth's responsible adult (adresp15_dv), else
+  # the mother's, else the father's; a report with no answered item comes last
+  num <- lapply(parstyle[c(items, "ps_pno", context)], function(x) {
+    bp631_num(unclass(x))
+  })
+  answered <- rowSums(!is.na(as.data.frame(num[items])))
+  still <- num$stillstate %in% 1 | num$stillpriv %in% 1
+  school_row <- num$schsta %in% c(1, 2) | still
+  respondent <- dplyr::case_when(
+    school_row & num$ps_pno == num$rapno2 ~ 1,
+    num$ps_pno == num$adresp15_dv ~ 2,
+    num$ps_pno == num$mnspno ~ 3,
+    num$ps_pno == num$fnspno ~ 4,
+    .default = 5
+  )
+  parstyle <- parstyle[order(answered == 0, respondent), ]
+  parstyle[!duplicated(parstyle[keys]), c(keys, items, "ps_pno")]
 }

@@ -167,42 +167,54 @@ family_structure,proximate,"famtp_p, famt4","case_when(
   as.numeric(famtp_p) == 3 ~ ""Other"",
   .default = ""Unknown""
 )","Family type of the sampled adult, the child's or adolescent's parent or legal guardian (famtp_p 2001, famt4 2005-2009): married with kids = Two biological/adoptive parents, single with kids (including married but not living with spouse) = Single parent, 2001 'other' = Other. Proximate: step-parents and unmarried partners cannot be identified, and Other cannot be identified in 2005-2009.",,
-fam_siblings_n,in_progress,,,,,
-fam_siblings_any,in_progress,,,,,
+fam_siblings_n,incompatible,hhsize_p,,"Only household size (hhsize_p), which does not separate siblings from adults and other members; no sibling count.",,
+fam_siblings_any,incompatible,hhsize_p,,"Only household size (hhsize_p; see fam_siblings_n), which does not show whether the child has siblings; no has-siblings item.",,
 fam_screenrules,unavailable,,,Not collected.,,
-fam_contentrules,in_progress,,,,,
+fam_contentrules,unavailable,,,Not collected.,,
 fam_bedroomscreen,unavailable,,,Not collected.,,
-fam_firstphone_age,in_progress,,,,,
-fam_firstscreen_age,in_progress,,,,,
-fam_coview_freq,in_progress,,,,,
-fam_mediation_restrict,in_progress,,,,,
-fam_mediation_active,in_progress,,,,,
-fam_mediation_monitor,in_progress,,,,,
-fam_mediation_technical,in_progress,,,,,
-fam_mediation_measure,in_progress,,,,,
-fam_parent_screentime,in_progress,,,,,
+fam_firstphone_age,unavailable,,,Not collected.,,
+fam_firstscreen_age,unavailable,,,Not collected.,,
+fam_coview_freq,unavailable,,,Not collected.,,
+fam_mediation_restrict,unavailable,,,Not collected.,,
+fam_mediation_active,unavailable,,,Not collected.,,
+fam_mediation_monitor,unavailable,,,Not collected.,,
+fam_mediation_technical,unavailable,,,Not collected.,,
+fam_mediation_measure,unavailable,,,See fam_mediation_restrict.,,
+fam_parent_screentime,unavailable,,,Not collected.,,
 fam_parentstress,unavailable,,,Not collected.,,
 fam_parentstress_measure,unavailable,,,See fam_parentstress.,,
-fam_parent_dep,in_progress,,,,,
-fam_parent_anx,in_progress,,,,,
-fam_parent_distress,in_progress,,,,,
-fam_parent_mh_measure,in_progress,,,,,
-fam_parenting_warmth_parent,in_progress,,,,,
-fam_parenting_harsh_parent,in_progress,,,,,
-fam_parenting_inconsistent_parent,in_progress,,,,,
-fam_monitoring_parent,in_progress,,,,,
-fam_monitoring_self,in_progress,,,,,
-fam_parenting_measure,in_progress,,,,,
-fam_physpunish,in_progress,,,,,
-fam_parentchild_rel_self,in_progress,,,,,
-fam_parentchild_rel_parent,in_progress,,,,,
-fam_parentchild_conflict_parent,in_progress,,,,,
-fam_parentchild_measure,in_progress,,,,,
-fam_functioning_parent,in_progress,,,,,
-fam_functioning_self,in_progress,,,,,
-fam_conflict_parent,in_progress,,,,,
-fam_conflict_self,in_progress,,,,,
-fam_functioning_measure,in_progress,,,,,
+fam_parent_dep,unavailable,,,Not collected.,,
+fam_parent_anx,unavailable,,,Not collected.,,
+fam_parent_distress,unavailable,,,Not collected.,,
+fam_parent_mh_measure,unavailable,,,See fam_parent_dep.,,
+fam_parenting_warmth_parent,unavailable,,,Not collected.,,
+fam_parenting_harsh_parent,unavailable,,,Not collected.,,
+fam_parenting_inconsistent_parent,unavailable,,,Not collected.,,
+fam_monitoring_parent,incompatible,cg7,,"Only whether the child regularly takes care of himself or herself for more than half an hour (cg7, the MKA, child file 2001), a single item on who looks after the child; no parent-reported monitoring scale.",,
+fam_monitoring_self,partial,"th6b, th6c","local({
+  k <- cbind(as.numeric(th6b), as.numeric(th6c))
+  k[!(k %in% 1:3)] <- NA
+  rowMeans(4 - k)
+})","Adolescents 2001 and 2005, self-report (ages 12-17): mean of two study items on how much the parents (or guardians) really know 'what you do with your free time' (th6b) and 'where you are most afternoons (after school)' (th6c), know a lot 1, a little 2, nothing 3, reversed (4 - x) so higher = more monitoring (range 1-3), complete-case; don't know and refused NA in 2001, CHIS-imputed answers used as released in 2005 (8 rows). 2007 did not ask the items and 2009 asked only where you go at night (th6a), a single item, so both are NA. Unused: th6a (has a 'doesn't go out at night' option), the 2001 items on what parents know about the adolescent's alcohol use, tobacco use and sexual activity (th6d-th6f) and how often an adult is around after school (th5). Partial: study items with no published scoring.",,
+fam_parenting_measure,inferred,"cohort, .wave","local({
+  s2001 <- ""CHIS adolescent interview (self); monitoring (self): how much parents really know, 2 of 6 items (what you do with your free time, where you are most afternoons), 1-3 item scoring (range 1-3), mean, reversed (4 - x) so know a lot = 3, complete-case, don't know and refused NA; study items, no published scoring""
+  s2005 <- ""CHIS adolescent interview (self); monitoring (self): how much parents really know, 2 of 3 items (what you do with your free time, where you are most afternoons), 1-3 item scoring (range 1-3), mean, reversed (4 - x) so know a lot = 3, complete-case, CHIS-imputed don't know and refused answers used as released; study items, no published scoring""
+  case_when(
+    cohort == ""teen"" & .wave == ""2001"" ~ s2001,
+    cohort == ""teen"" & .wave == ""2005"" ~ s2005,
+    .default = NA_character_
+  )
+})","Describes fam_monitoring_self, the only row mapped; adolescent rows of 2001 and 2005, NA elsewhere.",,
+fam_physpunish,unavailable,,,Not collected.,,
+fam_parentchild_rel_self,incompatible,th7_p,,"Only the single item 'How much do you feel your parents (or guardians) care about you?' (th7_p, adolescents 2001; very much, some, very little, not at all), not a relationship scale.",,
+fam_parentchild_rel_parent,unavailable,,,Not collected.,,
+fam_parentchild_conflict_parent,unavailable,,,Not collected.,,
+fam_parentchild_measure,unavailable,,,See fam_parentchild_rel_self.,,
+fam_functioning_parent,unavailable,,,Not collected.,,
+fam_functioning_self,unavailable,,,Not collected.,,
+fam_conflict_parent,unavailable,,,Not collected.,,
+fam_conflict_self,unavailable,,,Not collected.,,
+fam_functioning_measure,unavailable,,,See fam_functioning_parent.,,
 fam_readto_freq,proximate,"cg14, cg13_p, .wave","case_when(
   .wave %in% c(""2005"", ""2009"") ~ recode_values(
     as.numeric(cg14),
@@ -222,12 +234,12 @@ fam_readto_freq,proximate,"cg14, cg13_p, .wave","case_when(
   ),
   .default = NA_character_
 )","2005 and 2009, ages 0-5, the MKA (a parent or guardian): 'In a usual week, about how many days do you or any other family members read stories or look at picture books with (CHILD)?' (cg14): every day, 3-6 days, 1-2 days and never map code for code. 2001, ages 0-11, the MKA: 'About how many times in a typical week do you (or the child's other parent, or anyone else in the household) read a book or story to (CHILD)?' (cg13_p, public-file recode), times read as days: 0 = Less than once a week, 1-2 = Once or twice a week, 3-6 = Several times a week, 7 and the bands 8-14 and 15 or more times = Every day. Don't know and refused NA. 2007 is NA: its rows are adolescents only, because the tidier drops the 2007 child file (no screen item), although that file asks cg14. Proximate: the 2001 bands of 8 or more times cross into Every day, and its reader wording varies with the household.",,
-fam_readto_time,in_progress,,,,,
-fam_childbooks,in_progress,,,,,
-fam_home_total,in_progress,,,,,
-fam_home_cogstim,in_progress,,,,,
-fam_home_emotsupport,in_progress,,,,,
-fam_home_measure,in_progress,,,,,
+fam_readto_time,incompatible,"cg14, cg13_p",,"Only frequency items on reading to the child (cg14, days in a usual week, 2005 and 2009; cg13_p, times in a typical week, 2001), mapped to fam_readto_freq; no reading time.",,
+fam_childbooks,unavailable,,,Not collected.,,
+fam_home_total,unavailable,,,HOME Inventory not administered.,,
+fam_home_cogstim,unavailable,,,HOME Inventory not administered.,,
+fam_home_emotsupport,unavailable,,,HOME Inventory not administered.,,
+fam_home_measure,unavailable,,,See fam_home_total.,,
 school_grade,unavailable,,,Not collected.,,
 school_sector,compatible,sch_typ,"recode_values(as.numeric(haven::zap_labels(sch_typ)), 1 ~ ""Public"", 2 ~ ""Private"", default = ""Unknown"")","2005-2009 only: the study's type of school attended (sch_typ; children and adolescents attending school, MKA report for children, self-report for adolescents): public school = Public, private school = Private; other (2007-2009), inapplicable (not in school), not ascertained and 2001 (not in the release) = Unknown.",,
 school_track,unavailable,,,Not collected.,,
@@ -237,41 +249,56 @@ st_responder,inferred,cohort,"if_else(cohort == ""child"", ""Parent or carer"", 
 st_total_wd,incompatible,"cg8_p, cg8, te12_p, te12, cg9_p, cg9, te13_p, te13",,"No item on all screen use; the TV-or-video-game items (mapped to st_watch_wd) and the computer items (st_comp_wd) are never summed (DR-0002, DR-0004).",,
 st_total_we,incompatible,"cg10_p, cg10, te14_p, te14, cg11_p, cg11, te15_p, te15",,"No item on all screen use; the TV-or-video-game items (mapped to st_watch_we) and the computer items (st_comp_we) are never summed (DR-0002, DR-0004).",,
 st_total,incompatible,"cg8_p, cg8, te12_p, te12, cg10_p, cg10, te14_p, te14, cg9_p, cg9, te13_p, te13, cg11_p, cg11, te15_p, te15",,"No item on all screen use; the TV-or-video-game items (st_watch) and the computer items (st_comp) are never summed (DR-0002, DR-0004).",,
-st_watch_wd,partial,"cg8_p, cg8, te12_p, te12","dplyr::replace_values(
-  coalesce(as.numeric(cg8_p), as.numeric(cg8), as.numeric(te12_p), as.numeric(te12)),
-  93 ~ 0,
-  94 ~ 0.5,
-  c(-9, -8, -7, -5, -2, -1) ~ NA
-)","Child 2001 and 2005, adolescent 2001-2007: 'Thinking about your free time on Monday through Friday, on a typical day, about how many hours do you usually watch TV or play video games (such as Playstation)?' (cg8_p, cg8, te12_p, te12; no example in 2007). Hours as entered; more than 0 but less than 1 hour (94) = 0.5; no TV (93) = 0; children under 2 (under 4 in 2001) not asked = NA. 2001 top codes: 11+ hours (child) = 11, 10+ hours (adolescent) = 10. Partial: a TV item that also counts video gaming at the TV.",,
-st_watch_we,partial,"cg10_p, cg10, te14_p, te14, cg8_p","if_else(
-  as.numeric(cg8_p) %in% 93,
-  0,
-  dplyr::replace_values(
-    coalesce(as.numeric(cg10_p), as.numeric(cg10), as.numeric(te14_p), as.numeric(te14)),
-    93 ~ 0,
-    94 ~ 0.5,
-    c(-9, -8, -7, -5, -2, -1) ~ NA
-  )
-)","All cycles (child 2001, 2005, 2009; adolescent 2001-2009): hours per day on a typical Saturday or Sunday watching TV or playing video games (cg10_p, cg10, te14_p, te14). Recoded as st_watch_wd; 2001 children with no TV (cg8_p = 93) were routed past the item = 0. 2001 top codes: 11+ hours (child) = 11, 15+ hours (adolescent) = 15. Partial: also counts video gaming at the TV.",,
-st_watch,partial,"cg8_p, cg8, te12_p, te12, cg10_p, cg10, te14_p, te14","(5 *
+st_watch_wd,partial,"cg8_p, cg8, te12_p, te12, cg8_x, te12_x","if_else(
+  (!is.na(cg8_x) & cg8_x != -10) | (!is.na(te12_x) & te12_x != -10),
+  NA_real_,
   dplyr::replace_values(
     coalesce(as.numeric(cg8_p), as.numeric(cg8), as.numeric(te12_p), as.numeric(te12)),
     93 ~ 0,
     94 ~ 0.5,
     c(-9, -8, -7, -5, -2, -1) ~ NA
-  ) +
-  2 *
-    if_else(
-      as.numeric(cg8_p) %in% 93,
-      0,
-      dplyr::replace_values(
-        coalesce(as.numeric(cg10_p), as.numeric(cg10), as.numeric(te14_p), as.numeric(te14)),
-        93 ~ 0,
-        94 ~ 0.5,
-        c(-9, -8, -7, -5, -2, -1) ~ NA
-      )
-    )) /
-  7",2001-2007 only: (5 x st_watch_wd + 2 x st_watch_we) / 7; 2009 asked weekends only. Top codes as st_watch_wd and st_watch_we. Partial: also counts video gaming at the TV.,,
+  )
+)","Child 2001 and 2005, adolescent 2001-2007: 'Thinking about your free time on Monday through Friday, on a typical day, about how many hours do you usually watch TV or play video games (such as Playstation)?' (cg8_p, cg8, te12_p, te12; no example in 2007). Hours as entered; more than 0 but less than 1 hour (94) = 0.5; no TV (93) = 0; children under 2 (under 4 in 2001) not asked = NA. CHIS imputes missing answers, and a study-imputed screen-time value is NA: answers CHIS imputed (cg8_x or te12_x other than -10; 90 rows, 2005 68, 2007 22) are NA; the 2001 file has no imputation flags. 2001 top codes: 11+ hours (child) = 11, 10+ hours (adolescent) = 10. Partial: a TV item that also counts video gaming at the TV.",,
+st_watch_we,partial,"cg10_p, cg10, te14_p, te14, cg8_p, cg10_x, te14_x","if_else(
+  (!is.na(cg10_x) & cg10_x != -10) | (!is.na(te14_x) & te14_x != -10),
+  NA_real_,
+  if_else(
+    as.numeric(cg8_p) %in% 93,
+    0,
+    dplyr::replace_values(
+      coalesce(as.numeric(cg10_p), as.numeric(cg10), as.numeric(te14_p), as.numeric(te14)),
+      93 ~ 0,
+      94 ~ 0.5,
+      c(-9, -8, -7, -5, -2, -1) ~ NA
+    )
+  )
+)","All cycles (child 2001, 2005, 2009; adolescent 2001-2009): hours per day on a typical Saturday or Sunday watching TV or playing video games (cg10_p, cg10, te14_p, te14). Recoded as st_watch_wd; 2001 children with no TV (cg8_p = 93) were routed past the item = 0. Answers CHIS imputed (cg10_x or te14_x other than -10; 188 rows, 2005 86, 2007 17, 2009 85) are NA. 2001 top codes: 11+ hours (child) = 11, 15+ hours (adolescent) = 15. Partial: also counts video gaming at the TV.",,
+st_watch,partial,"cg8_p, cg8, te12_p, te12, cg10_p, cg10, te14_p, te14, cg8_x, te12_x, cg10_x, te14_x","if_else(
+  (!is.na(cg8_x) & cg8_x != -10) |
+    (!is.na(te12_x) & te12_x != -10) |
+    (!is.na(cg10_x) & cg10_x != -10) |
+    (!is.na(te14_x) & te14_x != -10),
+  NA_real_,
+  (5 *
+    dplyr::replace_values(
+      coalesce(as.numeric(cg8_p), as.numeric(cg8), as.numeric(te12_p), as.numeric(te12)),
+      93 ~ 0,
+      94 ~ 0.5,
+      c(-9, -8, -7, -5, -2, -1) ~ NA
+    ) +
+    2 *
+      if_else(
+        as.numeric(cg8_p) %in% 93,
+        0,
+        dplyr::replace_values(
+          coalesce(as.numeric(cg10_p), as.numeric(cg10), as.numeric(te14_p), as.numeric(te14)),
+          93 ~ 0,
+          94 ~ 0.5,
+          c(-9, -8, -7, -5, -2, -1) ~ NA
+        )
+      )) /
+    7
+)","2001-2007 only: (5 x st_watch_wd + 2 x st_watch_we) / 7; 2009 asked weekends only. Top codes as st_watch_wd and st_watch_we. NA where CHIS imputed either day's answer (cg8_x, te12_x, cg10_x or te14_x other than -10; 153 rows, 2005 124, 2007 29). Partial: also counts video gaming at the TV.",,
 st_game_wd,incompatible,"cg8_p, cg8, te12_p, te12",,"Video gaming is asked only pooled with TV watching (cg8_p, cg8, te12_p, te12); mapped to st_watch_wd.",,
 st_game_we,incompatible,"cg10_p, cg10, te14_p, te14",,"Video gaming is asked only pooled with TV watching (cg10_p, cg10, te14_p, te14); mapped to st_watch_we.",,
 st_game,incompatible,"cg8_p, cg8, te12_p, te12, cg10_p, cg10, te14_p, te14",,Video gaming is asked only pooled with TV watching; mapped to st_watch.,,
@@ -296,41 +323,56 @@ st_game_tablet,unavailable,,,No device split; see st_game.,,
 st_comp_nongaming_wd,incompatible,"cg9_p, cg9, te13_p, te13",,"'Use a computer for fun, not schoolwork' (cg9_p, cg9, te13_p, te13) can include games; mapped to st_comp_wd.",,
 st_comp_nongaming_we,incompatible,"cg11_p, cg11, te15_p, te15",,"'Use a computer for fun, not schoolwork' (cg11_p, cg11, te15_p, te15) can include games; mapped to st_comp_we.",,
 st_comp_nongaming,incompatible,"cg9_p, cg9, te13_p, te13, cg11_p, cg11, te15_p, te15",,"'Use a computer for fun, not schoolwork' can include games; mapped to st_comp.",,
-st_comp_wd,partial,"cg9_p, cg9, te13_p, te13","dplyr::replace_values(
-  coalesce(as.numeric(cg9_p), as.numeric(cg9), as.numeric(te13_p), as.numeric(te13)),
-  93 ~ 0,
-  94 ~ 0.5,
-  c(-9, -8, -7, -5, -2, -1) ~ NA
-)","Child 2001 and 2005, adolescent 2001-2007: 'About how many hours per day on Monday through Friday do you use a computer for fun, not schoolwork?' (cg9_p, cg9, te13_p, te13). More than 0 but less than 1 hour (94) = 0.5; no access to a PC (93; labelled 'doesn't have TV' in the 2001 adolescent file) = 0; children under 4 not asked = NA. 2001 top codes: 6+ hours (child) = 6, 10+ hours (adolescent) = 10. Partial: leisure use only, schoolwork excluded.",,
-st_comp_we,partial,"cg11_p, cg11, te15_p, te15, cg9_p, te13_p","if_else(
-  (as.numeric(cg9_p) %in% 93) | (as.numeric(te13_p) %in% 93),
-  0,
-  dplyr::replace_values(
-    coalesce(as.numeric(cg11_p), as.numeric(cg11), as.numeric(te15_p), as.numeric(te15)),
-    93 ~ 0,
-    94 ~ 0.5,
-    c(-9, -8, -7, -5, -2, -1) ~ NA
-  )
-)","All cycles (child 2001, 2005, 2009; adolescent 2001-2009): hours per day on a typical Saturday or Sunday using a computer for fun, not schoolwork (cg11_p, cg11, te15_p, te15). Recoded as st_comp_wd; 2001 respondents with no PC access on the weekday item (cg9_p, te13_p = 93) were routed past it = 0. 2001 top codes: 6+ hours (child) = 6, 10+ hours (adolescent) = 10. Partial: leisure use only.",,
-st_comp,partial,"cg9_p, cg9, te13_p, te13, cg11_p, cg11, te15_p, te15","(5 *
+st_comp_wd,partial,"cg9_p, cg9, te13_p, te13, cg9_x, te13_x","if_else(
+  (!is.na(cg9_x) & cg9_x != -10) | (!is.na(te13_x) & te13_x != -10),
+  NA_real_,
   dplyr::replace_values(
     coalesce(as.numeric(cg9_p), as.numeric(cg9), as.numeric(te13_p), as.numeric(te13)),
     93 ~ 0,
     94 ~ 0.5,
     c(-9, -8, -7, -5, -2, -1) ~ NA
-  ) +
-  2 *
-    if_else(
-      (as.numeric(cg9_p) %in% 93) | (as.numeric(te13_p) %in% 93),
-      0,
-      dplyr::replace_values(
-        coalesce(as.numeric(cg11_p), as.numeric(cg11), as.numeric(te15_p), as.numeric(te15)),
-        93 ~ 0,
-        94 ~ 0.5,
-        c(-9, -8, -7, -5, -2, -1) ~ NA
-      )
-    )) /
-  7",2001-2007 only: (5 x st_comp_wd + 2 x st_comp_we) / 7; 2009 asked weekends only. Top codes as st_comp_wd and st_comp_we. Partial: leisure use only.,,
+  )
+)","Child 2001 and 2005, adolescent 2001-2007: 'About how many hours per day on Monday through Friday do you use a computer for fun, not schoolwork?' (cg9_p, cg9, te13_p, te13). More than 0 but less than 1 hour (94) = 0.5; no access to a PC (93; labelled 'doesn't have TV' in the 2001 adolescent file) = 0; children under 4 not asked = NA. CHIS imputes missing answers, and a study-imputed screen-time value is NA: answers CHIS imputed (cg9_x or te13_x other than -10; 67 rows, 2005 56, 2007 11) are NA; the 2001 file has no imputation flags. 2001 top codes: 6+ hours (child) = 6, 10+ hours (adolescent) = 10. Partial: leisure use only, schoolwork excluded.",,
+st_comp_we,partial,"cg11_p, cg11, te15_p, te15, cg9_p, te13_p, cg11_x, te15_x","if_else(
+  (!is.na(cg11_x) & cg11_x != -10) | (!is.na(te15_x) & te15_x != -10),
+  NA_real_,
+  if_else(
+    (as.numeric(cg9_p) %in% 93) | (as.numeric(te13_p) %in% 93),
+    0,
+    dplyr::replace_values(
+      coalesce(as.numeric(cg11_p), as.numeric(cg11), as.numeric(te15_p), as.numeric(te15)),
+      93 ~ 0,
+      94 ~ 0.5,
+      c(-9, -8, -7, -5, -2, -1) ~ NA
+    )
+  )
+)","All cycles (child 2001, 2005, 2009; adolescent 2001-2009): hours per day on a typical Saturday or Sunday using a computer for fun, not schoolwork (cg11_p, cg11, te15_p, te15). Recoded as st_comp_wd; 2001 respondents with no PC access on the weekday item (cg9_p, te13_p = 93) were routed past it = 0. Answers CHIS imputed (cg11_x or te15_x other than -10; 126 rows, 2005 56, 2007 9, 2009 61) are NA. 2001 top codes: 6+ hours (child) = 6, 10+ hours (adolescent) = 10. Partial: leisure use only.",,
+st_comp,partial,"cg9_p, cg9, te13_p, te13, cg11_p, cg11, te15_p, te15, cg9_x, te13_x, cg11_x, te15_x","if_else(
+  (!is.na(cg9_x) & cg9_x != -10) |
+    (!is.na(te13_x) & te13_x != -10) |
+    (!is.na(cg11_x) & cg11_x != -10) |
+    (!is.na(te15_x) & te15_x != -10),
+  NA_real_,
+  (5 *
+    dplyr::replace_values(
+      coalesce(as.numeric(cg9_p), as.numeric(cg9), as.numeric(te13_p), as.numeric(te13)),
+      93 ~ 0,
+      94 ~ 0.5,
+      c(-9, -8, -7, -5, -2, -1) ~ NA
+    ) +
+    2 *
+      if_else(
+        (as.numeric(cg9_p) %in% 93) | (as.numeric(te13_p) %in% 93),
+        0,
+        dplyr::replace_values(
+          coalesce(as.numeric(cg11_p), as.numeric(cg11), as.numeric(te15_p), as.numeric(te15)),
+          93 ~ 0,
+          94 ~ 0.5,
+          c(-9, -8, -7, -5, -2, -1) ~ NA
+        )
+      )) /
+    7
+)","2001-2007 only: (5 x st_comp_wd + 2 x st_comp_we) / 7; 2009 asked weekends only. Top codes as st_comp_wd and st_comp_we. NA where CHIS imputed either day's answer (cg9_x, te13_x, cg11_x or te15_x other than -10; 103 rows, 2005 89, 2007 14). Partial: leisure use only.",,
 st_tablet_wd,unavailable,,,Not collected.,,
 st_tablet_we,unavailable,,,Not collected.,,
 st_tablet,unavailable,,,Not collected.,,
@@ -355,9 +397,9 @@ st_violent_game,unavailable,,,Not collected.,,
 st_violent_watch_index,unavailable,,,Not collected.,,
 st_violent_game_index,unavailable,,,Not collected.,,
 st_violent_measure,unavailable,,,See st_violent_watch and st_violent_game.,,
-st_educontent_watch_wd,unavailable,,,Not collected.,,
-st_educontent_watch_we,unavailable,,,Not collected.,,
-st_educontent_watch,unavailable,,,Not collected.,,
+st_educontent_watch_wd,unavailable,,,No weekday/weekend split.,,
+st_educontent_watch_we,unavailable,,,No weekday/weekend split.,,
+st_educontent_watch,incompatible,"cf61, cf62, cf63",,"Only the 2009 child-file (parent proxy) yes/no item whether the child has seen the PBS programme Sid the Science Kid (cf61: yes, no, doesn't watch TV) and two agreement items about it (cf62, cf63); a yes/no viewing item with no hours.",,
 st_work_wd,unavailable,,,Not collected.,,
 st_work_we,unavailable,,,Not collected.,,
 st_work,unavailable,,,Not collected.,,
@@ -390,13 +432,13 @@ acc_academachment_lettergrades,unavailable,,,Not collected.,,
 acc_academachment_stdtest,unavailable,,,Not collected.,,
 acc_schoolengage_caresschool,unavailable,,,Not collected.,,
 acc_schoolengage_homework,unavailable,,,Not collected.,,
-acc_schoolengage_self,in_progress,,,,,
-acc_schoolengage_teacher,in_progress,,,,,
-acc_schoolengage_measure,in_progress,,,,,
-acc_homework_time,in_progress,,,,,
+acc_schoolengage_self,unavailable,,,Not collected.,,
+acc_schoolengage_teacher,unavailable,,,Not collected.,,
+acc_schoolengage_measure,unavailable,,,See acc_schoolengage_self.,,
+acc_homework_time,unavailable,,,Not collected.,,
 acc_schoolpressure_self,unavailable,,,Not collected.,,
-acc_schoolstress_self,in_progress,,,,,
-acc_schoolstress_measure,in_progress,,,,,
+acc_schoolstress_self,unavailable,,,Not collected.,,
+acc_schoolstress_measure,unavailable,,,See acc_schoolstress_self.,,
 acc_schoolbelonging_self,incompatible,te65,,"Only a single school-safety item, 'feel safe at your school' (te65, adolescents 2009), not a belonging or connectedness scale.",,
 acc_schoolbelonging_measure,unavailable,,,See acc_schoolbelonging_self.,,
 acc_academachment_numgrades,unavailable,,,Not collected.,,
@@ -414,51 +456,52 @@ acc_numeracy_bas_numberskills,unavailable,,,BAS II not administered.,,
 acc_literacy_stdtest,unavailable,,,Not collected.,,
 acc_literacy_bas_wordreading,unavailable,,,BAS II not administered.,,
 acc_learningdisab_diagnosed,incompatible,"conmen_p, ca10br, ca10a_p",,"Only the MKA's report of the type of a condition limiting the child's activities (2001 conmen_p and ca10br, 2005 ca10a_p: autism, learning disability, language delay and other types); none is a health professional's diagnosis.",,
-acc_learningdisab_diagnosed_severity,in_progress,,,,,
-acc_graderepeated,in_progress,,,,,
+acc_learningdisab_diagnosed_severity,unavailable,,,Not collected.,,
+acc_graderepeated,unavailable,,,Not collected.,,
 beh_hyper_basc2,unavailable,,,BASC-2 not administered.,,
 beh_atten_basc2,unavailable,,,BASC-2 not administered.,,
 beh_atten_self,incompatible,cg32,,"Only a parent truth rating of SDQ item 25, 'good attention span' (cg32, child file 2005 and 2009); no self-reported attention scale.",,
-beh_hyper_self,in_progress,,,,,
-beh_adhdsymp_self,in_progress,,,,,
+beh_hyper_self,unavailable,,,Not collected.,,
+beh_adhdsymp_self,unavailable,,,Not collected.,,
 beh_atten_measure,unavailable,,,See beh_atten_self.,,
-beh_atten_singleitem_teacher,in_progress,,,,,
-beh_impulsivity_self,in_progress,,,,,
-beh_impulsivity_measure,in_progress,,,,,
-beh_selfreg_htks,unavailable,,,Not collected.,,
-beh_selfreg_parent,in_progress,,,,,
-beh_emotdysreg_parent,in_progress,,,,,
-beh_emotreg_parent,in_progress,,,,,
-beh_selfreg_self,in_progress,,,,,
-beh_emotreg_self,in_progress,,,,,
-beh_emotdysreg_self,in_progress,,,,,
-beh_emotreg_suppression_self,in_progress,,,,,
-beh_emotreg_reappraisal_self,in_progress,,,,,
-beh_emotaware_self,in_progress,,,,,
-beh_selfreg_measure,in_progress,,,,,
-beh_temp_negaffect_parent,in_progress,,,,,
-beh_temp_surgency_parent,in_progress,,,,,
-beh_temp_measure,in_progress,,,,,
+beh_atten_singleitem_teacher,unavailable,,,Not collected.,,
+beh_impulsivity_self,unavailable,,,Not collected.,,
+beh_impulsivity_measure,unavailable,,,See beh_impulsivity_self.,,
+beh_selfreg_htks,unavailable,,,HTKS not administered.,,
+beh_selfreg_parent,unavailable,,,Not collected.,,
+beh_emotdysreg_parent,unavailable,,,Not collected.,,
+beh_emotreg_parent,unavailable,,,Not collected.,,
+beh_selfreg_self,unavailable,,,Not collected.,,
+beh_emotreg_self,unavailable,,,Not collected.,,
+beh_emotdysreg_self,unavailable,,,Not collected.,,
+beh_emotreg_suppression_self,unavailable,,,Not collected.,,
+beh_emotreg_reappraisal_self,unavailable,,,Not collected.,,
+beh_emotaware_self,unavailable,,,Not collected.,,
+beh_selfreg_measure,unavailable,,,See beh_selfreg_self.,,
+beh_temp_negaffect_parent,unavailable,,,Not collected.,,
+beh_temp_surgency_parent,unavailable,,,Not collected.,,
+beh_temp_measure,unavailable,,,See beh_temp_negaffect_parent.,,
 beh_bullied,unavailable,,,Not collected.,,
 beh_beenbullied,partial,tg1_p,"recode_values(as.numeric(tg1_p), 0 ~ FALSE, c(1, 2, 3, 4, 5, 6, 7, 8) ~ TRUE)","Adolescents 2001 only: 'In the past 12 months, about how many times did someone about your age threaten to hurt you or threaten to beat you up?' (tg1_p): 0 = FALSE, 1 or more = TRUE; 12-month recall. Partial: one act type by peers, not framed as bullying.",,
 beh_beenbullied_online,unavailable,,,Not collected.,,
 beh_bullied_online,unavailable,,,Not collected.,,
 beh_fight,compatible,fight,"recode_values(as.numeric(fight), 1 ~ TRUE, 2 ~ FALSE)","Adolescents 2001 only: in a physical fight with someone around their age at least once in the past 12 months (fight, derived from the TG3 count); 12-month recall.",,
 beh_truancy,unavailable,,,Not collected.,,
-beh_suspended,in_progress,,,,,
+beh_suspended,unavailable,,,Not collected.,,
 beh_stealing,unavailable,,,Not collected.,,
 beh_vandalism,unavailable,,,Not collected.,,
-beh_alcohol_self,partial,te22,"recode_values(as.numeric(te22), 1 ~ TRUE, 2 ~ FALSE)","Adolescents, all cycles: 'Did you ever have more than a few sips of any alcoholic drink, like beer, wine, mixed drinks, or liquor?' (te22), yes/no. Partial: lifetime recall.",,
-beh_tobacco_self,compatible,"te19, tc38, .wave","case_when(
+beh_alcohol_self,partial,"te22, te22_x","recode_values(if_else(!is.na(te22_x) & te22_x != -10, NA_real_, as.numeric(te22)), 1 ~ TRUE, 2 ~ FALSE)","Adolescents, all cycles: 'Did you ever have more than a few sips of any alcoholic drink, like beer, wine, mixed drinks, or liquor?' (te22), yes/no. CHIS imputes don't-know and refused answers, and a study-imputed outcome value is NA: answers CHIS imputed (te22_x other than -10; 36 rows, 2005 16, 2007 10, 2009 10) are NA; the 2001 file has no imputation flags. Partial: lifetime recall.",,
+beh_tobacco_self,compatible,"te19, tc38, te19_x, tc38_x, .wave","case_when(
   .wave == ""2001"" ~ NA,
+  (!is.na(tc38_x) & tc38_x != -10) | (!is.na(te19_x) & te19_x != -10) ~ NA,
   as.numeric(tc38) == 2 ~ FALSE,
   as.numeric(te19) == 0 ~ FALSE,
   as.numeric(te19) %in% 1:6 ~ TRUE,
   .default = NA
-)","Adolescents 2005-2009: days smoked cigarettes in the past 30 days (te19, none to all 30): none = FALSE, any = TRUE; never smoked (tc38 = 2), routed past te19, = FALSE. 30-day recall. 2001 not used: its te19 was asked only of adolescents who had ever smoked regularly (te17).",,
-beh_vaping_self,in_progress,,,,,
+)","Adolescents 2005-2009: days smoked cigarettes in the past 30 days (te19, none to all 30): none = FALSE, any = TRUE; never smoked (tc38 = 2), routed past te19, = FALSE. CHIS imputes don't-know and refused answers, and a study-imputed outcome value is NA: values resting on an answer CHIS imputed (tc38_x or te19_x other than -10; 17 rows, 15 imputed never-smoked answers and 2 imputed day counts) are NA. 30-day recall. 2001 not used: its te19 was asked only of adolescents who had ever smoked regularly (te17).",,
+beh_vaping_self,unavailable,,,Not collected.,,
 beh_cannabis_self,unavailable,,,Not collected.,,
-beh_drugs_self,in_progress,,,,,
+beh_drugs_self,unavailable,,,Not in the supplied extract.,,
 beh_conduct_sdq_parent,incompatible,cg28,,"SDQ given as a 5-item parent subset (cg28-cg32, child file ages 4-11, 2005 and 2009); only item 7, 'generally obedient' (cg28), of the conduct subscale, fewer than 3.",,
 beh_hyper_sdq_parent,incompatible,cg32,,"SDQ given as a 5-item parent subset (cg28-cg32, child file ages 4-11, 2005 and 2009); only item 25, 'good attention span' (cg32), of the hyperactivity subscale, fewer than 3.",,
 beh_peerprob_sdq_parent,incompatible,cg31,,"SDQ given as a 5-item parent subset (cg28-cg32, child file ages 4-11, 2005 and 2009); only item 23, 'gets along better with adults than other children' (cg31), of the peer problems subscale, fewer than 3.",,
@@ -470,30 +513,30 @@ beh_agghostility_bpaq_self,unavailable,,,BPAQ-SF not administered; see beh_fight
 beh_agg_self,incompatible,"fight, tg3_p",,"Only the single 2001 physical-fight item (fight, tg3_p), not an aggression scale; mapped to beh_fight.",,
 beh_agg_measure,unavailable,,,See beh_agg_self.,,
 beh_aggphys_self,incompatible,"fight, tg3_p",,"Only the single 2001 adolescent physical-fight item (fight, tg3_p), mapped to beh_fight; no physical aggression scale.",,
-beh_aggphys_measure,in_progress,,,,,
-beh_aggrel_self,in_progress,,,,,
-beh_aggrel_measure,in_progress,,,,,
-beh_anger_self,in_progress,,,,,
-beh_anger_measure,in_progress,,,,,
-beh_aggbeliefs_self,in_progress,,,,,
-beh_agghostattrib_self,in_progress,,,,,
-beh_aggfantasy_self,in_progress,,,,,
-beh_aggcog_measure,in_progress,,,,,
-beh_agg_singleitem_teacher,in_progress,,,,,
-beh_disrupt_singleitem_teacher,in_progress,,,,,
-beh_aggphys_teacher,in_progress,,,,,
-beh_aggrel_teacher,in_progress,,,,,
-beh_agg_teacher,in_progress,,,,,
-beh_victphys_teacher,in_progress,,,,,
-beh_victrel_teacher,in_progress,,,,,
-beh_vict_teacher,in_progress,,,,,
-beh_atten_teacher,in_progress,,,,,
-beh_hyper_teacher,in_progress,,,,,
-beh_adhdsymp_teacher,in_progress,,,,,
-beh_ext_teacher,in_progress,,,,,
-beh_prosocial_teacher,in_progress,,,,,
-beh_socialskills_teacher,in_progress,,,,,
-beh_teacher_measure,in_progress,,,,,
+beh_aggphys_measure,unavailable,,,See beh_aggphys_self.,,
+beh_aggrel_self,unavailable,,,Not collected.,,
+beh_aggrel_measure,unavailable,,,See beh_aggrel_self.,,
+beh_anger_self,unavailable,,,Not collected.,,
+beh_anger_measure,unavailable,,,See beh_anger_self.,,
+beh_aggbeliefs_self,unavailable,,,Not collected.,,
+beh_agghostattrib_self,unavailable,,,Not collected.,,
+beh_aggfantasy_self,unavailable,,,Not collected.,,
+beh_aggcog_measure,unavailable,,,See beh_aggbeliefs_self.,,
+beh_agg_singleitem_teacher,unavailable,,,Not collected.,,
+beh_disrupt_singleitem_teacher,unavailable,,,Not collected.,,
+beh_aggphys_teacher,unavailable,,,Not collected.,,
+beh_aggrel_teacher,unavailable,,,Not collected.,,
+beh_agg_teacher,unavailable,,,Not collected.,,
+beh_victphys_teacher,unavailable,,,Not collected.,,
+beh_victrel_teacher,unavailable,,,Not collected.,,
+beh_vict_teacher,unavailable,,,Not collected.,,
+beh_atten_teacher,unavailable,,,Not collected.,,
+beh_hyper_teacher,unavailable,,,Not collected.,,
+beh_adhdsymp_teacher,unavailable,,,Not collected.,,
+beh_ext_teacher,unavailable,,,Not collected.,,
+beh_prosocial_teacher,unavailable,,,Not collected.,,
+beh_socialskills_teacher,unavailable,,,Not collected.,,
+beh_teacher_measure,unavailable,,,See beh_aggphys_teacher.,,
 beh_argues,unavailable,,,Not collected.,,
 beh_persistence_finishwork,incompatible,cg32,,"Only SDQ item 25, 'good attention span' (cg32), a parent truth rating.",,
 beh_emotreg_stayscalm,unavailable,,,Not collected.,,
@@ -508,7 +551,7 @@ beh_adhd_diagnosed,partial,"ca11, ca11c, srage, .wave","case_when(
   .default = NA_character_
 )","Child file 2001, ages 5-11: 'Did a doctor or psychologist ever tell you [child] has attention deficit disorder, ADD or ADHD?' (ca11, MKA report); told and currently taking prescription medicine for it (ca11c) = Currently, told and not = Previously. Partial: medication as the proxy for current. Under-5s were asked only when ADD/ADHD was their limiting condition, so NA. 2005 (ca11, ages 3-11) asks ever told only, with no current status, so 2005 is NA: a binary ever-told item does not fill waves of a row whose other waves separate current from previous diagnosis, because a weaker item fills missed waves only on score rows standardised within wave.",,
 beh_autism_diagnosed,incompatible,"conmen_p, ca10br, ca10a_p",,"Only the MKA's report of the type of a condition limiting the child's activities (2001 conmen_p and ca10br, 2005 ca10a_p: autism, learning disability, language delay and other types); none is a health professional's diagnosis.",,
-beh_autism_diagnosed_severity,in_progress,,,,,
+beh_autism_diagnosed_severity,unavailable,,,Not collected.,,
 beh_conduct_sdq_self,unavailable,,,SDQ not administered to adolescents; see beh_conduct_sdq_parent.,,
 beh_hyper_sdq_self,unavailable,,,SDQ not administered to adolescents; see beh_conduct_sdq_parent.,,
 beh_peerprob_sdq_self,unavailable,,,SDQ not administered to adolescents; see beh_conduct_sdq_parent.,,
@@ -523,33 +566,33 @@ beh_ext_sdq_teacher,unavailable,,,SDQ not administered to teachers.,,
 beh_agg_cbcl_parent,unavailable,,,CBCL not administered.,,
 beh_atten_cbcl_parent,unavailable,,,CBCL not administered.,,
 beh_rulebreak_cbcl_parent,unavailable,,,CBCL not administered.,,
-beh_socprob_cbcl_parent,in_progress,,,,,
+beh_socprob_cbcl_parent,unavailable,,,CBCL not administered.,,
 beh_ext_cbcl_parent,unavailable,,,CBCL not administered.,,
 beh_cbcl_measure,unavailable,,,CBCL not administered.,,
-beh_ext_self,in_progress,,,,,
-beh_opp_self,in_progress,,,,,
-beh_conduct_self,in_progress,,,,,
-beh_ext_measure,in_progress,,,,,
-beh_atten_parent,in_progress,,,,,
-beh_hyper_parent,in_progress,,,,,
-beh_adhdsymp_parent,in_progress,,,,,
-beh_opp_parent,in_progress,,,,,
-beh_conduct_parent,in_progress,,,,,
-beh_ext_parent,in_progress,,,,,
-beh_parent_measure,in_progress,,,,,
+beh_ext_self,incompatible,"fight, tg3_p",,"Only the single 2001 adolescent physical-fight item (fight, tg3_p), mapped to beh_fight; no externalising scale.",,
+beh_opp_self,unavailable,,,Not collected.,,
+beh_conduct_self,incompatible,"fight, tg3_p",,"Only the single 2001 adolescent physical-fight item (fight, tg3_p), mapped to beh_fight; no conduct or delinquency scale.",,
+beh_ext_measure,unavailable,,,See beh_ext_self.,,
+beh_atten_parent,incompatible,cg32,,"Only SDQ item 25, 'good attention span' (cg32), a single parent truth rating; SDQ given as a 5-item parent subset (cg28-cg32, child file ages 4-11, 2005 and 2009), and its hyperactivity/inattention subscale cannot be scored (beh_hyper_sdq_parent). No inattention scale.",,
+beh_hyper_parent,unavailable,,,Not collected.,,
+beh_adhdsymp_parent,incompatible,cg32,,"Only SDQ item 25, 'good attention span' (cg32), a single parent truth rating; SDQ given as a 5-item parent subset (cg28-cg32, child file ages 4-11, 2005 and 2009), and its hyperactivity/inattention subscale cannot be scored (beh_hyper_sdq_parent). No ADHD scale.",,
+beh_opp_parent,incompatible,cg28,,"Only SDQ item 7, 'generally well behaved, usually does what adults request' (cg28), a single parent truth rating; SDQ given as a 5-item parent subset (cg28-cg32, child file ages 4-11, 2005 and 2009). No oppositional scale.",,
+beh_conduct_parent,incompatible,cg28,,"Only SDQ item 7, 'generally well behaved, usually does what adults request' (cg28), a single parent truth rating; SDQ given as a 5-item parent subset (cg28-cg32, child file ages 4-11, 2005 and 2009), and its conduct problems subscale cannot be scored (beh_conduct_sdq_parent). No conduct scale.",,
+beh_ext_parent,incompatible,"cg28, cg32, cg24",,"Only single parent items: SDQ items 7, 'generally well behaved' (cg28), and 25, 'good attention span' (cg32), truth ratings, ages 4-11, and the PEDS concern 'how your child behaves' (cg24), ages under 6, child file 2005 and 2009; the SDQ externalising composite cannot be scored (beh_ext_sdq_parent).",,
+beh_parent_measure,unavailable,,,See beh_atten_parent.,,
 beh_prosocial_online_self,unavailable,,,Not collected.,,
 beh_prosocial_online_measure,unavailable,,,See beh_prosocial_online_self.,,
-beh_prosocial_self,in_progress,,,,,
-beh_prosocial_measure,in_progress,,,,,
-beh_prosocial_parent,in_progress,,,,,
-beh_socialskills_self,in_progress,,,,,
-beh_socialskills_measure,in_progress,,,,,
-beh_socialskills_parent,in_progress,,,,,
-beh_prosocial_singleitem_teacher,in_progress,,,,,
-beh_empathy_self,in_progress,,,,,
-beh_empathy_measure,in_progress,,,,,
+beh_prosocial_self,incompatible,th21,,"Only the single yes/no item 'In the past 12 months, have you done any volunteer work or community service that you have not been paid for?' (th21, adolescents 2009), not a prosocial behaviour scale.",,
+beh_prosocial_measure,unavailable,,,See beh_prosocial_self.,,
+beh_prosocial_parent,unavailable,,,Not collected.,,
+beh_socialskills_self,unavailable,,,Not collected.,,
+beh_socialskills_measure,unavailable,,,See beh_socialskills_self.,,
+beh_socialskills_parent,incompatible,cg22,,"Only the PEDS concern item 'how well your child gets along with others' (cg22; concerned a lot, a little or not at all; child file 2005 and 2009, ages under 6), a single parent concern item; no social-skills scale.",,
+beh_prosocial_singleitem_teacher,unavailable,,,Not collected.,,
+beh_empathy_self,unavailable,,,Not collected.,,
+beh_empathy_measure,unavailable,,,See beh_empathy_self.,,
 beh_problematicuse_self,unavailable,,,Not collected.,,
-beh_problematicuse_parent,in_progress,,,,,
+beh_problematicuse_parent,unavailable,,,Not collected.,,
 beh_problematicuse_measure,unavailable,,,See beh_problematicuse_self.,,
 cog_execfunc_basc2,unavailable,,,No cognitive testing.,,
 cog_langexec_nepsy,unavailable,,,No cognitive testing.,,
@@ -566,41 +609,41 @@ cog_vocab_nihtb_picvocab,unavailable,,,No cognitive testing.,,
 cog_fluidcomp_nihtb,unavailable,,,No cognitive testing.,,
 cog_crystcomp_nihtb,unavailable,,,No cognitive testing.,,
 cog_totalcomp_nihtb,unavailable,,,No cognitive testing.,,
-cog_atten_task,in_progress,,,,,
-cog_atten_task_measure,in_progress,,,,,
-cog_flex_task,in_progress,,,,,
-cog_flex_task_measure,in_progress,,,,,
-cog_inhib_task,in_progress,,,,,
-cog_inhib_task_measure,in_progress,,,,,
-cog_wm_task,in_progress,,,,,
-cog_wm_task_measure,in_progress,,,,,
-cog_speed_task,in_progress,,,,,
-cog_speed_task_measure,in_progress,,,,,
+cog_atten_task,unavailable,,,No cognitive testing.,,
+cog_atten_task_measure,unavailable,,,See cog_atten_task.,,
+cog_flex_task,unavailable,,,No cognitive testing.,,
+cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
+cog_inhib_task,unavailable,,,No cognitive testing.,,
+cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
+cog_wm_task,unavailable,,,No cognitive testing.,,
+cog_wm_task_measure,unavailable,,,See cog_wm_task.,,
+cog_speed_task,unavailable,,,No cognitive testing.,,
+cog_speed_task_measure,unavailable,,,See cog_speed_task.,,
 cog_wm_digitspan,unavailable,,,No cognitive testing.,,
 cog_iq_fullscale,unavailable,,,No cognitive testing.,,
-cog_nonverbalreason_task,in_progress,,,,,
-cog_nonverbalreason_task_measure,in_progress,,,,,
+cog_nonverbalreason_task,unavailable,,,No cognitive testing.,,
+cog_nonverbalreason_task_measure,unavailable,,,See cog_nonverbalreason_task.,,
 cog_vocab_bpvs,unavailable,,,No cognitive testing.,,
 cog_vocab_ppvt,unavailable,,,No cognitive testing.,,
-cog_vocab_receptive_task,in_progress,,,,,
-cog_vocab_expressive_task,in_progress,,,,,
-cog_vocab_task_measure,in_progress,,,,,
+cog_vocab_receptive_task,unavailable,,,No cognitive testing.,,
+cog_vocab_expressive_task,unavailable,,,No cognitive testing.,,
+cog_vocab_task_measure,unavailable,,,See cog_vocab_receptive_task.,,
 cog_execfunc_brief_parent,unavailable,,,No cognitive testing.,,
-cog_execfunc_parent,in_progress,,,,,
-cog_execfunc_teacher,in_progress,,,,,
-cog_execfunc_self,in_progress,,,,,
-cog_execfunc_measure,in_progress,,,,,
+cog_execfunc_parent,unavailable,,,Not collected.,,
+cog_execfunc_teacher,unavailable,,,Not collected.,,
+cog_execfunc_self,unavailable,,,Not collected.,,
+cog_execfunc_measure,unavailable,,,See cog_execfunc_parent.,,
 cog_vocab_bas_naming,unavailable,,,No cognitive testing.,,
 cog_nonverbalreason_bas_picsim,unavailable,,,No cognitive testing.,,
 cog_spatial_bas_pattern,unavailable,,,No cognitive testing.,,
 cog_verbalreason_bas_versim,unavailable,,,No cognitive testing.,,
 cog_earlynumber_bas_enc,unavailable,,,No cognitive testing.,,
 cog_schoolread_bracken,unavailable,,,No cognitive testing.,,
-cog_earlylang_parent,in_progress,,,,,
-cog_earlylang_measure,in_progress,,,,,
+cog_earlylang_parent,incompatible,"cg17, cg17a, cg18, peds",,"Only the Parents' Evaluation of Developmental Status (PEDS) concern items, child file 2005 and 2009, ages 4 months to 5 years: how the child makes speech sounds (cg17), talks and makes words (cg17a) and understands what you say (cg18), concerned a lot, a little or not at all, and the study's 2009 PEDS risk classification (peds); parent concern items and risk paths, not a language scale.",,
+cog_earlylang_measure,unavailable,,,See cog_earlylang_parent.,,
 cog_creativethinking_stdtest,unavailable,,,No cognitive testing.,,
 cog_speechlang_diagnosed,incompatible,"conmen_p, ca10br, ca10a_p, cf47, cg17",,"Only the MKA's report of the type of a condition limiting the child's activities (2001 conmen_p and ca10br, 2005 ca10a_p: autism, learning disability, language delay and other types), a professional's referral for speech, language or hearing testing (cf47, 2009) and concern about how the child makes speech sounds (cg17, 2005 and 2009); none is a health professional's diagnosis.",,
-cog_speechlang_diagnosed_severity,in_progress,,,,,
+cog_speechlang_diagnosed_severity,unavailable,,,Not collected.,,
 mh_anx_basc2,unavailable,,,BASC-2 not administered.,,
 mh_dep_basc2,unavailable,,,BASC-2 not administered.,,
 mh_emotsymp_sdq_parent,incompatible,"cg29, cg30",,"SDQ given as a 5-item parent subset (cg28-cg32, child file ages 4-11, 2005 and 2009); only items 8, 'often seems worried' (cg29), and 13, 'often unhappy, depressed, tearful' (cg30), of the emotional symptoms subscale, fewer than 3.",,
@@ -624,23 +667,32 @@ mh_dep_phq9_self,unavailable,,,PHQ-9 not administered; see mh_dep_self.,,
 mh_dep_rcads_self,unavailable,,,RCADS not administered; see mh_dep_self.,,
 mh_dep_dass21_self,unavailable,,,DASS-21 not administered; see mh_dep_self.,,
 mh_dep_scl_self,unavailable,,,SCL-90-R not administered; see mh_dep_self.,,
-mh_distress_k6_self,compatible,distress,"if_else(as.numeric(distress) >= 0, as.numeric(distress), NA_real_)","Adolescents 2007 and 2009: Kessler 6, past 30 days (tg11-tg16: nervous, hopeless, restless or fidgety, depressed, everything an effort, worthless; all of the time to not at all). Study score distress (0-24) equals the sum of 5 - item on every row; CHIS imputes the few don't-know and refused items (tg11_x-tg16_x flags).",,
+mh_distress_k6_self,compatible,"distress, tg11_x, tg12_x, tg13_x, tg14_x, tg15_x, tg16_x","local({
+  flags <- cbind(tg11_x, tg12_x, tg13_x, tg14_x, tg15_x, tg16_x)
+  imputed <- rowSums(!is.na(flags) & flags != -10) > 0
+  if_else(as.numeric(distress) >= 0 & !imputed, as.numeric(distress), NA_real_)
+})","Adolescents 2007 and 2009: Kessler 6, past 30 days (tg11-tg16: nervous, hopeless, restless or fidgety, depressed, everything an effort, worthless; all of the time to not at all). Study score distress (0-24) equals the sum of 5 - item on every row. CHIS imputes don't-know and refused items, and a study-imputed outcome score is NA: scores with any imputed item (a tg11_x-tg16_x flag other than -10; 195 rows, 2007 99, 2009 96) are NA.",,
 mh_distress_k10_self,unavailable,,,K10 not administered; see mh_distress_k6_self.,,
 mh_distress_malaise_self,unavailable,,,Malaise Inventory not administered; see mh_distress_self.,,
 mh_distress_ghq12_self,unavailable,,,GHQ-12 not administered; see mh_distress_self.,,
-mh_distress_self,compatible,"distress, td1, td2, td3, td4, td5","case_when(
-  as.numeric(distress) >= 0 ~ as.numeric(distress),
-  (as.numeric(td1) %in% 1:5) &
-    (as.numeric(td2) %in% 1:5) &
-    (as.numeric(td3) %in% 1:5) &
-    (as.numeric(td4) %in% 1:5) &
-    (as.numeric(td5) %in% 1:5) ~ (5 - as.numeric(td1)) +
-    (5 - as.numeric(td2)) +
-    (as.numeric(td3) - 1) +
-    (5 - as.numeric(td4)) +
-    (as.numeric(td5) - 1),
-  .default = NA_real_
-)","Adolescents 2001, 2007 and 2009. 2007-2009: the Kessler 6 score as mh_distress_k6_self (distress, 0-24). 2001: Mental Health Inventory-5 (td1-td5: very nervous, so down in the dumps nothing could cheer you up, peaceful and calm, downhearted and sad, a happy person; past 4 weeks, all of the time to not at all), each scored 0-4 towards distress with calm and happy reversed, summed complete-case (0-20; 22 rows NA). Instrument changes between cycles, so standardise within cycle.",,
+mh_distress_self,compatible,"distress, tg11_x, tg12_x, tg13_x, tg14_x, tg15_x, tg16_x, td1, td2, td3, td4, td5","local({
+  flags <- cbind(tg11_x, tg12_x, tg13_x, tg14_x, tg15_x, tg16_x)
+  k6_imputed <- rowSums(!is.na(flags) & flags != -10) > 0
+  case_when(
+    k6_imputed ~ NA_real_,
+    as.numeric(distress) >= 0 ~ as.numeric(distress),
+    (as.numeric(td1) %in% 1:5) &
+      (as.numeric(td2) %in% 1:5) &
+      (as.numeric(td3) %in% 1:5) &
+      (as.numeric(td4) %in% 1:5) &
+      (as.numeric(td5) %in% 1:5) ~ (5 - as.numeric(td1)) +
+      (5 - as.numeric(td2)) +
+      (as.numeric(td3) - 1) +
+      (5 - as.numeric(td4)) +
+      (as.numeric(td5) - 1),
+    .default = NA_real_
+  )
+})","Adolescents 2001, 2007 and 2009. 2007-2009: the Kessler 6 score as mh_distress_k6_self (distress, 0-24), NA where CHIS imputed any item (195 rows). 2001: Mental Health Inventory-5 (td1-td5: very nervous, so down in the dumps nothing could cheer you up, peaceful and calm, downhearted and sad, a happy person; past 4 weeks, all of the time to not at all), each scored 0-4 towards distress with calm and happy reversed, summed complete-case (0-20; 22 rows NA). Instrument changes between cycles, so standardise within cycle.",,
 mh_distress_measure,inferred,".wave, cohort","case_when(
   cohort == ""teen"" &
     .wave ==
@@ -658,12 +710,16 @@ mh_anx_gad7_self,unavailable,,,GAD-7 not administered.,,
 mh_anx_rcads_self,unavailable,,,RCADS not administered.,,
 mh_anx_dass21_self,unavailable,,,DASS-21 not administered.,,
 mh_anxdep_cbcl_parent,unavailable,,,CBCL not administered.,,
-mh_withdrawn_cbcl_parent,in_progress,,,,,
-mh_somatic_cbcl_parent,in_progress,,,,,
-mh_emotreact_cbcl_parent,in_progress,,,,,
+mh_withdrawn_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_somatic_cbcl_parent,unavailable,,,CBCL not administered.,,
+mh_emotreact_cbcl_parent,unavailable,,,CBCL not administered.,,
 mh_int_cbcl_parent,unavailable,,,CBCL not administered.,,
 mh_dep_binary_self,unavailable,,,Not collected.,,
-mh_dep_self,compatible,cesd8,"if_else(as.numeric(cesd8) >= 0, as.numeric(cesd8), NA_real_)","Adolescents 2005 only: study CES-D 8 score (cesd8, 0-24) from td6-td13 (days in the past 7 enjoyed life, could not shake sad feelings, felt depressed, happy, lonely, like a failure, sad, didn't want to do usual activities), each banded 0, 1-2, 3-4, 5-7 days to 0-3 with enjoyed life and happy reversed; reproduces on all 4,029 rows, no missing items. The 2001 MHI-5 and 2007-2009 K6 are general distress inventories (mh_distress_self), not depression scales.",,
+mh_dep_self,compatible,"cesd8, td6_x, td7_x, td8_x, td9_x, td10_x, td11_x, td12_x, td13_x","local({
+  flags <- cbind(td6_x, td7_x, td8_x, td9_x, td10_x, td11_x, td12_x, td13_x)
+  imputed <- rowSums(!is.na(flags) & flags != -10) > 0
+  if_else(as.numeric(cesd8) >= 0 & !imputed, as.numeric(cesd8), NA_real_)
+})","Adolescents 2005 only: study CES-D 8 score (cesd8, 0-24) from td6-td13 (days in the past 7 enjoyed life, could not shake sad feelings, felt depressed, happy, lonely, like a failure, sad, didn't want to do usual activities), each banded 0, 1-2, 3-4, 5-7 days to 0-3 with enjoyed life and happy reversed; reproduces on all 4,029 rows, with no missing items after CHIS imputation. A study-imputed outcome score is NA: scores with any imputed item (a td6_x-td13_x flag other than -10; 77 rows) are NA. The 2001 MHI-5 and 2007-2009 K6 are general distress inventories (mh_distress_self), not depression scales.",,
 mh_dep_measure,inferred,".wave, cohort","if_else(
   .wave == ""2005"" & cohort == ""teen"",
   ""CES-D 8-item short form, 8 of 20 items, 0-3 item scoring (range 0-24), sum; enjoyed life and felt happy reverse-scored; asked as days in the past 7 (0-7), banded 0, 1-2, 3-4, 5-7"",
@@ -671,27 +727,39 @@ mh_dep_measure,inferred,".wave, cohort","if_else(
 )",Describes mh_dep_self (adolescents 2005).,,
 mh_anx_self,incompatible,"td1, tg11",,"Only single 'nervous' items (td1, MHI-5, 2001; tg11, K6, 2007-2009), both scored in mh_distress_self; no anxiety scale.",,
 mh_anx_measure,unavailable,,,See mh_anx_self.,,
-mh_socanx_self,in_progress,,,,,
-mh_socanx_measure,in_progress,,,,,
-mh_int_parent,in_progress,,,,,
-mh_anx_parent,in_progress,,,,,
-mh_dep_parent,in_progress,,,,,
-mh_totalprob_parent,in_progress,,,,,
-mh_int_teacher,in_progress,,,,,
-mh_anx_teacher,in_progress,,,,,
-mh_dep_teacher,in_progress,,,,,
-mh_totalprob_teacher,in_progress,,,,,
+mh_socanx_self,unavailable,,,Not collected.,,
+mh_socanx_measure,unavailable,,,See mh_socanx_self.,,
+mh_int_parent,incompatible,"cg29, cg30, cg31, cg23",,"Only single parent items: SDQ items 8, 13 and 23 (cg29, cg30, cg31), truth ratings, ages 4-11, and the PEDS concern 'your child's feelings and moods' (cg23), ages under 6, child file 2005 and 2009; the SDQ internalising composite cannot be scored (mh_int_sdq_parent).",,
+mh_anx_parent,incompatible,cg29,,"Only SDQ item 8, 'often seems worried' (cg29), a single parent truth rating; SDQ given as a 5-item parent subset (cg28-cg32, child file ages 4-11, 2005 and 2009), and its emotional symptoms subscale cannot be scored (mh_emotsymp_sdq_parent). No anxiety scale.",,
+mh_dep_parent,incompatible,cg30,,"Only SDQ item 13, 'often unhappy, depressed or tearful' (cg30), a single parent truth rating; SDQ given as a 5-item parent subset (cg28-cg32, child file ages 4-11, 2005 and 2009), and its emotional symptoms subscale cannot be scored (mh_emotsymp_sdq_parent). No depression scale.",,
+mh_totalprob_parent,incompatible,"cg28, cg29, cg30, cg31, cg32, sdq, cf30",,"Only the 5-item SDQ parent subset (cg28-cg32, child file ages 4-11, 2005 and 2009), whose total difficulties cannot be scored (mh_totaldiff_sdq_parent), the study's 2009 banding of it (sdq) and the single item 'Overall, do you think your child has difficulties in any of the following areas: emotions, concentration, behavior, or being able to get along with other people?' (cf30, yes/no); no broadband total.",,
+mh_int_teacher,unavailable,,,Not collected.,,
+mh_anx_teacher,unavailable,,,Not collected.,,
+mh_dep_teacher,unavailable,,,Not collected.,,
+mh_totalprob_teacher,unavailable,,,Not collected.,,
 mh_depanx_diagnosed,incompatible,conmen_p,,"Only a 2001 parent report of the type of a condition limiting the child's activities (conmen_p: 'mental health/psychiatric' among autism, learning and other types), not a professional diagnosis of depression or anxiety.",,
 mh_stress_self,unavailable,,,Not collected.,,
-mh_stress_scale_self,in_progress,,,,,
-mh_stress_measure,in_progress,,,,,
-mh_lonely_self,compatible,td10,"recode_values(as.numeric(td10), 0 ~ ""Never"", c(1, 2) ~ ""Sometimes"", c(3, 4) ~ ""Often"", c(5, 6, 7) ~ ""Always"")","Adolescents 2005 only: days in the past 7 felt lonely (td10), by share of the 7-day window: 0 Never, 1-2 Sometimes, 3-4 Often, 5-7 Always; Rarely unreachable. Also scored in mh_dep_self.",,
+mh_stress_scale_self,unavailable,,,Not collected.,,
+mh_stress_measure,unavailable,,,See mh_stress_scale_self.,,
+mh_lonely_self,compatible,"td10, td10_x","recode_values(
+  if_else(!is.na(td10_x) & td10_x != -10, NA_real_, as.numeric(td10)),
+  0 ~ ""Never"",
+  c(1, 2) ~ ""Sometimes"",
+  c(3, 4) ~ ""Often"",
+  c(5, 6, 7) ~ ""Always""
+)","Adolescents 2005 only: days in the past 7 felt lonely (td10), by share of the 7-day window: 0 Never, 1-2 Sometimes, 3-4 Often, 5-7 Always; Rarely unreachable. Answers CHIS imputed (td10_x other than -10; 5 rows) are NA. Also scored in mh_dep_self.",,
 mh_lonely_scale_self,incompatible,td10,,Single item only (td10); mapped to mh_lonely_self.,,
 mh_lonely_measure,unavailable,,,See mh_lonely_scale_self.,,
-mh_sad_self,compatible,"td4, td12","coalesce(
+mh_sad_self,compatible,"td4, td12, td12_x","coalesce(
   recode_values(as.numeric(td4), 1 ~ ""Always"", 2 ~ ""Often"", 3 ~ ""Sometimes"", 4 ~ ""Rarely"", 5 ~ ""Never""),
-  recode_values(as.numeric(td12), 0 ~ ""Never"", c(1, 2) ~ ""Sometimes"", c(3, 4) ~ ""Often"", c(5, 6, 7) ~ ""Always"")
-)","Adolescents 2001 and 2005. 2001: 'Have you felt downhearted and sad? (How much of the time during the past 4 weeks?)' (td4): all, most, some, a little of the time, not at all = Always, Often, Sometimes, Rarely, Never; also scored in mh_distress_self. 2005: days in the past 7 felt sad (td12) by share of the window: 0 Never, 1-2 Sometimes, 3-4 Often, 5-7 Always; also scored in mh_dep_self.",,
+  recode_values(
+    if_else(!is.na(td12_x) & td12_x != -10, NA_real_, as.numeric(td12)),
+    0 ~ ""Never"",
+    c(1, 2) ~ ""Sometimes"",
+    c(3, 4) ~ ""Often"",
+    c(5, 6, 7) ~ ""Always""
+  )
+)","Adolescents 2001 and 2005. 2001: 'Have you felt downhearted and sad? (How much of the time during the past 4 weeks?)' (td4): all, most, some, a little of the time, not at all = Always, Often, Sometimes, Rarely, Never; also scored in mh_distress_self. 2005: days in the past 7 felt sad (td12) by share of the window: 0 Never, 1-2 Sometimes, 3-4 Often, 5-7 Always; answers CHIS imputed (td12_x other than -10; 7 rows) are NA; also scored in mh_dep_self.",,
 mh_worry_self,incompatible,"cg29, td1, tg11",,"Only the parent truth rating 'often seems worried' (cg29, SDQ item 8) and adolescent 'nervous' items (td1, tg11), which are not worry.",,
 mh_irritable_self,unavailable,,,Not collected.,,
 mh_nobodycares_self,incompatible,th7_p,,"Only 'How much do you feel your parents (or guardians) care about you?' (th7_p, adolescents 2001), a degree rating about parents, not a frequency.",,
@@ -699,7 +767,7 @@ mh_lifenotworth_self,unavailable,,,Not collected.,,
 mh_suicide_ideation_self,unavailable,,,Not collected.,,
 mh_suicide_attempt_self,unavailable,,,Not collected.,,
 mh_selfharm_self,unavailable,,,Not collected.,,
-mh_unhealthywtctrl_self,in_progress,,,,,
+mh_unhealthywtctrl_self,incompatible,"tc34, tc35, tc36, tc37",,"Adolescents 2005 only: trying to lose weight, stay the same or gain (tc34) and, in the past 7 days to lose or keep from gaining weight, whether they dieted (tc35), exercised (tc36) or did anything else (tc37, unspecified); trying to lose weight and dieting are incompatible and exercise never qualifies. No fasting, vomiting, laxative or diet-pill item.",,
 mh_psychsom_hbscscl_self,unavailable,,,HBSC-SCL not administered.,,
 mh_psychsom_measure,unavailable,,,See mh_psychsom_hbscscl_self.,,
 mh_somatic_self,unavailable,,,Not collected.,,
@@ -712,21 +780,21 @@ wb_psychcomplaints_feellow,unavailable,,,HBSC-SCL not administered; see mh_sad_s
 wb_psychcomplaints_irritable,unavailable,,,HBSC-SCL not administered.,,
 wb_psychcomplaints_nervous,unavailable,,,HBSC-SCL not administered.,,
 wb_psychcomplaints_diffsleep,unavailable,,,HBSC-SCL not administered.,,
-wb_bodyimage,proximate,tc33,"recode_values(
-  as.numeric(tc33),
+wb_bodyimage,proximate,"tc33, tc33_x","recode_values(
+  if_else(!is.na(tc33_x) & tc33_x != -10, NA_real_, as.numeric(tc33)),
   1 ~ ""Much too thin"",
   2 ~ ""A bit too thin"",
   3 ~ ""About right"",
   4 ~ ""A bit too fat"",
   5 ~ ""Much too fat""
-)","Adolescents 2005 only: 'Would you say you are very underweight, slightly underweight, about the right weight, slightly overweight or very overweight?' (tc33), mapped by rank. Proximate: weight-status wording.",,
-wb_bodyesteem_self,in_progress,,,,,
-wb_bodyesteem_measure,in_progress,,,,,
+)","Adolescents 2005 only: 'Would you say you are very underweight, slightly underweight, about the right weight, slightly overweight or very overweight?' (tc33), mapped by rank. CHIS imputes don't-know and refused answers, and a study-imputed outcome value is NA: answers CHIS imputed (tc33_x other than -10; 30 rows) are NA. Proximate: weight-status wording.",,
+wb_bodyesteem_self,incompatible,tc33,,"Only perceived weight, very underweight to very overweight (tc33, adolescents 2005), mapped to wb_bodyimage; no body-esteem scale.",,
+wb_bodyesteem_measure,unavailable,,,See wb_bodyesteem_self.,,
 wb_lifesat_slss_self,unavailable,,,SLSS not administered.,,
 wb_lifesat_swls_self,unavailable,,,SWLS not administered.,,
 wb_lifesat_singleitem_self,unavailable,,,Not collected.,,
-wb_lifesat_self,in_progress,,,,,
-wb_lifesat_measure,in_progress,,,,,
+wb_lifesat_self,unavailable,,,Not collected.,,
+wb_lifesat_measure,unavailable,,,See wb_lifesat_self.,,
 wb_happiness_singleitem_self,incompatible,"td5, td9",,"Only items of scales mapped on other rows: 'a happy person' (td5, MHI-5, 2001; mh_distress_self) and days felt happy (td9, CES-D 8, 2005; mh_dep_self).",,
 wb_happiness_singleitem_parent,unavailable,,,Not collected.,,
 wb_domainsat_schoolwork_self,unavailable,,,Not collected.,,
@@ -736,46 +804,60 @@ wb_domainsat_friends_self,unavailable,,,Not collected.,,
 wb_domainsat_school_self,unavailable,,,Not collected.,,
 wb_qol_pedsql_self,unavailable,,,PedsQL not administered.,,
 wb_qol_pedsql_parent,unavailable,,,PedsQL not administered.,,
-wb_qol_pedsql_physical_self,in_progress,,,,,
-wb_qol_pedsql_emotional_self,in_progress,,,,,
-wb_qol_pedsql_social_self,in_progress,,,,,
-wb_qol_pedsql_school_self,in_progress,,,,,
-wb_qol_pedsql_psychosocial_self,in_progress,,,,,
-wb_qol_pedsql_physical_parent,in_progress,,,,,
-wb_qol_pedsql_emotional_parent,in_progress,,,,,
-wb_qol_pedsql_social_parent,in_progress,,,,,
-wb_qol_pedsql_school_parent,in_progress,,,,,
-wb_qol_pedsql_psychosocial_parent,in_progress,,,,,
+wb_qol_pedsql_physical_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_self,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_physical_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_emotional_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_social_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_school_parent,unavailable,,,PedsQL not administered.,,
+wb_qol_pedsql_psychosocial_parent,unavailable,,,PedsQL not administered.,,
 wb_qol_kidscreen10_self,unavailable,,,KIDSCREEN not administered.,,
 wb_qol_kidscreen10_parent,unavailable,,,KIDSCREEN not administered.,,
-wb_qol_chu9d_self,in_progress,,,,,
+wb_qol_chu9d_self,unavailable,,,CHU-9D not administered.,,
 wb_selfesteem_rosenberg_self,unavailable,,,Rosenberg Self-Esteem Scale not administered.,,
-wb_selfesteem_singleitem_self,in_progress,,,,,
+wb_selfesteem_singleitem_self,unavailable,,,Not collected.,,
 wb_selfesteem_self,unavailable,,,Not collected.,,
 wb_selfesteem_measure,unavailable,,,See wb_selfesteem_self.,,
 wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
 wb_selfefficacy_self,unavailable,,,Not collected.,,
 wb_selfefficacy_measure,unavailable,,,See wb_selfefficacy_self.,,
-wb_selfefficacy_academic_self,in_progress,,,,,
-wb_selfefficacy_academic_measure,in_progress,,,,,
-wb_control_self,in_progress,,,,,
-wb_control_measure,in_progress,,,,,
-wb_selfconcept_academic_self,in_progress,,,,,
-wb_selfconcept_maths_self,in_progress,,,,,
-wb_selfconcept_verbal_self,in_progress,,,,,
-wb_selfconcept_science_self,in_progress,,,,,
-wb_selfconcept_social_self,in_progress,,,,,
-wb_selfconcept_measure,in_progress,,,,,
+wb_selfefficacy_academic_self,unavailable,,,Not collected.,,
+wb_selfefficacy_academic_measure,unavailable,,,See wb_selfefficacy_academic_self.,,
+wb_control_self,unavailable,,,Not collected.,,
+wb_control_measure,unavailable,,,See wb_control_self.,,
+wb_selfconcept_academic_self,unavailable,,,Not collected.,,
+wb_selfconcept_maths_self,unavailable,,,Not collected.,,
+wb_selfconcept_verbal_self,unavailable,,,Not collected.,,
+wb_selfconcept_science_self,unavailable,,,Not collected.,,
+wb_selfconcept_social_self,unavailable,,,Not collected.,,
+wb_selfconcept_measure,unavailable,,,See wb_selfconcept_academic_self.,,
 wb_mwb_who5_self,unavailable,,,WHO-5 not administered.,,
 wb_happiness_shs_self,unavailable,,,SHS not administered; see wb_happiness_singleitem_self.,,
 wb_mwb_swemwbs_self,unavailable,,,SWEMWBS not administered.,,
-wb_selfratedhealth_self,compatible,tb1,"recode_values(as.numeric(tb1), 1 ~ ""Excellent"", 2 ~ ""Very good"", 3 ~ ""Good"", 4 ~ ""Fair"", 5 ~ ""Poor"")","Adolescents, all cycles: own general health, excellent, very good, good, fair or poor (tb1).",,
-wb_selfratedmentalhealth_self,in_progress,,,,,
-wb_generalhealth_parent,compatible,ca6,"recode_values(as.numeric(ca6), 1 ~ ""Excellent"", 2 ~ ""Very good"", 3 ~ ""Good"", 4 ~ ""Fair"", 5 ~ ""Poor"")","Children 2001, 2005 and 2009: the MKA's (parent or guardian) rating of the child's general health, excellent, very good, good, fair or poor (ca6).",,
+wb_selfratedhealth_self,compatible,"tb1, tb1_x","recode_values(
+  if_else(!is.na(tb1_x) & tb1_x != -10, NA_real_, as.numeric(tb1)),
+  1 ~ ""Excellent"",
+  2 ~ ""Very good"",
+  3 ~ ""Good"",
+  4 ~ ""Fair"",
+  5 ~ ""Poor""
+)","Adolescents, all cycles: own general health, excellent, very good, good, fair or poor (tb1). CHIS imputes don't-know and refused answers, and a study-imputed outcome value is NA: answers CHIS imputed (tb1_x other than -10; 15 rows, 2005 8, 2007 2, 2009 5) are NA; the 2001 file has no imputation flags.",,
+wb_selfratedmentalhealth_self,unavailable,,,Not collected.,,
+wb_generalhealth_parent,compatible,"ca6, ca6_x","recode_values(
+  if_else(!is.na(ca6_x) & ca6_x != -10, NA_real_, as.numeric(ca6)),
+  1 ~ ""Excellent"",
+  2 ~ ""Very good"",
+  3 ~ ""Good"",
+  4 ~ ""Fair"",
+  5 ~ ""Poor""
+)","Children 2001, 2005 and 2009: the MKA's (parent or guardian) rating of the child's general health, excellent, very good, good, fair or poor (ca6). CHIS imputes don't-know and refused answers, and a study-imputed outcome value is NA: ratings CHIS imputed (ca6_x other than -10; 9 rows, 2005 3, 2009 6) are NA; the 2001 file has no imputation flags.",,
 wb_posaffect_self,incompatible,"td3, td5, td6, td9",,"Only single positive mood items: calm and peaceful and happy person (td3, td5; MHI-5, 2001), enjoyed life and felt happy (td6, td9; CES-D, 2005); no positive-affect scale.",,
 wb_posaffect_measure,unavailable,,,See wb_posaffect_self.,,
-wb_negaffect_self,in_progress,,,,,
-wb_negaffect_measure,in_progress,,,,,
+wb_negaffect_self,incompatible,"td1, td2, td3, td4, td5, td6, td7, td8, td9, td10, td11, td12, td13, tg11, tg12, tg13, tg14, tg15, tg16",,"Only distress and depression inventories, which stay on the mental-health rows: the Mental Health Inventory-5 (td1-td5, 2001) and Kessler 6 (tg11-tg16, 2007 and 2009) on mh_distress_self, and the CES-D 8 (td6-td13, 2005) on mh_dep_self; no published negative-affect scale.",,
+wb_negaffect_measure,unavailable,,,See wb_negaffect_self.,,
 wb_eudaimonic_self,unavailable,,,Not collected.,,
 wb_eudaimonic_measure,unavailable,,,See wb_eudaimonic_self.,,
 wb_socsupport_family_self,incompatible,th7_p,,"Only a single item on how much parents or guardians care (th7_p, adolescents 2001), not a support scale.",,
@@ -803,18 +885,18 @@ hlth_bmi_measure,inferred,"cohort, hghti, wghtp, hghti_p, wghtp_p","local({
 })","Rows with a BMI: child file = Parent-reported (the MKA's proxy report), adolescent file = Self-reported; NA elsewhere.",,
 hlth_bmi_z,unavailable,,,Derive at analysis from hlth_bmi.,,
 hlth_bmi_z_measure,unavailable,,,See hlth_bmi_z.,,
-hlth_puberty_status,proximate,"th27, srage_p","local({
+hlth_puberty_status,proximate,"th27, srage_p, th27_x","local({
   m <- as.numeric(haven::zap_labels(th27))
   age <- as.numeric(haven::zap_labels(srage_p))
-  case_when(m == 0 ~ 0, m > 0 & m <= age ~ 1, m > age ~ 0)
-})","2005 and 2007 adolescents, girls only, self-report: age at first menstrual period (th27), read against the age at the interview in completed years (srage_p): not started yet (0) or a later age = 0, at or below the current age = 1; boys (inapplicable), don't know and refused = NA. Proximate: menarche alone. Never carried.",,
+  case_when(!is.na(th27_x) & th27_x != -10 ~ NA_real_, m == 0 ~ 0, m > 0 & m <= age ~ 1, m > age ~ 0)
+})","2005 and 2007 adolescents, girls only, self-report: age at first menstrual period (th27), read against the age at the interview in completed years (srage_p): not started yet (0) or a later age = 0, at or below the current age = 1; boys (inapplicable) = NA. CHIS imputes don't-know and refused answers, and a study-imputed outcome value is NA: answers CHIS imputed (th27_x other than -10; 61 rows, 2005 39, 2007 22) are NA. Proximate: menarche alone. Never carried.",,
 hlth_puberty_measure,inferred,"cohort, .wave","if_else(
   cohort == ""teen"" & .wave %in% c(""2005"", ""2007""),
   ""Study item on age at first menstrual period (self, girls), 1 of 1 items, read against age at interview: not started or later = 0, at or before = 1 (range 0-1), menarche indicator"",
   NA_character_
 )","2005 and 2007 adolescent rows, where the menarche item was asked; NA elsewhere.",,
 hlth_maturity_offset,unavailable,,,Not collected.,,
-hlth_pa_days60,partial,".wave, te8, te49, cc35","local({
+hlth_pa_days60,partial,".wave, te8, te49, cc35, te8_x, te49_x, cc35_x","local({
   past <- if_else(
     .wave != ""2001"" & as.numeric(haven::zap_labels(te8)) %in% 0:7,
     as.numeric(haven::zap_labels(te8)),
@@ -822,21 +904,40 @@ hlth_pa_days60,partial,".wave, te8, te49, cc35","local({
   )
   usual <- if_else(as.numeric(haven::zap_labels(te49)) %in% 0:7, as.numeric(haven::zap_labels(te49)), NA_real_)
   child <- if_else(as.numeric(haven::zap_labels(cc35)) %in% 0:7, as.numeric(haven::zap_labels(cc35)), NA_real_)
-  coalesce(past, usual, child)
-})","Adolescents 2005-2009, self-report: 'Not including school PE, in the past 7 days, on how many days were you physically active for at least 60 minutes total per day?' (te8; in 2009 asked of adolescents in school or home-schooled the week before); the 2009 adolescents not asked te8 take 'During a typical week, on how many days are you physically active for at least 60 minutes total per day? Do not include PE.' (te49), which is unused in 2005-2007 where both were asked. Children 5 and older, 2009, MKA report: the same past-7-days item (cc35). Partial: school PE excluded. 2001 asked adolescents only about 20 minutes of vigorous activity (te8 in 2001, yes/no, unused); 2001 and 2005 children were not asked. Never carried.",,
+  imputed <- case_when(
+    !is.na(past) ~ !is.na(te8_x) & te8_x != -10,
+    !is.na(usual) ~ !is.na(te49_x) & te49_x != -10,
+    !is.na(child) ~ !is.na(cc35_x) & cc35_x != -10,
+    .default = FALSE
+  )
+  if_else(imputed, NA_real_, coalesce(past, usual, child))
+})","Adolescents 2005-2009, self-report: 'Not including school PE, in the past 7 days, on how many days were you physically active for at least 60 minutes total per day?' (te8; in 2009 asked of adolescents in school or home-schooled the week before); the 2009 adolescents not asked te8 take 'During a typical week, on how many days are you physically active for at least 60 minutes total per day? Do not include PE.' (te49), which is unused in 2005-2007 where both were asked. Children 5 and older, 2009, MKA report: the same past-7-days item (cc35). CHIS imputes missing answers, and a study-imputed outcome value is NA: values whose item taken was imputed by CHIS (te8_x, te49_x or cc35_x other than -10 for the item used; 202 rows, 2005 33, 2007 29, 2009 140) are NA. Partial: school PE excluded. 2001 asked adolescents only about 20 minutes of vigorous activity (te8 in 2001, yes/no, unused); 2001 and 2005 children were not asked. Never carried.",,
 hlth_birthweight,compatible,birthwk,"if_else(as.numeric(haven::zap_labels(birthwk)) > 0, as.numeric(haven::zap_labels(birthwk)) * 1000, NA_real_)","2005 child file only, MKA recall: 'How much did {he/she} weigh at birth?' (answered in pounds and ounces or kilograms), released in kilograms (birthwk) x 1,000; the pounds version (birthwp) is unused. Observed 0.91-4.99 kg, 0.3% and 0.5% of values at those ends, kept. Negative codes (don't know, refused, not ascertained) = NA. One row per participant, so nothing to carry.",,
 hlth_preterm,unavailable,,,Not collected.,,
-hlth_breastfed,compatible,ca14,"recode_values(as.numeric(haven::zap_labels(ca14)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","2005 child file only, children aged 3 and younger, MKA: 'Was (CHILD) ever breastfed or fed breast milk?' (ca14): yes = TRUE, no = FALSE; older children (inapplicable) = NA. The age breastfeeding stopped (brstfd) is unused. One row per participant, so nothing to carry.",,
+hlth_breastfed,compatible,"ca14, ca14_x","recode_values(
+  if_else(!is.na(ca14_x) & ca14_x != -10, NA_real_, as.numeric(haven::zap_labels(ca14))),
+  1 ~ ""TRUE"",
+  2 ~ ""FALSE""
+)","2005 child file only, children aged 3 and younger, MKA: 'Was (CHILD) ever breastfed or fed breast milk?' (ca14): yes = TRUE, no = FALSE; older children (inapplicable) = NA. CHIS imputes don't-know and refused answers, and a study-imputed outcome value is NA: answers CHIS imputed (ca14_x other than -10; 15 rows) are NA. The age breastfeeding stopped (brstfd) is unused. One row per participant, so nothing to carry.",,
 hlth_prenatalsmoking,incompatible,hhsmk,,"Only household smoking at the interview (hhsmk: none, some days, every day; 2005-2009), not the mother's smoking in pregnancy; no row holds it.",,
-hlth_chroniccond_diagnosed,partial,".wave, ca12, ca31, tb5, tb17, tb10","local({
+hlth_chroniccond_diagnosed,partial,".wave, ca12, ca31, tb5, tb17, tb10, ca12_x, ca31_x, tb5_x, tb17_x, tb10_x","local({
   asth <- coalesce(as.numeric(haven::zap_labels(ca12)), as.numeric(haven::zap_labels(tb5)))
   still <- coalesce(as.numeric(haven::zap_labels(ca31)), as.numeric(haven::zap_labels(tb17)))
   diab <- as.numeric(haven::zap_labels(tb10))
   case_when(
     .wave == ""2001"" ~ NA_character_,
+    (!is.na(ca12_x) & ca12_x != -10) |
+      (!is.na(tb5_x) & tb5_x != -10) |
+      (!is.na(ca31_x) & ca31_x != -10) |
+      (!is.na(tb17_x) & tb17_x != -10) |
+      (!is.na(tb10_x) & tb10_x != -10) ~ NA_character_,
     (asth == 1 & still == 1) | diab %in% 1 ~ ""Currently diagnosed"",
     asth == 1 & still == 2 ~ ""Previously diagnosed"",
     asth == 2 ~ ""Never diagnosed""
   )
-})","2005-2009: 'Has a doctor ever told you that (CHILD) has asthma?' (ca12, MKA; tb5, adolescent self-report) with 'Does {he/she} still have asthma?' (ca31, tb17): told and still = Currently, told and not still = Previously, not told = Never. Adolescents in 2005 and 2007 were also asked whether a doctor ever told them they have diabetes (tb10): told = Currently (no current follow-up; binary ever-told rule). Partial: asthma, plus diabetes for 2005-2007 adolescents, only. 2001 = NA: it asked only the ever-told item and daily asthma medication (ca12a, tb6), a weaker current proxy that does not fill the cycle. The condition-type recodes (ca10, ca10a_p, conphy_p) are unused.",,
-hlth_disability,partial,ca7,"recode_values(as.numeric(haven::zap_labels(ca7)), 1 ~ ""TRUE"", 2 ~ ""FALSE"")","Child file 2001, 2005 and 2009 (MKA): 'Does (CHILD) currently have any physical, behavioral or mental conditions that limit or prevent {him/her} from doing childhood activities usual for {his/her} age?' (ca7): yes = TRUE, no = FALSE; don't know and refused = NA. Partial: physical pooled with behavioral and mental conditions, with no long-term wording. Adolescents were not asked (NA). The school-limitation items (ca8, ca9) and condition-type follow-ups (ca10) are unused. Never carried.",,
+})","2005-2009: 'Has a doctor ever told you that (CHILD) has asthma?' (ca12, MKA; tb5, adolescent self-report) with 'Does {he/she} still have asthma?' (ca31, tb17): told and still = Currently, told and not still = Previously, not told = Never. Adolescents in 2005 and 2007 were also asked whether a doctor ever told them they have diabetes (tb10): told = Currently (no current follow-up; binary ever-told rule). CHIS imputes missing answers, and a study-imputed outcome value is NA: values with any of these answers imputed by CHIS (ca12_x, ca31_x, tb5_x, tb17_x or tb10_x other than -10; 198 rows, 2005 84, 2007 31, 2009 83) are NA. Partial: asthma, plus diabetes for 2005-2007 adolescents, only. 2001 = NA: it asked only the ever-told item and daily asthma medication (ca12a, tb6), a weaker current proxy that does not fill the cycle. The condition-type recodes (ca10, ca10a_p, conphy_p) are unused.",,
+hlth_disability,partial,"ca7, ca7_x","recode_values(
+  if_else(!is.na(ca7_x) & ca7_x != -10, NA_real_, as.numeric(haven::zap_labels(ca7))),
+  1 ~ ""TRUE"",
+  2 ~ ""FALSE""
+)","Child file 2001, 2005 and 2009 (MKA): 'Does (CHILD) currently have any physical, behavioral or mental conditions that limit or prevent {him/her} from doing childhood activities usual for {his/her} age?' (ca7): yes = TRUE, no = FALSE; don't know and refused = NA. CHIS imputes missing answers, and a study-imputed outcome value is NA: answers CHIS imputed (ca7_x other than -10; 35 rows, 2005 20, 2009 15) are NA; the 2001 file has no imputation flags. Partial: physical pooled with behavioral and mental conditions, with no long-term wording. Adolescents were not asked (NA). The school-limitation items (ca8, ca9) and condition-type follow-ups (ca10) are unused. Never carried.",,

@@ -354,6 +354,130 @@ bp625_items <- function() {
       "2017" = "q48",
       "2019" = "q47"
     ),
+    vape_30d = bp625_entry(
+      "During the past 30 days, on how many days did you use an electronic vapor product? (1 = 0 days, 2 = 1 or 2 days, 3 = 3 to 5 days, 4 = 6 to 9 days, 5 = 10 to 19 days, 6 = 20 to 29 days, 7 = All 30 days)",
+      "2015" = "q40",
+      "2017" = "q35",
+      "2019" = "q35"
+    ),
+    # --- other drugs (lifetime) ---------------------------------------------
+    # Response options for every item: 1 = 0 times, 2 = 1 or 2 times,
+    # 3 = 3 to 9 times, 4 = 10 to 19 times, 5 = 20 to 39 times,
+    # 6 = 40 or more times.
+    cocaine_life = bp625_entry(
+      "During your life, how many times have you used any form of cocaine, including powder, crack, or freebase? (1 = 0 times ... 6 = 40 or more times)",
+      "1999" = "q48",
+      "2003" = "q48",
+      "2005" = "q48",
+      "2007" = "q49",
+      "2009" = "q49",
+      "2011" = "q50",
+      "2013" = "q50",
+      "2015" = "q50",
+      "2017" = "q49",
+      "2019" = "q50"
+    ),
+    inhalant_life = bp625_entry(
+      "During your life, how many times have you sniffed glue, breathed the contents of aerosol spray cans, or inhaled any paints or sprays to get high? (1 = 0 times ... 6 = 40 or more times)",
+      "1999" = "q50",
+      "2003" = "q50",
+      "2005" = "q50",
+      "2007" = "q51",
+      "2009" = "q51",
+      "2011" = "q52",
+      "2013" = "q51",
+      "2015" = "q51",
+      "2017" = "q50",
+      "2019" = "q51"
+    ),
+    heroin_life = bp625_entry(
+      "During your life, how many times have you used heroin (also called smack, junk, or China White)? (1 = 0 times ... 6 = 40 or more times)",
+      "1999" = "q52",
+      "2003" = "q52",
+      "2005" = "q51",
+      "2007" = "q52",
+      "2009" = "q52",
+      "2011" = "q53",
+      "2013" = "q52",
+      "2015" = "q52",
+      "2017" = "q51",
+      "2019" = "q52"
+    ),
+    meth_life = bp625_entry(
+      "During your life, how many times have you used methamphetamines (also called speed, crystal, crank, or ice; 2019: crystal meth, crank, ice, or meth)? (1 = 0 times ... 6 = 40 or more times)",
+      "1999" = "q53",
+      "2003" = "q53",
+      "2005" = "q52",
+      "2007" = "q53",
+      "2009" = "q53",
+      "2011" = "q54",
+      "2013" = "q53",
+      "2015" = "q53",
+      "2017" = "q52",
+      "2019" = "q53"
+    ),
+    ecstasy_life = bp625_entry(
+      "During your life, how many times have you used ecstasy (also called MDMA)? (1 = 0 times ... 6 = 40 or more times)",
+      "2003" = "q54",
+      "2005" = "q53",
+      "2007" = "q54",
+      "2009" = "q54",
+      "2011" = "q55",
+      "2013" = "q54",
+      "2015" = "q54",
+      "2017" = "q53",
+      "2019" = "q54"
+    ),
+    hallucinogen_life = bp625_entry(
+      "During your life, how many times have you used hallucinogenic drugs, such as LSD, acid, PCP, angel dust, mescaline, or mushrooms? (1 = 0 times ... 6 = 40 or more times)",
+      "2003" = "q91",
+      "2005" = "q90",
+      "2007" = "q89",
+      "2009" = "q89",
+      "2011" = "q89",
+      "2013" = "q87",
+      "2015" = "q91",
+      "2017" = "q91",
+      "2019" = "q91"
+    ),
+    synth_marijuana_life = bp625_entry(
+      "During your life, how many times have you used synthetic marijuana (2015-2017 add: also called K2, Spice, fake weed, King Kong, Yucatan Fire, Skunk, or Moon Rocks)? (1 = 0 times ... 6 = 40 or more times)",
+      "2015" = "q55",
+      "2017" = "q54",
+      "2019" = "q48"
+    ),
+    # --- weight control (past 30 days) -------------------------------------
+    # 2015-2019 ask only what the student is trying to do about their weight.
+    fasting_30d = bp625_entry(
+      "During the past 30 days, did you go without eating for 24 hours or more (also called fasting) to lose weight or to keep from gaining weight? (1 = Yes, 2 = No)",
+      "1999" = "q69",
+      "2003" = "q70",
+      "2005" = "q68",
+      "2007" = "q69",
+      "2009" = "q69",
+      "2011" = "q69",
+      "2013" = "q68"
+    ),
+    diet_pills_30d = bp625_entry(
+      "During the past 30 days, did you take any diet pills, powders, or liquids without a doctor's advice to lose weight or to keep from gaining weight? (1999: to lose weight only; 2005 onward: meal replacement products such as Slim Fast excluded) (1 = Yes, 2 = No)",
+      "1999" = "q70",
+      "2003" = "q71",
+      "2005" = "q69",
+      "2007" = "q70",
+      "2009" = "q70",
+      "2011" = "q70",
+      "2013" = "q69"
+    ),
+    vomit_laxatives_30d = bp625_entry(
+      "During the past 30 days, did you vomit or take laxatives to lose weight or to keep from gaining weight? (1 = Yes, 2 = No)",
+      "1999" = "q71",
+      "2003" = "q72",
+      "2005" = "q70",
+      "2007" = "q71",
+      "2009" = "q71",
+      "2011" = "q71",
+      "2013" = "q70"
+    ),
     # --- school, health and sleep ------------------------------------------
     grades_school = bp625_entry(
       "How would you describe your grades in school, past 12 months (1 = mostly A's ... 5 = mostly F's, 6 = none of these, 7 = not sure)",

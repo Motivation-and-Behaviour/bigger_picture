@@ -2,8 +2,9 @@
 #'
 #' Each wave joins the child questionnaire to the adult (2010-2016) or person
 #' (2018-2022) questionnaire on `pid`, then joins the family roster, the
-#' household economy file and the roster mother's own adult/person record onto
-#' the result.
+#' household economy file, a count of the child's siblings on the wave's
+#' family rosters, the roster mother's own adult/person record and the roster
+#' father's own TV hours onto the result.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -53,12 +54,35 @@ tidy_BPIPD_873 <- function(raw_dataset, spec) {
     # The child and self-report files overlap only from 2018
     joined <- bp873_merge(child, individual, "pid") |>
       bp873_add_roster(roster) |>
-      dplyr::left_join(economy, by = "fid", relationship = "many-to-one")
+      dplyr::left_join(economy, by = "fid", relationship = "many-to-one") |>
+      dplyr::left_join(
+        bp873_roster_siblings(raw_dataset, wave),
+        by = "pid",
+        relationship = "many-to-one"
+      )
     joined$mother_pid <- as.numeric(haven::zap_labels(joined$mother_pid))
-    dplyr::left_join(
+    joined <- dplyr::left_join(
       joined,
       mother,
       by = "mother_pid",
+      relationship = "many-to-one"
+    )
+
+    # Only the father's own TV hours are linked, and 2010 asks adults none
+    if (is.null(wave$father_vars)) {
+      return(joined)
+    }
+    father <- bp873_take(
+      raw_dataset,
+      wave$individual,
+      wave$father_vars,
+      "father_pid"
+    )
+    joined$father_pid <- as.numeric(haven::zap_labels(joined$father_pid))
+    dplyr::left_join(
+      joined,
+      father,
+      by = "father_pid",
       relationship = "many-to-one"
     )
   })
@@ -97,9 +121,13 @@ tidy_BPIPD_873 <- function(raw_dataset, spec) {
 #'
 #' Height, weight and the public-school item also carry the responder in
 #' their name: the proxy module reports on children to 15 and the person file
-#' asks 10-15s themselves from 2018. `proxy` names the proxy respondent and the
-#' child's roster parents in the child file, and `mother_vars` the roster
-#' mother's own adult/person record.
+#' asks 10-15s themselves from 2018. `individual_selfrpt` and
+#' `individual_proxyrpt` say whether the adult/person record holds a self
+#' report and a proxy report (another family member answering the adult proxy
+#' questionnaire for the person). `proxy` names the proxy respondent and the
+#' child's roster parents in the child file, `mother_vars` the roster
+#' mother's own adult/person record and `father_vars` the roster father's
+#' (2014-2022).
 bp873_waves <- function() {
   list(
     list(
@@ -126,6 +154,15 @@ bp873_waves <- function() {
         activity_6 = "wk8_s_6",
         # 2010 frequency bands (6-7, 2-3, 1-2 times a week) differ from later waves
         tv_restrict_2010 = "wf605",
+        # Same 2010 frequency bands as `tv_restrict_2010`
+        tv_types_restrict_2010 = "wf606",
+        read_to_child_parent = "wg301",
+        homework_review_wd_self = "kt302_a_1",
+        homework_review_we_self = "kt302_a_2",
+        mastery_cant_solve = "wm111",
+        mastery_overburdened = "wm112",
+        mastery_in_control = "wm113",
+        mastery_hopeless = "wm114",
         academic_pressure = "ks502",
         age_reported = "wa1age",
         # One interview date covers the proxy and self modules in 2010
@@ -250,7 +287,16 @@ bp873_waves <- function() {
         child_height_cm_self = "qp1",
         child_weight_jin_self = "qp2"
       ),
-      mother_vars = c(mother_pid = "pid", mother_employ_2010 = "qg3"),
+      mother_vars = c(
+        mother_pid = "pid",
+        mother_employ_2010 = "qg3",
+        mother_k6_depressed = "qq601",
+        mother_k6_nervous = "qq602",
+        mother_k6_restless = "qq603",
+        mother_k6_hopeless = "qq604",
+        mother_k6_effort = "qq605",
+        mother_k6_meaningless = "qq606"
+      ),
       famconf = "cfps2010famconf",
       famconf_vars = c(
         pid = "pid",
@@ -297,6 +343,8 @@ bp873_waves <- function() {
         activity_4 = "wk8_s_4",
         activity_5 = "wk8_s_5",
         tv_restrict = "wf605m",
+        tv_types_restrict = "wf606m",
+        read_to_child_parent = "wg301",
         academic_pressure = "ks502",
         birth_address_2014 = "wa107m",
         age_reported = "cfps2014_age",
@@ -374,6 +422,8 @@ bp873_waves <- function() {
         ethnicity_code = "qa701code",
         internet_any_self = "ku2",
         self_rated_health = "qp201",
+        individual_selfrpt = "selfrpt",
+        individual_proxyrpt = "proxyrpt",
         tv_week_hours_self = "qq1001",
         internet_week_hours_self = "ku250m",
         socialise_freq = "ku703",
@@ -409,7 +459,21 @@ bp873_waves <- function() {
         child_height_cm_self = "qp101",
         child_weight_jin_self = "qp102"
       ),
-      mother_vars = c(mother_pid = "pid", mother_employ = "employ2014"),
+      mother_vars = c(
+        mother_pid = "pid",
+        mother_employ = "employ2014",
+        mother_tv_week_hours = "qq1001",
+        mother_k6_depressed = "qq601",
+        mother_k6_nervous = "qq602",
+        mother_k6_restless = "qq603",
+        mother_k6_hopeless = "qq604",
+        mother_k6_effort = "qq605",
+        mother_k6_meaningless = "qq606"
+      ),
+      father_vars = c(
+        father_pid = "pid",
+        father_tv_week_hours = "qq1001"
+      ),
       famconf = "cfps2014famconf",
       famconf_vars = c(
         pid = "pid",
@@ -426,6 +490,7 @@ bp873_waves <- function() {
         father_alive = "alive_a14_f",
         mother_alive = "alive_a14_m",
         mother_pid = "pid_m",
+        father_pid = "pid_f",
         mother_birth_year = "tb1y_a_m",
         mother_birth_month = "tb1m_a_m"
       ),
@@ -450,6 +515,8 @@ bp873_waves <- function() {
         subpopulation = "subpopulation",
         self_rated_health = "wl1",
         tv_restrict = "wf605m",
+        tv_types_restrict = "wf606m",
+        read_to_child_parent = "wg301",
         academic_pressure = "ks502",
         drank_12m = "wk813",
         smoked_12m = "wk814",
@@ -477,6 +544,8 @@ bp873_waves <- function() {
         grade_chinese_parent = "wf501",
         grade_maths_parent = "wf502",
         cesd20 = "cesd20sc",
+        cesd_depressed = "pn406",
+        cesd_effort = "pn407",
         cesd_sleep = "pn411",
         cesd_happy = "pn412",
         lonely = "pn414",
@@ -533,6 +602,8 @@ bp873_waves <- function() {
         internet_mobile_user = "ku201",
         internet_pc_user = "ku202",
         self_rated_health = "qp201",
+        individual_selfrpt = "selfrpt",
+        individual_proxyrpt = "proxyrpt",
         tv_week_hours_self = "qq1001",
         internet_week_hours_self = "ku250m",
         socialise_freq = "ku703",
@@ -544,6 +615,8 @@ bp873_waves <- function() {
         schoolwork_satisfaction = "ks501",
         study_hard = "ks601n",
         cesd20 = "cesd20sc",
+        cesd_depressed = "pn406",
+        cesd_effort = "pn407",
         cesd_sleep = "pn411",
         cesd_happy = "pn412",
         lonely = "pn414",
@@ -568,7 +641,16 @@ bp873_waves <- function() {
         child_weight_jin_self = "qp102",
         school_public_self = "ps601"
       ),
-      mother_vars = c(mother_pid = "pid", mother_employ = "employ"),
+      mother_vars = c(
+        mother_pid = "pid",
+        mother_employ = "employ",
+        mother_cesd20 = "cesd20sc",
+        mother_tv_week_hours = "qq1001"
+      ),
+      father_vars = c(
+        father_pid = "pid",
+        father_tv_week_hours = "qq1001"
+      ),
       famconf = "cfps2016famconf",
       famconf_vars = c(
         pid = "pid",
@@ -585,6 +667,7 @@ bp873_waves <- function() {
         father_alive = "alive_a16_f",
         mother_alive = "alive_a16_m",
         mother_pid = "pid_m",
+        father_pid = "pid_f",
         mother_birth_year = "tb1y_a_m",
         mother_birth_month = "tb1m_a_m"
       ),
@@ -610,6 +693,8 @@ bp873_waves <- function() {
         subpopulation = "subpopulation",
         # 2018 and 2020 reverse the coding (1 = never ... 5 = very often)
         tv_restrict_2018 = "wf605m",
+        tv_types_restrict_2018 = "wf606m",
+        read_to_child_parent = "wg301",
         birth_address = "wa401",
         age_reported = "age",
         interview_year_parent = "cyear",
@@ -658,6 +743,8 @@ bp873_waves <- function() {
         internet_mobile_user = "qu201",
         internet_pc_user = "qu202",
         self_rated_health = "qp201",
+        individual_selfrpt = "selfrpt",
+        individual_proxyrpt = "proxyrpt",
         tv_week_hours_self = "qq1001",
         internet_week_hours_self = "qu250m",
         socialise_freq = "qu703",
@@ -670,6 +757,8 @@ bp873_waves <- function() {
         study_hard = "qs601n",
         cesd20 = "cesd20sc",
         cesd8 = "cesd8",
+        cesd_depressed = "qn406",
+        cesd_effort = "qn407",
         cesd_sleep = "qn411",
         cesd_happy = "qn412",
         lonely = "qn414",
@@ -694,18 +783,35 @@ bp873_waves <- function() {
         # 5 = totally applicable
         int_angry_study = "qint001",
         ext_argue = "qext002",
+        int_exam_fear = "qint003",
         ext_attention = "qext004",
+        int_lonely = "qint005",
         ext_distracted = "qext006",
+        int_upset_sad = "qint007",
         ext_homework = "qext008",
         int_worry_school = "qint009",
+        int_worry_homework = "qint010",
+        int_worry_friends = "qint011",
+        ext_gossip = "qext012",
         ext_fight = "qext013",
+        int_ashamed_mistakes = "qint014",
         birth_weight_jin = "qa101",
         child_height_cm_self = "qp101",
         child_weight_jin_self = "qp102",
         school_public_self = "qs601"
       ),
-      mother_vars = c(mother_pid = "pid", mother_employ = "employ"),
+      mother_vars = c(
+        mother_pid = "pid",
+        mother_employ = "employ",
+        mother_cesd20 = "cesd20sc",
+        mother_tv_week_hours = "qq1001"
+      ),
+      father_vars = c(
+        father_pid = "pid",
+        father_tv_week_hours = "qq1001"
+      ),
       famconf = "cfps2018famconf",
+      roster_parents = c(mother = "pid_a_m", father = "pid_a_f"),
       famconf_vars = c(
         pid = "pid",
         fid = "fid18",
@@ -721,6 +827,7 @@ bp873_waves <- function() {
         father_alive = "alive_a18_f",
         mother_alive = "alive_a18_m",
         mother_pid = "pid_a_m",
+        father_pid = "pid_a_f",
         mother_birth_year = "tb1y_a_m",
         mother_birth_month = "tb1m_a_m"
       ),
@@ -746,6 +853,8 @@ bp873_waves <- function() {
         subpopulation = "subpopulation",
         # Reversed coding, as in 2018
         tv_restrict_2018 = "wf605mn",
+        tv_types_restrict_2018 = "wf606mn",
+        read_to_child_parent = "wg301",
         birth_address = "wa401",
         age_reported = "age",
         interview_year_parent = "cyear",
@@ -798,6 +907,8 @@ bp873_waves <- function() {
         internet_mobile_user = "qu201",
         internet_pc_user = "qu202",
         self_rated_health = "qp201",
+        individual_selfrpt = "selfrpt",
+        individual_proxyrpt = "proxyrpt",
         tv_week_hours_self = "qq1001",
         internet_mobile_day_mins_self = "qu201a",
         internet_pc_day_mins_self = "qu202a",
@@ -811,6 +922,8 @@ bp873_waves <- function() {
         study_hard = "qs601n",
         cesd20 = "cesd20sc",
         cesd8 = "cesd8",
+        cesd_depressed = "qn406",
+        cesd_effort = "qn407",
         cesd_sleep = "qn411",
         cesd_happy = "qn412",
         lonely = "qn414",
@@ -825,8 +938,18 @@ bp873_waves <- function() {
         child_weight_jin_self = "qp102",
         school_public_self = "qs601"
       ),
-      mother_vars = c(mother_pid = "pid", mother_employ = "employ"),
+      mother_vars = c(
+        mother_pid = "pid",
+        mother_employ = "employ",
+        mother_cesd20 = "cesd20sc",
+        mother_tv_week_hours = "qq1001"
+      ),
+      father_vars = c(
+        father_pid = "pid",
+        father_tv_week_hours = "qq1001"
+      ),
       famconf = "cfps2020famconf",
+      roster_parents = c(mother = "pid_a_m", father = "pid_a_f"),
       famconf_vars = c(
         pid = "pid",
         fid = "fid20",
@@ -842,6 +965,7 @@ bp873_waves <- function() {
         father_alive = "alive_a20_f",
         mother_alive = "alive_a20_m",
         mother_pid = "pid_a_m",
+        father_pid = "pid_a_f",
         mother_birth_year = "tb1y_a_m",
         mother_birth_month = "tb1m_a_m"
       ),
@@ -865,6 +989,7 @@ bp873_waves <- function() {
         weight_cross = "rswt_natcs22n",
         psu = "psu",
         subpopulation = "subpopulation",
+        read_to_child_parent = "wg301",
         birth_address = "wa401",
         age_reported = "age",
         interview_year_parent = "cyear",
@@ -918,6 +1043,8 @@ bp873_waves <- function() {
         internet_pc_user = "qu202",
         learning_online_user_self = "qu5",
         self_rated_health = "qp201",
+        individual_selfrpt = "selfrpt",
+        individual_proxyrpt = "proxyrpt",
         tv_week_hours_self = "qq1001",
         internet_mobile_day_mins_self = "qu201a",
         internet_pc_day_mins_self = "qu202a",
@@ -932,6 +1059,8 @@ bp873_waves <- function() {
         study_hard = "qs601n",
         cesd20 = "cesd20sc",
         cesd8 = "cesd8",
+        cesd_depressed = "qn406",
+        cesd_effort = "qn407",
         cesd_sleep = "qn411",
         cesd_happy = "qn412",
         lonely = "qn414",
@@ -945,17 +1074,33 @@ bp873_waves <- function() {
         math_test = "mathtest22",
         int_angry_study = "qint001",
         ext_argue = "qext002",
+        int_exam_fear = "qint003",
         ext_attention = "qext004",
+        int_lonely = "qint005",
         ext_distracted = "qext006",
+        int_upset_sad = "qint007",
         ext_homework = "qext008",
         int_worry_school = "qint009",
+        int_worry_homework = "qint010",
+        int_worry_friends = "qint011",
+        ext_gossip = "qext012",
         ext_fight = "qext013",
+        int_ashamed_mistakes = "qint014",
         birth_weight_jin = "qa101",
         child_height_cm_self = "qp101",
         child_weight_jin_self = "qp102",
         school_public_self = "qs601"
       ),
-      mother_vars = c(mother_pid = "pid", mother_employ = "employ"),
+      mother_vars = c(
+        mother_pid = "pid",
+        mother_employ = "employ",
+        mother_cesd20 = "cesd20sc",
+        mother_tv_week_hours = "qq1001"
+      ),
+      father_vars = c(
+        father_pid = "pid",
+        father_tv_week_hours = "qq1001"
+      ),
       famconf = "cfps2022famconf",
       famconf_vars = c(
         pid = "pid",
@@ -972,6 +1117,7 @@ bp873_waves <- function() {
         father_alive = "alive_a22_f",
         mother_alive = "alive_a22_m",
         mother_pid = "pid_m",
+        father_pid = "pid_f",
         mother_birth_year = "tb1y_a_m",
         mother_birth_month = "tb1m_a_m"
       ),
@@ -1124,16 +1270,25 @@ bp873_label_wording_ok <- c(
   "grade_maths_parent",
   "int_angry_study",
   "ext_argue",
+  "int_exam_fear",
   "ext_attention",
+  "int_lonely",
   "ext_distracted",
+  "int_upset_sad",
   "ext_homework",
   "int_worry_school",
+  "int_worry_homework",
+  "int_worry_friends",
+  "ext_gossip",
   "ext_fight",
+  "int_ashamed_mistakes",
   "subpopulation",
   "smoked_month",
   "birth_address_2014",
   # Only the unobserved code 79 differs
-  "breastfed_now"
+  "breastfed_now",
+  "individual_selfrpt",
+  "individual_proxyrpt"
 )
 
 #' Bind the waves, allowing only the reviewed value-label wording differences
@@ -1172,7 +1327,8 @@ bp873_relabel <- function(df, raw_dataset) {
     individual = "individual",
     famconf = "famconf",
     famecon = "famecon",
-    mother = "individual"
+    mother = "individual",
+    father = "individual"
   )
   for (wave in bp873_waves()) {
     for (part in names(sources)) {
@@ -1232,4 +1388,45 @@ bp873_merge <- function(x, y, by) {
   }
 
   joined[setdiff(names(joined), paste0(shared, ".y"))]
+}
+
+#' Number of the child's siblings on the wave's family rosters
+#'
+#' Counts the other people on any family roster of the wave who share the
+#' child's roster mother or roster father (`pid_m`, `pid_f`; `pid_a_m`,
+#' `pid_a_f` in 2018 and 2020), so full and half siblings recorded by CFPS
+#' count whether or not they live with the child. NA where the roster
+#' records neither parent's id.
+bp873_roster_siblings <- function(raw_dataset, wave) {
+  parents <- wave$roster_parents
+  if (is.null(parents)) {
+    parents <- c(mother = "pid_m", father = "pid_f")
+  }
+  roster <- raw_dataset$data[[wave$famconf]]
+  people <- dplyr::distinct(tibble::tibble(
+    pid = as.numeric(haven::zap_labels(roster$pid)),
+    mother = as.numeric(haven::zap_labels(roster[[parents[["mother"]]]])),
+    father = as.numeric(haven::zap_labels(roster[[parents[["father"]]]]))
+  ))
+  # Person ids have nine digits; negative and small codes (e.g. 77 'Other'
+  # in 2016) are missing-value codes
+  people$mother[!(people$mother > 100000)] <- NA_real_
+  people$father[!(people$father > 100000)] <- NA_real_
+  people <- people[!duplicated(people$pid), ]
+
+  shared <- function(key) {
+    counts <- table(key)
+    out <- as.numeric(counts[as.character(key)]) - 1
+    out[is.na(key)] <- 0
+    out
+  }
+  both <- ifelse(
+    is.na(people$mother) | is.na(people$father),
+    NA_character_,
+    paste(people$mother, people$father)
+  )
+  siblings <- shared(people$mother) + shared(people$father) - shared(both)
+  siblings[is.na(people$mother) & is.na(people$father)] <- NA_real_
+
+  tibble::tibble(pid = people$pid, siblings_roster = siblings)
 }

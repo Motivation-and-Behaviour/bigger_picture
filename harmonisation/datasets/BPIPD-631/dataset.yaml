@@ -31,8 +31,20 @@ resources:
       - "b[d-r]_pno"
       - "b[d-r]_age"
       - "b[d-r]_memorig"
-  # Adult interviews: parents' education and occupation, joined on hidp +
-  # the youth's mnspno/fnspno.
+  # Household relationship files, one row per ordered pair of household
+  # members: BHPS youths' resident siblings are counted from them in the
+  # tidier (UKHLS youth files carry the study's count, nnssib_dv).
+  - name: "bhps_egoalt"
+    role: "data"
+    glob: "stata/stata14_se/bhps/b{d,e,f,g,h,i,j,k,l,m,n,o,p,q,r}_egoalt.dta"
+    reader: "stata"
+    columns:
+      - "b[d-r]_hidp"
+      - "b[d-r]_pno"
+      - "b[d-r]_rel"
+  # Adult interviews: parents' education and occupation, and their own GHQ-12
+  # Likert score (scghq1_dv, adult self-completion), joined on hidp + the
+  # youth's mnspno/fnspno.
   - name: "bhps_indresp"
     role: "data"
     glob: "stata/stata14_se/bhps/b{d,e,f,g,h,i,j,k,l,m,n,o,p,q,r}_indresp.dta"
@@ -46,6 +58,7 @@ resources:
       - "b[d-r]_hiqual_dv"
       - "b[d-r]_jbstat"
       - "b[d-r]_jbnssec8_dv"
+      - "b[d-r]_scghq1_dv"
   - name: "ukhls_indresp"
     role: "data"
     glob: "stata/stata14_se/ukhls/?_indresp.dta"
@@ -59,6 +72,7 @@ resources:
       - "[a-o]_hiqual_dv"
       - "[a-o]_jbstat"
       - "[a-o]_jbnssec8_dv"
+      - "[a-o]_scghq1_dv"
   # Child files: whether the child attends a state or private school
   # (schsta), reported by a parent in the adult interview; only the waves
   # that ask it. BHPS files hold one row per responding parent and child (pno
@@ -84,6 +98,21 @@ resources:
       - "[a-o]_pno"
       - "[a-o]_(schsta|stillstate|stillpriv)"
       - "[a-o]_rapno2"
+  # Parenting-style files (UKHLS waves 3-15): the 32-item Parenting Styles
+  # and Dimensions Questionnaire (ps1-ps32) and the study's authoritative,
+  # authoritarian and permissive scores, self-completed by each responsible
+  # parent about any child aged 10; one row per parent and child (pno is the
+  # parent's, childpno the child's).
+  - name: "ukhls_parstyle"
+    role: "data"
+    glob: "stata/stata14_se/ukhls/?_parstyle.dta"
+    reader: "stata"
+    columns:
+      - "[c-o]_hidp"
+      - "[c-o]_pno"
+      - "[c-o]_childpno"
+      - "[c-o]_ps[0-9]+"
+      - "[c-o]_psdq[abc]_dv"
   # Household questionnaires: income and composition, joined on hidp.
   # fihhmngrs_dv is the income measure both surveys share. BHPS youth files
   # carry no interview date or region; those come from here instead

@@ -380,6 +380,10 @@ bp107_column_map <- function() {
         "Number of parents and/or guardians (none to four or more)",
         "2025"
       ),
+      ST230Q01JA = bp107_entry(
+        "Number of siblings, step-siblings included (none to three or more)",
+        "2022"
+      ),
       ESCS = bp107_entry("Index of economic, social and cultural status"),
       HISEI = bp107_entry(
         "Highest parental occupational status (ISEI)",
@@ -452,6 +456,16 @@ bp107_column_map <- function() {
       IC007Q01TA = bp107_entry(
         "Internet use outside school on a typical weekend day (7 duration bands)",
         c("2015", "2018")
+      ),
+      # Age bands differ: 2015 starts at '6 years old or younger', 2018 at
+      # '3 years old or younger', so each cycle keeps its own column.
+      IC002Q01NA = bp107_entry(
+        "Age when first used a digital device (2015 bands)",
+        "2015"
+      ),
+      IC002Q01HA = bp107_entry(
+        "Age when first used a digital device (2018 bands)",
+        "2018"
       ),
       IC008Q01TA = bp107_entry(
         "Outside school, frequency: playing one-player games",
@@ -752,6 +766,10 @@ bp107_column_map <- function() {
         "Parents' emotional support perceived by student index (ST123)",
         c("2015", "2018")
       ),
+      EMOSUPP = bp107_entry(
+        "Parents' emotional support index, parent questionnaire (PA004)",
+        c("2015", "2018")
+      ),
       FAMSUP = bp107_entry("Family support index (ST300)", c("2022", "2025")),
       WB162Q07HA = bp107_entry(
         "How easy to talk to close friend(s) about things that bother you",
@@ -759,6 +777,10 @@ bp107_column_map <- function() {
       ),
       PA202Q01DA = bp107_entry(
         "Parent sets rules on how long or when child uses digital devices",
+        "2025"
+      ),
+      PA202Q03DA = bp107_entry(
+        "Parent sets up filters against inappropriate online content",
         "2025"
       ),
       ST038Q01NA = bp107_entry(
@@ -983,14 +1005,9 @@ bp107_column_map <- function() {
       ),
       ANXMAT = bp107_entry("Mathematics anxiety index", "2022"),
       ST345Q03JA = bp107_entry("Agree: I worry about many things", "2022"),
-      ST343Q10JA = bp107_entry("Agree: I argue a lot", "2022"),
       ST307Q09JA = bp107_entry(
         "Agree: I finish what I start",
         c("2022", "2025")
-      ),
-      ST313Q05JA = bp107_entry(
-        "Agree: I stay calm even in tense situations",
-        "2022"
       ),
       ST309Q02JA = bp107_entry("Agree: I get easily distracted", "2022"),
       ST268Q07JA = bp107_entry(
@@ -1005,6 +1022,99 @@ bp107_column_map <- function() {
         "Agree: I want to do well in my science class",
         "2022"
       ),
+      ST268Q04JA = bp107_entry("Agree: Mathematics is easy for me", "2022"),
+      ST268Q05JA = bp107_entry("Agree: [Test language] is easy for me", "2022"),
+      ST268Q06JA = bp107_entry("Agree: [Science] is easy for me", "2022"),
+      SCREADCOMP = bp107_entry(
+        "Self-concept of reading: perception of competence index",
+        "2018"
+      ),
+      ATTLNACT = bp107_entry(
+        "Attitude towards school: learning activities index",
+        "2018"
+      ),
+      PERSPECT = bp107_entry("Perspective-taking index (ST215)", "2018"),
+      EMPATAGR = bp107_entry("Empathy (agreement) index (ST311)", "2022"),
+      ST311Q01JA = bp107_entry(
+        "Agree: I do not care what happens to other people",
+        "2022"
+      ),
+      ST311Q02JA = bp107_entry("Agree: I can sense how others feel", "2022"),
+      ST311Q03JA = bp107_entry(
+        "Agree: It is important to me that my friends are okay",
+        "2022"
+      ),
+      ST311Q04JA = bp107_entry(
+        "Agree: I can see situations from my friends' perspectives",
+        "2022"
+      ),
+      ST311Q05JA = bp107_entry(
+        "Agree: I ignore the feelings of others",
+        "2022"
+      ),
+      ST311Q06JA = bp107_entry(
+        "Agree: I am more compassionate than most people I know",
+        "2022"
+      ),
+      ST311Q07JA = bp107_entry(
+        "Agree: It is difficult for me to sense what others think",
+        "2022"
+      ),
+      ST311Q08JA = bp107_entry("Agree: I predict the needs of others", "2022"),
+      ST311Q09JA = bp107_entry(
+        "Agree: I get upset if bad things happen to other people",
+        "2022"
+      ),
+      ST311Q10JA = bp107_entry("Agree: I understand what others want", "2022"),
+      EMOCOAGR = bp107_entry(
+        "Emotional control (agreement) index (ST313)",
+        "2022"
+      ),
+      ST313Q01JA = bp107_entry(
+        "Agree: I keep my emotions under control",
+        "2022"
+      ),
+      ST313Q02JA = bp107_entry("Agree: I get mad easily", "2022"),
+      ST313Q03JA = bp107_entry("Agree: I change my mood a lot", "2022"),
+      ST313Q04JA = bp107_entry(
+        "Agree: I overreact to every little thing in life",
+        "2022"
+      ),
+      ST313Q05JA = bp107_entry(
+        "Agree: I stay calm even in tense situations",
+        "2022"
+      ),
+      ST313Q06JA = bp107_entry("Agree: I am easily upset", "2022"),
+      ST313Q07JA = bp107_entry(
+        "Agree: I know how to control my feelings",
+        "2022"
+      ),
+      ST313Q08JA = bp107_entry("Agree: I have unpredictable emotions", "2022"),
+      ST313Q09JA = bp107_entry("Agree: I am moody", "2022"),
+      ST313Q10JA = bp107_entry("Agree: I get frustrated quickly", "2022"),
+      COOPAGR = bp107_entry("Cooperation (agreement) index (ST343)", "2022"),
+      ST343Q01JA = bp107_entry("Agree: I like to help others", "2022"),
+      ST343Q02JA = bp107_entry(
+        "Agree: I get annoyed when I have to compromise with others",
+        "2022"
+      ),
+      ST343Q03JA = bp107_entry("Agree: I work well with other people", "2022"),
+      ST343Q04JA = bp107_entry("Agree: I start arguments with others", "2022"),
+      ST343Q05JA = bp107_entry(
+        "Agree: I avoid working together with other students",
+        "2022"
+      ),
+      ST343Q06JA = bp107_entry("Agree: I am ready to help anybody", "2022"),
+      ST343Q07JA = bp107_entry("Agree: I tend to be selfish", "2022"),
+      ST343Q08JA = bp107_entry(
+        "Agree: I work better when I am part of a team",
+        "2022"
+      ),
+      ST343Q09JA = bp107_entry(
+        "Agree: I enjoy cooperating with my classmates",
+        "2022"
+      ),
+      ST343Q10JA = bp107_entry("Agree: I argue a lot", "2022"),
       ST062Q01TA = bp107_entry(
         "Last two weeks: skipped a whole school day",
         c("2015", "2018", "2022", "2025")

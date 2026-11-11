@@ -96,7 +96,35 @@ tidy_BPIPD_270 <- function(raw_dataset, spec) {
     )
   }
 
-  bp270_apply_codebook_labels(df, raw_dataset)
+  df <- bp270_apply_codebook_labels(df, raw_dataset)
+
+  # The youth's count of siblings, themselves included (YFAM3A00, CB_e/CB_m),
+  # is asked from wave 2. Sibling counts are carried across gaps of 12 months
+  # or less, so a wave missing it takes the same youth's answer from the
+  # adjacent annual wave, the earlier one first: wave 1 takes wave 2.
+  df$siblings_incl_self <- bp270_fill_adjacent_wave(
+    as.numeric(df$YFAM3A00),
+    df$ID,
+    df$wave
+  )
+  attr(df$siblings_incl_self, "label") <- paste(
+    "Number of siblings, the youth included (YFAM3A00), filled from the",
+    "adjacent annual wave where missing"
+  )
+
+  df
+}
+
+#' Fill a missing value from the same youth's previous wave, else next wave
+#'
+#' Waves are annual (`w1` = 2018 to `w7` = 2024), so an adjacent wave is 12
+#' months away; waves further apart are never used.
+bp270_fill_adjacent_wave <- function(x, id, wave) {
+  wave_num <- as.integer(sub("^w", "", wave))
+  key <- paste(id, wave_num)
+  previous <- x[match(paste(id, wave_num - 1L), key)]
+  following <- x[match(paste(id, wave_num + 1L), key)]
+  dplyr::coalesce(x, previous, following)
 }
 
 #' Wave and cohort tokens the spec declares
