@@ -14,7 +14,7 @@ age_years,compatible,"`Fecha de nacimiento`, `Submission Date`","local({
   days <- difftime(`Submission Date`, `Fecha de nacimiento`, units = ""days"")
   age <- as.numeric(days) / 365.25
   if_else(age < 10, NA_real_, age)
-})","Decimal age from the self-reported birth date to the submission date (days / 365.25); 535 rows with no birth date are NA. 27 birth dates implying ages under 10 (21 in 2019, 8 equal to the submission date) are NA, as the study's own age (`edad`) is for those rows; 17 ages above 19 (max 42.3) kept.",,
+})","Decimal age from the self-reported birth date to the submission date (days / 365.25). 528 birth dates with a mistyped year (stored as 1-9 or 101-601 for 2001-2009) are repaired in the tidier, the century inferred from the data as there is no codebook; 7 other years before 1900 are NA. 27 birth dates implying ages under 10 (21 in 2019, 8 equal to the submission date) are NA, as the study's own age (`edad`) is for those rows; 17 ages above 19 (max 42.3) kept.",,
 sex,compatible,Sexo,"recode_values(Sexo, ""Femenino"" ~ ""Female"", ""Masculino"" ~ ""Male"", default = ""Unknown"")","Self-reported sex (`Sexo`: Femenino, Masculino; no other option), one-to-one; none missing.",,
 country,inferred,,"""Argentina""","No country item; school-based survey of adolescents in 52 Argentine schools, May-November 2019 (Pérez-Chada et al. 2023, doi:10.1371/journal.pone.0281379).",,
 state,unavailable,,,Not an Australian dataset.,,

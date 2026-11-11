@@ -881,6 +881,26 @@ test_that("read options are refused on readers that cannot honour them", {
     read_tabular_file("x.dta", "stata", list(col_names = FALSE)),
     "`col_names` is not supported by reader `stata`"
   )
+  expect_error(
+    read_tabular_file("x.csv", "csv", list(text_columns = "a")),
+    "`text_columns` is not supported by reader `csv`"
+  )
+})
+
+test_that("text_columns reads the named Excel columns as text", {
+  path <- readxl::readxl_example("datasets.xlsx")
+  tbl <- read_tabular_file(
+    path,
+    "excel",
+    list(sheet = 1, text_columns = "mpg")
+  )
+
+  expect_type(tbl$mpg, "character")
+  expect_type(tbl$cyl, "double")
+  expect_error(
+    read_tabular_file(path, "excel", list(sheet = 1, text_columns = "absent")),
+    "`text_columns` name\\(s\\) matched no column"
+  )
 })
 
 test_that("a read with parse failures errors instead of returning NAs", {

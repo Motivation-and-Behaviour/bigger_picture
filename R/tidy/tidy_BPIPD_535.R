@@ -24,7 +24,13 @@ tidy_BPIPD_535 <- function(raw_dataset, spec) {
   wide$ObsDateW1 <- as.Date(wide$ObsDateW1)
 
   # One wave-4 Tuesday cell holds a free-text note instead of a step count.
-  wide$Tues <- readr::parse_number(wide$Tues)
+  wide$Tues <- readr::parse_number(
+    wide$Tues,
+    na = c("", "NA", "lost pedometer. Super sorry!")
+  )
+
+  # Wave 4 only rewords the wave-1 labels of the same waist status codes.
+  attr(wide$WaistStat_W4, "labels") <- attr(wide$waiststa_W1, "labels")
 
   waves <- bp535_waves()
   wide <- bp535_unify_value_labels(wide, bp535_label_groups(waves, names(wide)))
