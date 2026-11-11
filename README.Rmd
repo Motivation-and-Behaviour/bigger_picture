@@ -56,6 +56,7 @@ Key principles:
 │   │   ├── harmonisation_engine.R         # Table-driven harmonisation engine
 │   │   ├── harmonisation_files.R          # Harmonisation/tidier file discovery helpers
 │   │   └── harmonisation_io.R             # Read/validate schema + study config
+│   ├── references/                # Dataset citations: readers and the Airtable sync
 │   └── registry/
 │       ├── list_datasets.R
 │       ├── read_dataset_specs.R
@@ -73,6 +74,7 @@ Key principles:
 │   │   └── BPIPD-*/               # Per-dataset dataset.yaml, variables.csv, optional local lookups/
 │   └── templates/
 │       └── dataset/               # Template dataset spec + harmonisation metadata
+├── references/                    # Dataset citations + acknowledgements (generated from Airtable and Zotero)
 └── docs/                          # Quarto documentation site (deployed to GitHub Pages)
     ├── guides/                    # How-to guides for adding and harmonising datasets
     ├── reference/                 # Generated dataschema + progress tables
@@ -171,6 +173,7 @@ The [adding a dataset guide](https://motivation-and-behaviour.github.io/bigger_p
   It validates all harmonisation metadata (schema, `variables.csv` expressions, lookups) and unit-tests the harmonisation engine; it runs entirely from files in the repository and never needs the `/data` mount, so it also runs on CI for every pull request.
 - `DESCRIPTION` declares the R package dependencies for CI and the devcontainer; this repository is not an R package.
 - `_targets/` is generated runtime state and should not be edited manually.
+- `references/` is a committed snapshot of each dataset's citations and required acknowledgements, written by `sync_dataset_references()` from Airtable and the Zotero export; the pipeline reads it but never calls Airtable (see `references/README.md`).
 - The funder report's sources live in a separate private repository, cloned into the project as `DoEreport/` (gitignored).
   When it is present, `R/analysis/private_report_targets.R` adds its render targets to the pipeline; public clones build without it.
 - Keep ingestion logic generic in `R/registry/`.

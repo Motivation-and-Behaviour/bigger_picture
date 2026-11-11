@@ -61,6 +61,14 @@ When it is in scope:
 1. Fill in the tidier so it returns one table with one row per participant (or participant-wave): [Tidy scripts](tidy-scripts.qmd).
 2. Fill in `variables.csv` to map each dataschema variable: [Harmonising variables](harmonisation.qmd).
 
+::: {.callout-note}
+## Citations and acknowledgements
+
+A dataset's citations, and any acknowledgement its data providers require, are recorded in Airtable rather than in the dataset's folder, so a dataset pull request never changes them.
+Each reference goes into the project's Zotero collection first; its citation key is then linked to the dataset in Airtable.
+`sync_dataset_references()` copies the keys, the acknowledgement text and the Zotero export into `references/`, in a pull request of its own (see `references/README.md`).
+:::
+
 ## 5. Commit and open a pull request
 
 1. In GitHub Desktop, review the changed files — you should see the new dataset folder, the tidier, and nothing unrelated.

@@ -261,3 +261,48 @@ bp_derivations_columns <- function() {
 bp_derivation_methods <- function() {
   c("sum", "mean", "weighted_mean")
 }
+
+# Dataset citations and acknowledgements (references/)
+bp_references_dir <- function() {
+  "references"
+}
+
+bp_dataset_bib_path <- function() {
+  fs::path(bp_references_dir(), "datasets.bib")
+}
+
+bp_dataset_citations_path <- function() {
+  fs::path(bp_references_dir(), "dataset_citations.csv")
+}
+
+bp_acknowledgements_path <- function() {
+  fs::path(bp_references_dir(), "dataset_acknowledgements.csv")
+}
+
+bp_dataset_citations_columns <- function() {
+  c("dataset_id", "citekey")
+}
+
+bp_acknowledgements_columns <- function() {
+  c("dataset_id", "acknowledgement")
+}
+
+# Spec statuses whose datasets must each have at least one citation
+bp_citation_required_statuses <- function() {
+  character()
+}
+
+# The only Airtable tables and fields the sync may request.
+bp_airtable_reference_fields <- function() {
+  list(
+    datasets_table = "Datasets",
+    dataset_fields = c("Dataset ID", "Citations", "Required Acknowledgements"),
+    included_filter = "{Status} = 'Included'",
+    citations_table = "Citations",
+    citation_fields = "Citation Key"
+  )
+}
+
+bp_airtable_api_url <- function() {
+  "https://api.airtable.com/v0"
+}

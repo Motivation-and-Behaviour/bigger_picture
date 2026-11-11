@@ -220,6 +220,29 @@ if (nrow(.dataset_map_plan) == 0) {
   )
 )
 
+# Dataset citations and acknowledgements
+.reference_targets <- list(
+  tar_target(dataset_bib_file, bp_dataset_bib_path(), format = "file"),
+  tar_target(
+    dataset_citations_file,
+    bp_dataset_citations_path(),
+    format = "file"
+  ),
+  tar_target(
+    dataset_citations,
+    read_dataset_citations(dataset_citations_file, dataset_bib_file)
+  ),
+  tar_target(
+    dataset_acknowledgements_file,
+    bp_acknowledgements_path(),
+    format = "file"
+  ),
+  tar_target(
+    dataset_acknowledgements,
+    read_dataset_acknowledgements(dataset_acknowledgements_file)
+  )
+)
+
 list(
   .dataschema_targets,
   .dataset_targets,
@@ -228,5 +251,6 @@ list(
   .harmonised_targets,
   .analysis_target,
   .analysis_registry_targets,
+  .reference_targets,
   private_report_targets()
 )
