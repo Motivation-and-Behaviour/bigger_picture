@@ -1,0 +1,18 @@
+variable_name,notes
+sex,"Modal observed value at every wave, ties Unknown"
+ethnicity,Carried within participant: missing or not-asked waves take the earliest observed value
+indigenous,Carried within participant: missing or not-asked waves take the earliest observed value
+minority,Carried within participant: missing or not-asked waves take the earliest observed value
+immigrant_background,Carried within participant: missing or not-asked waves take the earliest observed value
+born_in_country,Carried within participant: missing or not-asked waves take the earliest observed value
+home_language,Carried within participant: missing or not-asked waves take the earliest observed value
+hlth_birthweight,"Early-life row, carried by the carry-forward rule"
+hlth_preterm,"Early-life row, carried by the carry-forward rule"
+hlth_breastfed,"Early-life row, carried by the carry-forward rule"
+hlth_prenatalsmoking,"Early-life row, carried by the carry-forward rule"
+fam_firstphone_age,"Onset age, carried except to a wave before onset (NA there)"
+fam_firstscreen_age,"Onset age, carried except to a wave before onset (NA there)"
+survey_strata,Fixed at sampling and carried to every wave
+survey_cluster,Fixed at sampling and carried to every wave
+survey_weight,Fixed at sampling and carried to every wave
+rct_arm,"Allocated arm, fixed at allocation"

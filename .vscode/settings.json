@@ -18,4 +18,5 @@
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "quarto.quarto"
   },
+  "r.consolePath": "/usr/local/bin/arf"
 }

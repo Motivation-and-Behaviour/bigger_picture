@@ -201,6 +201,25 @@ if (nrow(.dataset_map_plan) == 0) {
   }
 }
 
+.analysis_registry_targets <- list(
+  tar_target(outcome_tree_file, bp_outcome_tree_path(), format = "file"),
+  tar_target(outcome_rows_file, bp_outcome_rows_path(), format = "file"),
+  tar_target(
+    outcome_registry,
+    read_outcome_registry(outcome_tree_file, outcome_rows_file, dataschema)
+  ),
+  tar_target(exposures_file, bp_exposures_path(), format = "file"),
+  tar_target(
+    exposure_registry,
+    read_exposure_registry(exposures_file, dataschema)
+  ),
+  tar_target(derivations_file, bp_derivations_path(), format = "file"),
+  tar_target(
+    derivation_registry,
+    read_derivations(derivations_file, dataschema)
+  )
+)
+
 list(
   .dataschema_targets,
   .dataset_targets,
@@ -208,7 +227,6 @@ list(
   .harmonisation_config_targets,
   .harmonised_targets,
   .analysis_target,
-  # Analysis targets (ANALYSIS_PLAN.md, Step 1 onward) go here, then the
-  # private report, which is absent from public clones.
+  .analysis_registry_targets,
   private_report_targets()
 )

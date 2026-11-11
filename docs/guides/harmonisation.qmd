@@ -209,6 +209,7 @@ Dataschema notes refer to the named rules below in bold (for example the **SDQ r
 - A named-instrument row is unavailable when that instrument, or a version of it, was not given to that informant ('\<instrument> not administered; see \<row>.'), and incompatible only when a version was given but cannot be scored.
 - A generic scale row with only single items, or only an item subset of a broader instrument not given for the construct, is incompatible, and its note points to any row that holds them; the subject self-concept rows are one exception and take a single item, or an item subset of a broader instrument, on their subject as partial, and the parental mediation rows (`fam_mediation_restrict`, `fam_mediation_active`, `fam_mediation_monitor`) are another and take a single graded item, or a study's own graded items, as partial.
 - A composite that can be derived at analysis from mapped rows is unavailable ('Derive at analysis from \<rows>.').
+  The rule for computing it lives in `analysis/derivations.csv`, and a test warns about any outcome row with no rule.
 - A named instrument given only to another informant leaves this informant's row unavailable.
 - A single-item `_self` row with only a parent- or teacher-rated analogue is incompatible, item named.
 - A generic `_self` scale row with only a parent-, carer- or teacher-rated scale on its construct in hand is incompatible, naming the scale and the row that holds it.
@@ -630,6 +631,16 @@ sync_harmonisation_vars() # all datasets, plus the new-dataset template
 This appends any missing variables as `in_progress` and reorders rows to dataschema order, keeping any measure-tagged rows after the primary rows.
 It covers the template under `harmonisation/templates/dataset/` as well, so a newly copied dataset spec starts with the full set of variables.
 The validator (and therefore CI) rejects a `variables.csv` with missing, duplicate, or unknown target variables.
+
+The analysis registries in `analysis/` must also list every outcome, health and screen-time variable (see `analysis/README.md`).
+For a new outcome or health variable, run:
+
+```r
+sync_outcome_registry() # adds it to analysis/outcome_rows.csv as `unassigned`
+```
+
+A new screen-time variable needs its row in `analysis/exposures.csv` added by hand.
+The tests fail until every such variable is registered.
 
 ## Checking your expressions
 
