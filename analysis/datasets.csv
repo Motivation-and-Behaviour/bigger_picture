@@ -1,0 +1,103 @@
+dataset_id,baseline_wave,team_contributed,signed_off,overlap_group,risk_of_bias,notes
+18,1,,,,,"Panel: earliest wave in the data, by data year then age"
+21,,,,,,
+27,sweep_2,,,,,"Panel: earliest wave in the data, by data year then age"
+31,Year 3,,,,,"Panel: earliest wave in the data, by data year then age"
+41,,,,,,Repeated cross-sections: no baseline
+46,1997,,,,,"Panel: earliest wave in the data, by data year then age"
+50,1990,,,,,"Panel: earliest wave in the data, by data year then age"
+64,,,,,,
+67,1,,,,,"Panel: earliest wave in the data, by data year then age"
+80,,,,,,
+86,,,,,,
+87,,,,,,
+97,,,,,,Repeated cross-sections: no baseline
+107,,,,,,Repeated cross-sections: no baseline
+131,,,,,,
+138,,,,,,"Trial with one post-intervention occasion: no baseline in the data, so only the control arm enters [A13]"
+160,,,,,,
+161,,,,,,
+170,,,,,,Repeated cross-sections: no baseline
+176,1,,,,,"Panel: earliest wave in the data, by data year then age"
+232,,,,,,Repeated cross-sections: no baseline
+262,,,,,,
+270,w1,,,,,"Panel: earliest wave in the data, by data year then age"
+278,3,,,,,"Panel: earliest wave in the data, by data year then age"
+279,,,,,,
+337,,,,,,
+535,1,,,,,"Trial: pre-intervention wave, from the dataset's wave notes"
+621,,,,,,
+625,,,,,,Repeated cross-sections: no baseline
+631,BHPS wave 4,,,,,"Panel: earliest wave in the data, by data year then age"
+642,,,,,,
+655,,,,,,
+663,,,,,,
+666,baseline,,,,,"Panel: earliest wave in the data, by data year then age"
+677,,,,,,
+689,,,,,,
+696,Baseline,,,,,"Trial: pre-intervention wave, from the dataset's wave notes"
+706,,,,,,
+718,,,,,,
+728,,,,,,
+736,Baseline,,,,,"Trial: pre-intervention wave, from the dataset's wave notes"
+774,,,,,,
+775,2,,,,,"Panel: earliest wave in the data, by data year then age"
+788,,,,,,
+820,1,,,,,"Panel: earliest wave in the data, by data year then age"
+831,,,,,,
+838,T1,,,,,"Panel: earliest wave in the data, by data year then age"
+845,,,,,,
+871,1,,,,,"Panel: earliest wave in the data, by data year then age"
+873,2010,,,,,"Panel: earliest wave in the data, by data year then age"
+905,,,,,,
+911,,,,,,"Single occasion: only baseline asked the device items, so the tidier keeps baseline only"
+933,,,,,,
+938,,,,,,
+948,,,,,,
+989,,,,,,
+1025,,,,,,Repeated cross-sections: no baseline
+1127,1,,,,,"Panel: earliest wave in the data, by data year then age"
+1214,,,,,,
+1249,,,,,,
+1261,,,,,,
+1294,Base year 2002,,,,,"Panel: earliest wave in the data, by data year then age"
+1295,Base year 1980,,,,,"Panel: earliest wave in the data, by data year then age"
+1336,,,,,,
+1346,,,,,,
+1353,,,,,,Repeated cross-sections: no baseline
+1380,,,,,,
+1417,,,,,,
+1439,,,,,,Repeated cross-sections: no baseline
+1440,,,,,,
+1453,,,,,,
+1520,,,,,,
+1528,,,,,,Repeated cross-sections: no baseline
+1598,T2,,,,,"Panel: earliest wave in the data, by data year then age"
+1612,T1,,,,,"Panel: earliest wave in the data, by data year then age"
+1629,,,,,,
+1639,,,,,,"Trial with one post-intervention occasion: no baseline in the data, so only the control arm enters [A13]"
+1645,,,,,,
+1711,baseline,,,,,"Panel: earliest wave in the data, by data year then age"
+1713,,,,,,
+1714,,,,,,
+1721,,,,,,
+1760,,,,,,
+1927,,,,,,
+1928,,,,,,Repeated cross-sections: no baseline
+2035,,,,,,Repeated cross-sections: no baseline
+2187,2,,,,,"Panel: earliest wave in the data, by data year then age"
+2205,,,,,,
+2207,10,,,,,"Panel: earliest wave in the data, by data year then age"
+2281,,,,,,
+2303,1,,,,,"Panel: earliest wave in the data, by data year then age"
+2309,E1,,,,,"Panel: earliest wave in the data, by data year then age"
+2319,2003,,,,,"Panel: earliest wave in the data, by data year then age"
+2329,,,,,,
+2330,,,,,,
+2342,,,,,,
+2387,,,,,,Repeated cross-sections: no baseline
+2395,,,,,,
+2488,,,,,,
+2545,,,,,,
+2583,,,,,,Repeated cross-sections: no baseline
+2679,,,,,,

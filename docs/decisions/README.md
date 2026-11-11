@@ -51,6 +51,8 @@ The numeric prefix preserves chronological ordering.
 | DR-0004 | [Total screen time comes only from a dedicated item](DR-0004-total-screen-time.md) | Accepted | 2026-09-24 |
 | DR-0005 | [Data year falls back to the earliest publication](DR-0005-data-year-fallback.md) | Accepted | 2026-10-20 |
 | DR-0006 | [`analysis_data` is stored as Parquet with categorical columns as factors](DR-0006-analysis-data-storage.md) | Proposed | 2026-10-20 |
+| DR-0007 | [The analysis runs in this repository's pipeline, on the data the pipeline holds](DR-0007-analysis-in-the-pipeline.md) | Accepted | 2026-11-09 |
+| DR-0008 | [The outcome registry decides which outcomes go forward and how they combine](DR-0008-outcome-registry.md) | Accepted | 2026-11-11 |
 
 When adding a new decision:
 

@@ -1,0 +1,54 @@
+node,parent,label,level,prereg_status,headline,notes
+learning,,Learning,L0,named,,Prereg main outcome
+cognition,,Cognitive abilities,L0,named,,Prereg main outcome
+mental_health,,Mental health,L0,named,,Prereg main outcome
+behaviour,,Behaviour,L0,named,,Prereg main outcome
+wellbeing,,Wellbeing,L0,named,,Prereg main outcome
+general_achievement,learning,General academic achievement,L1,named,TRUE,Prereg 'General education'
+numeracy,learning,Numeracy,L1,named,TRUE,
+literacy,learning,Literacy,L1,named,TRUE,
+school_engagement,learning,School engagement,L1,added,FALSE,
+school_belonging,learning,School belonging,L1,added,FALSE,
+academic_stress,learning,Academic stress and pressure,L1,added,FALSE,
+grade_retention,learning,Grade retention,L1,added,FALSE,
+executive_function,cognition,Executive function,L1,named,TRUE,"Performance tasks; rated executive function is under behaviour (self-regulation), following the prereg's placement of the BRIEF"
+cognitive_function,cognition,General cognitive ability,L1,named,TRUE,Prereg 'Cognitive function'
+language,cognition,Language and vocabulary,L1,added,FALSE,Platform finding 'language'
+depression,mental_health,Depression,L1,named,TRUE,
+anxiety,mental_health,Anxiety,L1,named,TRUE,
+emotion_regulation,mental_health,Emotion regulation,L1,named,TRUE,Prereg 'Emotions' (its example measure is an emotion regulation questionnaire)
+emotional_symptoms,mental_health,Emotional symptoms (mixed anxiety and depression),L1,added,TRUE,
+internalising,mental_health,Internalising problems,L1,added,TRUE,"Broadband total: its own node, never pooled with its subscales"
+psychological_distress,mental_health,Psychological distress,L1,added,TRUE,
+psychosomatic_complaints,mental_health,Psychosomatic complaints,L1,added,FALSE,
+stress,mental_health,Perceived stress,L1,added,FALSE,
+loneliness,mental_health,Loneliness,L1,added,TRUE,
+suicidality_selfharm,mental_health,"Suicidal thoughts and behaviour, and self-harm",L1,added,FALSE,
+disordered_eating,mental_health,Unhealthy weight control,L1,added,FALSE,
+aggression,behaviour,Aggression,L1,named,TRUE,
+self_regulation,behaviour,Self-regulation,L1,named,TRUE,"Includes rated executive function, as the prereg lists the BRIEF under behaviour"
+prosocial,behaviour,Prosocial behaviour,L1,named,TRUE,
+attention_hyperactivity,behaviour,Attention and hyperactivity (ADHD symptoms),L1,expected,TRUE,Rated symptoms; attention tasks are under cognition (executive function)
+conduct_problems,behaviour,Conduct problems,L1,expected,TRUE,
+externalising,behaviour,Externalising problems,L1,expected,TRUE,"Broadband total: its own node, never pooled with its subscales"
+total_problems,behaviour,Total behavioural and emotional problems,L1,expected,TRUE,Broadband total; the prereg lists the SDQ under behaviour
+peer_problems,behaviour,Peer relationship problems,L1,expected,TRUE,
+social_skills,behaviour,Social skills,L1,added,FALSE,
+aggressive_cognitions,behaviour,Aggressive cognitions,L1,added,FALSE,
+bullying_victimisation,behaviour,Being bullied,L1,added,TRUE,
+bullying_perpetration,behaviour,Bullying others,L1,added,FALSE,
+alcohol_use,behaviour,Alcohol use,L1,added,TRUE,
+tobacco_use,behaviour,Tobacco and e-cigarette use,L1,added,TRUE,
+cannabis_use,behaviour,Cannabis use,L1,added,TRUE,
+other_drug_use,behaviour,Other illicit drug use,L1,added,FALSE,
+truancy,behaviour,School attendance (truancy),L1,added,TRUE,Platform finding 'school attendance'
+self_esteem,wellbeing,Self-esteem,L1,expected,TRUE,Prereg 'Self-perceptions'
+self_efficacy,wellbeing,Self-efficacy and perceived control,L1,expected,FALSE,Prereg 'Self-perceptions'
+self_concept,wellbeing,Self-concept,L1,expected,TRUE,Prereg 'Self-perceptions'
+body_esteem,wellbeing,Body esteem,L1,expected,FALSE,Prereg 'Self-perceptions'
+mental_wellbeing,wellbeing,Mental wellbeing and happiness,L1,named,TRUE,Prereg 'Positive mental health'
+life_satisfaction,wellbeing,Life satisfaction,L1,expected,TRUE,Prereg 'Positive mental health'
+domain_satisfaction,wellbeing,"Satisfaction with school, family, friends and appearance",L1,added,TRUE,
+quality_of_life,wellbeing,Health-related quality of life,L1,expected,FALSE,
+general_health,wellbeing,Self-rated general health,L1,added,TRUE,
+social_support,wellbeing,Perceived social support,L1,added,FALSE,Platform finding 'social support'

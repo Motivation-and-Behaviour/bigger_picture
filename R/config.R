@@ -118,3 +118,146 @@ bp_schema <- function() {
     )
   )
 }
+
+# Analysis registries (ANALYSIS_PLAN.md, Step 1): spec CSVs under analysis/.
+bp_analysis_dir <- function() {
+  "analysis"
+}
+
+bp_outcome_tree_path <- function() {
+  fs::path(bp_analysis_dir(), "outcome_tree.csv")
+}
+
+bp_outcome_rows_path <- function() {
+  fs::path(bp_analysis_dir(), "outcome_rows.csv")
+}
+
+bp_exposures_path <- function() {
+  fs::path(bp_analysis_dir(), "exposures.csv")
+}
+
+bp_invariants_path <- function() {
+  fs::path(bp_analysis_dir(), "invariants.csv")
+}
+
+bp_analysis_datasets_path <- function() {
+  fs::path(bp_analysis_dir(), "datasets.csv")
+}
+
+bp_derivations_path <- function() {
+  fs::path(bp_analysis_dir(), "derivations.csv")
+}
+
+# Schema domains whose every row must appear in outcome_rows.csv. Health rows
+# are registered too, so negative controls and mediators carry a role.
+bp_outcome_registry_domains <- function() {
+  c(
+    "academic",
+    "behaviour",
+    "cognition",
+    "mental_health",
+    "wellbeing",
+    "health"
+  )
+}
+
+# The vocabularies of the outcome registry. `node` takes a tree node, or one of
+# the placeholders: `unassigned` before the freeze, `post_freeze` after it.
+bp_outcome_registry_values <- function() {
+  list(
+    level = c("L0", "L1"),
+    prereg_status = c("named", "expected", "added"),
+    role = c("outcome", "measure", "negative_control", "mediator", "covariate"),
+    informant = c("self", "parent", "teacher", "task", "mixed"),
+    score_type = c("continuous", "ordinal", "binary", "nominal", "diagnosis"),
+    direction = c("higher_better", "higher_worse", "none"),
+    use = c("core", "report", "archive"),
+    node_placeholder = c("unassigned", "post_freeze"),
+    # Besides these, any `*_measure` schema row can be a standardisation key.
+    standardise_key = c("dataset", "wave", "country", "age_band", "sex")
+  )
+}
+
+bp_exposure_registry_values <- function() {
+  list(
+    content_class = c(
+      "educational",
+      "non_interactive",
+      "interactive",
+      "social_media"
+    ),
+    axis = c(
+      "activity",
+      "device",
+      "subset",
+      "context",
+      "aggregate",
+      "metadata"
+    ),
+    context = c("any", "school"),
+    day = c("usual", "weekday", "weekend"),
+    unit = c("hours", "index")
+  )
+}
+
+bp_outcome_tree_columns <- function() {
+  c("node", "parent", "label", "level", "prereg_status", "headline", "notes")
+}
+
+bp_outcome_rows_columns <- function() {
+  c(
+    "variable_name",
+    "node",
+    "informant",
+    "role",
+    "score_type",
+    "direction",
+    "standardise_by",
+    "part_of",
+    "synthesis",
+    "use",
+    "prereg_family",
+    "schema_domain",
+    "frozen",
+    "notes"
+  )
+}
+
+bp_exposures_columns <- function() {
+  c(
+    "exposure",
+    "variable_name",
+    "content_class",
+    "axis",
+    "context",
+    "day",
+    "unit",
+    "include",
+    "headline",
+    "notes"
+  )
+}
+
+bp_invariants_columns <- function() {
+  c("variable_name", "notes")
+}
+
+bp_analysis_datasets_columns <- function() {
+  c(
+    "dataset_id",
+    "baseline_wave",
+    "team_contributed",
+    "signed_off",
+    "overlap_group",
+    "risk_of_bias",
+    "notes"
+  )
+}
+
+bp_derivations_columns <- function() {
+  c("target", "sources", "method", "weights", "dataset_id", "notes")
+}
+
+bp_derivation_methods <- function() {
+  c("sum", "mean", "weighted_mean")
+}

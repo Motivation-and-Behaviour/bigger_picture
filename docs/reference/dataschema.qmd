@@ -45,4 +45,4 @@ DT::datatable(
 
 Three variables are filled by the pipeline rather than mapped in `variables.csv`: `dataset_id`, `dataset_name`, and `st_measure_id`, which identifies the screen-time measure a row carries when a dataset contributes more than one (see [Several screen-time measures](../guides/harmonisation.qmd#several-screen-time-measures)).
 
-Changing the dataschema is a project-level decision: adding a variable requires a row in every dataset's `variables.csv` (run `sync_harmonisation_vars()` to add them as `in_progress`), and significant definition changes should be recorded in the [decision register](../decisions/README.md).
+Changing the dataschema is a project-level decision: adding a variable requires a row in every dataset's `variables.csv` (run `sync_harmonisation_vars()` to add them as `in_progress`), an outcome, health or screen-time variable also needs a row in the analysis registries (run `sync_outcome_registry()`, and add screen-time rows to `analysis/exposures.csv`), and significant definition changes should be recorded in the [decision register](../decisions/README.md).

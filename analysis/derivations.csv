@@ -1,0 +1,24 @@
+target,sources,method,weights,dataset_id,notes
+beh_ext_sdq_parent,beh_conduct_sdq_parent|beh_hyper_sdq_parent,sum,,,SDQ scoring
+mh_int_sdq_parent,mh_emotsymp_sdq_parent|beh_peerprob_sdq_parent,sum,,,SDQ scoring
+mh_totaldiff_sdq_parent,mh_emotsymp_sdq_parent|beh_conduct_sdq_parent|beh_hyper_sdq_parent|beh_peerprob_sdq_parent,sum,,,SDQ scoring
+beh_ext_sdq_self,beh_conduct_sdq_self|beh_hyper_sdq_self,sum,,,SDQ scoring
+mh_int_sdq_self,mh_emotsymp_sdq_self|beh_peerprob_sdq_self,sum,,,SDQ scoring
+mh_totaldiff_sdq_self,mh_emotsymp_sdq_self|beh_conduct_sdq_self|beh_hyper_sdq_self|beh_peerprob_sdq_self,sum,,,SDQ scoring
+beh_ext_sdq_teacher,beh_conduct_sdq_teacher|beh_hyper_sdq_teacher,sum,,,SDQ scoring
+mh_int_sdq_teacher,mh_emotsymp_sdq_teacher|beh_peerprob_sdq_teacher,sum,,,SDQ scoring
+mh_totaldiff_sdq_teacher,mh_emotsymp_sdq_teacher|beh_conduct_sdq_teacher|beh_hyper_sdq_teacher|beh_peerprob_sdq_teacher,sum,,,SDQ scoring
+wb_qol_pedsql_psychosocial_self,wb_qol_pedsql_emotional_self|wb_qol_pedsql_social_self|wb_qol_pedsql_school_self,weighted_mean,5|5|5,,"PedsQL scores are means over items, so subscales are weighted by item count; the toddler form has 3 school items"
+wb_qol_pedsql_self,wb_qol_pedsql_physical_self|wb_qol_pedsql_emotional_self|wb_qol_pedsql_social_self|wb_qol_pedsql_school_self,weighted_mean,8|5|5|5,,"PedsQL scores are means over items, so subscales are weighted by item count; the toddler form has 3 school items"
+wb_qol_pedsql_psychosocial_parent,wb_qol_pedsql_emotional_parent|wb_qol_pedsql_social_parent|wb_qol_pedsql_school_parent,weighted_mean,5|5|5,,"PedsQL scores are means over items, so subscales are weighted by item count; the toddler form has 3 school items"
+wb_qol_pedsql_parent,wb_qol_pedsql_physical_parent|wb_qol_pedsql_emotional_parent|wb_qol_pedsql_social_parent|wb_qol_pedsql_school_parent,weighted_mean,8|5|5|5,,"PedsQL scores are means over items, so subscales are weighted by item count; the toddler form has 3 school items"
+acc_academachment_stdtest,acc_numeracy_stdtest|acc_literacy_stdtest,mean,,1294,"Mathematics and reading T scores, whose average the study releases as its composite"
+beh_adhdsymp_parent,beh_atten_parent|beh_hyper_parent,sum,,845,SNAP-IV subscale sums
+beh_adhdsymp_parent,beh_atten_parent|beh_hyper_parent,sum,,1639,BASC-2 raw scores
+beh_adhdsymp_self,beh_atten_self|beh_hyper_self,mean,,176,Subscale means over nine items each
+beh_agg_teacher,beh_aggphys_teacher|beh_aggrel_teacher,sum,,1760,Physical and relational form totals
+mh_distress_self,mh_dep_self|mh_anx_self|mh_somatic_self,mean,,1721,BSI-18 subscale means over six items each
+mh_totalprob_parent,beh_adhdsymp_parent|beh_ext_parent|mh_int_parent,sum,,911,Brief Problem Monitor scale sums
+mh_totalprob_parent,beh_ext_parent|mh_int_parent,sum,,666,BITSEA externalising and internalising sums as the study keys them
+mh_totalprob_parent,beh_adhdsymp_parent|beh_ext_parent|mh_int_parent,sum,,2679,Pediatric Symptom Checklist-17 subscale sums
+mh_totalprob_teacher,beh_agg_teacher|mh_int_teacher,sum,,31,SSRS problem behaviour sums
