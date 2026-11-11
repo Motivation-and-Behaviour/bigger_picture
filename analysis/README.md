@@ -12,6 +12,7 @@ They hold dataschema variable names, node labels, dataset IDs and wave labels, w
 | `derivations.csv` | Rule for computing an outcome row from other rows | `validate_derivations()` |
 | `invariants.csv` | Row the harmonisation keeps constant within a participant | `tests/testthat/test-analysis-registry.R` |
 | `datasets.csv` | Dataset | `tests/testthat/test-analysis-registry.R` |
+| `deviations.csv` | Departure from the preregistration | `tests/testthat/test-analysis-deviations.R` |
 
 ## When the dataschema changes
 
@@ -91,3 +92,15 @@ A test warns about any outcome row noted 'Derive at analysis' that has no rule h
 A dataset with no row reads as a blank one, so it has no baseline and is not signed off.
 Dataset branches never edit this folder, so a new dataset gets its row on `main` after it merges; a test warns until it has one.
 The row matters for panels and trials, which need `baseline_wave`.
+
+## Deviations ledger
+
+`deviations.csv` records every place the analysis departs from the [preregistration](../docs/prereg/bigger_picture_preregistration.md), started before any analysis code so that nothing is reconstructed afterwards.
+
+- `status` is `made` for a departure already in effect and `planned` for one the analysis plan commits to.
+- `prereg_plan` gives what the preregistration says, `deviation` what is done instead, and `reason` why.
+- `validity` rates the effect on how well the analysis answers the research question, and `severity` the effect on how capable a test is of showing a claim to be wrong: `improves`, `no_change`, `reduces` or `unclear`.
+  `assessment` explains the ratings and names what limits the damage.
+- `decision_record` lists the decision records behind the entry, separated by `|`.
+
+Add a row when a decision changes what the preregistration promised; do not edit an entry's history away, but update its `status` when a planned departure takes effect.

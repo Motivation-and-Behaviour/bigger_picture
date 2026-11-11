@@ -1,6 +1,6 @@
 # DR-0006: `analysis_data` is stored as Parquet with categorical columns as factors
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-10-20  
 **Decision makers:** Taren  
 **Related issues:** NA

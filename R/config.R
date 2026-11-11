@@ -148,6 +148,10 @@ bp_derivations_path <- function() {
   fs::path(bp_analysis_dir(), "derivations.csv")
 }
 
+bp_deviations_path <- function() {
+  fs::path(bp_analysis_dir(), "deviations.csv")
+}
+
 # Schema domains whose every row must appear in outcome_rows.csv. Health rows
 # are registered too, so negative controls and mediators carry a role.
 bp_outcome_registry_domains <- function() {
@@ -256,6 +260,30 @@ bp_analysis_datasets_columns <- function() {
 
 bp_derivations_columns <- function() {
   c("target", "sources", "method", "weights", "dataset_id", "notes")
+}
+
+# The deviations ledger: where the analysis departs from the preregistration.
+bp_deviations_columns <- function() {
+  c(
+    "id",
+    "date_logged",
+    "status",
+    "prereg_plan",
+    "deviation",
+    "reason",
+    "validity",
+    "severity",
+    "assessment",
+    "decision_record"
+  )
+}
+
+bp_deviation_statuses <- function() {
+  c("made", "planned")
+}
+
+bp_deviation_ratings <- function() {
+  c("improves", "no_change", "reduces", "unclear")
 }
 
 bp_derivation_methods <- function() {

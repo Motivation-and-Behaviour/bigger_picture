@@ -41,7 +41,7 @@ sex,compatible,sex_raw,"recode_values(haven::as_factor(sex_raw), ""F"" ~ ""Femal
 
 ## Statuses
 
-Statuses follow the [Maelstrom Research](https://www.maelstrom-research.org/) harmonisation vocabulary:
+Statuses are adapted from the [Maelstrom Research](https://www.maelstrom-research.org/) harmonisation vocabulary:
 
 ```{r}
 #| label: status-table
