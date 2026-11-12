@@ -164,6 +164,8 @@ resources:
     reader: "stata"
     columns:
       - "pidp"
+      - "psu"
+      - "strata"
       - "ethn_dv"
       - "bornuk_dv"
       - "bwt"

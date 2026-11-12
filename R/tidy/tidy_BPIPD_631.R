@@ -22,6 +22,10 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
   })
   indresp <- bp631_stack(tables, "indresp")
   xwave <- bp631_zap_missing(raw_dataset$data$xwavedat)
+  # The cross-wave file's design codes are joined under their own names and
+  # preferred below: the BHPS wave files give two sampling units an earlier
+  # stratum code than the cross-wave file does.
+  xwave <- dplyr::rename(xwave, psu_xwave = "psu", strata_xwave = "strata")
   parent_cols <- c("pidp", "ethn_dv", "bornuk_dv")
 
   # `mnspno`/`fnspno`: natural/step/adoptive mother's and father's person
@@ -98,6 +102,12 @@ tidy_BPIPD_631 <- function(raw_dataset, spec) {
   # `bp631_zap_missing()` leaves it.
   df$psu[df$psu < 0] <- NA
   df$strata[df$strata < 0] <- NA
+  for (col in c("psu", "strata")) {
+    cross_wave <- df[[paste0(col, "_xwave")]]
+    use <- !is.na(cross_wave) & cross_wave > 0
+    df[[col]][use] <- cross_wave[use]
+    df[[paste0(col, "_xwave")]] <- NULL
+  }
 
   attr(df$nnssib_dv, "label") <- paste0(
     attr(df$nnssib_dv, "label"),
