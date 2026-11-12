@@ -89,7 +89,10 @@ analysis_targets <- function(harmonise_plan) {
     targets::tar_target_raw(
       "exceptions_file",
       quote(find_analysis_exceptions(dataset_id)),
-      format = "file"
+      format = "file",
+      # Looked for on every run: a dataset with no file tracks no path, so
+      # nothing else would notice one being added.
+      cue = targets::tar_cue(mode = "always")
     ),
     targets::tar_target_raw(
       "exceptions",

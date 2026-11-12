@@ -777,6 +777,14 @@ test_that("the analysis section builds a target list from a dataset plan", {
       names
   ))
   expect_false(anyDuplicated(names) > 0)
+  # A dataset with no exceptions file tracks no path, so the file is looked
+  # for on every run; otherwise a new file would go unnoticed.
+  targets_list <- unlist(section)
+  exception_files <- targets_list[grepl("^exceptions_file_", names)]
+  expect_length(exception_files, 2)
+  for (target in exception_files) {
+    expect_equal(target$cue$mode, "always")
+  }
   expect_length(analysis_targets(plan[0, ]), 6)
 })
 

@@ -1,7 +1,7 @@
 #' Path to a dataset's analysis exceptions file, when it exists
 #'
-#' Tracked as a file target for every dataset, so a new file is noticed. A
-#' dataset with no file gives a zero-length path.
+#' Tracked as a file target for every dataset, and looked for on every run,
+#' so a new file is noticed. A dataset with no file gives a zero-length path.
 #'
 #' @param dataset_id The dataset's ID.
 #' @return A path, or `character(0)`.
