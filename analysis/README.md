@@ -111,7 +111,11 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `exceptions_<key>` | The dataset's analysis exceptions, if it has a file |
 | `prepared_<key>`, `prepared_review_<key>` | The dataset prepared for modelling (below), and its summary, flags and audit |
 | `analysis_row_audit`, `rows_dropped_all`, `prepared_summary_all`, `prepared_flags_all` | What preparation used, dropped and flagged |
-| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
+| `development_cells` | The cells fitted before the freeze, from `development_cells.csv` |
+| `stage1_<key>`, `stage1_all` | One model per unit and cell: the slope on screen use, with how it was fitted or why it was not |
+| `stage2_development` | Each cell's slopes pooled across datasets |
+| `onestage_rows_<key>`, `onestage_check` | The one-stage check on one cell |
+| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation`, `report_thin_slice` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
 
 A dataset is included until any dataset has `signed_off` set in `datasets.csv`; from then on only signed-off datasets are.
 
@@ -152,6 +156,19 @@ The tests read every such file, and the pipeline tracks one per dataset, so a ne
 `record_data_manifest("<label>")` writes the current `data_manifest` to `analysis/manifests/<label>.csv`: dataset IDs, counts and hashes, never names.
 Record one for each delivered report and at the freeze, and commit it with that state of the code.
 `compare_data_manifest()` lists what has been added, removed or changed since a record.
+
+### The engine
+
+Two-stage is the primary analysis (DR-0010).
+
+- `fit_stage1()` fits one model per stage 1 unit and cell: a linear model of the standardised score for continuous rows and for ordinal rows with five or more levels, a proportional-odds model for ordinal rows with three or four, and a logistic model for binary rows.
+  It uses the unit's weights where it has them, clusters standard errors on the sampling unit or the family, and adjusts for age and sex in the most flexible form the unit's ages allow.
+  A unit that cannot be fitted returns a row saying why.
+- `pool_stage2()` pools a cell's slopes with a multilevel random-effects model, units nested in datasets, and robust small-sample inference; it needs three datasets, and marks an estimate with fewer than four degrees of freedom as too few studies to say.
+- `fit_onestage_check()` fits a single model across datasets for one cell and compares it with a two-stage estimate built the same way.
+
+Until the freeze the engine runs only on the development cells in `development_cells.csv`: each line names an exposure row and either an outcome family or one outcome row, with a reason.
+These are the only associations seen before the specification is frozen, and the deviations ledger records them.
 
 ## Deviations ledger
 

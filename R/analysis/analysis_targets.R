@@ -33,6 +33,19 @@ analysis_targets <- function(harmonise_plan) {
     shared,
     list(
       targets::tar_target_raw(
+        "development_cells_file",
+        quote(bp_development_cells_path()),
+        format = "file"
+      ),
+      targets::tar_target_raw(
+        "development_cells",
+        quote(read_development_cells(
+          development_cells_file,
+          outcome_registry,
+          exposure_registry
+        ))
+      ),
+      targets::tar_target_raw(
         "invariants_file",
         quote(bp_invariants_path()),
         format = "file"
@@ -119,6 +132,30 @@ analysis_targets <- function(harmonise_plan) {
       resources = row_level
     ),
     targets::tar_target_raw(
+      "stage1",
+      quote(fit_stage1(
+        prepared,
+        development_cells,
+        outcome_registry,
+        dataschema,
+        settings
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = row_level
+    ),
+    targets::tar_target_raw(
+      "onestage_rows",
+      quote(extract_cell_rows(
+        prepared,
+        settings$onestage_cell[["exposure"]],
+        settings$onestage_cell[["outcome"]]
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = row_level
+    ),
+    targets::tar_target_raw(
       "prepared_review",
       quote(review_prepared(
         prepared,
@@ -158,6 +195,24 @@ analysis_targets <- function(harmonise_plan) {
     reviews("rows_dropped_all", "dropped"),
     reviews("prepared_summary_all", "summary"),
     reviews("prepared_flags_all", "flags"),
+    tarchetypes::tar_combine_raw(
+      "stage1_all",
+      per_dataset[["stage1"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
+      "onestage_rows_all",
+      per_dataset[["onestage_rows"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "onestage_check",
+      quote(fit_onestage_check(onestage_rows_all, settings))
+    ),
+    targets::tar_target_raw(
+      "stage2_development",
+      quote(pool_stage2_cells(stage1_all, settings))
+    ),
     targets::tar_target_raw(
       "derived_codebook",
       quote(derived_variable_codebook(derivation_registry, settings))
@@ -213,6 +268,10 @@ analysis_targets <- function(harmonise_plan) {
     tarchetypes::tar_quarto_raw(
       "report_preparation",
       path = fs::path(bp_analysis_reports_dir(), "preparation.qmd")
+    ),
+    tarchetypes::tar_quarto_raw(
+      "report_thin_slice",
+      path = fs::path(bp_analysis_reports_dir(), "thin_slice.qmd")
     )
   )
 

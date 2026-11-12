@@ -152,6 +152,16 @@ bp_deviations_path <- function() {
   fs::path(bp_analysis_dir(), "deviations.csv")
 }
 
+# The cells fitted before the freeze, to build the engine on real data
+# (ANALYSIS_PLAN.md, Step 5).
+bp_development_cells_path <- function() {
+  fs::path(bp_analysis_dir(), "development_cells.csv")
+}
+
+bp_development_cells_columns <- function() {
+  c("exposure", "family", "variable_name", "reason")
+}
+
 # Workers for the analysis targets that load a whole dataset. Each can hold
 # well over 10 GB, so this pool is kept small whatever the machine's cores.
 bp_row_level_workers <- function() {
