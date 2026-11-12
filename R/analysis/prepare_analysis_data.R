@@ -132,6 +132,8 @@ prepare_analysis_data <- function(
     measures = measures,
     row_audit = row_audit,
     dropped = prepared$dropped,
+    wave_order_declared = !is.na(info$wave_order %||% NA) &&
+      nzchar(info$wave_order %||% ""),
     repeats = outcomes$repeats,
     nodes = outcomes$nodes,
     derived = outcomes$derived

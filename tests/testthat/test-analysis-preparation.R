@@ -976,3 +976,39 @@ test_that("empty columns are dropped, and the result does not depend on it", {
     prepare_mock("9995", rows = rows)[c("base", "exposures", "outcomes")]
   )
 })
+
+test_that("a declared wave order replaces the computed one", {
+  rows <- mock_dataset("9991")
+  rows$data_year <- 2020
+  computed <- prepare_base(rows, mock_info("9991"), names(rows))$base
+  expect_equal(unique(computed$wave_order[computed$wave == "1"]), 1L)
+  declared <- prepare_base(
+    rows,
+    mock_info("9991", wave_order = "2|1"),
+    names(rows)
+  )$base
+  expect_equal(unique(declared$wave_order[declared$wave == "2"]), 1L)
+  expect_equal(unique(declared$wave_order[declared$wave == "1"]), 2L)
+  expect_error(
+    prepare_base(rows, mock_info("9991", wave_order = "1"), names(rows)),
+    "does not list wave"
+  )
+})
+
+test_that("a generic row standing for a short form is dropped for the whole", {
+  rows <- mock_dataset("9993")
+  n <- nrow(rows)
+  short <- round(stats::runif(n, 0, 24))
+  rows$mh_distress_k6_self <- short
+  rows$mh_distress_self <- short
+  rows$mh_distress_k10_self <- short + round(stats::runif(n, 10, 16))
+  prepared <- prepare_mock("9993", rows = rows)
+  expect_true("mh_distress_k10_self" %in% names(prepared$outcomes))
+  expect_false("mh_distress_k6_self" %in% names(prepared$outcomes))
+  expect_false("mh_distress_self" %in% names(prepared$outcomes))
+  audit <- prepared$row_audit
+  expect_equal(
+    unique(audit$status[audit$variable_name == "mh_distress_self"]),
+    "dropped_part"
+  )
+})

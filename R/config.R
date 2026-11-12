@@ -266,6 +266,7 @@ bp_analysis_datasets_columns <- function() {
   c(
     "dataset_id",
     "baseline_wave",
+    "wave_order",
     "team_contributed",
     "signed_off",
     "overlap_group",

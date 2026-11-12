@@ -64,7 +64,7 @@ test_that("a dataset missing from datasets.csv reads as a blank row", {
   writeLines(
     c(
       paste(bp_analysis_datasets_columns(), collapse = ","),
-      "9991,T1,,TRUE,,,A panel"
+      "9991,T1,,,TRUE,,,A panel"
     ),
     path
   )

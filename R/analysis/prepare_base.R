@@ -90,7 +90,7 @@ prepare_base <- function(rows, info, carry, settings = analysis_settings()) {
     sep = "|"
   )
   base$is_baseline <- is_baseline[keep]
-  base$wave_order <- order_waves(base)
+  base$wave_order <- order_waves(base, info$wave_order)
   base$school_stage <- as.character(cut(
     as.numeric(base$age_years),
     breaks = settings$school_stage_breaks,
@@ -102,12 +102,28 @@ prepare_base <- function(rows, info, carry, settings = analysis_settings()) {
   list(base = base, keep = keep, dropped = dropped)
 }
 
-# Rank a dataset's occasions in time: by median collection year, then median
-# age, then label. `wave` is a free-text label whose string order is not
-# always time order.
-order_waves <- function(base) {
+# Rank a dataset's occasions in time. `wave` is a free-text label whose string
+# order is not always time order, so the rank is by median collection year,
+# then median age, then label. Where that is wrong (waves within one year
+# that different subsamples attended), analysis/datasets.csv declares the
+# order, as wave labels separated by `|`.
+order_waves <- function(base, declared = NA_character_) {
   if (nrow(base) == 0) {
     return(integer())
+  }
+  if (length(declared) == 1 && !is.na(declared) && nzchar(declared)) {
+    labels <- strsplit(declared, "|", fixed = TRUE)[[1]]
+    unlisted <- setdiff(unique(base$wave), labels)
+    if (length(unlisted) > 0) {
+      stop(
+        "Dataset ",
+        base$dataset_id[1],
+        ": wave_order in analysis/datasets.csv does not list wave(s) ",
+        paste(unlisted, collapse = ", "),
+        call. = FALSE
+      )
+    }
+    return(match(base$wave, labels))
   }
   year <- if ("data_year" %in% names(base)) base$data_year else NA_real_
   waves <- dplyr::summarise(

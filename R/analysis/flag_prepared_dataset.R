@@ -19,7 +19,7 @@
 #' - `weights_partial`: a unit has survey weights on some rows only, so a
 #'   weighted model would drop the rest.
 #' - `wave_order_tie`: two waves share a median collection year, so their
-#'   order rests on median age.
+#'   order rests on median age, unless `datasets.csv` declares the order.
 #' - `rows_dropped`: more than a fifth of the dataset's rows were dropped.
 #' - `partial_rows` (info): outcome rows mapped as partial or proximate that
 #'   are used.
@@ -208,7 +208,7 @@ flag_prepared_dataset <- function(
       .by = "wave"
     )
     tied <- waves$year[duplicated(waves$year) & !is.na(waves$year)]
-    if (length(tied) > 0) {
+    if (length(tied) > 0 && !isTRUE(prepared$wave_order_declared)) {
       flags[[length(flags) + 1]] <- flag(
         "wave_order_tie",
         "wave",

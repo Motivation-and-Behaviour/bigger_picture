@@ -212,11 +212,22 @@ prepare_outcomes <- function(
       }
     }
     for (variable in names(scores)) {
-      wholes <- registry$part_of[match(variable, registry$variable_name)]
-      if (is.na(wholes) || !wave_has(variable, wave_label)) {
+      # A generic row that kept a score in place of an instrument row is a
+      # part of whatever that instrument row is a part of.
+      stands_for <- repeats$specific[
+        repeats$drop &
+          repeats$keep %in% variable &
+          (repeats$wave %in% wave_label |
+            (is.na(repeats$wave) & is.na(wave_label)))
+      ]
+      wholes <- registry$part_of[
+        match(c(variable, stands_for), registry$variable_name)
+      ]
+      wholes <- unlist(strsplit(wholes[!is.na(wholes)], "|", fixed = TRUE))
+      if (length(wholes) == 0 || !wave_has(variable, wave_label)) {
         next
       }
-      for (whole in strsplit(wholes, "|", fixed = TRUE)[[1]]) {
+      for (whole in setdiff(unique(wholes), variable)) {
         if (
           wave_has(whole, wave_label) &&
             identical(node_of(whole), node_of(variable)) &&

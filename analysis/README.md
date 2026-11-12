@@ -88,6 +88,7 @@ Its `rule` says what the guide promises: `constant` (one value per participant, 
 `datasets.csv` holds what the analysis needs to know about each dataset:
 
 - `baseline_wave` is the panel's earliest wave in the data, a trial's pre-intervention wave, or blank;
+- `wave_order` is blank for almost every dataset, whose waves are ordered by median collection year and then median age; where that gives the wrong order it lists the wave labels in time order, separated by `|`;
 - `team_contributed`, `signed_off`, `overlap_group` and `risk_of_bias` are filled at later steps.
 
 A dataset with no row reads as a blank one, so it has no baseline and is not signed off.
