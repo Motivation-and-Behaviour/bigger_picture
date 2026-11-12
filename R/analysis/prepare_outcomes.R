@@ -10,8 +10,9 @@
 #'    exception keeps them (DR-0011);
 #' 5. within each wave, drop repeats of another row's score, letter grades
 #'    where numeric grades exist, and a part where its whole is in the same
-#'    node;
-#' 6. standardise continuous rows within their `standardise_by` groups.
+#'    node and covers nearly all of the part's rows;
+#' 6. standardise continuous rows within their `standardise_by` groups,
+#'    leaving groups smaller than the minimum unit size unstandardised.
 #'
 #' Rows the registry marks `archive`, and nominal rows, are not prepared;
 #' the audit says so.
@@ -25,8 +26,9 @@
 #' @param settings From `analysis_settings()`.
 #' @return A list: `outcomes` (scores, one column per row used), `outcomes_z`
 #'   (standardised scores for continuous rows), `audit` (one row per wave and
-#'   outcome row with any value), `repeats` (the repeated scores found) and
-#'   `derived` (the derivation rules that ran).
+#'   outcome row with any value), `repeats` (the repeated scores found),
+#'   `nodes` (nodes assigned by exception) and `derived` (the derivation
+#'   rules that ran).
 prepare_outcomes <- function(
   rows,
   base,
@@ -85,18 +87,36 @@ prepare_outcomes <- function(
   }
   observed <- lapply(scores, function(x) !is.na(x))
 
-  # 2. Exclusions by exception.
+  # 2. Exclusions by exception. Applied again after derivation, which would
+  # otherwise refill an excluded row from its parts.
+  unknown <- setdiff(exceptions$variable_name, registry$variable_name[analysed])
+  if (length(unknown) > 0) {
+    stop(
+      "Dataset ",
+      base$dataset_id[1],
+      ": analysis exceptions name rows that are not analysed outcomes: ",
+      paste(unknown, collapse = ", "),
+      call. = FALSE
+    )
+  }
   in_waves <- function(exception_wave) {
     if (is.na(exception_wave)) rep(TRUE, n) else wave %in% exception_wave
   }
   excluded <- exceptions[exceptions$action %in% "exclude", ]
+  exclude_rows <- function(scores) {
+    for (i in seq_len(nrow(excluded))) {
+      variable <- excluded$variable_name[i]
+      if (variable %in% names(scores)) {
+        scores[[variable]][in_waves(excluded$wave[i])] <- NA_real_
+      }
+    }
+    scores
+  }
+  scores <- exclude_rows(scores)
   for (i in seq_len(nrow(excluded))) {
-    variable <- excluded$variable_name[i]
-    if (variable %in% names(scores)) {
-      hit <- in_waves(excluded$wave[i])
-      scores[[variable]][hit] <- NA_real_
+    if (excluded$variable_name[i] %in% names(scores)) {
       audit[[length(audit) + 1]] <- note(
-        variable,
+        excluded$variable_name[i],
         "excluded",
         paste0("exception: ", excluded$reason[i]),
         if (is.na(excluded$wave[i])) NULL else excluded$wave[i]
@@ -115,15 +135,14 @@ prepare_outcomes <- function(
   for (target in targets) {
     observed[[target]] <- !is.na(scores[[target]])
   }
+  scores <- exclude_rows(scores)
 
   # 4. Bounds, for continuous rows.
-  keep_bounds <- exceptions$variable_name[
-    exceptions$action %in% "keep_out_of_bounds"
-  ]
+  keep_bounds <- exceptions[exceptions$action %in% "keep_out_of_bounds", ]
   out_of_bounds <- list()
   for (variable in names(scores)) {
     row <- registry[match(variable, registry$variable_name), ]
-    if (!row$score_type %in% "continuous" || variable %in% keep_bounds) {
+    if (!row$score_type %in% "continuous") {
       next
     }
     low <- suppressWarnings(as.numeric(row$min_value))
@@ -131,6 +150,9 @@ prepare_outcomes <- function(
     values <- scores[[variable]]
     outside <- (!is.na(low) & !is.na(values) & values < low) |
       (!is.na(high) & !is.na(values) & values > high)
+    for (i in which(keep_bounds$variable_name %in% variable)) {
+      outside <- outside & !in_waves(keep_bounds$wave[i])
+    }
     if (any(outside)) {
       scores[[variable]][outside] <- NA_real_
       out_of_bounds[[variable]] <- outside
@@ -141,11 +163,15 @@ prepare_outcomes <- function(
   wave_rows <- function(wave_label) {
     if (is.na(wave_label)) is.na(wave) else wave %in% wave_label
   }
+  nodes <- stats::setNames(registry$node, registry$variable_name)
+  reassigned <- exceptions[exceptions$action %in% "node", ]
+  nodes[reassigned$variable_name] <- reassigned$value
   repeats <- find_repeated_scores(
     scores,
     wave,
-    stats::setNames(registry$node, registry$variable_name),
-    settings$repeat_min_rows
+    nodes,
+    settings$repeat_min_rows,
+    settings$repeat_min_minority
   )
   for (i in which(repeats$drop)) {
     scores[[repeats$specific[i]]][wave_rows(repeats$wave[i])] <- NA_real_
@@ -161,7 +187,13 @@ prepare_outcomes <- function(
     variable %in% names(scores) && any(!is.na(scores[[variable]][hit]))
   }
   node_of <- function(variable) {
-    registry$node[match(variable, registry$variable_name)]
+    if (variable %in% names(nodes)) nodes[[variable]] else NA_character_
+  }
+  # The share of a part's rows in the wave that its whole also covers.
+  covered <- function(part, whole, wave_label) {
+    hit <- wave_rows(wave_label)
+    has_part <- !is.na(scores[[part]][hit])
+    sum(has_part & !is.na(scores[[whole]][hit])) / sum(has_part)
   }
   for (wave_label in unique(wave)) {
     preferred <- bp_preferred_outcome_rows()
@@ -187,7 +219,8 @@ prepare_outcomes <- function(
       for (whole in strsplit(wholes, "|", fixed = TRUE)[[1]]) {
         if (
           wave_has(whole, wave_label) &&
-            identical(node_of(whole), node_of(variable))
+            identical(node_of(whole), node_of(variable)) &&
+            covered(variable, whole, wave_label) >= settings$part_cover_min
         ) {
           scores[[variable]][wave_rows(wave_label)] <- NA_real_
           audit[[length(audit) + 1]] <- note(
@@ -220,7 +253,8 @@ prepare_outcomes <- function(
     }
     outcomes_z[[variable]] <- standardise_within(
       scores[[variable]],
-      standardise_groups(keys, base, rows)
+      standardise_groups(keys, base, rows),
+      settings$min_unit_rows
     )
   }
 
@@ -280,6 +314,10 @@ prepare_outcomes <- function(
     outcomes_z = outcomes_z,
     audit = audit,
     repeats = repeats,
+    nodes = tibble::tibble(
+      variable_name = reassigned$variable_name,
+      node = reassigned$value
+    ),
     derived = derived$derived[derived$derived$target %in% targets, ]
   )
 }

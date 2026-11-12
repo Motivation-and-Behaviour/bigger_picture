@@ -11,7 +11,8 @@
 #' @param dataschema The dataschema.
 #' @return A tibble with one row per dataset and variable that has any value:
 #'   `rows` (primary rows in the dataset), `n_value`, `n_unknown`, `share`,
-#'   `waves` (waves with a value) and the variable's `domain`.
+#'   `waves` (waves with a value), `n_value_other_measures` (values on extra
+#'   screen-time measure blocks) and the variable's `domain`.
 summarise_coverage <- function(
   numeric_summary,
   level_summary,
@@ -41,6 +42,28 @@ summarise_coverage <- function(
     .by = c("dataset_id", "variable_name")
   )
   coverage <- dplyr::bind_rows(from_numeric, from_levels)
+
+  # Screen-time variables can also sit on an extra measure block (a diary, a
+  # second informant), sometimes only there.
+  other <- function(tbl) tbl[!tbl$st_measure_id %in% "primary", ]
+  elsewhere <- dplyr::summarise(
+    dplyr::bind_rows(
+      other(numeric_summary)[c("dataset_id", "variable_name", "n")],
+      other(level_summary[!level_summary$level %in% "Unknown", ])[
+        c("dataset_id", "variable_name", "n")
+      ]
+    ),
+    n_value_other_measures = sum(.data$n),
+    .by = c("dataset_id", "variable_name")
+  )
+  coverage <- dplyr::full_join(
+    coverage,
+    elsewhere,
+    by = c("dataset_id", "variable_name")
+  )
+  for (column in c("n_value", "n_unknown", "waves", "n_value_other_measures")) {
+    coverage[[column]][is.na(coverage[[column]])] <- 0L
+  }
   coverage <- dplyr::left_join(coverage, denominators, by = "dataset_id")
   coverage$share <- coverage$n_value / coverage$rows
   coverage <- dplyr::left_join(

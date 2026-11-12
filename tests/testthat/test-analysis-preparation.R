@@ -80,6 +80,7 @@ test_that("an excluded dataset yields nothing anywhere", {
   expect_null(summarise_numeric(rows, out, reg$schema))
   expect_null(summarise_levels(rows, out, reg$schema))
   expect_null(summarise_units(rows, out))
+  expect_null(summarise_unit_counts(rows, out, reg$schema))
   expect_null(prepare_mock("9991", info = out))
 })
 
@@ -145,11 +146,15 @@ test_that("summaries describe a dataset without row-level data", {
   expect_equal(game$median, stats::median(rows$st_game))
   expect_false("st_socmedia" %in% numeric$variable_name)
 
-  levels <- summarise_levels(rows, info, reg$schema, max_levels = 50)
+  levels <- summarise_levels(rows, info, reg$schema)
   sex <- levels[levels$variable_name == "sex", ]
   expect_equal(sum(sex$n), nrow(rows))
-  ids <- levels[levels$variable_name == "participant_id", ]
-  expect_equal(ids$level, "(many values)")
+  # Identifiers are never tabulated, however few a dataset has.
+  ids <- levels[levels$variable_name %in% bp_identifier_columns(), ]
+  expect_setequal(ids$variable_name, c("participant_id", "survey_cluster"))
+  expect_equal(unique(ids$level), "(many values)")
+  few <- summarise_levels(rows, info, reg$schema, max_levels = 1)
+  expect_equal(unique(few$level[few$variable_name == "sex"]), "(many values)")
 
   units <- summarise_units(rows, info)
   expect_setequal(units$country, c("Ireland", "Scotland"))
@@ -157,11 +162,77 @@ test_that("summaries describe a dataset without row-level data", {
 
   coverage <- summarise_coverage(numeric, levels, grain, reg$schema)
   expect_equal(coverage$share[coverage$variable_name == "st_game"], 1)
-  missing <- summarise_missingness(numeric, levels, grain)
+  counts <- summarise_unit_counts(rows, info, reg$schema)
+  game <- counts[counts$variable_name == "st_game", ]
+  expect_equal(sum(game$n_value), nrow(rows))
+  expect_setequal(game$country, c("Ireland", "Scotland"))
+  missing <- summarise_missingness(counts, units)
   expect_equal(sum(missing$n_systematic), 0)
 })
 
-test_that("Unknown counts as missing, sporadic where the wave has values", {
+test_that("a variable one country never measured is systematic there", {
+  reg <- repo_registries()
+  rows <- mock_dataset("9996")
+  info <- mock_info("9996")
+  rows$mh_dep_self[rows$country == "Scotland"] <- NA
+  rows$mh_dep_self[which(rows$country == "Ireland")[1:4]] <- NA
+  rows$country[which(rows$country == "Ireland")[5:7]] <- "Unknown"
+  units <- summarise_units(rows, info)
+  expect_equal(sum(is.na(units$country)), 1)
+  missing <- summarise_missingness(
+    summarise_unit_counts(rows, info, reg$schema),
+    units
+  )
+  dep <- missing[missing$variable_name == "mh_dep_self", ]
+  expect_equal(dep$n_systematic, sum(rows$country == "Scotland"))
+  expect_equal(dep$n_sporadic, 4)
+  expect_equal(dep$n_value + dep$n_sporadic + dep$n_systematic, nrow(rows))
+})
+
+test_that("a screen-time row held only on an extra measure is still covered", {
+  reg <- repo_registries()
+  rows <- mock_dataset("9995")
+  info <- mock_info("9995")
+  diary <- rows[1:30, ]
+  diary$st_measure_id <- "diary"
+  diary$st_educational <- 1
+  rows <- dplyr::bind_rows(rows, diary)
+  coverage <- summarise_coverage(
+    summarise_numeric(rows, info, reg$schema),
+    summarise_levels(rows, info, reg$schema),
+    summarise_grain(rows, info),
+    reg$schema
+  )
+  edu <- coverage[coverage$variable_name == "st_educational", ]
+  expect_equal(edu$n_value, 0)
+  expect_equal(edu$n_value_other_measures, 30)
+  watch <- coverage[coverage$variable_name == "st_watch", ]
+  expect_equal(watch$n_value, nrow(rows) - 30)
+  expect_equal(watch$share, 1)
+})
+
+test_that("the dataset flow counts specs by status from their files", {
+  dir <- withr::local_tempdir()
+  write_spec <- function(id, status) {
+    path <- file.path(dir, paste0(id, ".yaml"))
+    yaml::write_yaml(list(dataset_id = id, status = status), path)
+    path
+  }
+  files <- c(
+    write_spec("1", "harmonised"),
+    write_spec("2", "blocked"),
+    write_spec("3", "in_progress")
+  )
+  manifest <- tibble::tibble(participants = 10, primary_rows = 20)
+  flow <- summarise_dataset_flow(files, c("1", "3"), manifest)
+  count <- function(stage) flow$datasets[flow$stage == stage]
+  expect_equal(count("Spec written"), 3)
+  expect_equal(count("Spec status: blocked"), 1)
+  expect_equal(count("In the pipeline"), 2)
+  expect_equal(count("Included in the analysis"), 1)
+})
+
+test_that("Unknown counts as missing, sporadic where the unit has values", {
   reg <- repo_registries()
   rows <- mock_dataset("9991")
   info <- mock_info("9991")
@@ -176,30 +247,54 @@ test_that("Unknown counts as missing, sporadic where the wave has values", {
   expect_equal(sex$n_unknown, sum(rows$sex == "Unknown"))
   expect_equal(sex$n_value, sum(rows$sex != "Unknown"))
 
-  missing <- summarise_missingness(numeric, levels, grain)
+  missing <- summarise_missingness(
+    summarise_unit_counts(rows, info, reg$schema),
+    summarise_units(rows, info)
+  )
   sex <- missing[missing$variable_name == "sex", ]
   expect_equal(sex$n_sporadic, 5)
   expect_equal(sex$n_systematic, sum(rows$wave == "2"))
 })
 
-test_that("the checks find what they name", {
+run_checks <- function(rows, info, invariants) {
   reg <- repo_registries()
-  rows <- mock_dataset("9991")
-  info <- mock_info("9991")
-  rows$st_game[1:3] <- 30
-  rows <- dplyr::bind_rows(rows, rows[10, ])
-  person <- rows$participant_id[20]
-  rows$sex[rows$participant_id == person] <- c("Female", "Male")
-  invariants <- tibble::tibble(variable_name = c("sex", "country"))
-
-  findings <- check_analysis_data(
+  check_analysis_data(
     summarise_numeric(rows, info, reg$schema),
     summarise_levels(rows, info, reg$schema),
     summarise_grain(rows, info),
     check_invariants(rows, info, invariants),
+    dplyr::bind_rows(
+      tibble::tibble(dataset_id = character(), n_differs = integer()),
+      check_day_consistency(rows, info, reg$exposures)
+    ),
+    invariants,
     reg$schema,
     reg$exposures
   )
+}
+# The mock draws a cluster per row, so it is not declared constant here.
+mock_invariants <- tibble::tibble(
+  variable_name = c("sex", "country"),
+  rule = c("constant", "carried")
+)
+
+test_that("the checks find what they name", {
+  rows <- mock_dataset("9991")
+  info <- mock_info("9991")
+  rows$st_game[1:3] <- 30
+  rows$mh_dep_self[1:2] <- 500
+  rows$age_years[4] <- 40
+  rows$sex[rows$participant_id == rows$participant_id[5]] <- "Not listed"
+  rows$st_socmedia <- 0
+  rows <- dplyr::bind_rows(rows, rows[10, ])
+  person <- rows$participant_id[20]
+  rows$sex[rows$participant_id == person] <- c("Female", "Male")
+  mover <- rows$participant_id[30]
+  rows$country[rows$participant_id == mover] <- c("Australia", "England")
+  gap <- rows$participant_id[40]
+  rows$country[rows$participant_id == gap][2] <- "Unknown"
+
+  findings <- run_checks(rows, info, mock_invariants)
   found <- function(check, variable = NULL) {
     hit <- findings$check == check
     if (!is.null(variable)) {
@@ -207,22 +302,82 @@ test_that("the checks find what they name", {
     }
     sum(findings$n[hit])
   }
+  severity <- function(check, variable) {
+    unique(findings$severity[
+      findings$check == check & findings$variable_name %in% variable
+    ])
+  }
   expect_equal(found("above_max", "st_game"), 3)
+  expect_equal(severity("above_max", "st_game"), "review")
+  expect_equal(found("above_max", "age_years"), 1)
+  expect_equal(severity("above_max", "age_years"), "advisory")
+  expect_equal(found("outside_allowed_values", "sex"), 2)
+  expect_equal(found("screen_all_zero", "st_socmedia"), nrow(rows))
   expect_equal(found("duplicate_key"), 1)
   expect_equal(found("invariant_varies", "sex"), 1)
   expect_equal(found("invariant_varies", "country"), 0)
+  expect_equal(found("carried_value_changes", "country"), 1)
+  expect_equal(severity("carried_value_changes", "country"), "advisory")
+  expect_equal(found("carry_gap", "country"), 1)
+  expect_equal(found("carry_gap", "sex"), 0)
   expect_true(all(findings$severity %in% c("review", "advisory")))
 
-  clean <- mock_dataset("9992")
-  none <- check_analysis_data(
-    summarise_numeric(clean, mock_info("9992"), reg$schema),
-    summarise_levels(clean, mock_info("9992"), reg$schema),
-    summarise_grain(clean, mock_info("9992")),
-    check_invariants(clean, mock_info("9992"), invariants),
+  clean <- run_checks(mock_dataset("9992"), mock_info("9992"), mock_invariants)
+  expect_equal(clean$check[clean$severity == "review"], character())
+})
+
+test_that("usual-day values are checked row by row against the week", {
+  reg <- repo_registries()
+  rows <- mock_dataset("9995")
+  info <- mock_info("9995")
+  n <- nrow(rows)
+  rows$st_watch_wd <- stats::runif(n, 0, 4)
+  rows$st_watch_we <- stats::runif(n, 0, 6)
+  rows$st_watch <- (5 * rows$st_watch_wd + 2 * rows$st_watch_we) / 7
+  # Weekday and weekend asked of a subsample: the means differ, the rows agree.
+  rows$st_watch_wd[101:n] <- NA
+  rows$st_watch_we[101:n] <- NA
+  rows$st_watch[101:n] <- 9
+  agree <- check_day_consistency(rows, info, reg$exposures)
+  expect_equal(sum(agree$n), 100)
+  expect_equal(sum(agree$n_differs), 0)
+  findings <- run_checks(rows, info, mock_invariants)
+  expect_false("usual_day_mismatch" %in% findings$check)
+
+  rows$st_watch[1:7] <- rows$st_watch[1:7] + 1
+  findings <- run_checks(rows, info, mock_invariants)
+  expect_equal(findings$n[findings$check == "usual_day_mismatch"], 7)
+  expect_null(check_day_consistency(mock_dataset("9992"), mock_info("9992"), reg$exposures))
+})
+
+test_that("a dataset on another scale stands out from the others", {
+  reg <- repo_registries()
+  ids <- as.character(9991:9996)
+  numeric <- dplyr::bind_rows(lapply(ids, function(id) {
+    rows <- mock_dataset(id)
+    if (id == "9996") {
+      rows$st_game <- rows$st_game * 10
+    }
+    summarise_numeric(rows, mock_info(id), reg$schema)
+  }))
+  empty <- function(...) tibble::tibble(dataset_id = character(), ...)
+  findings <- check_analysis_data(
+    numeric,
+    empty(variable_name = character(), level = character(), n = integer()),
+    empty(duplicate_keys = integer(), missing_ids = integer()),
+    empty(
+      variable_name = character(),
+      participants_varying = integer(),
+      participants_gap = integer()
+    ),
+    empty(n_differs = integer()),
+    mock_invariants,
     reg$schema,
     reg$exposures
   )
-  expect_equal(nrow(none[none$severity == "review", ]), 0)
+  scale <- findings[findings$check == "screen_scale", ]
+  expect_equal(scale$dataset_id, "9996")
+  expect_equal(scale$variable_name, "st_game")
 })
 
 test_that("rows under the age limit are kept and the rest are counted", {
@@ -289,32 +444,55 @@ test_that("total screen time is the dedicated item, else a guarded sum", {
     st_watch = c(1, 1, 2, NA, 20, 1),
     st_game = c(1, 1, 3, 1, 20, 1),
     st_socmedia = c(1, 1, NA, 1, 1, NA),
+    st_messaging = c(4, 4, 4, 4, 4, 4),
     st_phone = c(9, 9, 9, 9, 9, 9)
   )
-  wave <- c("a", "a", "b", "b", "b", "c")
-  total <- derive_total_screen(exposures, wave, reg$exposures)
+  unit <- c("a", "a", "b", "b", "b", "c")
+  total <- derive_total_screen(exposures, unit, reg$exposures)
 
   expect_equal(total$total_source, c(rep("dedicated", 2), rep("summed", 4)))
   expect_equal(total$total_screen[1:2], c(5, 6))
-  # Wave b sums watching, gaming and social media, complete cases only.
+  # Unit b sums the content classes it has: complete cases only, capped.
   expect_equal(total$total_screen[3:5], c(NA, NA, 24))
   expect_equal(total$total_capped, c(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE))
   expect_equal(total$total_coverage[3], 3L)
   expect_equal(total$total_rows[3], "st_watch|st_game|st_socmedia")
-  # Wave c has only watching and gaming; the device row is never added.
+  # Unit c: neither the device row nor the narrower activity row is added.
   expect_equal(total$total_screen[6], 2)
-  expect_equal(total$other_watch[1], 2)
+  expect_equal(total$total_rows[6], "st_watch|st_game")
+  # The rest of screen use: total minus own where dedicated, else the others.
+  expect_equal(total$other_watch[1], 4)
   expect_equal(total$other_watch[6], 1)
+  expect_false("other_messaging" %in% names(total))
 
-  no_game <- derive_total_screen(exposures["st_watch"], wave, reg$exposures)
+  no_game <- derive_total_screen(exposures["st_watch"], unit, reg$exposures)
   expect_true(all(is.na(no_game$total_screen)))
+  expect_true(all(is.na(no_game$other_watch)))
+})
+
+test_that("a row asked of part of a unit does not remove everyone's total", {
+  reg <- repo_registries()
+  exposures <- tibble::tibble(
+    st_watch = rep(1, 20),
+    st_game = rep(2, 20),
+    st_socmedia = c(rep(3, 4), rep(NA, 16)),
+    st_educational = c(rep(1, 16), rep(NA, 4))
+  )
+  unit <- rep(c("x", "y"), each = 10)
+  total <- derive_total_screen(exposures, unit, reg$exposures)
+  # Unit x: social media on 4 of 10 rows is left out; educational stays.
+  expect_equal(unique(total$total_rows[1:10]), "st_watch|st_game|st_educational")
+  expect_equal(total$total_screen[1:10], rep(4, 10))
+  # Unit y: no social media at all; educational on 6 of 10 rows stays, and
+  # the rows without it have no total.
+  expect_equal(sum(is.na(total$total_screen[11:20])), 4)
 })
 
 test_that("exposures over 24 hours are dropped and counted", {
   reg <- repo_registries()
   rows <- mock_dataset("9995")
   rows$st_watch[1:2] <- c(25, 24)
-  out <- prepare_exposures(rows, rows$wave, reg$exposures)
+  out <- prepare_exposures(rows, rows$wave, rows$wave, reg$exposures)
   expect_true(is.na(out$exposures$st_watch[1]))
   expect_equal(out$exposures$st_watch[2], 24)
   watch <- out$audit[out$audit$variable_name == "st_watch", ]
@@ -400,6 +578,16 @@ test_that("a repeated score is dropped in favour of the generic row", {
   expect_false(any(find_repeated_scores(scores, wave)$drop))
 })
 
+test_that("two rare diagnoses are not called one score", {
+  dx <- c(rep(1, 38), 2, 2)
+  scores <- tibble::tibble(a_diagnosed = dx, b_diagnosed = dx)
+  nodes <- c(a_diagnosed = "n", b_diagnosed = "n")
+  expect_equal(nrow(find_repeated_scores(scores, rep("1", 40), nodes)), 0)
+  dx[1:8] <- 2
+  scores <- tibble::tibble(a_diagnosed = dx, b_diagnosed = dx)
+  expect_equal(nrow(find_repeated_scores(scores, rep("1", 40), nodes)), 1)
+})
+
 test_that("standardising is within group and needs spread", {
   values <- c(1, 2, 3, 10, 20, 30, 5, NA, 7, 7)
   groups <- c("a", "a", "a", "b", "b", "b", "c", "c", "d", "d")
@@ -409,6 +597,7 @@ test_that("standardising is within group and needs spread", {
   expect_true(all(is.na(z[7:10])))
   two_keys <- standardise_within(values[1:6], list(groups[1:6], rep("x", 6)))
   expect_equal(two_keys, z[1:6])
+  expect_true(all(is.na(standardise_within(values, groups, min_n = 4))))
 })
 
 test_that("prepared tables share one row order and lose no row silently", {
@@ -528,8 +717,13 @@ test_that("a prepared dataset is summarised and flagged", {
   expect_equal(summary$total_summed, nrow(prepared$base))
 
   variables <- tibble::tibble(
-    target_variable = c("mh_dep_self", "wb_lifesat_self"),
-    notes = c("As released.", "Derive at analysis from the items.")
+    target_variable = c("mh_dep_self", "wb_lifesat_self", "wb_selfesteem_self"),
+    status = c("partial", "incompatible", "incompatible"),
+    notes = c(
+      "As released.",
+      "Derive at analysis from the items.",
+      "See the instrument row, which the analysis can derive at analysis."
+    )
   )
   flags <- flag_prepared_dataset(prepared, variables, reg$outcomes)
   expect_true("rows_dropped" %in% flags$flag)
@@ -538,6 +732,7 @@ test_that("a prepared dataset is summarised and flagged", {
     flags$variable_name[flags$flag == "derive_at_analysis"],
     "wb_lifesat_self"
   )
+  expect_equal(flags$level[flags$flag == "partial_rows"], "info")
   expect_null(flag_prepared_dataset(NULL, variables, reg$outcomes))
 })
 
@@ -554,9 +749,230 @@ test_that("the analysis section builds a target list from a dataset plan", {
     function(target) target$settings$name
   ))
   expect_true(all(
-    c("data_manifest", "prepared_BPIPD_9991", "violations", "coverage") %in%
+    c(
+      "data_manifest",
+      "dataset_summary_BPIPD_9991",
+      "prepared_BPIPD_9991",
+      "prepared_review_BPIPD_9992",
+      "violations",
+      "coverage"
+    ) %in%
       names
   ))
   expect_false(anyDuplicated(names) > 0)
-  expect_length(analysis_targets(plan[0, ]), 5)
+  expect_length(analysis_targets(plan[0, ]), 6)
+})
+
+test_that("an excluded row stays excluded when a rule could derive it", {
+  reg <- repo_registries()
+  rows <- mock_dataset("9995")
+  n <- nrow(rows)
+  rows$beh_conduct_sdq_parent <- round(stats::runif(n, 0, 10))
+  rows$beh_hyper_sdq_parent <- round(stats::runif(n, 0, 10))
+  dir <- withr::local_tempdir()
+  path <- file.path(dir, "analysis_exceptions.csv")
+  writeLines(
+    c(
+      "variable_name,wave,action,value,reason",
+      "beh_ext_sdq_parent,,exclude,,Not comparable here"
+    ),
+    path
+  )
+  prepare <- function(exceptions) {
+    prepare_analysis_data(
+      rows,
+      mock_info("9995"),
+      reg$outcomes,
+      reg$exposures,
+      reg$derivations,
+      reg$schema,
+      exceptions
+    )
+  }
+  derived <- prepare(no_exceptions(reg))
+  expect_equal(
+    derived$outcomes$beh_ext_sdq_parent,
+    rows$beh_conduct_sdq_parent + rows$beh_hyper_sdq_parent
+  )
+  excluded <- prepare(read_analysis_exceptions(path, reg$schema, reg$outcomes))
+  expect_false("beh_ext_sdq_parent" %in% names(excluded$outcomes))
+})
+
+test_that("bounds drop values unless an exception keeps them", {
+  reg <- repo_registries()
+  rows <- mock_dataset("9995")
+  rows$cog_earlynumber_bas_enc <- 150
+  rows$cog_earlynumber_bas_enc[1:50] <- 50
+  dropped <- prepare_mock("9995", rows = rows)
+  expect_equal(sum(!is.na(dropped$outcomes$cog_earlynumber_bas_enc)), 50)
+  audit <- dropped$row_audit
+  audit <- audit[audit$variable_name == "cog_earlynumber_bas_enc", ]
+  expect_equal(sum(audit$n_values) - sum(audit$n_used), nrow(rows) - 50)
+
+  path <- file.path(
+    repo_root,
+    bp_harmonisation_dataset_dir("1025"),
+    "analysis_exceptions.csv"
+  )
+  kept <- prepare_analysis_data(
+    rows,
+    mock_info("9995"),
+    reg$outcomes,
+    reg$exposures,
+    reg$derivations,
+    reg$schema,
+    read_analysis_exceptions(path, reg$schema, reg$outcomes)
+  )
+  expect_false(anyNA(kept$outcomes$cog_earlynumber_bas_enc))
+})
+
+test_that("a part is dropped only where its whole covers it", {
+  reg <- repo_registries()
+  rows <- mock_dataset("9993")
+  n <- nrow(rows)
+  rows$beh_atten_self <- stats::rnorm(n)
+  rows$beh_hyper_self <- stats::rnorm(n)
+  rows$beh_adhdsymp_self <- rows$beh_atten_self + rows$beh_hyper_self
+  covered <- prepare_mock("9993", rows = rows)
+  expect_false("beh_atten_self" %in% names(covered$outcomes))
+  expect_true("beh_adhdsymp_self" %in% names(covered$outcomes))
+
+  rows$beh_adhdsymp_self[rows$wave == "1"][1:60] <- NA
+  partial <- prepare_mock("9993", rows = rows)
+  wave_1 <- partial$base$wave == "1"
+  expect_false(anyNA(partial$outcomes$beh_atten_self[wave_1]))
+  expect_true(all(is.na(partial$outcomes$beh_atten_self[!wave_1])))
+})
+
+test_that("extra measure blocks follow the row rules", {
+  rows <- mock_dataset("9995")
+  rows$age_years[1:10] <- 30
+  diary <- rows[1:40, ]
+  diary$st_measure_id <- "diary"
+  diary$st_watch[11] <- 30
+  recall <- rows[41:50, ]
+  recall$st_measure_id <- "recall"
+  prepared <- prepare_mock("9995", rows = dplyr::bind_rows(rows, diary, recall))
+  measures <- prepared$measures
+  expect_equal(nrow(measures), 40)
+  expect_true(all(measures$participant_id %in% prepared$base$participant_id))
+  expect_equal(sum(is.na(measures$st_watch)), 1)
+  expect_equal(sum(!measures$concurrent), 10)
+  expect_equal(nrow(prepared$base), nrow(rows) - 10)
+})
+
+test_that("a baseline wave that is not in the data is an error", {
+  rows <- mock_dataset("9991")
+  expect_error(
+    prepare_base(rows, mock_info("9991", baseline_wave = "0"), names(rows)),
+    "not a wave in the data"
+  )
+})
+
+test_that("exceptions must name analysed outcomes, and a node moves a row", {
+  reg <- repo_registries()
+  dir <- withr::local_tempdir()
+  read <- function(line) {
+    path <- file.path(dir, "analysis_exceptions.csv")
+    writeLines(c("variable_name,wave,action,value,reason", line), path)
+    read_analysis_exceptions(path, reg$schema, reg$outcomes)
+  }
+  prepare <- function(exceptions) {
+    prepare_analysis_data(
+      mock_dataset("9995"),
+      mock_info("9995"),
+      reg$outcomes,
+      reg$exposures,
+      reg$derivations,
+      reg$schema,
+      exceptions
+    )
+  }
+  expect_error(prepare(read("st_watch,,exclude,,why")), "not analysed outcomes")
+  expect_error(read("mh_dep_self,1,node,anxiety,why"), "every wave")
+  moved <- prepare(read("mh_dep_self,,node,anxiety,Anxiety scale here"))
+  expect_equal(moved$nodes$variable_name, "mh_dep_self")
+  expect_equal(moved$nodes$node, "anxiety")
+})
+
+test_that("one summary target and one review target hold a dataset's parts", {
+  reg <- repo_registries()
+  rows <- mock_dataset("9991")
+  info <- mock_info("9991")
+  parts <- summarise_dataset(
+    rows,
+    info,
+    reg$schema,
+    mock_invariants,
+    reg$exposures
+  )
+  expect_named(
+    parts,
+    c(
+      "manifest",
+      "grain",
+      "numeric_summary",
+      "level_summary",
+      "unit_summary",
+      "unit_counts",
+      "invariant_check",
+      "day_check"
+    )
+  )
+  expect_equal(parts$manifest, manifest_dataset(rows, info))
+  other <- summarise_dataset(
+    mock_dataset("9992"),
+    mock_info("9992"),
+    reg$schema,
+    mock_invariants,
+    reg$exposures
+  )
+  excluded <- summarise_dataset(
+    rows,
+    mock_info("9991", included = FALSE),
+    reg$schema,
+    mock_invariants,
+    reg$exposures
+  )
+  grain <- bind_part(list(parts, excluded, other), "grain")
+  expect_setequal(grain$dataset_id, c("9991", "9992"))
+  manifest <- combine_data_manifest(
+    bind_part(list(other, excluded, parts), "manifest")
+  )
+  expect_equal(manifest$dataset_id, c("9991", "9992"))
+
+  variables <- tibble::tibble(
+    target_variable = "mh_dep_self",
+    status = "compatible",
+    notes = NA_character_
+  )
+  review <- review_prepared(prepare_mock("9991"), variables, reg$outcomes)
+  expect_named(review, c("summary", "flags", "row_audit", "dropped"))
+  expect_equal(review$summary$dataset_id, "9991")
+  expect_null(review_prepared(NULL, variables, reg$outcomes)$summary)
+})
+
+test_that("empty columns are dropped, and the result does not depend on it", {
+  reg <- repo_registries()
+  rows <- mock_dataset("9995")
+  padded <- rows
+  padded$st_tablet <- NA_real_
+  padded$mh_anx_self <- NA_real_
+  padded$urbanicity <- NA_character_
+  trimmed <- drop_empty_columns(padded)
+  expect_false(any(c("st_tablet", "mh_anx_self", "urbanicity") %in% names(trimmed)))
+  # `wave` is all missing in a single-wave dataset and is kept.
+  expect_true(all(is.na(rows$wave)))
+  expect_true("wave" %in% names(trimmed))
+  expect_null(drop_empty_columns(NULL))
+
+  info <- mock_info("9995")
+  a <- summarise_dataset(rows, info, reg$schema, mock_invariants, reg$exposures)
+  b <- summarise_dataset(padded, info, reg$schema, mock_invariants, reg$exposures)
+  expect_equal(a[names(a) != "manifest"], b[names(b) != "manifest"])
+  expect_false(identical(a$manifest$hash, b$manifest$hash))
+  expect_equal(
+    prepare_mock("9995", rows = padded)[c("base", "exposures", "outcomes")],
+    prepare_mock("9995", rows = rows)[c("base", "exposures", "outcomes")]
+  )
 })

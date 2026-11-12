@@ -31,6 +31,7 @@ summarise_prepared <- function(prepared) {
     rows_kept = nrow(base),
     participants = dplyr::n_distinct(base$participant_id),
     units = dplyr::n_distinct(base$unit),
+    units_small = sum(table(base$unit) < analysis_settings()$min_unit_rows),
     dropped_age_missing = dropped_for("age_missing"),
     dropped_age_over_limit = dropped_for("age_over_limit"),
     dropped_trial_arm = dropped_for("trial_arm_after_baseline"),

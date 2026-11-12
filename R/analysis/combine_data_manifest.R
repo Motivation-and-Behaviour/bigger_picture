@@ -1,6 +1,7 @@
 #' The data manifest: one row per included dataset, with an overall hash
 #'
-#' @param ... Rows from `manifest_dataset()`; NULLs are dropped.
+#' @param ... Rows from `manifest_dataset()`, or tibbles of them; NULLs are
+#'   dropped.
 #' @return A tibble sorted by dataset ID, with the hash of the whole set of
 #'   dataset hashes repeated in `overall_hash`.
 combine_data_manifest <- function(...) {

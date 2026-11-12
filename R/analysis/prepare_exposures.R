@@ -6,6 +6,7 @@
 #'
 #' @param rows The dataset's kept primary rows, in base-table order.
 #' @param wave The wave of each row.
+#' @param unit The stage 1 unit of each row.
 #' @param exposure_registry The exposure registry.
 #' @param settings From `analysis_settings()`.
 #' @return A list: `exposures` (one row per base row) and `audit` (one row
@@ -13,6 +14,7 @@
 prepare_exposures <- function(
   rows,
   wave,
+  unit,
   exposure_registry,
   settings = analysis_settings()
 ) {
@@ -64,6 +66,6 @@ prepare_exposures <- function(
     NA_character_
   ))
 
-  total <- derive_total_screen(exposures, wave, exposure_registry, settings)
+  total <- derive_total_screen(exposures, unit, exposure_registry, settings)
   list(exposures = dplyr::bind_cols(exposures, total), audit = audit)
 }

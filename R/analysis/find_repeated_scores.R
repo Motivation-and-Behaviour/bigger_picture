@@ -3,7 +3,8 @@
 #' The harmonisation guide repeats some instrument-specific rows onto their
 #' generic row, so the same score can sit in two columns. Two rows are a
 #' repeat when every co-observed value is equal, on at least `min_rows` rows
-#' that are not all one value. Different instruments measured on one occasion
+#' of which at least `min_minority` differ from the commonest value. Without
+#' that, two rare diagnoses would look like one score. Different instruments measured on one occasion
 #' are not repeats and both stay.
 #'
 #' Of a repeated pair the generic row is `keep`: the row named for its
@@ -18,13 +19,15 @@
 #' @param wave The wave of each row.
 #' @param nodes A named character vector: each row's node, NA for none.
 #' @param min_rows Fewest co-observed rows for a comparison.
+#' @param min_minority Fewest co-observed rows away from the commonest value.
 #' @return A tibble of `wave`, `specific`, `keep` and `drop`, one row per
 #'   repeat found.
 find_repeated_scores <- function(
   scores,
   wave,
   nodes = character(),
-  min_rows = analysis_settings()$repeat_min_rows
+  min_rows = analysis_settings()$repeat_min_rows,
+  min_minority = analysis_settings()$repeat_min_minority
 ) {
   empty <- tibble::tibble(
     wave = character(),
@@ -64,7 +67,10 @@ find_repeated_scores <- function(
           next
         }
         x <- block[[a]][both]
-        if (!all(x == block[[b]][both]) || all(x == x[1])) {
+        if (!all(x == block[[b]][both])) {
+          next
+        }
+        if (length(x) - max(table(x)) < min_minority) {
           next
         }
         pair <- generic_first(a, b)

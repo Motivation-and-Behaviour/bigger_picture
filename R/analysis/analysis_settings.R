@@ -30,6 +30,15 @@ analysis_settings <- function() {
     ),
     # A derived total needs these activity rows at minimum (DR-0013).
     total_required = c("st_watch", "st_game"),
+    # A content-class row enters a unit's sum when it is present on at least
+    # this share of the unit's rows that have the required rows.
+    total_row_min_share = 0.5,
+    # A part is dropped for its whole when the whole is observed on at least
+    # this share of the rows where the part is.
+    part_cover_min = 0.9,
+    # A second value needs this many rows before two rows can be called a
+    # repeat of one score.
+    repeat_min_minority = 5L,
     # Two outcome rows are a repeat of one score when every co-observed value
     # is equal, on at least this many rows.
     repeat_min_rows = 10L

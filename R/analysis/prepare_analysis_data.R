@@ -16,11 +16,13 @@
 #' - `outcomes` and `outcomes_z`: the score of every analysed outcome row,
 #'   and its standardised form for continuous rows;
 #' - `measures`: the extra screen-time measure blocks (diaries, a second
-#'   informant), for comparisons between measures within a study;
+#'   informant) for the occasions in `base`, for comparisons between measures
+#'   within a study; `concurrent` is FALSE for recall blocks;
 #' - `row_audit`: one row per wave and dataschema row, saying whether it was
 #'   used and, if not, why, so that no row disappears silently;
 #' - `dropped`: rows dropped per wave and reason;
-#' - `repeats`: outcome rows found to repeat another row's score, and
+#' - `repeats`: outcome rows found to repeat another row's score;
+#'   `nodes`: any node an exception assigns in place of the registry's; and
 #'   `derived`: the derivation rules that ran.
 #'
 #' @param harmonised A dataset's harmonised tibble.
@@ -41,13 +43,15 @@ prepare_analysis_data <- function(
   exceptions,
   settings = analysis_settings()
 ) {
-  all_rows <- included_rows(harmonised, info)
+  all_rows <- included_rows(drop_empty_columns(harmonised), info)
+  rm(harmonised)
   if (is.null(all_rows)) {
     return(NULL)
   }
   dataset_id <- as.character(info$dataset_id)
   primary <- all_rows$st_measure_id %in% "primary"
-  rows <- all_rows[primary, ]
+  # A copy only where there is something to leave out.
+  rows <- if (all(primary)) all_rows else all_rows[primary, ]
 
   carried_roles <- outcome_registry$rows$variable_name[
     outcome_registry$rows$role %in% c("covariate", "mediator", "measure")
@@ -61,9 +65,16 @@ prepare_analysis_data <- function(
   ))
   prepared <- prepare_base(rows, info, carry, settings)
   base <- prepared$base
-  kept <- rows[prepared$keep, ]
+  kept <- if (all(prepared$keep)) rows else rows[prepared$keep, ]
+  rm(rows)
 
-  exposures <- prepare_exposures(kept, base$wave, exposure_registry, settings)
+  exposures <- prepare_exposures(
+    kept,
+    base$wave,
+    base$unit,
+    exposure_registry,
+    settings
+  )
   outcomes <- prepare_outcomes(
     kept,
     base,
@@ -94,6 +105,21 @@ prepare_analysis_data <- function(
     ),
     measure_columns
   )]
+  # The extra blocks follow the row rules too: only occasions in the base
+  # table, and no hours over the plausibility limit.
+  key <- function(tbl) {
+    paste(tbl$participant_id, dplyr::coalesce(as.character(tbl$wave), ""))
+  }
+  measures <- measures[key(measures) %in% key(base), ]
+  hours <- exposure_registry$variable_name[exposure_registry$unit %in% "hours"]
+  for (column in intersect(hours, names(measures))) {
+    values <- as.numeric(measures[[column]])
+    values[!is.na(values) & values > settings$exposure_max_hours] <- NA_real_
+    measures[[column]] <- values
+  }
+  # A recall block asks about an earlier period, so it stays out of analyses
+  # of concurrent screen use.
+  measures$concurrent <- !measures$st_measure_id %in% "recall"
 
   row_audit <- dplyr::bind_rows(exposures$audit, outcomes$audit)
   row_audit$dataset_id <- rep(dataset_id, nrow(row_audit))
@@ -107,6 +133,7 @@ prepare_analysis_data <- function(
     row_audit = row_audit,
     dropped = prepared$dropped,
     repeats = outcomes$repeats,
+    nodes = outcomes$nodes,
     derived = outcomes$derived
   )
 }

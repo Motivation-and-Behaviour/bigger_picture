@@ -5,7 +5,8 @@
 #' express, each with a reason (ANALYSIS_PLAN.md, Step 4). Columns:
 #'
 #' - `variable_name`: the dataschema row the decision is about;
-#' - `wave`: a wave label, or blank for every wave;
+#' - `wave`: a wave label, or blank for every wave (always blank for `node`
+#'   and `standardise_by`);
 #' - `action`: `exclude` (leave the row out), `keep_out_of_bounds` (do not
 #'   drop values outside the schema's bounds, for a documented score form),
 #'   `node` (assign to another node of the outcome tree) or `standardise_by`
@@ -45,6 +46,10 @@ read_analysis_exceptions <- function(path, dataschema, outcome_registry) {
   needs_value <- exceptions$action %in% c("node", "standardise_by")
   if (any(needs_value & is.na(exceptions$value))) {
     fail("`node` and `standardise_by` need a value")
+  }
+  whole_dataset <- exceptions$action %in% c("node", "standardise_by")
+  if (any(whole_dataset & !is.na(exceptions$wave))) {
+    fail("`node` and `standardise_by` apply to every wave; leave `wave` blank")
   }
   nodes <- exceptions$value[exceptions$action %in% "node"]
   bad_node <- setdiff(nodes, outcome_registry$tree$node)

@@ -2,54 +2,45 @@
 #'
 #' Missingness is classified by where it sits, not by how it is encoded
 #' (ANALYSIS_PLAN.md, Step 4): a missing or `Unknown` cell is sporadic when its
-#' wave has real values on that variable, and systematic when the wave has
-#' none, because the harmonisation guide also writes `Unknown` in waves where
-#' an item was not asked. Counted on the primary rows, by dataset and wave.
+#' unit (wave by country) has real values on that variable, and systematic
+#' when the unit has none, because the harmonisation guide also writes
+#' `Unknown` in waves where an item was not asked. Counted on the primary
+#' rows, before the eligibility rules.
 #'
-#' @param numeric_summary Combined output of `summarise_numeric()`.
-#' @param level_summary Combined output of `summarise_levels()`.
-#' @param grain Combined output of `summarise_grain()`.
+#' @param unit_counts Combined output of `summarise_unit_counts()`.
+#' @param unit_summary Combined output of `summarise_units()`.
 #' @return A tibble with one row per dataset and variable that has any value:
 #'   `rows`, `n_value`, `n_sporadic`, `n_systematic` and
-#'   `waves_with_value` out of `waves`.
-summarise_missingness <- function(numeric_summary, level_summary, grain) {
-  primary <- function(tbl) tbl[tbl$st_measure_id %in% "primary", ]
-  wave_rows <- primary(grain)[c("dataset_id", "wave", "rows")]
-
-  levels <- primary(level_summary)
-  levels <- levels[!levels$level %in% "Unknown", ]
-  values <- dplyr::bind_rows(
-    primary(numeric_summary)[c("dataset_id", "variable_name", "wave", "n")],
-    dplyr::summarise(
-      levels,
-      n = sum(.data$n),
-      .by = c("dataset_id", "variable_name", "wave")
-    )
+#'   `units_with_value` out of `units`.
+summarise_missingness <- function(unit_counts, unit_summary) {
+  units <- unit_summary[c("dataset_id", "wave", "country", "rows")]
+  variables <- dplyr::distinct(
+    unit_counts,
+    .data$dataset_id,
+    .data$variable_name
   )
-
-  variables <- dplyr::distinct(values, .data$dataset_id, .data$variable_name)
   grid <- dplyr::inner_join(
     variables,
-    wave_rows,
+    units,
     by = "dataset_id",
     relationship = "many-to-many"
   )
   grid <- dplyr::left_join(
     grid,
-    values,
-    by = c("dataset_id", "variable_name", "wave"),
+    unit_counts,
+    by = c("dataset_id", "variable_name", "wave", "country"),
     na_matches = "na"
   )
-  grid$n[is.na(grid$n)] <- 0L
+  grid$n_value[is.na(grid$n_value)] <- 0L
   dplyr::summarise(
     grid,
     # `rows` is summed last: a summary named like its input replaces it for
     # the expressions that follow.
-    n_value = sum(.data$n),
-    n_sporadic = sum((.data$rows - .data$n)[.data$n > 0]),
-    n_systematic = sum(.data$rows[.data$n == 0]),
-    waves_with_value = sum(.data$n > 0),
-    waves = dplyr::n(),
+    n_sporadic = sum((.data$rows - .data$n_value)[.data$n_value > 0]),
+    n_systematic = sum(.data$rows[.data$n_value == 0]),
+    units_with_value = sum(.data$n_value > 0),
+    units = dplyr::n(),
+    n_value = sum(.data$n_value),
     rows = sum(.data$rows),
     .by = c("dataset_id", "variable_name")
   )

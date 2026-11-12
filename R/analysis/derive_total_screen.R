@@ -1,38 +1,51 @@
 #' Derive the analysis-level total screen time (DR-0013)
 #'
-#' Decided wave by wave. Where the wave has a dedicated item (`st_total`),
-#' the total is that item. Otherwise it is the sum of the wave's usual-day
-#' activity rows, for rows with all of them, and only when the wave has the
-#' required rows (watching and gaming). Device, subset, context and aggregate
-#' rows are never summed. A sum above the plausibility limit is set to the
-#' limit and flagged.
+#' Decided unit by unit (dataset by wave by country), so every row of a unit
+#' has a total built the same way:
 #'
-#' The same rule gives `other_<exposure>`, the summed activity rows leaving
-#' one out, for the models that adjust one type of screen use for the rest.
+#' - where the unit has a dedicated item (`st_total`), the total is that item;
+#' - otherwise it is the sum of the unit's usual-day rows for the content
+#'   classes (watching, gaming, social media and educational use), for rows
+#'   with all of them, and only when the unit has the required rows (watching
+#'   and gaming);
+#' - a content-class row asked of only part of a unit is left out of that
+#'   unit's sum, so it does not remove the total from everyone else: it must
+#'   be present on at least `total_row_min_share` of the rows that have the
+#'   required rows;
+#' - device, subset, context and aggregate rows are never summed, nor are the
+#'   narrower activity rows (messaging, video chat and the like), which
+#'   overlap the content classes;
+#' - a sum above the plausibility limit is set to the limit and flagged.
+#'
+#' `other_<exposure>` is the rest of a row's screen use, for the models that
+#' adjust one content class for the others: the sum of the unit's other
+#' summed rows, or the dedicated total minus the exposure.
 #'
 #' @param exposures A tibble of exposure columns, one row per base row.
-#' @param wave The wave of each row.
+#' @param unit The stage 1 unit of each row.
 #' @param exposure_registry The exposure registry.
 #' @param settings From `analysis_settings()`.
 #' @return A tibble with one row per input row: `total_screen`,
 #'   `total_source` (`dedicated` or `summed`), `total_rows` (the rows used),
-#'   `total_coverage` (how many activity rows were summed), `total_capped`
-#'   and one `other_<exposure>` column per activity row present.
+#'   `total_coverage` (how many content-class rows the unit measures),
+#'   `total_capped`, and `other_<exposure>` for each content class present.
 derive_total_screen <- function(
   exposures,
-  wave,
+  unit,
   exposure_registry,
   settings = analysis_settings()
 ) {
   n <- nrow(exposures)
-  usual <- exposure_registry[
+  content <- exposure_registry[
     exposure_registry$unit %in% "hours" &
       exposure_registry$day %in% "usual" &
-      exposure_registry$context %in% "any",
+      exposure_registry$context %in% "any" &
+      exposure_registry$axis %in% "activity" &
+      !is.na(exposure_registry$content_class) &
+      exposure_registry$variable_name %in% names(exposures),
   ]
-  activity <- usual[usual$axis %in% "activity", ]
-  activity <- activity[activity$variable_name %in% names(exposures), ]
   dedicated <- "st_total"
+  limit <- settings$exposure_max_hours
 
   out <- tibble::tibble(
     total_screen = rep(NA_real_, n),
@@ -41,15 +54,19 @@ derive_total_screen <- function(
     total_coverage = rep(NA_integer_, n),
     total_capped = rep(FALSE, n)
   )
-  for (exposure in activity$exposure) {
+  for (exposure in content$exposure) {
     out[[paste0("other_", exposure)]] <- rep(NA_real_, n)
   }
   if (n == 0) {
     return(out)
   }
 
-  has_values <- function(variable, index) {
-    variable %in% names(exposures) && any(!is.na(exposures[[variable]][index]))
+  observed <- function(variable, index) {
+    if (variable %in% names(exposures)) {
+      !is.na(exposures[[variable]][index])
+    } else {
+      rep(FALSE, length(index))
+    }
   }
   row_sum <- function(variables, index) {
     if (length(variables) == 0) {
@@ -57,37 +74,60 @@ derive_total_screen <- function(
     }
     rowSums(as.matrix(exposures[index, variables, drop = FALSE]))
   }
+  other_column <- function(variable) {
+    paste0("other_", content$exposure[content$variable_name == variable])
+  }
 
-  wave_key <- dplyr::coalesce(as.character(wave), "")
-  for (key in unique(wave_key)) {
-    index <- which(wave_key == key)
-    present <- activity$variable_name[vapply(
-      activity$variable_name,
-      has_values,
-      logical(1),
-      index = index
+  unit_key <- dplyr::coalesce(as.character(unit), "")
+  for (key in unique(unit_key)) {
+    index <- which(unit_key == key)
+    measured <- content$variable_name[vapply(
+      content$variable_name,
+      function(variable) any(observed(variable, index)),
+      logical(1)
     )]
+    out$total_coverage[index] <- length(measured)
 
-    if (has_values(dedicated, index)) {
-      out$total_screen[index] <- exposures[[dedicated]][index]
+    if (any(observed(dedicated, index))) {
+      total <- exposures[[dedicated]][index]
+      out$total_screen[index] <- total
       out$total_source[index] <- "dedicated"
       out$total_rows[index] <- dedicated
-    } else if (all(settings$total_required %in% present)) {
-      total <- row_sum(present, index)
-      over <- !is.na(total) & total > settings$exposure_max_hours
-      total[over] <- settings$exposure_max_hours
-      out$total_screen[index] <- total
-      out$total_capped[index] <- over
-      out$total_source[index] <- "summed"
-      out$total_rows[index] <- paste(present, collapse = "|")
-      out$total_coverage[index] <- length(present)
+      for (variable in measured) {
+        own <- exposures[[variable]][index]
+        out[[other_column(variable)]][index] <- pmax(total - own, 0)
+      }
+      next
+    }
+    if (!all(settings$total_required %in% measured)) {
+      next
     }
 
-    for (variable in present) {
-      others <- setdiff(present, variable)
-      exposure <- activity$exposure[activity$variable_name == variable]
-      other <- pmin(row_sum(others, index), settings$exposure_max_hours)
-      out[[paste0("other_", exposure)]][index] <- other
+    has_required <- Reduce(
+      `&`,
+      lapply(settings$total_required, observed, index = index)
+    )
+    share <- vapply(
+      measured,
+      function(variable) {
+        sum(observed(variable, index) & has_required) / sum(has_required)
+      },
+      numeric(1)
+    )
+    summed <- measured[share >= settings$total_row_min_share]
+    if (!all(settings$total_required %in% summed)) {
+      next
+    }
+    total <- row_sum(summed, index)
+    over <- !is.na(total) & total > limit
+    total[over] <- limit
+    out$total_screen[index] <- total
+    out$total_capped[index] <- over
+    out$total_source[index] <- "summed"
+    out$total_rows[index] <- paste(summed, collapse = "|")
+    for (variable in summed) {
+      rest <- pmin(row_sum(setdiff(summed, variable), index), limit)
+      out[[other_column(variable)]][index] <- rest
     }
   }
   out

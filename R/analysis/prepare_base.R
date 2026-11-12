@@ -30,6 +30,16 @@ prepare_base <- function(rows, info, carry, settings = analysis_settings()) {
   reason[!is.na(age) & age >= settings$age_limit] <- "age_over_limit"
   trial <- is_trial_arm(arm)
   is_baseline <- if (has_baseline) wave %in% baseline else rep(FALSE, n)
+  if (has_baseline && !any(is_baseline)) {
+    stop(
+      "Dataset ",
+      dataset_id,
+      ": baseline_wave '",
+      baseline,
+      "' in analysis/datasets.csv is not a wave in the data.",
+      call. = FALSE
+    )
+  }
   if (any(trial)) {
     documented <- !is.na(info$notes) && nzchar(info$notes)
     if (!has_baseline && !documented) {
@@ -64,6 +74,11 @@ prepare_base <- function(rows, info, carry, settings = analysis_settings()) {
       values[values %in% "Unknown"] <- NA_character_
       base[[column]] <- values
     }
+  }
+  if (all(c("fam_siblings_any", "fam_siblings_n") %in% names(base))) {
+    # The guide leaves this row to the analysis where a count is recorded.
+    derived <- ifelse(as.numeric(base$fam_siblings_n) > 0, "TRUE", "FALSE")
+    base$fam_siblings_any <- dplyr::coalesce(base$fam_siblings_any, derived)
   }
   base$dataset_id <- rep(dataset_id, nrow(base))
   base$wave <- wave[keep]

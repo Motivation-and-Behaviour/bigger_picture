@@ -1,3 +1,2 @@
 variable_name,wave,action,value,reason
-cog_vocab_bas_naming,,keep_out_of_bounds,,"The study releases the BAS II ability score, not a T-score, so its values lie outside the row's 20-80 bounds by design; it is standardised within the dataset."
 cog_earlynumber_bas_enc,,keep_out_of_bounds,,"The study releases the BAS II ability score, not a T-score, so its values lie outside the row's 20-80 bounds by design; it is standardised within the dataset."

@@ -252,7 +252,14 @@ bp_exposures_columns <- function() {
 }
 
 bp_invariants_columns <- function() {
-  c("variable_name", "notes")
+  c("variable_name", "rule", "notes")
+}
+
+# How the harmonisation guide treats a row within a participant: one value
+# always, carried from the earliest observed value, or carried except to
+# waves before onset.
+bp_invariant_rules <- function() {
+  c("constant", "carried", "onset")
 }
 
 bp_analysis_datasets_columns <- function() {

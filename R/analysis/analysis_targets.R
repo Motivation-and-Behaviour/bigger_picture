@@ -12,6 +12,11 @@ analysis_targets <- function(harmonise_plan) {
   shared <- list(
     targets::tar_target_raw("settings", quote(analysis_settings())),
     targets::tar_target_raw(
+      "dataset_spec_files",
+      quote(list_dataset_spec_files()),
+      format = "file"
+    ),
+    targets::tar_target_raw(
       "analysis_datasets_file",
       quote(bp_analysis_datasets_path()),
       format = "file"
@@ -50,6 +55,11 @@ analysis_targets <- function(harmonise_plan) {
       paste0("harmonisation_config_", harmonise_plan$dataset_key)
     )
   )
+  # Three targets per dataset read row-level data: the summaries, the
+  # prepared tables and their review. Keeping it to three bounds how many
+  # copies of one dataset are in memory at once. They are transient, with a
+  # garbage collection first, so a worker does not keep each dataset it has
+  # loaded for the rest of the run.
   per_dataset <- tarchetypes::tar_map(
     values = values,
     names = "dataset_key",
@@ -58,28 +68,17 @@ analysis_targets <- function(harmonise_plan) {
       quote(analysis_dataset_info(analysis_datasets, dataset_id))
     ),
     targets::tar_target_raw(
-      "manifest",
-      quote(manifest_dataset(harmonised, dataset_info))
-    ),
-    targets::tar_target_raw(
-      "grain",
-      quote(summarise_grain(harmonised, dataset_info))
-    ),
-    targets::tar_target_raw(
-      "numeric_summary",
-      quote(summarise_numeric(harmonised, dataset_info, dataschema))
-    ),
-    targets::tar_target_raw(
-      "level_summary",
-      quote(summarise_levels(harmonised, dataset_info, dataschema))
-    ),
-    targets::tar_target_raw(
-      "unit_summary",
-      quote(summarise_units(harmonised, dataset_info))
-    ),
-    targets::tar_target_raw(
-      "invariant_check",
-      quote(check_invariants(harmonised, dataset_info, invariants))
+      "dataset_summary",
+      quote(summarise_dataset(
+        harmonised,
+        dataset_info,
+        dataschema,
+        invariants,
+        exposure_registry,
+        settings
+      )),
+      memory = "transient",
+      garbage_collection = TRUE
     ),
     targets::tar_target_raw(
       "exceptions_file",
@@ -105,63 +104,49 @@ analysis_targets <- function(harmonise_plan) {
         dataschema,
         exceptions,
         settings
-      ))
+      )),
+      memory = "transient",
+      garbage_collection = TRUE
     ),
     targets::tar_target_raw(
-      "prepared_summary",
-      quote(summarise_prepared(prepared))
-    ),
-    targets::tar_target_raw(
-      "prepared_flags",
-      quote(flag_prepared_dataset(
+      "prepared_review",
+      quote(review_prepared(
         prepared,
         harmonisation_config$variables,
-        outcome_registry
-      ))
-    ),
-    # `[[`, not `$`: tar_map() renames every symbol that matches a mapped
-    # target, and `prepared$row_audit` would become `$row_audit_<key>`.
-    targets::tar_target_raw(
-      "row_audit",
-      quote(prepared[["row_audit"]])
-    ),
-    targets::tar_target_raw(
-      "rows_dropped",
-      quote(prepared[["dropped"]])
+        outcome_registry,
+        settings
+      )),
+      memory = "transient",
+      garbage_collection = TRUE
     )
   )
 
-  bind <- function(name, from) {
+  bind <- function(name, from, part) {
     tarchetypes::tar_combine_raw(
       name,
       per_dataset[[from]],
-      command = quote(dplyr::bind_rows(!!!.x))
+      command = bquote(bind_part(list(!!!.x), .(part)))
     )
   }
+  summaries <- function(name, part) bind(name, "dataset_summary", part)
+  reviews <- function(name, part) bind(name, "prepared_review", part)
   combined <- list(
     tarchetypes::tar_combine_raw(
       "data_manifest",
-      per_dataset[["manifest"]],
-      command = quote(combine_data_manifest(!!!.x))
+      per_dataset[["dataset_summary"]],
+      command = quote(combine_data_manifest(bind_part(list(!!!.x), "manifest")))
     ),
-    bind("grain_all", "grain"),
-    bind("numeric_summary_all", "numeric_summary"),
-    bind("level_summary_all", "level_summary"),
-    bind("unit_summary_all", "unit_summary"),
-    targets::tar_target_raw(
-      "coverage",
-      quote(summarise_coverage(
-        numeric_summary_all,
-        level_summary_all,
-        grain_all,
-        dataschema
-      ))
-    ),
-    bind("invariant_check_all", "invariant_check"),
-    bind("analysis_row_audit", "row_audit"),
-    bind("rows_dropped_all", "rows_dropped"),
-    bind("prepared_summary_all", "prepared_summary"),
-    bind("prepared_flags_all", "prepared_flags"),
+    summaries("grain_all", "grain"),
+    summaries("numeric_summary_all", "numeric_summary"),
+    summaries("level_summary_all", "level_summary"),
+    summaries("unit_summary_all", "unit_summary"),
+    summaries("unit_counts_all", "unit_counts"),
+    summaries("invariant_check_all", "invariant_check"),
+    summaries("day_check_all", "day_check"),
+    reviews("analysis_row_audit", "row_audit"),
+    reviews("rows_dropped_all", "dropped"),
+    reviews("prepared_summary_all", "summary"),
+    reviews("prepared_flags_all", "flags"),
     targets::tar_target_raw(
       "derived_codebook",
       quote(derived_variable_codebook(derivation_registry, settings))
@@ -173,22 +158,29 @@ analysis_targets <- function(harmonise_plan) {
         level_summary_all,
         grain_all,
         invariant_check_all,
+        day_check_all,
+        invariants,
         dataschema,
         exposure_registry
       ))
     ),
     targets::tar_target_raw(
-      "missingness",
-      quote(summarise_missingness(
+      "coverage",
+      quote(summarise_coverage(
         numeric_summary_all,
         level_summary_all,
-        grain_all
+        grain_all,
+        dataschema
       ))
+    ),
+    targets::tar_target_raw(
+      "missingness",
+      quote(summarise_missingness(unit_counts_all, unit_summary_all))
     ),
     targets::tar_target_raw(
       "dataset_flow",
       bquote(summarise_dataset_flow(
-        read_dataset_specs(),
+        dataset_spec_files,
         .(as.character(harmonise_plan$dataset_id)),
         data_manifest
       ))

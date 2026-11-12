@@ -2,9 +2,10 @@
 #'
 #' Feeds coverage, the demographics tables and the check against
 #' `allowed_values`. Screen-time variables are counted for every measure
-#' block and other variables on the primary rows only. A column with more
-#' distinct values than `max_levels` is an identifier: only its number of
-#' non-missing values is kept, under the level `(many values)`.
+#' block and other variables on the primary rows only. For an identifier
+#' column, and any column with more distinct values than `max_levels`, only
+#' the number of non-missing values is kept, under the level `(many values)`,
+#' so no participant, family or cluster ID reaches a summary.
 #'
 #' @param harmonised A dataset's harmonised tibble.
 #' @param info The dataset's row from `analysis_dataset_info()`.
@@ -45,7 +46,8 @@ summarise_levels <- function(
       st_measure_id = measure[keep],
       level = values[keep]
     )
-    if (data.table::uniqueN(dt$level) > max_levels) {
+    identifier <- variable %in% bp_identifier_columns()
+    if (identifier || data.table::uniqueN(dt$level) > max_levels) {
       dt$level <- "(many values)"
     }
     out <- dt[, list(n = .N), by = c("wave", "st_measure_id", "level")]
@@ -59,4 +61,10 @@ summarise_levels <- function(
   }
   out$dataset_id <- as.character(info$dataset_id)
   dplyr::relocate(out, "dataset_id", "variable_name")
+}
+
+# Columns that identify a person, family or sampling unit: their values are
+# never tabulated, however few a dataset has.
+bp_identifier_columns <- function() {
+  c("participant_id", "family_id", "survey_strata", "survey_cluster")
 }

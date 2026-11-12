@@ -1,10 +1,11 @@
 #' Flag what needs a look in a prepared dataset
 #'
-#' Only what a person should check (ANALYSIS_PLAN.md, Step 4); each flag ends
-#' in an analysis exception, a harmonisation fix or no action.
+#' Only what a person should check (ANALYSIS_PLAN.md, Step 4). A `review`
+#' flag ends in an analysis exception, a harmonisation fix or no action; an
+#' `info` flag is context for whoever signs the dataset off.
 #'
-#' - `derive_at_analysis`: a mapping note says a row is derived at analysis,
-#'   but no rule produced it.
+#' - `derive_at_analysis`: a mapping note begins "Derive at analysis", but
+#'   no rule produced the row.
 #' - `repeat_across_nodes`: two outcome rows hold the same score but sit in
 #'   different nodes, or in none, so neither was dropped.
 #' - `near_identical`: two outcome rows correlate above 0.98 within the
@@ -13,39 +14,59 @@
 #'   value within a wave, so one score row may hold two instruments.
 #' - `out_of_bounds`: more than 5% of a row's values fell outside the
 #'   schema's bounds and were dropped, which suggests a different score form.
-#' - `total_incomplete`: more than half the rows that have the required
-#'   activity rows lose their summed total to another activity row's
-#'   missingness.
+#' - `total_incomplete`: a unit with a summed total loses more than a quarter
+#'   of the rows that have watching and gaming.
+#' - `weights_partial`: a unit has survey weights on some rows only, so a
+#'   weighted model would drop the rest.
+#' - `wave_order_tie`: two waves share a median collection year, so their
+#'   order rests on median age.
 #' - `rows_dropped`: more than a fifth of the dataset's rows were dropped.
+#' - `partial_rows` (info): outcome rows mapped as partial or proximate that
+#'   are used.
+#' - `small_units` (info): units below the minimum size, which no model fits.
 #'
 #' @param prepared Output of `prepare_analysis_data()`.
 #' @param variables The dataset's `variables.csv` mapping table.
 #' @param outcome_registry The outcome registry.
-#' @return A tibble of `dataset_id`, `flag`, `variable_name` and `detail`,
-#'   with no rows when nothing needs a look; NULL when not included.
-flag_prepared_dataset <- function(prepared, variables, outcome_registry) {
+#' @param settings From `analysis_settings()`.
+#' @return A tibble of `dataset_id`, `level`, `flag`, `variable_name` and
+#'   `detail`, with no rows when nothing needs a look; NULL when not included.
+flag_prepared_dataset <- function(
+  prepared,
+  variables,
+  outcome_registry,
+  settings = analysis_settings()
+) {
   if (is.null(prepared)) {
     return(NULL)
   }
   flags <- list()
-  flag <- function(name, variable, detail) {
-    tibble::tibble(flag = name, variable_name = variable, detail = detail)
+  flag <- function(name, variable, detail, level = "review") {
+    tibble::tibble(
+      level = level,
+      flag = name,
+      variable_name = variable,
+      detail = detail
+    )
   }
   audit <- prepared$row_audit
   registry <- outcome_registry$rows
   summary <- summarise_prepared(prepared)
 
+  base <- prepared$base
+  exposures <- prepared$exposures
   noted <- variables$target_variable[
-    grepl("at analysis", variables$notes, ignore.case = TRUE)
+    grepl("^derive at analysis", variables$notes, ignore.case = TRUE)
   ]
-  noted <- intersect(
-    noted,
-    registry$variable_name[registry$role %in% "outcome"]
-  )
-  # A row the audit accounts for (used, derived or dropped as a repeat) needs
-  # no flag.
-  for (variable in setdiff(noted, audit$variable_name)) {
-    flags[[length(flags) + 1]] <- flag("derive_at_analysis", variable, "noted in the mapping; no rule ran")
+  # A row the audit accounts for needs no flag, nor does one the base table
+  # derives, nor one with no rule yet for any dataset.
+  accounted <- c(audit$variable_name, "fam_siblings_any", bp_underived_rows())
+  for (variable in setdiff(noted, accounted)) {
+    flags[[length(flags) + 1]] <- flag(
+      "derive_at_analysis",
+      variable,
+      "noted in the mapping; no rule ran"
+    )
   }
 
   across <- prepared$repeats[!prepared$repeats$drop, ]
@@ -72,7 +93,11 @@ flag_prepared_dataset <- function(prepared, variables, outcome_registry) {
       a <- colnames(correlation)[pairs[i, 1]]
       b <- colnames(correlation)[pairs[i, 2]]
       both <- sum(!is.na(z[[a]]) & !is.na(z[[b]]))
-      if (both >= 30 && !is_part(a, b) && !is_part(b, a)) {
+      reported <- any(
+        (across$specific == a & across$keep == b) |
+          (across$specific == b & across$keep == a)
+      )
+      if (both >= 30 && !reported && !is_part(a, b) && !is_part(b, a)) {
         flags[[length(flags) + 1]] <- flag(
           "near_identical",
           a,
@@ -82,7 +107,6 @@ flag_prepared_dataset <- function(prepared, variables, outcome_registry) {
     }
   }
 
-  base <- prepared$base
   measure_rows <- grep("_measure$", names(base), value = TRUE)
   # These two are filled per row by design, so they vary within a wave.
   measure_rows <- setdiff(
@@ -122,14 +146,110 @@ flag_prepared_dataset <- function(prepared, variables, outcome_registry) {
     }
   }
 
-  lost <- summary$total_lost_to_incomplete
-  if (lost > summary$total_summed) {
-    flags[[length(flags) + 1]] <- flag(
-      "total_incomplete",
-      "total_screen",
-      paste0(lost, " rows have watching and gaming but no summed total")
+  required <- intersect(settings$total_required, names(exposures))
+  if (length(required) == length(settings$total_required) && nrow(base) > 0) {
+    could <- exposures$total_source %in% "summed" &
+      stats::complete.cases(exposures[required])
+    by_unit <- dplyr::summarise(
+      tibble::tibble(
+        unit = base$unit,
+        could = could,
+        lost = could & is.na(exposures$total_screen)
+      ),
+      could = sum(.data$could),
+      lost = sum(.data$lost),
+      .by = "unit"
     )
+    hit <- by_unit[
+      by_unit$could >= settings$min_unit_rows &
+        by_unit$lost > 0.25 * by_unit$could,
+    ]
+    if (nrow(hit) > 0) {
+      flags[[length(flags) + 1]] <- flag(
+        "total_incomplete",
+        "total_screen",
+        paste0(
+          nrow(hit),
+          " units lose ",
+          sum(hit$lost),
+          " of ",
+          sum(hit$could),
+          " rows that have watching and gaming"
+        )
+      )
+    }
   }
+
+  if (nrow(base) > 0) {
+    weights <- dplyr::summarise(
+      tibble::tibble(unit = base$unit, has = !is.na(base$survey_weight_norm)),
+      with = sum(.data$has),
+      rows = dplyr::n(),
+      .by = "unit"
+    )
+    partly <- weights[weights$with > 0 & weights$with < weights$rows, ]
+    if (nrow(partly) > 0) {
+      flags[[length(flags) + 1]] <- flag(
+        "weights_partial",
+        "survey_weight",
+        paste0(
+          sum(partly$rows - partly$with),
+          " rows without a weight in ",
+          nrow(partly),
+          " units that have weights"
+        )
+      )
+    }
+
+    year <- if ("data_year" %in% names(base)) base$data_year else NA_real_
+    waves <- dplyr::summarise(
+      tibble::tibble(wave = base$wave, year = as.numeric(year)),
+      year = bp_stat(.data$year, stats::median),
+      .by = "wave"
+    )
+    tied <- waves$year[duplicated(waves$year) & !is.na(waves$year)]
+    if (length(tied) > 0) {
+      flags[[length(flags) + 1]] <- flag(
+        "wave_order_tie",
+        "wave",
+        paste0(
+          "waves ",
+          paste(waves$wave[waves$year %in% tied], collapse = ", "),
+          " share a median collection year"
+        )
+      )
+    }
+
+    sizes <- table(base$unit)
+    small <- sum(sizes < settings$min_unit_rows)
+    if (small > 0) {
+      flags[[length(flags) + 1]] <- flag(
+        "small_units",
+        NA_character_,
+        paste0(small, " of ", length(sizes), " units have fewer than ", settings$min_unit_rows, " rows"),
+        level = "info"
+      )
+    }
+  }
+
+  used <- unique(audit$variable_name[
+    audit$kind %in% "outcome" & audit$status %in% c("used", "derived")
+  ])
+  if ("status" %in% names(variables)) {
+    weaker <- variables$target_variable[
+      variables$status %in% c("partial", "proximate")
+    ]
+    weaker <- intersect(weaker, used)
+    if (length(weaker) > 0) {
+      flags[[length(flags) + 1]] <- flag(
+        "partial_rows",
+        NA_character_,
+        paste0(length(weaker), " of ", length(used), " outcome rows used are mapped partial or proximate"),
+        level = "info"
+      )
+    }
+  }
+
   dropped <- sum(prepared$dropped$n)
   if (dropped > 0.2 * (dropped + summary$rows_kept)) {
     flags[[length(flags) + 1]] <- flag(
@@ -141,6 +261,7 @@ flag_prepared_dataset <- function(prepared, variables, outcome_registry) {
 
   out <- dplyr::bind_rows(
     tibble::tibble(
+      level = character(),
       flag = character(),
       variable_name = character(),
       detail = character()
@@ -149,4 +270,10 @@ flag_prepared_dataset <- function(prepared, variables, outcome_registry) {
   )
   out$dataset_id <- rep(summary$dataset_id, nrow(out))
   dplyr::relocate(out, "dataset_id")
+}
+
+# Rows the guide leaves to the analysis that have no derivation rule yet, for
+# any dataset: reported once, not flagged per dataset.
+bp_underived_rows <- function() {
+  "hlth_bmi_z"
 }

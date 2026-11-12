@@ -121,6 +121,7 @@ by_size |>
 
 A unit is one dataset in one wave in one country.
 Rows aged `r settings$age_limit` or over, and rows with no age, are not eligible.
+A row whose country is not recorded falls in a unit of its own within its wave.
 
 ```{r}
 #| label: units
@@ -130,7 +131,7 @@ tibble::tibble(
     "Units",
     "Datasets with more than one unit",
     paste0("Units with fewer than ", settings$min_unit_rows, " eligible rows"),
-    "Share of rows aged 19 or over or with no age",
+    paste0("Share of rows aged ", settings$age_limit, " or over or with no age"),
     "Share of rows with no age"
   ),
   Value = c(
@@ -147,7 +148,7 @@ tibble::tibble(
 ```{r}
 #| label: fig-unit-size
 #| fig-height: 3
-#| fig-cap: "Eligible rows per unit (log scale). The line marks the provisional minimum unit size."
+#| fig-cap: "Eligible rows per unit (log scale), for units with at least one eligible row. The line marks the provisional minimum unit size."
 ggplot(filter(units, age_eligible > 0), aes(age_eligible)) +
   geom_histogram(bins = 50) +
   geom_vline(xintercept = settings$min_unit_rows, linetype = 2) +
@@ -160,7 +161,7 @@ ggplot(filter(units, age_eligible > 0), aes(age_eligible)) +
 ```{r}
 #| label: fig-age
 #| fig-height: 11
-#| fig-cap: "Age range of each dataset: full range (thin line) and the middle of its units' median ages (point)."
+#| fig-cap: "Age range of each dataset: full range (line) and the mean of its units' median ages, weighted by rows (point)."
 age <- units |>
   filter(!is.na(age_min)) |>
   summarise(
@@ -204,7 +205,10 @@ level_summary |>
   knitr::kable(align = "llrrr")
 ```
 
-Countries: `r n_distinct(na.omit(units$country))`, with `r sum(is.na(units$country))` units that record no country.
+Shares in the table above are of rows where the variable is recorded, `Unknown` included.
+
+Countries: `r n_distinct(na.omit(units$country))`.
+`r sum(is.na(units$country))` units in `r n_distinct(units$dataset_id[is.na(units$country)])` datasets record no country, or record it as `Unknown`.
 
 ```{r}
 #| label: countries
@@ -219,6 +223,8 @@ units |>
 ## Coverage
 
 A value counts when it is neither missing nor `Unknown`.
+The share is of all of a dataset's observations, across every wave, so a variable asked at one wave in ten shows about 10%.
+Only datasets with a value appear; a blank cell means none.
 
 ```{r}
 #| label: coverage-by-domain
@@ -248,10 +254,6 @@ coverage_plot <- function(domain_name) {
       axis.text.y = element_text(size = 5),
       panel.grid = element_blank()
     )
-}
-plot_height <- function(domain_name) {
-  n <- n_distinct(coverage$variable_name[coverage$domain == domain_name & coverage$n_value > 0])
-  1.5 + 0.11 * n
 }
 ```
 
@@ -318,10 +320,27 @@ coverage_plot("demographics")
 coverage_plot("family")
 ```
 
+```{r}
+#| label: fig-coverage-provenance
+#| fig-width: 12
+#| fig-height: 3.5
+coverage_plot("provenance")
+```
+
+```{r}
+#| label: coverage-other-measures
+coverage |>
+  filter(n_value == 0, n_value_other_measures > 0) |>
+  arrange(as.numeric(dataset_id), variable_name) |>
+  transmute(Dataset = dataset_id, Variable = variable_name, `Values on extra measure blocks` = fmt(n_value_other_measures)) |>
+  knitr::kable(align = "llr", caption = "Screen-time variables a dataset holds only on an extra measure block (a diary or a second informant), which the heatmaps above do not show.")
+```
+
 ## Missingness
 
-Missing and `Unknown` cells are sporadic when their wave has real values on that variable, and systematic when the wave has none.
+Missing and `Unknown` cells are sporadic when their unit (wave and country) has real values on that variable, and systematic when the unit has none.
 Only sporadic missingness is a candidate for imputation.
+Counted on all observations, before the age and trial rules.
 
 ```{r}
 #| label: missingness
@@ -341,7 +360,7 @@ missingness |>
     `Cells in datasets that measure the variable` = fmt(cells),
     `With a value` = pct(value / cells),
     `Sporadic missing` = pct(sporadic / cells),
-    `Systematic missing (wave never measured it)` = pct(systematic / cells)
+    `Systematic missing (unit never measured it)` = pct(systematic / cells)
   ) |>
   knitr::kable(align = "lrrrr")
 ```
@@ -349,12 +368,12 @@ missingness |>
 ```{r}
 #| label: unknown
 coverage |>
-  filter(n_unknown > 0) |>
-  summarise(unknown = sum(n_unknown), value = sum(n_value), datasets = n(), .by = variable_name) |>
+  summarise(unknown = sum(n_unknown), value = sum(n_value), datasets = sum(n_unknown > 0), .by = variable_name) |>
+  filter(unknown > 0) |>
   mutate(share = unknown / (unknown + value)) |>
   arrange(desc(unknown)) |>
   head(20) |>
-  transmute(Variable = variable_name, `Unknown cells` = fmt(unknown), `Share of recorded cells` = pct(share), Datasets = datasets) |>
+  transmute(Variable = variable_name, `Unknown cells` = fmt(unknown), `Share of recorded cells` = pct(share), `Datasets with any` = datasets) |>
   knitr::kable(align = "lrrr", caption = "The 20 variables with most `Unknown` cells.")
 ```
 
@@ -386,8 +405,9 @@ Rows with a weight of zero: `r fmt(sum(design$zero_weight))`.
 
 ```{r}
 #| label: weight-scale
+all_zero <- units |> filter(weight_rows > 0, weight_mean == 0)
 units |>
-  filter(weight_rows > 0) |>
+  filter(weight_rows > 0, weight_mean > 0) |>
   summarise(
     units = n(),
     smallest_mean = min(weight_mean),
@@ -402,14 +422,17 @@ units |>
   knitr::kable(align = "lrr", caption = "Datasets whose mean weight differs most between units, which is why weights are normalised within unit.")
 ```
 
+Units where every weight is zero: `r nrow(all_zero)`, holding `r fmt(sum(all_zero$rows))` rows.
+
 ## What the data support
 
-Datasets that hold both an exposure and at least one row of an outcome, anywhere in the dataset.
+Datasets that hold both an exposure and at least one row of an outcome, anywhere in the dataset, on any screen-time measure.
 This is an upper bound: Step 7 counts rows where both are present for the same participant and wave.
+The `total` column counts dedicated total items only; the preparation report covers the derived total.
 
 ```{r}
 #| label: support
-has_value <- coverage |> filter(n_value > 0) |> select(dataset_id, variable_name)
+has_value <- coverage |> filter(n_value > 0 | n_value_other_measures > 0) |> select(dataset_id, variable_name)
 exposure_sets <- exposures |>
   filter(headline %in% TRUE) |>
   inner_join(has_value, by = "variable_name") |>

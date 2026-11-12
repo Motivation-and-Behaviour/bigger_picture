@@ -90,7 +90,7 @@ tibble::tibble(
     "Observations with a dedicated total",
     "Observations with a summed total",
     "Summed totals capped at 24 hours",
-    "Observations with watching and gaming but no sum, because another activity row is missing"
+    "Observations with watching and gaming but no sum, because another summed row is missing"
   ),
   Value = c(
     sum(summary$total_dedicated > 0),
@@ -109,12 +109,12 @@ tibble::tibble(
 ```{r}
 #| label: fig-total
 #| fig-height: 3.5
-#| fig-cap: "Median summed total by the number of activity rows a dataset sums. Each point is a dataset."
+#| fig-cap: "Median summed total by the number of content-class rows a dataset measures (the most in any unit). Each point is a dataset."
 summary |>
   filter(total_summed > 0) |>
   ggplot(aes(factor(total_coverage_max), total_median_summed)) +
   geom_jitter(width = 0.15, height = 0, alpha = 0.6) +
-  labs(x = "Activity rows summed (most in any wave)", y = "Median total, hours a day")
+  labs(x = "Content-class rows measured", y = "Median total, hours a day")
 ```
 
 ```{r}
@@ -126,7 +126,7 @@ summary |>
     Dataset = dataset_id,
     Dedicated = fmt(total_dedicated),
     Summed = fmt(total_summed),
-    `Rows summed` = total_coverage_max,
+    `Content rows (most in a unit)` = total_coverage_max,
     Capped = fmt(total_capped),
     `Lost to incomplete rows` = fmt(total_lost_to_incomplete),
     `Median, dedicated` = signif(total_median_dedicated, 3),
@@ -207,24 +207,31 @@ Each flag ends in an analysis exception, a harmonisation fix or no action.
 #| label: flag-summary
 flag_labels <- c(
   derive_at_analysis = "Mapping note says derive at analysis, but no rule ran",
+  repeat_across_nodes = "Two outcome rows in different nodes hold the same score",
   near_identical = "Two outcome rows correlate above 0.98",
+  weights_partial = "Survey weights on some rows of a unit only",
+  wave_order_tie = "Two waves share a median collection year",
+  partial_rows = "Outcome rows mapped partial or proximate (info)",
+  small_units = "Units below the minimum size (info)",
   measure_changes = "More than one instrument within a wave",
   out_of_bounds = "More than 5% of a row's values outside the bounds",
-  total_incomplete = "Summed total lost to incomplete activity rows",
+  total_incomplete = "A unit loses more than a quarter of its summed totals",
   rows_dropped = "More than a fifth of observations dropped"
 )
 flags |>
-  summarise(flags = n(), datasets = n_distinct(dataset_id), .by = flag) |>
-  arrange(desc(flags)) |>
-  transmute(Flag = coalesce(flag_labels[flag], flag), Flags = flags, Datasets = datasets) |>
-  knitr::kable(align = "lrr")
+  summarise(flags = n(), datasets = n_distinct(dataset_id), .by = c(level, flag)) |>
+  arrange(desc(level), desc(flags)) |>
+  transmute(Level = level, Flag = coalesce(flag_labels[flag], flag), Flags = flags, Datasets = datasets) |>
+  knitr::kable(align = "llrr")
 ```
 
-`r nrow(manifest) - n_distinct(flags$dataset_id)` of `r nrow(manifest)` datasets have no flag.
+`r nrow(manifest) - n_distinct(flags$dataset_id[flags$level == "review"])` of `r nrow(manifest)` datasets have no flag to review.
+BMI z-scores are left to the analysis by the harmonisation guide and have no derivation rule yet, for any dataset.
 
 ```{r}
 #| label: flag-list
 flags |>
+  filter(level == "review") |>
   by_id() |>
   transmute(Dataset = dataset_id, Flag = flag, Row = coalesce(variable_name, ""), Detail = detail) |>
   knitr::kable()
@@ -236,7 +243,7 @@ flags |>
 #| label: per-dataset
 summary |>
   by_id() |>
-  left_join(count(flags, dataset_id, name = "flags"), by = "dataset_id") |>
+  left_join(count(filter(flags, level == "review"), dataset_id, name = "flags"), by = "dataset_id") |>
   transmute(
     Dataset = dataset_id,
     Kept = fmt(rows_kept),
@@ -248,10 +255,11 @@ summary |>
     Repeats = outcomes_dropped_repeat,
     Parts = outcomes_dropped_part,
     Archive = outcomes_archive,
+    `Small units` = units_small,
     `Extra measure rows` = fmt(measure_rows),
     Flags = coalesce(flags, 0L)
   ) |>
-  knitr::kable(align = "lrrrrrrrrrrr")
+  knitr::kable(align = "lrrrrrrrrrrrr")
 ```
 
 ## Derived variables

@@ -6,8 +6,10 @@
 #'
 #' @param harmonised A dataset's harmonised tibble.
 #' @param info The dataset's row from `analysis_dataset_info()`.
-#' @return A tibble with one row per wave and country, or NULL.
-summarise_units <- function(harmonised, info) {
+#' @param settings From `analysis_settings()`.
+#' @return A tibble with one row per wave and country, or NULL. A country of
+#'   `Unknown` is no country.
+summarise_units <- function(harmonised, info, settings = analysis_settings()) {
   rows <- included_rows(harmonised, info, primary_only = TRUE)
   if (is.null(rows)) {
     return(NULL)
@@ -18,7 +20,7 @@ summarise_units <- function(harmonised, info) {
   age <- as.numeric(column("age_years"))
   dt <- data.table::data.table(
     wave = as.character(rows$wave),
-    country = as.character(column("country")),
+    country = unit_country(rows),
     participant_id = as.character(rows$participant_id),
     age = age,
     year = as.numeric(column("data_year")),
@@ -28,7 +30,7 @@ summarise_units <- function(harmonised, info) {
     family = as.character(column("family_id")),
     arm = as.character(column("rct_arm"))
   )
-  limit <- analysis_settings()$age_limit
+  limit <- settings$age_limit
   units <- dt[,
     list(
       rows = .N,
@@ -62,7 +64,7 @@ summarise_units <- function(harmonised, info) {
 # dataset labels them instead.
 is_trial_arm <- function(arm) {
   arm <- as.character(arm)
-  !is.na(arm) & arm != "Not a randomised trial"
+  !is.na(arm) & !arm %in% c("Not a randomised trial", "Unknown")
 }
 
 # A summary of the non-missing values, NA when there are none.

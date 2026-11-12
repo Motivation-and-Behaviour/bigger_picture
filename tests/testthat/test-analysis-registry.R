@@ -29,6 +29,7 @@ test_that("invariants.csv names dataschema rows, once each", {
     bp_invariants_columns()
   )
   expect_false(anyDuplicated(invariants$variable_name) > 0)
+  expect_true(all(invariants$rule %in% bp_invariant_rules()))
   expect_true(all(invariants$variable_name %in% repo_schema()$variable_name))
 })
 

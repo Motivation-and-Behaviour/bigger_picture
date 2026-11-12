@@ -2,24 +2,33 @@
 #'
 #' Never a pipeline failure: the result is a tidy table to review
 #' (ANALYSIS_PLAN.md, Step 3). Every check works from the per-dataset
-#' summaries, so no row of data is read here.
+#' summaries, so no row of data is read here. A `review` finding needs a
+#' look; an `advisory` finding is context.
 #'
 #' Checks, in `check`:
 #'
 #' - `below_min`, `above_max`: numeric values outside the schema's bounds.
 #'   The guide keeps these for the analysis to screen, so they are counted,
-#'   not expected to be zero.
+#'   not expected to be zero. Ages over the bound are advisory, because the
+#'   age rule of the preparation step removes them.
 #' - `outside_allowed_values`: a level the schema does not list. Advisory
 #'   until `allowed_values` is maintained (DR-0006).
 #' - `screen_constant`, `screen_all_zero`: a screen-time variable with one
-#'   distinct value, or only zeros, across a wave.
-#' - `screen_scale`: a screen-time variable in hours whose 75th percentile is
-#'   more than 4 times, or less than a twentieth of, the typical value across
-#'   datasets, which is how a minutes-for-hours error shows.
-#' - `usual_day_outside_week`: a usual-day mean well outside the range of the
-#'   weekday and weekend means of the same exposure.
+#'   distinct value, or only zeros, across a wave; `screen_nearly_all_zero`
+#'   (advisory) where 99% or more are zero.
+#' - `screen_scale`: a screen-time variable in hours whose upper quartile in
+#'   a dataset is more than 4 times, or less than a twentieth of, the median
+#'   dataset's, which is how a minutes-for-hours error shows. On the primary
+#'   measure, one value per dataset, so a many-wave dataset does not set its
+#'   own reference.
+#' - `usual_day_mismatch`: usual-day values that differ from
+#'   (5 x weekday + 2 x weekend) / 7 on rows that have all three.
 #' - `invariant_varies`: participants with more than one value on a row the
-#'   guide carries within participant.
+#'   guide holds constant.
+#' - `carry_gap`: participants with a value at some waves and none at others
+#'   on a row the guide carries.
+#' - `carried_value_changes` (advisory): participants who gave different
+#'   answers at different waves on a carried row, which the guide keeps.
 #' - `duplicate_key`: more than one row for a participant, wave and measure.
 #' - `missing_participant_id`: rows with no participant ID.
 #'
@@ -27,6 +36,8 @@
 #' @param level_summary Combined output of `summarise_levels()`.
 #' @param grain Combined output of `summarise_grain()`.
 #' @param invariant_checks Combined output of `check_invariants()`.
+#' @param day_checks Combined output of `check_day_consistency()`.
+#' @param invariants The table from `invariants.csv`.
 #' @param dataschema The dataschema.
 #' @param exposures The exposure registry.
 #' @return A tibble: `dataset_id`, `variable_name`, `wave`, `st_measure_id`,
@@ -37,6 +48,8 @@ check_analysis_data <- function(
   level_summary,
   grain,
   invariant_checks,
+  day_checks,
+  invariants,
   dataschema,
   exposures
 ) {
@@ -79,7 +92,7 @@ check_analysis_data <- function(
     finding(
       high,
       "above_max",
-      "review",
+      ifelse(high$variable_name == "age_years", "advisory", "review"),
       high$n_above_max,
       high$n,
       paste0("maximum observed ", signif(high$max, 4))
@@ -110,6 +123,7 @@ check_analysis_data <- function(
   st <- num[num$variable_name %in% hours & num$n >= 30, ]
   constant <- st[st$n_distinct == 1 & st$n_zero < st$n, ]
   all_zero <- st[st$n_zero == st$n, ]
+  nearly <- st[st$n_zero < st$n & st$n_zero >= 0.99 * st$n, ]
   screen <- list(
     finding(
       constant,
@@ -119,18 +133,32 @@ check_analysis_data <- function(
       constant$n,
       paste0("every value is ", signif(constant$median, 4))
     ),
-    finding(all_zero, "screen_all_zero", "review", all_zero$n, all_zero$n, "")
+    finding(all_zero, "screen_all_zero", "review", all_zero$n, all_zero$n, ""),
+    finding(
+      nearly,
+      "screen_nearly_all_zero",
+      "advisory",
+      nearly$n_zero,
+      nearly$n,
+      paste0(nearly$n - nearly$n_zero, " values above zero")
+    )
   )
 
-  # Location against other datasets, on the 75th percentile so zero-heavy
-  # variables still have something to compare.
+  # Location against other datasets: one upper quartile per dataset, on the
+  # primary measure, compared with the median dataset.
+  per_dataset <- dplyr::summarise(
+    st[st$st_measure_id %in% "primary" & st$p75 > 0, ],
+    p75 = stats::median(.data$p75),
+    n = sum(.data$n),
+    .by = c("dataset_id", "variable_name")
+  )
   typical <- dplyr::summarise(
-    st[st$p75 > 0, ],
+    per_dataset,
     across_datasets = stats::median(.data$p75),
-    datasets = dplyr::n_distinct(.data$dataset_id),
+    datasets = dplyr::n(),
     .by = "variable_name"
   )
-  scale <- dplyr::inner_join(st[st$p75 > 0, ], typical, by = "variable_name")
+  scale <- dplyr::inner_join(per_dataset, typical, by = "variable_name")
   scale <- scale[scale$datasets >= 5, ]
   ratio <- scale$p75 / scale$across_datasets
   off <- scale[ratio > 4 | ratio < 0.05, ]
@@ -141,63 +169,64 @@ check_analysis_data <- function(
     off$n,
     off$n,
     paste0(
-      "75th percentile ",
+      "upper quartile ",
       signif(off$p75, 3),
       " hours against ",
       signif(off$across_datasets, 3),
-      " across datasets"
+      " in the median dataset"
     )
   )
 
-  days <- exposures[
-    exposures$unit %in% "hours" & exposures$day %in% bp_exposure_days(),
-    c("variable_name", "exposure", "context", "day")
-  ]
-  by_day <- dplyr::inner_join(
-    st[c("dataset_id", "variable_name", "wave", "st_measure_id", "mean", "n")],
-    days,
+  mismatch <- day_checks[day_checks$n_differs > 0, ]
+  usual_finding <- finding(
+    mismatch,
+    "usual_day_mismatch",
+    "review",
+    mismatch$n_differs,
+    mismatch$n,
+    paste0(
+      "usual-day mean ",
+      signif(mismatch$mean_usual, 3),
+      " against ",
+      signif(mismatch$mean_expected, 3),
+      " from weekday and weekend"
+    )
+  )
+
+  checks <- dplyr::left_join(
+    invariant_checks,
+    invariants[c("variable_name", "rule")],
     by = "variable_name"
   )
-  wide <- tidyr::pivot_wider(
-    by_day,
-    id_cols = c("dataset_id", "wave", "st_measure_id", "exposure", "context"),
-    names_from = "day",
-    values_from = c("mean", "n", "variable_name")
-  )
-  needed <- paste0("mean_", bp_exposure_days())
-  if (all(needed %in% names(wide))) {
-    wide <- wide[stats::complete.cases(wide[needed]), ]
-    lower <- pmin(wide$mean_weekday, wide$mean_weekend)
-    upper <- pmax(wide$mean_weekday, wide$mean_weekend)
-    gap <- wide[wide$mean_usual < 0.8 * lower | wide$mean_usual > 1.2 * upper, ]
-    gap$variable_name <- gap$variable_name_usual
-    usual_finding <- finding(
-      gap,
-      "usual_day_outside_week",
+  varying <- checks[checks$participants_varying > 0, ]
+  must_hold <- varying[varying$rule %in% "constant", ]
+  may_change <- varying[!varying$rule %in% "constant", ]
+  gaps <- checks[checks$rule %in% "carried" & checks$participants_gap > 0, ]
+  carried <- list(
+    finding(
+      must_hold,
+      "invariant_varies",
       "review",
-      gap$n_usual,
-      gap$n_usual,
-      paste0(
-        "usual ",
-        signif(gap$mean_usual, 3),
-        ", weekday ",
-        signif(gap$mean_weekday, 3),
-        ", weekend ",
-        signif(gap$mean_weekend, 3)
-      )
+      must_hold$participants_varying,
+      must_hold$participants_repeated,
+      "participants with more than one value on a row held constant"
+    ),
+    finding(
+      gaps,
+      "carry_gap",
+      "review",
+      gaps$participants_gap,
+      gaps$participants_repeated,
+      "participants with a value at some waves and none at others"
+    ),
+    finding(
+      may_change,
+      "carried_value_changes",
+      "advisory",
+      may_change$participants_varying,
+      may_change$participants_repeated,
+      "participants who gave different answers at different waves"
     )
-  } else {
-    usual_finding <- NULL
-  }
-
-  varying <- invariant_checks[invariant_checks$participants_varying > 0, ]
-  varying <- finding(
-    varying,
-    "invariant_varies",
-    "review",
-    varying$participants_varying,
-    varying$participants_repeated,
-    "participants with more than one value"
   )
 
   duplicated <- grain[grain$duplicate_keys > 0, ]
@@ -236,12 +265,9 @@ check_analysis_data <- function(
     bounds,
     list(outside),
     screen,
-    list(scale_finding, usual_finding, varying),
+    list(scale_finding, usual_finding),
+    carried,
     keys
   )
   out[order(as.numeric(out$dataset_id), out$check, out$variable_name), ]
-}
-
-bp_exposure_days <- function() {
-  c("usual", "weekday", "weekend")
 }

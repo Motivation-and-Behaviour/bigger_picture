@@ -48,9 +48,12 @@ check_labels <- c(
   outside_allowed_values = "Level not in the schema's allowed values (advisory)",
   screen_constant = "Screen-time variable with one distinct value in a wave",
   screen_all_zero = "Screen-time variable all zero in a wave",
+  screen_nearly_all_zero = "Screen-time variable 99% or more zero in a wave (advisory)",
   screen_scale = "Screen-time variable far from other datasets (possible unit error)",
-  usual_day_outside_week = "Usual-day mean outside the weekday and weekend means",
-  invariant_varies = "Carried row takes more than one value within a participant",
+  usual_day_mismatch = "Usual-day value differs from its weekday and weekend rows",
+  invariant_varies = "Row held constant takes more than one value within a participant",
+  carry_gap = "Carried row has a value at some waves and none at others",
+  carried_value_changes = "Carried row: different answers at different waves (advisory)",
   duplicate_key = "More than one row per participant, wave and measure",
   missing_participant_id = "Rows with no participant ID"
 )
@@ -82,6 +85,7 @@ violations |>
 ```
 
 `r nrow(manifest) - n_distinct(violations$dataset_id[violations$severity == "review"])` of `r nrow(manifest)` datasets have no finding to review.
+Ages over the schema's bound are advisory, because the preparation step's age rule removes those rows.
 
 ## Values outside the schema's bounds
 
@@ -90,21 +94,27 @@ A large share in one dataset usually means a different score form or a mapping e
 
 ```{r}
 #| label: bounds
+# Shares are of all of the dataset's values on the variable, in every wave
+# and measure, and the extreme is the dataset's.
+totals <- numeric_summary |>
+  summarise(values = sum(n), lowest = min(min), highest = max(max), .by = c(dataset_id, variable_name))
 violations |>
   filter(check %in% c("above_max", "below_min")) |>
-  summarise(n = sum(n), denominator = sum(denominator), waves = n(), detail = first(detail), .by = c(dataset_id, variable_name, check)) |>
-  mutate(share = n / denominator) |>
-  arrange(desc(share)) |>
-  transmute(Dataset = dataset_id, Variable = variable_name, Check = check, Cells = fmt(n), Share = pct(share), Waves = waves, Example = detail) |>
-  knitr::kable(align = "lllrrrl")
+  summarise(cells = sum(n), waves = n(), .by = c(dataset_id, variable_name, check, severity)) |>
+  left_join(totals, by = c("dataset_id", "variable_name")) |>
+  mutate(share = cells / values, extreme = ifelse(check == "above_max", highest, lowest)) |>
+  arrange(severity, desc(share)) |>
+  transmute(Dataset = dataset_id, Variable = variable_name, Check = check, Severity = severity, Cells = fmt(cells), `Share of the dataset's values` = pct(share), `Waves affected` = waves, `Most extreme value` = signif(extreme, 4)) |>
+  knitr::kable(align = "llllrrrr")
 ```
 
 ## Screen time
 
 ### Location and spread across datasets
 
-Each line is one dataset's 5th to 95th percentile, with its quartiles and median, pooled over its waves on the primary measure.
-A dataset far to the right of the others may be in minutes.
+Each line is one dataset's 5th to 95th percentile, with its quartiles and median, on the primary measure.
+A dataset with several waves shows the average of its waves' percentiles, weighted by rows, which is close to but not the same as the percentile of all its rows.
+Hours are bounded at 24, so a minutes-for-hours error shows mainly as values over the maximum; a dataset far from the others here is more likely a different question or population.
 
 ```{r}
 #| label: screen-fn
@@ -139,6 +149,14 @@ quantile_plot(c("st_total", "st_watch", "st_game", "st_socmedia", "st_educationa
 ```
 
 ```{r}
+#| label: fig-screen-days
+#| fig-width: 12
+#| fig-height: 22
+#| fig-cap: "Weekday and weekend rows of the same exposures."
+quantile_plot(c(outer(c("st_total", "st_watch", "st_game", "st_socmedia", "st_educational", "st_comp"), c("_wd", "_we"), paste0)), ncol = 4)
+```
+
+```{r}
 #| label: screen-high
 numeric_summary |>
   filter(variable_name %in% hours_vars, st_measure_id == "primary") |>
@@ -151,10 +169,12 @@ numeric_summary |>
 
 ### Scale, constant and usual-day findings
 
+The usual-day check compares each row's usual-day value with (5 × weekday + 2 × weekend) / 7, on rows that have all three, as the harmonisation guide defines it.
+
 ```{r}
 #| label: screen-findings
 violations |>
-  filter(check %in% c("screen_scale", "screen_constant", "screen_all_zero", "usual_day_outside_week")) |>
+  filter(check %in% c("screen_scale", "screen_constant", "screen_all_zero", "usual_day_mismatch")) |>
   transmute(Dataset = dataset_id, Variable = variable_name, Wave = wave, Measure = st_measure_id, Check = check, N = fmt(n), Detail = detail) |>
   knitr::kable(align = "lllllrl")
 ```
@@ -181,33 +201,57 @@ distinct_values |>
   knitr::kable(caption = "Dataset, measure and variable combinations by declared type and number of distinct values.")
 ```
 
+```{r}
+#| label: measure-type-odd
+distinct_values |>
+  filter((measure_type == "Continuous" & distinct <= 8) | (measure_type == "Categorical" & distinct > 30)) |>
+  arrange(measure_type, as.numeric(dataset_id), variable_name) |>
+  transmute(Dataset = dataset_id, Measure = st_measure_id, Variable = variable_name, `Declared type` = measure_type, `Distinct values` = distinct, N = fmt(n)) |>
+  knitr::kable(align = "llllrr", caption = "The combinations worth a look: declared continuous with 8 or fewer distinct values, or declared categorical with more than 30. Sums of banded items can rightly give many values.")
+```
+
+```{r}
+#| label: near-zero
+violations |>
+  filter(check == "screen_nearly_all_zero") |>
+  summarise(waves = n(), zero = sum(n), values = sum(denominator), .by = c(dataset_id, variable_name)) |>
+  arrange(as.numeric(dataset_id), variable_name) |>
+  transmute(Dataset = dataset_id, Variable = variable_name, Waves = waves, `Share zero` = pct(zero / values), `Values above zero` = fmt(values - zero)) |>
+  knitr::kable(align = "llrrr", caption = "Screen-time variables where 99% or more of a wave's values are zero.")
+```
+
 ## Carried rows
+
+The harmonisation guide treats these rows in three ways, recorded in `analysis/invariants.csv`.
+A row held **constant** (sex, strata, cluster, trial arm) must take one value per participant.
+A **carried** row keeps what was observed and fills waves where it was missing or not asked, so a participant may rightly hold two answers, but should not have a value at some waves and none at others.
+An **onset** age is carried except to waves before onset, so neither test applies.
 
 ```{r}
 #| label: invariants
+rules <- tar_read(invariants)
 invariant_checks |>
+  left_join(rules[c("variable_name", "rule")], by = "variable_name") |>
   summarise(
     datasets = n(),
-    datasets_varying = sum(participants_varying > 0),
     repeated = sum(participants_repeated),
     varying = sum(participants_varying),
-    .by = variable_name
+    gap = sum(participants_gap),
+    .by = c(rule, variable_name)
   ) |>
-  mutate(share = varying / pmax(repeated, 1)) |>
-  arrange(desc(varying)) |>
-  transmute(Variable = variable_name, Datasets = datasets, `Datasets where it varies` = datasets_varying, `Participants seen twice or more` = fmt(repeated), `Participants with more than one value` = fmt(varying), Share = pct(share)) |>
-  knitr::kable(align = "lrrrrr")
+  arrange(rule, variable_name) |>
+  transmute(Rule = rule, Variable = variable_name, Datasets = datasets, `Participants seen twice or more` = fmt(repeated), `More than one value` = fmt(varying), `Value at some waves only` = fmt(gap)) |>
+  knitr::kable(align = "llrrrr")
 ```
 
 ```{r}
 #| label: invariants-detail
-invariant_checks |>
-  filter(participants_varying > 0) |>
-  mutate(share = participants_varying / pmax(participants_repeated, 1)) |>
-  arrange(desc(share)) |>
-  head(40) |>
-  transmute(Dataset = dataset_id, Variable = variable_name, `Seen twice or more` = fmt(participants_repeated), Varying = fmt(participants_varying), Share = pct(share)) |>
-  knitr::kable(align = "llrrr", caption = "The 40 dataset and variable pairs where a carried row varies most.")
+violations |>
+  filter(check %in% c("invariant_varies", "carry_gap")) |>
+  mutate(share = n / pmax(denominator, 1)) |>
+  arrange(check, desc(share)) |>
+  transmute(Dataset = dataset_id, Variable = variable_name, Check = check, Participants = fmt(n), `Of those seen twice or more` = pct(share)) |>
+  knitr::kable(align = "lllrr", caption = "Findings to review on constant and carried rows.")
 ```
 
 ## Grain
@@ -244,7 +288,7 @@ Instruments differ between datasets on generic rows, so different locations are 
 #| label: outcome-panels
 #| results: asis
 #| fig-width: 12
-outcome_domains <- c("academic", "behaviour", "cognition", "mental_health", "wellbeing", "health", "family")
+outcome_domains <- c("academic", "behaviour", "cognition", "mental_health", "wellbeing", "health", "family", "demographics")
 numeric_vars <- schema |>
   filter(domain %in% outcome_domains, data_type == "double") |>
   select(variable_name, domain)
@@ -263,3 +307,70 @@ for (domain_name in outcome_domains) {
   }
 }
 ```
+
+## Every numeric variable, per dataset
+
+::: {.callout-note collapse="true"}
+## Table: n, mean, SD, median, MAD, minimum and maximum
+
+```{r}
+#| label: numeric-table
+numeric_summary |>
+  filter(st_measure_id == "primary") |>
+  summarise(
+    mean = weighted.mean(mean, n),
+    sd = sqrt(weighted.mean(sd^2, n, na.rm = TRUE)),
+    median = weighted.mean(median, n),
+    mad = weighted.mean(mad, n),
+    min = min(min),
+    max = max(max),
+    waves = n(),
+    n = sum(n),
+    .by = c(variable_name, dataset_id)
+  ) |>
+  arrange(variable_name, as.numeric(dataset_id)) |>
+  transmute(Variable = variable_name, Dataset = dataset_id, N = fmt(n), Waves = waves, Mean = signif(mean, 4), SD = signif(sd, 4), Median = signif(median, 4), MAD = signif(mad, 4), Min = signif(min, 4), Max = signif(max, 4)) |>
+  knitr::kable(align = "llrrrrrrrr")
+```
+
+Mean, median and MAD are averages of a dataset's waves, weighted by rows, and SD is the pooled within-wave SD.
+:::
+
+## Categorical levels against the schema
+
+::: {.callout-note collapse="true"}
+## Table: every level of every categorical variable
+
+```{r}
+#| label: level-table
+level_summary |>
+  filter(st_measure_id == "primary", level != "(many values)") |>
+  left_join(schema[c("variable_name", "allowed_values")], by = "variable_name") |>
+  summarise(n = sum(n), datasets = n_distinct(dataset_id), .by = c(variable_name, level, allowed_values)) |>
+  mutate(
+    listed = case_when(
+      is.na(allowed_values) ~ "no list",
+      mapply(\(l, a) l %in% strsplit(a, "|", fixed = TRUE)[[1]], level, allowed_values) ~ "yes",
+      TRUE ~ "NO"
+    )
+  ) |>
+  filter(!is.na(allowed_values)) |>
+  arrange(variable_name, desc(n)) |>
+  transmute(Variable = variable_name, Level = level, `In allowed values` = listed, Datasets = datasets, Observations = fmt(n)) |>
+  knitr::kable(align = "lllrr")
+```
+:::
+
+## Every finding
+
+::: {.callout-note collapse="true"}
+## Table: the full list
+
+```{r}
+#| label: all-findings
+violations |>
+  arrange(severity == "advisory", as.numeric(dataset_id), check, variable_name) |>
+  transmute(Dataset = dataset_id, Check = check, Severity = severity, Variable = coalesce(variable_name, ""), Wave = coalesce(wave, ""), Measure = coalesce(st_measure_id, ""), N = fmt(n), Of = ifelse(is.na(denominator), "", fmt(denominator)), Detail = detail) |>
+  knitr::kable(align = "lllllllrl")
+```
+:::
