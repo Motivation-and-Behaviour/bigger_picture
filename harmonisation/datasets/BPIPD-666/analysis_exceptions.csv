@@ -1,0 +1,2 @@
+variable_name,wave,action,value,reason
+beh_socialskills_parent,,standardise_by,dataset|wave|country|age_band,"A score that is not age-normed and rises with age across the ages in this dataset (correlation with age 0.67); standardised within school stage so the scale is not set by the age range."

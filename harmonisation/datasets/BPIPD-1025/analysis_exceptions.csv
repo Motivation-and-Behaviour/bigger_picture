@@ -1,2 +1,4 @@
 variable_name,wave,action,value,reason
 cog_earlynumber_bas_enc,,keep_out_of_bounds,,"The study releases the BAS II ability score, not a T-score, so its values lie outside the row's 20-80 bounds by design; it is standardised within the dataset."
+cog_earlynumber_bas_enc,,standardise_by,dataset|wave|country|age_band,"A score that is not age-normed and rises with age across the ages in this dataset (correlation with age 0.72); standardised within school stage so the scale is not set by the age range."
+cog_vocab_expressive_task,,standardise_by,dataset|wave|country|age_band,"A score that is not age-normed and rises with age across the ages in this dataset (correlation with age 0.61); standardised within school stage so the scale is not set by the age range."
