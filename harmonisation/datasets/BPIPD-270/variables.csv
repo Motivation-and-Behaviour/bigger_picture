@@ -47,7 +47,10 @@ ethnicity,incompatible,PBRP1,,No ethnicity or race item; PBRP1 (guardian's birth
 indigenous,unavailable,,,Not collected.,,
 minority,incompatible,PBRP1,,Guardian birthplace only (PBRP1); cannot identify minority children.,,
 immigrant_background,incompatible,"PARENT, PBRP1",,Responding guardian's birthplace only (PBRP1); the other parent's is not asked.,,
-born_in_country,compatible,PYBRP1,"recode_values(as.numeric(PYBRP1), 1 ~ ""Yes"", 2 ~ ""No"", default = ""Unknown"")","Guardian report of the child's birthplace (PYBRP1: in Korea / abroad), every wave; missing = Unknown.",,
+born_in_country,compatible,"PYBRP1, ID, wave","coalesce(
+  carry_within(recode_values(as.numeric(PYBRP1), 1 ~ ""Yes"", 2 ~ ""No""), ID, as.numeric(sub(""^w"", """", wave))),
+  ""Unknown""
+)","Guardian report of the child's birthplace (PYBRP1: in Korea / abroad), asked every wave; carried within participant to waves where the guardian questionnaire was not completed; otherwise Unknown.",,
 home_language,unavailable,,,Not collected.,,
 ses_area,unavailable,,,Not collected.,,
 ses_household,proximate,"PINCOME, wave","case_when(

@@ -2014,21 +2014,21 @@ cog_flex_task,unavailable,,,Not collected.,,
 cog_flex_task_measure,unavailable,,,See cog_flex_task.,,
 cog_inhib_task,unavailable,,,Not collected.,,
 cog_inhib_task_measure,unavailable,,,See cog_inhib_task.,,
-cog_wm_task,compatible,"Q3DSTOT, Q34DSTO","local({
-  x <- coalesce(as.numeric(Q3DSTOT), as.numeric(Q34DSTO))
+cog_wm_task,compatible,"Q3DSTOT, Q24DSTO, Q34DSTO","local({
+  x <- coalesce(as.numeric(Q3DSTOT), as.numeric(Q24DSTO), as.numeric(Q34DSTO))
   if_else(x >= 0 & x < 99, x, NA_real_)
-})","Repeats cog_wm_digitspan: WISC Digit Span forward + backward total raw score, 1997 and 2007.",,
+})","Repeats cog_wm_digitspan: WISC Digit Span forward + backward total raw score, 1997, 2002 and 2007.",,
 cog_wm_task_measure,inferred,.wave,"if_else(
-  .wave %in% c(""1997"", ""2007""),
+  .wave %in% c(""1997"", ""2002"", ""2007""),
   ""Digit Span (WISC), forward and backward, total raw score (observed range 0-30), raw, as released"",
   NA_character_
-)",Describes cog_wm_task in 1997 and 2007.,,
+)","Describes cog_wm_task in 1997, 2002 and 2007.",,
 cog_speed_task,unavailable,,,Not collected.,,
 cog_speed_task_measure,unavailable,,,See cog_speed_task.,,
-cog_wm_digitspan,partial,"Q3DSTOT, Q34DSTO","local({
-  x <- coalesce(as.numeric(Q3DSTOT), as.numeric(Q34DSTO))
+cog_wm_digitspan,partial,"Q3DSTOT, Q24DSTO, Q34DSTO","local({
+  x <- coalesce(as.numeric(Q3DSTOT), as.numeric(Q24DSTO), as.numeric(Q34DSTO))
   if_else(x >= 0 & x < 99, x, NA_real_)
-})","1997 and 2007 child assessment: WISC Digit Span total raw score (forward + backward, as released); no scaled score is released, so partial; 99 NA. Raw scores: standardise within dataset and age at analysis.",,
+})","1997, 2002 and 2007 child assessment: WISC Digit Span total raw score (forward + backward, as released); no scaled score is released, so partial; 99 NA. Raw scores: standardise within dataset and age at analysis.",,
 cog_iq_fullscale,unavailable,,,Not collected.,,
 cog_nonverbalreason_task,unavailable,,,Not collected.,,
 cog_nonverbalreason_task_measure,unavailable,,,See cog_nonverbalreason_task.,,
