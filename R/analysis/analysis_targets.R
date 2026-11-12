@@ -87,6 +87,11 @@ analysis_targets <- function(harmonise_plan) {
     ),
     resource_index = rlang::syms(
       paste0("resource_index_", harmonise_plan$dataset_key)
+    ),
+    has_exceptions = vapply(
+      as.character(harmonise_plan$dataset_id),
+      function(id) length(find_analysis_exceptions(id)) > 0,
+      logical(1)
     )
   )
   row_level <- targets::tar_resources(
@@ -122,11 +127,11 @@ analysis_targets <- function(harmonise_plan) {
     ),
     targets::tar_target_raw(
       "exceptions_file",
-      quote(find_analysis_exceptions(dataset_id)),
-      format = "file",
-      # Looked for on every run: a dataset with no file tracks no path, so
-      # nothing else would notice one being added.
-      cue = targets::tar_cue(mode = "always")
+      # `has_exceptions` is worked out when the pipeline is defined, so adding
+      # or removing a dataset's file changes this target's command and it
+      # reruns; a file target with no path would otherwise never notice.
+      quote(find_analysis_exceptions(dataset_id, has_exceptions)),
+      format = "file"
     ),
     targets::tar_target_raw(
       "exceptions",
