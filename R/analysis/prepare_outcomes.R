@@ -45,7 +45,8 @@ prepare_outcomes <- function(
     dataschema[c("variable_name", "allowed_values", "min_value", "max_value")],
     by = "variable_name"
   )
-  analysed <- registry$role %in% "negative_control" |
+  analysed <- registry$role %in%
+    "negative_control" |
     registry$use %in% c("core", "report")
   scored_types <- c("continuous", "ordinal", "binary", "diagnosis")
   wave <- as.character(base$wave)
@@ -72,11 +73,19 @@ prepare_outcomes <- function(
       next
     }
     if (!analysed[i]) {
-      audit[[length(audit) + 1]] <- note(variable, "archive", "not analysed this round")
+      audit[[length(audit) + 1]] <- note(
+        variable,
+        "archive",
+        "not analysed this round"
+      )
       next
     }
     if (!registry$score_type[i] %in% scored_types) {
-      audit[[length(audit) + 1]] <- note(variable, "descriptive_only", "nominal rows are not modelled")
+      audit[[length(audit) + 1]] <- note(
+        variable,
+        "descriptive_only",
+        "nominal rows are not modelled"
+      )
       next
     }
     scores[[variable]] <- score_outcome_values(
@@ -217,7 +226,8 @@ prepare_outcomes <- function(
       stands_for <- repeats$specific[
         repeats$drop &
           repeats$keep %in% variable &
-          (repeats$wave %in% wave_label |
+          (repeats$wave %in%
+            wave_label |
             (is.na(repeats$wave) & is.na(wave_label)))
       ]
       wholes <- registry$part_of[

@@ -16,7 +16,10 @@ summarise_grain <- function(harmonised, info) {
     st_measure_id = as.character(rows$st_measure_id),
     participant_id = as.character(rows$participant_id)
   )
-  per_key <- keys[, list(n = .N), by = c("wave", "st_measure_id", "participant_id")]
+  per_key <- keys[,
+    list(n = .N),
+    by = c("wave", "st_measure_id", "participant_id")
+  ]
   grain <- per_key[,
     list(
       rows = sum(n),

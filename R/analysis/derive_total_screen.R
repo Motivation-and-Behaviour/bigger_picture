@@ -37,7 +37,8 @@ derive_total_screen <- function(
 ) {
   n <- nrow(exposures)
   content <- exposure_registry[
-    exposure_registry$unit %in% "hours" &
+    exposure_registry$unit %in%
+      "hours" &
       exposure_registry$day %in% "usual" &
       exposure_registry$context %in% "any" &
       exposure_registry$axis %in% "activity" &

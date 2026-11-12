@@ -152,6 +152,12 @@ bp_deviations_path <- function() {
   fs::path(bp_analysis_dir(), "deviations.csv")
 }
 
+# Workers for the analysis targets that load a whole dataset. Each can hold
+# well over 10 GB, so this pool is kept small whatever the machine's cores.
+bp_row_level_workers <- function() {
+  4L
+}
+
 # Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).
 bp_manifest_dir <- function() {
   fs::path(bp_analysis_dir(), "manifests")

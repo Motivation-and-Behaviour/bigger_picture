@@ -12,6 +12,7 @@ mock_info <- function(id, ...) {
   info <- tibble::tibble(
     dataset_id = id,
     baseline_wave = NA_character_,
+    wave_order = NA_character_,
     signed_off = NA,
     notes = NA_character_,
     included = TRUE
@@ -347,7 +348,11 @@ test_that("usual-day values are checked row by row against the week", {
   rows$st_watch[1:7] <- rows$st_watch[1:7] + 1
   findings <- run_checks(rows, info, mock_invariants)
   expect_equal(findings$n[findings$check == "usual_day_mismatch"], 7)
-  expect_null(check_day_consistency(mock_dataset("9992"), mock_info("9992"), reg$exposures))
+  expect_null(check_day_consistency(
+    mock_dataset("9992"),
+    mock_info("9992"),
+    reg$exposures
+  ))
 })
 
 test_that("a dataset on another scale stands out from the others", {
@@ -434,7 +439,9 @@ test_that("the base table recodes Unknown and derives its columns", {
   expect_equal(dplyr::n_distinct(base$unit), 2)
   unit_means <- tapply(base$survey_weight_norm, base$unit, mean)
   expect_equal(unname(as.numeric(unit_means)), c(1, 1))
-  expect_true(all(base$school_stage %in% analysis_settings()$school_stage_labels))
+  expect_true(all(
+    base$school_stage %in% analysis_settings()$school_stage_labels
+  ))
 })
 
 test_that("total screen time is the dedicated item, else a guarded sum", {
@@ -481,7 +488,10 @@ test_that("a row asked of part of a unit does not remove everyone's total", {
   unit <- rep(c("x", "y"), each = 10)
   total <- derive_total_screen(exposures, unit, reg$exposures)
   # Unit x: social media on 4 of 10 rows is left out; educational stays.
-  expect_equal(unique(total$total_rows[1:10]), "st_watch|st_game|st_educational")
+  expect_equal(
+    unique(total$total_rows[1:10]),
+    "st_watch|st_game|st_educational"
+  )
   expect_equal(total$total_screen[1:10], rep(4, 10))
   # Unit y: no social media at all; educational on 6 of 10 rows stays, and
   # the rows without it have no total.
@@ -568,7 +578,10 @@ test_that("a repeated score is dropped in favour of the generic row", {
 
   # The row named for its informant is the generic one, whatever its length.
   scores <- tibble::tibble(cog_wm_digitspan = x, cog_wm_task = x)
-  same <- c(cog_wm_digitspan = "executive_function", cog_wm_task = "executive_function")
+  same <- c(
+    cog_wm_digitspan = "executive_function",
+    cog_wm_task = "executive_function"
+  )
   kept <- find_repeated_scores(scores, wave, same)
   expect_equal(unique(kept$keep), "cog_wm_task")
 
@@ -683,7 +696,9 @@ test_that("exceptions are validated and applied", {
   base <- prepared$base
   expect_true(all(is.na(prepared$outcomes$mh_dep_self[base$wave == "2"])))
   expect_false(anyNA(prepared$outcomes$mh_dep_self[base$wave == "1"]))
-  audit <- prepared$row_audit[prepared$row_audit$variable_name == "mh_dep_self", ]
+  audit <- prepared$row_audit[
+    prepared$row_audit$variable_name == "mh_dep_self",
+  ]
   expect_equal(audit$status[audit$wave == "2"], "excluded")
   expect_equal(audit$status[audit$wave == "1"], "used")
   z <- prepared$outcomes_z$mh_dep_self[base$wave == "1"]
@@ -707,7 +722,9 @@ test_that("every committed exceptions file passes its checks", {
 test_that("a prepared dataset is summarised and flagged", {
   reg <- repo_registries()
   rows <- mock_dataset("9991")
-  rows$mh_dep_cesd_self <- rows$mh_dep_self * 2 + stats::rnorm(nrow(rows), 0, 0.01)
+  rows$mh_dep_cesd_self <- rows$mh_dep_self *
+    2 +
+    stats::rnorm(nrow(rows), 0, 0.01)
   rows$age_years[seq_len(nrow(rows) / 2)] <- 30
   prepared <- prepare_mock("9991", rows = rows)
 
@@ -960,7 +977,9 @@ test_that("empty columns are dropped, and the result does not depend on it", {
   padded$mh_anx_self <- NA_real_
   padded$urbanicity <- NA_character_
   trimmed <- drop_empty_columns(padded)
-  expect_false(any(c("st_tablet", "mh_anx_self", "urbanicity") %in% names(trimmed)))
+  expect_false(any(
+    c("st_tablet", "mh_anx_self", "urbanicity") %in% names(trimmed)
+  ))
   # `wave` is all missing in a single-wave dataset and is kept.
   expect_true(all(is.na(rows$wave)))
   expect_true("wave" %in% names(trimmed))
@@ -968,7 +987,13 @@ test_that("empty columns are dropped, and the result does not depend on it", {
 
   info <- mock_info("9995")
   a <- summarise_dataset(rows, info, reg$schema, mock_invariants, reg$exposures)
-  b <- summarise_dataset(padded, info, reg$schema, mock_invariants, reg$exposures)
+  b <- summarise_dataset(
+    padded,
+    info,
+    reg$schema,
+    mock_invariants,
+    reg$exposures
+  )
   expect_equal(a[names(a) != "manifest"], b[names(b) != "manifest"])
   expect_false(identical(a$manifest$hash, b$manifest$hash))
   expect_equal(

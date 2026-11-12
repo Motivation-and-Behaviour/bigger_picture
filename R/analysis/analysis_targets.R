@@ -55,11 +55,16 @@ analysis_targets <- function(harmonise_plan) {
       paste0("harmonisation_config_", harmonise_plan$dataset_key)
     )
   )
+  row_level <- targets::tar_resources(
+    qs = targets::tar_resources_qs(nthreads = 4L),
+    crew = targets::tar_resources_crew(controller = "row_level")
+  )
   # Three targets per dataset read row-level data: the summaries, the
   # prepared tables and their review. Keeping it to three bounds how many
   # copies of one dataset are in memory at once. They are transient, with a
   # garbage collection first, so a worker does not keep each dataset it has
-  # loaded for the rest of the run.
+  # loaded for the rest of the run, and they run in the small `row_level`
+  # worker pool.
   per_dataset <- tarchetypes::tar_map(
     values = values,
     names = "dataset_key",
@@ -78,7 +83,8 @@ analysis_targets <- function(harmonise_plan) {
         settings
       )),
       memory = "transient",
-      garbage_collection = TRUE
+      garbage_collection = TRUE,
+      resources = row_level
     ),
     targets::tar_target_raw(
       "exceptions_file",
@@ -106,7 +112,8 @@ analysis_targets <- function(harmonise_plan) {
         settings
       )),
       memory = "transient",
-      garbage_collection = TRUE
+      garbage_collection = TRUE,
+      resources = row_level
     ),
     targets::tar_target_raw(
       "prepared_review",
@@ -117,7 +124,8 @@ analysis_targets <- function(harmonise_plan) {
         settings
       )),
       memory = "transient",
-      garbage_collection = TRUE
+      garbage_collection = TRUE,
+      resources = row_level
     )
   )
 
@@ -194,7 +202,10 @@ analysis_targets <- function(harmonise_plan) {
     ),
     tarchetypes::tar_quarto_raw(
       "report_harmonisation_diagnostics",
-      path = fs::path(bp_analysis_reports_dir(), "harmonisation_diagnostics.qmd")
+      path = fs::path(
+        bp_analysis_reports_dir(),
+        "harmonisation_diagnostics.qmd"
+      )
     ),
     tarchetypes::tar_quarto_raw(
       "report_preparation",

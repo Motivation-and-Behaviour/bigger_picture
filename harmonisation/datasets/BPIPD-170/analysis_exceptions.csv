@@ -1,0 +1,2 @@
+variable_name,wave,action,value,reason
+acc_schoolengage_self,,standardise_by,dataset|wave|country|acc_schoolengage_measure,"In 2000 to 2022 grade 12 has a 4-item mean without the interest item and grades 8 and 10 a 5-item mean, in the same wave."

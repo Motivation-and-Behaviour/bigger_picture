@@ -25,7 +25,8 @@ check_day_consistency <- function(
     return(NULL)
   }
   days <- exposures[
-    exposures$unit %in% "hours" &
+    exposures$unit %in%
+      "hours" &
       exposures$day %in% c("usual", "weekday", "weekend") &
       exposures$variable_name %in% names(rows),
     c("variable_name", "exposure", "context", "day")

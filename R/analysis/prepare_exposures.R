@@ -19,7 +19,8 @@ prepare_exposures <- function(
   settings = analysis_settings()
 ) {
   registry <- exposure_registry[
-    exposure_registry$unit %in% c("hours", "index") &
+    exposure_registry$unit %in%
+      c("hours", "index") &
       exposure_registry$variable_name %in% names(rows),
   ]
   wave <- as.character(wave)

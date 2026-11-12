@@ -35,7 +35,9 @@ apply_derivations <- function(scores, derivations, dataset_id) {
       sum = rowSums(parts),
       mean = rowMeans(parts),
       weighted_mean = {
-        weights <- as.numeric(strsplit(rules$weights[i], "|", fixed = TRUE)[[1]])
+        weights <- as.numeric(strsplit(rules$weights[i], "|", fixed = TRUE)[[
+          1
+        ]])
         as.numeric(parts %*% weights) / sum(weights)
       }
     )

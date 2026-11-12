@@ -24,7 +24,10 @@ score_outcome_values <- function(values, score_type, allowed_values = NA) {
     return(out)
   }
   if (score_type %in% c("ordinal", "diagnosis") && !is.na(allowed_values)) {
-    levels <- setdiff(strsplit(allowed_values, "|", fixed = TRUE)[[1]], "Unknown")
+    levels <- setdiff(
+      strsplit(allowed_values, "|", fixed = TRUE)[[1]],
+      "Unknown"
+    )
     return(as.numeric(match(values, levels)))
   }
   rep(NA_real_, length(values))

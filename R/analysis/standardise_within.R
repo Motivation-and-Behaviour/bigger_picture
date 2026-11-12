@@ -20,7 +20,11 @@ standardise_within <- function(values, groups, min_n = 2L) {
   group[is.na(group)] <- "\r(missing)"
   centre <- stats::ave(values, group, FUN = function(x) mean(x, na.rm = TRUE))
   spread <- stats::ave(values, group, FUN = function(x) {
-    if (sum(!is.na(x)) >= max(min_n, 2L)) stats::sd(x, na.rm = TRUE) else NA_real_
+    if (sum(!is.na(x)) >= max(min_n, 2L)) {
+      stats::sd(x, na.rm = TRUE)
+    } else {
+      NA_real_
+    }
   })
   z <- (values - centre) / spread
   z[!is.finite(z)] <- NA_real_

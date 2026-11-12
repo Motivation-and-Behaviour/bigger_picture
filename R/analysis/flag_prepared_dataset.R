@@ -88,7 +88,10 @@ flag_prepared_dataset <- function(
     correlation <- suppressWarnings(
       stats::cor(as.matrix(z), use = "pairwise.complete.obs")
     )
-    pairs <- which(abs(correlation) > 0.98 & upper.tri(correlation), arr.ind = TRUE)
+    pairs <- which(
+      abs(correlation) > 0.98 & upper.tri(correlation),
+      arr.ind = TRUE
+    )
     for (i in seq_len(nrow(pairs))) {
       a <- colnames(correlation)[pairs[i, 1]]
       b <- colnames(correlation)[pairs[i, 2]]
@@ -148,7 +151,8 @@ flag_prepared_dataset <- function(
 
   required <- intersect(settings$total_required, names(exposures))
   if (length(required) == length(settings$total_required) && nrow(base) > 0) {
-    could <- exposures$total_source %in% "summed" &
+    could <- exposures$total_source %in%
+      "summed" &
       stats::complete.cases(exposures[required])
     by_unit <- dplyr::summarise(
       tibble::tibble(
@@ -226,7 +230,14 @@ flag_prepared_dataset <- function(
       flags[[length(flags) + 1]] <- flag(
         "small_units",
         NA_character_,
-        paste0(small, " of ", length(sizes), " units have fewer than ", settings$min_unit_rows, " rows"),
+        paste0(
+          small,
+          " of ",
+          length(sizes),
+          " units have fewer than ",
+          settings$min_unit_rows,
+          " rows"
+        ),
         level = "info"
       )
     }
@@ -244,7 +255,12 @@ flag_prepared_dataset <- function(
       flags[[length(flags) + 1]] <- flag(
         "partial_rows",
         NA_character_,
-        paste0(length(weaker), " of ", length(used), " outcome rows used are mapped partial or proximate"),
+        paste0(
+          length(weaker),
+          " of ",
+          length(used),
+          " outcome rows used are mapped partial or proximate"
+        ),
         level = "info"
       )
     }

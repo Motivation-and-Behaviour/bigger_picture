@@ -90,7 +90,7 @@ prepare_base <- function(rows, info, carry, settings = analysis_settings()) {
     sep = "|"
   )
   base$is_baseline <- is_baseline[keep]
-  base$wave_order <- order_waves(base, info$wave_order)
+  base$wave_order <- order_waves(base, info[["wave_order"]])
   base$school_stage <- as.character(cut(
     as.numeric(base$age_years),
     breaks = settings$school_stage_breaks,

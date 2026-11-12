@@ -1,0 +1,2 @@
+variable_name,wave,action,value,reason
+cog_vocab_receptive_task,,standardise_by,dataset|wave|country|age_band,"The 1992 PPVT raw score (no standard score in the extract) across ages 3 to 18 rises steeply with age; it is standardised within school stage so the scale is not set by the age range."
