@@ -152,6 +152,30 @@ bp_deviations_path <- function() {
   fs::path(bp_analysis_dir(), "deviations.csv")
 }
 
+# The settings each stage reads, so a change to one reruns only that stage.
+bp_prepare_settings <- function() {
+  c(
+    "age_limit",
+    "exposure_max_hours",
+    "min_unit_rows",
+    "school_stage_breaks",
+    "school_stage_labels",
+    "total_required",
+    "total_row_min_share",
+    "part_cover_min",
+    "repeat_min_rows",
+    "repeat_min_minority"
+  )
+}
+
+bp_summary_settings <- function() {
+  c("max_levels", "age_limit")
+}
+
+bp_model_settings <- function() {
+  c("min_unit_rows", "min_datasets", "sex_known_min", "min_clusters")
+}
+
 # The cells fitted before the freeze, to build the engine on real data
 # (ANALYSIS_PLAN.md, Step 5).
 bp_development_cells_path <- function() {

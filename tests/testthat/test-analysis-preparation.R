@@ -785,7 +785,7 @@ test_that("the analysis section builds a target list from a dataset plan", {
   for (target in exception_files) {
     expect_equal(target$cue$mode, "always")
   }
-  expect_length(analysis_targets(plan[0, ]), 8)
+  expect_length(analysis_targets(plan[0, ]), 12)
 })
 
 test_that("an excluded row stays excluded when a rule could derive it", {

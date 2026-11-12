@@ -16,7 +16,7 @@ review_prepared <- function(
   settings = analysis_settings()
 ) {
   list(
-    summary = summarise_prepared(prepared),
+    summary = summarise_prepared(prepared, settings),
     flags = flag_prepared_dataset(
       prepared,
       variables,

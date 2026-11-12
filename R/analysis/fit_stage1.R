@@ -5,10 +5,11 @@
 #' the slope on screen use (DR-0009, DR-0010). Each score type has its own
 #' model and effect measure:
 #'
-#' - continuous rows: a linear model of the standardised score, giving SD
-#'   per hour;
-#' - ordinal rows with five or more levels: the same, on the level's position
-#'   standardised within the unit;
+#' - continuous rows: a linear model of the score standardised by the
+#'   preparation step, giving SD per hour;
+#' - ordinal rows with five or more levels in the dataschema: the same, on
+#'   the level's position standardised within the unit over every row that
+#'   has the outcome, so the scale does not depend on the exposure;
 #' - ordinal rows with three or four levels: a proportional-odds model,
 #'   giving log odds per hour of a higher level;
 #' - binary rows: a logistic model, giving log odds per hour.
@@ -17,20 +18,27 @@
 #'
 #' - weights are used where the unit has them, normalised within unit, and a
 #'   row with no weight or a zero weight in a weighted unit is left out;
-#' - standard errors are clustered on the sampling unit where one is recorded
-#'   on every row, otherwise on the family where families repeat, otherwise
-#'   they are heteroskedasticity-robust; strata are not used, which errs
-#'   towards wider intervals;
-#' - age enters as a natural spline with two degrees of freedom where the
-#'   unit spans two or more years of age, as categories where it takes five
-#'   or fewer distinct values, linearly otherwise, and not at all where it
-#'   does not vary; sex enters where both sexes have at least five rows;
+#' - standard errors are clustered on the sampling unit where the unit
+#'   records one, a row without one forming a cluster of its own; otherwise
+#'   on the family where families repeat; otherwise they are
+#'   heteroskedasticity-robust. Strata are not used: against stratified fits
+#'   of the same models the standard error was between about 13% smaller and
+#'   7% larger, so this is not uniformly conservative;
+#' - age enters as categories where it takes five or fewer distinct values,
+#'   as a natural spline with two degrees of freedom where the middle 90% of
+#'   ages span two or more years and a knot can be placed, linearly
+#'   otherwise, and not at all where it does not vary;
+#' - sex enters where it is known for at least 90% of the unit's rows and
+#'   both sexes have at least five; rows of unknown or other sex are then
+#'   left out. Where sex is known for fewer rows it is left out of the model
+#'   and the rows stay;
 #' - a unit is fitted on complete cases, and only with at least the minimum
 #'   number of rows, variation in the exposure and, for a binary outcome, at
 #'   least ten rows in each class.
 #'
-#' A unit that cannot be fitted returns a row saying why, so nothing drops
-#' out silently.
+#' Every row says how many rows had the exposure and the outcome and how many
+#' the weight and sex rules left out, and a unit that cannot be fitted says
+#' why, so nothing drops out silently.
 #'
 #' @param prepared Output of `prepare_analysis_data()` for one dataset.
 #' @param cells A tibble of `exposure` and `outcome` rows to fit.
@@ -92,6 +100,13 @@ fit_stage1 <- function(
     x <- prepared$exposures[[exposure]]
     y <- if (model == "linear" && outcome %in% names(prepared$outcomes_z)) {
       prepared$outcomes_z[[outcome]]
+    } else if (model == "linear") {
+      # A numeric ordinal score, on each unit's own SD scale.
+      standardise_within(
+        prepared$outcomes[[outcome]],
+        base$unit,
+        settings$min_unit_rows
+      )
     } else {
       prepared$outcomes[[outcome]]
     }
@@ -148,19 +163,27 @@ stage1_model_type <- function(score_type, n_levels) {
 
 # Fit one unit's model and return a one-row tibble.
 fit_stage1_unit <- function(data, model, settings = analysis_settings()) {
+  available <- nrow(data)
+  counts <- list(
+    n = available,
+    n_available = available,
+    n_no_weight = 0L,
+    n_no_sex = 0L
+  )
   result <- function(status, ...) {
-    values <- list(
-      estimate = NA_real_,
-      se = NA_real_,
-      df = NA_real_,
-      n = nrow(data),
-      n_clusters = NA_integer_,
-      weighted = FALSE,
-      se_type = NA_character_,
-      covariates = NA_character_,
-      effect_measure = NA_character_,
-      engine = NA_character_,
-      status = status
+    values <- c(
+      list(estimate = NA_real_, se = NA_real_, df = NA_real_),
+      counts,
+      list(
+        n_clusters = NA_integer_,
+        few_clusters = NA,
+        weighted = FALSE,
+        se_type = NA_character_,
+        covariates = NA_character_,
+        effect_measure = NA_character_,
+        engine = NA_character_,
+        status = status
+      )
     )
     extra <- list(...)
     values[names(extra)] <- extra
@@ -173,18 +196,20 @@ fit_stage1_unit <- function(data, model, settings = analysis_settings()) {
   # Weights: used where the unit has them, on the rows that have one.
   weighted <- any(!is.na(data$weight) & data$weight > 0)
   if (weighted) {
-    data <- data[!is.na(data$weight) & data$weight > 0, ]
+    has_weight <- !is.na(data$weight) & data$weight > 0
+    counts$n_no_weight <- sum(!has_weight)
+    data <- data[has_weight, ]
   }
 
   # Covariates the unit can support.
   terms <- "x"
   covariates <- character()
-  age_span <- if (all(is.na(data$age))) {
+  age_values <- dplyr::n_distinct(data$age, na.rm = TRUE)
+  age_span <- if (age_values == 0) {
     0
   } else {
     diff(stats::quantile(data$age, c(0.05, 0.95), na.rm = TRUE, names = FALSE))
   }
-  age_values <- dplyr::n_distinct(data$age, na.rm = TRUE)
   spline_works <- age_span >= 2 &&
     !inherits(try(splines::ns(data$age, df = 2), silent = TRUE), "try-error")
   if (age_values > 1 && age_values <= 5) {
@@ -203,45 +228,62 @@ fit_stage1_unit <- function(data, model, settings = analysis_settings()) {
   if (age_values > 1) {
     data <- data[!is.na(data$age), ]
   }
-  sex_counts <- table(data$sex[data$sex %in% c("Female", "Male")])
-  if (length(sex_counts) == 2 && min(sex_counts) >= 5) {
-    data <- data[data$sex %in% c("Female", "Male"), ]
+  sex_known <- data$sex %in% c("Female", "Male")
+  sex_counts <- table(data$sex[sex_known])
+  if (
+    length(sex_counts) == 2 &&
+      min(sex_counts) >= 5 &&
+      mean(sex_known) >= settings$sex_known_min
+  ) {
+    counts$n_no_sex <- sum(!sex_known)
+    data <- data[sex_known, ]
     terms <- c(terms, "sex")
     covariates <- c(covariates, "sex")
   }
 
   n <- nrow(data)
+  counts$n <- n
+  common <- list(
+    weighted = weighted,
+    covariates = paste(covariates, collapse = " + ")
+  )
+  stop_with <- function(status) {
+    do.call(result, c(list(status = status), common))
+  }
   if (n < settings$min_unit_rows) {
-    return(result("fewer rows than the minimum unit size", n = n))
+    return(stop_with("fewer rows than the minimum unit size"))
   }
   if (stats::sd(data$x) == 0) {
-    return(result("no variation in the exposure", n = n))
+    return(stop_with("no variation in the exposure"))
   }
-  if (model == "linear") {
-    # A numeric ordinal score is put on the unit's own SD scale.
-    spread <- stats::sd(data$y)
-    if (is.na(spread) || spread == 0) {
-      return(result("no variation in the outcome", n = n))
-    }
-    data$y <- (data$y - mean(data$y)) / spread
+  if (model == "linear" && stats::sd(data$y) == 0) {
+    return(stop_with("no variation in the outcome"))
   }
   if (
     model == "logistic" && min(table(factor(data$y, levels = c(0, 1)))) < 10
   ) {
-    return(result("fewer than 10 rows in one class", n = n))
+    return(stop_with("fewer than 10 rows in one class"))
   }
   if (model == "ordinal") {
     data$y <- factor(data$y, ordered = TRUE)
-    if (nlevels(data$y) < 3 || min(table(data$y)) < 5) {
-      return(result("too few rows in one level", n = n))
+    if (nlevels(data$y) < 3) {
+      return(stop_with("fewer than three levels observed"))
+    }
+    if (min(table(data$y)) < 5) {
+      return(stop_with("fewer than 5 rows in one level"))
     }
   }
 
-  # Clustering: the sampling unit, else the family, else none.
+  # Clustering: the sampling unit, else the family, else none. A row with no
+  # sampling unit recorded is a cluster of its own.
   cluster <- NULL
   se_type <- "heteroskedasticity-robust"
-  if (!anyNA(data$cluster) && dplyr::n_distinct(data$cluster) > 1) {
-    cluster <- data$cluster
+  if (dplyr::n_distinct(data$cluster, na.rm = TRUE) > 1) {
+    cluster <- ifelse(
+      is.na(data$cluster),
+      paste0("\r", seq_len(n)),
+      data$cluster
+    )
     se_type <- "clustered on sampling unit"
   } else if (
     !anyNA(data$family) && dplyr::n_distinct(data$family) < nrow(data)
@@ -257,14 +299,15 @@ fit_stage1_unit <- function(data, model, settings = analysis_settings()) {
   n_clusters <- dplyr::n_distinct(data$cluster_id)
   data$w <- if (weighted) data$weight else rep(1, n)
   formula <- stats::as.formula(paste("y ~", paste(terms, collapse = " + ")))
-
-  common <- list(
-    n = n,
-    n_clusters = if (is.null(cluster)) NA_integer_ else n_clusters,
-    weighted = weighted,
-    se_type = se_type,
-    covariates = paste(covariates, collapse = " + ")
+  common <- c(
+    common,
+    list(
+      n_clusters = if (is.null(cluster)) NA_integer_ else n_clusters,
+      few_clusters = !is.null(cluster) && n_clusters < settings$min_clusters,
+      se_type = se_type
+    )
   )
+
   fitted <- tryCatch(
     switch(
       model,
@@ -275,16 +318,14 @@ fit_stage1_unit <- function(data, model, settings = analysis_settings()) {
     error = function(e) conditionMessage(e)
   )
   if (is.character(fitted)) {
-    return(do.call(
-      result,
-      c(list(status = paste("model failed:", fitted)), common)
-    ))
+    return(stop_with(paste("model failed:", fitted)))
+  }
+  if (!fitted$converged) {
+    return(stop_with("model did not converge"))
   }
   if (is.na(fitted$estimate) || is.na(fitted$se) || fitted$se <= 0) {
-    return(do.call(result, c(list(status = "slope not estimable"), common)))
+    return(stop_with("slope not estimable"))
   }
-  measure <- if (model == "linear") "sd_per_hour" else "log_odds_per_hour"
-  parameters <- length(terms) + 2 + max(age_values - 2, 0) * (age_values <= 5)
   do.call(
     result,
     c(
@@ -292,8 +333,12 @@ fit_stage1_unit <- function(data, model, settings = analysis_settings()) {
         status = "fitted",
         estimate = fitted$estimate,
         se = fitted$se,
-        df = if (is.null(cluster)) n - parameters else n_clusters - 1,
-        effect_measure = measure,
+        df = fitted$df,
+        effect_measure = if (model == "linear") {
+          "sd_per_hour"
+        } else {
+          "log_odds_per_hour"
+        },
         engine = fitted$engine
       ),
       common
@@ -302,6 +347,8 @@ fit_stage1_unit <- function(data, model, settings = analysis_settings()) {
 }
 
 # Linear and logistic models, with weights and clustered or robust errors.
+# A logistic fit that stops before converging returns a normal-looking
+# table, so its convergence flag is read.
 stage1_fixest <- function(data, formula, cluster, model) {
   vcov <- if (is.null(cluster)) "hetero" else stats::as.formula("~cluster_id")
   fit <- if (model == "linear") {
@@ -325,12 +372,21 @@ stage1_fixest <- function(data, formula, cluster, model) {
     )
   }
   table <- fixest::coeftable(fit)
+  converged <- model == "linear" || isTRUE(fit$convStatus)
   if (!"x" %in% rownames(table)) {
-    return(list(estimate = NA_real_, se = NA_real_, engine = "fixest"))
+    return(list(
+      estimate = NA_real_,
+      se = NA_real_,
+      df = NA_real_,
+      converged = converged,
+      engine = "fixest"
+    ))
   }
   list(
     estimate = unname(table["x", "Estimate"]),
     se = unname(table["x", "Std. Error"]),
+    df = fixest::degrees_freedom(fit, type = "t"),
+    converged = converged,
     engine = "fixest"
   )
 }
@@ -350,6 +406,8 @@ stage1_ordinal <- function(data, formula) {
   list(
     estimate = unname(table["x", "Value"]),
     se = unname(table["x", "Std. Error"]),
+    df = survey::degf(design),
+    converged = TRUE,
     engine = "survey"
   )
 }

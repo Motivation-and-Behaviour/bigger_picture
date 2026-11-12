@@ -39,6 +39,12 @@ analysis_settings <- function() {
     # A second value needs this many rows before two rows can be called a
     # repeat of one score.
     repeat_min_minority = 5L,
+    # Sex is a covariate where it is known for at least this share of a
+    # unit's rows; below that it is left out and the rows stay.
+    sex_known_min = 0.9,
+    # Cluster-robust standard errors from fewer clusters than this are
+    # flagged: they tend to be too small.
+    min_clusters = 10L,
     # The one-stage check's cell before the freeze, and the gap between the
     # two approaches, on the contrast of 1 against 4 hours a day, that
     # prompts a look: half the smallest effect of interest.

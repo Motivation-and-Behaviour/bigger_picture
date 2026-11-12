@@ -11,6 +11,20 @@
 analysis_targets <- function(harmonise_plan) {
   shared <- list(
     targets::tar_target_raw("settings", quote(analysis_settings())),
+    # Each stage reads only the settings it uses, so changing one threshold
+    # reruns that stage and not every dataset's preparation.
+    targets::tar_target_raw(
+      "settings_prepare",
+      quote(settings[bp_prepare_settings()])
+    ),
+    targets::tar_target_raw(
+      "settings_summary",
+      quote(settings[bp_summary_settings()])
+    ),
+    targets::tar_target_raw(
+      "settings_model",
+      quote(settings[bp_model_settings()])
+    ),
     targets::tar_target_raw(
       "dataset_spec_files",
       quote(list_dataset_spec_files()),
@@ -44,6 +58,10 @@ analysis_targets <- function(harmonise_plan) {
           outcome_registry,
           exposure_registry
         ))
+      ),
+      targets::tar_target_raw(
+        "onestage_cell",
+        quote(check_onestage_cell(settings$onestage_cell, development_cells))
       ),
       targets::tar_target_raw(
         "invariants_file",
@@ -96,7 +114,7 @@ analysis_targets <- function(harmonise_plan) {
         dataschema,
         invariants,
         exposure_registry,
-        settings
+        settings_summary
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -128,7 +146,7 @@ analysis_targets <- function(harmonise_plan) {
         derivation_registry,
         dataschema,
         exceptions,
-        settings
+        settings_prepare
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -141,7 +159,7 @@ analysis_targets <- function(harmonise_plan) {
         development_cells,
         outcome_registry,
         dataschema,
-        settings
+        settings_model
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -153,7 +171,7 @@ analysis_targets <- function(harmonise_plan) {
         prepared,
         outcome_registry,
         exposure_registry,
-        settings
+        settings_model
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -171,8 +189,8 @@ analysis_targets <- function(harmonise_plan) {
       "onestage_rows",
       quote(extract_cell_rows(
         prepared,
-        settings$onestage_cell[["exposure"]],
-        settings$onestage_cell[["outcome"]]
+        onestage_cell[["exposure"]],
+        onestage_cell[["outcome"]]
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -184,7 +202,7 @@ analysis_targets <- function(harmonise_plan) {
         prepared,
         harmonisation_config$variables,
         outcome_registry,
-        settings
+        settings_prepare
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -225,15 +243,19 @@ analysis_targets <- function(harmonise_plan) {
     bind("described_units", "descriptives", "units"),
     targets::tar_target_raw(
       "screen_pooled",
-      quote(pool_descriptives(described_screen, described_units, settings))
+      quote(pool_descriptives(
+        described_screen,
+        described_units,
+        settings_model
+      ))
     ),
     targets::tar_target_raw(
       "screen_trends",
-      quote(trend_descriptives(described_screen, "mean", settings))
+      quote(trend_descriptives(described_screen, "mean", settings_model))
     ),
     targets::tar_target_raw(
       "screen_trends_share",
-      quote(trend_descriptives(described_screen, "share_2plus", settings))
+      quote(trend_descriptives(described_screen, "share_2plus", settings_model))
     ),
     targets::tar_target_raw(
       "measured",
@@ -272,13 +294,19 @@ analysis_targets <- function(harmonise_plan) {
       per_dataset[["onestage_rows"]],
       command = quote(dplyr::bind_rows(!!!.x))
     ),
+    # The one-stage model holds several gigabytes while it fits, so it takes
+    # a place in the small pool with the targets that load whole datasets.
     targets::tar_target_raw(
       "onestage_check",
-      quote(fit_onestage_check(onestage_rows_all, settings))
+      quote(fit_onestage_check(
+        onestage_rows_all,
+        c(settings_model, settings["onestage_trigger"])
+      )),
+      resources = row_level
     ),
     targets::tar_target_raw(
       "stage2_development",
-      quote(pool_stage2_cells(stage1_all, settings))
+      quote(pool_stage2_cells(stage1_all, development_cells, settings_model))
     ),
     targets::tar_target_raw(
       "derived_codebook",

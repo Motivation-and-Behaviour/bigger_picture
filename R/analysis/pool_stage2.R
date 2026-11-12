@@ -3,8 +3,16 @@
 #' A random-effects multilevel meta-analysis fitted by REML, with units
 #' nested in datasets, and inference robust to the dependence of a dataset's
 #' units (DR-0010). It reports the mean slope, how much the slope varies
-#' between datasets, and a prediction interval for a new dataset. There is no
-#' fallback to a simpler model: a fit that fails is reported as failed.
+#' between datasets and between a dataset's units, and a prediction interval
+#' for a new unit in a new dataset. There is no fallback to a simpler model:
+#' a fit that fails is reported as failed.
+#'
+#' Units of one dataset are treated as having independent sampling errors.
+#' Where a panel's waves share participants that is not so: the robust
+#' interval for the mean still holds, but the shared error is counted as
+#' variation between datasets, so the two SDs are not clean in cells made
+#' mostly of panels, and a between-dataset SD at zero is a boundary estimate,
+#' not a finding of no variation.
 #'
 #' A cell is pooled only from the minimum number of datasets. Where the
 #' robust estimate has fewer than four degrees of freedom the cell is marked
@@ -24,6 +32,16 @@
 #'   interval, the between-dataset and between-unit SDs, the prediction
 #'   interval and `status`.
 pool_stage2 <- function(estimates, settings = analysis_settings()) {
+  if (nrow(estimates) == 0) {
+    estimates <- tibble::tibble(
+      dataset_id = character(),
+      unit = character(),
+      estimate = numeric(),
+      se = numeric(),
+      n = numeric(),
+      status = character()
+    )
+  }
   fitted <- estimates[
     estimates$status %in%
       "fitted" &

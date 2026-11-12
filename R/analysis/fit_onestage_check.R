@@ -5,10 +5,12 @@
 #' check tests the assumptions; it does not offer a second result to choose
 #' from. The one-stage model has an intercept per unit, the exposure centred
 #' within unit, a residual variance per unit and each unit's own age and sex
-#' effects, with the slope on screen use varying between datasets. It runs on
-#' complete cases and without survey weights, so it is compared with a
-#' two-stage estimate built the same way: unweighted per-unit linear models
-#' with linear age and sex.
+#' effects, with the slope on screen use varying between datasets and between
+#' the units of a dataset, as stage 2 has it. It runs on complete cases and
+#' without survey weights, so it is compared with a two-stage estimate built
+#' the same way: unweighted per-unit linear models with linear age and sex,
+#' pooled with the same two levels of variation. With only a dataset-level
+#' slope in the one-stage model, the two differ for that reason alone.
 #'
 #' The comparison is on the contrast of 1 against 4 hours a day. A gap above
 #' the trigger means the assumptions need a look; two-stage stays primary. A
@@ -17,9 +19,10 @@
 #'
 #' @param rows Combined output of `extract_cell_rows()` for one cell.
 #' @param settings From `analysis_settings()`.
-#' @return A one-row tibble: the one-stage and matched two-stage slopes with
-#'   standard errors, the between-dataset SD from each, the gap on the
-#'   contrast, whether it exceeds the trigger, and `status`.
+#' @return A one-row tibble: the one-stage and matched two-stage slopes, the
+#'   one-stage model-based and the two-stage robust standard error, the
+#'   between-dataset and between-unit SDs from each, the gap on the contrast,
+#'   whether it exceeds the trigger, and `status`.
 fit_onestage_check <- function(rows, settings = analysis_settings()) {
   result <- function(status, ...) {
     values <- list(
@@ -29,9 +32,11 @@ fit_onestage_check <- function(rows, settings = analysis_settings()) {
       onestage_estimate = NA_real_,
       onestage_se = NA_real_,
       onestage_tau = NA_real_,
+      onestage_tau_unit = NA_real_,
       twostage_estimate = NA_real_,
       twostage_se = NA_real_,
       twostage_tau = NA_real_,
+      twostage_tau_unit = NA_real_,
       contrast_gap = NA_real_,
       trigger = settings$onestage_trigger,
       exceeds_trigger = NA,
@@ -97,7 +102,13 @@ fit_onestage_check <- function(rows, settings = analysis_settings()) {
 
   onestage <- tryCatch(
     glmmTMB::glmmTMB(
-      y ~ 0 + unit + x_c + unit:age_c + unit:sex + (0 + x_c | dataset_id),
+      y ~ 0 +
+        unit +
+        x_c +
+        unit:age_c +
+        unit:sex +
+        (0 + x_c | dataset_id) +
+        (0 + x_c | unit),
       dispformula = ~ 0 + unit,
       data = rows,
       REML = TRUE,
@@ -110,7 +121,8 @@ fit_onestage_check <- function(rows, settings = analysis_settings()) {
   two <- list(
     twostage_estimate = twostage$estimate,
     twostage_se = twostage$se,
-    twostage_tau = twostage$tau_dataset
+    twostage_tau = twostage$tau_dataset,
+    twostage_tau_unit = twostage$tau_unit
   )
   if (is.character(onestage)) {
     return(do.call(
@@ -127,7 +139,9 @@ fit_onestage_check <- function(rows, settings = analysis_settings()) {
   }
   table <- stats::coef(summary(onestage))$cond
   estimate <- unname(table["x_c", "Estimate"])
-  tau <- attr(glmmTMB::VarCorr(onestage)$cond$dataset_id, "stddev")[[1]]
+  components <- glmmTMB::VarCorr(onestage)$cond
+  tau <- attr(components$dataset_id, "stddev")[[1]]
+  tau_unit <- attr(components$unit, "stddev")[[1]]
   gap <- abs(estimate - twostage$estimate) * (4 - 1)
   do.call(
     result,
@@ -137,6 +151,7 @@ fit_onestage_check <- function(rows, settings = analysis_settings()) {
         onestage_estimate = estimate,
         onestage_se = unname(table["x_c", "Std. Error"]),
         onestage_tau = tau,
+        onestage_tau_unit = tau_unit,
         contrast_gap = gap,
         exceeds_trigger = gap > settings$onestage_trigger
       ),

@@ -64,6 +64,42 @@ fitted |>
 ```
 
 ```{r}
+#| label: stage1-rows
+fitted |>
+  summarise(
+    units = n(),
+    available = sum(n_available),
+    used = sum(n),
+    no_weight = sum(n_no_weight),
+    no_sex = sum(n_no_sex),
+    lost_5 = sum(n < 0.95 * n_available),
+    few_clusters = sum(few_clusters %in% TRUE)
+  ) |>
+  transmute(
+    `Fitted unit-by-cell models` = fmt(units),
+    `Rows with exposure and outcome` = fmt(available),
+    `Rows used` = fmt(used),
+    `Left out: no weight in a weighted unit` = fmt(no_weight),
+    `Left out: sex unknown or other` = fmt(no_sex),
+    `Fits that use under 95% of their rows` = fmt(lost_5),
+    `Fits with fewer than 10 clusters` = fmt(few_clusters)
+  ) |>
+  tidyr::pivot_longer(everything(), names_to = " ", values_to = "Count") |>
+  knitr::kable(align = "lr", caption = "Rows a model could have used against rows it did.")
+```
+
+```{r}
+#| label: stage1-lost
+fitted |>
+  mutate(share_used = n / n_available) |>
+  filter(share_used < 0.95) |>
+  summarise(fits = n(), lowest = min(share_used), no_weight = sum(n_no_weight), no_sex = sum(n_no_sex), .by = dataset_id) |>
+  arrange(lowest) |>
+  transmute(Dataset = dataset_id, `Fits affected` = fits, `Lowest share of rows used` = sprintf("%.0f%%", 100 * lowest), `Rows without a weight` = fmt(no_weight), `Rows with sex unknown` = fmt(no_sex)) |>
+  knitr::kable(align = "lrrrr", caption = "Datasets where a fitted model uses under 95% of the rows that have the exposure and the outcome.")
+```
+
+```{r}
 #| label: stage1-covariates
 fitted |>
   count(covariates) |>
@@ -77,7 +113,7 @@ fitted |>
 ```{r}
 #| label: fig-slopes
 #| fig-height: 3.5
-#| fig-cap: "Unit slopes in SD per hour against their standard errors. A funnel centred near the pooled value is what a working engine gives; points far outside it are units to look at."
+#| fig-cap: "Unit slopes in SD per hour against their standard errors, for every outcome together. Outcomes differ in direction, so no single funnel is expected; the plot is here to show units far from the rest."
 fitted |>
   filter(effect_measure == "sd_per_hour") |>
   ggplot(aes(estimate, se)) +
@@ -101,6 +137,8 @@ fitted |>
 
 A cell is pooled from `r settings$min_datasets` or more datasets.
 Where the robust estimate has fewer than 4 degrees of freedom the cell reads "too few studies to say".
+An SD shown as 0.000 is an estimate at its boundary, usually where one dataset carries most of the weight, and not a finding that slopes do not vary.
+Units of one dataset are treated as independent; where a panel's waves share children, some of that shared error is counted as variation between datasets.
 
 ```{r}
 #| label: stage2-status
@@ -151,7 +189,7 @@ stage2 |>
 #| label: fig-forest
 #| fig-height: 7
 #| fig-cap: "Unit slopes for the one-stage check's cell, grouped by dataset, with the pooled estimate and its interval. Dataset IDs only."
-cell <- settings$onestage_cell
+cell <- tar_read(onestage_cell)
 forest <- fitted |>
   filter(exposure == cell[["exposure"]], outcome == cell[["outcome"]]) |>
   arrange(as.numeric(dataset_id), wave, country) |>
@@ -161,7 +199,7 @@ ggplot(forest, aes(y = reorder(unit, -row))) +
   annotate("rect", xmin = pooled$ci_low, xmax = pooled$ci_high, ymin = -Inf, ymax = Inf, alpha = 0.15) +
   geom_vline(xintercept = pooled$estimate, linetype = 2) +
   geom_vline(xintercept = 0, colour = "grey60") +
-  geom_linerange(aes(xmin = estimate - 1.96 * se, xmax = estimate + 1.96 * se), colour = "grey40") +
+  geom_linerange(aes(xmin = estimate - qt(0.975, df) * se, xmax = estimate + qt(0.975, df) * se), colour = "grey40") +
   geom_point(aes(x = estimate, size = 1 / se^2), show.legend = FALSE) +
   scale_size_area(max_size = 3) +
   labs(x = "Slope, SD per hour a day", y = "Unit (dataset | wave | country)") +
@@ -170,8 +208,9 @@ ggplot(forest, aes(y = reorder(unit, -row))) +
 
 ## One-stage check
 
-The one-stage model has an intercept per unit, the exposure centred within unit, a residual variance per unit and each unit's own age and sex effects.
-It is unweighted, so it is compared with a two-stage estimate built the same way.
+The one-stage model has an intercept per unit, the exposure centred within unit, a residual variance per unit and each unit's own age and sex effects, and lets the slope vary between datasets and between a dataset's units, as stage 2 does.
+It is unweighted, so it is compared with a two-stage estimate built the same way: unweighted per-unit models with linear age and sex, pooled with the same two levels of variation.
+The one-stage standard error is model-based and the two-stage one is robust, so they are not expected to match exactly.
 
 ```{r}
 #| label: onestage
@@ -183,6 +222,7 @@ tibble::tibble(
     "One-stage slope (SE)",
     "Matched two-stage slope (SE)",
     "SD between datasets: one-stage, two-stage",
+    "SD between units: one-stage, two-stage",
     "Gap on the contrast of 1 against 4 hours",
     "Trigger",
     "Primary (weighted) two-stage slope, for reference"
@@ -194,6 +234,7 @@ tibble::tibble(
     paste0(num(onestage$onestage_estimate, 4), " (", num(onestage$onestage_se, 4), ")"),
     paste0(num(onestage$twostage_estimate, 4), " (", num(onestage$twostage_se, 4), ")"),
     paste(num(onestage$onestage_tau), num(onestage$twostage_tau), sep = ", "),
+    paste(num(onestage$onestage_tau_unit), num(onestage$twostage_tau_unit), sep = ", "),
     num(onestage$contrast_gap, 4),
     paste0(num(onestage$trigger, 2), ifelse(isTRUE(onestage$exceeds_trigger), ": exceeded", ": not exceeded")),
     if (nrow(pooled) == 1) paste0(num(pooled$estimate, 4), " (", num(pooled$se, 4), ")") else "not pooled"
