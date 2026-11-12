@@ -93,6 +93,57 @@ A dataset with no row reads as a blank one, so it has no baseline and is not sig
 Dataset branches never edit this folder, so a new dataset gets its row on `main` after it merges; a test warns until it has one.
 The row matters for panels and trials, which need `baseline_wave`.
 
+## The analysis section of the pipeline
+
+`analysis_targets()` (`R/analysis/analysis_targets.R`) adds everything downstream of harmonisation to `_targets.R`.
+Each per-dataset target reads that dataset's harmonised table and its one-row `dataset_info`, so a new or changed dataset reruns only its own targets and the combined targets they feed.
+
+| Target | What it holds |
+| --- | --- |
+| `dataset_info_<key>` | The dataset's `datasets.csv` row and whether it is included |
+| `manifest_<key>`, `data_manifest` | Rows, participants and a content hash per included dataset, and an overall hash |
+| `grain_<key>`, `numeric_summary_<key>`, `level_summary_<key>`, `unit_summary_<key>` | Aggregate summaries the reports and checks read; no row of data |
+| `coverage`, `missingness`, `dataset_flow` | Coverage of every dataschema row, sporadic against systematic missingness, and the dataset flow |
+| `invariant_check_<key>`, `violations` | The checks against the dataschema, as a table of findings |
+| `exceptions_<key>` | The dataset's analysis exceptions, if it has a file |
+| `prepared_<key>` | The dataset prepared for modelling (below) |
+| `analysis_row_audit`, `rows_dropped_all`, `prepared_summary_all`, `prepared_flags_all` | What preparation used, dropped and flagged |
+| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
+
+A dataset is included until any dataset has `signed_off` set in `datasets.csv`; from then on only signed-off datasets are.
+
+### Prepared data
+
+`prepare_analysis_data()` turns one dataset's harmonised rows into a list of tables that share one row order:
+
+- `base`: one eligible row per participant and wave (aged under 19; in trials, baseline rows and control arms), with `Unknown` recoded to missing, and the derived columns `unit`, `wave_order`, `is_baseline`, `school_stage` and `survey_weight_norm`;
+- `exposures`: screen-time rows in hours, values over 24 hours removed, plus `total_screen` with its source, rows and coverage (DR-0013);
+- `outcomes` and `outcomes_z`: the score of each analysed outcome row and, for continuous rows, its standardised form;
+- `measures`: the extra screen-time measure blocks;
+- `row_audit` and `dropped`: what was used and what was not, with the reason.
+
+The `derived_codebook` target lists every derived variable and its rule.
+
+### Analysis exceptions
+
+A decision about one dataset that the registries cannot express goes in an optional `harmonisation/datasets/BPIPD-<id>/analysis_exceptions.csv`, one row per decision:
+
+| Column | Values |
+| --- | --- |
+| `variable_name` | The dataschema row |
+| `wave` | A wave label, or blank for every wave |
+| `action` | `exclude`, `keep_out_of_bounds`, `node` or `standardise_by` |
+| `value` | The node, or the pipe-separated keys; blank otherwise |
+| `reason` | Why, in a sentence |
+
+The tests read every such file, and the pipeline tracks one per dataset, so a new file is noticed.
+
+### Data manifests
+
+`record_data_manifest("<label>")` writes the current `data_manifest` to `analysis/manifests/<label>.csv`: dataset IDs, counts and hashes, never names.
+Record one for each delivered report and at the freeze, and commit it with that state of the code.
+`compare_data_manifest()` lists what has been added, removed or changed since a record.
+
 ## Deviations ledger
 
 `deviations.csv` records every place the analysis departs from the [preregistration](../docs/prereg/bigger_picture_preregistration.md), started before any analysis code so that nothing is reconstructed afterwards.

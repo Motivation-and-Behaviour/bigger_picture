@@ -1,0 +1,264 @@
+---
+title: "Analysis preparation"
+subtitle: "What the preparation step kept, dropped and derived"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(dplyr)
+library(ggplot2)
+library(targets)
+
+summary <- tar_read(prepared_summary_all)
+flags <- tar_read(prepared_flags_all)
+audit <- tar_read(analysis_row_audit)
+dropped <- tar_read(rows_dropped_all)
+codebook <- tar_read(derived_codebook)
+manifest <- tar_read(data_manifest)
+
+fmt <- function(x) format(x, big.mark = ",", trim = TRUE)
+pct <- function(x) sprintf("%.1f%%", 100 * x)
+by_id <- function(tbl) arrange(tbl, as.numeric(dataset_id))
+theme_set(theme_minimal(base_size = 10))
+```
+
+The preparation step turns each dataset's harmonised rows into the tables the models read.
+This report shows what it did, so that no row disappears silently.
+Data: `r nrow(manifest)` datasets, overall hash `r unique(manifest$overall_hash)`.
+
+## Rows kept and dropped
+
+```{r}
+#| label: rows
+rows_in <- sum(manifest$primary_rows)
+reason_labels <- c(
+  age_missing = "No recorded age",
+  age_over_limit = "Aged 19 or over",
+  trial_arm_after_baseline = "Trial: intervention arm after baseline"
+)
+bind_rows(
+  tibble::tibble(Rows = "Observations before the rules", n = rows_in, datasets = nrow(manifest)),
+  dropped |>
+    summarise(n = sum(n), datasets = n_distinct(dataset_id), .by = reason) |>
+    transmute(Rows = paste("Dropped:", coalesce(reason_labels[reason], reason)), n, datasets),
+  tibble::tibble(Rows = "Kept", n = sum(summary$rows_kept), datasets = sum(summary$rows_kept > 0))
+) |>
+  mutate(Share = pct(n / rows_in), n = fmt(n)) |>
+  knitr::kable(col.names = c("", "Observations", "Datasets", "Share"), align = "lrrr")
+```
+
+```{r}
+#| label: rows-by-dataset
+summary |>
+  mutate(
+    dropped = dropped_age_missing + dropped_age_over_limit + dropped_trial_arm,
+    share = dropped / (dropped + rows_kept)
+  ) |>
+  filter(share > 0.05) |>
+  arrange(desc(share)) |>
+  transmute(
+    Dataset = dataset_id,
+    Kept = fmt(rows_kept),
+    `No age` = fmt(dropped_age_missing),
+    `19 or over` = fmt(dropped_age_over_limit),
+    `Trial arm` = fmt(dropped_trial_arm),
+    `Share dropped` = pct(share)
+  ) |>
+  knitr::kable(align = "lrrrrr", caption = "Datasets that lose more than 5% of their observations.")
+```
+
+## Total screen time
+
+```{r}
+#| label: total
+tibble::tibble(
+  ` ` = c(
+    "Datasets with a total from a dedicated item",
+    "Datasets with a summed total",
+    "Datasets with both, in different waves",
+    "Datasets with no total",
+    "Observations with a dedicated total",
+    "Observations with a summed total",
+    "Summed totals capped at 24 hours",
+    "Observations with watching and gaming but no sum, because another activity row is missing"
+  ),
+  Value = c(
+    sum(summary$total_dedicated > 0),
+    sum(summary$total_summed > 0),
+    sum(summary$total_dedicated > 0 & summary$total_summed > 0),
+    sum(summary$total_dedicated == 0 & summary$total_summed == 0),
+    fmt(sum(summary$total_dedicated)),
+    fmt(sum(summary$total_summed)),
+    paste0(fmt(sum(summary$total_capped)), " (", pct(sum(summary$total_capped) / sum(summary$total_summed)), ")"),
+    fmt(sum(summary$total_lost_to_incomplete))
+  )
+) |>
+  knitr::kable()
+```
+
+```{r}
+#| label: fig-total
+#| fig-height: 3.5
+#| fig-cap: "Median summed total by the number of activity rows a dataset sums. Each point is a dataset."
+summary |>
+  filter(total_summed > 0) |>
+  ggplot(aes(factor(total_coverage_max), total_median_summed)) +
+  geom_jitter(width = 0.15, height = 0, alpha = 0.6) +
+  labs(x = "Activity rows summed (most in any wave)", y = "Median total, hours a day")
+```
+
+```{r}
+#| label: total-both
+summary |>
+  filter(total_dedicated > 0 | total_summed > 0) |>
+  by_id() |>
+  transmute(
+    Dataset = dataset_id,
+    Dedicated = fmt(total_dedicated),
+    Summed = fmt(total_summed),
+    `Rows summed` = total_coverage_max,
+    Capped = fmt(total_capped),
+    `Lost to incomplete rows` = fmt(total_lost_to_incomplete),
+    `Median, dedicated` = signif(total_median_dedicated, 3),
+    `Median, summed` = signif(total_median_summed, 3)
+  ) |>
+  knitr::kable(align = "lrrrrrrr")
+```
+
+## What happened to each row
+
+```{r}
+#| label: audit-status
+status_labels <- c(
+  used = "Used",
+  derived = "Derived from its parts and used",
+  dropped_repeat = "Dropped: repeats another row's score",
+  dropped_part = "Dropped: part of a whole in the same node",
+  dropped_preferred = "Dropped: letter grades where numeric grades exist",
+  excluded = "Excluded by a dataset exception",
+  archive = "Not analysed this round (archive)",
+  descriptive_only = "Described only (nominal)"
+)
+audit |>
+  summarise(
+    cells = n(),
+    datasets = n_distinct(dataset_id),
+    variables = n_distinct(variable_name),
+    .by = c(kind, status)
+  ) |>
+  arrange(kind, desc(cells)) |>
+  transmute(Kind = kind, Status = coalesce(status_labels[status], status), `Dataset, wave and row cells` = fmt(cells), Datasets = datasets, `Schema rows` = variables) |>
+  knitr::kable(align = "llrrr")
+```
+
+### Repeats found
+
+```{r}
+#| label: repeats
+audit |>
+  filter(status == "dropped_repeat") |>
+  summarise(datasets = n_distinct(dataset_id), waves = n(), .by = c(variable_name, detail)) |>
+  arrange(variable_name) |>
+  transmute(`Row dropped` = variable_name, Reason = detail, Datasets = datasets, `Dataset-waves` = waves) |>
+  knitr::kable(align = "llrr")
+```
+
+### Derivations run
+
+```{r}
+#| label: derived
+audit |>
+  filter(status == "derived") |>
+  summarise(datasets = n_distinct(dataset_id), n = sum(n_used), .by = variable_name) |>
+  arrange(variable_name) |>
+  transmute(Row = variable_name, Datasets = datasets, Values = fmt(n)) |>
+  knitr::kable(align = "lrr")
+```
+
+### Values dropped at the plausibility limits
+
+```{r}
+#| label: limits
+audit |>
+  filter(status %in% c("used", "derived"), n_values > n_used) |>
+  summarise(dropped = sum(n_values - n_used), values = sum(n_values), datasets = n_distinct(dataset_id), .by = c(kind, variable_name)) |>
+  mutate(share = dropped / values) |>
+  arrange(desc(dropped)) |>
+  head(40) |>
+  transmute(Kind = kind, Row = variable_name, Dropped = fmt(dropped), Share = pct(share), Datasets = datasets) |>
+  knitr::kable(align = "llrrr", caption = "The 40 rows with most values dropped.")
+```
+
+## Flags to resolve
+
+Each flag ends in an analysis exception, a harmonisation fix or no action.
+
+```{r}
+#| label: flag-summary
+flag_labels <- c(
+  derive_at_analysis = "Mapping note says derive at analysis, but no rule ran",
+  near_identical = "Two outcome rows correlate above 0.98",
+  measure_changes = "More than one instrument within a wave",
+  out_of_bounds = "More than 5% of a row's values outside the bounds",
+  total_incomplete = "Summed total lost to incomplete activity rows",
+  rows_dropped = "More than a fifth of observations dropped"
+)
+flags |>
+  summarise(flags = n(), datasets = n_distinct(dataset_id), .by = flag) |>
+  arrange(desc(flags)) |>
+  transmute(Flag = coalesce(flag_labels[flag], flag), Flags = flags, Datasets = datasets) |>
+  knitr::kable(align = "lrr")
+```
+
+`r nrow(manifest) - n_distinct(flags$dataset_id)` of `r nrow(manifest)` datasets have no flag.
+
+```{r}
+#| label: flag-list
+flags |>
+  by_id() |>
+  transmute(Dataset = dataset_id, Flag = flag, Row = coalesce(variable_name, ""), Detail = detail) |>
+  knitr::kable()
+```
+
+## One line per dataset
+
+```{r}
+#| label: per-dataset
+summary |>
+  by_id() |>
+  left_join(count(flags, dataset_id, name = "flags"), by = "dataset_id") |>
+  transmute(
+    Dataset = dataset_id,
+    Kept = fmt(rows_kept),
+    Participants = fmt(participants),
+    Units = units,
+    Exposures = exposures_used,
+    Outcomes = outcomes_used,
+    Derived = outcomes_derived,
+    Repeats = outcomes_dropped_repeat,
+    Parts = outcomes_dropped_part,
+    Archive = outcomes_archive,
+    `Extra measure rows` = fmt(measure_rows),
+    Flags = coalesce(flags, 0L)
+  ) |>
+  knitr::kable(align = "lrrrrrrrrrrr")
+```
+
+## Derived variables
+
+```{r}
+#| label: codebook
+codebook |>
+  transmute(Variable = variable, Table = table, Definition = definition, Source = source) |>
+  knitr::kable()
+```

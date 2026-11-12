@@ -152,6 +152,15 @@ bp_deviations_path <- function() {
   fs::path(bp_analysis_dir(), "deviations.csv")
 }
 
+# Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).
+bp_manifest_dir <- function() {
+  fs::path(bp_analysis_dir(), "manifests")
+}
+
+bp_analysis_reports_dir <- function() {
+  fs::path(bp_analysis_dir(), "reports")
+}
+
 # Schema domains whose every row must appear in outcome_rows.csv. Health rows
 # are registered too, so negative controls and mediators carry a role.
 bp_outcome_registry_domains <- function() {

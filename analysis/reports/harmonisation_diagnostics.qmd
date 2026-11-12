@@ -1,0 +1,265 @@
+---
+title: "Harmonisation diagnostics"
+subtitle: "Are the harmonised variables plausible and comparable across datasets?"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(dplyr)
+library(ggplot2)
+library(targets)
+
+violations <- tar_read(violations)
+numeric_summary <- tar_read(numeric_summary_all)
+level_summary <- tar_read(level_summary_all)
+invariant_checks <- tar_read(invariant_check_all)
+grain <- tar_read(grain_all)
+manifest <- tar_read(data_manifest)
+schema <- tar_read(dataschema)
+exposures <- tar_read(exposure_registry)
+
+fmt <- function(x) format(x, big.mark = ",", trim = TRUE)
+pct <- function(x) sprintf("%.1f%%", 100 * x)
+id_order <- function(x) factor(x, levels = unique(x[order(as.numeric(x))]))
+theme_set(theme_minimal(base_size = 9))
+```
+
+A permanent QA tool, rebuilt whenever a dataset changes.
+Nothing here is a pipeline failure: each finding is something to look at, and ends in a harmonisation fix, an analysis exception or no action.
+Data: `r nrow(manifest)` datasets, overall hash `r unique(manifest$overall_hash)`.
+
+## Findings by check
+
+```{r}
+#| label: findings-summary
+check_labels <- c(
+  above_max = "Numeric value above the schema maximum",
+  below_min = "Numeric value below the schema minimum",
+  outside_allowed_values = "Level not in the schema's allowed values (advisory)",
+  screen_constant = "Screen-time variable with one distinct value in a wave",
+  screen_all_zero = "Screen-time variable all zero in a wave",
+  screen_scale = "Screen-time variable far from other datasets (possible unit error)",
+  usual_day_outside_week = "Usual-day mean outside the weekday and weekend means",
+  invariant_varies = "Carried row takes more than one value within a participant",
+  duplicate_key = "More than one row per participant, wave and measure",
+  missing_participant_id = "Rows with no participant ID"
+)
+violations |>
+  summarise(
+    datasets = n_distinct(dataset_id),
+    variables = n_distinct(variable_name, na.rm = TRUE),
+    findings = n(),
+    affected = sum(n),
+    .by = c(check, severity)
+  ) |>
+  mutate(Check = coalesce(check_labels[check], check)) |>
+  arrange(severity, desc(findings)) |>
+  transmute(Check, Severity = severity, Datasets = datasets, Variables = variables, Findings = findings, `Cells or participants` = fmt(affected)) |>
+  knitr::kable(align = "llrrrr")
+```
+
+## Findings by dataset
+
+```{r}
+#| label: findings-by-dataset
+violations |>
+  filter(severity == "review") |>
+  count(dataset_id, check) |>
+  tidyr::pivot_wider(names_from = check, values_from = n, values_fill = 0) |>
+  arrange(as.numeric(dataset_id)) |>
+  rename(Dataset = dataset_id) |>
+  knitr::kable(caption = "Findings to review, per dataset. Datasets with none are not listed.")
+```
+
+`r nrow(manifest) - n_distinct(violations$dataset_id[violations$severity == "review"])` of `r nrow(manifest)` datasets have no finding to review.
+
+## Values outside the schema's bounds
+
+The harmonisation guide keeps out-of-range scores for the analysis to screen, so these are expected in small numbers.
+A large share in one dataset usually means a different score form or a mapping error.
+
+```{r}
+#| label: bounds
+violations |>
+  filter(check %in% c("above_max", "below_min")) |>
+  summarise(n = sum(n), denominator = sum(denominator), waves = n(), detail = first(detail), .by = c(dataset_id, variable_name, check)) |>
+  mutate(share = n / denominator) |>
+  arrange(desc(share)) |>
+  transmute(Dataset = dataset_id, Variable = variable_name, Check = check, Cells = fmt(n), Share = pct(share), Waves = waves, Example = detail) |>
+  knitr::kable(align = "lllrrrl")
+```
+
+## Screen time
+
+### Location and spread across datasets
+
+Each line is one dataset's 5th to 95th percentile, with its quartiles and median, pooled over its waves on the primary measure.
+A dataset far to the right of the others may be in minutes.
+
+```{r}
+#| label: screen-fn
+hours_vars <- exposures$variable_name[exposures$unit %in% "hours"]
+dataset_quantiles <- function(vars) {
+  numeric_summary |>
+    filter(variable_name %in% vars, st_measure_id == "primary") |>
+    summarise(
+      across(c(p05, p25, median, p75, p95), \(x) weighted.mean(x, n)),
+      n = sum(n),
+      .by = c(dataset_id, variable_name)
+    )
+}
+quantile_plot <- function(vars, ncol = 3) {
+  d <- dataset_quantiles(vars)
+  if (nrow(d) == 0) return(invisible(NULL))
+  ggplot(d, aes(y = id_order(dataset_id))) +
+    geom_linerange(aes(xmin = p05, xmax = p95), colour = "grey60") +
+    geom_linerange(aes(xmin = p25, xmax = p75), linewidth = 1) +
+    geom_point(aes(x = median), colour = "firebrick", size = 0.8) +
+    facet_wrap(vars(variable_name), scales = "free", ncol = ncol) +
+    labs(x = NULL, y = "Dataset") +
+    theme(axis.text.y = element_text(size = 4))
+}
+```
+
+```{r}
+#| label: fig-screen-main
+#| fig-width: 12
+#| fig-height: 16
+quantile_plot(c("st_total", "st_watch", "st_game", "st_socmedia", "st_educational", "st_comp", "st_tablet", "st_phone", "st_internet"))
+```
+
+```{r}
+#| label: screen-high
+numeric_summary |>
+  filter(variable_name %in% hours_vars, st_measure_id == "primary") |>
+  summarise(p95 = weighted.mean(p95, n), max = max(max), n = sum(n), .by = c(dataset_id, variable_name)) |>
+  filter(p95 >= 10) |>
+  arrange(desc(p95)) |>
+  transmute(Dataset = dataset_id, Variable = variable_name, N = fmt(n), `95th percentile (hours)` = signif(p95, 3), Maximum = signif(max, 3)) |>
+  knitr::kable(align = "llrrr", caption = "Dataset and variable pairs whose 95th percentile is 10 hours a day or more.")
+```
+
+### Scale, constant and usual-day findings
+
+```{r}
+#| label: screen-findings
+violations |>
+  filter(check %in% c("screen_scale", "screen_constant", "screen_all_zero", "usual_day_outside_week")) |>
+  transmute(Dataset = dataset_id, Variable = variable_name, Wave = wave, Measure = st_measure_id, Check = check, N = fmt(n), Detail = detail) |>
+  knitr::kable(align = "lllllrl")
+```
+
+### Response bands and declared measure type
+
+The number of distinct values a dataset records, against what `st_measure_type` says.
+A "Continuous" measure with a handful of distinct values, or a banded one with many, deserves a look.
+
+```{r}
+#| label: measure-type
+measure_type <- level_summary |>
+  filter(variable_name == "st_measure_type", level != "Unknown") |>
+  slice_max(n, n = 1, with_ties = FALSE, by = c(dataset_id, st_measure_id)) |>
+  select(dataset_id, st_measure_id, measure_type = level)
+distinct_values <- numeric_summary |>
+  filter(variable_name %in% c("st_watch", "st_game", "st_socmedia", "st_educational", "st_total")) |>
+  summarise(distinct = max(n_distinct), n = sum(n), .by = c(dataset_id, st_measure_id, variable_name)) |>
+  left_join(measure_type, by = c("dataset_id", "st_measure_id"))
+distinct_values |>
+  mutate(band = cut(distinct, c(0, 4, 8, 15, 30, Inf), labels = c("1-4", "5-8", "9-15", "16-30", "31+"))) |>
+  count(measure_type, band) |>
+  tidyr::pivot_wider(names_from = band, values_from = n, values_fill = 0, names_sort = TRUE) |>
+  knitr::kable(caption = "Dataset, measure and variable combinations by declared type and number of distinct values.")
+```
+
+## Carried rows
+
+```{r}
+#| label: invariants
+invariant_checks |>
+  summarise(
+    datasets = n(),
+    datasets_varying = sum(participants_varying > 0),
+    repeated = sum(participants_repeated),
+    varying = sum(participants_varying),
+    .by = variable_name
+  ) |>
+  mutate(share = varying / pmax(repeated, 1)) |>
+  arrange(desc(varying)) |>
+  transmute(Variable = variable_name, Datasets = datasets, `Datasets where it varies` = datasets_varying, `Participants seen twice or more` = fmt(repeated), `Participants with more than one value` = fmt(varying), Share = pct(share)) |>
+  knitr::kable(align = "lrrrrr")
+```
+
+```{r}
+#| label: invariants-detail
+invariant_checks |>
+  filter(participants_varying > 0) |>
+  mutate(share = participants_varying / pmax(participants_repeated, 1)) |>
+  arrange(desc(share)) |>
+  head(40) |>
+  transmute(Dataset = dataset_id, Variable = variable_name, `Seen twice or more` = fmt(participants_repeated), Varying = fmt(participants_varying), Share = pct(share)) |>
+  knitr::kable(align = "llrrr", caption = "The 40 dataset and variable pairs where a carried row varies most.")
+```
+
+## Grain
+
+```{r}
+#| label: grain
+grain |>
+  summarise(rows = sum(rows), participants = sum(participants), duplicate_keys = sum(duplicate_keys), missing_ids = sum(missing_ids), datasets = n_distinct(dataset_id), .by = st_measure_id) |>
+  transmute(Measure = st_measure_id, Datasets = datasets, Rows = fmt(rows), `Participant-waves` = fmt(participants), `Duplicate keys` = fmt(duplicate_keys), `Rows with no ID` = fmt(missing_ids)) |>
+  knitr::kable(align = "lrrrrr")
+```
+
+## Categorical variables against the schema
+
+Advisory until `allowed_values` is maintained.
+
+```{r}
+#| label: allowed
+violations |>
+  filter(check == "outside_allowed_values") |>
+  summarise(datasets = n_distinct(dataset_id), cells = sum(n), .by = c(variable_name, detail)) |>
+  arrange(desc(cells)) |>
+  head(60) |>
+  transmute(Variable = variable_name, Level = detail, Datasets = datasets, Cells = fmt(cells)) |>
+  knitr::kable(align = "llrr", caption = "The 60 unlisted levels with most cells.")
+```
+
+## Continuous outcomes across datasets
+
+One panel per variable with data in two or more datasets: each dataset's 5th to 95th percentile, quartiles and median.
+Instruments differ between datasets on generic rows, so different locations are expected there; on instrument-specific rows they are not.
+
+```{r}
+#| label: outcome-panels
+#| results: asis
+#| fig-width: 12
+outcome_domains <- c("academic", "behaviour", "cognition", "mental_health", "wellbeing", "health", "family")
+numeric_vars <- schema |>
+  filter(domain %in% outcome_domains, data_type == "double") |>
+  select(variable_name, domain)
+with_data <- numeric_summary |>
+  filter(st_measure_id == "primary") |>
+  summarise(datasets = n_distinct(dataset_id), .by = variable_name) |>
+  filter(datasets >= 2) |>
+  inner_join(numeric_vars, by = "variable_name")
+for (domain_name in outcome_domains) {
+  vars <- sort(with_data$variable_name[with_data$domain == domain_name])
+  if (length(vars) == 0) next
+  cat("\n\n### ", domain_name, "\n\n", sep = "")
+  for (chunk in split(vars, ceiling(seq_along(vars) / 12))) {
+    print(quantile_plot(chunk, ncol = 4))
+    cat("\n\n")
+  }
+}
+```

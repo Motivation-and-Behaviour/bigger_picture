@@ -1,0 +1,440 @@
+---
+title: "Data health"
+subtitle: "What data the analysis has right now"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(dplyr)
+library(ggplot2)
+library(targets)
+
+manifest <- tar_read(data_manifest)
+flow <- tar_read(dataset_flow)
+grain <- tar_read(grain_all)
+units <- tar_read(unit_summary_all)
+coverage <- tar_read(coverage)
+missingness <- tar_read(missingness)
+numeric_summary <- tar_read(numeric_summary_all)
+level_summary <- tar_read(level_summary_all)
+outcomes <- tar_read(outcome_registry)
+exposures <- tar_read(exposure_registry)
+settings <- tar_read(settings)
+
+fmt <- function(x) format(x, big.mark = ",", trim = TRUE)
+pct <- function(x) sprintf("%.1f%%", 100 * x)
+id_order <- function(x) factor(x, levels = unique(x[order(as.numeric(x))]))
+theme_set(theme_minimal(base_size = 10))
+```
+
+A rough working report, rebuilt whenever the data change.
+Every number comes from pipeline targets, and nothing here shows a row of data.
+Dataset IDs are shown and names are not.
+
+## The data this report describes
+
+```{r}
+#| label: manifest-summary
+tibble::tibble(
+  ` ` = c(
+    "Datasets included",
+    "Participants",
+    "Observations (participant by wave)",
+    "Rows including extra screen-time measures",
+    "Overall data hash"
+  ),
+  Value = c(
+    fmt(nrow(manifest)),
+    fmt(sum(manifest$participants)),
+    fmt(sum(manifest$primary_rows)),
+    fmt(sum(manifest$rows)),
+    unique(manifest$overall_hash)
+  )
+) |>
+  knitr::kable()
+```
+
+The hash changes when any included dataset's harmonised data change.
+
+## Dataset flow
+
+```{r}
+#| label: flow
+flow |>
+  mutate(across(c(datasets, participants, rows), \(x) ifelse(is.na(x), "", fmt(x)))) |>
+  knitr::kable(col.names = c("Stage", "Datasets", "Participants", "Observations"), align = "lrrr")
+```
+
+Datasets identified or requested but never given a spec are not recorded in the repository, so the top of the flow diagram has to be added by hand.
+
+## Size and concentration
+
+```{r}
+#| label: concentration
+by_size <- manifest |>
+  arrange(desc(participants)) |>
+  mutate(
+    rank = row_number(),
+    share = participants / sum(participants),
+    cumulative = cumsum(share)
+  )
+top <- function(k) pct(sum(head(by_size$share, k)))
+```
+
+The five largest datasets hold `r top(5)` of participants, and the ten largest hold `r top(10)`.
+The median dataset has `r fmt(median(manifest$participants))` participants.
+
+```{r}
+#| label: fig-concentration
+#| fig-height: 3
+#| fig-cap: "Cumulative share of participants, datasets ordered from largest to smallest."
+ggplot(by_size, aes(rank, cumulative)) +
+  geom_step() +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
+  labs(x = "Datasets, largest first", y = "Share of participants")
+```
+
+```{r}
+#| label: size-table
+by_size |>
+  transmute(
+    Dataset = dataset_id,
+    Participants = fmt(participants),
+    Observations = fmt(primary_rows),
+    Waves = waves,
+    `Share of participants` = pct(share)
+  ) |>
+  knitr::kable(align = "lrrrr")
+```
+
+## Stage 1 units
+
+A unit is one dataset in one wave in one country.
+Rows aged `r settings$age_limit` or over, and rows with no age, are not eligible.
+
+```{r}
+#| label: units
+units <- units |> mutate(too_small = age_eligible < settings$min_unit_rows)
+tibble::tibble(
+  ` ` = c(
+    "Units",
+    "Datasets with more than one unit",
+    paste0("Units with fewer than ", settings$min_unit_rows, " eligible rows"),
+    "Share of rows aged 19 or over or with no age",
+    "Share of rows with no age"
+  ),
+  Value = c(
+    fmt(nrow(units)),
+    fmt(sum(table(units$dataset_id) > 1)),
+    fmt(sum(units$too_small)),
+    pct(1 - sum(units$age_eligible) / sum(units$rows)),
+    pct(sum(units$age_missing) / sum(units$rows))
+  )
+) |>
+  knitr::kable()
+```
+
+```{r}
+#| label: fig-unit-size
+#| fig-height: 3
+#| fig-cap: "Eligible rows per unit (log scale). The line marks the provisional minimum unit size."
+ggplot(filter(units, age_eligible > 0), aes(age_eligible)) +
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept = settings$min_unit_rows, linetype = 2) +
+  scale_x_log10(labels = scales::comma) +
+  labs(x = "Eligible rows in the unit", y = "Units")
+```
+
+## Ages and collection years
+
+```{r}
+#| label: fig-age
+#| fig-height: 11
+#| fig-cap: "Age range of each dataset: full range (thin line) and the middle of its units' median ages (point)."
+age <- units |>
+  filter(!is.na(age_min)) |>
+  summarise(
+    age_min = min(age_min),
+    age_max = max(age_max),
+    age_mid = weighted.mean(age_median, rows),
+    .by = dataset_id
+  )
+ggplot(age, aes(y = reorder(dataset_id, age_mid))) +
+  geom_linerange(aes(xmin = age_min, xmax = age_max), colour = "grey50") +
+  geom_point(aes(x = age_mid), size = 1) +
+  geom_vline(xintercept = settings$age_limit, linetype = 2) +
+  labs(x = "Age in years", y = "Dataset")
+```
+
+```{r}
+#| label: fig-year
+#| fig-height: 3.5
+#| fig-cap: "Observations by collection year."
+units |>
+  filter(!is.na(year_median)) |>
+  mutate(year = round(year_median)) |>
+  summarise(rows = sum(rows), datasets = n_distinct(dataset_id), .by = year) |>
+  ggplot(aes(year, rows)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Collection year (unit median)", y = "Observations")
+```
+
+## Demographics
+
+```{r}
+#| label: demographics
+demo_vars <- c("sex", "ses_household", "urbanicity", "minority", "indigenous", "sample_population")
+level_summary |>
+  filter(variable_name %in% demo_vars, st_measure_id == "primary") |>
+  summarise(n = sum(n), datasets = n_distinct(dataset_id), .by = c(variable_name, level)) |>
+  mutate(share = n / sum(n), .by = variable_name) |>
+  arrange(variable_name, desc(n)) |>
+  transmute(Variable = variable_name, Level = level, Observations = fmt(n), Share = pct(share), Datasets = datasets) |>
+  knitr::kable(align = "llrrr")
+```
+
+Countries: `r n_distinct(na.omit(units$country))`, with `r sum(is.na(units$country))` units that record no country.
+
+```{r}
+#| label: countries
+units |>
+  summarise(datasets = n_distinct(dataset_id), rows = sum(rows), .by = country) |>
+  arrange(desc(rows)) |>
+  head(25) |>
+  transmute(Country = coalesce(country, "(not recorded)"), Datasets = datasets, Observations = fmt(rows)) |>
+  knitr::kable(align = "lrr", caption = "The 25 countries with most observations.")
+```
+
+## Coverage
+
+A value counts when it is neither missing nor `Unknown`.
+
+```{r}
+#| label: coverage-by-domain
+coverage |>
+  filter(n_value > 0) |>
+  summarise(
+    variables = n_distinct(variable_name),
+    datasets = n_distinct(dataset_id),
+    .by = domain
+  ) |>
+  arrange(domain) |>
+  knitr::kable(col.names = c("Domain", "Variables with data", "Datasets with any"))
+```
+
+```{r}
+#| label: coverage-plot-fn
+coverage_plot <- function(domain_name) {
+  d <- coverage |>
+    filter(domain == domain_name, n_value > 0) |>
+    mutate(dataset_id = id_order(dataset_id))
+  ggplot(d, aes(dataset_id, variable_name, fill = share)) +
+    geom_tile() +
+    scale_fill_viridis_c(limits = c(0, 1), labels = scales::percent, name = "Non-missing") +
+    labs(x = "Dataset", y = NULL, title = domain_name) +
+    theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5),
+      axis.text.y = element_text(size = 5),
+      panel.grid = element_blank()
+    )
+}
+plot_height <- function(domain_name) {
+  n <- n_distinct(coverage$variable_name[coverage$domain == domain_name & coverage$n_value > 0])
+  1.5 + 0.11 * n
+}
+```
+
+```{r}
+#| label: fig-coverage-screen
+#| fig-width: 12
+#| fig-height: 11
+coverage_plot("screen_time")
+```
+
+```{r}
+#| label: fig-coverage-mh
+#| fig-width: 12
+#| fig-height: 9
+coverage_plot("mental_health")
+```
+
+```{r}
+#| label: fig-coverage-behaviour
+#| fig-width: 12
+#| fig-height: 13
+coverage_plot("behaviour")
+```
+
+```{r}
+#| label: fig-coverage-wellbeing
+#| fig-width: 12
+#| fig-height: 8
+coverage_plot("wellbeing")
+```
+
+```{r}
+#| label: fig-coverage-academic
+#| fig-width: 12
+#| fig-height: 4
+coverage_plot("academic")
+```
+
+```{r}
+#| label: fig-coverage-cognition
+#| fig-width: 12
+#| fig-height: 6
+coverage_plot("cognition")
+```
+
+```{r}
+#| label: fig-coverage-health
+#| fig-width: 12
+#| fig-height: 4
+coverage_plot("health")
+```
+
+```{r}
+#| label: fig-coverage-demographics
+#| fig-width: 12
+#| fig-height: 4.5
+coverage_plot("demographics")
+```
+
+```{r}
+#| label: fig-coverage-family
+#| fig-width: 12
+#| fig-height: 6
+coverage_plot("family")
+```
+
+## Missingness
+
+Missing and `Unknown` cells are sporadic when their wave has real values on that variable, and systematic when the wave has none.
+Only sporadic missingness is a candidate for imputation.
+
+```{r}
+#| label: missingness
+schema_domain <- distinct(coverage, variable_name, domain)
+missingness |>
+  left_join(schema_domain, by = "variable_name") |>
+  summarise(
+    cells = sum(rows),
+    value = sum(n_value),
+    sporadic = sum(n_sporadic),
+    systematic = sum(n_systematic),
+    .by = domain
+  ) |>
+  arrange(domain) |>
+  transmute(
+    Domain = domain,
+    `Cells in datasets that measure the variable` = fmt(cells),
+    `With a value` = pct(value / cells),
+    `Sporadic missing` = pct(sporadic / cells),
+    `Systematic missing (wave never measured it)` = pct(systematic / cells)
+  ) |>
+  knitr::kable(align = "lrrrr")
+```
+
+```{r}
+#| label: unknown
+coverage |>
+  filter(n_unknown > 0) |>
+  summarise(unknown = sum(n_unknown), value = sum(n_value), datasets = n(), .by = variable_name) |>
+  mutate(share = unknown / (unknown + value)) |>
+  arrange(desc(unknown)) |>
+  head(20) |>
+  transmute(Variable = variable_name, `Unknown cells` = fmt(unknown), `Share of recorded cells` = pct(share), Datasets = datasets) |>
+  knitr::kable(align = "lrrr", caption = "The 20 variables with most `Unknown` cells.")
+```
+
+## Survey design
+
+```{r}
+#| label: design
+design <- units |>
+  summarise(
+    rows = sum(rows),
+    weight = sum(weight_rows),
+    strata = sum(strata_rows),
+    cluster = sum(cluster_rows),
+    family = sum(family_rows),
+    zero_weight = sum(weight_zero),
+    trial = sum(trial_rows),
+    .by = dataset_id
+  )
+has <- function(x) sum(x > 0)
+tibble::tibble(
+  `Design variable` = c("Survey weight", "Strata", "Cluster", "Family ID", "Trial arm"),
+  Datasets = c(has(design$weight), has(design$strata), has(design$cluster), has(design$family), has(design$trial)),
+  `Share of observations` = pct(c(sum(design$weight), sum(design$strata), sum(design$cluster), sum(design$family), sum(design$trial)) / sum(design$rows))
+) |>
+  knitr::kable(align = "lrr")
+```
+
+Rows with a weight of zero: `r fmt(sum(design$zero_weight))`.
+
+```{r}
+#| label: weight-scale
+units |>
+  filter(weight_rows > 0) |>
+  summarise(
+    units = n(),
+    smallest_mean = min(weight_mean),
+    largest_mean = max(weight_mean),
+    .by = dataset_id
+  ) |>
+  filter(units > 1) |>
+  mutate(ratio = largest_mean / smallest_mean) |>
+  arrange(desc(ratio)) |>
+  head(15) |>
+  transmute(Dataset = dataset_id, Units = units, `Largest unit mean weight / smallest` = signif(ratio, 3)) |>
+  knitr::kable(align = "lrr", caption = "Datasets whose mean weight differs most between units, which is why weights are normalised within unit.")
+```
+
+## What the data support
+
+Datasets that hold both an exposure and at least one row of an outcome, anywhere in the dataset.
+This is an upper bound: Step 7 counts rows where both are present for the same participant and wave.
+
+```{r}
+#| label: support
+has_value <- coverage |> filter(n_value > 0) |> select(dataset_id, variable_name)
+exposure_sets <- exposures |>
+  filter(headline %in% TRUE) |>
+  inner_join(has_value, by = "variable_name") |>
+  distinct(exposure, dataset_id)
+tree <- outcomes$tree
+node_rows <- outcomes$rows |>
+  filter(role == "outcome", use %in% c("core", "report"), !is.na(node)) |>
+  inner_join(has_value, by = "variable_name") |>
+  distinct(node, prereg_family, dataset_id)
+node_support <- inner_join(node_rows, exposure_sets, by = "dataset_id", relationship = "many-to-many") |>
+  summarise(datasets = n_distinct(dataset_id), .by = c(prereg_family, node, exposure))
+node_support |>
+  tidyr::pivot_wider(names_from = exposure, values_from = datasets, values_fill = 0) |>
+  left_join(tree[c("node", "label", "headline")], by = "node") |>
+  arrange(prereg_family, label) |>
+  mutate(Headline = ifelse(headline %in% TRUE, "yes", "")) |>
+  select(Family = prereg_family, `Specific outcome` = label, Headline, everything(), -node, -headline) |>
+  knitr::kable()
+```
+
+```{r}
+#| label: family-support
+family_support <- inner_join(node_rows, exposure_sets, by = "dataset_id", relationship = "many-to-many") |>
+  summarise(datasets = n_distinct(dataset_id), .by = c(prereg_family, exposure)) |>
+  tidyr::pivot_wider(names_from = exposure, values_from = datasets, values_fill = 0) |>
+  arrange(prereg_family)
+knitr::kable(family_support, caption = "Datasets per outcome family and headline exposure.")
+```

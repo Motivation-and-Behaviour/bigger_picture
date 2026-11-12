@@ -201,6 +201,11 @@ if (nrow(.dataset_map_plan) == 0) {
   }
 }
 
+# The analysis reads each dataset's harmonised table (R/analysis/).
+.analysis_section_targets <- analysis_targets(
+  dplyr::filter(.dataset_map_plan, has_harmonisation)
+)
+
 .analysis_registry_targets <- list(
   tar_target(outcome_tree_file, bp_outcome_tree_path(), format = "file"),
   tar_target(outcome_rows_file, bp_outcome_rows_path(), format = "file"),
@@ -251,6 +256,7 @@ list(
   .harmonised_targets,
   .analysis_target,
   .analysis_registry_targets,
+  .analysis_section_targets,
   .reference_targets,
   private_report_targets()
 )
