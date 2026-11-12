@@ -45,6 +45,10 @@ analysis_settings <- function() {
     # Cluster-robust standard errors from fewer clusters than this are
     # flagged: they tend to be too small.
     min_clusters = 10L,
+    # A trend over collection years needs this many datasets, spanning this
+    # many years.
+    year_min_datasets = 10L,
+    year_min_span = 10,
     # The one-stage check's cell before the freeze, and the gap between the
     # two approaches, on the contrast of 1 against 4 hours a day, that
     # prompts a look: half the smallest effect of interest.

@@ -23,6 +23,7 @@ cells <- tar_read(development_cells)
 stage1 <- tar_read(stage1_all)
 stage2 <- tar_read(stage2_development)
 onestage <- tar_read(onestage_check)
+by_year <- tar_read(year_moderation_development)
 manifest <- tar_read(data_manifest)
 settings <- tar_read(settings)
 registry <- tar_read(outcome_registry)
@@ -241,4 +242,58 @@ tibble::tibble(
   )
 ) |>
   knitr::kable()
+```
+
+## Do the slopes differ by collection year?
+
+The code for the plan's test of whether associations are getting stronger or weaker over time, run here on the development cells only.
+Each unit's slope is regressed on its collection year, split into a between-study part (a dataset's mean year, adjusted for the units' ages and how screen use was asked) and a within-study part (like units of one study through its years: the same country, school stage, respondent and response format, with no recorded change to the question).
+Year stands in for content, which is not measured, so a result reads "the link was stronger in more recent data" and never that content has changed.
+A cell needs `r settings$year_min_datasets` or more datasets spanning `r settings$year_min_span` or more years.
+
+```{r}
+#| label: by-year-status
+by_year |>
+  count(status) |>
+  knitr::kable(col.names = c("Outcome of the year model", "Cells"))
+```
+
+```{r}
+#| label: by-year
+part <- function(est, low, high, status) case_when(
+  is.na(est) ~ "",
+  status == "too few studies to say" ~ "too few studies to say",
+  TRUE ~ paste0(num(est), " (", num(low), " to ", num(high), ")")
+)
+by_year |>
+  filter(status == "fitted") |>
+  arrange(desc(k_datasets)) |>
+  transmute(
+    Outcome = outcome,
+    Datasets = k_datasets,
+    Units = k_units,
+    Years = paste(round(first_year), "to", round(last_year)),
+    `Between studies, per decade` = part(between_per_decade, between_ci_low, between_ci_high, between_status),
+    `Within studies, per decade` = part(within_per_decade, within_ci_low, within_ci_high, within_status),
+    `Studies with a series over years` = k_within,
+    `Adjusted for` = adjusted_for
+  ) |>
+  knitr::kable(align = "lrrlrrrl")
+```
+
+```{r}
+#| label: fig-by-year
+#| fig-height: 4
+#| fig-cap: "Unit slopes for the one-stage check's cell against collection year. Point size shows precision."
+units <- tar_read(described_units)
+forest |>
+  left_join(units[c("unit", "year", "repeats_participants")], by = "unit") |>
+  filter(!is.na(year)) |>
+  ggplot(aes(year, estimate)) +
+  geom_hline(yintercept = 0, colour = "grey60") +
+  geom_point(aes(size = 1 / se^2, shape = repeats_participants), alpha = 0.5) +
+  scale_shape_manual(values = c(`TRUE` = 1, `FALSE` = 16), labels = c(`TRUE` = "follows the same children", `FALSE` = "new sample each time"), name = NULL) +
+  scale_size_area(max_size = 4, guide = "none") +
+  labs(x = "Collection year", y = "Slope, SD per hour a day") +
+  theme(legend.position = "bottom")
 ```

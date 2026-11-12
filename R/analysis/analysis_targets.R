@@ -60,6 +60,15 @@ analysis_targets <- function(harmonise_plan) {
         ))
       ),
       targets::tar_target_raw(
+        "series_breaks_file",
+        quote(bp_series_breaks_path()),
+        format = "file"
+      ),
+      targets::tar_target_raw(
+        "series_breaks",
+        quote(read_series_breaks(series_breaks_file, exposure_registry))
+      ),
+      targets::tar_target_raw(
         "onestage_cell",
         quote(check_onestage_cell(settings$onestage_cell, development_cells))
       ),
@@ -255,12 +264,57 @@ analysis_targets <- function(harmonise_plan) {
       ))
     ),
     targets::tar_target_raw(
-      "screen_trends",
-      quote(trend_descriptives(described_screen, "mean", settings_model))
+      "screen_by_year",
+      quote(trend_across_datasets(
+        described_screen,
+        described_units,
+        exposure_registry,
+        series_breaks,
+        "mean",
+        settings_model
+      ))
     ),
     targets::tar_target_raw(
-      "screen_trends_share",
-      quote(trend_descriptives(described_screen, "share_2plus", settings_model))
+      "screen_by_year_share",
+      quote(trend_across_datasets(
+        described_screen,
+        described_units,
+        exposure_registry,
+        series_breaks,
+        "share_2plus",
+        settings_model
+      ))
+    ),
+    targets::tar_target_raw(
+      "week_pooled",
+      quote(pool_unit_table(
+        described_week,
+        c("mean_weekday", "mean_weekend", "share_more_on_weekend"),
+        "exposure",
+        settings_model
+      ))
+    ),
+    targets::tar_target_raw(
+      "relations_pooled",
+      quote(pool_unit_table(
+        described_relations,
+        c("spearman", "share_both"),
+        c("variable_a", "variable_b"),
+        settings_model
+      ))
+    ),
+    targets::tar_target_raw(
+      "outcomes_pooled",
+      quote(pool_unit_table(
+        described_outcomes,
+        "prevalence",
+        c("variable_name", "grouping", "group"),
+        settings_model
+      ))
+    ),
+    targets::tar_target_raw(
+      "dataset_table",
+      quote(summarise_dataset_table(described_units, mapping_counts))
     ),
     targets::tar_target_raw(
       "measured",
@@ -286,7 +340,8 @@ analysis_targets <- function(harmonise_plan) {
         resource_counts,
         mapping_counts,
         dataschema,
-        data_manifest
+        data_manifest,
+        prepared_summary_all
       ))
     ),
     tarchetypes::tar_combine_raw(
@@ -312,6 +367,16 @@ analysis_targets <- function(harmonise_plan) {
     targets::tar_target_raw(
       "stage2_development",
       quote(pool_stage2_cells(stage1_all, development_cells, settings_model))
+    ),
+    targets::tar_target_raw(
+      "year_moderation_development",
+      quote(moderate_by_year(
+        stage1_all,
+        described_units,
+        exposure_registry,
+        series_breaks,
+        settings_model
+      ))
     ),
     targets::tar_target_raw(
       "derived_codebook",

@@ -116,7 +116,10 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `stage2_development` | Each cell's slopes pooled across datasets |
 | `onestage_rows_<key>`, `onestage_check` | The one-stage check on one cell |
 | `descriptives_<key>`, `described_screen`, `described_week`, `described_relations`, `described_outcomes`, `described_units` | Per-unit descriptive statistics of screen use and of binary outcomes, weighted where a unit has weights |
-| `screen_pooled`, `screen_trends`, `screen_trends_share` | Those statistics pooled so each dataset counts once, and change over time within repeated surveys |
+| `screen_pooled`, `week_pooled`, `relations_pooled`, `outcomes_pooled` | Those statistics pooled so each dataset counts once |
+| `series_breaks`, `screen_by_year`, `screen_by_year_share` | Recorded changes to a dataset's screen items, and screen use against collection year, between studies and within like series of one study |
+| `year_moderation_development` | Whether the slopes differ by collection year, on the development cells |
+| `dataset_table` | One row per dataset, numbered and not named |
 | `measured`, `work_scale` | What was measured, and the scale of the harmonisation work, counted from the repository and the pipeline |
 | `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation`, `report_descriptives`, `report_thin_slice` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
 

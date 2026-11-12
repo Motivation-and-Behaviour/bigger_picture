@@ -18,8 +18,10 @@
 #'   stage, sex and household SES), `week` (weekday against weekend on the
 #'   same rows), `relations` (rank correlations between screen measures),
 #'   `outcomes` (prevalence of binary outcomes, overall and by school stage)
-#'   and `units` (how each unit measured screen use, and its design). NULL
-#'   when the dataset is not included.
+#'   and `units` (how each unit measured screen use, its design, and how
+#'   many of its rows have no weight and so are left out of its weighted
+#'   statistics). The rank correlations are unweighted and use every row.
+#'   NULL when the dataset is not included.
 describe_dataset <- function(
   prepared,
   outcome_registry,
@@ -224,6 +226,7 @@ describe_dataset <- function(
       measure_type = as.character(column("st_measure_type")),
       responder = as.character(column("st_responder")),
       weighted = unit_weighted,
+      no_weight = unit_weighted & (is.na(weight) | weight <= 0),
       total_source = exposures$total_source,
       total_coverage = exposures$total_coverage
     ),
@@ -237,6 +240,7 @@ describe_dataset <- function(
     measure_type = modal(.data$measure_type),
     responder = modal(.data$responder),
     weighted = any(.data$weighted),
+    rows_without_weight = sum(.data$no_weight),
     total_source = modal(.data$total_source),
     total_coverage = bp_stat(.data$total_coverage, max),
     .by = "unit"

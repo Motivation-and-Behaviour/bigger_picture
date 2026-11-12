@@ -673,6 +673,42 @@ test_that("descriptives are per unit, weighted, and never relate x to y", {
   expect_false(any(c("mh_dep_self") %in% unlist(lapply(described, names))))
   expect_null(describe_dataset(NULL, reg$outcomes, reg$exposures))
 
+  # Weekday against weekend on the same rows, and outcome prevalence.
+  week_rows <- engine_prepare("9996", reg, function(rows) {
+    rows$st_watch_wd <- rows$st_watch
+    rows$st_watch_we <- rows$st_watch + 1
+    rows$st_watch_we[1:50] <- NA
+    rows
+  })
+  week <- describe_dataset(week_rows, reg$outcomes, reg$exposures)$week
+  expect_equal(week$mean_weekend - week$mean_weekday, c(1, 1))
+  expect_equal(week$share_more_on_weekend, c(1, 1))
+  expect_equal(sum(week$n), nrow(week_rows$base) - 50)
+  with_alcohol <- engine_prepare("9994", reg)
+  prevalence <- describe_dataset(
+    with_alcohol,
+    reg$outcomes,
+    reg$exposures
+  )$outcomes
+  overall <- prevalence[
+    prevalence$variable_name == "beh_alcohol_self" &
+      prevalence$grouping == "all",
+  ]
+  first <- with_alcohol$base$unit == overall$unit[1]
+  expect_equal(
+    overall$prevalence[1],
+    mean(with_alcohol$outcomes$beh_alcohol_self[first])
+  )
+  # A panel repeats participants; a repeated cross-section does not.
+  expect_true(all(
+    describe_dataset(
+      engine_prepare("9991", reg),
+      reg$outcomes,
+      reg$exposures
+    )$units$repeats_participants
+  ))
+  expect_false(any(described$units$repeats_participants))
+
   # Weighted where the unit has weights: dataset 9995 does.
   weighted <- engine_prepare("9995", reg)
   out <- describe_dataset(weighted, reg$outcomes, reg$exposures)
@@ -682,6 +718,18 @@ test_that("descriptives are per unit, weighted, and never relate x to y", {
     out$screen$variable_name == "st_watch" & out$screen$grouping == "all",
   ]
   expect_equal(watch$mean, sum(w * weighted$exposures$st_watch) / sum(w))
+  expect_equal(out$units$rows_without_weight, 0)
+  # Rows with no weight in a weighted unit are left out and counted.
+  partly <- engine_prepare("9995", reg, function(rows) {
+    rows$survey_weight[1:100] <- NA
+    rows
+  })
+  part <- describe_dataset(partly, reg$outcomes, reg$exposures)
+  expect_equal(part$units$rows_without_weight, 100)
+  part_watch <- part$screen[
+    part$screen$variable_name == "st_watch" & part$screen$grouping == "all",
+  ]
+  expect_equal(part_watch$n, nrow(partly$base) - 100)
 })
 
 test_that("pooled descriptives count each dataset once and need three", {
@@ -720,40 +768,6 @@ test_that("pooled descriptives count each dataset once and need three", {
   expect_equal(nrow(apart), 0)
 })
 
-test_that("trends come from repeated surveys with three or more years", {
-  years <- c(2000, 2005, 2010, 2015)
-  make <- function(id, slope, panel = FALSE) {
-    tibble::tibble(
-      dataset_id = id,
-      unit = paste(id, years),
-      country = "A",
-      year = years,
-      variable_name = "st_watch",
-      grouping = "all",
-      n = 500,
-      median = 2 + slope * (years - 2000) / 10 + c(0.01, -0.01, 0.01, -0.01),
-      repeats_participants = panel
-    )
-  }
-  screen <- dplyr::bind_rows(
-    make("a", 0.5),
-    make("b", 0.4),
-    make("c", 0.6),
-    make("panel", 3, panel = TRUE),
-    make("short", 3)[1:2, ]
-  )
-  trend <- trend_descriptives(screen)
-  expect_setequal(trend$slopes$dataset_id, c("a", "b", "c"))
-  expect_equal(
-    trend$slopes$slope_per_decade,
-    c(0.5, 0.4, 0.6),
-    tolerance = 0.05
-  )
-  expect_equal(trend$pooled$datasets, 3)
-  expect_equal(trend$pooled$change_per_decade, 0.5, tolerance = 0.05)
-  expect_equal(nrow(trend$series), 12)
-})
-
 test_that("coverage and the scale of the work are counted, not typed", {
   reg <- engine_registries()
   audit <- tibble::tibble(
@@ -773,18 +787,27 @@ test_that("coverage and the scale of the work are counted, not typed", {
   measured <- summarise_measured(audit, reg$outcomes, reg$exposures)
   depression <- measured$outcomes[measured$outcomes$node == "depression", ]
   expect_equal(depression$datasets, 2)
-  expect_equal(depression$observations, 60)
+  expect_equal(depression$dataset_waves, 3)
+  expect_equal(depression$scores, 60)
   expect_equal(depression$schema_rows, 2)
   expect_false("anxiety" %in% measured$outcomes$node)
   expect_equal(measured$exposures$exposure, "watch")
 
+  # A column used by rows of two statuses counts once; a column named only
+  # by a row that was not mapped does not count; free text is not a column.
   variables <- tibble::tibble(
-    status = c("compatible", "compatible", "unavailable"),
-    source_columns = c("a, b", "b", NA)
+    status = c(
+      "compatible",
+      "partial",
+      "incompatible",
+      "unavailable",
+      "inferred"
+    ),
+    source_columns = c("a, b", "b; c", "d", NA, "CBCL 101")
   )
   mapping <- count_mapping(variables, 1)
-  expect_equal(mapping$rows[mapping$status == "compatible"], 2)
-  expect_equal(mapping$source_columns[mapping$status == "compatible"], 2)
+  expect_equal(sum(mapping$rows), 5)
+  expect_equal(unique(mapping$tidied_columns), 3)
   resources <- count_resources(
     tibble::tibble(
       role = c("data", "data", "codebook"),
@@ -794,16 +817,254 @@ test_that("coverage and the scale of the work are counted, not typed", {
   )
   expect_equal(resources$files[resources$role == "data"], 2)
 
+  tidiers <- withr::local_tempdir()
+  file.create(file.path(
+    tidiers,
+    c("tidy_BPIPD_1.R", "tidy_BPIPD_7.R", "tidy_BPIPD_TEMPLATE.R")
+  ))
+  lookups <- withr::local_tempdir()
+  dir.create(file.path(lookups, "BPIPD-1", "lookups"), recursive = TRUE)
+  dir.create(file.path(lookups, "BPIPD-7", "lookups"), recursive = TRUE)
+  dir.create(file.path(lookups, "lookups"))
+  file.create(file.path(lookups, "BPIPD-1", "lookups", "own.csv"))
+  file.create(file.path(lookups, "BPIPD-7", "lookups", "other.csv"))
+  file.create(file.path(lookups, "lookups", "shared.csv"))
   scale <- summarise_work_scale(
     resources,
     mapping,
     reg$schema,
-    tibble::tibble(dataset_id = "1", participants = 5, primary_rows = 9)
+    tibble::tibble(dataset_id = "1", participants = 5, primary_rows = 9),
+    tibble::tibble(rows_kept = 8),
+    tidier_dir = tidiers,
+    lookup_dirs = lookups
   )
   count <- function(item) scale$totals$count[scale$totals$item == item]
   expect_equal(count("Raw data files read"), 2)
-  expect_equal(count("Codebooks and documents consulted"), 1)
-  expect_equal(count("Variables mapped with data"), 2)
-  expect_equal(count("Mapping decisions recorded"), 3)
-  expect_equal(count("Dataschema variables"), nrow(reg$schema))
+  expect_equal(count("Codebooks and other documents supplied with the data"), 1)
+  expect_equal(count("Of those, mapped with data"), 3)
+  expect_equal(count("Mapping decisions recorded (a variable in a dataset)"), 5)
+  expect_equal(count("Columns of the tidied data those mappings draw on"), 3)
+  expect_equal(count("Observations after the age and trial rules"), 8)
+  # Only the included dataset's tidier and lookups, and never the template.
+  expect_equal(count("Study-specific tidying scripts"), 1)
+  expect_equal(count("Lookup tables"), 2)
+  expect_equal(count("Variables in the shared schema"), nrow(reg$schema))
+})
+
+test_that("any per-unit table pools with each dataset counted once", {
+  table <- tibble::tibble(
+    dataset_id = c("a", "a", "b", "c", "d", "e"),
+    key = c(rep("x", 4), rep("y", 2)),
+    n = c(100, 300, 50, 1e6, 10, 10),
+    value = c(1, 3, 4, 2, 9, 9),
+    other = c(0.1, 0.3, 0.9, 0.5, 0, 0)
+  )
+  pooled <- pool_unit_table(table, c("value", "other"), "key")
+  expect_equal(pooled$key, "x")
+  expect_equal(pooled$datasets, 3)
+  # Dataset a averages to 2.5 and 0.25; the three datasets are then ranked.
+  expect_equal(pooled$value_mid, 2.5)
+  expect_equal(pooled$value_low, 2.25)
+  expect_equal(pooled$value_high, 3.25)
+  expect_equal(pooled$other_mid, 0.5)
+  expect_equal(pooled$other_low, 0.375)
+  expect_equal(pooled$other_high, 0.7)
+})
+
+test_that("units form a series only where they measure the same thing", {
+  reg <- engine_registries()
+  units <- tibble::tibble(
+    dataset_id = c("1", "1", "1", "1", "1", "2", "170", "170"),
+    country = c("A", "A", "B", "A", "A", "A", "USA", "USA"),
+    responder = c(
+      "Self",
+      "Self",
+      "Self",
+      "Parent or carer",
+      "Self",
+      "Self",
+      "Self",
+      "Self"
+    ),
+    measure_type = "Categorical",
+    age_median = c(13, 14, 13, 13, 17, 13, 15, 15),
+    year = c(2000, 2005, 2000, 2000, 2010, 2000, 2015, 2019)
+  )
+  breaks <- read_series_breaks(
+    file.path(repo_root, bp_series_breaks_path()),
+    reg$exposures
+  )
+  expect_true(all(c("dataset_id", "exposure", "from_year") %in% names(breaks)))
+  series <- assign_series(units, "watch", breaks)
+  # Same country, respondent, format and school stage: one series.
+  expect_equal(series[1], series[2])
+  # Another country, respondent, school stage or dataset: another series.
+  expect_equal(dplyr::n_distinct(series[1:6]), 5)
+  # A recorded change to the watching item splits the years either side.
+  expect_false(series[7] == series[8])
+  expect_equal(
+    assign_series(units[7:8, ], "educational", breaks)[1],
+    assign_series(units[7:8, ], "educational", breaks)[2]
+  )
+
+  dir <- withr::local_tempdir()
+  path <- file.path(dir, "series_breaks.csv")
+  writeLines(
+    c("dataset_id,exposure,from_year,reason", "1,not_an_exposure,2000,why"),
+    path
+  )
+  expect_error(read_series_breaks(path, reg$exposures), "not exposures")
+  writeLines(c("dataset_id,exposure,from_year,reason", "1,watch,,why"), path)
+  expect_error(read_series_breaks(path, reg$exposures), "year and a reason")
+})
+
+test_that("the dataset table gives one row per dataset, by number", {
+  units <- tibble::tibble(
+    dataset_id = c("2", "2", "1", "3", "3"),
+    wave = c("a", "b", NA, "a", "b"),
+    country = c("A", "A", "B", "A", "C"),
+    year = c(2000, 2004, 2010, 2001, 2001),
+    age_median = c(10, 12, 15, 9, 9),
+    rows = c(100, 90, 50, 30, 40),
+    repeats_participants = c(TRUE, TRUE, FALSE, FALSE, FALSE),
+    weighted = c(FALSE, FALSE, TRUE, FALSE, FALSE)
+  )
+  mapping <- tibble::tibble(
+    dataset_id = c("1", "1", "2", "3"),
+    status = c("compatible", "unavailable", "partial", "inferred"),
+    rows = c(4, 500, 7, 2)
+  )
+  table <- summarise_dataset_table(units, mapping)
+  expect_equal(table$dataset_id, c("1", "2", "3"))
+  expect_equal(
+    table$design,
+    c(
+      "Single occasion",
+      "Follows the same children",
+      "Repeated survey, new sample each time"
+    )
+  )
+  expect_equal(table$variables_supplied, c(4, 7, 2))
+  expect_equal(table$countries, c(1, 1, 2))
+  expect_false("dataset_name" %in% names(table))
+})
+
+test_that("a trend over years is split within and between datasets", {
+  set.seed(31)
+  # Twelve repeated surveys and eight panels. Slopes rise 0.05 per decade
+  # inside a survey; across surveys they rise 0.02 per decade. In the panels
+  # the year moves with age, and age shifts the estimate strongly.
+  survey <- function(id, start, panel) {
+    years <- start + c(0, 5, 10)
+    centre <- mean(years)
+    age <- if (panel) 8 + (years - start) / 2 else rep(13, 3)
+    tibble::tibble(
+      dataset_id = id,
+      unit = paste(id, years),
+      year = years,
+      series = paste(id, if (panel) years else "all"),
+      age_median = age,
+      measure_type = "Categorical",
+      responder = "Self",
+      sei = 0.01,
+      yi = 0.02 *
+        (centre - 2010) /
+        10 +
+        (if (panel) 0 else 0.05 * (years - centre) / 10) +
+        0.03 * (age - 13) +
+        stats::rnorm(3, 0, 0.01)
+    )
+  }
+  units <- dplyr::bind_rows(
+    lapply(1:12, function(i) survey(paste0("s", i), 1990 + 2 * i, FALSE)),
+    lapply(1:8, function(i) survey(paste0("p", i), 1992 + 3 * i, TRUE))
+  )
+  fit <- regress_units_on_year(units)
+  expect_equal(fit$status, "fitted")
+  expect_equal(fit$k_datasets, 20)
+  expect_equal(fit$k_within, 12)
+  expect_lt(abs(fit$within_per_decade - 0.05), 0.01)
+  expect_lt(abs(fit$between_per_decade - 0.02), 0.015)
+  expect_true(fit$within_ci_low < 0.05 && fit$within_ci_high > 0.05)
+  expect_match(fit$adjusted_for, "median age")
+
+  # A panel's waves at different ages are separate series, so they add
+  # nothing within; put in one series, each panel would add its own years.
+  one_series <- units
+  one_series$series <- one_series$dataset_id
+  expect_equal(regress_units_on_year(one_series)$k_within, 20)
+  expect_equal(fit$within_status, "estimated")
+
+  expect_equal(
+    regress_units_on_year(units[
+      units$dataset_id %in% paste0("s", 1:5),
+    ])$status,
+    "too few datasets or years"
+  )
+  narrow <- units
+  narrow$year <- 2010 + (narrow$year %% 3)
+  expect_equal(
+    regress_units_on_year(narrow)$status,
+    "too few datasets or years"
+  )
+})
+
+test_that("year moderation and the cross-dataset trend use unit descriptions", {
+  set.seed(32)
+  ids <- sprintf("d%02d", 1:12)
+  reg <- engine_registries()
+  breaks <- read_series_breaks(
+    file.path(repo_root, bp_series_breaks_path()),
+    reg$exposures
+  )
+  units <- tibble::tibble(
+    dataset_id = rep(ids, each = 2),
+    unit = paste0(dataset_id, c("a", "b")),
+    country = "A",
+    year = rep(seq(1998, 2020, length.out = 12), each = 2) + c(0, 4),
+    age_median = stats::runif(24, 12.5, 15.5),
+    measure_type = "Categorical",
+    responder = "Self"
+  )
+  stage1 <- tibble::tibble(
+    dataset_id = units$dataset_id,
+    unit = units$unit,
+    exposure = "st_watch",
+    outcome = "mh_dep_self",
+    effect_measure = "sd_per_hour",
+    estimate = 0.04 * (units$year - 2010) / 10 + stats::rnorm(24, 0, 0.005),
+    se = 0.01,
+    status = "fitted"
+  )
+  moderation <- moderate_by_year(stage1, units, reg$exposures, breaks)
+  expect_equal(nrow(moderation), 1)
+  expect_equal(moderation$status, "fitted")
+  expect_lt(abs(moderation$between_per_decade - 0.04), 0.015)
+  expect_lt(abs(moderation$within_per_decade - 0.04), 0.03)
+  expect_equal(
+    nrow(moderate_by_year(stage1[0, ], units, reg$exposures, breaks)),
+    0
+  )
+
+  screen <- tibble::tibble(
+    dataset_id = rep(units$dataset_id, 2),
+    unit = rep(units$unit, 2),
+    variable_name = rep(c("st_watch", "total_screen"), each = 24),
+    grouping = "all",
+    n = 500,
+    mean = 2 +
+      0.5 * (rep(units$year, 2) - 2010) / 10 +
+      stats::rnorm(48, 0, 0.02),
+    se_mean = 0.03,
+    share_2plus = 0.4
+  )
+  trend <- trend_across_datasets(screen, units, reg$exposures, breaks)
+  expect_equal(trend$trends$variable_name, "st_watch")
+  expect_lt(abs(trend$trends$between_per_decade - 0.5), 0.1)
+  # The figure's table counts each dataset once per period, needs three
+  # datasets, carries no dataset label, and leaves the total out.
+  expect_false("dataset_id" %in% names(trend$periods))
+  expect_equal(unique(trend$periods$variable_name), "st_watch")
+  expect_true(all(trend$periods$datasets >= 3))
+  expect_true(all(trend$periods$low <= trend$periods$mid))
 })

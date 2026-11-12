@@ -1,9 +1,11 @@
 #' What was measured: coverage of every outcome node and exposure
 #'
-#' For the descriptive sections: how many datasets, units and observations
+#' For the descriptive sections: how many datasets, dataset-waves and scores
 #' stand behind each specific outcome and each screen measure, and which
 #' informants reported it (ANALYSIS_PLAN.md, Step 6). Counts are of what the
-#' preparation step used, from the row audit.
+#' preparation step used, from the row audit. `scores` adds up the values of
+#' every schema row of a node, so a child with a parent report and a self
+#' report counts twice: it is not a count of children or of observations.
 #'
 #' @param row_audit The combined row audit.
 #' @param outcome_registry The outcome registry.
@@ -30,7 +32,7 @@ summarise_measured <- function(row_audit, outcome_registry, exposure_registry) {
     outcome_rows,
     datasets = dplyr::n_distinct(.data$dataset_id),
     dataset_waves = dplyr::n_distinct(paste(.data$dataset_id, .data$wave)),
-    observations = sum(.data$n_used),
+    scores = sum(.data$n_used),
     schema_rows = dplyr::n_distinct(.data$variable_name),
     informants = paste(sort(unique(.data$informant)), collapse = ", "),
     score_types = paste(sort(unique(.data$score_type)), collapse = ", "),
@@ -59,7 +61,7 @@ summarise_measured <- function(row_audit, outcome_registry, exposure_registry) {
     exposure_rows,
     datasets = dplyr::n_distinct(.data$dataset_id),
     dataset_waves = dplyr::n_distinct(paste(.data$dataset_id, .data$wave)),
-    observations = sum(.data$n_used),
+    scores = sum(.data$n_used),
     .by = c("exposure", "content_class", "axis", "context", "day")
   )
   exposures <- exposures[order(-exposures$datasets), ]

@@ -152,6 +152,15 @@ bp_deviations_path <- function() {
   fs::path(bp_analysis_dir(), "deviations.csv")
 }
 
+# Points where a dataset's screen item changed (R/analysis/read_series_breaks.R).
+bp_series_breaks_path <- function() {
+  fs::path(bp_analysis_dir(), "series_breaks.csv")
+}
+
+bp_series_breaks_columns <- function() {
+  c("dataset_id", "exposure", "from_year", "reason")
+}
+
 # The settings each stage reads, so a change to one reruns only that stage.
 bp_prepare_settings <- function() {
   c(
@@ -173,7 +182,16 @@ bp_summary_settings <- function() {
 }
 
 bp_model_settings <- function() {
-  c("min_unit_rows", "min_datasets", "sex_known_min", "min_clusters")
+  c(
+    "min_unit_rows",
+    "min_datasets",
+    "sex_known_min",
+    "min_clusters",
+    "year_min_datasets",
+    "year_min_span",
+    "school_stage_breaks",
+    "school_stage_labels"
+  )
 }
 
 # The cells fitted before the freeze, to build the engine on real data

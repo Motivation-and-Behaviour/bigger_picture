@@ -7,7 +7,8 @@
 #' @param x Hours a day.
 #' @param w Weights, one per value.
 #' @param thresholds Durations for "share at or above".
-#' @return A one-row tibble: `n`, `mean`, the 10th, 25th, 50th, 75th and 90th
+#' @return A one-row tibble: `n`, `mean`, `se_mean` (the standard error of
+#'   the weighted mean, ignoring clustering), the 10th, 25th, 50th, 75th and 90th
 #'   percentiles, `share_zero` and one `share_<h>plus` per threshold.
 weighted_summary <- function(x, w = rep(1, length(x)), thresholds = c(2, 4)) {
   keep <- !is.na(x) & !is.na(w) & w > 0
@@ -19,6 +20,7 @@ weighted_summary <- function(x, w = rep(1, length(x)), thresholds = c(2, 4)) {
     shares <- rep(NA_real_, length(thresholds))
     centre <- NA_real_
     zero <- NA_real_
+    spread <- NA_real_
   } else {
     order <- order(x)
     cumulative <- cumsum(w[order]) / sum(w)
@@ -34,9 +36,10 @@ weighted_summary <- function(x, w = rep(1, length(x)), thresholds = c(2, 4)) {
     )
     centre <- sum(w * x) / sum(w)
     zero <- sum(w[x == 0]) / sum(w)
+    spread <- sqrt(sum(w^2 * (x - centre)^2)) / sum(w)
   }
   out <- c(
-    list(n = length(x), mean = centre),
+    list(n = length(x), mean = centre, se_mean = spread),
     as.list(quantiles),
     list(share_zero = zero),
     stats::setNames(as.list(shares), paste0("share_", thresholds, "plus"))
