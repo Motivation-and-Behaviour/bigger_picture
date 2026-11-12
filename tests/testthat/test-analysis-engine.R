@@ -335,3 +335,189 @@ test_that("the one-stage check agrees with a matched two-stage estimate", {
     extract_cell_rows(engine_prepare("9995", reg), "st_tablet", "mh_dep_self")
   )
 })
+
+test_that("a weighted summary gives weighted quantiles and shares", {
+  plain <- weighted_summary(c(0, 0, 1, 2, 3, 5))
+  expect_equal(plain$n, 6)
+  expect_equal(plain$median, 1)
+  expect_equal(plain$share_zero, 2 / 6)
+  expect_equal(plain$share_2plus, 3 / 6)
+  expect_equal(plain$share_4plus, 1 / 6)
+  # All the weight on the top value moves every statistic to it.
+  heavy <- weighted_summary(c(0, 1, 5), c(1, 1, 98))
+  expect_equal(heavy$median, 5)
+  expect_equal(heavy$p10, 5)
+  expect_equal(heavy$share_zero, 0.01)
+  expect_equal(heavy$mean, (1 + 5 * 98) / 100)
+  # Missing values and non-positive weights are left out.
+  expect_equal(weighted_summary(c(1, NA, 3), c(1, 1, 0))$n, 1)
+  expect_true(is.na(weighted_summary(numeric())$median))
+})
+
+test_that("descriptives are per unit, weighted, and never relate x to y", {
+  reg <- engine_registries()
+  prepared <- engine_prepare("9996", reg)
+  described <- describe_dataset(prepared, reg$outcomes, reg$exposures)
+  expect_named(
+    described,
+    c("screen", "week", "relations", "outcomes", "units")
+  )
+  expect_equal(nrow(described$units), 2)
+  expect_setequal(described$units$country, c("Ireland", "Scotland"))
+
+  screen <- described$screen
+  game <- screen[screen$variable_name == "st_game" & screen$grouping == "all", ]
+  ireland <- prepared$base$unit == game$unit[game$country == "Ireland"]
+  expect_equal(
+    game$median[game$country == "Ireland"],
+    stats::median(prepared$exposures$st_game[ireland]),
+    tolerance = 0.01
+  )
+  expect_setequal(
+    unique(screen$grouping),
+    c("all", "school_stage", "sex")
+  )
+  expect_true("total_screen" %in% screen$variable_name)
+  expect_true(all(screen$n >= analysis_settings()$min_unit_rows))
+
+  # The same two screen measures in every unit, one correlation each.
+  expect_equal(nrow(described$relations), 2)
+  expect_true(all(abs(described$relations$spearman) < 0.2))
+  # No table holds an outcome beside an exposure.
+  expect_false(any(c("mh_dep_self") %in% unlist(lapply(described, names))))
+  expect_null(describe_dataset(NULL, reg$outcomes, reg$exposures))
+
+  # Weighted where the unit has weights: dataset 9995 does.
+  weighted <- engine_prepare("9995", reg)
+  out <- describe_dataset(weighted, reg$outcomes, reg$exposures)
+  expect_true(out$units$weighted)
+  w <- weighted$base$survey_weight_norm
+  watch <- out$screen[
+    out$screen$variable_name == "st_watch" & out$screen$grouping == "all",
+  ]
+  expect_equal(watch$mean, sum(w * weighted$exposures$st_watch) / sum(w))
+})
+
+test_that("pooled descriptives count each dataset once and need three", {
+  screen <- tibble::tibble(
+    dataset_id = c("a", "a", "b", "c", "d", "d"),
+    unit = c("a1", "a2", "b1", "c1", "d1", "d2"),
+    variable_name = c(rep("st_watch", 4), rep("st_game", 2)),
+    grouping = "all",
+    group = "all",
+    n = c(100, 300, 50, 1e6, 10, 10),
+    median = c(1, 3, 4, 2, 9, 9),
+    p25 = 1,
+    p75 = 3,
+    p90 = 4,
+    share_zero = 0.1,
+    share_2plus = 0.5,
+    share_4plus = 0.2
+  )
+  units <- tibble::tibble(
+    unit = screen$unit,
+    total_source = NA_character_,
+    total_coverage = NA_integer_
+  )
+  pooled <- pool_descriptives(screen, units)
+  # Gaming has one dataset and is not pooled.
+  expect_equal(pooled$variable_name, "st_watch")
+  expect_equal(pooled$datasets, 3)
+  # Dataset a's units average to 2.5; the huge dataset c counts once.
+  expect_equal(pooled$median_mid, stats::median(c(2.5, 4, 2)))
+
+  total <- screen[1:4, ]
+  total$variable_name <- "total_screen"
+  units$total_source <- c("summed", "summed", "summed", "dedicated", NA, NA)
+  units$total_coverage <- c(2L, 2L, 2L, 4L, NA, NA)
+  apart <- pool_descriptives(total, units)
+  expect_equal(nrow(apart), 0)
+})
+
+test_that("trends come from repeated surveys with three or more years", {
+  years <- c(2000, 2005, 2010, 2015)
+  make <- function(id, slope, panel = FALSE) {
+    tibble::tibble(
+      dataset_id = id,
+      unit = paste(id, years),
+      country = "A",
+      year = years,
+      variable_name = "st_watch",
+      grouping = "all",
+      n = 500,
+      median = 2 + slope * (years - 2000) / 10 + c(0.01, -0.01, 0.01, -0.01),
+      repeats_participants = panel
+    )
+  }
+  screen <- dplyr::bind_rows(
+    make("a", 0.5),
+    make("b", 0.4),
+    make("c", 0.6),
+    make("panel", 3, panel = TRUE),
+    make("short", 3)[1:2, ]
+  )
+  trend <- trend_descriptives(screen)
+  expect_setequal(trend$slopes$dataset_id, c("a", "b", "c"))
+  expect_equal(
+    trend$slopes$slope_per_decade,
+    c(0.5, 0.4, 0.6),
+    tolerance = 0.05
+  )
+  expect_equal(trend$pooled$datasets, 3)
+  expect_equal(trend$pooled$change_per_decade, 0.5, tolerance = 0.05)
+  expect_equal(nrow(trend$series), 12)
+})
+
+test_that("coverage and the scale of the work are counted, not typed", {
+  reg <- engine_registries()
+  audit <- tibble::tibble(
+    dataset_id = c("1", "1", "2", "2", "2"),
+    wave = c("a", "b", "a", "a", "a"),
+    variable_name = c(
+      "mh_dep_self",
+      "mh_dep_self",
+      "mh_dep_smfq_self",
+      "st_watch",
+      "mh_anx_self"
+    ),
+    kind = c("outcome", "outcome", "outcome", "exposure", "outcome"),
+    n_used = c(10, 20, 30, 40, 50),
+    status = c("used", "used", "used", "used", "dropped_repeat")
+  )
+  measured <- summarise_measured(audit, reg$outcomes, reg$exposures)
+  depression <- measured$outcomes[measured$outcomes$node == "depression", ]
+  expect_equal(depression$datasets, 2)
+  expect_equal(depression$observations, 60)
+  expect_equal(depression$schema_rows, 2)
+  expect_false("anxiety" %in% measured$outcomes$node)
+  expect_equal(measured$exposures$exposure, "watch")
+
+  variables <- tibble::tibble(
+    status = c("compatible", "compatible", "unavailable"),
+    source_columns = c("a, b", "b", NA)
+  )
+  mapping <- count_mapping(variables, 1)
+  expect_equal(mapping$rows[mapping$status == "compatible"], 2)
+  expect_equal(mapping$source_columns[mapping$status == "compatible"], 2)
+  resources <- count_resources(
+    tibble::tibble(
+      role = c("data", "data", "codebook"),
+      reader = c("csv", "csv", NA)
+    ),
+    1
+  )
+  expect_equal(resources$files[resources$role == "data"], 2)
+
+  scale <- summarise_work_scale(
+    resources,
+    mapping,
+    reg$schema,
+    tibble::tibble(dataset_id = "1", participants = 5, primary_rows = 9)
+  )
+  count <- function(item) scale$totals$count[scale$totals$item == item]
+  expect_equal(count("Raw data files read"), 2)
+  expect_equal(count("Codebooks and documents consulted"), 1)
+  expect_equal(count("Variables mapped with data"), 2)
+  expect_equal(count("Mapping decisions recorded"), 3)
+  expect_equal(count("Dataschema variables"), nrow(reg$schema))
+})

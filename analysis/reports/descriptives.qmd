@@ -1,0 +1,372 @@
+---
+title: "Descriptives"
+subtitle: "The scale of the work, what was measured, and how children use screens"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(dplyr)
+library(ggplot2)
+library(targets)
+
+work <- tar_read(work_scale)
+flow <- tar_read(dataset_flow)
+measured <- tar_read(measured)
+pooled <- tar_read(screen_pooled)
+units <- tar_read(described_units)
+week <- tar_read(described_week)
+relations <- tar_read(described_relations)
+outcomes <- tar_read(described_outcomes)
+trends <- tar_read(screen_trends)
+trends_share <- tar_read(screen_trends_share)
+manifest <- tar_read(data_manifest)
+settings <- tar_read(settings)
+exposures <- tar_read(exposure_registry)
+
+fmt <- function(x) format(round(x), big.mark = ",", trim = TRUE)
+num <- function(x, digits = 2) formatC(x, format = "f", digits = digits)
+pct <- function(x) sprintf("%.0f%%", 100 * x)
+theme_set(theme_minimal(base_size = 10))
+stage_order <- settings$school_stage_labels
+measure_labels <- c(
+  total_screen = "Total screen time",
+  st_watch = "Watching",
+  st_game = "Gaming",
+  st_socmedia = "Social media",
+  st_educational = "Educational use",
+  st_comp = "Computer",
+  st_tablet = "Tablet",
+  st_phone = "Phone",
+  st_educontent_watch = "Educational programmes"
+)
+label_measure <- function(x) coalesce(measure_labels[x], x)
+```
+
+A working draft of the descriptive half of the report to the funder, built before any model is run.
+Screen use and outcomes are described separately here: nothing relates one to the other.
+Every figure is computed within each study's own waves and countries first, using survey weights where the study released them, and then pooled so that each dataset counts once; a figure needs `r settings$min_datasets` or more datasets.
+No dataset is named.
+Data: `r nrow(manifest)` datasets, overall hash `r unique(manifest$overall_hash)`.
+
+## The scale of the work
+
+```{r}
+#| label: totals
+work$totals |>
+  transmute(` ` = item, Count = fmt(count)) |>
+  knitr::kable(align = "lr")
+```
+
+```{r}
+#| label: flow
+flow |>
+  mutate(across(c(datasets, participants, rows), \(x) ifelse(is.na(x), "", fmt(x)))) |>
+  knitr::kable(col.names = c("Stage", "Datasets", "Participants", "Observations"), align = "lrrr", caption = "Datasets from specification to analysis. Datasets identified or requested but never specified are not recorded in the repository.")
+```
+
+```{r}
+#| label: files
+work$files |>
+  filter(role == "data") |>
+  transmute(Format = reader, Datasets = datasets, Files = fmt(files)) |>
+  knitr::kable(align = "lrr", caption = "Raw data files read, by format.")
+```
+
+```{r}
+#| label: mapping
+status_labels <- c(
+  compatible = "Compatible: converts to the shared variable without loss",
+  partial = "Partial: part of the construct, or a simplification",
+  proximate = "Proximate: a close but not equivalent set of categories",
+  inferred = "Inferred: from the study's design or documentation",
+  incompatible = "Incompatible: related information exists but cannot be used",
+  unavailable = "Unavailable: the study did not collect it",
+  in_progress = "Not yet decided"
+)
+work$mapping |>
+  mutate(order = match(status, names(status_labels))) |>
+  arrange(order) |>
+  transmute(`Mapping decision` = coalesce(status_labels[status], status), `Variable-by-dataset decisions` = fmt(rows), Datasets = datasets) |>
+  knitr::kable(align = "lrr", caption = "Every shared variable was considered for every dataset, and the decision recorded with its reason.")
+```
+
+```{r}
+#| label: schema
+work$schema |>
+  arrange(desc(rows)) |>
+  transmute(Domain = domain, `Shared variables` = rows) |>
+  knitr::kable(align = "lr")
+```
+
+## Who is in the data
+
+```{r}
+#| label: who
+tibble::tibble(
+  ` ` = c("Datasets", "Countries", "Collection years", "Waves and countries analysed separately (units)", "Datasets that follow the same children over time", "Units with survey weights"),
+  Value = c(
+    n_distinct(units$dataset_id),
+    n_distinct(na.omit(units$country)),
+    paste(round(min(units$year, na.rm = TRUE)), "to", round(max(units$year, na.rm = TRUE))),
+    fmt(nrow(units)),
+    n_distinct(units$dataset_id[units$repeats_participants]),
+    paste0(fmt(sum(units$weighted)), " (", pct(mean(units$weighted)), ")")
+  )
+) |>
+  knitr::kable()
+```
+
+```{r}
+#| label: fig-year-age
+#| fig-height: 4
+#| fig-cap: "Observations by collection year and median age of the unit. Each cell sums the observations of the units that fall in it."
+units |>
+  filter(!is.na(year), !is.na(age_median)) |>
+  mutate(year = 5 * floor(year / 5), age = 2 * floor(age_median / 2)) |>
+  summarise(rows = sum(rows), datasets = n_distinct(dataset_id), .by = c(year, age)) |>
+  ggplot(aes(year, age, fill = rows)) +
+  geom_tile() +
+  geom_text(aes(label = datasets), size = 2.5, colour = "white") +
+  scale_fill_viridis_c(trans = "log10", labels = scales::comma, name = "Observations") +
+  labs(x = "Collection year (five-year bands)", y = "Median age of the unit (two-year bands)", caption = "Numbers are datasets.")
+```
+
+```{r}
+#| label: countries
+units |>
+  mutate(country = coalesce(country, "(not recorded)")) |>
+  summarise(datasets = n_distinct(dataset_id), rows = sum(rows), .by = country) |>
+  arrange(desc(datasets), desc(rows)) |>
+  head(20) |>
+  transmute(Country = country, Datasets = datasets, Observations = fmt(rows)) |>
+  knitr::kable(align = "lrr", caption = "The 20 countries with most datasets.")
+```
+
+## What was measured
+
+### Screen use
+
+```{r}
+#| label: measured-exposures
+measured$exposures |>
+  filter(day == "usual", context == "any") |>
+  mutate(kind = c(activity = "Activity", device = "Device", subset = "A subset of an activity", aggregate = "Aggregate")[axis]) |>
+  transmute(Measure = exposure, Kind = kind, Datasets = datasets, `Dataset-waves` = dataset_waves, Observations = fmt(observations)) |>
+  knitr::kable(align = "llrrr", caption = "Usual-day screen measures, by how many datasets hold them.")
+```
+
+```{r}
+#| label: how-measured
+units |>
+  filter(!is.na(measure_type)) |>
+  summarise(datasets = n_distinct(dataset_id), units = n(), rows = sum(rows), .by = c(measure_type, responder)) |>
+  arrange(desc(rows)) |>
+  transmute(`Response format` = measure_type, `Who reported` = coalesce(responder, "(not recorded)"), Datasets = datasets, Units = units, Observations = fmt(rows)) |>
+  knitr::kable(align = "llrrr", caption = "How screen use was asked: response bands (categorical) against open entry (continuous), and who answered.")
+```
+
+### Outcomes
+
+```{r}
+#| label: measured-outcomes
+measured$outcomes |>
+  transmute(
+    Family = prereg_family,
+    `Specific outcome` = label,
+    Datasets = datasets,
+    `Dataset-waves` = dataset_waves,
+    Observations = fmt(observations),
+    `Shared variables` = schema_rows,
+    Informants = informants,
+    `Score types` = score_types
+  ) |>
+  knitr::kable(align = "llrrrrll")
+```
+
+## How much children use screens
+
+Medians and shares lead, because response bands with an open top make means understate heavy use.
+The middle column is the median dataset's value; the range is the middle half of datasets.
+
+```{r}
+#| label: distributions
+usual <- exposures$variable_name[exposures$day %in% "usual"]
+pooled |>
+  filter(grouping == "all", variable_name %in% c(usual, "total_screen")) |>
+  arrange(variable_name != "total_screen", desc(datasets)) |>
+  transmute(
+    Measure = label_measure(variable_name),
+    `How built` = built,
+    Datasets = datasets,
+    `Median hours a day` = paste0(num(median_mid), " (", num(median_low), " to ", num(median_high), ")"),
+    `Reporting none` = paste0(pct(share_zero_mid), " (", pct(share_zero_low), " to ", pct(share_zero_high), ")"),
+    `2 hours or more` = paste0(pct(share_2plus_mid), " (", pct(share_2plus_low), " to ", pct(share_2plus_high), ")"),
+    `4 hours or more` = paste0(pct(share_4plus_mid), " (", pct(share_4plus_low), " to ", pct(share_4plus_high), ")")
+  ) |>
+  knitr::kable(align = "llrrrrr")
+```
+
+Total screen time is shown by how it was built, and the rows are not comparable with each other: a sum of more content classes is larger because more was asked.
+
+```{r}
+#| label: fig-by-stage
+#| fig-height: 5
+#| fig-cap: "Median hours a day by school stage: the median dataset (point) and the middle half of datasets (line). Numbers are datasets."
+pooled |>
+  filter(grouping == "school_stage", variable_name %in% c("st_watch", "st_game", "st_socmedia", "st_educational")) |>
+  mutate(group = factor(group, levels = stage_order), measure = label_measure(variable_name)) |>
+  ggplot(aes(group, median_mid)) +
+  geom_linerange(aes(ymin = median_low, ymax = median_high), colour = "grey50") +
+  geom_point() +
+  geom_text(aes(label = datasets, y = median_high), vjust = -0.6, size = 2.5) +
+  facet_wrap(vars(measure), scales = "free_y") +
+  labs(x = NULL, y = "Median hours a day") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+```{r}
+#| label: by-sex-ses
+pooled |>
+  filter(grouping %in% c("sex", "ses_household"), group %in% c("Female", "Male", "Low", "Medium", "High"), variable_name %in% c("st_watch", "st_game", "st_socmedia", "st_educational")) |>
+  mutate(group = factor(group, levels = c("Female", "Male", "Low", "Medium", "High"))) |>
+  arrange(variable_name, group) |>
+  transmute(
+    Measure = label_measure(variable_name),
+    Group = group,
+    Datasets = datasets,
+    `Median hours a day` = paste0(num(median_mid), " (", num(median_low), " to ", num(median_high), ")"),
+    `2 hours or more` = paste0(pct(share_2plus_mid), " (", pct(share_2plus_low), " to ", pct(share_2plus_high), ")")
+  ) |>
+  knitr::kable(align = "llrrr", caption = "By sex, and by household socioeconomic position relative to the study's own sample.")
+```
+
+## Weekdays and weekends
+
+Compared on the same children, where a study asked both.
+
+```{r}
+#| label: week
+week |>
+  summarise(
+    weekday = weighted.mean(mean_weekday, n),
+    weekend = weighted.mean(mean_weekend, n),
+    more = weighted.mean(share_more_on_weekend, n),
+    .by = c(dataset_id, exposure)
+  ) |>
+  summarise(
+    datasets = n(),
+    weekday = median(weekday),
+    weekend = median(weekend),
+    more = median(more),
+    .by = exposure
+  ) |>
+  filter(datasets >= settings$min_datasets) |>
+  arrange(desc(datasets)) |>
+  transmute(Measure = exposure, Datasets = datasets, `Mean hours, weekday` = num(weekday), `Mean hours, weekend day` = num(weekend), `Share using more on a weekend day` = pct(more)) |>
+  knitr::kable(align = "lrrrr")
+```
+
+## Change over time
+
+Estimated inside each repeated survey and then pooled, because comparing periods across datasets mixes real change with which datasets exist in each period.
+Studies that follow the same children are left out: there the year moves with the children's age.
+Only `r n_distinct(trends$slopes$dataset_id)` datasets are repeated surveys with three or more collection years, so this section is thin.
+
+```{r}
+#| label: trend-table
+trend_table <- function(trend, unit_label) {
+  if (is.null(trend$pooled) || nrow(trend$pooled) == 0) return(NULL)
+  trend$pooled |>
+    transmute(
+      Measure = label_measure(variable_name),
+      Datasets = datasets,
+      Years = paste(first_year, "to", last_year),
+      Change = paste0(num(change_per_decade), " (", num(ci_low), " to ", num(ci_high), ")")
+    ) |>
+    knitr::kable(align = "lrlr", col.names = c("Measure", "Datasets", "Years", paste(unit_label, "per decade (95% interval)")))
+}
+trend_table(trends, "Change in mean hours a day")
+```
+
+```{r}
+#| label: trend-share
+trend_table(trends_share, "Change in the share at 2 hours or more")
+```
+
+```{r}
+#| label: fig-trend
+#| fig-height: 4
+#| fig-cap: "Mean hours a day by collection year within each repeated survey. Each line is one dataset, unlabelled."
+trends$series |>
+  filter(variable_name %in% c("st_watch", "st_watch_wd", "st_game", "st_game_wd", "st_socmedia", "total_screen")) |>
+  mutate(measure = label_measure(sub("_wd$", "", variable_name)), day = ifelse(grepl("_wd$", variable_name), "weekday", "usual day")) |>
+  ggplot(aes(year, value, group = interaction(dataset_id, variable_name), linetype = day)) +
+  geom_line() +
+  geom_point(size = 0.8) +
+  facet_wrap(vars(measure), scales = "free_y") +
+  labs(x = "Collection year", y = "Mean hours a day", linetype = NULL)
+```
+
+## How the kinds of screen use relate
+
+Rank correlations between two screen measures among the same children, within each unit.
+
+```{r}
+#| label: relations
+relations |>
+  summarise(rho = weighted.mean(spearman, n), both = weighted.mean(share_both, n), .by = c(dataset_id, variable_a, variable_b)) |>
+  summarise(datasets = n(), rho = median(rho), low = quantile(rho, 0.25), high = quantile(rho, 0.75), both = median(both), .by = c(variable_a, variable_b)) |>
+  filter(datasets >= settings$min_datasets) |>
+  arrange(desc(datasets)) |>
+  transmute(`Measure` = label_measure(variable_a), `With` = label_measure(variable_b), Datasets = datasets, `Rank correlation` = paste0(num(rho), " (", num(low), " to ", num(high), ")"), `Share doing both` = pct(both)) |>
+  knitr::kable(align = "llrrr")
+```
+
+## Binary outcomes
+
+Prevalence within each unit, pooled so that each dataset counts once.
+Standardised scores are not shown, because they carry no meaning on their own.
+
+```{r}
+#| label: outcomes
+outcomes |>
+  filter(grouping == "all") |>
+  summarise(prevalence = weighted.mean(prevalence, n), .by = c(dataset_id, variable_name)) |>
+  summarise(datasets = n(), mid = median(prevalence), low = quantile(prevalence, 0.25), high = quantile(prevalence, 0.75), .by = variable_name) |>
+  filter(datasets >= settings$min_datasets) |>
+  arrange(desc(datasets)) |>
+  transmute(Outcome = variable_name, Datasets = datasets, Prevalence = paste0(pct(mid), " (", pct(low), " to ", pct(high), ")")) |>
+  knitr::kable(align = "lrr")
+```
+
+```{r}
+#| label: fig-outcomes-stage
+#| fig-height: 5
+#| fig-cap: "Prevalence by school stage for the binary outcomes with most datasets: the median dataset (point) and the middle half (line)."
+by_stage <- outcomes |>
+  filter(grouping == "school_stage") |>
+  summarise(prevalence = weighted.mean(prevalence, n), .by = c(dataset_id, variable_name, group)) |>
+  summarise(datasets = n(), mid = median(prevalence), low = quantile(prevalence, 0.25), high = quantile(prevalence, 0.75), .by = c(variable_name, group)) |>
+  filter(datasets >= settings$min_datasets)
+top <- by_stage |> summarise(k = max(datasets), .by = variable_name) |> slice_max(k, n = 6, with_ties = FALSE)
+by_stage |>
+  filter(variable_name %in% top$variable_name) |>
+  mutate(group = factor(group, levels = stage_order)) |>
+  ggplot(aes(group, mid)) +
+  geom_linerange(aes(ymin = low, ymax = high), colour = "grey50") +
+  geom_point() +
+  facet_wrap(vars(variable_name), scales = "free_y") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = NULL, y = "Prevalence") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```

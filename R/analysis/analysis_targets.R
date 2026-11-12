@@ -66,6 +66,9 @@ analysis_targets <- function(harmonise_plan) {
     harmonised = rlang::syms(paste0("harmonised_", harmonise_plan$dataset_key)),
     harmonisation_config = rlang::syms(
       paste0("harmonisation_config_", harmonise_plan$dataset_key)
+    ),
+    resource_index = rlang::syms(
+      paste0("resource_index_", harmonise_plan$dataset_key)
     )
   )
   row_level <- targets::tar_resources(
@@ -145,6 +148,26 @@ analysis_targets <- function(harmonise_plan) {
       resources = row_level
     ),
     targets::tar_target_raw(
+      "descriptives",
+      quote(describe_dataset(
+        prepared,
+        outcome_registry,
+        exposure_registry,
+        settings
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = row_level
+    ),
+    targets::tar_target_raw(
+      "resource_count",
+      quote(count_resources(resource_index, dataset_id))
+    ),
+    targets::tar_target_raw(
+      "mapping_count",
+      quote(count_mapping(harmonisation_config$variables, dataset_id))
+    ),
+    targets::tar_target_raw(
       "onestage_rows",
       quote(extract_cell_rows(
         prepared,
@@ -195,6 +218,50 @@ analysis_targets <- function(harmonise_plan) {
     reviews("rows_dropped_all", "dropped"),
     reviews("prepared_summary_all", "summary"),
     reviews("prepared_flags_all", "flags"),
+    bind("described_screen", "descriptives", "screen"),
+    bind("described_week", "descriptives", "week"),
+    bind("described_relations", "descriptives", "relations"),
+    bind("described_outcomes", "descriptives", "outcomes"),
+    bind("described_units", "descriptives", "units"),
+    targets::tar_target_raw(
+      "screen_pooled",
+      quote(pool_descriptives(described_screen, described_units, settings))
+    ),
+    targets::tar_target_raw(
+      "screen_trends",
+      quote(trend_descriptives(described_screen, "mean", settings))
+    ),
+    targets::tar_target_raw(
+      "screen_trends_share",
+      quote(trend_descriptives(described_screen, "share_2plus", settings))
+    ),
+    targets::tar_target_raw(
+      "measured",
+      quote(summarise_measured(
+        analysis_row_audit,
+        outcome_registry,
+        exposure_registry
+      ))
+    ),
+    tarchetypes::tar_combine_raw(
+      "resource_counts",
+      per_dataset[["resource_count"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
+      "mapping_counts",
+      per_dataset[["mapping_count"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "work_scale",
+      quote(summarise_work_scale(
+        resource_counts,
+        mapping_counts,
+        dataschema,
+        data_manifest
+      ))
+    ),
     tarchetypes::tar_combine_raw(
       "stage1_all",
       per_dataset[["stage1"]],
@@ -268,6 +335,10 @@ analysis_targets <- function(harmonise_plan) {
     tarchetypes::tar_quarto_raw(
       "report_preparation",
       path = fs::path(bp_analysis_reports_dir(), "preparation.qmd")
+    ),
+    tarchetypes::tar_quarto_raw(
+      "report_descriptives",
+      path = fs::path(bp_analysis_reports_dir(), "descriptives.qmd")
     ),
     tarchetypes::tar_quarto_raw(
       "report_thin_slice",

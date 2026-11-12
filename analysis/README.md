@@ -115,7 +115,10 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `stage1_<key>`, `stage1_all` | One model per unit and cell: the slope on screen use, with how it was fitted or why it was not |
 | `stage2_development` | Each cell's slopes pooled across datasets |
 | `onestage_rows_<key>`, `onestage_check` | The one-stage check on one cell |
-| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation`, `report_thin_slice` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
+| `descriptives_<key>`, `described_screen`, `described_week`, `described_relations`, `described_outcomes`, `described_units` | Per-unit descriptive statistics of screen use and of binary outcomes, weighted where a unit has weights |
+| `screen_pooled`, `screen_trends`, `screen_trends_share` | Those statistics pooled so each dataset counts once, and change over time within repeated surveys |
+| `measured`, `work_scale` | What was measured, and the scale of the harmonisation work, counted from the repository and the pipeline |
+| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation`, `report_descriptives`, `report_thin_slice` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
 
 A dataset is included until any dataset has `signed_off` set in `datasets.csv`; from then on only signed-off datasets are.
 
