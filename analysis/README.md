@@ -82,16 +82,76 @@ A test warns about any outcome row noted 'Derive at analysis' that has no rule h
 
 ## Invariants and datasets
 
-`invariants.csv` lists the rows the harmonisation guide keeps constant within a participant; the diagnostics check them, and nothing fills them a second time.
+`invariants.csv` lists the rows the harmonisation guide carries within a participant; the diagnostics check them, and nothing fills them a second time.
+Its `rule` says what the guide promises: `constant` (one value per participant, such as sex and the design values fixed at sampling), `carried` (observed values stay and missing waves take the earliest one, so a participant may hold two answers but not a gap) or `onset` (carried except to waves before onset).
 
 `datasets.csv` holds what the analysis needs to know about each dataset:
 
 - `baseline_wave` is the panel's earliest wave in the data, a trial's pre-intervention wave, or blank;
+- `wave_order` is blank for almost every dataset, whose waves are ordered by median collection year and then median age; where that gives the wrong order it lists the wave labels in time order, separated by `|`;
 - `team_contributed`, `signed_off`, `overlap_group` and `risk_of_bias` are filled at later steps.
 
 A dataset with no row reads as a blank one, so it has no baseline and is not signed off.
 Dataset branches never edit this folder, so a new dataset gets its row on `main` after it merges; a test warns until it has one.
 The row matters for panels and trials, which need `baseline_wave`.
+
+## The analysis section of the pipeline
+
+`analysis_targets()` (`R/analysis/analysis_targets.R`) adds everything downstream of harmonisation to `_targets.R`.
+Each per-dataset target reads that dataset's harmonised table and its one-row `dataset_info`, so a new or changed dataset reruns only its own targets and the combined targets they feed.
+
+| Target | What it holds |
+| --- | --- |
+| `dataset_info_<key>` | The dataset's `datasets.csv` row and whether it is included |
+| `dataset_summary_<key>` | Every summary and check of the dataset, from one read of its rows: manifest line, grain, numeric and level summaries, units, per-unit counts, and the invariant and day checks; no row of data and no identifier |
+| `data_manifest` | Rows, participants and a content hash per included dataset, and an overall hash |
+| `grain_all`, `numeric_summary_all`, `level_summary_all`, `unit_summary_all`, `unit_counts_all` | Those summaries, combined across datasets |
+| `coverage`, `missingness`, `dataset_flow` | Coverage of every dataschema row, sporadic against systematic missingness, and the dataset flow |
+| `violations` | The checks against the dataschema and the guide, as a table of findings |
+| `exceptions_<key>` | The dataset's analysis exceptions, if it has a file |
+| `prepared_<key>`, `prepared_review_<key>` | The dataset prepared for modelling (below), and its summary, flags and audit |
+| `analysis_row_audit`, `rows_dropped_all`, `prepared_summary_all`, `prepared_flags_all` | What preparation used, dropped and flagged |
+| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
+
+A dataset is included until any dataset has `signed_off` set in `datasets.csv`; from then on only signed-off datasets are.
+
+Only three targets per dataset read row-level data (`dataset_summary`, `prepared` and `prepared_review`).
+The largest dataset takes about 10 GB in memory, and a target for each summary would load it once per worker at the same time.
+
+### Prepared data
+
+`prepare_analysis_data()` turns one dataset's harmonised rows into a list of tables that share one row order:
+
+- `base`: one eligible row per participant and wave (aged under 19; in trials, baseline rows and control arms), with `Unknown` recoded to missing, and the derived columns `unit`, `wave_order`, `is_baseline`, `school_stage` and `survey_weight_norm`;
+- `exposures`: screen-time rows in hours, values over 24 hours removed, plus `total_screen` with its source, rows and coverage, and `other_<exposure>` for the rest of a row's screen use (DR-0013);
+- `outcomes` and `outcomes_z`: the score of each analysed outcome row and, for continuous rows, its standardised form;
+- `measures`: the extra screen-time measure blocks for the same occasions;
+- `row_audit` and `dropped`: what was used and what was not, with the reason;
+- `repeats`, `nodes` and `derived`: repeated scores found, nodes assigned by exception, and derivation rules that ran.
+
+`prepared_flags_all` lists what a person should look at before signing a dataset off.
+
+The `derived_codebook` target lists every derived variable and its rule.
+
+### Analysis exceptions
+
+A decision about one dataset that the registries cannot express goes in an optional `harmonisation/datasets/BPIPD-<id>/analysis_exceptions.csv`, one row per decision:
+
+| Column | Values |
+| --- | --- |
+| `variable_name` | The dataschema row |
+| `wave` | A wave label, or blank for every wave; always blank for `node` and `standardise_by` |
+| `action` | `exclude`, `keep_out_of_bounds`, `node` or `standardise_by` |
+| `value` | The node, or the pipe-separated keys; blank otherwise |
+| `reason` | Why, in a sentence |
+
+The tests read every such file, and the pipeline tracks one per dataset, so a new file is noticed.
+
+### Data manifests
+
+`record_data_manifest("<label>")` writes the current `data_manifest` to `analysis/manifests/<label>.csv`: dataset IDs, counts and hashes, never names.
+Record one for each delivered report and at the freeze, and commit it with that state of the code.
+`compare_data_manifest()` lists what has been added, removed or changed since a record.
 
 ## Deviations ledger
 

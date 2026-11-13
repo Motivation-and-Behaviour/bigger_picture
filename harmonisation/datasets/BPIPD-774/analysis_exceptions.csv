@@ -1,0 +1,3 @@
+variable_name,wave,action,value,reason
+acc_numeracy_stdtest,,standardise_by,dataset|wave|country|age_band,"A score that is not age-normed and rises with age across the ages in this dataset (correlation with age 0.65); standardised within school stage so the scale is not set by the age range."
+acc_literacy_stdtest,,standardise_by,dataset|wave|country|age_band,"A score that is not age-normed and rises with age across the ages in this dataset (correlation with age 0.57); standardised within school stage so the scale is not set by the age range."

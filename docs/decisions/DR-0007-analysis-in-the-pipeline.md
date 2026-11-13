@@ -35,8 +35,8 @@ The pipeline renders it only where that folder is present, and every table, figu
 ## Rationale
 
 - Results always describe the data in the pipeline, with no snapshot to fall out of step with it.
-- Only the parts of the analysis a change touches rerun: each analysis target reads a slice of the shared table scoped to what it needs, and a slice whose content is unchanged leaves everything downstream of it alone.
-  Tested on 9 November: with outcome slices that kept `analysis_data`'s factor levels, a dataset feeding one outcome reran every outcome's model; with `droplevels()`, only its own.
+- Only the parts of the analysis a change touches rerun: each per-dataset analysis target reads that dataset's harmonised table, which holds the same rows as its part of `analysis_data`, so a new or changed dataset reruns its own targets and the combined targets they feed.
+  As first written, each target read a slice of the shared table; reading the per-dataset tables gives the same isolation without loading the combined table, which takes tens of gigabytes in memory (revised 12 November 2026).
 - One project and one run command keep a regular clone simple to set up and maintain.
 - Public code and specs let readers check the analysis; the private report holds only prose and formatting.
 
@@ -60,7 +60,8 @@ The pipeline renders it only where that folder is present, and every table, figu
 
 - Every `tar_make()` also builds the parts of the analysis a change touches; `targets::tar_make(analysis_data)` builds the harmonisation part alone.
 - `tar_outdated()` lists the whole analysis as outdated after any data change, until a build has run.
-- Every slice of a shared table must end with `droplevels()`, because `factorise_analysis_data()` takes factor levels from the data (DR-0006).
+- A target that does slice a shared table must end with `droplevels()`, because `factorise_analysis_data()` takes factor levels from the data (DR-0006).
+- A per-dataset target loads its whole dataset, and the largest takes about 10 GB before its empty columns are dropped, so only a few targets per dataset may read row-level data.
 - A delivered report cannot be regenerated later from the live pipeline, so its rendered copy and recorded manifest are kept.
 
 ---

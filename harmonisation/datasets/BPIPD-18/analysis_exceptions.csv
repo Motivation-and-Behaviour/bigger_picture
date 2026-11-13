@@ -1,0 +1,5 @@
+variable_name,wave,action,value,reason
+beh_prosocial_teacher,,standardise_by,dataset|wave|country|beh_teacher_measure,"At wave 3 the younger cohort is rated by child-care or preschool staff and the older cohort by class teachers."
+beh_conduct_sdq_teacher,,standardise_by,dataset|wave|country|beh_teacher_measure,"At wave 3 the younger cohort has the SDQ form for ages 2 to 4 and the older cohort the form for ages 4 to 17, whose conduct items differ."
+beh_ext_sdq_teacher,,standardise_by,dataset|wave|country|beh_teacher_measure,"At wave 3 the younger cohort has the SDQ form for ages 2 to 4 and the older cohort the form for ages 4 to 17, whose conduct items differ."
+mh_totaldiff_sdq_teacher,,standardise_by,dataset|wave|country|beh_teacher_measure,"At wave 3 the younger cohort has the SDQ form for ages 2 to 4 and the older cohort the form for ages 4 to 17, whose conduct items differ."

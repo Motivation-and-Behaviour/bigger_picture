@@ -1,0 +1,2 @@
+variable_name,wave,action,value,reason
+beh_cannabis_self,4,exclude,,"The one drug item asks about taking drugs in general, after items on ecstasy; cannabis is not named, and the same score is on beh_drugs_self."

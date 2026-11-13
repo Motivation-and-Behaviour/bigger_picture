@@ -152,6 +152,21 @@ bp_deviations_path <- function() {
   fs::path(bp_analysis_dir(), "deviations.csv")
 }
 
+# Workers for the analysis targets that load a whole dataset. Each can hold
+# well over 10 GB, so this pool is kept small whatever the machine's cores.
+bp_row_level_workers <- function() {
+  4L
+}
+
+# Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).
+bp_manifest_dir <- function() {
+  fs::path(bp_analysis_dir(), "manifests")
+}
+
+bp_analysis_reports_dir <- function() {
+  fs::path(bp_analysis_dir(), "reports")
+}
+
 # Schema domains whose every row must appear in outcome_rows.csv. Health rows
 # are registered too, so negative controls and mediators carry a role.
 bp_outcome_registry_domains <- function() {
@@ -243,13 +258,21 @@ bp_exposures_columns <- function() {
 }
 
 bp_invariants_columns <- function() {
-  c("variable_name", "notes")
+  c("variable_name", "rule", "notes")
+}
+
+# How the harmonisation guide treats a row within a participant: one value
+# always, carried from the earliest observed value, or carried except to
+# waves before onset.
+bp_invariant_rules <- function() {
+  c("constant", "carried", "onset")
 }
 
 bp_analysis_datasets_columns <- function() {
   c(
     "dataset_id",
     "baseline_wave",
+    "wave_order",
     "team_contributed",
     "signed_off",
     "overlap_group",

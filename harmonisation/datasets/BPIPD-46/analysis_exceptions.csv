@@ -1,0 +1,2 @@
+variable_name,wave,action,value,reason
+cog_wm_digitspan,,keep_out_of_bounds,,"The study releases the WISC Digit Span raw total (forward plus backward, 0-30), not the scaled score, so values lie outside the row's 1-19 bounds by design; it is standardised within the dataset."
