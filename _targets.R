@@ -5,7 +5,11 @@ tar_source()
 
 # One math thread per process: the workers already run in parallel, and
 # multithreaded linear algebra in each of them starves the rest.
-Sys.setenv(OMP_NUM_THREADS = "1", OPENBLAS_NUM_THREADS = "1", MKL_NUM_THREADS = "1")
+Sys.setenv(
+  OMP_NUM_THREADS = "1",
+  OPENBLAS_NUM_THREADS = "1",
+  MKL_NUM_THREADS = "1"
+)
 
 # Set target options. Two worker pools: `main` for everything, and a smaller
 # `row_level` pool for the analysis targets that load a whole dataset, the
