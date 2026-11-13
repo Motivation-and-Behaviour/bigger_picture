@@ -42,14 +42,26 @@ It says, for every exposure and every level of the outcome tree, how many datase
 The freeze uses it to decide which cells go in the model list.
 
 Data: `r nrow(manifest)` datasets, overall hash `r unique(manifest$overall_hash)`.
-`r feasibility$scope$datasets_with_cells` of them have at least one exposure together with one outcome row, and `r feasibility$scope$datasets_signed_off` of those are signed off; only signed-off datasets are counted below.
+`r feasibility$scope$datasets_with_cells` of them have at least one exposure together with one outcome row, and `r feasibility$scope$datasets_signed_off` of those are marked signed off in `analysis/datasets.csv`; only those are counted below.
+A dataset that is not signed off is left out of the analysis before this point, so the two numbers can differ only while sign-off is under way.
 
 How to read the counts:
 
-- a unit (a dataset's wave in one country) counts towards a cell where at least `r settings$min_unit_rows` of its rows have both the exposure and the outcome row;
-- a cell can be pooled from `r settings$min_datasets` datasets or more;
-- participants are counted once per dataset and country, from the largest unit and row a dataset gives the cell;
-- counts are of the prepared rows, before stage 1's rules on weights, age and sex, so a few countable units will still not be fitted.
+- a unit (a dataset's wave in one country) counts towards a cell where at least `r settings$min_unit_rows` of its rows have both the exposure and the outcome row, on the score the model uses, the outcome's score type has a model, a binary outcome has ten rows in each class, and the exposure varies;
+- a row, a specific outcome by informant and a specific outcome can be pooled from `r settings$min_datasets` datasets or more, and a family where at least one of its specific outcomes can;
+- participants are a lower bound: within a unit a group takes its largest outcome row; a dataset that follows participants takes its largest unit per country, and one that does not sums its units;
+- stage 1 also leaves rows out by its rules on weights, age and sex, which are not applied here, so a unit counted here can lose rows there, and a few will not be fitted.
+
+```{r}
+#| label: tbl-usable
+feasibility$not_usable |>
+  arrange(desc(unit_cells)) |>
+  transmute(
+    `Unit by exposure by outcome row` = reason,
+    Count = fmt(unit_cells)
+  ) |>
+  knitr::kable(align = "lr")
+```
 
 ## Exposures by outcome family
 
@@ -80,6 +92,23 @@ families |>
     `Specific outcomes that can be pooled` = k_nodes_poolable
   ) |>
   knitr::kable(align = "llrrrr")
+```
+
+Some datasets have an exposure only on a weekday or a weekend row, so they are missing from the usual-day counts above and enter only the models of those rows.
+
+```{r}
+#| label: tbl-days
+feasibility$days |>
+  filter(exposure_group %in% lead$exposure_group) |>
+  mutate(Family = label_of(family)) |>
+  transmute(
+    Exposure = exposure_group,
+    Family,
+    `Datasets, usual-day row` = k_datasets_usual_day,
+    `Datasets, any day's row` = k_datasets_any_day
+  ) |>
+  filter(`Datasets, any day's row` > `Datasets, usual-day row`) |>
+  knitr::kable(align = "llrr")
 ```
 
 ## Specific outcomes
@@ -122,10 +151,24 @@ node_summary |>
   knitr::kable(align = "lrr")
 ```
 
+Participants per specific outcome, for the lead exposures (a lower bound, as above).
+
+```{r}
+#| label: tbl-nodes-participants
+nodes |>
+  mutate(participants = fmt(participants)) |>
+  select(family_label, node_label, exposure, participants) |>
+  tidyr::pivot_wider(names_from = exposure, values_from = participants) |>
+  arrange(family_label, node_label) |>
+  rename(Family = family_label, `Specific outcome` = node_label) |>
+  knitr::kable(align = "llrrrrrr")
+```
+
 ## Every level, every exposure row
 
-Cells that can be pooled, of the cells with any countable dataset, at each level of the tree.
+Cells with enough datasets to pool, of the cells with any usable dataset, at each level of the tree.
 This covers every analysed exposure row, including the weekday and weekend rows and the device and content subsets.
+The complete listing, one line per exposure row, level and group, with datasets, units and participants, is the `levels` table of the `feasibility` target: `targets::tar_read(feasibility)$levels`.
 
 ```{r}
 #| label: tbl-levels
@@ -141,8 +184,8 @@ levels |>
   ) |>
   group_by(Level) |>
   summarise(
-    `Cells with a dataset` = fmt(n()),
-    `Can be pooled` = fmt(sum(poolable)),
+    `Cells with a usable dataset` = fmt(n()),
+    `Enough datasets to pool` = fmt(sum(poolable)),
     `Median datasets, where pooled` = median(k_datasets[poolable]),
     .groups = "drop"
   ) |>
@@ -153,6 +196,7 @@ levels |>
 
 A unit that does not record a tier's covariates is not fitted at that tier (DR-0015), so further tiers rest on fewer datasets.
 Specific outcomes, for the lead exposures, that could still be pooled at each tier.
+These counts are approximate: a unit's covariates are judged here on all its rows, where stage 1 judges them on each cell's rows and also needs a minimum share of rows with all of them.
 
 ```{r}
 #| label: tbl-tiers
@@ -175,6 +219,8 @@ tiers |>
 
 Specific outcomes, for the lead exposures, where a moderator has two levels with at least `r settings$min_datasets` datasets each, so the levels can be compared.
 Most datasets have one level of a moderator, so these comparisons are mostly between kinds of study.
+Datasets and participants at each level of each moderator are in the `moderators` table of the target.
+Risk of bias has no ratings yet and is absent.
 
 ```{r}
 #| label: tbl-moderators
@@ -189,24 +235,82 @@ feasibility$moderators |>
 
 ## Trend over collection years
 
-The trend in the associations runs for a specific outcome with at least `r settings$year_min_datasets` datasets spanning `r settings$year_min_span` years or more.
+The trend in the associations runs with at least `r settings$year_min_datasets` datasets spanning `r settings$year_min_span` years or more.
+Its within-study part rests on repeated cross-sections collected in more than one year, so a group with none can only compare studies run in different periods.
+The table counts the groups for the lead exposures at three levels; the trend is at present fitted per outcome row.
 
 ```{r}
 #| label: tbl-years
 feasibility$years |>
-  semi_join(nodes, by = c("exposure", "node")) |>
-  group_by(Exposure = exposure) |>
+  filter(exposure %in% lead$exposure) |>
+  mutate(
+    Level = recode(
+      level,
+      L0 = "L0 family",
+      L1 = "L1 specific outcome",
+      L3 = "L3 outcome row"
+    )
+  ) |>
+  group_by(Level, exposure) |>
   summarise(
-    `Specific outcomes with a dated dataset` = n(),
-    `Trend can run` = sum(trend_can_run),
+    value = paste0(
+      sum(trend_can_run),
+      " (",
+      sum(trend_can_run & k_repeated_cross_sections > 0),
+      ")"
+    ),
     .groups = "drop"
   ) |>
-  knitr::kable(align = "lrr")
+  tidyr::pivot_wider(names_from = exposure, values_from = value) |>
+  knitr::kable()
+```
+
+Each cell gives the groups where the trend can run and, in brackets, how many of those have at least one repeated cross-section.
+
+## School against home
+
+The question of whether use at school relates to outcomes differently needs datasets with a school-context row and an any-location row of the same exposure, in the same unit and for the same outcome row.
+It is reported as insufficient evidence unless three or more datasets have both.
+
+```{r}
+#| label: tbl-school
+if (nrow(feasibility$school_home) == 0) {
+  cat("No signed-off dataset has a usable school-context row.")
+} else {
+  feasibility$school_home |>
+    mutate(Family = label_of(family)) |>
+    transmute(
+      `School-context exposure` = exposure,
+      Family,
+      `Datasets with the school row` = k_datasets_school,
+      `Of those, with a matched any-location row` = k_datasets_matched
+    ) |>
+    arrange(`School-context exposure`, Family) |>
+    knitr::kable(align = "llrr")
+}
+```
+
+## Negative-control outcomes
+
+Rows that come before any screen use, so screen use cannot cause them; they are run as outcomes where three or more datasets support them.
+
+```{r}
+#| label: tbl-controls
+controls <- lead[lead$level == "L3" & lead$role %in% "negative_control", ]
+if (nrow(controls) == 0) {
+  cat("No signed-off dataset has a lead exposure together with a negative-control row.")
+} else {
+  controls |>
+    select(outcome, exposure, k_datasets) |>
+    tidyr::pivot_wider(names_from = exposure, values_from = k_datasets) |>
+    rename(`Negative-control row` = outcome) |>
+    knitr::kable()
+}
 ```
 
 ## What cannot be pooled
 
-Specific outcomes, for the lead exposures, with a dataset but too few to pool.
+Specific outcomes, for the lead exposures, with a usable dataset but too few to pool.
 
 ```{r}
 #| label: tbl-thin

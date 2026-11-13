@@ -1537,7 +1537,6 @@ test_that("a further tier is set beside tier 1 on its own rows", {
 })
 
 test_that("cells are counted from the rows that have both", {
-  n <- 100
   prepared <- list(
     base = tibble::tibble(
       dataset_id = "9001",
@@ -1548,37 +1547,96 @@ test_that("cells are counted from the rows that have both", {
       urbanicity = c(rep("Urban", 50), rep(c("Urban", "Rural"), 25))
     ),
     exposures = tibble::tibble(
-      st_watch = c(rep(1, 40), rep(NA, 10), rep(1, 50)),
+      st_watch = c(rep(1, 40), rep(NA, 10), 1:50),
       st_game = NA_real_,
-      total_screen = 2,
+      st_watch_school = c(1:50, rep(NA, 50)),
+      total_screen = c(1:50, 1:50),
       total_source = "summed",
       st_archived = 1
     ),
     outcomes = tibble::tibble(
       core_row = c(rep(NA, 10), rep(1, 90)),
+      binary_row = c(rep(c(0, 1), 25), rep(0, 45), rep(1, 5)),
+      diagnosis_row = 1,
+      control_row = 1,
       archive_row = 1,
       empty_row = NA_real_
-    )
+    ),
+    # The standardised score is missing for ten more rows of the first unit.
+    outcomes_z = tibble::tibble(core_row = c(rep(NA, 20), rep(1, 80)))
   )
   registry <- list(
     rows = tibble::tibble(
-      variable_name = c("core_row", "archive_row", "empty_row"),
-      use = c("core", "archive", "core")
+      variable_name = c(
+        "core_row",
+        "binary_row",
+        "diagnosis_row",
+        "control_row",
+        "archive_row",
+        "empty_row"
+      ),
+      use = c("core", "core", "report", NA, "archive", "core"),
+      role = c(rep("outcome", 3), "negative_control", "outcome", "outcome"),
+      score_type = c(
+        "continuous",
+        "binary",
+        "diagnosis",
+        "continuous",
+        "continuous",
+        "continuous"
+      )
     )
   )
   exposures <- tibble::tibble(
-    variable_name = c("st_watch", "st_game", "st_archived"),
-    include = c(TRUE, TRUE, FALSE)
+    variable_name = c("st_watch", "st_game", "st_watch_school", "st_archived"),
+    include = c(TRUE, TRUE, FALSE, FALSE),
+    context = c("any", "any", "school", "any")
   )
-  counted <- count_cells(prepared, registry, exposures)
+  schema <- tibble::tibble(
+    variable_name = registry$rows$variable_name,
+    allowed_values = NA_character_
+  )
+  counted <- count_cells(prepared, registry, exposures, schema)
   cells <- counted$cells
-  # Only analysed exposures and outcome rows, and only pairs with a row.
-  expect_setequal(cells$exposure, c("st_watch", "total_screen"))
-  expect_equal(unique(cells$outcome), "core_row")
-  watch <- cells[cells$exposure == "st_watch", ]
-  expect_equal(watch$n_rows, c(30, 50))
-  expect_equal(watch$n_participants, c(30, 50))
-  expect_equal(cells$n_rows[cells$exposure == "total_screen"], c(40, 50))
+  cell <- function(exposure, outcome) {
+    cells[cells$exposure == exposure & cells$outcome == outcome, ]
+  }
+  # Analysed exposures, the school row and the derived total; analysed
+  # outcome rows and the negative control; only pairs with a row.
+  expect_setequal(
+    cells$exposure,
+    c("st_watch", "st_watch_school", "total_screen")
+  )
+  expect_setequal(
+    cells$outcome,
+    c("core_row", "binary_row", "diagnosis_row", "control_row")
+  )
+  # A linear row is counted on its standardised score.
+  watch <- cell("st_watch", "core_row")
+  expect_equal(watch$n_rows, c(20, 50))
+  expect_equal(watch$n_participants, c(20, 50))
+  expect_equal(watch$model, c("linear", "linear"))
+  # Twenty rows are under the minimum; the first unit's screen use is also
+  # constant, but the first check that fails is the one named.
+  expect_equal(
+    watch$not_usable,
+    c("fewer rows than the minimum unit size", NA)
+  )
+  expect_equal(
+    cell("st_watch", "control_row")$not_usable,
+    c("no variation in the exposure", NA)
+  )
+  expect_equal(cell("total_screen", "core_row")$n_rows, c(30, 50))
+  expect_true(all(is.na(cell("total_screen", "core_row")$not_usable)))
+  # A binary row needs ten in each class; the second unit has five.
+  binary <- cell("total_screen", "binary_row")
+  expect_equal(binary$model, c("logistic", "logistic"))
+  expect_equal(binary$not_usable, c(NA, "fewer than 10 rows in one class"))
+  expect_equal(
+    unique(cell("total_screen", "diagnosis_row")$not_usable),
+    "score type not modelled here"
+  )
+  expect_equal(cell("st_watch_school", "control_row")$n_rows, 50)
   expect_equal(unique(cells$dataset_id), "9001")
   # What each tier would use: SES in both units, no ethnicity, and
   # urbanicity only where it varies.
@@ -1587,88 +1645,118 @@ test_that("cells are counted from the rows that have both", {
   expect_true(all(is.na(counted$units$ethnicity_measure)))
   expect_equal(counted$units$urbanicity_measure, c(NA, "urbanicity"))
 
-  # A participant with several rows in a unit is one participant.
+  # Several rows per participant in a unit: a participant counts once, and
+  # only for a row that has both. Screen use is on each child's first row
+  # and the control row on their second for children 41 to 50.
   prepared$base$unit <- "9001|1|X"
-  again <- count_cells(prepared, registry, exposures)$cells
-  watch <- again[again$exposure == "st_watch", ]
-  expect_equal(watch$n_rows, 80)
+  prepared$exposures$total_screen[51:100] <- NA
+  prepared$outcomes$control_row[41:50] <- NA
+  again <- count_cells(prepared, registry, exposures, schema)$cells
+  control <- again[
+    again$exposure == "total_screen" & again$outcome == "control_row",
+  ]
+  expect_equal(control$n_rows, 40)
+  expect_equal(control$n_participants, 40)
+  watch <- again[
+    again$exposure == "st_watch" & again$outcome == "control_row",
+  ]
+  expect_equal(watch$n_rows, 90)
   expect_equal(watch$n_participants, 50)
-  expect_null(count_cells(NULL, registry, exposures))
+  expect_null(count_cells(NULL, registry, exposures, schema))
 })
 
 test_that("feasibility counts datasets, units and participants per level", {
   registry <- list(
     tree = tibble::tibble(
-      node = c("fam", "n1", "n2"),
-      parent = c(NA, "fam", "fam"),
-      level = c("L0", "L1", "L1")
+      node = c("fam", "n1", "n2", "n3"),
+      parent = c(NA, "fam", "fam", "fam"),
+      level = c("L0", "L1", "L1", "L2")
     ),
     rows = tibble::tibble(
-      variable_name = c("a_self", "a_parent", "b_self", "alone"),
-      node = c("n1", "n1", "n2", NA),
-      informant = c("self", "parent", "self", "self"),
-      direction = "higher_better",
-      synthesis = c(TRUE, TRUE, TRUE, FALSE)
+      variable_name = c("a_self", "a_parent", "b_self", "alone", "c", "nodir"),
+      node = c("n1", "n1", "n2", NA, "n3", "n2"),
+      informant = c("self", "parent", "self", "self", "self", "self"),
+      direction = c(rep("higher_better", 5), "none"),
+      synthesis = c(TRUE, TRUE, TRUE, FALSE, TRUE, TRUE),
+      score_type = "continuous",
+      role = "outcome",
+      use = "core"
     )
   )
   exposures <- tibble::tibble(
-    variable_name = "st_watch",
-    exposure = "watch",
-    day = "usual",
-    headline = TRUE
+    variable_name = c("st_watch", "st_watch_wd", "st_watch_school"),
+    exposure = c("watch", "watch", "watch_school"),
+    day = c("usual", "weekday", "weekday"),
+    context = c("any", "any", "school"),
+    headline = c(TRUE, TRUE, FALSE)
   )
-  cell <- function(dataset, wave, outcome, n) {
+  cell <- function(dataset, wave, outcome, n, exposure = "st_watch", why = NA) {
     tibble::tibble(
       dataset_id = dataset,
       unit = paste(dataset, wave, "X", sep = "|"),
-      exposure = "st_watch",
+      exposure = exposure,
       outcome = outcome,
       n_rows = n,
-      n_participants = n
+      n_participants = n,
+      model = "linear",
+      not_usable = as.character(why)
     )
   }
+  small <- "fewer rows than the minimum unit size"
   cells <- dplyr::bind_rows(
-    # Four datasets give `a_self`; d1 in two waves of the same children.
+    # Four datasets give `a_self`. d1 is a panel of two waves; d2 is a
+    # repeated cross-section of two.
     cell("d1", 1, "a_self", 100),
     cell("d1", 2, "a_self", 80),
     cell("d2", 1, "a_self", 200),
+    cell("d2", 2, "a_self", 250),
     cell("d3", 1, "a_self", 300),
     cell("d4", 1, "a_self", 400),
-    # Two give `a_parent`; one unit is too small to count.
+    # Two usable datasets give `a_parent`; one unit is not usable.
     cell("d1", 1, "a_parent", 90),
-    cell("d2", 1, "a_parent", 10),
+    cell("d2", 1, "a_parent", 10, why = small),
     cell("d5", 1, "a_parent", 500),
-    # One gives `b_self`, one the row reported on its own.
+    # One gives `b_self`; rows that pool nowhere.
     cell("d1", 1, "b_self", 100),
     cell("d1", 1, "alone", 100),
+    cell("d1", 1, "c", 100),
+    cell("d1", 1, "nodir", 100),
+    # d6 has watching on a weekday row only, and at school.
+    cell("d6", 1, "a_self", 600, exposure = "st_watch_wd"),
+    cell("d6", 1, "a_self", 600, exposure = "st_watch_school"),
+    cell("d1", 1, "a_self", 100, exposure = "st_watch_school"),
+    # d5 has a school row for an outcome row its any-location row lacks.
+    cell("d5", 1, "a_self", 50, exposure = "st_watch_school"),
     # Not signed off: not counted.
     cell("d9", 1, "a_self", 900)
   )
-  ids <- unique(cells$unit)
   units <- tibble::tibble(
-    unit = ids,
+    unit = unique(cells$unit),
+    dataset_id = sub("\\|.*", "", unit),
     country = "X",
-    year = c(2000, 2001, 2005, 2010, 2012, 2015, 2020),
+    year = c(2000, 2001, 2005, 2016, 2010, 2012, 2015, 2018, 2020),
     measure_type = "Categorical",
-    responder = c(rep("Self", 4), rep("Parent or carer", 3))
+    responder = c(rep("Self", 6), rep("Parent or carer", 3)),
+    total_source = NA,
+    repeats_participants = dataset_id == "d1"
   )
   measures <- tibble::tibble(
-    unit = ids,
+    unit = units$unit,
     ses_measure = c(
       "ses_household",
       NA,
       "ses_household",
+      NA,
       "ses_area",
-      NA,
-      NA,
-      NA
+      rep(NA, 4)
     ),
-    ethnicity_measure = c("ethnicity", NA, NA, "minority", NA, NA, NA),
-    urbanicity_measure = c("urbanicity", NA, NA, NA, NA, NA, NA)
+    ethnicity_measure = c("ethnicity", NA, NA, NA, "minority", rep(NA, 4)),
+    urbanicity_measure = c("urbanicity", rep(NA, 8))
   )
   datasets <- tibble::tibble(
-    dataset_id = c("d1", "d2", "d3", "d4", "d5", "d9"),
-    signed_off = c(TRUE, TRUE, TRUE, TRUE, TRUE, NA)
+    dataset_id = c("d1", "d2", "d3", "d4", "d5", "d6", "d9"),
+    signed_off = c(rep(TRUE, 6), FALSE),
+    risk_of_bias = NA_character_
   )
   out <- summarise_feasibility(
     cells,
@@ -1678,45 +1766,164 @@ test_that("feasibility counts datasets, units and participants per level", {
     exposures,
     datasets
   )
-  expect_equal(out$scope$datasets_with_cells, 6)
-  expect_equal(out$scope$datasets_signed_off, 5)
-  level <- function(name) out$levels[out$levels$level == name, ]
+  expect_equal(out$scope$datasets_with_cells, 7)
+  expect_equal(out$scope$datasets_signed_off, 6)
+  expect_equal(out$not_usable$unit_cells[out$not_usable$reason == small], 1)
+  watch <- out$levels[out$levels$exposure == "st_watch", ]
+  level <- function(name) watch[watch$level == name, ]
 
   row <- level("L3")
   a_self <- row[row$outcome == "a_self", ]
   expect_equal(a_self$k_datasets, 4)
-  expect_equal(a_self$k_units, 5)
-  # d1's two waves hold the same children: its larger wave counts.
-  expect_equal(a_self$participants, 100 + 200 + 300 + 400)
+  expect_equal(a_self$k_units, 6)
+  # The panel's larger wave, and the sum of the cross-section's two.
+  expect_equal(a_self$participants, 100 + (200 + 250) + 300 + 400)
   expect_true(a_self$poolable)
   a_parent <- row[row$outcome == "a_parent", ]
   expect_equal(a_parent$k_datasets, 2)
   expect_false(a_parent$poolable)
-  # The row reported on its own is counted as a row and pools nowhere.
-  expect_true("alone" %in% row$outcome)
+  # Rows that pool nowhere are counted as rows only.
+  expect_true(all(c("alone", "c", "nodir") %in% row$outcome))
+  expect_setequal(level("L1")$node, c("n1", "n2"))
 
   n1 <- level("L1")[level("L1")$node == "n1", ]
   expect_equal(n1$k_datasets, 5)
   expect_equal(n1$k_rows, 2)
-  expect_equal(n1$participants, 100 + 200 + 300 + 400 + 500)
+  expect_equal(n1$participants, 100 + 450 + 300 + 400 + 500)
   expect_equal(nrow(level("L2")), 3)
   family <- level("L0")
   expect_equal(family$k_datasets, 5)
   expect_equal(family$k_nodes_poolable, 1)
+  expect_true(family$poolable)
   expect_equal(family$exposure_group, "watch")
+  # A family with datasets but no specific outcome to pool cannot be pooled.
+  weekday <- out$levels[
+    out$levels$exposure == "st_watch_wd" & out$levels$level == "L0",
+  ]
+  expect_equal(weekday$k_datasets, 1)
+  expect_false(weekday$poolable)
+  # The school row is not an any-location exposure.
+  expect_false("st_watch_school" %in% out$levels$exposure)
 
-  tiers <- out$tiers[out$tiers$node == "n1", ]
+  tiers <- out$tiers[
+    out$tiers$exposure == "st_watch" & out$tiers$node == "n1",
+  ]
   expect_equal(
     c(tiers$k_datasets_tier1, tiers$k_datasets_tier2, tiers$k_datasets_tier3),
     c(5, 3, 1)
   )
-  # Informant: four datasets by the child, two by a parent.
-  informant <- out$moderators[
-    out$moderators$node == "n1" & out$moderators$moderator == "informant",
+  expect_equal(tiers$participants_tier3, 100)
+  # Informant: four datasets by the child and two by a parent; by reporter,
+  # the child reports both in four and the parent's report differs in two.
+  moderator <- function(name) {
+    found <- out$moderators[
+      out$moderators$exposure == "st_watch" &
+        out$moderators$node == "n1" &
+        out$moderators$moderator == name,
+    ]
+    found[order(found$level), ]
+  }
+  expect_equal(moderator("informant")$k_datasets, c(2, 4))
+  expect_false(any(moderator("informant")$comparable))
+  expect_equal(moderator("informant")$participants, c(590, 1250))
+  expect_equal(moderator("instrument")$level, c("a_parent", "a_self"))
+  expect_equal(nrow(moderator("risk_of_bias")), 0)
+  # d5 has a parent reporting screen use, the other four the child.
+  expect_equal(moderator("responder")$k_datasets, c(1, 4))
+
+  # Fifteen years across five datasets is too few datasets for a trend; the
+  # within-study part would rest on the one repeated cross-section.
+  years <- out$years[
+    out$years$exposure == "st_watch" & out$years$node %in% "n1",
   ]
-  expect_equal(informant$k_datasets[order(informant$level)], c(2, 4))
-  expect_false(any(informant$comparable))
-  years <- out$years[out$years$node == "n1", ]
-  expect_equal(c(years$first_year, years$last_year), c(2000, 2015))
-  expect_false(years$trend_can_run)
+  l1 <- years[years$level == "L1", ]
+  expect_equal(c(l1$first_year, l1$last_year), c(2000, 2016))
+  expect_equal(l1$k_repeated_cross_sections, 1)
+  expect_false(l1$trend_can_run)
+  expect_setequal(out$years$level, c("L0", "L1", "L3"))
+
+  # d6 has watching on a weekday row only.
+  expect_equal(out$days$k_datasets_any_day, 6)
+  expect_equal(out$days$k_datasets_usual_day, 5)
+  # Three datasets have a school row; two also have an any-location row of
+  # the same exposure, on any day, for the same outcome row.
+  expect_equal(out$school_home$k_datasets_school, 3)
+  expect_equal(out$school_home$k_datasets_matched, 2)
+})
+
+test_that("a trend can run with enough datasets over enough years", {
+  registry <- list(
+    tree = tibble::tibble(
+      node = c("fam", "n1"),
+      parent = c(NA, "fam"),
+      level = c("L0", "L1")
+    ),
+    rows = tibble::tibble(
+      variable_name = "a",
+      node = "n1",
+      informant = "self",
+      direction = "higher_better",
+      synthesis = TRUE,
+      score_type = "continuous",
+      role = "outcome",
+      use = "core"
+    )
+  )
+  exposures <- tibble::tibble(
+    variable_name = "st_watch",
+    exposure = "watch",
+    day = "usual",
+    context = "any",
+    headline = TRUE
+  )
+  ids <- sprintf("d%02d", 1:10)
+  cells <- tibble::tibble(
+    dataset_id = ids,
+    unit = paste0(ids, "|1|X"),
+    exposure = "st_watch",
+    outcome = "a",
+    n_rows = 30L,
+    n_participants = 30L,
+    model = "linear",
+    not_usable = NA_character_
+  )
+  units <- tibble::tibble(
+    unit = cells$unit,
+    dataset_id = ids,
+    country = "X",
+    year = 2001:2010,
+    measure_type = rep(c("Categorical", "Continuous"), 5),
+    responder = "Self",
+    total_source = NA,
+    repeats_participants = FALSE
+  )
+  measures <- tibble::tibble(
+    unit = cells$unit,
+    ses_measure = NA_character_,
+    ethnicity_measure = NA_character_,
+    urbanicity_measure = NA_character_
+  )
+  datasets <- tibble::tibble(
+    dataset_id = ids,
+    signed_off = TRUE,
+    risk_of_bias = NA_character_
+  )
+  run <- function(units) {
+    summarise_feasibility(cells, measures, units, registry, exposures, datasets)
+  }
+  out <- run(units)
+  # Ten datasets over nine years: one year short.
+  expect_false(any(out$years$trend_can_run))
+  units$year[10] <- 2011
+  out <- run(units)
+  expect_true(all(out$years$trend_can_run))
+  # Five datasets at each response format: the two can be compared.
+  format <- out$moderators[out$moderators$moderator == "measure_type", ]
+  expect_equal(format$k_datasets, c(5, 5))
+  expect_true(all(format$comparable))
+  # A dataset with no year is left out of the trend count only.
+  units$year[1] <- NA
+  out <- run(units)
+  expect_equal(unique(out$years$k_datasets), 9)
+  expect_equal(out$levels$k_datasets[out$levels$level == "L1"], 10)
 })

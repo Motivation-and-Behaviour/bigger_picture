@@ -198,6 +198,7 @@ analysis_targets <- function(harmonise_plan) {
         prepared,
         outcome_registry,
         exposure_registry,
+        dataschema,
         settings_model
       )),
       memory = "transient",
@@ -440,6 +441,7 @@ analysis_targets <- function(harmonise_plan) {
         outcome_registry,
         exposure_registry,
         analysis_datasets,
+        mapping_status_all,
         settings_model
       ))
     ),

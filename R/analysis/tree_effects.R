@@ -23,25 +23,18 @@ tree_effects <- function(
   outcome_registry,
   settings = analysis_settings()
 ) {
-  rows <- outcome_registry$rows
-  tree <- outcome_registry$tree
   out <- estimates[
     estimates$status %in%
       "fitted" &
       !is.na(estimates$estimate) &
       !is.na(estimates$se),
   ]
-  at <- match(out$outcome, rows$variable_name)
-  out$node <- rows$node[at]
-  out$family <- tree$parent[match(out$node, tree$node)]
-  out$informant <- dplyr::coalesce(rows$informant[at], "not recorded")
-  direction <- rows$direction[at]
-  out$left_out <- dplyr::case_when(
-    !rows$synthesis[at] %in% TRUE ~ "reported on its own",
-    !tree$level[match(out$node, tree$node)] %in% "L1" ~ "no specific outcome",
-    !direction %in% c("higher_better", "higher_worse") ~ "no direction",
-    .default = NA_character_
-  )
+  place <- tree_place(out$outcome, outcome_registry)
+  out$node <- place$node
+  out$family <- place$family
+  out$informant <- place$informant
+  direction <- place$direction
+  out$left_out <- place$left_out
   out$pools <- is.na(out$left_out)
 
   scale <- ifelse(
@@ -55,4 +48,31 @@ tree_effects <- function(
   out$estimate <- ifelse(out$flipped, -1, 1) * out$estimate / scale
   out$se <- out$se / scale
   out
+}
+
+#' Where outcome rows sit in the tree, and whether they pool
+#'
+#' @param outcome Outcome row names.
+#' @param outcome_registry The outcome registry.
+#' @return A tibble, one row per element of `outcome`: `node`, `family`,
+#'   `informant` (`not recorded` where the registry has none), `direction`
+#'   and `left_out`, the reason the row does not pool above itself, or NA.
+tree_place <- function(outcome, outcome_registry) {
+  rows <- outcome_registry$rows
+  tree <- outcome_registry$tree
+  at <- match(outcome, rows$variable_name)
+  node <- rows$node[at]
+  direction <- rows$direction[at]
+  tibble::tibble(
+    node = node,
+    family = tree$parent[match(node, tree$node)],
+    informant = dplyr::coalesce(rows$informant[at], "not recorded"),
+    direction = direction,
+    left_out = dplyr::case_when(
+      !rows$synthesis[at] %in% TRUE ~ "reported on its own",
+      !tree$level[match(node, tree$node)] %in% "L1" ~ "no specific outcome",
+      !direction %in% c("higher_better", "higher_worse") ~ "no direction",
+      .default = NA_character_
+    )
+  )
 }

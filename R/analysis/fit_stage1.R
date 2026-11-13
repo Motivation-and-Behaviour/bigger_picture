@@ -83,13 +83,7 @@ fit_stage1 <- function(
     return(NULL)
   }
   registry <- outcome_registry$rows
-  levels_of <- function(variable) {
-    allowed <- dataschema$allowed_values[match(
-      variable,
-      dataschema$variable_name
-    )]
-    length(setdiff(strsplit(allowed, "|", fixed = TRUE)[[1]], "Unknown"))
-  }
+  levels_of <- function(variable) schema_level_count(variable, dataschema)
   column <- function(name) {
     if (name %in% names(base)) base[[name]] else rep(NA, nrow(base))
   }
@@ -614,4 +608,14 @@ stage1_covariate_groups <- function(values, settings = analysis_settings()) {
     return(NULL)
   }
   values
+}
+
+# The number of levels the dataschema allows a categorical row, without
+# `Unknown`.
+schema_level_count <- function(variable, dataschema) {
+  allowed <- dataschema$allowed_values[match(
+    variable,
+    dataschema$variable_name
+  )]
+  length(setdiff(strsplit(allowed, "|", fixed = TRUE)[[1]], "Unknown"))
 }
