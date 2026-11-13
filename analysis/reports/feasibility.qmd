@@ -1,0 +1,223 @@
+---
+title: "Feasibility: what the signed-off datasets can support"
+subtitle: "Counts of datasets and participants for every exposure and outcome, before the freeze"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(dplyr)
+library(ggplot2)
+library(targets)
+
+feasibility <- tar_read(feasibility)
+registry <- tar_read(outcome_registry)
+settings <- tar_read(settings)
+manifest <- tar_read(data_manifest)
+
+fmt <- function(x) format(x, big.mark = ",", trim = TRUE)
+theme_set(theme_minimal(base_size = 10))
+options(knitr.kable.NA = "")
+tree <- registry$tree
+label_of <- function(node) coalesce(tree$label[match(node, tree$node)], node)
+levels <- feasibility$levels
+levels$family_label <- label_of(levels$family)
+levels$node_label <- label_of(levels$node)
+# The exposures the models use: the usual-day row of each analysed exposure.
+usual <- levels[levels$day == "usual", ]
+lead <- usual[usual$exposure_headline, ]
+```
+
+This report counts; it fits no model and shows no association.
+It says, for every exposure and every level of the outcome tree, how many datasets, units and participants have the exposure together with the outcome, and whether that is enough to pool.
+The freeze uses it to decide which cells go in the model list.
+
+Data: `r nrow(manifest)` datasets, overall hash `r unique(manifest$overall_hash)`.
+`r feasibility$scope$datasets_with_cells` of them have at least one exposure together with one outcome row, and `r feasibility$scope$datasets_signed_off` of those are signed off; only signed-off datasets are counted below.
+
+How to read the counts:
+
+- a unit (a dataset's wave in one country) counts towards a cell where at least `r settings$min_unit_rows` of its rows have both the exposure and the outcome row;
+- a cell can be pooled from `r settings$min_datasets` datasets or more;
+- participants are counted once per dataset and country, from the largest unit and row a dataset gives the cell;
+- counts are of the prepared rows, before stage 1's rules on weights, age and sex, so a few countable units will still not be fitted.
+
+## Exposures by outcome family
+
+Datasets with the exposure and at least one outcome row of the family that pools.
+These are the exposures the report leads with, on their usual-day row; `total_screen` is the analysis's derived total.
+
+```{r}
+#| label: fig-families
+#| fig-height: 3.2
+families <- lead[lead$level == "L0", ]
+ggplot(families, aes(family_label, exposure, fill = k_datasets)) +
+  geom_tile(colour = "white") +
+  geom_text(aes(label = k_datasets), size = 3) +
+  scale_fill_gradient(low = "#f3f6fb", high = "#5b8fd1", guide = "none") +
+  labs(x = NULL, y = NULL)
+```
+
+```{r}
+#| label: tbl-families
+families |>
+  arrange(exposure, family_label) |>
+  transmute(
+    Exposure = exposure,
+    Family = family_label,
+    Datasets = k_datasets,
+    Units = fmt(k_units),
+    Participants = fmt(participants),
+    `Specific outcomes that can be pooled` = k_nodes_poolable
+  ) |>
+  knitr::kable(align = "llrrrr")
+```
+
+## Specific outcomes
+
+Datasets per specific outcome, for the lead exposures.
+A blank cell means no signed-off dataset has the pair; a number under `r settings$min_datasets` means it cannot be pooled.
+
+```{r}
+#| label: tbl-nodes
+nodes <- lead[lead$level == "L1", ]
+nodes |>
+  select(family_label, node_label, exposure, k_datasets) |>
+  tidyr::pivot_wider(names_from = exposure, values_from = k_datasets) |>
+  arrange(family_label, node_label) |>
+  rename(Family = family_label, `Specific outcome` = node_label) |>
+  knitr::kable()
+```
+
+```{r}
+#| label: nodes-summary
+node_summary <- nodes |>
+  group_by(exposure) |>
+  summarise(
+    with_data = n(),
+    poolable = sum(poolable),
+    .groups = "drop"
+  )
+```
+
+`r nrow(tree[tree$level %in% "L1", ])` specific outcomes are in the tree.
+
+```{r}
+#| label: tbl-nodes-summary
+node_summary |>
+  transmute(
+    Exposure = exposure,
+    `Specific outcomes with any dataset` = with_data,
+    `Of those, can be pooled` = poolable
+  ) |>
+  knitr::kable(align = "lrr")
+```
+
+## Every level, every exposure row
+
+Cells that can be pooled, of the cells with any countable dataset, at each level of the tree.
+This covers every analysed exposure row, including the weekday and weekend rows and the device and content subsets.
+
+```{r}
+#| label: tbl-levels
+levels |>
+  mutate(
+    Level = recode(
+      level,
+      L0 = "L0 family",
+      L1 = "L1 specific outcome",
+      L2 = "L2 specific outcome by informant",
+      L3 = "L3 outcome row"
+    )
+  ) |>
+  group_by(Level) |>
+  summarise(
+    `Cells with a dataset` = fmt(n()),
+    `Can be pooled` = fmt(sum(poolable)),
+    `Median datasets, where pooled` = median(k_datasets[poolable]),
+    .groups = "drop"
+  ) |>
+  knitr::kable(align = "lrrr")
+```
+
+## Covariate tiers
+
+A unit that does not record a tier's covariates is not fitted at that tier (DR-0015), so further tiers rest on fewer datasets.
+Specific outcomes, for the lead exposures, that could still be pooled at each tier.
+
+```{r}
+#| label: tbl-tiers
+tiers <- feasibility$tiers |>
+  semi_join(nodes, by = c("exposure", "node"))
+tiers |>
+  group_by(Exposure = exposure) |>
+  summarise(
+    `Tier 1 (age, sex)` = sum(k_datasets_tier1 >= settings$min_datasets),
+    `Tier 2 (adds SES)` = sum(k_datasets_tier2 >= settings$min_datasets),
+    `Tier 3 (adds ethnicity or minority, urbanicity)` = sum(
+      k_datasets_tier3 >= settings$min_datasets
+    ),
+    .groups = "drop"
+  ) |>
+  knitr::kable(align = "lrrr")
+```
+
+## Moderators
+
+Specific outcomes, for the lead exposures, where a moderator has two levels with at least `r settings$min_datasets` datasets each, so the levels can be compared.
+Most datasets have one level of a moderator, so these comparisons are mostly between kinds of study.
+
+```{r}
+#| label: tbl-moderators
+feasibility$moderators |>
+  semi_join(nodes, by = c("exposure", "node")) |>
+  distinct(exposure, node, moderator, comparable) |>
+  group_by(Moderator = moderator, exposure) |>
+  summarise(comparable = sum(comparable), .groups = "drop") |>
+  tidyr::pivot_wider(names_from = exposure, values_from = comparable) |>
+  knitr::kable()
+```
+
+## Trend over collection years
+
+The trend in the associations runs for a specific outcome with at least `r settings$year_min_datasets` datasets spanning `r settings$year_min_span` years or more.
+
+```{r}
+#| label: tbl-years
+feasibility$years |>
+  semi_join(nodes, by = c("exposure", "node")) |>
+  group_by(Exposure = exposure) |>
+  summarise(
+    `Specific outcomes with a dated dataset` = n(),
+    `Trend can run` = sum(trend_can_run),
+    .groups = "drop"
+  ) |>
+  knitr::kable(align = "lrr")
+```
+
+## What cannot be pooled
+
+Specific outcomes, for the lead exposures, with a dataset but too few to pool.
+
+```{r}
+#| label: tbl-thin
+nodes |>
+  filter(!poolable) |>
+  arrange(exposure, family_label, node_label) |>
+  transmute(
+    Exposure = exposure,
+    Family = family_label,
+    `Specific outcome` = node_label,
+    Datasets = k_datasets
+  ) |>
+  knitr::kable(align = "lllr")
+```

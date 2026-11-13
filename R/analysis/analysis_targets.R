@@ -193,6 +193,18 @@ analysis_targets <- function(harmonise_plan) {
       resources = row_level
     ),
     targets::tar_target_raw(
+      "cell_counts",
+      quote(count_cells(
+        prepared,
+        outcome_registry,
+        exposure_registry,
+        settings_model
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = row_level
+    ),
+    targets::tar_target_raw(
       "stage1_adjusted",
       quote(fit_stage1(
         prepared,
@@ -410,6 +422,28 @@ analysis_targets <- function(harmonise_plan) {
       command = quote(dplyr::bind_rows(!!!.x))
     ),
     tarchetypes::tar_combine_raw(
+      "cell_counts_all",
+      per_dataset[["cell_counts"]],
+      command = quote(bind_part(list(!!!.x), "cells"))
+    ),
+    tarchetypes::tar_combine_raw(
+      "cell_units_all",
+      per_dataset[["cell_counts"]],
+      command = quote(bind_part(list(!!!.x), "units"))
+    ),
+    targets::tar_target_raw(
+      "feasibility",
+      quote(summarise_feasibility(
+        cell_counts_all,
+        cell_units_all,
+        described_units,
+        outcome_registry,
+        exposure_registry,
+        analysis_datasets,
+        settings_model
+      ))
+    ),
+    tarchetypes::tar_combine_raw(
       "stage1_adjusted_all",
       per_dataset[["stage1_adjusted"]],
       command = quote(dplyr::bind_rows(!!!.x))
@@ -542,6 +576,10 @@ analysis_targets <- function(harmonise_plan) {
     tarchetypes::tar_quarto_raw(
       "report_descriptives",
       path = fs::path(bp_analysis_reports_dir(), "descriptives.qmd")
+    ),
+    tarchetypes::tar_quarto_raw(
+      "report_feasibility",
+      path = fs::path(bp_analysis_reports_dir(), "feasibility.qmd")
     ),
     tarchetypes::tar_quarto_raw(
       "report_thin_slice",

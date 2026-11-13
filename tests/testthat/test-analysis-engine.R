@@ -1535,3 +1535,188 @@ test_that("a further tier is set beside tier 1 on its own rows", {
   expect_equal(thin$status, "insufficient data")
   expect_true(is.na(thin$change))
 })
+
+test_that("cells are counted from the rows that have both", {
+  n <- 100
+  prepared <- list(
+    base = tibble::tibble(
+      dataset_id = "9001",
+      participant_id = c(1:50, 1:50),
+      unit = rep(c("9001|1|X", "9001|2|X"), each = 50),
+      ses_household = rep(c("Low", "High"), 50),
+      ethnicity = NA_character_,
+      urbanicity = c(rep("Urban", 50), rep(c("Urban", "Rural"), 25))
+    ),
+    exposures = tibble::tibble(
+      st_watch = c(rep(1, 40), rep(NA, 10), rep(1, 50)),
+      st_game = NA_real_,
+      total_screen = 2,
+      total_source = "summed",
+      st_archived = 1
+    ),
+    outcomes = tibble::tibble(
+      core_row = c(rep(NA, 10), rep(1, 90)),
+      archive_row = 1,
+      empty_row = NA_real_
+    )
+  )
+  registry <- list(
+    rows = tibble::tibble(
+      variable_name = c("core_row", "archive_row", "empty_row"),
+      use = c("core", "archive", "core")
+    )
+  )
+  exposures <- tibble::tibble(
+    variable_name = c("st_watch", "st_game", "st_archived"),
+    include = c(TRUE, TRUE, FALSE)
+  )
+  counted <- count_cells(prepared, registry, exposures)
+  cells <- counted$cells
+  # Only analysed exposures and outcome rows, and only pairs with a row.
+  expect_setequal(cells$exposure, c("st_watch", "total_screen"))
+  expect_equal(unique(cells$outcome), "core_row")
+  watch <- cells[cells$exposure == "st_watch", ]
+  expect_equal(watch$n_rows, c(30, 50))
+  expect_equal(watch$n_participants, c(30, 50))
+  expect_equal(cells$n_rows[cells$exposure == "total_screen"], c(40, 50))
+  expect_equal(unique(cells$dataset_id), "9001")
+  # What each tier would use: SES in both units, no ethnicity, and
+  # urbanicity only where it varies.
+  expect_equal(counted$units$rows, c(50, 50))
+  expect_equal(counted$units$ses_measure, rep("ses_household", 2))
+  expect_true(all(is.na(counted$units$ethnicity_measure)))
+  expect_equal(counted$units$urbanicity_measure, c(NA, "urbanicity"))
+
+  # A participant with several rows in a unit is one participant.
+  prepared$base$unit <- "9001|1|X"
+  again <- count_cells(prepared, registry, exposures)$cells
+  watch <- again[again$exposure == "st_watch", ]
+  expect_equal(watch$n_rows, 80)
+  expect_equal(watch$n_participants, 50)
+  expect_null(count_cells(NULL, registry, exposures))
+})
+
+test_that("feasibility counts datasets, units and participants per level", {
+  registry <- list(
+    tree = tibble::tibble(
+      node = c("fam", "n1", "n2"),
+      parent = c(NA, "fam", "fam"),
+      level = c("L0", "L1", "L1")
+    ),
+    rows = tibble::tibble(
+      variable_name = c("a_self", "a_parent", "b_self", "alone"),
+      node = c("n1", "n1", "n2", NA),
+      informant = c("self", "parent", "self", "self"),
+      direction = "higher_better",
+      synthesis = c(TRUE, TRUE, TRUE, FALSE)
+    )
+  )
+  exposures <- tibble::tibble(
+    variable_name = "st_watch",
+    exposure = "watch",
+    day = "usual",
+    headline = TRUE
+  )
+  cell <- function(dataset, wave, outcome, n) {
+    tibble::tibble(
+      dataset_id = dataset,
+      unit = paste(dataset, wave, "X", sep = "|"),
+      exposure = "st_watch",
+      outcome = outcome,
+      n_rows = n,
+      n_participants = n
+    )
+  }
+  cells <- dplyr::bind_rows(
+    # Four datasets give `a_self`; d1 in two waves of the same children.
+    cell("d1", 1, "a_self", 100),
+    cell("d1", 2, "a_self", 80),
+    cell("d2", 1, "a_self", 200),
+    cell("d3", 1, "a_self", 300),
+    cell("d4", 1, "a_self", 400),
+    # Two give `a_parent`; one unit is too small to count.
+    cell("d1", 1, "a_parent", 90),
+    cell("d2", 1, "a_parent", 10),
+    cell("d5", 1, "a_parent", 500),
+    # One gives `b_self`, one the row reported on its own.
+    cell("d1", 1, "b_self", 100),
+    cell("d1", 1, "alone", 100),
+    # Not signed off: not counted.
+    cell("d9", 1, "a_self", 900)
+  )
+  ids <- unique(cells$unit)
+  units <- tibble::tibble(
+    unit = ids,
+    country = "X",
+    year = c(2000, 2001, 2005, 2010, 2012, 2015, 2020),
+    measure_type = "Categorical",
+    responder = c(rep("Self", 4), rep("Parent or carer", 3))
+  )
+  measures <- tibble::tibble(
+    unit = ids,
+    ses_measure = c(
+      "ses_household",
+      NA,
+      "ses_household",
+      "ses_area",
+      NA,
+      NA,
+      NA
+    ),
+    ethnicity_measure = c("ethnicity", NA, NA, "minority", NA, NA, NA),
+    urbanicity_measure = c("urbanicity", NA, NA, NA, NA, NA, NA)
+  )
+  datasets <- tibble::tibble(
+    dataset_id = c("d1", "d2", "d3", "d4", "d5", "d9"),
+    signed_off = c(TRUE, TRUE, TRUE, TRUE, TRUE, NA)
+  )
+  out <- summarise_feasibility(
+    cells,
+    measures,
+    units,
+    registry,
+    exposures,
+    datasets
+  )
+  expect_equal(out$scope$datasets_with_cells, 6)
+  expect_equal(out$scope$datasets_signed_off, 5)
+  level <- function(name) out$levels[out$levels$level == name, ]
+
+  row <- level("L3")
+  a_self <- row[row$outcome == "a_self", ]
+  expect_equal(a_self$k_datasets, 4)
+  expect_equal(a_self$k_units, 5)
+  # d1's two waves hold the same children: its larger wave counts.
+  expect_equal(a_self$participants, 100 + 200 + 300 + 400)
+  expect_true(a_self$poolable)
+  a_parent <- row[row$outcome == "a_parent", ]
+  expect_equal(a_parent$k_datasets, 2)
+  expect_false(a_parent$poolable)
+  # The row reported on its own is counted as a row and pools nowhere.
+  expect_true("alone" %in% row$outcome)
+
+  n1 <- level("L1")[level("L1")$node == "n1", ]
+  expect_equal(n1$k_datasets, 5)
+  expect_equal(n1$k_rows, 2)
+  expect_equal(n1$participants, 100 + 200 + 300 + 400 + 500)
+  expect_equal(nrow(level("L2")), 3)
+  family <- level("L0")
+  expect_equal(family$k_datasets, 5)
+  expect_equal(family$k_nodes_poolable, 1)
+  expect_equal(family$exposure_group, "watch")
+
+  tiers <- out$tiers[out$tiers$node == "n1", ]
+  expect_equal(
+    c(tiers$k_datasets_tier1, tiers$k_datasets_tier2, tiers$k_datasets_tier3),
+    c(5, 3, 1)
+  )
+  # Informant: four datasets by the child, two by a parent.
+  informant <- out$moderators[
+    out$moderators$node == "n1" & out$moderators$moderator == "informant",
+  ]
+  expect_equal(informant$k_datasets[order(informant$level)], c(2, 4))
+  expect_false(any(informant$comparable))
+  years <- out$years[out$years$node == "n1", ]
+  expect_equal(c(years$first_year, years$last_year), c(2000, 2015))
+  expect_false(years$trend_can_run)
+})

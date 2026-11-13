@@ -114,6 +114,7 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `development_cells` | The cells fitted before the freeze, from `development_cells.csv` |
 | `stage1_<key>`, `stage1_all` | One model per unit and cell: the slope on screen use, with how it was fitted or why it was not |
 | `stage2_development` | Each cell's slopes pooled across datasets |
+| `cell_counts_<key>`, `cell_counts_all`, `cell_units_all`, `feasibility` | Rows and participants with each exposure together with each outcome row, per unit, and what the signed-off datasets can therefore pool at each level of the tree, at each covariate tier, by moderator and over collection years; counts only, no model |
 | `stage1_adjusted_<key>`, `stage1_adjusted_all`, `tiers_development` | The development cells fitted at covariate tiers 2 and 3 (DR-0015), and each tier's pooled slope beside tier 1 pooled over the same units |
 | `slope_correlations_<key>`, `slope_correlations_all` | How strongly the slopes of two rows of one specific outcome share their error in a unit, estimated from the unit's rows |
 | `tree_development` | The development cells' slopes pooled up the outcome tree: specific outcome by informant, specific outcome, and family |
@@ -126,7 +127,7 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `dataset_table` | One row per dataset, by number, with its citation keys from `references/` |
 | `dataset_outcomes`, `dataset_outcome_flow` | What became of every dataset the project sought, from hand-entered counts |
 | `measured`, `work_scale` | What was measured, and the scale of the harmonisation work, counted from the repository and the pipeline |
-| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation`, `report_descriptives`, `report_thin_slice` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
+| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation`, `report_descriptives`, `report_thin_slice`, `report_feasibility` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
 
 A dataset is included until any dataset has `signed_off` set in `datasets.csv`; from then on only signed-off datasets are.
 
