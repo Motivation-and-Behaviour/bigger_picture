@@ -117,7 +117,7 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `onestage_rows_<key>`, `onestage_check` | The one-stage check on one cell |
 | `descriptives_<key>`, `described_screen`, `described_week`, `described_relations`, `described_outcomes`, `described_units` | Per-unit descriptive statistics of screen use and of binary outcomes, weighted where a unit has weights |
 | `screen_pooled`, `week_pooled`, `relations_pooled`, `outcomes_pooled` | Those statistics pooled so each dataset counts once |
-| `series_breaks`, `screen_by_year`, `screen_by_year_share` | Recorded changes to a dataset's screen items, and screen use against collection year, between studies and within like series of one study |
+| `series_breaks`, `series_breaks_unused`, `screen_by_year`, `screen_by_year_share` | Recorded changes to a dataset's screen items, the recorded changes that separate no units (none, when the file is right), and screen use against collection year, between studies and within like series of one study |
 | `year_moderation_development` | Whether the slopes differ by collection year, on the development cells |
 | `dataset_table` | One row per dataset, by number, with its citation keys from `references/` |
 | `dataset_outcomes`, `dataset_outcome_flow` | What became of every dataset the project sought, from hand-entered counts |
@@ -201,3 +201,16 @@ Both are blank for a dataset until the references snapshot has it; nothing in `a
 - `decision_record` lists the decision records behind the entry, separated by `|`.
 
 Add a row when a decision changes what the preregistration promised; do not edit an entry's history away, but update its `status` when a planned departure takes effect.
+
+### Changes to a screen item
+
+`series_breaks.csv` lists where a repeated study changed how it asked about screen use: new wording, new response bands, another respondent, another instrument.
+A trend over collection years is read only along units on the same side of every line, so a redesign is not read as change over time.
+Each line names a `dataset_id`, an `exposure` and a `reason` taken from the study's own questionnaires and codebooks, and says where the changed item applies in one of two ways.
+`from_year` gives the first collection year of the changed item, for a change that holds from then on.
+`waves` lists the waves that used it, separated by semicolons and spelt as in the harmonised `wave` column, for a study whose waves share or straddle calendar years or whose item came and went.
+Fill in one of the two and leave the other blank.
+`day` limits a line to the `weekday`, `weekend` or `usual` row of the exposure; blank means all three.
+A list of waves is closed: when a study adds a wave that still uses the changed item, add the wave to every such list, or it is read as the old item.
+The derived total is built from whichever items a dataset has, so every line of the dataset splits its series, whatever the exposure or day.
+A line with no units that have the exposure on one of its two sides is listed in the `series_breaks_unused` target, which should be empty.

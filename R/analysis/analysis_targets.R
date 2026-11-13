@@ -273,6 +273,15 @@ analysis_targets <- function(harmonise_plan) {
       ))
     ),
     targets::tar_target_raw(
+      "series_breaks_unused",
+      quote(check_series_breaks(
+        series_breaks,
+        described_units,
+        described_screen,
+        exposure_registry
+      ))
+    ),
+    targets::tar_target_raw(
       "screen_by_year",
       quote(trend_across_datasets(
         described_screen,

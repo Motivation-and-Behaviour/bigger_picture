@@ -41,6 +41,7 @@ trend_across_datasets <- function(
     overall[c("dataset_id", "unit", "variable_name", "n", "yi", "sei")],
     units[c(
       "unit",
+      "wave",
       "country",
       "year",
       "age_median",
@@ -54,6 +55,10 @@ trend_across_datasets <- function(
     overall$variable_name,
     exposure_registry$variable_name
   )]
+  day_of <- exposure_registry$day[match(
+    overall$variable_name,
+    exposure_registry$variable_name
+  )]
   overall$series <- NA_character_
   for (exposure in unique(exposure_of)) {
     rows <- exposure_of %in% exposure
@@ -61,7 +66,8 @@ trend_across_datasets <- function(
       overall[rows, ],
       exposure,
       breaks,
-      settings
+      settings,
+      day_of[rows]
     )
   }
 

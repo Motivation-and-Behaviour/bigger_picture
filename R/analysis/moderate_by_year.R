@@ -42,6 +42,7 @@ moderate_by_year <- function(
     )],
     units[c(
       "unit",
+      "wave",
       "country",
       "year",
       "age_median",
@@ -54,6 +55,10 @@ moderate_by_year <- function(
     fitted$exposure,
     exposure_registry$variable_name
   )]
+  day_of <- exposure_registry$day[match(
+    fitted$exposure,
+    exposure_registry$variable_name
+  )]
   fitted$series <- NA_character_
   for (exposure in unique(exposure_of)) {
     rows <- exposure_of %in% exposure
@@ -61,7 +66,8 @@ moderate_by_year <- function(
       fitted[rows, ],
       exposure,
       breaks,
-      settings
+      settings,
+      day_of[rows]
     )
   }
   fitted$yi <- fitted$estimate

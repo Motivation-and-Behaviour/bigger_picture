@@ -163,7 +163,7 @@ bp_series_breaks_path <- function() {
 }
 
 bp_series_breaks_columns <- function() {
-  c("dataset_id", "exposure", "from_year", "reason")
+  c("dataset_id", "exposure", "day", "from_year", "waves", "reason")
 }
 
 # The settings each stage reads, so a change to one reruns only that stage.

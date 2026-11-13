@@ -888,7 +888,8 @@ test_that("units form a series only where they measure the same thing", {
     ),
     measure_type = "Categorical",
     age_median = c(13, 14, 13, 13, 17, 13, 15, 15),
-    year = c(2000, 2005, 2000, 2000, 2010, 2000, 2015, 2019)
+    year = c(2000, 2005, 2000, 2000, 2010, 2000, 2015, 2019),
+    wave = as.character(1:8)
   )
   breaks <- read_series_breaks(
     file.path(repo_root, bp_series_breaks_path()),
@@ -909,13 +910,85 @@ test_that("units form a series only where they measure the same thing", {
 
   dir <- withr::local_tempdir()
   path <- file.path(dir, "series_breaks.csv")
+  header <- "dataset_id,exposure,day,from_year,waves,reason"
+  write_breaks <- function(...) writeLines(c(header, ...), path)
+  write_breaks("1,not_an_exposure,,2000,,why")
+  expect_error(read_series_breaks(path, reg$exposures), "not exposures")
+  write_breaks("1,watch,someday,2000,,why")
+  expect_error(read_series_breaks(path, reg$exposures), "not days")
+  write_breaks("1,watch,,,,why")
+  expect_error(read_series_breaks(path, reg$exposures), "either a year")
+  write_breaks("1,watch,,2000,a;b,why")
+  expect_error(read_series_breaks(path, reg$exposures), "either a year")
+  write_breaks("1,watch,,soon,,why")
+  expect_error(read_series_breaks(path, reg$exposures), "must be a year")
+  write_breaks("1,watch,,2000,,")
+  expect_error(read_series_breaks(path, reg$exposures), "a reason")
+})
+
+test_that("a change keyed by waves or by day splits only those units", {
+  reg <- engine_registries()
+  dir <- withr::local_tempdir()
+  path <- file.path(dir, "series_breaks.csv")
   writeLines(
-    c("dataset_id,exposure,from_year,reason", "1,not_an_exposure,2000,why"),
+    c(
+      "dataset_id,exposure,day,from_year,waves,reason",
+      "p,watch,,2002,,new bands",
+      "p,watch,,,b; d,mail-out form",
+      "p,watch,weekend,2004,,weekend item only",
+      "p,game,,,zz,no such wave",
+      "q,game,,1990,,before any unit"
+    ),
     path
   )
-  expect_error(read_series_breaks(path, reg$exposures), "not exposures")
-  writeLines(c("dataset_id,exposure,from_year,reason", "1,watch,,why"), path)
-  expect_error(read_series_breaks(path, reg$exposures), "year and a reason")
+  breaks <- read_series_breaks(path, reg$exposures)
+  expect_equal(breaks$waves[[2]], c("b", "d"))
+  units <- tibble::tibble(
+    dataset_id = c(rep("p", 6), "q"),
+    wave = c("a", "b", "c", "d", "e", "f", "a"),
+    country = "A",
+    responder = "Self",
+    measure_type = "Categorical",
+    age_median = 13,
+    year = c(2000, 2001, 2002, 2002, 2003, 2004, 2000)
+  )
+  series <- assign_series(units, "watch", breaks, day = "weekday")
+  # Waves a and b are before the new bands; b and d are the mail-out form,
+  # which came and went, so c, e and f are one series around it.
+  expect_equal(series[3], series[5])
+  expect_equal(series[5], series[6])
+  expect_equal(dplyr::n_distinct(series[1:6]), 4)
+  # Waves sharing a year are told apart by wave.
+  expect_false(series[3] == series[4])
+  # The weekend-only change splits the weekend row and no other.
+  weekend <- assign_series(units, "watch", breaks, day = "weekend")
+  expect_false(weekend[5] == weekend[6])
+  expect_equal(weekend[3], weekend[5])
+  # The derived total has no exposure, so every change in the dataset counts.
+  total <- assign_series(units, NA_character_, breaks)
+  expect_false(total[5] == total[6])
+  # Lines that separate nothing are reported.
+  units$unit <- paste0(units$dataset_id, units$wave)
+  screen <- tibble::tibble(
+    unit = c(units$unit[1:6], units$unit[6]),
+    variable_name = c(rep("st_watch_wd", 6), "st_watch_we")
+  )
+  unused <- check_series_breaks(breaks, units, screen, reg$exposures)
+  # The weekend change has weekend values only after it, so splits nothing;
+  # game has no statistics, so its lines are checked against every unit.
+  expect_equal(unused$exposure, c("watch", "game", "game"))
+  expect_equal(unused$day, c("weekend", NA, NA))
+  expect_equal(unused$units, c(1L, 6L, 1L))
+  expect_equal(unused$matched, c(1L, 0L, 1L))
+  expect_error(assign_series(units[names(units) != "wave"], "watch", breaks))
+
+  header <- "dataset_id,exposure,day,from_year,waves,reason"
+  writeLines(c(header, "p,watch,,,a;;b,why"), path)
+  expect_error(read_series_breaks(path, reg$exposures), "empty entry")
+  writeLines(c(header, "p,watch,,2012.5,,why"), path)
+  expect_error(read_series_breaks(path, reg$exposures), "must be a year")
+  writeLines(c(header, "p,watch,,2012,,why", "p,watch,,2012,,again"), path)
+  expect_error(read_series_breaks(path, reg$exposures), "appears twice")
 })
 
 test_that("the dataset table gives one row per dataset, by number", {
@@ -1071,6 +1144,7 @@ test_that("year moderation and the cross-dataset trend use unit descriptions", {
   units <- tibble::tibble(
     dataset_id = rep(ids, each = 2),
     unit = paste0(dataset_id, c("a", "b")),
+    wave = rep(c("a", "b"), 12),
     country = "A",
     year = rep(seq(1998, 2020, length.out = 12), each = 2) + c(0, 4),
     age_median = stats::runif(24, 12.5, 15.5),
@@ -1096,6 +1170,25 @@ test_that("year moderation and the cross-dataset trend use unit descriptions", {
     nrow(moderate_by_year(stage1[0, ], units, reg$exposures, breaks)),
     0
   )
+  # A change at every dataset's second wave leaves no series over years; one
+  # limited to the weekend row leaves the usual-day row whole.
+  split_all <- breaks[rep(1, 12), ]
+  split_all$dataset_id <- ids
+  split_all$exposure <- "watch"
+  split_all$day <- NA_character_
+  split_all$from_year <- NA_real_
+  split_all$waves <- rep(list("b"), 12)
+  weekend_only <- split_all
+  weekend_only$day <- "weekend"
+  expect_gt(moderation$k_within, 0)
+  expect_equal(
+    moderate_by_year(stage1, units, reg$exposures, split_all)$k_within,
+    0
+  )
+  expect_equal(
+    moderate_by_year(stage1, units, reg$exposures, weekend_only)$k_within,
+    moderation$k_within
+  )
 
   screen <- tibble::tibble(
     dataset_id = rep(units$dataset_id, 2),
@@ -1112,6 +1205,24 @@ test_that("year moderation and the cross-dataset trend use unit descriptions", {
   trend <- trend_across_datasets(screen, units, reg$exposures, breaks)
   expect_equal(trend$trends$variable_name, "st_watch")
   expect_lt(abs(trend$trends$between_per_decade - 0.5), 0.1)
+  expect_equal(
+    trend_across_datasets(
+      screen,
+      units,
+      reg$exposures,
+      split_all
+    )$trends$k_within,
+    0
+  )
+  expect_equal(
+    trend_across_datasets(
+      screen,
+      units,
+      reg$exposures,
+      weekend_only
+    )$trends$k_within,
+    trend$trends$k_within
+  )
   # The figure's table counts each dataset once per period, needs three
   # datasets, carries no dataset label, and leaves the total out.
   expect_false("dataset_id" %in% names(trend$periods))

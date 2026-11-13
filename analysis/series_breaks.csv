@@ -1,8 +1,137 @@
-dataset_id,exposure,from_year,reason
-170,watch,2018,The questionnaire was redesigned: television on a weekday or weekend day to 2017 and video or television or movies on any device from 2018 with new response bands
-170,game,2018,Hours a week to 2017 and hours a day from 2018 with new response bands
-170,socmedia,2018,Hours a week to 2017 and hours a day from 2018 with new response bands
-170,videochat,2018,Hours a week to 2017 and hours a day from 2018 with new response bands
-170,messaging,2018,Hours a week to 2017 and hours a day from 2018 with new response bands
-1928,watch,2015,Nine response bands in 2009 and 2012 and ten from 2015 with a different top band
-1928,watch,2024,The 2024 item narrows to programmes on digital platforms watched on the television
+dataset_id,exposure,day,from_year,waves,reason
+18,comp,,2006,,Five response bands at wave 1 and open hours and minutes from wave 2
+18,comp,,,2.5;3.5,Mail-out questionnaires between main interviews asking weekly totals with no home access filter
+18,game,,2012,,Filter changes from owning an electronic game system to having access to electronic games
+18,game,,2016,,Older cohort answers for itself from wave 7 while the younger cohort is still parent report
+18,game,,,2.5;3.5,Mail-out questionnaires between main interviews asking weekly totals
+18,watch,,2006,,Five response bands at wave 1 and open hours and minutes from wave 2
+18,watch,,,2.5;3.5,Mail-out questionnaires between main interviews summing separate TV and DVD items asked as weekly totals
+18,watch,,,7,Older cohort answers for itself at wave 7 while the younger cohort is still parent report
+27,game,,2012,,Computer use or electronic games in six bands to sweep 4 and electronic games only in seven bands from sweep 5
+27,game,,2015,,Parent report in seven bands to sweep 5 and self-report in eight bands from sweep 6
+27,game,,2018,,Games on a computer or games system to sweep 6 and games on any device including phones and tablets with a top band of 10 hours or more at sweep 7
+27,socmedia,,2018,,Eight bands topping at 7 hours or more at sweep 6 and nine bands topping at 10 hours or more without term-time wording at sweep 7
+27,watch,,2006,,Typical day in four bands at sweep 2 and a normal term-time weekday in six bands from sweep 3
+27,watch,,2012,,TV videos or DVDs in six bands to sweep 4 and programmes or films on any device in seven bands from sweep 5
+27,watch,,2015,,Parent report in seven bands to sweep 5 and self-report in eight bands from sweep 6
+27,watch,,2018,,Nine bands with a top band of 10 hours or more and no term-time wording at sweep 7 against eight bands topping at 7 hours or more at sweep 6
+31,game,,2015,,Caregiver report of video or computer games at Year 5 and teen self-report of games on computer TV or device at Year 15
+31,watch,,2015,,Caregiver report of TV or videos to Year 9 and teen self-report of TV videos or movies in a time-use block at Year 15
+46,comp,,2015,,Home computer activity codes to 2007 and any activity with a computer recorded as device in the 2014 wave
+46,comp_nongaming,,2015,,Home computer activity codes to 2007 and any activity with a computer recorded as device in the 2014 wave
+46,educational,,2015,,Computer homework activity code to 2007 and online classes plus homework with a device code in the 2014 wave
+46,educational,,2020,,Homework device identified by device codes in the 2014 wave and by one pooled yes or no device box in the 2019 and 2020 waves
+46,game,,2007,,The 2007 code frame adds games on a cell phone to the computer games code
+46,game,,2015,,Sum of console code 879 and computer games code 502 to 2007 and one any-device electronic games code from the 2014 wave
+46,game_comp,,2015,,Activity code to 2007 and device recorded per gaming episode in the 2014 wave
+46,game_console,,2015,,Activity code to 2007 and device recorded per gaming episode in the 2014 wave
+46,game_phone,,2015,,Cell phone games activity code in 2007 and games with a smartphone recorded as device in the 2014 wave
+46,internet,,2007,,The 2007 code frame adds the same recreational use on a cell phone
+46,internet,,2015,,Other recreational computer activities to 2007 and computer or electronic device from the 2014 wave
+46,phone,,2015,,Cell phone activity codes in 2007 and any activity with a smartphone recorded as device in the 2014 wave
+46,shopping,,2007,,The 2007 code frame adds shopping on a cell phone to shopping on a computer
+46,watch,,2015,,Diary code 919 is TV set only to 2007 and watching a show or video or movie on any device from the 2014 wave
+50,comp,,2008,,Banded weekly computer total with a top band of 10 hours to 2006 and a sum of two open-hours items by purpose from 2008
+50,educational,,2013,,Item widens from a computer to a computer or mobile device and adds children aged 14 and over
+50,game,,2010,,Child item widens from video games to video games or on-line games
+50,game,usual,2017,,Usual-day row is the young-adult banded weekly item only once the child items end after 2014
+50,watch,weekend,1998,,Child weekend item changes from one typical weekend day to separate Saturday and Sunday items averaged
+50,watch,usual,1998,,Child weekend item changes from one typical weekend day to separate Saturday and Sunday items averaged
+50,watch,usual,2000,,Usual-day row adds young adults answering a banded hours-a-week TV item from 2000
+50,watch,,2002,,Child item reworded and moved from written-in hours to on-screen entry capped at 24 and mother item becomes interviewer-entered to the nearest half hour
+50,watch,usual,2013,,Young-adult item widens from TV to TV programs or movies on a television or computer or mobile device
+50,watch,,2017,,Child self-report items end after 2014 so the weekday and weekend rows are mother report only and the usual-day row is mother report or the young-adult item
+67,socmedia,,2021,,One typical-day item in four bands in 2015 and separate weekday and weekend items with finer bands from 2021
+67,watch,,2016,,TV on a typical day in five bands to 2015 and TV or videos on any device in four bands with a lower top band in 2016
+67,watch,,2017,,Separate weekday and weekend items on television and streaming videos with commercials with new bands from 2017
+97,game,,2019,,One item on internet gaming on a typical day in 2015 and a weighted mean of new school-day and non-school-day gaming items in 2019
+170,comp,,2006,,Seven weekly bands topping at 20 or more to 2005 and eight bands topping at 30 or more from 2006
+170,comp,,2010,,Eight weekly bands topping at 30 or more to 2009 and nine bands topping at 40 or more from 2010
+170,educational,,2006,,Seven weekly bands topping at 20 or more to 2005 and eight bands topping at 30 or more from 2006
+170,educational,,2010,,Eight weekly bands topping at 30 or more to 2009 and nine bands topping at 40 or more from 2010
+170,game,,2010,,Eight weekly bands topping at 30 or more to 2009 and nine bands topping at 40 or more from 2010
+170,game,,2018,,Hours a week to 2017 and hours a day from 2018 with new response bands
+170,internet,,2010,,Eight weekly bands topping at 30 or more to 2009 and nine bands topping at 40 or more from 2010
+170,messaging,,2018,,Hours a week to 2017 and hours a day from 2018 with new response bands
+170,socmedia,,2018,,Hours a week to 2017 and hours a day from 2018 with new response bands
+170,socmedia,,2024,,Reworded from social networking sites like Facebook Twitter Instagram to social media sites like TikTok YouTube Snapchat Facebook Instagram X
+170,videochat,,2018,,Hours a week to 2017 and hours a day from 2018 with new response bands
+170,watch,,2018,,The questionnaire was redesigned: television on a weekday or weekend day to 2017 and video or television or movies on any device from 2018 with new response bands
+170,work,,2006,,Seven weekly bands topping at 20 or more to 2005 and eight bands topping at 30 or more from 2006
+170,work,,2010,,Eight weekly bands topping at 30 or more to 2009 and nine bands topping at 40 or more from 2010
+232,leisure,,2018,,Devices other than TV with a none option in 2016 and 2017 and one combined TV and all-devices item with no none option from 2018
+278,educational,,2017,,Education using electronic media item in 2013 and 2014 and the correspondence education grid cell from 2017
+278,educational,,2021,,Caregiver correspondence education grid cell to 2020 and the learning part of the child's media time from 2021
+278,game,,2011,,Mother's self-completed activity grid in 2010 with blanks read as zero and the caregiver interview from 2011
+278,game,,2012,,Open answer in minutes to 2011 and in hours from 2012
+278,game,,2017,,Games and computer games item in an activity list to 2012 and the games cell of the daily time-use grid from 2017
+278,game,,2021,,Caregiver report to 2020 and child self-report from 2021
+278,leisure,,2021,,Caregiver weekday play with electronic media item in 2013 and 2014 and a sum of four parts of the child's media time from 2021
+278,total,,2016,,Weekday sum of education and play with electronic media in 2013 and 2014 and a single smartphone and PC hours item from 2016
+278,total,,2019,,Smartphone and PC hours in 2016 and 2017 and media use hours from 2019 with the 2018 wording undocumented
+278,total,,2021,,Caregiver hours item to 2020 and child self-report in hours and minutes from 2021
+278,watch,,2011,,Mother's self-completed activity grid in 2010 with blanks read as zero and the caregiver interview from 2011
+278,watch,,2012,,Open answer in minutes to 2011 and in hours from 2012
+278,watch,,2015,,TV and video item in an activity list to 2012 and a TV-only cell of a new daily time-use grid from 2015
+278,watch,,2019,,Grid cell reworded from TV watching to video watching
+278,watch,,2021,,Caregiver report to 2020 and child self-report from 2021
+625,leisure,,2013,,The item's instruction widened in 2013 to count smartphones and tablets and YouTube and social networking
+631,socmedia,,,UKHLS wave 8;UKHLS wave 9;UKHLS wave 10;UKHLS wave 11;UKHLS wave 12;UKHLS wave 13;UKHLS wave 14;UKHLS wave 15,Filter and item widened at UKHLS wave 8 from membership of a social web-site to a social media profile or account on any sites or apps
+631,socmedia,,,UKHLS wave 12;UKHLS wave 13;UKHLS wave 14;UKHLS wave 15,Item widened from a social web-site or app to social media gaming websites or apps from UKHLS wave 12
+631,watch,,,UKHLS wave 1;UKHLS wave 2;UKHLS wave 3;UKHLS wave 4;UKHLS wave 5;UKHLS wave 6;UKHLS wave 7;UKHLS wave 8;UKHLS wave 9;UKHLS wave 10;UKHLS wave 11;UKHLS wave 12;UKHLS wave 13;UKHLS wave 14;UKHLS wave 15,BHPS item with four bands and none merged with less than an hour to wave 18 then the UKHLS item on TV including video and DVDs with five bands from UKHLS wave 1
+631,watch,,,UKHLS wave 9;UKHLS wave 10;UKHLS wave 11;UKHLS wave 12;UKHLS wave 13;UKHLS wave 14;UKHLS wave 15,TV including video and DVDs to UKHLS wave 8 and television programmes or films on any device from wave 9
+666,phone,,2022,,Single total smartphone and tablet item at baseline and a sum of alone and with-parent and with-others items at follow-up
+775,watch,weekday,2012,,Sum of three dayparts watched at home in 2011 and a single weekday item for any device from 2012
+775,watch,weekend,,3;5,Saturday and Sunday viewing at home in round 2 and a typical summer day on any device in rounds 3 and 5
+820,game,,2010,,The frequency item that scales the duration has five options at T1 and T2 and six at T3 which adds once a week
+820,watch,,2010,,The frequency item that scales the duration has five options at T1 and T2 and six at T3 which adds once a week
+873,internet,,2014,,Daily time-use grid or daily hours online in 2010 and weekly hours online besides work or study from 2014
+873,internet,,2020,,Weekly leisure hours online to 2018 and a sum of daily minutes on mobile devices and on computers from 2020
+873,watch,,2014,,Time-use grid of daily TV and video and radio and music hours in 2010 and a weekly hours item on TV and movies and videos from 2014
+873,watch,,2016,,The parent proxy item was limited to weeks when the child is not on vacation from 2016
+1025,game,,2004,,After school yesterday item with seven bands in 1986 and a normal school day home computer item with different bands asked of the cohort members' children in 2004
+1025,watch,,2004,,Sum of two after school yesterday items with seven bands in 1986 and one normal school day item with five bands asked of the cohort members' children in 2004
+1294,comp,,2004,,Two computer items in open hours top-coded at 6 or more in 2002 and in six response bands topping at 5 hours or more in 2004
+1294,educational,,2004,,Open hours a day top-coded at 6 or more in 2002 and six response bands topping at 5 hours or more in 2004
+1294,game,,2004,,Open hours a day top-coded at 6 or more in 2002 and six response bands topping at 5 hours or more in 2004
+1294,watch,,2004,,Open hours a day top-coded at 6 or more in 2002 and six response bands topping at 5 hours or more in 2004
+1295,watch,,1984,,Seven response bands topping at 5 hours or more in 1980 and 1982 and ten bands topping at 8 or more hours in 1984
+1353,internet,,2009,,Internet use for all purposes in 2008 and excluding study use from 2009
+1353,internet,,2011,,A single non-study internet item in 2009 and 2010 and the non-study part of a two-part study and non-study question from 2011 with 10-minute rather than 30-minute steps
+1353,internet,,2018,,The non-study part of a two-part question to 2016 and a single item on internet use other than for study from 2018
+1353,phone,,2020,,Smartphone hours asked over the past 30 days in 2017 and over the past 7 days from 2020
+1528,game,,,2014,Computer or console games to 2010 and from the 2014 wave any device including tablet and smartphone but excluding active games
+1528,watch,,,2014,Television with videos and DVDs to 2010 and from the 2014 wave TV plus YouTube and other entertainment on a screen
+1928,watch,,2015,,Nine response bands in 2009 and 2012 and ten from 2015 with a different top band
+1928,watch,,2024,,The 2024 item narrows to programmes on digital platforms watched on the television
+2207,comp,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,comp_nongaming,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,comp_school,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,creating,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,creating,,2022,,Graphics and programming code 25 alone to 2021 and code 25 plus the new photo and video shooting and editing code 47 from 2022
+2207,educational,,2022,,Learning videos code 42 alone in 2020 and 2021 and code 42 plus the new online classes code 46 from 2022
+2207,educational_school,,2022,,Learning videos code 42 alone in 2020 and 2021 and code 42 plus the new online classes code 46 from 2022
+2207,email,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,game,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,game_comp,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,game_console,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,game_handheldconsole,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,game_phone,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,game_tablet,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,internet,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,internet_school,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,messaging,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,phone,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,phone_school,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,shopping,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,socmedia,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,tablet,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,tablet_school,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,watch,,2013,,Diary sheet redesigned from up to nine simultaneous media per slot in 2010 to 2012 to one main and one simultaneous medium from 2013
+2207,watch,,2020,,Films and videos code 8 was split in 2020 into studio-made video code 41 and learning videos code 42 and learning videos are no longer in the watch sum
+2309,messaging,,2020,,WhatsApp reading and sending items summed in burst 1 and a single total WhatsApp time item in burst 2
+2309,socmedia,,2020,,A sum of several activity items per platform in burst 1 and a single total-time item per platform in burst 2
+2319,internet,,2015,,Using the internet in 2008 and a bundled online or Facebook or email item beside a new other-computer-use item from 2015
+2319,watch,,2015,,TV or videos in 2006 and 2008 and TV or DVD or online video in a new questionnaire from 2015
+2387,comp,,2005,,The 2001 public file top-codes hours at 6 for children and 10 for adolescents and keeps imputed answers while later cycles release hours as entered with imputed answers dropped
+2387,watch,,2005,,The 2001 public file top-codes hours at 10 to 15 and keeps imputed answers while later cycles release hours as entered with imputed answers dropped
