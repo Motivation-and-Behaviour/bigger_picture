@@ -1230,3 +1230,59 @@ test_that("year moderation and the cross-dataset trend use unit descriptions", {
   expect_true(all(trend$periods$datasets >= 3))
   expect_true(all(trend$periods$low <= trend$periods$mid))
 })
+
+test_that("the tree pools the mock's rows, counting a copied score once", {
+  reg <- engine_registries()
+  ids <- unique(as.character(engine_mock$data$dataset_id))
+  cells <- tibble::tibble(
+    exposure = "st_game",
+    outcome = c("mh_dep_self", "mh_anx_self", "mh_distress_self")
+  )
+  # The depression score is entered again as an anxiety row, a different
+  # specific outcome, so the preparation step keeps both; and a distress row
+  # is made that shares half its variation with depression.
+  set.seed(11)
+  edit <- function(rows) {
+    rows$mh_anx_self <- rows$mh_dep_self
+    rows$mh_distress_self <- rows$mh_dep_self +
+      stats::rnorm(nrow(rows), 0, stats::sd(rows$mh_dep_self, na.rm = TRUE))
+    rows
+  }
+  prepared <- lapply(ids, engine_prepare, reg = reg, edit = edit)
+  stage1 <- dplyr::bind_rows(lapply(prepared, function(p) {
+    fit_stage1(p, cells, reg$outcomes, reg$schema)
+  }))
+  # Each row is its own specific outcome, so no pair is within one.
+  expect_null(stage1_correlations(prepared[[1]], cells, reg$outcomes))
+
+  tree <- pool_tree(stage1, reg$outcomes)
+  level <- function(name) tree[tree$level == name, ]
+  l1 <- level("L1")
+  expect_setequal(l1$node, c("depression", "anxiety", "psychological_distress"))
+  expect_true(all(tree$family == "mental_health"))
+  # Higher depression is worse, so the mock's positive slope turns negative,
+  # and a specific outcome of one row is that row's stage 2 estimate.
+  dep <- l1[l1$node == "depression", ]
+  stage2 <- pool_stage2(stage1[stage1$outcome == "mh_dep_self", ])
+  expect_equal(dep$estimate, -stage2$estimate)
+  expect_equal(dep$se, stage2$se)
+  anx <- l1[l1$node == "anxiety", ]
+  expect_equal(anx$estimate, dep$estimate)
+
+  # Depression and its copy alone: the family is exactly one of them.
+  pair <- pool_tree(
+    stage1[stage1$outcome != "mh_distress_self", ],
+    reg$outcomes
+  )
+  l0 <- pair[pair$level == "L0", ]
+  expect_equal(l0$k_nodes, 2)
+  expect_equal(l0$estimate, dep$estimate)
+  expect_equal(l0$se, dep$se)
+  expect_equal(l0$df, dep$df)
+
+  # With distress the family is the plain average of the three.
+  l0 <- level("L0")
+  expect_equal(l0$k_nodes, 3)
+  expect_equal(l0$estimate, mean(l1$estimate))
+  expect_equal(l0$status, "pooled")
+})

@@ -114,6 +114,8 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `development_cells` | The cells fitted before the freeze, from `development_cells.csv` |
 | `stage1_<key>`, `stage1_all` | One model per unit and cell: the slope on screen use, with how it was fitted or why it was not |
 | `stage2_development` | Each cell's slopes pooled across datasets |
+| `slope_correlations_<key>`, `slope_correlations_all` | How strongly the slopes of two rows of one specific outcome share their error in a unit, estimated from the unit's rows |
+| `tree_development` | The development cells' slopes pooled up the outcome tree: specific outcome by informant, specific outcome, and family |
 | `onestage_rows_<key>`, `onestage_check` | The one-stage check on one cell |
 | `descriptives_<key>`, `described_screen`, `described_week`, `described_relations`, `described_outcomes`, `described_units` | Per-unit descriptive statistics of screen use and of binary outcomes, weighted where a unit has weights |
 | `screen_pooled`, `week_pooled`, `relations_pooled`, `outcomes_pooled` | Those statistics pooled so each dataset counts once |
@@ -176,6 +178,22 @@ Two-stage is the primary analysis (DR-0010).
 
 Until the freeze the engine runs only on the development cells in `development_cells.csv`: each line names an exposure row and either an outcome family or one outcome row, with a reason.
 These are the only associations seen before the specification is frozen, and the deviations ledger records them.
+
+### Pooling up the outcome tree
+
+`pool_tree()` takes the stage 1 slopes above the outcome row.
+`tree_effects()` first puts them on one scale and one direction: a slope in log odds is divided by pi / sqrt(3) to give SD per hour, and a slope on a row where higher is worse changes sign, so a positive slope always means a better outcome with more screen use.
+Rows with `synthesis` FALSE, no node or no direction do not pool.
+
+- A specific outcome by informant (L2) and a specific outcome (L1) pool their rows with `pool_tree_group()`: the stage 2 model, with the covariance of slopes fitted on the same children and, where a unit gives several rows, variation between a unit's rows.
+- That covariance comes from `stage1_correlations()`, which estimates from each unit's rows how strongly two slopes share their error.
+  It is approximate, and the robust inference does not depend on it being right.
+- A family (L0) is the plain average of its pooled specific outcomes, from `pool_tree_family()`, so each specific outcome counts once however many rows or datasets it has.
+  Its standard error allows for any dependence among a dataset's slopes, so a score that sits in two specific outcomes adds nothing to the family's precision.
+- A family is estimated whenever two of its specific outcomes pooled.
+  It carries a warning where they disagree in sign or their estimates differ by more than the smallest effect of interest, and is then not for the headline.
+
+The tests in `tests/testthat/test-analysis-tree.R` hold the known answers these rules must give.
 
 ### Dataset outcomes
 

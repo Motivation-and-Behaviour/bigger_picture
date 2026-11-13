@@ -215,3 +215,93 @@ test_that("a family needs two pooled specific outcomes", {
   expect_equal(family$status, "fewer than two specific outcomes pooled")
   expect_equal(family$k_nodes, 1)
 })
+
+# A prepared dataset of one unit with two outcome rows of one specific
+# outcome, whose scores correlate at `rho` once screen use is taken out.
+tree_prepared <- function(n, rho, seed, slope = 0.1) {
+  set.seed(seed)
+  x <- stats::rgamma(n, shape = 2)
+  shared <- stats::rnorm(n)
+  a <- slope * x + sqrt(rho) * shared + sqrt(1 - rho) * stats::rnorm(n)
+  b <- slope * x + sqrt(rho) * shared + sqrt(1 - rho) * stats::rnorm(n)
+  list(
+    base = tibble::tibble(
+      dataset_id = "9001",
+      unit = "9001|1|Nowhere",
+      age_years = stats::runif(n, 8, 12),
+      sex = sample(c("Female", "Male"), n, replace = TRUE),
+      survey_weight_norm = NA_real_
+    ),
+    exposures = tibble::tibble(st_watch = x),
+    outcomes = tibble::tibble(row_a = a, row_b = b),
+    outcomes_z = tibble::tibble(row_a = a, row_b = b)
+  )
+}
+tree_pair_registry <- list(
+  rows = tibble::tibble(variable_name = c("row_a", "row_b"), node = "n1")
+)
+tree_pair_cells <- tibble::tibble(
+  exposure = "st_watch",
+  outcome = c("row_a", "row_b")
+)
+
+test_that("the correlation between two slopes is recovered from the rows", {
+  prepared <- tree_prepared(4000, rho = 0.5, seed = 21)
+  full <- stage1_correlations(prepared, tree_pair_cells, tree_pair_registry)
+  expect_equal(nrow(full), 1)
+  expect_equal(full$basis, "estimated")
+  expect_equal(full$n_shared, 4000)
+  expect_equal(full$r, 0.5, tolerance = 0.06)
+
+  # Half the children lack the second score: the slopes share less.
+  half <- prepared
+  half$outcomes_z$row_b[1:2000] <- NA
+  part <- stage1_correlations(half, tree_pair_cells, tree_pair_registry)
+  expect_equal(part$n_shared, 2000)
+  expect_equal(part$r, part$r_residual * 2000 / sqrt(4000 * 2000))
+
+  # No child has both: independent slopes.
+  apart <- half
+  apart$outcomes_z$row_a[2001:4000] <- NA
+  none <- stage1_correlations(apart, tree_pair_cells, tree_pair_registry)
+  expect_equal(none$r, 0)
+  expect_equal(none$basis, "no shared rows")
+
+  # Too few children have both to estimate it: the default, scaled.
+  few <- half
+  few$outcomes_z$row_a[-(2001:2020)] <- NA
+  thin <- stage1_correlations(few, tree_pair_cells, tree_pair_registry)
+  expect_equal(thin$basis, "default")
+  expect_equal(thin$n_shared, 20)
+  expect_equal(thin$r, 0.6 * 20 / sqrt(20 * 2000))
+})
+
+test_that("the estimate matches how two slopes vary together over samples", {
+  # The slopes of the two rows over 400 samples, half the children lacking
+  # the second score, against the correlation estimated within samples.
+  draws <- lapply(seq_len(400), function(seed) {
+    prepared <- tree_prepared(300, rho = 0.6, seed = seed)
+    prepared$outcomes_z$row_b[1:150] <- NA
+    x <- prepared$exposures$st_watch
+    age <- prepared$base$age_years
+    sex <- prepared$base$sex
+    slope <- function(y) stats::coef(stats::lm(y ~ x + age + sex))[["x"]]
+    estimated <- stage1_correlations(
+      prepared,
+      tree_pair_cells,
+      tree_pair_registry
+    )
+    c(
+      a = slope(prepared$outcomes_z$row_a),
+      b = slope(prepared$outcomes_z$row_b),
+      r = estimated$r
+    )
+  })
+  draws <- do.call(rbind, draws)
+  expect_equal(
+    mean(draws[, "r"]),
+    stats::cor(draws[, "a"], draws[, "b"]),
+    tolerance = 0.15
+  )
+  expect_equal(mean(draws[, "r"]), 0.6 / sqrt(2), tolerance = 0.05)
+})

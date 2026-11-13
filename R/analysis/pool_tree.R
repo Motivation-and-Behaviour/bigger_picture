@@ -8,7 +8,8 @@
 #'
 #' @param estimates Stage 1 rows for any number of exposures.
 #' @param outcome_registry The outcome registry.
-#' @param correlations See `tree_covariance()`.
+#' @param correlations See `tree_covariance()`; with an `exposure` column,
+#'   as `stage1_correlations()` gives, each exposure uses its own rows.
 #' @param settings From `analysis_settings()`.
 #' @return One row per exposure, level and group: `exposure`, `level`,
 #'   `family`, `node`, `informant`, then the columns of `pool_tree_group()`
@@ -28,39 +29,49 @@ pool_tree <- function(
   effects <- effects[
     order(effects$exposure, effects$family, effects$node, effects$unit),
   ]
-  out <- list()
-  add <- function(row, exposure, level, family, node, informant) {
+  label <- function(row, exposure, level, family, node, informant) {
     row$exposure <- exposure
     row$level <- level
     row$family <- family
     row$node <- node
     row$informant <- informant
-    out[[length(out) + 1]] <<- row
+    row
   }
-  for (one in split(effects, effects$exposure)) {
-    exposure <- one$exposure[1]
-    for (family_rows in split(one, one$family)) {
-      family <- family_rows$family[1]
-      groups <- list()
-      for (node_rows in split(family_rows, family_rows$node)) {
-        node <- node_rows$node[1]
-        for (l2 in split(node_rows, node_rows$informant)) {
-          row <- pool_tree_group(l2, correlations, settings)$row
-          log_odds <- all(l2$effect_measure %in% "log_odds_per_hour")
-          row$odds_ratio <- if (log_odds) {
-            exp(row$estimate * settings$log_odds_per_sd)
-          } else {
-            NA_real_
-          }
-          add(row, exposure, "L2", family, node, l2$informant[1])
-        }
-        groups[[node]] <- pool_tree_group(node_rows, correlations, settings)
-        add(groups[[node]]$row, exposure, "L1", family, node, NA_character_)
-      }
-      l0 <- pool_tree_family(family_rows, groups, settings)
-      add(l0, exposure, "L0", family, NA_character_, NA_character_)
+  families <- split(effects, paste(effects$exposure, effects$family))
+  out <- lapply(families, function(family_rows) {
+    exposure <- family_rows$exposure[1]
+    family <- family_rows$family[1]
+    nodes <- split(family_rows, family_rows$node)
+    if ("exposure" %in% names(correlations)) {
+      correlations <- correlations[correlations$exposure %in% exposure, ]
     }
-  }
+    groups <- lapply(nodes, pool_tree_group, correlations, settings)
+    l2 <- lapply(nodes, function(node_rows) {
+      by_informant <- split(node_rows, node_rows$informant)
+      dplyr::bind_rows(lapply(by_informant, function(rows) {
+        row <- pool_tree_group(rows, correlations, settings)$row
+        log_odds <- all(rows$effect_measure %in% "log_odds_per_hour")
+        row$odds_ratio <- if (log_odds) {
+          exp(row$estimate * settings$log_odds_per_sd)
+        } else {
+          NA_real_
+        }
+        label(row, exposure, "L2", family, rows$node[1], rows$informant[1])
+      }))
+    })
+    l1 <- lapply(names(groups), function(node) {
+      label(groups[[node]]$row, exposure, "L1", family, node, NA_character_)
+    })
+    l0 <- label(
+      pool_tree_family(family_rows, groups, settings),
+      exposure,
+      "L0",
+      family,
+      NA_character_,
+      NA_character_
+    )
+    dplyr::bind_rows(c(unname(l2), l1, list(l0)))
+  })
   dplyr::relocate(
     dplyr::bind_rows(out),
     "exposure",

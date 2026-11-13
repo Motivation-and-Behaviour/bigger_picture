@@ -26,6 +26,10 @@ analysis_targets <- function(harmonise_plan) {
       quote(settings[bp_model_settings()])
     ),
     targets::tar_target_raw(
+      "settings_tree",
+      quote(settings[bp_tree_settings()])
+    ),
+    targets::tar_target_raw(
       "dataset_spec_files",
       quote(list_dataset_spec_files()),
       format = "file"
@@ -183,6 +187,18 @@ analysis_targets <- function(harmonise_plan) {
         outcome_registry,
         dataschema,
         settings_model
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = row_level
+    ),
+    targets::tar_target_raw(
+      "slope_correlations",
+      quote(stage1_correlations(
+        prepared,
+        development_cells,
+        outcome_registry,
+        settings_tree
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -376,6 +392,11 @@ analysis_targets <- function(harmonise_plan) {
       command = quote(dplyr::bind_rows(!!!.x))
     ),
     tarchetypes::tar_combine_raw(
+      "slope_correlations_all",
+      per_dataset[["slope_correlations"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
       "onestage_rows_all",
       per_dataset[["onestage_rows"]],
       command = quote(dplyr::bind_rows(!!!.x))
@@ -393,6 +414,15 @@ analysis_targets <- function(harmonise_plan) {
     targets::tar_target_raw(
       "stage2_development",
       quote(pool_stage2_cells(stage1_all, development_cells, settings_model))
+    ),
+    targets::tar_target_raw(
+      "tree_development",
+      quote(pool_tree(
+        stage1_all,
+        outcome_registry,
+        slope_correlations_all,
+        settings_tree
+      ))
     ),
     targets::tar_target_raw(
       "year_moderation_development",

@@ -199,6 +199,18 @@ bp_model_settings <- function() {
   )
 }
 
+# The settings pooling up the outcome tree reads, kept apart so changing
+# one does not refit stage 1.
+bp_tree_settings <- function() {
+  c(
+    "min_unit_rows",
+    "min_datasets",
+    "log_odds_per_sd",
+    "tree_default_correlation",
+    "smallest_effect_per_hour"
+  )
+}
+
 # The cells fitted before the freeze, to build the engine on real data
 # (ANALYSIS_PLAN.md, Step 5).
 bp_development_cells_path <- function() {
