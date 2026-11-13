@@ -237,11 +237,19 @@ Not built yet from the plan's list (Step 7 task 4):
 It is the linear stage 1 model at tier 1 with the curve in place of the slope, for rows that take a linear model.
 `pool_curve()` pools the terms across datasets and reads the curve at each hour of `curve_grid` as the difference from the low-use reference (`curve_reference`), in SD of the outcome.
 
-- A curve is interpretable at an hour that at least the minimum number of datasets support: a unit supports an hour where it has the minimum number of rows at or above it and at or below it.
-- The threshold duration is the lowest interpretable hour above the reference whose interval lies wholly beyond the smallest effect of interest (`smallest_effect`) from the reference.
-- `simulate_curve_recovery()` checks the method on real hours of screen use with a simulated outcome that follows a known curve (a plasmode simulation); `curve_truths()` lists the curves it builds in.
+- A unit's curve needs more distinct values of screen use than the curve has terms, the minimum number of rows in every stretch between knots (`curve_interval_rows`), and more clusters than terms; a unit that falls short is not fitted and says why.
+- The pooled model lets each term vary between datasets and, where there are more units than datasets, between a dataset's units.
+- A unit supports an hour where it has the minimum number of rows within `curve_window` hours of it.
+  A curve is interpretable at an hour inside the boundary knots that at least the minimum number of datasets support, counting only datasets that also support the reference; beyond the boundary knots the curve is a straight line continued and is not read.
+- The threshold duration is the lowest interpretable hour above the reference whose interval lies wholly beyond the smallest effect of interest (`smallest_effect`) from the reference, with at least four robust degrees of freedom there.
+  Its direction is given as a better or worse outcome, and `threshold_holds` says whether the curve stays beyond it at every later hour.
+- `simulate_curve_recovery()` checks the method on real hours of screen use with a simulated outcome that follows a known curve (a plasmode simulation); `curve_truths()` lists the curves it builds in, and DR-0016 says what it found.
+
+A threshold depends on how precisely a curve is estimated as well as on the curve, so thresholds are not comparable between cells without their intervals.
+In the simulation it was almost never reported where there was none, was usually reported an hour or more after the true one, and was never reported from five datasets.
 
 The breakpoint of the preregistered piecewise model is not built yet.
+Also not built: response format as a moderator of the curve with a continuous-only check, a sensitivity analysis of how the top band is scored, and reading the derived total's curve within one source of the total.
 
 ### Dataset outcomes
 

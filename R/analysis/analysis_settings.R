@@ -80,6 +80,12 @@ analysis_settings <- function() {
     curve_boundary = c(0, 6),
     curve_grid = seq(0, 8, by = 0.5),
     curve_reference = 1,
+    # A unit's curve needs this many rows in each stretch between knots, so
+    # no part of it rests on a handful of children; and a unit supports an
+    # hour where it has the minimum number of rows within this many hours
+    # of it.
+    curve_interval_rows = 30L,
+    curve_window = 0.5,
     smallest_effect = 0.10
   )
 }

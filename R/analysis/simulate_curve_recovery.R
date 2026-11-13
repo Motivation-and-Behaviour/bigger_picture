@@ -1,16 +1,26 @@
 #' The curves the simulation builds into the data
 #'
 #' Each is a function of hours of screen use a day, in SD of the outcome.
-#' They cover what the threshold method has to tell apart: no association,
-#' a straight line, a line that bends at two hours, and a rise then a fall.
+#' They cover what the threshold method has to tell apart: no association;
+#' a straight line; a line that bends, at a knot and away from one; curves
+#' that level off just short of the smallest effect of interest and just
+#' past it; a dip that comes back; and a rise then a fall.
 #'
 #' @return A named list of functions.
 curve_truths <- function() {
   list(
     flat = function(hours) 0 * hours,
     linear = function(hours) -0.05 * hours,
-    kinked = function(hours) -0.10 * pmax(hours - 2, 0),
-    rise_then_fall = function(hours) 0.08 * hours - 0.02 * hours^2
+    bends_at_2 = function(hours) -0.10 * pmax(hours - 2, 0),
+    bends_at_3 = function(hours) -0.10 * pmax(hours - 3, 0),
+    # Against one hour these level off at 0.08 and 0.15 SD.
+    levels_off_short = function(hours) -0.16 * (1 - exp(-hours / 1.5)),
+    levels_off_past = function(hours) -0.30 * (1 - exp(-hours / 1.5)),
+    dip = function(hours) -0.20 * exp(-(hours - 3)^2),
+    rise_then_fall = function(hours) {
+      capped <- pmin(hours, 6)
+      0.08 * capped - 0.02 * capped^2
+    }
   )
 }
 
@@ -19,25 +29,32 @@ curve_truths <- function() {
 #' A plasmode simulation (ANALYSIS_PLAN.md, Step 7 task 8). It keeps the
 #' real units of one cell, with their real hours of screen use, ages, sexes
 #' and sizes, and replaces the outcome with one that follows a known curve
-#' plus noise, each dataset's curve a little stronger or weaker than the
-#' average. The curve engine (`fit_curve_unit()`, `pool_curve()`) is then
-#' run as it is on real data, and what it reports is compared with the
-#' curve that was built in. Real hours matter because the method's
-#' difficulties are in them: banded answers, a top band, and units where
-#' few children report long hours.
+#' plus noise. Datasets differ as real ones do: each has the curve a little
+#' stronger or weaker, stretched or squeezed along the hours so its shape
+#' sits elsewhere, and tilted by a slope of its own. The curve engine
+#' (`fit_curve_unit()`, `pool_curve()`) is then run as it is on real data,
+#' and what it reports is compared with the curve that was built in. Real
+#' hours matter because the method's difficulties are in them: banded
+#' answers and units where few children report long hours.
 #'
-#' Three things are varied:
+#' Four things are varied:
 #'
 #' - `band_error`: with `within bands`, a child's true hours differ from
 #'   the recorded hours in units with a banded item (by a random share of
-#'   the recorded value, and upwards from the top value, which stands for
-#'   "this much or more"), the outcome follows the true hours, and the
-#'   analysis sees the recorded ones. With `none`, the recorded hours are
-#'   the truth.
-#' - `units`: `all` pools every unit a curve can be fitted in; `long hours
-#'   only` leaves out units with fewer than the minimum number of rows at
-#'   four hours or more.
+#'   the recorded value, and upwards from the unit's top value), the
+#'   outcome follows the true hours, and the analysis sees the recorded
+#'   ones. With `none`, the recorded hours are the truth. This is the mild
+#'   kind of error: it does not model answers that misreport the true
+#'   hours, or a band value that is not the band's mean.
 #' - `knots`: where the curve's interior knots sit, in hours.
+#' - `units`: `every stretch` keeps a unit only with the minimum number of
+#'   rows in every stretch between knots (`curve_interval_rows`); `any`
+#'   keeps every unit a curve can be fitted in.
+#' - `datasets`: `all` of the cell's datasets, or `five` drawn at random,
+#'   since most cells have few.
+#'
+#' Not simulated: weights and clustered errors, outcomes that are not
+#' normal, confounding by age that is not smooth, and other exposures.
 #'
 #' @param rows A tibble of `dataset_id`, `unit`, `x` (hours), `age` and
 #'   `sex`, as `extract_cell_rows()` gives.
@@ -48,20 +65,23 @@ curve_truths <- function() {
 #'   the one in `settings`.
 #' @param max_rows The most rows kept per unit, to bound the run time.
 #' @param cores Processes to run replicates in.
-#' @return A list: `replicates`, one row per scenario, replicate, way of
-#'   choosing units and hour, with the estimate, its interval and the true
-#'   value; `thresholds`, one row per scenario, replicate and way, with the
-#'   threshold found; `truth`, the true curve and threshold per scenario;
-#'   and `base`, the units used.
+#' @return A list: `replicates`, one row per scenario, replicate, choice and
+#'   hour, with the estimate, its interval and the true value;
+#'   `thresholds`, one row per scenario, replicate and choice, with the
+#'   threshold found and the pool's status; `truth`, the true curve and
+#'   threshold per scenario; and `base`, the units used.
 simulate_curve_recovery <- function(
   rows,
   units,
   reps = 200L,
   settings = analysis_settings(),
   knot_sets = bp_curve_knot_sets(settings),
-  max_rows = 4000L,
+  max_rows = 10000L,
   cores = 1L
 ) {
+  if (is.null(settings$seed)) {
+    stop("simulate_curve_recovery(): `settings` needs a `seed`.", call. = FALSE)
+  }
   set.seed(settings$seed)
   rows <- rows[!is.na(rows$x), c("dataset_id", "unit", "x", "age", "sex")]
   keep <- unlist(lapply(split(seq_len(nrow(rows)), rows$unit), function(i) {
@@ -88,7 +108,7 @@ simulate_curve_recovery <- function(
   )
   truth <- dplyr::bind_rows(lapply(names(truths), function(name) {
     value <- truths[[name]](grid) - truths[[name]](reference)
-    fine <- seq(reference, max(grid), by = 0.01)
+    fine <- seq(reference, settings$curve_boundary[2], by = 0.01)
     beyond <- abs(truths[[name]](fine) - truths[[name]](reference)) >=
       settings$smallest_effect
     tibble::tibble(
@@ -98,32 +118,38 @@ simulate_curve_recovery <- function(
       true_threshold = if (any(beyond)) min(fine[beyond]) else NA_real_
     )
   }))
+  # Units are fitted without the rule on rows per stretch, which is then
+  # applied, or not, when pooling.
+  fit_settings <- settings
+  fit_settings$curve_interval_rows <- 0L
 
   one <- function(job) {
     scenario <- scenarios[job$scenario, ]
-    set.seed(settings$seed + 1000L * job$scenario + job$rep)
+    set.seed(settings$seed + 100000L * job$scenario + job$rep)
     curve <- truths[[scenario$truth]]
-    # Each dataset's curve is the average one, a little stronger or weaker.
-    strength <- stats::setNames(
-      1 + stats::rnorm(length(datasets), 0, 0.3),
-      datasets
-    )
+    k <- length(datasets)
+    strength <- stats::setNames(1 + stats::rnorm(k, 0, 0.3), datasets)
+    stretch <- stats::setNames(exp(stats::rnorm(k, 0, 0.15)), datasets)
+    tilt <- stats::setNames(stats::rnorm(k, 0, 0.03), datasets)
+    five <- sample(datasets, min(5L, k))
     simulated <- lapply(names(by_unit), function(name) {
       data <- by_unit[[name]]
+      id <- data$dataset_id[1]
       true_hours <- data$x
       if (scenario$band_error == "within bands" && data$banded[1]) {
         true_hours <- data$x * exp(stats::rnorm(nrow(data), 0, 0.25))
         true_hours[data$top] <- data$x[data$top] +
           stats::rexp(sum(data$top), rate = 1)
       }
-      data$y <- strength[[data$dataset_id[1]]] *
-        curve(true_hours) +
+      data$y <- strength[[id]] *
+        curve(true_hours * stretch[[id]]) +
+        tilt[[id]] * true_hours +
         stats::rnorm(nrow(data))
       data
     })
     names(simulated) <- names(by_unit)
     out <- lapply(names(knot_sets), function(knots) {
-      with_knots <- settings
+      with_knots <- fit_settings
       with_knots$curve_knots <- knot_sets[[knots]]
       fits <- dplyr::bind_rows(lapply(names(simulated), function(name) {
         fit <- fit_curve_unit(simulated[[name]], with_knots)
@@ -131,22 +157,25 @@ simulate_curve_recovery <- function(
         fit$unit <- name
         fit
       }))
-      at_four <- vapply(
-        fits$rows_at_or_above,
-        function(counts) counts[match(4, grid)],
-        numeric(1)
+      full <- fits$rows_least_stretch >= settings$curve_interval_rows
+      choices <- expand.grid(
+        units = c("every stretch", "any"),
+        datasets = c("all", "five"),
+        stringsAsFactors = FALSE
       )
-      ways <- list(
-        all = fits,
-        `long hours only` = fits[at_four >= settings$min_unit_rows, ]
-      )
-      lapply(names(ways), function(way) {
-        pooled <- pool_curve(ways[[way]], with_knots)
+      lapply(seq_len(nrow(choices)), function(i) {
+        choice <- choices[i, ]
+        used <- fits[
+          (choice$units == "any" | full) &
+            (choice$datasets == "all" | fits$dataset_id %in% five),
+        ]
+        pooled <- pool_curve(used, with_knots)
         label <- function(table) {
           table$truth <- scenario$truth
           table$band_error <- scenario$band_error
           table$knots <- knots
-          table$units <- way
+          table$units <- choice$units
+          table$datasets <- choice$datasets
           table$rep <- job$rep
           table
         }
@@ -163,6 +192,7 @@ simulate_curve_recovery <- function(
             "k_units",
             "threshold_hours",
             "threshold_direction",
+            "threshold_holds",
             "status"
           )])
         )
@@ -184,13 +214,20 @@ simulate_curve_recovery <- function(
   } else {
     lapply(jobs, one)
   }
-  failed <- vapply(done, inherits, logical(1), what = "try-error")
-  if (any(failed)) {
+  # A process that was killed returns nothing, and one that failed an error.
+  broken <- !vapply(
+    done,
+    function(job) is.list(job) && !is.null(job$threshold),
+    logical(1)
+  )
+  if (any(broken)) {
     stop(
       "simulate_curve_recovery(): ",
-      sum(failed),
-      " replicate(s) failed; the first said: ",
-      as.character(done[[which(failed)[1]]]),
+      sum(broken),
+      " of ",
+      length(done),
+      " replicates did not return; the first said: ",
+      paste(as.character(done[[which(broken)[1]]]), collapse = " "),
       call. = FALSE
     )
   }
@@ -217,12 +254,15 @@ simulate_curve_recovery <- function(
 #' Summarise the curve simulation
 #'
 #' @param simulation Output of `simulate_curve_recovery()`.
-#' @return A list of two tibbles, one row per scenario, knot placement and
-#'   way of choosing units. `curve`: by hour, the mean error of the pooled curve, the share
-#'   of intervals that cover the truth, and the share of replicates in
-#'   which the hour was interpretable. `threshold`: the true threshold, the
-#'   share of replicates that found one, the median and quartiles of those
-#'   found, and the share that found one in the wrong direction.
+#' @return A list of two tibbles, one row per scenario and choice of knots,
+#'   units and datasets. `curve`: by hour, the mean error of the pooled
+#'   curve, the share of intervals that cover the truth, and the share of
+#'   replicates in which the hour was interpretable, over the replicates
+#'   that pooled. `threshold`: the true threshold; the share of replicates
+#'   whose pool failed; the share that found a threshold, with the median
+#'   and quartiles of those found; `false_or_early`, the share that found
+#'   one where the truth has none, or more than a quarter of an hour before
+#'   the true one; and the share that found one in the wrong direction.
 summarise_curve_recovery <- function(simulation) {
   replicates <- simulation$replicates
   replicates <- replicates[!is.na(replicates$ci_low), ]
@@ -233,6 +273,7 @@ summarise_curve_recovery <- function(simulation) {
       .data$band_error,
       .data$knots,
       .data$units,
+      .data$datasets,
       .data$hours
     ),
     true_value = .data$true_value[1],
@@ -246,41 +287,43 @@ summarise_curve_recovery <- function(simulation) {
   true_threshold <- dplyr::distinct(
     simulation$truth[c("truth", "true_threshold")]
   )
-  true_direction <- dplyr::summarise(
-    dplyr::group_by(simulation$truth, .data$truth),
-    falls = .data$true_value[which.max(abs(.data$true_value))] < 0,
-    .groups = "drop"
-  )
   thresholds <- dplyr::left_join(
     simulation$thresholds,
-    true_direction,
+    true_threshold,
     by = "truth"
   )
   found <- !is.na(thresholds$threshold_hours)
+  thresholds$false_or_early <- found &
+    (is.na(thresholds$true_threshold) |
+      thresholds$threshold_hours < thresholds$true_threshold - 0.25)
+  # Every built-in curve with a threshold reaches it by falling.
   thresholds$wrong <- found &
-    (thresholds$threshold_direction == "lower outcome") != thresholds$falls
+    !is.na(thresholds$true_threshold) &
+    thresholds$threshold_direction %in% "higher outcome"
   threshold <- dplyr::summarise(
     dplyr::group_by(
       thresholds,
       .data$truth,
       .data$band_error,
       .data$knots,
-      .data$units
+      .data$units,
+      .data$datasets
     ),
+    true_threshold = .data$true_threshold[1],
     k_datasets = stats::median(.data$k_datasets),
     k_units = stats::median(.data$k_units),
+    failed = mean(
+      !.data$status %in% c("pooled", "too few studies to say")
+    ),
     found = mean(!is.na(.data$threshold_hours)),
     q25 = stats::quantile(.data$threshold_hours, 0.25, na.rm = TRUE),
     median = stats::median(.data$threshold_hours, na.rm = TRUE),
     q75 = stats::quantile(.data$threshold_hours, 0.75, na.rm = TRUE),
+    false_or_early = mean(.data$false_or_early),
     wrong_direction = mean(.data$wrong),
     .groups = "drop"
   )
-  threshold <- dplyr::left_join(threshold, true_threshold, by = "truth")
-  list(
-    curve = curve,
-    threshold = dplyr::relocate(threshold, "true_threshold", .after = "units")
-  )
+  list(curve = curve, threshold = threshold)
 }
 
 # The knot placements the simulation compares: the one in the settings, and

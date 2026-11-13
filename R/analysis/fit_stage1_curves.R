@@ -10,7 +10,10 @@
 #' Curves are fitted for rows that take a linear model: continuous rows and
 #' ordinal rows with five or more levels. A unit needs more distinct values
 #' of screen use than the curve has terms, which a banded item with few
-#' bands does not have.
+#' bands does not have; a minimum number of rows in every stretch between
+#' knots (`curve_interval_rows`), so that no part of its curve rests on a
+#' handful of children; and, where its errors are clustered, more clusters
+#' than curve terms.
 #'
 #' @param prepared Output of `prepare_analysis_data()` for one dataset.
 #' @param cells A tibble of `exposure` and `outcome` rows to fit.
@@ -19,9 +22,10 @@
 #' @param settings From `analysis_settings()`.
 #' @return A tibble with one row per unit and cell that has data: `coef` and
 #'   `vcov` (list columns: the curve terms and their covariance), the rows
-#'   behind them, `hours_distinct`, `rows_at_or_above` and
-#'   `rows_at_or_below` (list columns, per hour of `curve_grid`), and
-#'   `status`. NULL when the dataset is not included or holds no cell.
+#'   behind them, `hours_distinct`, `rows_least_stretch` (the rows in its
+#'   thinnest stretch between knots), `rows_near` (a list column: the rows
+#'   within `curve_window` hours of each hour of `curve_grid`), the
+#'   clusters, and `status`. NULL when the dataset is not included or holds no cell.
 fit_stage1_curves <- function(
   prepared,
   cells,
@@ -139,14 +143,23 @@ fit_curve_unit <- function(data, settings = analysis_settings()) {
   design <- stage1_design(data, settings, tier = 1L)
   data <- design$data
   n <- nrow(data)
+  breaks <- c(-Inf, settings$curve_knots, Inf)
+  stretch <- if (n == 0) {
+    0L
+  } else {
+    min(table(cut(data$x, breaks, right = TRUE)))
+  }
   result <- function(status, coef = NULL, vcov = NULL, ...) {
     values <- list(
       n = n,
       n_available = available,
       hours_distinct = dplyr::n_distinct(data$x),
       hours_max = if (n == 0) NA_real_ else max(data$x),
+      rows_least_stretch = as.integer(stretch),
       weighted = design$weighted,
       covariates = paste(design$covariates, collapse = " + "),
+      n_clusters = NA_integer_,
+      few_clusters = NA,
       se_type = NA_character_,
       status = status
     )
@@ -155,14 +168,9 @@ fit_curve_unit <- function(data, settings = analysis_settings()) {
     out <- tibble::as_tibble(values)
     out$coef <- list(coef)
     out$vcov <- list(vcov)
-    out$rows_at_or_above <- list(vapply(
+    out$rows_near <- list(vapply(
       grid,
-      function(hour) sum(data$x >= hour),
-      numeric(1)
-    ))
-    out$rows_at_or_below <- list(vapply(
-      grid,
-      function(hour) sum(data$x <= hour),
+      function(hour) sum(abs(data$x - hour) <= settings$curve_window),
       numeric(1)
     ))
     out
@@ -175,11 +183,23 @@ fit_curve_unit <- function(data, settings = analysis_settings()) {
   if (dplyr::n_distinct(data$x) <= length(terms)) {
     return(result("too few distinct values of screen use for a curve"))
   }
+  if (stretch < settings$curve_interval_rows) {
+    return(result("too few rows in a stretch between knots for a curve"))
+  }
   if (stats::sd(data$y) == 0) {
     return(result("no variation in the outcome"))
   }
   data[terms] <- basis
   clustering <- stage1_cluster(data)
+  clustered <- !is.null(clustering$cluster)
+  n_clusters <- dplyr::n_distinct(clustering$cluster_id)
+  if (clustered && n_clusters <= length(terms)) {
+    return(result(
+      "too few clusters for a curve",
+      n_clusters = n_clusters,
+      few_clusters = TRUE
+    ))
+  }
   data$cluster_id <- clustering$cluster_id
   data$w <- if (design$weighted) data$weight else rep(1, n)
   formula <- stats::as.formula(paste(
@@ -217,6 +237,8 @@ fit_curve_unit <- function(data, settings = analysis_settings()) {
     "fitted",
     coef = estimated[terms],
     vcov = covariance,
+    n_clusters = if (clustered) n_clusters else NA_integer_,
+    few_clusters = clustered && n_clusters < settings$min_clusters,
     se_type = clustering$se_type
   )
 }

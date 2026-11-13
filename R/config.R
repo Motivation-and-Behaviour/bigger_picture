@@ -222,10 +222,13 @@ bp_curve_settings <- function() {
     "min_datasets",
     "sex_known_min",
     "covariate_known_min",
+    "min_clusters",
     "curve_knots",
     "curve_boundary",
     "curve_grid",
     "curve_reference",
+    "curve_interval_rows",
+    "curve_window",
     "smallest_effect"
   )
 }
@@ -265,19 +268,20 @@ bp_row_level_workers <- function() {
 
 # Workers for the targets that fit models on a prepared dataset. Memory sets
 # the number, not cores. A worker holding the largest prepared dataset peaks
-# near 3.7 GB, but when the preparation step reruns, the `row_level` pool is
-# loading whole harmonised datasets at the same time and each dataset's
-# model targets start together as its preparation finishes: with sixteen
-# model workers a full rerun left under 20 GB available, against about 60
-# GB with four.
+# near 3.7 GB, but when the preparation step reruns, each dataset's model
+# targets all start as its preparation finishes while the `row_level` pool
+# goes on loading whole harmonised datasets: with sixteen model workers, and
+# again with eight, a full rerun fell below 25 GB available, against about
+# 60 GB when these targets shared the pool of four.
 bp_model_workers <- function() {
-  max(1L, min(parallel::detectCores() - 2L, 8L))
+  4L
 }
 
-# Processes for a simulation target, which runs on its own once the rest of
-# a build is done and holds little memory per process.
+# Processes for a simulation target. Each holds little memory, but nothing
+# stops the target starting while the other pools are busy, so run a build
+# that reruns the simulation under the memory watchdog.
 bp_simulation_cores <- function() {
-  max(1L, min(parallel::detectCores() - 2L, 16L))
+  max(1L, min(parallel::detectCores() - 2L, 24L))
 }
 
 # Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).

@@ -30,6 +30,10 @@ analysis_targets <- function(harmonise_plan) {
       quote(settings[bp_curve_settings()])
     ),
     targets::tar_target_raw(
+      "settings_simulation",
+      quote(settings[c(bp_curve_settings(), "seed")])
+    ),
+    targets::tar_target_raw(
       "settings_tree",
       quote(settings[bp_tree_settings()])
     ),
@@ -451,7 +455,7 @@ analysis_targets <- function(harmonise_plan) {
     ),
     targets::tar_target_raw(
       "curves_development",
-      quote(pool_curve_cells(curves_all, settings_curve))
+      quote(pool_curve_cells(curves_all, settings_curve, outcome_registry))
     ),
     # The simulation runs its replicates in processes of its own.
     targets::tar_target_raw(
@@ -460,7 +464,7 @@ analysis_targets <- function(harmonise_plan) {
         onestage_rows_all,
         described_units,
         reps = 200L,
-        settings = c(settings_curve, settings["seed"]),
+        settings = settings_simulation,
         cores = bp_simulation_cores()
       ))
     ),

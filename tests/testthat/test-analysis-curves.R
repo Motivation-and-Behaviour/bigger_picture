@@ -6,7 +6,7 @@ skip_if_not_installed("metafor")
 skip_if_not_installed("clubSandwich")
 
 # One unit's rows: screen use in hours and an outcome that follows `truth`.
-curve_rows <- function(n, truth, seed, hours = NULL, shift = 0) {
+curve_rows <- function(n, truth, seed, hours = NULL, noise = 1) {
   set.seed(seed)
   x <- if (is.null(hours)) {
     pmin(stats::rgamma(n, shape = 2, scale = 1.2), 10)
@@ -15,7 +15,7 @@ curve_rows <- function(n, truth, seed, hours = NULL, shift = 0) {
   }
   data.frame(
     x = x,
-    y = truth(x) + shift + stats::rnorm(n),
+    y = truth(x) + noise * stats::rnorm(n),
     age = stats::runif(n, 8, 12),
     sex = sample(c("Female", "Male"), n, replace = TRUE),
     weight = NA_real_,
@@ -25,9 +25,9 @@ curve_rows <- function(n, truth, seed, hours = NULL, shift = 0) {
   )
 }
 # The units of `k` datasets, two each, fitted.
-curve_fits <- function(k, truth, n = 3000, seed = 1, hours = NULL) {
+curve_fits <- function(k, truth, n = 3000, seed = 1, noise = 1) {
   fits <- lapply(seq_len(2 * k), function(i) {
-    rows <- curve_rows(n, truth, seed = 100 * seed + i, hours = hours)
+    rows <- curve_rows(n, truth, seed = 100 * seed + i, noise = noise)
     fit <- fit_curve_unit(rows)
     fit$dataset_id <- sprintf("d%02d", (i + 1) %/% 2)
     fit$unit <- paste0("u", i)
@@ -38,6 +38,7 @@ curve_fits <- function(k, truth, n = 3000, seed = 1, hours = NULL) {
 flat <- function(x) 0 * x
 # No association up to two hours, then 0.15 SD lower per hour.
 kinked <- function(x) -0.15 * pmax(x - 2, 0)
+at_hour <- function(curve, hour) curve[curve$hours == hour, ]
 
 test_that("the curve terms are the same in every unit", {
   settings <- analysis_settings()
@@ -53,7 +54,8 @@ test_that("the curve terms are the same in every unit", {
 })
 
 test_that("a unit's curve is fitted, or says why not", {
-  fit <- fit_curve_unit(curve_rows(3000, kinked, seed = 1))
+  rows <- curve_rows(3000, kinked, seed = 1)
+  fit <- fit_curve_unit(rows)
   expect_equal(fit$status, "fitted")
   expect_equal(names(fit$coef[[1]]), c("s1", "s2", "s3", "s4"))
   expect_equal(dim(fit$vcov[[1]]), c(4, 4))
@@ -61,11 +63,13 @@ test_that("a unit's curve is fitted, or says why not", {
   # The unit's own curve, read at four hours against one: about -0.30.
   contrast <- curve_basis(4)[1, ] - curve_basis(1)[1, ]
   expect_equal(sum(contrast * fit$coef[[1]]), -0.30, tolerance = 0.1, scale = 1)
+  # The rows near each hour of the grid, and in the thinnest stretch
+  # between knots.
   grid <- analysis_settings()$curve_grid
-  expect_length(fit$rows_at_or_above[[1]], length(grid))
-  expect_equal(fit$rows_at_or_above[[1]][1], 3000)
-  rows <- curve_rows(3000, kinked, seed = 1)
-  expect_equal(fit$rows_at_or_below[[1]][length(grid)], sum(rows$x <= 8))
+  expect_length(fit$rows_near[[1]], length(grid))
+  expect_equal(fit$rows_near[[1]][grid == 2], sum(abs(rows$x - 2) <= 0.5))
+  stretches <- table(cut(rows$x, c(-Inf, 1, 2, 4, Inf)))
+  expect_equal(fit$rows_least_stretch, min(stretches))
 
   # Four bands cannot carry four curve terms.
   bands <- fit_curve_unit(curve_rows(3000, kinked, 2, hours = c(0.5, 2, 4, 6)))
@@ -76,73 +80,185 @@ test_that("a unit's curve is fitted, or says why not", {
   expect_null(bands$coef[[1]])
   small <- fit_curve_unit(curve_rows(20, kinked, seed = 3))
   expect_equal(small$status, "fewer rows than the minimum unit size")
+  still <- rows
+  still$y <- 1
+  expect_equal(fit_curve_unit(still)$status, "no variation in the outcome")
+})
+
+test_that("a unit with few children in part of the range is not fitted", {
+  # Twenty-nine rows above four hours are one short of the minimum.
+  rows <- curve_rows(3000, kinked, seed = 4)
+  long <- which(rows$x > 4)
+  thin <- rows[-long[-(1:29)], ]
+  fit <- fit_curve_unit(thin)
+  expect_equal(fit$rows_least_stretch, 29)
+  expect_equal(
+    fit$status,
+    "too few rows in a stretch between knots for a curve"
+  )
+  enough <- rows[-long[-(1:30)], ]
+  expect_equal(fit_curve_unit(enough)$status, "fitted")
+  # The rule can be turned off, as the simulation does to compare.
+  off <- analysis_settings()
+  off$curve_interval_rows <- 0L
+  expect_equal(fit_curve_unit(thin, off)$status, "fitted")
+})
+
+test_that("a unit's curve uses the clustered errors, and needs enough clusters", {
+  rows <- curve_rows(3000, kinked, seed = 5)
+  set.seed(6)
+  school <- sample(40, nrow(rows), replace = TRUE)
+  rows$y <- rows$y + stats::rnorm(40)[school]
+  plain <- fit_curve_unit(rows)
+  rows$cluster <- as.character(school)
+  clustered <- fit_curve_unit(rows)
+  expect_equal(clustered$se_type, "clustered on sampling unit")
+  expect_equal(clustered$n_clusters, 40)
+  expect_false(clustered$few_clusters)
+  expect_equal(clustered$coef[[1]], plain$coef[[1]])
+  expect_false(isTRUE(all.equal(clustered$vcov[[1]], plain$vcov[[1]])))
+  # Eight clusters are flagged; four cannot carry four terms.
+  rows$cluster <- as.character(school %% 8)
+  expect_true(fit_curve_unit(rows)$few_clusters)
+  rows$cluster <- as.character(school %% 4)
+  few <- fit_curve_unit(rows)
+  expect_equal(few$status, "too few clusters for a curve")
+  expect_null(few$vcov[[1]])
 })
 
 test_that("a pooled curve recovers the curve built into the units", {
   fits <- curve_fits(10, kinked)
-  pooled <- pool_curve(fits)
+  pooled <- pool_curve(fits, higher_is = "better")
   curve <- pooled$curve
   truth <- kinked(curve$hours) - kinked(1)
   expect_equal(pooled$summary$status, "pooled")
   expect_equal(pooled$summary$k_datasets, 10)
   expect_equal(pooled$summary$k_units, 20)
-  expect_equal(curve$estimate[curve$hours == 1], 0)
-  # Within the hours children have, the curve is within 0.05 SD of the
-  # truth, and its interval covers the truth give or take that much: a
-  # smooth curve rounds the kink.
+  expect_equal(pooled$summary$k_units_not_fitted, 0)
+  expect_equal(pooled$summary$random_levels, "dataset, unit")
+  expect_equal(at_hour(curve, 1)$estimate, 0)
+  # Within the hours the curve bends freely in, it is within 0.03 SD of
+  # the truth; a smooth curve rounds the kink a little.
   inside <- curve$hours >= 0.5 & curve$hours <= 6 & curve$hours != 1
-  expect_lt(max(abs(curve$estimate - truth)[inside]), 0.05)
-  covered <- curve$ci_low - 0.05 <= truth & truth <= curve$ci_high + 0.05
-  expect_true(all(covered[inside]))
-  # The truth passes 0.10 SD below the reference at 2.67 hours; the first
-  # hour on the grid whose whole interval is beyond it comes soon after.
-  expect_equal(pooled$summary$threshold_direction, "lower outcome")
-  expect_true(pooled$summary$threshold_hours %in% c(3, 3.5))
+  expect_lt(max(abs(curve$estimate - truth)[inside]), 0.03)
+  expect_true(all((curve$ci_low <= truth & truth <= curve$ci_high)[
+    curve$hours %in% c(3, 4, 5)
+  ]))
+  # The truth is 0.075 below the reference at 2.5 hours and 0.15 below at
+  # 3: the threshold is 3, where the whole interval first clears 0.10.
+  expect_lt(at_hour(curve, 2.5)$ci_high, 0)
+  expect_gt(at_hour(curve, 2.5)$ci_high, -0.10)
+  expect_lt(at_hour(curve, 3)$ci_high, -0.10)
+  expect_equal(pooled$summary$threshold_hours, 3)
+  expect_equal(pooled$summary$threshold_direction, "worse outcome")
+  expect_true(pooled$summary$threshold_holds)
+  # The same curve on a row where higher is worse is a better outcome, and
+  # with no direction given it is a lower one.
+  expect_equal(
+    pool_curve(fits, higher_is = "worse")$summary$threshold_direction,
+    "better outcome"
+  )
+  expect_equal(pool_curve(fits)$summary$threshold_direction, "lower outcome")
 })
 
-test_that("a flat curve has no threshold", {
+test_that("the threshold is two-sided and needs the whole interval beyond", {
+  rising <- function(x) 0.15 * pmax(x - 2, 0)
+  up <- pool_curve(curve_fits(10, rising, seed = 4), higher_is = "better")
+  expect_equal(up$summary$threshold_hours, 3)
+  expect_equal(up$summary$threshold_direction, "better outcome")
+
+  # With far noisier units the estimate at three hours is still about 0.15
+  # below, but its interval reaches inside 0.10, so that is not a threshold.
+  noisy <- pool_curve(curve_fits(10, kinked, n = 400, seed = 5, noise = 3))
+  three <- at_hour(noisy$curve, 3)
+  expect_lt(three$estimate, -0.05)
+  expect_gt(three$ci_high, -0.10)
+  expect_true(
+    is.na(noisy$summary$threshold_hours) || noisy$summary$threshold_hours > 3
+  )
+})
+
+test_that("a flat curve has no threshold, and a dip is said not to hold", {
   pooled <- pool_curve(curve_fits(10, flat, seed = 2))
   expect_true(is.na(pooled$summary$threshold_hours))
   expect_true(is.na(pooled$summary$threshold_direction))
+  expect_true(is.na(pooled$summary$threshold_holds))
   inside <- pooled$curve$hours >= 0.5 & pooled$curve$hours <= 6
   expect_lt(max(abs(pooled$curve$estimate[inside])), 0.05)
+
+  # Half an SD lower around three hours, and back by six.
+  dip <- function(x) -0.5 * exp(-((x - 3) / 0.9)^2)
+  back <- pool_curve(curve_fits(10, dip, seed = 3))
+  expect_false(is.na(back$summary$threshold_hours))
+  expect_lt(back$summary$threshold_hours, 3.5)
+  expect_false(back$summary$threshold_holds)
 })
 
-test_that("a curve is read only at hours enough datasets support", {
-  # No child has more than four hours, so nothing supports the hours above.
-  capped <- function(n, seed) {
-    rows <- curve_rows(n, kinked, seed)
-    rows$x <- pmin(rows$x, 4)
-    rows
-  }
-  fits <- dplyr::bind_rows(lapply(1:8, function(i) {
-    fit <- fit_curve_unit(capped(3000, i))
-    fit$dataset_id <- sprintf("d%02d", i)
-    fit$unit <- paste0("u", i)
-    fit
-  }))
+test_that("a curve is read only at hours with data near them, inside the knots", {
+  fits <- curve_fits(8, kinked, seed = 6)
   pooled <- pool_curve(fits)
   curve <- pooled$curve
-  expect_true(all(curve$interpretable[curve$hours >= 0.5 & curve$hours <= 4]))
-  expect_false(any(curve$interpretable[curve$hours > 4]))
-  # Nor does anything support zero hours: no child reports none at all.
-  expect_false(curve$interpretable[curve$hours == 0])
-  expect_equal(pooled$summary$interpretable_from, 0.5)
-  expect_equal(curve$k_datasets_support[curve$hours == 5], 0)
-  expect_equal(pooled$summary$interpretable_to, 4)
-  # A threshold is not read beyond the supported hours.
-  expect_true(
-    is.na(pooled$summary$threshold_hours) ||
-      pooled$summary$threshold_hours <= 4
+  # Beyond the last knot the curve is a straight line continued: not read.
+  expect_false(any(curve$interpretable[curve$hours > 6]))
+  expect_true(all(curve$interpretable[curve$hours >= 0.5 & curve$hours <= 5]))
+  expect_equal(
+    pooled$summary$interpretable_to,
+    max(
+      curve$hours[curve$k_datasets_support >= 3 & curve$hours <= 6]
+    )
+  )
+  # No child reports no screen use at all, so half an hour is where the
+  # data start; the count at an hour is of datasets with rows near it.
+  expect_equal(at_hour(curve, 3)$k_datasets_support, 8)
+  rows <- curve_rows(3000, kinked, seed = 601)
+  expect_equal(
+    fits$rows_near[[1]][curve$hours == 3],
+    sum(abs(rows$x - 3) <= 0.5)
   )
 
+  # Take away the rows near five hours in six of the eight datasets.
+  thinned <- fits
+  five <- which(curve$hours == 5)
+  for (i in which(thinned$dataset_id %in% sprintf("d%02d", 1:6))) {
+    thinned$rows_near[[i]][five] <- 5
+  }
+  expect_equal(at_hour(pool_curve(thinned)$curve, 5)$k_datasets_support, 2)
+  expect_false(at_hour(pool_curve(thinned)$curve, 5)$interpretable)
+
   # Two datasets are too few for a curve.
-  two <- pool_curve(fits[1:2, ])
+  two <- pool_curve(fits[1:4, ])
   expect_equal(two$summary$status, "insufficient data")
   expect_true(all(is.na(two$curve$estimate)))
-  # Units that could not be fitted do not count.
-  fits$status[1:6] <- "curve not estimable in the unit"
-  expect_equal(pool_curve(fits)$summary$k_datasets, 2)
+  # Units that could not be fitted do not count, and are counted as such.
+  fits$status[1:12] <- "curve not estimable in the unit"
+  left <- pool_curve(fits)
+  expect_equal(left$summary$k_datasets, 2)
+  expect_equal(left$summary$k_units_not_fitted, 12)
+})
+
+test_that("the reference must be supported, and a threshold needs studies", {
+  fits <- curve_fits(8, kinked, seed = 7)
+  grid <- analysis_settings()$curve_grid
+  # Six datasets have too few rows near one hour.
+  thin <- fits
+  for (i in which(thin$dataset_id %in% sprintf("d%02d", 1:6))) {
+    thin$rows_near[[i]][grid == 1] <- 5
+  }
+  unsupported <- pool_curve(thin)
+  expect_equal(
+    unsupported$summary$status,
+    "too few datasets support the reference"
+  )
+  expect_true(is.na(unsupported$summary$threshold_hours))
+  expect_true(all(is.na(unsupported$curve$estimate)))
+
+  # Three datasets pool, but with too few degrees of freedom for a
+  # threshold: the curve is given and no threshold is.
+  three <- pool_curve(curve_fits(3, kinked, seed = 8))
+  expect_true(all(three$curve$df[three$curve$hours > 1] < 4))
+  expect_equal(three$summary$status, "too few studies to say")
+  expect_true(is.na(three$summary$threshold_hours))
+  expect_false(is.na(at_hour(three$curve, 4)$estimate))
 })
 
 test_that("the curve's settings hold everything its functions read", {
@@ -162,29 +278,48 @@ test_that("the curve's settings hold everything its functions read", {
     c("sex_known_min", "covariate_known_min") %in% bp_curve_settings()
   ))
   expect_true(all(bp_curve_settings() %in% names(analysis_settings())))
+  expect_equal(names(bp_curve_knot_sets()), c("1, 2, 4", "1, 3"))
+  same <- analysis_settings()
+  same$curve_knots <- c(1, 3)
+  expect_equal(names(bp_curve_knot_sets(same)), "1, 3")
 })
 
-test_that("every cell gets its pooled curve", {
-  fits <- curve_fits(4, kinked, n = 1000, seed = 3)
+test_that("every cell gets its pooled curve, with its row's direction", {
+  fits <- curve_fits(6, kinked, n = 2000, seed = 3)
   fits$exposure <- "st_watch"
   fits$outcome <- "a"
   again <- fits
   again$outcome <- "b"
-  pooled <- pool_curve_cells(dplyr::bind_rows(fits, again))
+  registry <- list(
+    rows = tibble::tibble(
+      variable_name = c("a", "b"),
+      direction = c("higher_better", "higher_worse")
+    )
+  )
+  both <- dplyr::bind_rows(fits, again)
+  pooled <- pool_curve_cells(both, outcome_registry = registry)
   expect_equal(pooled$summaries$outcome, c("a", "b"))
   expect_equal(nrow(pooled$curves), 2 * length(analysis_settings()$curve_grid))
   expect_equal(
     pooled$curves$estimate[pooled$curves$outcome == "a"],
     pooled$curves$estimate[pooled$curves$outcome == "b"]
   )
+  expect_equal(
+    pooled$summaries$threshold_direction,
+    c("worse outcome", "better outcome")
+  )
+  expect_equal(
+    unique(pool_curve_cells(both)$summaries$threshold_direction),
+    "lower outcome"
+  )
   expect_equal(nrow(pool_curve_cells(NULL)$summaries), 0)
 })
 
 test_that("the simulation rebuilds outcomes on the real hours and scores them", {
   set.seed(5)
-  rows <- dplyr::bind_rows(lapply(1:6, function(i) {
-    n <- 600
-    banded <- i > 3
+  rows <- dplyr::bind_rows(lapply(1:12, function(i) {
+    n <- 800
+    banded <- i > 6
     tibble::tibble(
       dataset_id = sprintf("d%d", (i + 1) %/% 2),
       unit = paste0("u", i),
@@ -199,42 +334,124 @@ test_that("the simulation rebuilds outcomes on the real hours and scores them", 
     )
   }))
   units <- tibble::tibble(
-    unit = paste0("u", 1:6),
-    measure_type = rep(c("Continuous", "Categorical"), each = 3)
+    unit = paste0("u", 1:12),
+    measure_type = rep(c("Continuous", "Categorical"), each = 6)
   )
   settings <- analysis_settings()
-  sim <- simulate_curve_recovery(rows, units, reps = 2L, max_rows = 500L)
-  expect_equal(sim$base$units, 6)
-  expect_equal(sim$base$units_banded, 3)
-  expect_equal(sim$base$rows, 6 * 500)
-  # Every truth, with and without band error, two knot placements, pooled
-  # two ways, twice.
-  scenarios <- dplyr::distinct(
-    sim$thresholds[c("truth", "band_error", "knots", "units")]
-  )
-  expect_equal(nrow(scenarios), length(curve_truths()) * 2 * 2 * 2)
+  sim <- simulate_curve_recovery(rows, units, reps = 2L, max_rows = 600L)
+  expect_equal(sim$base$units, 12)
+  expect_equal(sim$base$units_banded, 6)
+  expect_equal(sim$base$rows, 12 * 600)
+  # Every truth, with and without band error; two knot placements, two
+  # rules on units and two numbers of datasets; twice.
+  choices <- c("truth", "band_error", "knots", "units", "datasets")
+  scenarios <- dplyr::distinct(sim$thresholds[choices])
+  expect_equal(nrow(scenarios), length(curve_truths()) * 2 * 2 * 2 * 2)
   expect_setequal(scenarios$knots, c("1, 3", "1, 2, 4"))
   expect_equal(nrow(sim$thresholds), 2 * nrow(scenarios))
   expect_equal(
     nrow(sim$replicates),
     nrow(sim$thresholds) * length(settings$curve_grid)
   )
+  # Five datasets are pooled where five are asked for.
+  five <- sim$thresholds[
+    sim$thresholds$datasets == "five" & sim$thresholds$units == "any",
+  ]
+  expect_true(all(five$k_datasets == 5))
   # The outcome in the rows is never used: the estimates are not near 99.
   expect_lt(max(abs(sim$replicates$estimate), na.rm = TRUE), 5)
   # The truth is the built-in curve against the reference, and its
   # threshold where that passes the smallest effect of interest.
-  kinked <- sim$truth[sim$truth$truth == "kinked", ]
-  expect_equal(kinked$true_value[kinked$hours == 4], -0.2)
-  expect_equal(unique(kinked$true_threshold), 3)
-  expect_true(all(is.na(sim$truth$true_threshold[sim$truth$truth == "flat"])))
-  # The same seed gives the same replicates.
-  again <- simulate_curve_recovery(rows, units, reps = 2L, max_rows = 500L)
+  bends <- sim$truth[sim$truth$truth == "bends_at_2", ]
+  expect_equal(at_hour(bends, 4)$true_value, -0.2)
+  expect_equal(unique(bends$true_threshold), 3)
+  none <- c("flat", "levels_off_short")
+  expect_true(all(is.na(sim$truth$true_threshold[sim$truth$truth %in% none])))
+  past <- unique(sim$truth$true_threshold[sim$truth$truth == "levels_off_past"])
+  expect_equal(past, 2.57, tolerance = 0.02, scale = 1)
+  # The same seed gives the same replicates; no seed is an error.
+  again <- simulate_curve_recovery(rows, units, reps = 2L, max_rows = 600L)
   expect_equal(again$replicates$estimate, sim$replicates$estimate)
+  seedless <- settings[setdiff(names(settings), "seed")]
+  expect_error(
+    simulate_curve_recovery(rows, units, reps = 1L, settings = seedless),
+    "needs a `seed`"
+  )
+})
 
-  summary <- summarise_curve_recovery(sim)
-  expect_equal(nrow(summary$threshold), nrow(scenarios))
-  expect_true(all(summary$curve$coverage >= 0 & summary$curve$coverage <= 1))
-  expect_true(all(
-    c("mean_error", "coverage", "interpretable") %in% names(summary$curve)
+test_that("the simulation's summary counts failures, early and false thresholds", {
+  truth <- tibble::tibble(
+    truth = rep(c("flat", "bends"), each = 2),
+    hours = rep(c(1, 4), 2),
+    true_value = c(0, 0, 0, -0.2),
+    true_threshold = rep(c(NA, 3), each = 2)
+  )
+  one <- function(
+    name,
+    rep,
+    threshold,
+    status = "pooled",
+    direction = "lower outcome"
+  ) {
+    tibble::tibble(
+      truth = name,
+      band_error = "none",
+      knots = "1, 2, 4",
+      units = "any",
+      datasets = "all",
+      rep = rep,
+      k_datasets = 14,
+      k_units = 85,
+      threshold_hours = threshold,
+      threshold_direction = if (is.na(threshold)) NA_character_ else direction,
+      threshold_holds = NA,
+      status = status
+    )
+  }
+  thresholds <- dplyr::bind_rows(
+    # Flat: one false threshold in four, and one failed pool.
+    one("flat", 1, NA),
+    one("flat", 2, 4),
+    one("flat", 3, NA),
+    one("flat", 4, NA, status = "model failed: no convergence"),
+    # Bends at a true threshold of 3: on time, late, early, wrong way.
+    one("bends", 1, 3),
+    one("bends", 2, 4),
+    one("bends", 3, 2.5),
+    one("bends", 4, 3, direction = "higher outcome")
+  )
+  replicates <- tibble::tibble(
+    truth = "bends",
+    band_error = "none",
+    knots = "1, 2, 4",
+    units = "any",
+    datasets = "all",
+    rep = 1:4,
+    hours = 4,
+    estimate = c(-0.2, -0.3, -0.1, -0.2),
+    ci_low = c(-0.3, -0.4, -0.15, NA),
+    ci_high = c(-0.1, -0.25, -0.05, NA),
+    interpretable = c(TRUE, TRUE, TRUE, FALSE),
+    true_value = -0.2
+  )
+  out <- summarise_curve_recovery(list(
+    replicates = replicates,
+    thresholds = thresholds,
+    truth = truth
   ))
+  flat_row <- out$threshold[out$threshold$truth == "flat", ]
+  expect_equal(flat_row$failed, 0.25)
+  expect_equal(flat_row$found, 0.25)
+  expect_equal(flat_row$false_or_early, 0.25)
+  expect_equal(flat_row$wrong_direction, 0)
+  bends_row <- out$threshold[out$threshold$truth == "bends", ]
+  expect_equal(bends_row$found, 1)
+  expect_equal(bends_row$median, 3)
+  expect_equal(bends_row$false_or_early, 0.25)
+  expect_equal(bends_row$wrong_direction, 0.25)
+  # The curve's error and coverage are over the replicates that pooled:
+  # the fourth has no interval.
+  expect_equal(out$curve$mean_error, mean(c(0, -0.1, 0.1)))
+  expect_equal(out$curve$coverage, 1 / 3)
+  expect_equal(out$curve$interpretable, 1)
 })
