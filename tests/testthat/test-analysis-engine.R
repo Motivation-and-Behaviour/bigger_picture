@@ -1286,3 +1286,131 @@ test_that("the tree pools the mock's rows, counting a copied score once", {
   expect_equal(l0$estimate, mean(l1$estimate))
   expect_equal(l0$status, "pooled")
 })
+
+test_that("a further covariate tier removes confounding the first leaves in", {
+  # Screen use and the outcome both rise with household SES; the true slope
+  # is 0.10. Tier 1 is confounded, tier 2 adjusts for SES and recovers it.
+  set.seed(31)
+  n <- 3000
+  ses <- sample(c("Low", "Medium", "High"), n, replace = TRUE)
+  level <- match(ses, c("Low", "Medium", "High"))
+  data <- data.frame(
+    x = stats::rgamma(n, shape = 2) + level,
+    age = stats::runif(n, 8, 12),
+    sex = sample(c("Female", "Male"), n, replace = TRUE),
+    weight = NA_real_,
+    cluster = NA_character_,
+    family = NA_character_,
+    ses_household = ses,
+    parental_education = sample(c("A", "B"), n, replace = TRUE),
+    ses_area = NA_character_,
+    ethnicity = NA_character_,
+    minority = sample(c("Minority", "Non-minority"), n, replace = TRUE),
+    urbanicity = c(rep("Rural", 3), rep("Urban", n - 3)),
+    stringsAsFactors = FALSE
+  )
+  data$y <- 0.10 * data$x + 0.8 * level + stats::rnorm(n)
+  data$ses_household[1:100] <- NA
+  first <- fit_stage1_unit(data, "linear", tier = 1L)
+  second <- fit_stage1_unit(data, "linear", tier = 2L)
+  expect_equal(c(first$tier, second$tier), 1:2)
+  expect_gt(first$estimate, 0.2)
+  expect_equal(second$estimate, 0.10, tolerance = 0.03, scale = 1)
+  # Household SES is used first, and rows where it is unknown are left out.
+  expect_equal(second$ses_measure, "ses_household")
+  expect_true(is.na(first$ses_measure))
+  expect_equal(second$n_no_covariate, 100)
+  expect_equal(second$n, 2900)
+  expect_match(second$covariates, "ses_household")
+
+  # Tier 3 takes minority where ethnicity is not recorded; the three rural
+  # rows are too few for a group, so urbanicity does not count as recorded.
+  third <- fit_stage1_unit(data, "linear", tier = 3L)
+  expect_equal(third$status, "no urbanicity measure in the unit")
+  expect_true(is.na(third$estimate))
+  data$urbanicity <- sample(c("Rural", "Urban"), n, replace = TRUE)
+  third <- fit_stage1_unit(data, "linear", tier = 3L)
+  expect_equal(third$status, "fitted")
+  expect_match(third$covariates, "ses_household \\+ minority \\+ urbanicity")
+
+  # No socioeconomic measure known for enough rows: the next is taken, and
+  # with none the unit is not fitted at this tier.
+  data$ses_household[1:1500] <- NA
+  expect_equal(
+    fit_stage1_unit(data, "linear", tier = 2L)$ses_measure,
+    "parental_education"
+  )
+  data$parental_education <- NA_character_
+  none <- fit_stage1_unit(data, "linear", tier = 2L)
+  expect_equal(none$status, "no socioeconomic measure in the unit")
+})
+
+test_that("small groups of a covariate are merged, or left out", {
+  values <- c(rep("a", 50), rep("b", 40), rep("c", 3), rep("d", 4), NA)
+  groups <- stage1_covariate_groups(values)
+  expect_equal(sum(groups %in% "(small groups)"), 7)
+  values <- c(rep("a", 50), rep("b", 40), rep("c", 3), NA)
+  groups <- stage1_covariate_groups(values)
+  expect_equal(sum(is.na(groups)), 4)
+  expect_null(stage1_covariate_groups(c(rep("a", 50), rep("b", 3))))
+  expect_null(stage1_covariate_groups(c(rep("a", 5), rep("b", 5), rep(NA, 10))))
+  expect_null(stage1_covariate_groups(NULL))
+})
+
+test_that("stage 1 fits each cell at each tier asked for", {
+  reg <- engine_registries()
+  prepared <- engine_prepare("9995", reg)
+  fits <- fit_stage1(
+    prepared,
+    engine_cells[1, ],
+    reg$outcomes,
+    reg$schema,
+    tiers = 1:3
+  )
+  expect_equal(sort(unique(fits$tier)), 1:3)
+  expect_equal(nrow(fits), 3 * dplyr::n_distinct(fits$unit))
+  one <- fit_stage1(prepared, engine_cells[1, ], reg$outcomes, reg$schema)
+  expect_equal(fits[fits$tier == 1, ], one)
+})
+
+test_that("a further tier is set beside tier 1 on the same units", {
+  slopes <- function(tier, estimate, datasets) {
+    tibble::tibble(
+      dataset_id = rep(datasets, each = 2),
+      unit = paste(rep(datasets, each = 2), 1:2),
+      exposure = "st_watch",
+      outcome = "o",
+      score_type = "continuous",
+      effect_measure = "sd_per_hour",
+      tier = tier,
+      estimate = estimate,
+      se = 0.01,
+      n = 100,
+      status = "fitted"
+    )
+  }
+  # Tier 1 has six datasets: 0.10 in the four that record SES, 0.30 in the
+  # two that do not. Tier 2 is 0.06 in the four.
+  first <- dplyr::bind_rows(
+    slopes(1L, 0.10, c("a", "b", "c", "d")),
+    slopes(1L, 0.30, c("e", "f"))
+  )
+  further <- dplyr::bind_rows(
+    slopes(2L, 0.06, c("a", "b", "c", "d")),
+    dplyr::mutate(
+      slopes(2L, NA_real_, c("e", "f")),
+      status = "no socioeconomic measure in the unit"
+    )
+  )
+  out <- compare_stage2_tiers(first, further)
+  expect_equal(nrow(out), 1)
+  expect_equal(out$tier, 2L)
+  expect_equal(out$k_datasets, 4)
+  expect_equal(out$estimate, 0.06)
+  # Tier 1 over the same four datasets, not all six.
+  expect_equal(out$tier1_k_datasets, 4)
+  expect_equal(out$tier1_estimate, 0.10)
+  expect_equal(out$change, -0.04)
+  expect_equal(out$k_units_lost, 4L)
+  expect_equal(nrow(compare_stage2_tiers(first, further[0, ])), 0)
+})

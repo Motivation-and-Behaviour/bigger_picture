@@ -191,6 +191,7 @@ bp_model_settings <- function() {
     "min_unit_rows",
     "min_datasets",
     "sex_known_min",
+    "covariate_known_min",
     "min_clusters",
     "year_min_datasets",
     "year_min_span",

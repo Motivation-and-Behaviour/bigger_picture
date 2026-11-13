@@ -32,6 +32,14 @@
 #'   both sexes have at least five; rows of unknown or other sex are then
 #'   left out. Where sex is known for fewer rows it is left out of the model
 #'   and the rows stay;
+#' - a further covariate tier adds to age and sex (DR-0015): tier 2 a
+#'   socioeconomic measure, the first the unit records of household SES,
+#'   parental education and area SES; tier 3 also ethnicity, or else
+#'   minority status, and urbanicity. A unit that does not record a tier's
+#'   covariates is not fitted at that tier, and says so. A covariate counts
+#'   as recorded where it is known for at least `covariate_known_min` of the
+#'   unit's rows and two of its groups have five rows or more; rows where it
+#'   is unknown are left out, and groups of fewer than five rows are merged;
 #' - a unit is fitted on complete cases, and only with at least the minimum
 #'   number of rows, variation in the exposure and, for a binary outcome, at
 #'   least ten rows in each class.
@@ -45,7 +53,8 @@
 #' @param outcome_registry The outcome registry.
 #' @param dataschema The dataschema, for the level order of ordinal rows.
 #' @param settings From `analysis_settings()`.
-#' @return A tibble with one row per unit and cell that has data: the slope
+#' @param tiers The covariate tiers to fit each cell at, among 1, 2 and 3.
+#' @return A tibble with one row per unit, cell and tier that has data: the slope
 #'   (`estimate`, `se`), its `effect_measure`, the rows, clusters and degrees
 #'   of freedom behind it, the covariates and engine used, and `status`
 #'   (`fitted` or the reason it was not). NULL when the dataset is not
@@ -55,7 +64,8 @@ fit_stage1 <- function(
   cells,
   outcome_registry,
   dataschema,
-  settings = analysis_settings()
+  settings = analysis_settings(),
+  tiers = 1L
 ) {
   if (is.null(prepared) || nrow(prepared$base) == 0) {
     return(NULL)
@@ -89,6 +99,9 @@ fit_stage1 <- function(
     family = as.character(column("family_id")),
     stringsAsFactors = FALSE
   )
+  for (covariate in bp_stage1_covariates()) {
+    frame[[covariate]] <- as.character(column(covariate))
+  }
   unit_rows <- split(seq_len(nrow(frame)), frame$unit)
 
   results <- list()
@@ -119,12 +132,14 @@ fit_stage1 <- function(
       data <- frame[index, ]
       data$x <- x[index]
       data$y <- y[index]
-      fit <- fit_stage1_unit(data, model, settings)
-      fit$unit <- unit
-      fit$exposure <- exposure
-      fit$outcome <- outcome
-      fit$score_type <- score_type
-      results[[length(results) + 1]] <- fit
+      for (tier in tiers) {
+        fit <- fit_stage1_unit(data, model, settings, tier)
+        fit$unit <- unit
+        fit$exposure <- exposure
+        fit$outcome <- outcome
+        fit$score_type <- score_type
+        results[[length(results) + 1]] <- fit
+      }
     }
   }
   out <- dplyr::bind_rows(results)
@@ -162,13 +177,19 @@ stage1_model_type <- function(score_type, n_levels) {
 }
 
 # Fit one unit's model and return a one-row tibble.
-fit_stage1_unit <- function(data, model, settings = analysis_settings()) {
+fit_stage1_unit <- function(
+  data,
+  model,
+  settings = analysis_settings(),
+  tier = 1L
+) {
   available <- nrow(data)
   counts <- list(
     n = available,
     n_available = available,
     n_no_weight = 0L,
-    n_no_sex = 0L
+    n_no_sex = 0L,
+    n_no_covariate = 0L
   )
   result <- function(status, ...) {
     values <- c(
@@ -178,6 +199,8 @@ fit_stage1_unit <- function(data, model, settings = analysis_settings()) {
         n_clusters = NA_integer_,
         few_clusters = NA,
         weighted = FALSE,
+        tier = as.integer(tier),
+        ses_measure = NA_character_,
         se_type = NA_character_,
         covariates = NA_character_,
         effect_measure = NA_character_,
@@ -241,14 +264,65 @@ fit_stage1_unit <- function(data, model, settings = analysis_settings()) {
     covariates <- c(covariates, "sex")
   }
 
+  # Further tiers: each needs its covariates recorded in the unit.
+  ses_measure <- NA_character_
+  missing_tier <- NA_character_
+  wanted <- list()
+  if (tier >= 2) {
+    wanted[["no socioeconomic measure in the unit"]] <- c(
+      "ses_household",
+      "parental_education",
+      "ses_area"
+    )
+  }
+  if (tier >= 3) {
+    wanted[["no ethnicity or minority measure in the unit"]] <- c(
+      "ethnicity",
+      "minority"
+    )
+    wanted[["no urbanicity measure in the unit"]] <- "urbanicity"
+  }
+  added <- character()
+  for (reason in names(wanted)) {
+    # The first of the candidates the unit records well enough.
+    found <- NA_character_
+    for (candidate in wanted[[reason]]) {
+      groups <- stage1_covariate_groups(data[[candidate]], settings)
+      if (!is.null(groups)) {
+        data[[candidate]] <- groups
+        found <- candidate
+        break
+      }
+    }
+    if (is.na(found)) {
+      missing_tier <- dplyr::coalesce(missing_tier, reason)
+    }
+    added <- c(added, found)
+  }
+  if (tier >= 2) {
+    ses_measure <- added[1]
+  }
+  added <- added[!is.na(added)]
+  if (length(added) > 0 && is.na(missing_tier)) {
+    known <- stats::complete.cases(data[added])
+    counts$n_no_covariate <- sum(!known)
+    data <- data[known, ]
+    terms <- c(terms, added)
+    covariates <- c(covariates, added)
+  }
+
   n <- nrow(data)
   counts$n <- n
   common <- list(
     weighted = weighted,
+    ses_measure = ses_measure,
     covariates = paste(covariates, collapse = " + ")
   )
   stop_with <- function(status) {
     do.call(result, c(list(status = status), common))
+  }
+  if (!is.na(missing_tier)) {
+    return(stop_with(missing_tier))
   }
   if (n < settings$min_unit_rows) {
     return(stop_with("fewer rows than the minimum unit size"))
@@ -410,4 +484,36 @@ stage1_ordinal <- function(data, formula) {
     converged = TRUE,
     engine = "survey"
   )
+}
+
+# The covariates of the further tiers, as columns of the prepared base table.
+bp_stage1_covariates <- function() {
+  c(
+    "ses_household",
+    "parental_education",
+    "ses_area",
+    "ethnicity",
+    "minority",
+    "urbanicity"
+  )
+}
+
+# A categorical covariate ready for a unit's model, or NULL where the unit
+# does not record it well enough: known for the minimum share of rows, with
+# two groups of five rows or more. Smaller groups are merged into one, and
+# that one is left out (NA) if it is still under five rows.
+stage1_covariate_groups <- function(values, settings = analysis_settings()) {
+  if (is.null(values) || mean(!is.na(values)) < settings$covariate_known_min) {
+    return(NULL)
+  }
+  sizes <- table(values)
+  small <- names(sizes)[sizes < 5]
+  if (length(small) > 0) {
+    merged <- if (sum(sizes[small]) >= 5) "(small groups)" else NA_character_
+    values[values %in% small] <- merged
+  }
+  if (dplyr::n_distinct(values, na.rm = TRUE) < 2) {
+    return(NULL)
+  }
+  values
 }

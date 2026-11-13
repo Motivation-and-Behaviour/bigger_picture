@@ -193,6 +193,20 @@ analysis_targets <- function(harmonise_plan) {
       resources = row_level
     ),
     targets::tar_target_raw(
+      "stage1_adjusted",
+      quote(fit_stage1(
+        prepared,
+        development_cells,
+        outcome_registry,
+        dataschema,
+        settings_model,
+        tiers = 2:3
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = row_level
+    ),
+    targets::tar_target_raw(
       "slope_correlations",
       quote(stage1_correlations(
         prepared,
@@ -394,6 +408,20 @@ analysis_targets <- function(harmonise_plan) {
       "stage1_all",
       per_dataset[["stage1"]],
       command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
+      "stage1_adjusted_all",
+      per_dataset[["stage1_adjusted"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "tiers_development",
+      quote(compare_stage2_tiers(
+        stage1_all,
+        stage1_adjusted_all,
+        development_cells,
+        settings_model
+      ))
     ),
     tarchetypes::tar_combine_raw(
       "slope_correlations_all",

@@ -114,6 +114,7 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `development_cells` | The cells fitted before the freeze, from `development_cells.csv` |
 | `stage1_<key>`, `stage1_all` | One model per unit and cell: the slope on screen use, with how it was fitted or why it was not |
 | `stage2_development` | Each cell's slopes pooled across datasets |
+| `stage1_adjusted_<key>`, `stage1_adjusted_all`, `tiers_development` | The development cells fitted at covariate tiers 2 and 3 (DR-0015), and each tier's pooled slope beside tier 1 pooled over the same units |
 | `slope_correlations_<key>`, `slope_correlations_all` | How strongly the slopes of two rows of one specific outcome share their error in a unit, estimated from the unit's rows |
 | `tree_development` | The development cells' slopes pooled up the outcome tree: specific outcome by informant, specific outcome, and family |
 | `mapping_status_<key>`, `mapping_status_all`, `moderation_development` | Each dataset's harmonisation status per mapped variable, and whether the development cells' slopes differ by informant, reporter, response format, instrument, score type, harmonisation status and the other stage 2 moderators, within each specific outcome |
