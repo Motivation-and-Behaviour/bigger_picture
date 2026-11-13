@@ -116,6 +116,7 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `stage2_development` | Each cell's slopes pooled across datasets |
 | `slope_correlations_<key>`, `slope_correlations_all` | How strongly the slopes of two rows of one specific outcome share their error in a unit, estimated from the unit's rows |
 | `tree_development` | The development cells' slopes pooled up the outcome tree: specific outcome by informant, specific outcome, and family |
+| `mapping_status_<key>`, `mapping_status_all`, `moderation_development` | Each dataset's harmonisation status per mapped variable, and whether the development cells' slopes differ by informant, reporter, response format, instrument, score type, harmonisation status and the other stage 2 moderators, within each specific outcome |
 | `onestage_rows_<key>`, `onestage_check` | The one-stage check on one cell |
 | `descriptives_<key>`, `described_screen`, `described_week`, `described_relations`, `described_outcomes`, `described_units` | Per-unit descriptive statistics of screen use and of binary outcomes, weighted where a unit has weights |
 | `screen_pooled`, `week_pooled`, `relations_pooled`, `outcomes_pooled` | Those statistics pooled so each dataset counts once |
@@ -200,7 +201,16 @@ Rows with `synthesis` FALSE, no node or no direction do not pool; the result's `
 - The `_by_datasets` columns give the family weighted by each specific outcome's number of datasets, as a sensitivity analysis.
 - A family averages every specific outcome that pools, whether or not the registry marks it `headline`: that column decides what a report leads with.
 
-Not built yet from the pooling gate in the plan: informant and instrument as moderators (Step 7 task 4).
+### Stage 2 moderators
+
+`moderate_tree()` asks, within each specific outcome, whether the slopes differ between the levels of each label in `bp_tree_moderators()`; `tree_moderators()` says where each label comes from.
+`moderate_tree_group()` fits the specific outcome's model with one mean per level and tests that the means are equal, with the robust small-sample test used for families.
+A level needs the minimum number of datasets to enter, and a moderator with fewer than two such levels is reported as not comparable.
+
+Most datasets have one level of a moderator, so a difference is mostly a difference between kinds of study, which also differ in country, age and instrument.
+`k_datasets_several` counts the datasets with more than one level.
+Age and collection year are continuous and are handled apart (`moderate_by_year()`; age comes with Step 12).
+`risk_of_bias` has no ratings yet, so it compares nothing.
 
 The tests in `tests/testthat/test-analysis-tree.R` hold the known answers these rules must give.
 

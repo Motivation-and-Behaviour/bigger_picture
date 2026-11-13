@@ -236,6 +236,10 @@ analysis_targets <- function(harmonise_plan) {
       resources = row_level
     ),
     targets::tar_target_raw(
+      "mapping_status",
+      quote(list_mapping_status(harmonisation_config$variables, dataset_id))
+    ),
+    targets::tar_target_raw(
       "prepared_review",
       quote(review_prepared(
         prepared,
@@ -421,6 +425,23 @@ analysis_targets <- function(harmonise_plan) {
         stage1_all,
         outcome_registry,
         slope_correlations_all,
+        settings_tree
+      ))
+    ),
+    tarchetypes::tar_combine_raw(
+      "mapping_status_all",
+      per_dataset[["mapping_status"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "moderation_development",
+      quote(moderate_tree(
+        stage1_all,
+        described_units,
+        outcome_registry,
+        slope_correlations_all,
+        mapping_status_all,
+        analysis_datasets,
         settings_tree
       ))
     ),

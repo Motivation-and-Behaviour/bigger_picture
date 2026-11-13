@@ -212,6 +212,23 @@ bp_tree_settings <- function() {
   )
 }
 
+# The categorical stage 2 moderators (ANALYSIS_PLAN.md, Step 7 task 4), as
+# columns of `tree_moderators()`.
+bp_tree_moderators <- function() {
+  c(
+    "informant",
+    "reporter",
+    "measure_type",
+    "responder",
+    "instrument",
+    "score_type",
+    "outcome_status",
+    "exposure_status",
+    "total_source",
+    "risk_of_bias"
+  )
+}
+
 # The cells fitted before the freeze, to build the engine on real data
 # (ANALYSIS_PLAN.md, Step 5).
 bp_development_cells_path <- function() {

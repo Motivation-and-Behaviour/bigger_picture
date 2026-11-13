@@ -53,48 +53,19 @@ pool_tree_group <- function(
     return(list(row = result("insufficient data"), M = NULL, keys = keys))
   }
 
-  sampling <- tree_covariance(effects, correlations, settings)
-  data <- data.frame(
-    yi = effects$estimate,
-    dataset_id = effects$dataset_id,
-    unit = effects$unit,
-    slope = seq_len(nrow(effects))
-  )
-  # A level is only estimable when it has more members than the one above.
-  k_units <- dplyr::n_distinct(data$unit)
-  levels <- c(
-    "dataset_id",
-    if (k_units > k_datasets) "unit",
-    if (nrow(data) > k_units) "slope"
-  )
-  random <- stats::as.formula(paste("~ 1 |", paste(levels, collapse = " / ")))
-  # The default optimiser first, then a second one where it does not
-  # converge.
-  fit <- NULL
-  for (optimiser in c("nlminb", "BFGS")) {
-    fit <- tryCatch(
-      metafor::rma.mv(
-        yi,
-        sampling$V,
-        random = random,
-        data = data,
-        method = "REML",
-        test = "t",
-        control = list(optimizer = optimiser)
-      ),
-      error = function(e) conditionMessage(e)
-    )
-    if (!is.character(fit)) {
-      break
-    }
-  }
-  if (is.character(fit)) {
+  working <- fit_tree_model(effects, correlations, settings)
+  if (is.character(working)) {
     return(list(
-      row = result(paste("model failed:", fit)),
+      row = result(paste("model failed:", working)),
       M = NULL,
       keys = keys
     ))
   }
+  fit <- working$fit
+  data <- working$data
+  levels <- working$levels
+  sampling <- working$sampling
+  optimiser <- working$optimiser
   robust <- tryCatch(
     clubSandwich::conf_int(fit, vcov = "CR2", cluster = data$dataset_id),
     error = function(e) conditionMessage(e)

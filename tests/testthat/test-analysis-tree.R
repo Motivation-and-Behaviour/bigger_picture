@@ -598,7 +598,11 @@ test_that("the tree's settings hold everything its functions read", {
       "pool_tree_group.R",
       "pool_tree_family.R",
       "pool_tree.R",
-      "stage1_correlations.R"
+      "stage1_correlations.R",
+      "fit_tree_model.R",
+      "tree_moderators.R",
+      "moderate_tree_group.R",
+      "moderate_tree.R"
     )
   )
   code <- unlist(lapply(files, readLines))
@@ -623,4 +627,134 @@ test_that("uncertainty alone does not keep a family from the headline", {
   expect_equal(family$k_nodes_thin, 2)
   expect_true(is.na(family$warning))
   expect_true(family$headline)
+})
+
+test_that("moderator labels come from the registry, the unit and the mapping", {
+  effects <- tibble::tibble(
+    dataset_id = c("1", "1", "2", "2", "3"),
+    unit = c("u1", "u1", "u2", "u2", "u3"),
+    exposure = c(
+      "st_watch",
+      "st_watch",
+      "st_watch",
+      "total_screen",
+      "st_watch"
+    ),
+    outcome = c("o_self", "o_parent", "o_self", "o_task", "o_mixed"),
+    informant = c("self", "parent", "self", "task", "mixed"),
+    score_type = "continuous"
+  )
+  units <- tibble::tibble(
+    unit = c("u1", "u2", "u3"),
+    measure_type = c("Categorical", "Continuous", "Categorical"),
+    responder = c("Self", "Parent or carer", NA),
+    total_source = c(NA, "summed", NA)
+  )
+  status <- tibble::tibble(
+    dataset_id = c("1", "1", "2"),
+    target_variable = c("o_self", "st_watch", "o_self"),
+    status = c("compatible", "partial", "proximate")
+  )
+  datasets <- tibble::tibble(
+    dataset_id = c("1", "2"),
+    risk_of_bias = c("low", NA)
+  )
+  out <- tree_moderators(effects, units, status, datasets)
+  expect_true(all(bp_tree_moderators() %in% names(out)))
+  # The child reports both, a parent the outcome only, a parent the screen
+  # use only, a test against a parent's report, and a mixed informant.
+  expect_equal(
+    out$reporter,
+    c(
+      "same reporter",
+      "different reporter",
+      "different reporter",
+      "different reporter",
+      NA
+    )
+  )
+  expect_equal(out$measure_type[c(1, 3)], c("Categorical", "Continuous"))
+  expect_equal(out$outcome_status, c("compatible", NA, "proximate", NA, NA))
+  expect_equal(out$exposure_status, c("partial", "partial", NA, NA, NA))
+  # The source of the total applies to the derived total only.
+  expect_equal(out$total_source, c(NA, NA, NA, "summed", NA))
+  expect_equal(out$risk_of_bias, c("low", "low", NA, NA, NA))
+  expect_equal(out$instrument, effects$outcome)
+
+  variables <- tibble::tibble(
+    target_variable = c("a", "b", "st_watch", "st_watch"),
+    status = c("compatible", "unavailable", "partial", "compatible"),
+    measure = c(NA, NA, "", "diary")
+  )
+  listed <- list_mapping_status(variables, 7)
+  expect_equal(listed$target_variable, c("a", "st_watch"))
+  expect_equal(listed$status, c("compatible", "partial"))
+  expect_equal(listed$dataset_id, c("7", "7"))
+})
+
+test_that("a moderator's levels are compared, with a known difference", {
+  # Twelve datasets report by the child (mean 0.02) and twelve by a parent
+  # (mean 0.12); four of them give both; one more gives a third level.
+  self <- tree_slopes(12, 0.02, "o_self", "n1", seed = 51, tau = 0.01)
+  parent <- tree_slopes(12, 0.12, "o_parent", "n1", seed = 52, tau = 0.01)
+  parent$dataset_id <- sub("d", "p", parent$dataset_id)
+  parent$dataset_id[1:8] <- self$dataset_id[1:8]
+  parent$unit <- paste0(parent$dataset_id, sub("^.[0-9]+", "", parent$unit))
+  teacher <- tree_slopes(1, 0.5, "o_teacher", "n1", seed = 53)
+  teacher$dataset_id <- "t01"
+  teacher$unit <- sub("d01", "t01", teacher$unit)
+  effects <- dplyr::bind_rows(self, parent, teacher)
+  effects$informant <- sub("o_", "", effects$outcome)
+  effects <- effects[order(effects$unit), ]
+  out <- moderate_tree_group(effects, "informant")
+  expect_equal(out$level, c("parent", "self", "teacher"))
+  expect_equal(out$k_datasets, c(12, 12, 1))
+  expect_equal(out$status, rep("compared", 3))
+  expect_equal(unique(out$k_levels), 2)
+  expect_equal(unique(out$k_datasets_several), 4)
+  # The level with one dataset is counted and not estimated.
+  expect_equal(out$level_status[3], "insufficient data")
+  expect_true(is.na(out$estimate[3]))
+  expect_equal(out$estimate[1:2], c(0.12, 0.02), tolerance = 0.03, scale = 1)
+  expect_true(all(out$ci_low[1:2] < c(0.12, 0.02)))
+  expect_true(all(out$ci_high[1:2] > c(0.12, 0.02)))
+  # Second minus first: the child's report minus the parent's.
+  expect_equal(out$difference[1], out$estimate[2] - out$estimate[1])
+  expect_equal(out$difference[1], -0.10, tolerance = 0.03, scale = 1)
+  expect_lt(out$difference_ci_high[1], 0)
+  expect_lt(out$equal_p[1], 0.001)
+
+  # The same mean at both levels: no difference found.
+  parent$estimate <- parent$estimate - 0.10
+  effects <- dplyr::bind_rows(self, parent)
+  effects$informant <- sub("o_", "", effects$outcome)
+  effects <- effects[order(effects$unit), ]
+  same <- moderate_tree_group(effects, "informant")
+  expect_gt(same$equal_p[1], 0.05)
+  expect_true(same$difference_ci_low[1] < 0 && same$difference_ci_high[1] > 0)
+
+  # One level only, or none: said, not estimated.
+  one <- moderate_tree_group(
+    effects[effects$informant == "self", ],
+    "informant"
+  )
+  expect_equal(one$status, "fewer than two levels with enough datasets")
+  effects$informant <- NA
+  expect_equal(nrow(moderate_tree_group(effects, "informant")), 0)
+})
+
+test_that("three levels are tested together", {
+  parts <- lapply(1:3, function(i) {
+    out <- tree_slopes(10, c(0, 0, 0.15)[i], paste0("o", i), "n1", 60 + i, 0.01)
+    out$dataset_id <- paste0(out$dataset_id, letters[i])
+    out$unit <- paste0(out$unit, letters[i])
+    out$score_type <- c("binary", "continuous", "ordinal")[i]
+    out
+  })
+  out <- moderate_tree_group(dplyr::bind_rows(parts), "score_type")
+  expect_equal(unique(out$k_levels), 3)
+  expect_lt(out$equal_p[1], 0.01)
+  # A difference is given only between two levels.
+  expect_true(all(is.na(out$difference)))
+  expect_equal(out$estimate, c(0, 0, 0.15), tolerance = 0.04, scale = 1)
 })

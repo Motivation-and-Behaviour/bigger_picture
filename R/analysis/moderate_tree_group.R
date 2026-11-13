@@ -1,0 +1,122 @@
+#' Whether a specific outcome's slopes differ between the levels of a label
+#'
+#' Fits the working model of `pool_tree_group()` with one mean per level of
+#' a categorical moderator, and tests whether the means are equal with a
+#' robust small-sample test clustered on dataset. A level enters only with
+#' the minimum number of datasets, and the comparison needs two such levels.
+#'
+#' Most datasets have one level of a moderator, so the comparison is mostly
+#' between datasets, which also differ in country, age and instrument: a
+#' difference says the slopes differ between kinds of study, not that the
+#' label is the cause. `k_datasets_several` counts the datasets with more
+#' than one level, which is what a within-study comparison would rest on.
+#'
+#' @param effects Rows from `tree_moderators()` for one group.
+#' @param moderator The name of a moderator column.
+#' @param correlations See `tree_covariance()`.
+#' @param settings From `analysis_settings()`.
+#' @return One row per level: its datasets and slopes, `estimate` with a
+#'   robust `se`, `df` and 95% interval, and `level_status`; and on every
+#'   row the number of levels compared, `equal_p` (the test that the levels'
+#'   means are equal), for two levels the `difference` (second minus first,
+#'   in the order of the rows) with its interval, and `status`.
+moderate_tree_group <- function(
+  effects,
+  moderator,
+  correlations = NULL,
+  settings = analysis_settings()
+) {
+  effects$level <- as.character(effects[[moderator]])
+  effects <- effects[!is.na(effects$level), ]
+  counts <- dplyr::summarise(
+    dplyr::group_by(effects, .data$level),
+    k_datasets = dplyr::n_distinct(.data$dataset_id),
+    k_slopes = dplyr::n(),
+    .groups = "drop"
+  )
+  counts <- counts[order(counts$level), ]
+  enough <- counts$level[counts$k_datasets >= settings$min_datasets]
+  per_dataset <- tapply(effects$level, effects$dataset_id, dplyr::n_distinct)
+  out <- counts
+  out$estimate <- NA_real_
+  out$se <- NA_real_
+  out$df <- NA_real_
+  out$ci_low <- NA_real_
+  out$ci_high <- NA_real_
+  out$level_status <- ifelse(
+    out$level %in% enough,
+    NA_character_,
+    "insufficient data"
+  )
+  out$k_levels <- length(enough)
+  out$k_datasets_several <- sum(per_dataset > 1)
+  out$equal_p <- NA_real_
+  out$difference <- NA_real_
+  out$difference_ci_low <- NA_real_
+  out$difference_ci_high <- NA_real_
+  out$difference_df <- NA_real_
+  finish <- function(status) {
+    out$status <- rep(status, nrow(out))
+    out
+  }
+  if (nrow(out) == 0) {
+    return(finish("no data")[0, ])
+  }
+  if (length(enough) < 2) {
+    return(finish("fewer than two levels with enough datasets"))
+  }
+
+  used <- effects[effects$level %in% enough, ]
+  used$level <- factor(used$level, levels = enough)
+  working <- fit_tree_model(used, correlations, settings, mods = ~ 0 + level)
+  if (is.character(working)) {
+    return(finish(paste("model failed:", working)))
+  }
+  cluster <- working$data$dataset_id
+  robust <- tryCatch(
+    clubSandwich::conf_int(working$fit, vcov = "CR2", cluster = cluster),
+    error = function(e) conditionMessage(e)
+  )
+  if (is.character(robust)) {
+    return(finish(paste("robust inference failed:", robust)))
+  }
+  at <- match(enough, out$level)
+  out$estimate[at] <- robust$beta
+  out$se[at] <- robust$SE
+  out$df[at] <- robust$df
+  out$ci_low[at] <- robust$CI_L
+  out$ci_high[at] <- robust$CI_U
+  out$level_status[at] <- ifelse(
+    robust$df < 4,
+    "too few studies to say",
+    "estimated"
+  )
+  out$equal_p <- tryCatch(
+    clubSandwich::Wald_test(
+      working$fit,
+      constraints = clubSandwich::constrain_equal(seq_along(enough)),
+      vcov = "CR2",
+      cluster = cluster,
+      test = "HTZ"
+    )$p_val[1],
+    error = function(e) NA_real_
+  )
+  if (length(enough) == 2) {
+    contrast <- tryCatch(
+      clubSandwich::linear_contrast(
+        working$fit,
+        vcov = "CR2",
+        cluster = cluster,
+        contrasts = matrix(c(-1, 1), nrow = 1)
+      ),
+      error = function(e) NULL
+    )
+    if (!is.null(contrast)) {
+      out$difference <- contrast$Est[1]
+      out$difference_ci_low <- contrast$CI_L[1]
+      out$difference_ci_high <- contrast$CI_U[1]
+      out$difference_df <- contrast$df[1]
+    }
+  }
+  finish("compared")
+}
