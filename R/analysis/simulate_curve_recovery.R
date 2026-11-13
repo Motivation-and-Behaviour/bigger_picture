@@ -193,6 +193,8 @@ simulate_curve_recovery <- function(
             "threshold_hours",
             "threshold_direction",
             "threshold_holds",
+            "threshold_central_hours",
+            "threshold_central_direction",
             "status"
           )])
         )
@@ -254,15 +256,17 @@ simulate_curve_recovery <- function(
 #' Summarise the curve simulation
 #'
 #' @param simulation Output of `simulate_curve_recovery()`.
-#' @return A list of two tibbles, one row per scenario and choice of knots,
-#'   units and datasets. `curve`: by hour, the mean error of the pooled
+#' @return A list of two tibbles. `curve`, one row per scenario, choice of
+#'   knots, units and datasets, and hour: the mean error of the pooled
 #'   curve, the share of intervals that cover the truth, and the share of
 #'   replicates in which the hour was interpretable, over the replicates
-#'   that pooled. `threshold`: the true threshold; the share of replicates
-#'   whose pool failed; the share that found a threshold, with the median
-#'   and quartiles of those found; `false_or_early`, the share that found
-#'   one where the truth has none, or more than a quarter of an hour before
-#'   the true one; and the share that found one in the wrong direction.
+#'   that pooled. `threshold`, one row per scenario, choice and `rule`
+#'   (`conservative` or `central`, as in `pool_curve()`): the true
+#'   threshold; the share of replicates whose pool failed; the share that
+#'   found a threshold, with the median and quartiles of those found;
+#'   `false_or_early`, the share that found one where the truth has none,
+#'   or more than a quarter of an hour before the true one; and the share
+#'   that found one in the wrong direction.
 summarise_curve_recovery <- function(simulation) {
   replicates <- simulation$replicates
   replicates <- replicates[!is.na(replicates$ci_low), ]
@@ -287,8 +291,14 @@ summarise_curve_recovery <- function(simulation) {
   true_threshold <- dplyr::distinct(
     simulation$truth[c("truth", "true_threshold")]
   )
+  both <- simulation$thresholds
+  central <- both
+  central$threshold_hours <- both$threshold_central_hours
+  central$threshold_direction <- both$threshold_central_direction
+  both$rule <- "conservative"
+  central$rule <- "central"
   thresholds <- dplyr::left_join(
-    simulation$thresholds,
+    dplyr::bind_rows(both, central),
     true_threshold,
     by = "truth"
   )
@@ -307,7 +317,8 @@ summarise_curve_recovery <- function(simulation) {
       .data$band_error,
       .data$knots,
       .data$units,
-      .data$datasets
+      .data$datasets,
+      .data$rule
     ),
     true_threshold = .data$true_threshold[1],
     k_datasets = stats::median(.data$k_datasets),

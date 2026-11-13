@@ -152,6 +152,13 @@ test_that("a pooled curve recovers the curve built into the units", {
   expect_equal(pooled$summary$threshold_hours, 3)
   expect_equal(pooled$summary$threshold_direction, "worse outcome")
   expect_true(pooled$summary$threshold_holds)
+  # The central reading asks only that the estimate be beyond 0.10 with an
+  # interval clear of no difference: here the same hour, as the estimate
+  # at 2.5 hours is short of 0.10.
+  expect_gt(at_hour(curve, 2.5)$estimate, -0.10)
+  expect_equal(pooled$summary$threshold_central_hours, 3)
+  expect_equal(pooled$summary$threshold_central_direction, "worse outcome")
+  expect_true(pooled$summary$threshold_central_holds)
   # The same curve on a row where higher is worse is a better outcome, and
   # with no direction given it is a lower one.
   expect_equal(
@@ -176,6 +183,23 @@ test_that("the threshold is two-sided and needs the whole interval beyond", {
   expect_true(
     is.na(noisy$summary$threshold_hours) || noisy$summary$threshold_hours > 3
   )
+  # The central reading comes no later than the conservative one, and is
+  # the first hour with an estimate beyond 0.10 and an interval clear of
+  # zero.
+  curve <- noisy$curve
+  meets <- curve$hours > 1 &
+    curve$interpretable &
+    abs(curve$estimate) >= 0.10 &
+    (curve$ci_low > 0 | curve$ci_high < 0)
+  expect_true(any(meets))
+  expect_equal(
+    noisy$summary$threshold_central_hours,
+    min(curve$hours[meets])
+  )
+  expect_true(
+    is.na(noisy$summary$threshold_hours) ||
+      noisy$summary$threshold_central_hours <= noisy$summary$threshold_hours
+  )
 })
 
 test_that("a flat curve has no threshold, and a dip is said not to hold", {
@@ -183,6 +207,7 @@ test_that("a flat curve has no threshold, and a dip is said not to hold", {
   expect_true(is.na(pooled$summary$threshold_hours))
   expect_true(is.na(pooled$summary$threshold_direction))
   expect_true(is.na(pooled$summary$threshold_holds))
+  expect_true(is.na(pooled$summary$threshold_central_hours))
   inside <- pooled$curve$hours >= 0.5 & pooled$curve$hours <= 6
   expect_lt(max(abs(pooled$curve$estimate[inside])), 0.05)
 
@@ -346,6 +371,7 @@ test_that("the simulation rebuilds outcomes on the real hours and scores them", 
   # rules on units and two numbers of datasets; twice.
   choices <- c("truth", "band_error", "knots", "units", "datasets")
   scenarios <- dplyr::distinct(sim$thresholds[choices])
+  expect_true("threshold_central_hours" %in% names(sim$thresholds))
   expect_equal(nrow(scenarios), length(curve_truths()) * 2 * 2 * 2 * 2)
   expect_setequal(scenarios$knots, c("1, 3", "1, 2, 4"))
   expect_equal(nrow(sim$thresholds), 2 * nrow(scenarios))
@@ -405,6 +431,8 @@ test_that("the simulation's summary counts failures, early and false thresholds"
       threshold_hours = threshold,
       threshold_direction = if (is.na(threshold)) NA_character_ else direction,
       threshold_holds = NA,
+      threshold_central_hours = if (is.na(threshold)) 2 else threshold - 0.5,
+      threshold_central_direction = direction,
       status = status
     )
   }
@@ -439,6 +467,16 @@ test_that("the simulation's summary counts failures, early and false thresholds"
     thresholds = thresholds,
     truth = truth
   ))
+  expect_setequal(out$threshold$rule, c("conservative", "central"))
+  rule <- function(name) out$threshold[out$threshold$rule == name, ]
+  # The central reading here is half an hour before the conservative one,
+  # or at two hours where that found none: always found, false for the flat
+  # curve, and early for the bend except where the conservative was late.
+  central <- rule("central")
+  expect_equal(central$found, c(1, 1))
+  expect_equal(central$false_or_early[central$truth == "flat"], 1)
+  expect_equal(central$false_or_early[central$truth == "bends"], 0.75)
+  out$threshold <- rule("conservative")
   flat_row <- out$threshold[out$threshold$truth == "flat", ]
   expect_equal(flat_row$failed, 0.25)
   expect_equal(flat_row$found, 0.25)

@@ -13,15 +13,22 @@
 #' least the minimum number of datasets support, counting only datasets that
 #' also support the reference (ANALYSIS_PLAN.md, Step 11 task 7).
 #'
-#' The threshold duration is the lowest interpretable hour above the
-#' reference whose interval lies wholly beyond the smallest effect of
-#' interest from the reference, in either direction, and whose robust
-#' degrees of freedom are at least four (Step 11 task 1). It depends on how
-#' precisely the curve is estimated as well as on the curve: the same curve
-#' gives a later threshold where datasets are fewer or differ more, so
-#' thresholds are not comparable between cells without their intervals.
-#' `threshold_holds` says whether every later interpretable hour is beyond
-#' the smallest effect too; where it is FALSE the curve comes back.
+#' The threshold duration is read two ways (Step 11 task 1; DR-0016), each
+#' the lowest interpretable hour above the reference that meets its rule:
+#'
+#' - conservative (`threshold_hours`): the whole interval lies beyond the
+#'   smallest effect of interest from the reference, in either direction,
+#'   with at least four robust degrees of freedom. It is rarely wrong and
+#'   usually late, and depends on how precisely the curve is estimated: the
+#'   same curve gives a later threshold where datasets are fewer or differ
+#'   more.
+#' - central (`threshold_central_hours`): the estimate itself is beyond the
+#'   smallest effect of interest, and the interval excludes no difference.
+#'   It is close to the true crossing on average, and is sometimes reported
+#'   for a curve that levels off just short of the smallest effect.
+#'
+#' `threshold_holds` and `threshold_central_holds` say whether every later
+#' interpretable hour meets the rule too; where FALSE the curve comes back.
 #'
 #' @param curves Rows of `fit_stage1_curves()` for one exposure and outcome.
 #' @param settings From `analysis_settings()`.
@@ -31,9 +38,9 @@
 #' @return A list: `curve`, one row per hour with the `estimate` (difference
 #'   from the reference), robust `se`, `df` and 95% interval, the datasets
 #'   supporting the hour and `interpretable`; and `summary`, one row with
-#'   the counts, the units left out and why, `threshold_hours` with its
-#'   `threshold_direction` and `threshold_holds`, the hours the curve is
-#'   interpretable over, the random-effect levels used, and `status`.
+#'   the counts, the units left out, each threshold with its direction and
+#'   whether it holds, the hours the curve is interpretable over, the
+#'   random-effect levels used, and `status`.
 pool_curve <- function(
   curves,
   settings = analysis_settings(),
@@ -92,6 +99,9 @@ pool_curve <- function(
       threshold_hours = NA_real_,
       threshold_direction = NA_character_,
       threshold_holds = NA,
+      threshold_central_hours = NA_real_,
+      threshold_central_direction = NA_character_,
+      threshold_central_holds = NA,
       random_levels = NA_character_,
       status = status
     )
@@ -184,12 +194,15 @@ pool_curve <- function(
   beyond <- !is.na(curve$ci_low) &
     (curve$ci_low > settings$smallest_effect |
       curve$ci_high < -settings$smallest_effect)
-  found <- sure & beyond
-  threshold <- if (any(found)) min(curve$hours[found]) else NA_real_
-  direction <- NA_character_
-  holds <- NA
-  if (!is.na(threshold)) {
-    rises <- curve$estimate[match(threshold, curve$hours)] > 0
+  # The first hour that meets a rule, its direction, and whether every later
+  # interpretable hour meets it too.
+  read_threshold <- function(meets) {
+    found <- readable & meets
+    if (!any(found)) {
+      return(list(hours = NA_real_, direction = NA_character_, holds = NA))
+    }
+    hours <- min(curve$hours[found])
+    rises <- curve$estimate[match(hours, curve$hours)] > 0
     direction <- if (is.na(higher_is)) {
       if (rises) "higher outcome" else "lower outcome"
     } else if (rises == (higher_is == "better")) {
@@ -197,16 +210,24 @@ pool_curve <- function(
     } else {
       "worse outcome"
     }
-    later <- readable & curve$hours > threshold
-    holds <- all(beyond[later])
+    later <- readable & curve$hours > hours
+    list(hours = hours, direction = direction, holds = all(meets[later]))
   }
+  conservative <- read_threshold(sure & beyond)
+  clear <- !is.na(curve$ci_low) & (curve$ci_low > 0 | curve$ci_high < 0)
+  central <- read_threshold(
+    clear & abs(curve$estimate) >= settings$smallest_effect
+  )
   finish(
     if (any(sure)) "pooled" else "too few studies to say",
     interpretable_from = min(curve$hours[curve$interpretable]),
     interpretable_to = max(curve$hours[curve$interpretable]),
-    threshold_hours = threshold,
-    threshold_direction = direction,
-    threshold_holds = holds,
+    threshold_hours = conservative$hours,
+    threshold_direction = conservative$direction,
+    threshold_holds = conservative$holds,
+    threshold_central_hours = central$hours,
+    threshold_central_direction = central$direction,
+    threshold_central_holds = central$holds,
     random_levels = levels_used
   )
 }
