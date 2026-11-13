@@ -26,6 +26,10 @@ analysis_targets <- function(harmonise_plan) {
       quote(settings[bp_model_settings()])
     ),
     targets::tar_target_raw(
+      "settings_curve",
+      quote(settings[bp_curve_settings()])
+    ),
+    targets::tar_target_raw(
       "settings_tree",
       quote(settings[bp_tree_settings()])
     ),
@@ -192,6 +196,19 @@ analysis_targets <- function(harmonise_plan) {
         outcome_registry,
         dataschema,
         settings_model
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "curves",
+      quote(fit_stage1_curves(
+        prepared,
+        development_cells,
+        outcome_registry,
+        dataschema,
+        settings_curve
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -426,6 +443,30 @@ analysis_targets <- function(harmonise_plan) {
       "stage1_all",
       per_dataset[["stage1"]],
       command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
+      "curves_all",
+      per_dataset[["curves"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "curves_development",
+      quote(pool_curve_cells(curves_all, settings_curve))
+    ),
+    # The simulation runs its replicates in processes of its own.
+    targets::tar_target_raw(
+      "curve_simulation",
+      quote(simulate_curve_recovery(
+        onestage_rows_all,
+        described_units,
+        reps = 200L,
+        settings = c(settings_curve, settings["seed"]),
+        cores = bp_simulation_cores()
+      ))
+    ),
+    targets::tar_target_raw(
+      "curve_simulation_summary",
+      quote(summarise_curve_recovery(curve_simulation))
     ),
     tarchetypes::tar_combine_raw(
       "cell_counts_all",

@@ -268,28 +268,10 @@ fit_stage1_unit <- function(
     }
   }
 
-  # Clustering: the sampling unit, else the family, else none. A row with no
-  # sampling unit recorded is a cluster of its own.
-  cluster <- NULL
-  se_type <- "heteroskedasticity-robust"
-  if (dplyr::n_distinct(data$cluster, na.rm = TRUE) > 1) {
-    cluster <- ifelse(
-      is.na(data$cluster),
-      paste0("\r", seq_len(n)),
-      data$cluster
-    )
-    se_type <- "clustered on sampling unit"
-  } else if (
-    !anyNA(data$family) && dplyr::n_distinct(data$family) < nrow(data)
-  ) {
-    cluster <- data$family
-    se_type <- "clustered on family"
-  }
-  data$cluster_id <- if (is.null(cluster)) {
-    as.character(seq_len(n))
-  } else {
-    cluster
-  }
+  clustering <- stage1_cluster(data)
+  cluster <- clustering$cluster
+  se_type <- clustering$se_type
+  data$cluster_id <- clustering$cluster_id
   n_clusters <- dplyr::n_distinct(data$cluster_id)
   data$w <- if (weighted) data$weight else rep(1, n)
   formula <- stats::as.formula(paste("y ~", paste(terms, collapse = " + ")))
@@ -618,4 +600,29 @@ schema_level_count <- function(variable, dataschema) {
     dataschema$variable_name
   )]
   length(setdiff(strsplit(allowed, "|", fixed = TRUE)[[1]], "Unknown"))
+}
+
+# The clusters a unit's standard errors use: the sampling unit, else the
+# family, else none. A row with no sampling unit recorded is a cluster of
+# its own. `cluster` is NULL where errors are not clustered.
+stage1_cluster <- function(data) {
+  n <- nrow(data)
+  cluster <- NULL
+  se_type <- "heteroskedasticity-robust"
+  if (dplyr::n_distinct(data$cluster, na.rm = TRUE) > 1) {
+    cluster <- ifelse(
+      is.na(data$cluster),
+      paste0("\r", seq_len(n)),
+      data$cluster
+    )
+    se_type <- "clustered on sampling unit"
+  } else if (!anyNA(data$family) && dplyr::n_distinct(data$family) < n) {
+    cluster <- data$family
+    se_type <- "clustered on family"
+  }
+  list(
+    cluster = cluster,
+    se_type = se_type,
+    cluster_id = if (is.null(cluster)) as.character(seq_len(n)) else cluster
+  )
 }

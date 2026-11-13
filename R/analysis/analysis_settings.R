@@ -69,6 +69,17 @@ analysis_settings <- function() {
     tree_default_correlation = 0.6,
     # The smallest effect of interest in SD per hour a day: 0.10 SD on the
     # contrast of 1 against 4 hours (provisional until the freeze).
-    smallest_effect_per_hour = 0.10 / 3
+    smallest_effect_per_hour = 0.10 / 3,
+    # Curves (ANALYSIS_PLAN.md, Step 11): a natural cubic spline of screen
+    # use with knots fixed in hours, so every unit has the same curve terms;
+    # the hours a pooled curve is read at; and the low-use reference each
+    # hour is compared with. A threshold is the lowest duration whose
+    # interval lies beyond `smallest_effect` SD from the reference
+    # (provisional until the freeze).
+    curve_knots = c(1, 2, 4),
+    curve_boundary = c(0, 6),
+    curve_grid = seq(0, 8, by = 0.5),
+    curve_reference = 1,
+    smallest_effect = 0.10
   )
 }

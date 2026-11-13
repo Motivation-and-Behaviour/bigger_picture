@@ -214,6 +214,22 @@ bp_tree_settings <- function() {
   )
 }
 
+# The settings the curve functions read: stage 1's row rules and the curve's
+# own.
+bp_curve_settings <- function() {
+  c(
+    "min_unit_rows",
+    "min_datasets",
+    "sex_known_min",
+    "covariate_known_min",
+    "curve_knots",
+    "curve_boundary",
+    "curve_grid",
+    "curve_reference",
+    "smallest_effect"
+  )
+}
+
 # The categorical stage 2 moderators (ANALYSIS_PLAN.md, Step 7 task 4), as
 # columns of `tree_moderators()`.
 bp_tree_moderators <- function() {
@@ -248,11 +264,19 @@ bp_row_level_workers <- function() {
 }
 
 # Workers for the targets that fit models on a prepared dataset. Memory sets
-# the number, not cores: a worker holding the largest prepared dataset peaks
-# near 3.7 GB (measured with 12 and with 20 at once), and in a cold build the
-# `row_level` pool can hold over 40 GB at the same time. Sixteen at once is
-# about 59 GB. Every other prepared dataset is far smaller.
+# the number, not cores. A worker holding the largest prepared dataset peaks
+# near 3.7 GB, but when the preparation step reruns, the `row_level` pool is
+# loading whole harmonised datasets at the same time and each dataset's
+# model targets start together as its preparation finishes: with sixteen
+# model workers a full rerun left under 20 GB available, against about 60
+# GB with four.
 bp_model_workers <- function() {
+  max(1L, min(parallel::detectCores() - 2L, 8L))
+}
+
+# Processes for a simulation target, which runs on its own once the rest of
+# a build is done and holds little memory per process.
+bp_simulation_cores <- function() {
   max(1L, min(parallel::detectCores() - 2L, 16L))
 }
 

@@ -114,6 +114,8 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `development_cells` | The cells fitted before the freeze, from `development_cells.csv` |
 | `stage1_<key>`, `stage1_all` | One model per unit and cell: the slope on screen use, with how it was fitted or why it was not |
 | `stage2_development` | Each cell's slopes pooled across datasets |
+| `curves_<key>`, `curves_all`, `curves_development` | Each unit's curve of the outcome over hours of screen use for the development cells, and the pooled curve of each cell with its threshold duration |
+| `curve_simulation`, `curve_simulation_summary` | Whether the curve method recovers curves built into the real hours of one cell: 200 simulated outcomes per scenario, with and without error inside the bands of banded items |
 | `cell_counts_<key>`, `cell_counts_all`, `cell_units_all`, `feasibility` | Rows and participants with each exposure together with each outcome row, per unit, and what the signed-off datasets can therefore pool at each level of the tree, at each covariate tier, by moderator and over collection years; counts only, no model |
 | `stage1_adjusted_<key>`, `stage1_adjusted_all`, `tiers_development` | The development cells fitted at covariate tiers 2 and 3 (DR-0015), and each tier's pooled slope beside tier 1 pooled over the same units |
 | `slope_correlations_<key>`, `slope_correlations_all` | How strongly the slopes of two rows of one specific outcome share their error in a unit, estimated from the unit's rows |
@@ -228,6 +230,18 @@ Not built yet from the plan's list (Step 7 task 4):
 - within-study comparisons of response format and responder using tagged measure blocks: stage 1 fits the primary measure only, so those two moderators compare between datasets;
 - the compatible-only subset where five or more datasets remain;
 - `risk_of_bias` has no ratings yet, and `total_source` applies only to the derived total, which no development cell uses, so neither compares anything so far.
+
+### Curves and the threshold duration
+
+`fit_stage1_curves()` fits, in each unit, a natural cubic spline of screen use with knots fixed in hours (`curve_knots`, `curve_boundary`), so every unit estimates the same curve terms.
+It is the linear stage 1 model at tier 1 with the curve in place of the slope, for rows that take a linear model.
+`pool_curve()` pools the terms across datasets and reads the curve at each hour of `curve_grid` as the difference from the low-use reference (`curve_reference`), in SD of the outcome.
+
+- A curve is interpretable at an hour that at least the minimum number of datasets support: a unit supports an hour where it has the minimum number of rows at or above it and at or below it.
+- The threshold duration is the lowest interpretable hour above the reference whose interval lies wholly beyond the smallest effect of interest (`smallest_effect`) from the reference.
+- `simulate_curve_recovery()` checks the method on real hours of screen use with a simulated outcome that follows a known curve (a plasmode simulation); `curve_truths()` lists the curves it builds in.
+
+The breakpoint of the preregistered piecewise model is not built yet.
 
 ### Dataset outcomes
 
