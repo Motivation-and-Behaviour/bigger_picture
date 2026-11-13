@@ -183,15 +183,22 @@ These are the only associations seen before the specification is frozen, and the
 
 `pool_tree()` takes the stage 1 slopes above the outcome row.
 `tree_effects()` first puts them on one scale and one direction: a slope in log odds is divided by pi / sqrt(3) to give SD per hour, and a slope on a row where higher is worse changes sign, so a positive slope always means a better outcome with more screen use.
-Rows with `synthesis` FALSE, no node or no direction do not pool.
+Rows with `synthesis` FALSE, no node or no direction do not pool; the result's `left_out` attribute counts them by row and reason.
 
 - A specific outcome by informant (L2) and a specific outcome (L1) pool their rows with `pool_tree_group()`: the stage 2 model, with the covariance of slopes fitted on the same children and, where a unit gives several rows, variation between a unit's rows.
-- That covariance comes from `stage1_correlations()`, which estimates from each unit's rows how strongly two slopes share their error.
-  It is approximate, and the robust inference does not depend on it being right.
+  An L2 group of log-odds rows of one direction also reports an odds ratio in the rows' own direction, as stage 2 does for a row.
+- That covariance comes from `stage1_correlations()`, which estimates how strongly two slopes of one unit share their error, on the rows, terms and clusters stage 1 uses but treating every score as numeric.
+  It sets the working model's weights, and the robust inference does not depend on it being right.
+  A pair with too few shared rows takes `tree_default_correlation`, and correlations that cannot all hold at once are shrunk towards zero; both are counted in the result.
 - A family (L0) is the plain average of its pooled specific outcomes, from `pool_tree_family()`, so each specific outcome counts once however many rows or datasets it has.
   Its standard error allows for any dependence among a dataset's slopes, so a score that sits in two specific outcomes adds nothing to the family's precision.
-- A family is estimated whenever two of its specific outcomes pooled.
-  It carries a warning where they disagree in sign or their estimates differ by more than the smallest effect of interest, and is then not for the headline.
+- A family is estimated whenever one of its specific outcomes pooled, and one that could not be pooled is named in `nodes_left_out`.
+  A specific outcome with too few studies to say still enters the average; `k_nodes_thin` counts them.
+- `headline` is TRUE for a pooled family with no warning.
+  The warnings are: one specific outcome only; two specific outcomes with intervals on opposite sides of zero; and estimates that span more than the smallest effect of interest where a robust test rejects that they are equal, or could not be run.
+  A specific outcome is warned in the same way where two of its informants have intervals on opposite sides of zero.
+
+Not built yet from the pooling gate in the plan: informant and instrument as moderators (Step 7 task 4), and the registry's `headline` column on specific outcomes is not consulted.
 
 The tests in `tests/testthat/test-analysis-tree.R` hold the known answers these rules must give.
 

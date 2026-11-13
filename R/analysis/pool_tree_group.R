@@ -12,15 +12,18 @@
 #' @param correlations See `tree_covariance()`.
 #' @param settings From `analysis_settings()`.
 #' @return A list: `row`, a one-row tibble shaped like `pool_stage2()`'s with
-#'   `k_rows` (outcome rows) and `pairs_assumed` added, and `M`, the working
-#'   model's covariance of the slopes in the order of `effects` (NULL when
-#'   the group was not pooled).
+#'   `k_rows` (outcome rows), `pairs_assumed` and `units_repaired` (see
+#'   `tree_covariance()`) and `optimiser` added; `M`, the working model's
+#'   covariance of the slopes in the order of `effects` (NULL when the group
+#'   was not pooled); and `keys`, the unit and outcome row of each slope in
+#'   that order.
 pool_tree_group <- function(
   effects,
   correlations = NULL,
   settings = analysis_settings()
 ) {
   k_datasets <- dplyr::n_distinct(effects$dataset_id)
+  keys <- paste(effects$unit, effects$outcome, sep = "\r")
   result <- function(status, ...) {
     values <- list(
       k_datasets = k_datasets,
@@ -38,6 +41,8 @@ pool_tree_group <- function(
       pi_low = NA_real_,
       pi_high = NA_real_,
       pairs_assumed = NA_integer_,
+      units_repaired = NA_integer_,
+      optimiser = NA_character_,
       status = status
     )
     extra <- list(...)
@@ -45,7 +50,7 @@ pool_tree_group <- function(
     tibble::as_tibble(values)
   }
   if (k_datasets < settings$min_datasets) {
-    return(list(row = result("insufficient data"), M = NULL))
+    return(list(row = result("insufficient data"), M = NULL, keys = keys))
   }
 
   sampling <- tree_covariance(effects, correlations, settings)
@@ -63,19 +68,32 @@ pool_tree_group <- function(
     if (nrow(data) > k_units) "slope"
   )
   random <- stats::as.formula(paste("~ 1 |", paste(levels, collapse = " / ")))
-  fit <- tryCatch(
-    metafor::rma.mv(
-      yi,
-      sampling$V,
-      random = random,
-      data = data,
-      method = "REML",
-      test = "t"
-    ),
-    error = function(e) conditionMessage(e)
-  )
+  # The default optimiser first, then a second one where it does not
+  # converge.
+  fit <- NULL
+  for (optimiser in c("nlminb", "BFGS")) {
+    fit <- tryCatch(
+      metafor::rma.mv(
+        yi,
+        sampling$V,
+        random = random,
+        data = data,
+        method = "REML",
+        test = "t",
+        control = list(optimizer = optimiser)
+      ),
+      error = function(e) conditionMessage(e)
+    )
+    if (!is.character(fit)) {
+      break
+    }
+  }
   if (is.character(fit)) {
-    return(list(row = result(paste("model failed:", fit)), M = NULL))
+    return(list(
+      row = result(paste("model failed:", fit)),
+      M = NULL,
+      keys = keys
+    ))
   }
   robust <- tryCatch(
     clubSandwich::conf_int(fit, vcov = "CR2", cluster = data$dataset_id),
@@ -84,7 +102,8 @@ pool_tree_group <- function(
   if (is.character(robust)) {
     return(list(
       row = result(paste("robust inference failed:", robust)),
-      M = NULL
+      M = NULL,
+      keys = keys
     ))
   }
 
@@ -104,7 +123,9 @@ pool_tree_group <- function(
     tau_row = unname(tau["slope"]),
     pi_low = estimate - half_width,
     pi_high = estimate + half_width,
-    pairs_assumed = sampling$assumed
+    pairs_assumed = sampling$assumed,
+    units_repaired = sampling$repaired,
+    optimiser = optimiser
   )
-  list(row = row, M = unclass(fit$M))
+  list(row = row, M = unclass(fit$M), keys = keys)
 }
