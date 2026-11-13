@@ -14,16 +14,19 @@
 targets::tar_source()
 
 sections <- bp_build_sections()
-section_names <- function(prefixes) {
-  paste0("^(", paste(prefixes, collapse = "|"), ")_BPIPD_")
+# The pattern is worked out here and handed over as text, because
+# `tar_make()` reads `names` in a process of its own.
+build_section <- function(prefixes) {
+  pattern <- paste0("^(", paste(prefixes, collapse = "|"), ")_BPIPD_")
+  targets::tar_make(names = tidyselect::matches(!!pattern))
 }
 
 message("== Section 1 of 3: datasets")
-targets::tar_make(names = tidyselect::matches(section_names(sections$datasets)))
+build_section(sections$datasets)
 
 message("== Section 2 of 3: models")
 Sys.setenv(BP_MODEL_WORKERS = bp_model_workers_wide())
-targets::tar_make(names = tidyselect::matches(section_names(sections$models)))
+build_section(sections$models)
 Sys.unsetenv("BP_MODEL_WORKERS")
 
 message("== Section 3 of 3: everything else")
