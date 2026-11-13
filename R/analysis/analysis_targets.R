@@ -120,6 +120,11 @@ analysis_targets <- function(harmonise_plan) {
     qs = targets::tar_resources_qs(nthreads = 4L),
     crew = targets::tar_resources_crew(controller = "row_level")
   )
+  # The targets that fit or count on a prepared dataset run in a wider pool.
+  model_level <- targets::tar_resources(
+    qs = targets::tar_resources_qs(nthreads = 4L),
+    crew = targets::tar_resources_crew(controller = "model")
+  )
   # Three targets per dataset read row-level data: the summaries, the
   # prepared tables and their review. Keeping it to three bounds how many
   # copies of one dataset are in memory at once. They are transient, with a
@@ -190,7 +195,7 @@ analysis_targets <- function(harmonise_plan) {
       )),
       memory = "transient",
       garbage_collection = TRUE,
-      resources = row_level
+      resources = model_level
     ),
     targets::tar_target_raw(
       "cell_counts",
@@ -203,7 +208,7 @@ analysis_targets <- function(harmonise_plan) {
       )),
       memory = "transient",
       garbage_collection = TRUE,
-      resources = row_level
+      resources = model_level
     ),
     targets::tar_target_raw(
       "stage1_adjusted",
@@ -217,7 +222,7 @@ analysis_targets <- function(harmonise_plan) {
       )),
       memory = "transient",
       garbage_collection = TRUE,
-      resources = row_level
+      resources = model_level
     ),
     targets::tar_target_raw(
       "slope_correlations",
@@ -229,7 +234,7 @@ analysis_targets <- function(harmonise_plan) {
       )),
       memory = "transient",
       garbage_collection = TRUE,
-      resources = row_level
+      resources = model_level
     ),
     targets::tar_target_raw(
       "descriptives",

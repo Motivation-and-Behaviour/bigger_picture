@@ -11,9 +11,11 @@ Sys.setenv(
   MKL_NUM_THREADS = "1"
 )
 
-# Set target options. Two worker pools: `main` for everything, and a smaller
-# `row_level` pool for the analysis targets that load a whole dataset, the
-# largest of which takes over 10 GB each time it is read (bp_row_level_workers()).
+# Set target options. Three worker pools: `main` for everything else; a small
+# `row_level` pool for the analysis targets that load a whole harmonised
+# dataset, the largest of which takes over 10 GB each time it is read
+# (bp_row_level_workers()); and `model` for the targets that fit models on a
+# prepared dataset, which is far smaller (bp_model_workers()).
 tar_option_set(
   packages = c("dplyr"),
   controller = crew::crew_controller_group(
@@ -25,6 +27,11 @@ tar_option_set(
     crew::crew_controller_local(
       name = "row_level",
       workers = bp_row_level_workers(),
+      seconds_idle = 15
+    ),
+    crew::crew_controller_local(
+      name = "model",
+      workers = bp_model_workers(),
       seconds_idle = 15
     )
   ),

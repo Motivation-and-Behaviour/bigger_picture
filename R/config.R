@@ -247,6 +247,14 @@ bp_row_level_workers <- function() {
   4L
 }
 
+# Workers for the targets that fit models on a prepared dataset. The largest
+# prepared dataset peaks near 6 GB in a worker and every other one is far
+# smaller, so twelve copies at once stay well inside the machine's memory,
+# and never more than its cores allow.
+bp_model_workers <- function() {
+  max(1L, min(parallel::detectCores() - 2L, 12L))
+}
+
 # Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).
 bp_manifest_dir <- function() {
   fs::path(bp_analysis_dir(), "manifests")
