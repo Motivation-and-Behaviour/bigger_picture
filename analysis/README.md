@@ -119,7 +119,8 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `screen_pooled`, `week_pooled`, `relations_pooled`, `outcomes_pooled` | Those statistics pooled so each dataset counts once |
 | `series_breaks`, `screen_by_year`, `screen_by_year_share` | Recorded changes to a dataset's screen items, and screen use against collection year, between studies and within like series of one study |
 | `year_moderation_development` | Whether the slopes differ by collection year, on the development cells |
-| `dataset_table` | One row per dataset, numbered and not named |
+| `dataset_table` | One row per dataset, by number, with its citation keys from `references/` |
+| `dataset_outcomes`, `dataset_outcome_flow` | What became of every dataset the project sought, from hand-entered counts |
 | `measured`, `work_scale` | What was measured, and the scale of the harmonisation work, counted from the repository and the pipeline |
 | `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation`, `report_descriptives`, `report_thin_slice` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
 
@@ -175,6 +176,19 @@ Two-stage is the primary analysis (DR-0010).
 
 Until the freeze the engine runs only on the development cells in `development_cells.csv`: each line names an exposure row and either an outcome family or one outcome row, with a reason.
 These are the only associations seen before the specification is frozen, and the deviations ledger records them.
+
+### Dataset outcomes
+
+`dataset_outcomes.csv` holds the top of the dataset flow, which the repository cannot count for itself: how many of the datasets the project sought ended in each outcome.
+Type a whole number into `datasets` on each line; a line can stay blank until its number is known, and the reports then show "to be added".
+The outcomes are fixed: `included`, `agreed_awaiting_data`, `contacting_authors`, `declined`, `non_response` and `cannot_access`, each defined in the file.
+When `included` is filled in, the reports check it against the number of datasets in the analysis and say so if the two differ.
+
+### Citations and acknowledgements
+
+The dataset table carries each dataset's citation keys from `references/dataset_citations.csv` as a pandoc citation, and a report that lists `references/datasets.bib` as its bibliography formats them in its own style.
+Required acknowledgements come from `references/dataset_acknowledgements.csv`.
+Both are blank for a dataset until the references snapshot has it; nothing in `analysis/` holds a citation of its own.
 
 ## Deviations ledger
 

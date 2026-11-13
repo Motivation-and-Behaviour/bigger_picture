@@ -1,6 +1,7 @@
 ---
 title: "Descriptives"
 subtitle: "The scale of the work, what was measured, and how children use screens"
+bibliography: ../../references/datasets.bib
 format:
   html:
     toc: true
@@ -30,6 +31,8 @@ outcomes <- tar_read(outcomes_pooled)
 by_year <- tar_read(screen_by_year)
 by_year_share <- tar_read(screen_by_year_share)
 datasets <- tar_read(dataset_table)
+sought <- tar_read(dataset_outcome_flow)
+acknowledgements <- tar_read(dataset_acknowledgements)
 manifest <- tar_read(data_manifest)
 settings <- tar_read(settings)
 exposures <- tar_read(exposure_registry)
@@ -83,6 +86,21 @@ work$totals |>
 ```
 
 Each of the `r fmt(nrow(schema))` shared variables was considered for each dataset, and the decision recorded with its reason; a few datasets record extra decisions where they measure screen use twice.
+
+```{r}
+#| label: sought
+blank <- "to be added"
+sought$table |>
+  transmute(
+    Outcome = label,
+    Datasets = ifelse(is.na(datasets), blank, fmt(datasets)),
+    `What it means` = definition
+  ) |>
+  bind_rows(tibble::tibble(Outcome = "All datasets sought", Datasets = ifelse(sought$complete, fmt(sought$sought), blank), `What it means` = "")) |>
+  knitr::kable(align = "lrl", caption = "What became of every dataset the project sought. The counts are entered by hand in `analysis/dataset_outcomes.csv`.")
+```
+
+`r if (isFALSE(sought$agrees)) paste0("**The count entered for included datasets (", fmt(sought$table$datasets[1]), ") does not match the ", nrow(manifest), " datasets in the analysis.**") else ""`
 
 ```{r}
 #| label: flow
@@ -417,7 +435,8 @@ by_stage |>
 
 ## The datasets
 
-One row per dataset, numbered and not named.
+One row per dataset, by number.
+The sources column cites the publications that describe each dataset, once they are recorded in `references/`; results elsewhere in this report are never attributed to a dataset.
 
 ```{r}
 #| label: dataset-table
@@ -431,7 +450,25 @@ datasets |>
     Waves = waves,
     Observations = fmt(participants_rows),
     `Shared variables supplied` = variables_supplied,
-    Weights = ifelse(weighted, "yes", "")
+    Weights = ifelse(weighted, "yes", ""),
+    Sources = sources
   ) |>
-  knitr::kable(align = "llrllrrrl")
+  knitr::kable(align = "llrllrrrll")
 ```
+
+`r sum(datasets$sources == "")` of `r nrow(datasets)` datasets have no source recorded yet.
+
+## Acknowledgements required by the datasets
+
+```{r}
+#| label: acknowledgements
+#| results: asis
+required <- acknowledgements[acknowledgements$dataset_id %in% datasets$dataset_id, ]
+if (nrow(required) == 0) {
+  cat("None recorded yet.\n")
+} else {
+  cat(paste0("- ", unique(required$acknowledgement), collapse = "\n"), "\n")
+}
+```
+
+## References

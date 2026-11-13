@@ -807,7 +807,7 @@ test_that("the analysis section builds a target list from a dataset plan", {
     "TRUE",
     fixed = TRUE
   )
-  expect_length(analysis_targets(plan[0, ]), 14)
+  expect_length(analysis_targets(plan[0, ]), 16)
 })
 
 test_that("an excluded row stays excluded when a rule could derive it", {

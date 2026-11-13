@@ -947,6 +947,57 @@ test_that("the dataset table gives one row per dataset, by number", {
   expect_equal(table$variables_supplied, c(4, 7, 2))
   expect_equal(table$countries, c(1, 1, 2))
   expect_false("dataset_name" %in% names(table))
+  # Citation keys become a pandoc citation; a dataset with none is blank.
+  expect_equal(table$sources, c("", "", ""))
+  cited <- summarise_dataset_table(
+    units,
+    mapping,
+    tibble::tibble(
+      dataset_id = c("2", "2", "9"),
+      citekey = c("a2020", "b2021", "z")
+    )
+  )
+  expect_equal(cited$sources, c("", "[@a2020; @b2021]", ""))
+})
+
+test_that("dataset outcomes are entered by hand and can stay blank", {
+  committed <- read_dataset_outcomes(
+    file.path(repo_root, bp_dataset_outcomes_path())
+  )
+  expect_equal(committed$outcome, names(bp_dataset_outcomes()))
+  expect_false(anyNA(committed$definition))
+
+  dir <- withr::local_tempdir()
+  path <- file.path(dir, "dataset_outcomes.csv")
+  write <- function(counts) {
+    writeLines(
+      c(
+        "outcome,datasets,definition",
+        paste0(names(bp_dataset_outcomes()), ",", counts, ",what it means")
+      ),
+      path
+    )
+    read_dataset_outcomes(path)
+  }
+  manifest <- tibble::tibble(dataset_id = as.character(1:3))
+  blank <- summarise_dataset_outcomes(write(rep("", 6)), manifest)
+  expect_false(blank$complete)
+  expect_true(is.na(blank$sought))
+  expect_true(is.na(blank$agrees))
+  expect_equal(blank$table$in_analysis[1], 3)
+
+  partly <- summarise_dataset_outcomes(write(c(3, "", "", 4, "", "")), manifest)
+  expect_false(partly$complete)
+  expect_true(partly$agrees)
+
+  full <- summarise_dataset_outcomes(write(c(5, 1, 2, 4, 6, 3)), manifest)
+  expect_true(full$complete)
+  expect_equal(full$sought, 21)
+  expect_false(full$agrees)
+
+  expect_error(write(c("many", 1, 2, 4, 6, 3)), "whole number or blank")
+  writeLines(c("outcome,datasets,definition", "included,1,x"), path)
+  expect_error(read_dataset_outcomes(path), "exactly one line for each")
 })
 
 test_that("a trend over years is split within and between datasets", {

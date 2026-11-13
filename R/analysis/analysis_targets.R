@@ -60,6 +60,15 @@ analysis_targets <- function(harmonise_plan) {
         ))
       ),
       targets::tar_target_raw(
+        "dataset_outcomes_file",
+        quote(bp_dataset_outcomes_path()),
+        format = "file"
+      ),
+      targets::tar_target_raw(
+        "dataset_outcomes",
+        quote(read_dataset_outcomes(dataset_outcomes_file))
+      ),
+      targets::tar_target_raw(
         "series_breaks_file",
         quote(bp_series_breaks_path()),
         format = "file"
@@ -313,8 +322,16 @@ analysis_targets <- function(harmonise_plan) {
       ))
     ),
     targets::tar_target_raw(
+      "dataset_outcome_flow",
+      quote(summarise_dataset_outcomes(dataset_outcomes, data_manifest))
+    ),
+    targets::tar_target_raw(
       "dataset_table",
-      quote(summarise_dataset_table(described_units, mapping_counts))
+      quote(summarise_dataset_table(
+        described_units,
+        mapping_counts,
+        dataset_citations
+      ))
     ),
     targets::tar_target_raw(
       "measured",

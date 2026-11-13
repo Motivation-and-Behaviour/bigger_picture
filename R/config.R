@@ -152,6 +152,11 @@ bp_deviations_path <- function() {
   fs::path(bp_analysis_dir(), "deviations.csv")
 }
 
+# Hand-entered counts of what became of every dataset the project sought.
+bp_dataset_outcomes_path <- function() {
+  fs::path(bp_analysis_dir(), "dataset_outcomes.csv")
+}
+
 # Points where a dataset's screen item changed (R/analysis/read_series_breaks.R).
 bp_series_breaks_path <- function() {
   fs::path(bp_analysis_dir(), "series_breaks.csv")

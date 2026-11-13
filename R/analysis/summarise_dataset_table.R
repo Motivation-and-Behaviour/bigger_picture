@@ -6,8 +6,12 @@
 #'
 #' @param units Combined `units` tables from `describe_dataset()`.
 #' @param mapping_counts Combined output of `count_mapping()`.
+#' @param citations The dataset citations (`dataset_id`, `citekey`), from
+#'   `references/`. Each dataset's keys are written as a pandoc citation,
+#'   `[@key1; @key2]`, which a Quarto document that lists the bibliography
+#'   formats in its own style; blank where a dataset has none yet.
 #' @return A tibble with one row per dataset.
-summarise_dataset_table <- function(units, mapping_counts) {
+summarise_dataset_table <- function(units, mapping_counts, citations = NULL) {
   design <- dplyr::summarise(
     units,
     participants_rows = sum(.data$rows),
@@ -32,5 +36,15 @@ summarise_dataset_table <- function(units, mapping_counts) {
     .by = "dataset_id"
   )
   out <- dplyr::left_join(design, mapped, by = "dataset_id")
+  out$sources <- rep("", nrow(out))
+  if (!is.null(citations) && nrow(citations) > 0) {
+    keys <- tapply(
+      citations$citekey,
+      citations$dataset_id,
+      function(k) paste0("[", paste0("@", k, collapse = "; "), "]")
+    )
+    found <- match(out$dataset_id, names(keys))
+    out$sources[!is.na(found)] <- unname(keys[found[!is.na(found)]])
+  }
   out[order(as.numeric(out$dataset_id)), ]
 }
