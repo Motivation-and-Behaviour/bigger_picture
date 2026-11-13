@@ -208,6 +208,12 @@ test_that("a family is the plain average of its specific outcomes", {
   expect_match(family$warning, "differ by more than the smallest effect")
   expect_false(family$headline)
   expect_true(is.na(family$nodes_left_out))
+  # The sensitivity average weights each by its datasets: 12 and 4.
+  expect_equal(
+    family$estimate_by_datasets,
+    (12 * groups$n1$row$estimate + 4 * groups$n2$row$estimate) / 16
+  )
+  expect_lt(family$se_by_datasets, family$se)
   # The precise member adds almost nothing to the average's uncertainty,
   # which is about half the noisy member's.
   expect_equal(family$se, groups$n2$row$se / 2, tolerance = 0.1)
@@ -310,8 +316,12 @@ test_that("a family with one pooled specific outcome is that outcome", {
   expect_equal(family$estimate, groups$n1$row$estimate)
   expect_equal(family$se, groups$n1$row$se)
   expect_equal(family$status, "pooled")
-  expect_equal(family$warning, "one specific outcome only")
-  expect_false(family$headline)
+  # Resting on one specific outcome is said, and is no reason to keep the
+  # family from the headline: only disagreement is.
+  expect_true(is.na(family$warning))
+  expect_equal(family$note, "one specific outcome only")
+  expect_true(family$headline)
+  expect_equal(family$estimate_by_datasets, family$estimate)
   # The one that could not be pooled is named, with the reason.
   expect_equal(family$nodes_left_out, "n2 (insufficient data)")
 
@@ -598,4 +608,19 @@ test_that("the tree's settings hold everything its functions read", {
   )))
   expect_setequal(read, bp_tree_settings())
   expect_true(all(bp_tree_settings() %in% names(analysis_settings())))
+})
+
+test_that("uncertainty alone does not keep a family from the headline", {
+  # Two specific outcomes on three datasets each: too few studies to say,
+  # and still in the headline, because nothing shows they disagree.
+  one <- tree_slopes(3, 0.05, "a", "n1", seed = 41)
+  two <- tree_slopes(3, 0.05, "b", "n2", seed = 42)
+  family <- pool_tree_family(
+    dplyr::bind_rows(one, two),
+    list(n1 = pool_tree_group(one), n2 = pool_tree_group(two))
+  )
+  expect_equal(family$status, "too few studies to say")
+  expect_equal(family$k_nodes_thin, 2)
+  expect_true(is.na(family$warning))
+  expect_true(family$headline)
 })

@@ -194,11 +194,13 @@ Rows with `synthesis` FALSE, no node or no direction do not pool; the result's `
   Its standard error allows for any dependence among a dataset's slopes, so a score that sits in two specific outcomes adds nothing to the family's precision.
 - A family is estimated whenever one of its specific outcomes pooled, and one that could not be pooled is named in `nodes_left_out`.
   A specific outcome with too few studies to say still enters the average; `k_nodes_thin` counts them.
-- `headline` is TRUE for a pooled family with no warning.
-  The warnings are: one specific outcome only; two specific outcomes with intervals on opposite sides of zero; and estimates that span more than the smallest effect of interest where a robust test rejects that they are equal, or could not be run.
+- `headline` is TRUE for a family with no warning, and only evidence of disagreement warns (DR-0014): two specific outcomes with intervals on opposite sides of zero, or estimates that span more than the smallest effect of interest where a robust test rejects that they are equal.
+  Uncertainty does not: one specific outcome only, a test that could not be run and too few studies to say are recorded in `note` and `status`.
   A specific outcome is warned in the same way where two of its informants have intervals on opposite sides of zero.
+- The `_by_datasets` columns give the family weighted by each specific outcome's number of datasets, as a sensitivity analysis.
+- A family averages every specific outcome that pools, whether or not the registry marks it `headline`: that column decides what a report leads with.
 
-Not built yet from the pooling gate in the plan: informant and instrument as moderators (Step 7 task 4), and the registry's `headline` column on specific outcomes is not consulted.
+Not built yet from the pooling gate in the plan: informant and instrument as moderators (Step 7 task 4).
 
 The tests in `tests/testthat/test-analysis-tree.R` hold the known answers these rules must give.
 

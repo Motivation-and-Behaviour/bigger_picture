@@ -14,15 +14,24 @@
 #'
 #' The family is estimated whenever one of its specific outcomes pooled, and
 #' with one it is that specific outcome. A specific outcome that could not
-#' be pooled is left out and named in `nodes_left_out`. Three things keep a
-#' family from the headline, each recorded in `warning`:
+#' be pooled is left out and named in `nodes_left_out`.
 #'
-#' - it rests on one specific outcome;
+#' Only evidence that the specific outcomes disagree keeps a family from the
+#' headline (DR-0014), recorded in `warning`:
+#'
 #' - two specific outcomes have intervals on opposite sides of zero;
 #' - the specific outcomes' estimates span more than the smallest effect of
-#'   interest and a robust test rejects that they are equal (or the test
-#'   could not be run). The span alone is not enough: estimates of equal
-#'   effects differ by chance, the more so the more of them there are.
+#'   interest and a robust test rejects that they are equal. The span alone
+#'   is not enough: estimates of equal effects differ by chance, the more so
+#'   the more of them there are.
+#'
+#' Uncertainty does not: a family on one specific outcome, one whose test
+#' could not be run and one with too few studies to say are reported as
+#' such, in `note` and `status`, and stay in the headline.
+#'
+#' Beside the plain average the row gives the average weighted by each
+#' specific outcome's number of datasets, as a sensitivity analysis. Those
+#' weights come from what was measured, not from the estimates.
 #'
 #' @param effects Rows from `tree_effects()` for one family.
 #' @param groups A named list of `pool_tree_group()` results, one per node,
@@ -32,7 +41,8 @@
 #'   how many of those had too few studies to say, the `estimate` with its
 #'   robust `se`, `df` and 95% interval, the range of the specific outcomes'
 #'   estimates, the p-value of the test that they are equal, `warning`,
-#'   `headline` and `status`.
+#'   `note`, `headline`, `status`, and the same estimate weighted by
+#'   datasets in the `_by_datasets` columns.
 pool_tree_family <- function(effects, groups, settings = analysis_settings()) {
   is_pooled <- vapply(
     groups,
@@ -70,8 +80,14 @@ pool_tree_family <- function(effects, groups, settings = analysis_settings()) {
       nodes_differ_p = NA_real_,
       nodes_left_out = left_out,
       warning = NA_character_,
+      note = NA_character_,
       headline = FALSE,
-      status = status
+      status = status,
+      estimate_by_datasets = NA_real_,
+      se_by_datasets = NA_real_,
+      df_by_datasets = NA_real_,
+      ci_low_by_datasets = NA_real_,
+      ci_high_by_datasets = NA_real_
     )
     extra <- list(...)
     values[names(extra)] <- extra
@@ -90,7 +106,13 @@ pool_tree_family <- function(effects, groups, settings = analysis_settings()) {
       ci_high = rows$ci_high,
       node_low = rows$estimate,
       node_high = rows$estimate,
-      warning = "one specific outcome only"
+      note = "one specific outcome only",
+      headline = TRUE,
+      estimate_by_datasets = rows$estimate,
+      se_by_datasets = rows$se,
+      df_by_datasets = rows$df,
+      ci_low_by_datasets = rows$ci_low,
+      ci_high_by_datasets = rows$ci_high
     ))
   }
 
@@ -130,18 +152,30 @@ pool_tree_family <- function(effects, groups, settings = analysis_settings()) {
   if (is.character(fit)) {
     return(result(paste("model failed:", fit)))
   }
-  weights <- matrix(1 / length(pooled), nrow = 1, ncol = length(pooled))
-  robust <- tryCatch(
-    clubSandwich::linear_contrast(
-      fit,
-      vcov = "CR2",
-      cluster = data$dataset_id,
-      contrasts = weights
-    ),
-    error = function(e) conditionMessage(e)
-  )
+  average <- function(weights) {
+    tryCatch(
+      clubSandwich::linear_contrast(
+        fit,
+        vcov = "CR2",
+        cluster = data$dataset_id,
+        contrasts = matrix(weights / sum(weights), nrow = 1)
+      ),
+      error = function(e) conditionMessage(e)
+    )
+  }
+  robust <- average(rep(1, length(pooled)))
   if (is.character(robust)) {
     return(result(paste("robust inference failed:", robust)))
+  }
+  by_datasets <- average(rows$k_datasets)
+  if (is.character(by_datasets)) {
+    by_datasets <- list(
+      Est = NA_real_,
+      SE = NA_real_,
+      df = NA_real_,
+      CI_L = NA_real_,
+      CI_U = NA_real_
+    )
   }
   equal <- tryCatch(
     clubSandwich::Wald_test(
@@ -160,13 +194,15 @@ pool_tree_family <- function(effects, groups, settings = analysis_settings()) {
   wide <- max(nodes) - min(nodes) > settings$smallest_effect_per_hour
   warning <- c(
     if (opposed) "specific outcomes on opposite sides of zero",
-    if (wide && is.na(equal)) {
-      "specific outcomes span more than the smallest effect; not testable"
-    },
     if (wide && !is.na(equal) && equal < 0.05) {
       "specific outcomes differ by more than the smallest effect"
     }
   )
+  note <- if (wide && is.na(equal)) {
+    "whether the specific outcomes differ could not be tested"
+  } else {
+    NA_character_
+  }
   status <- if (robust$df[1] < 4) "too few studies to say" else "pooled"
   result(
     status,
@@ -183,6 +219,12 @@ pool_tree_family <- function(effects, groups, settings = analysis_settings()) {
     } else {
       NA_character_
     },
-    headline = status == "pooled" && length(warning) == 0
+    note = note,
+    headline = length(warning) == 0,
+    estimate_by_datasets = by_datasets$Est[1],
+    se_by_datasets = by_datasets$SE[1],
+    df_by_datasets = by_datasets$df[1],
+    ci_low_by_datasets = by_datasets$CI_L[1],
+    ci_high_by_datasets = by_datasets$CI_U[1]
   )
 }
