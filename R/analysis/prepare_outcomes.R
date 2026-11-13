@@ -36,7 +36,7 @@ prepare_outcomes <- function(
   derivations,
   dataschema,
   exceptions,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   registry <- outcome_registry$rows
   registry <- registry[registry$role %in% c("outcome", "negative_control"), ]

@@ -43,7 +43,7 @@
 #'   random-effect levels used, and `status`.
 pool_curve <- function(
   curves,
-  settings = analysis_settings(),
+  settings = default_analysis_settings(),
   higher_is = NA_character_
 ) {
   grid <- settings$curve_grid
@@ -243,7 +243,7 @@ pool_curve <- function(
 #'   row per cell.
 pool_curve_cells <- function(
   curves,
-  settings = analysis_settings(),
+  settings = default_analysis_settings(),
   outcome_registry = NULL
 ) {
   if (is.null(curves) || nrow(curves) == 0) {

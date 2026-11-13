@@ -26,7 +26,7 @@
 tree_covariance <- function(
   effects,
   correlations = NULL,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   n <- nrow(effects)
   covariance <- diag(effects$se^2, nrow = n)

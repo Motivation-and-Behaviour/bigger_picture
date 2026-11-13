@@ -24,7 +24,7 @@ assign_series <- function(
   units,
   exposure,
   breaks,
-  settings = analysis_settings(),
+  settings = default_analysis_settings(),
   day = NA_character_
 ) {
   stage <- as.character(cut(

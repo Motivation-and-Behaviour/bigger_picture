@@ -268,13 +268,50 @@ bp_row_level_workers <- function() {
 
 # Workers for the targets that fit models on a prepared dataset. Memory sets
 # the number, not cores. A worker holding the largest prepared dataset peaks
-# near 3.7 GB, but when the preparation step reruns, each dataset's model
-# targets all start as its preparation finishes while the `row_level` pool
-# goes on loading whole harmonised datasets: with sixteen model workers, and
-# again with eight, a full rerun fell below 25 GB available, against about
-# 60 GB when these targets shared the pool of four.
+# near 3.7 GB, but in a plain `tar_make()` each dataset's model targets all
+# start as its preparation finishes, while the `row_level` pool goes on
+# loading whole harmonised datasets: with sixteen model workers, and again
+# with eight, a full rerun fell below 25 GB available. So the default is
+# four. `make.R` builds in sections, and raises this for the section in
+# which nothing loads a harmonised dataset, through `BP_MODEL_WORKERS`.
 bp_model_workers <- function() {
-  4L
+  asked <- suppressWarnings(as.integer(Sys.getenv("BP_MODEL_WORKERS", "4")))
+  if (is.na(asked) || asked < 1L) {
+    asked <- 4L
+  }
+  max(1L, min(parallel::detectCores() - 2L, asked))
+}
+
+# The sections `make.R` builds in, in order: each is the per-dataset targets
+# whose names start with one of these, and everything they need. Whatever
+# is left is built last. Section one loads whole datasets; section two only
+# fits and counts on prepared ones, and is the one given more workers.
+bp_build_sections <- function() {
+  list(
+    datasets = c(
+      "prepared",
+      "dataset_summary",
+      "prepared_review",
+      "descriptives",
+      "onestage_rows",
+      "mapping_status",
+      "mapping_count"
+    ),
+    models = c(
+      "stage1",
+      "stage1_adjusted",
+      "slope_correlations",
+      "cell_counts",
+      "curves"
+    )
+  )
+}
+
+# The model workers `make.R` uses for the models section: measured with
+# twenty workers each holding the largest prepared dataset, which left over
+# 40 GB available.
+bp_model_workers_wide <- function() {
+  16L
 }
 
 # Processes for a simulation target. Each holds little memory, but nothing

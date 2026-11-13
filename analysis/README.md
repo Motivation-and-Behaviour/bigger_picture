@@ -95,6 +95,16 @@ A dataset with no row reads as a blank one, so it has no baseline and is not sig
 Dataset branches never edit this folder, so a new dataset gets its row on `main` after it merges; a test warns until it has one.
 The row matters for panels and trials, which need `baseline_wave`.
 
+## Building
+
+`Rscript make.R` builds the pipeline in three sections: the per-dataset targets that load whole datasets, then the per-dataset targets that fit models and count on prepared datasets, then everything else.
+The two kinds of work never overlap, so the models section can use more workers (`bp_model_workers_wide()`) than is safe while whole datasets are loading.
+A plain `targets::tar_make()` builds the same targets with four model workers.
+`bp_build_sections()` lists what each section builds, and a test checks it against the pool each target runs in.
+
+Functions take their settings as an argument, and the pipeline hands each stage only the settings it reads, so changing one setting reruns only the stages that read it.
+A function's default goes through `default_analysis_settings()` and never names `analysis_settings()` itself, which the pipeline would count as a dependency of every function; `tests/testthat/test-analysis-settings.R` fails if a function that takes settings is called without them.
+
 ## The analysis section of the pipeline
 
 `analysis_targets()` (`R/analysis/analysis_targets.R`) adds everything downstream of harmonisation to `_targets.R`.

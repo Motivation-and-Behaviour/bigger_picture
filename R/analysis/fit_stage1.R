@@ -67,7 +67,7 @@ fit_stage1 <- function(
   cells,
   outcome_registry,
   dataschema,
-  settings = analysis_settings(),
+  settings = default_analysis_settings(),
   tiers = 1L
 ) {
   if (is.null(prepared) || nrow(prepared$base) == 0) {
@@ -177,7 +177,7 @@ stage1_model_type <- function(score_type, n_levels) {
 fit_stage1_unit <- function(
   data,
   model,
-  settings = analysis_settings(),
+  settings = default_analysis_settings(),
   tier = 1L
 ) {
   if (!tier %in% 1:3) {
@@ -421,7 +421,11 @@ bp_stage1_covariates <- function() {
 # are judged on the rows that are left.
 #
 # `not_fitted` says why the unit cannot be fitted at the tier, or is NA.
-stage1_design <- function(data, settings = analysis_settings(), tier = 1L) {
+stage1_design <- function(
+  data,
+  settings = default_analysis_settings(),
+  tier = 1L
+) {
   counts <- list(n_no_weight = 0L, n_no_sex = 0L, n_no_covariate = 0L)
   not_fitted <- NA_character_
 
@@ -576,7 +580,10 @@ stage1_tier_extras <- function(data, model, added, terms, run) {
 # two groups of five rows or more. Smaller groups are merged into one, which
 # then stands for unlike groups and only adjusts; that one is left out (NA)
 # if it is still under five rows.
-stage1_covariate_groups <- function(values, settings = analysis_settings()) {
+stage1_covariate_groups <- function(
+  values,
+  settings = default_analysis_settings()
+) {
   if (is.null(values) || mean(!is.na(values)) < settings$covariate_known_min) {
     return(NULL)
   }

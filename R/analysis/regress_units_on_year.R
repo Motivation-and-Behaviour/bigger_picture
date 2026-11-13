@@ -29,7 +29,10 @@
 #'   what the within slope rests on, a status for each slope (`estimated`, or
 #'   `too few studies to say` under four robust degrees of freedom), and
 #'   `status`.
-regress_units_on_year <- function(units, settings = analysis_settings()) {
+regress_units_on_year <- function(
+  units,
+  settings = default_analysis_settings()
+) {
   units <- units[
     !is.na(units$yi) & !is.na(units$sei) & units$sei > 0 & !is.na(units$year),
   ]

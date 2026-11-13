@@ -74,7 +74,7 @@ simulate_curve_recovery <- function(
   rows,
   units,
   reps = 200L,
-  settings = analysis_settings(),
+  settings = default_analysis_settings(),
   knot_sets = bp_curve_knot_sets(settings),
   max_rows = 10000L,
   cores = 1L
@@ -339,7 +339,7 @@ summarise_curve_recovery <- function(simulation) {
 
 # The knot placements the simulation compares: the one in the settings, and
 # one with two interior knots.
-bp_curve_knot_sets <- function(settings = analysis_settings()) {
+bp_curve_knot_sets <- function(settings = default_analysis_settings()) {
   sets <- list(settings$curve_knots, c(1, 3))
   names(sets) <- vapply(sets, paste, character(1), collapse = ", ")
   sets[!duplicated(names(sets))]

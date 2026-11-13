@@ -23,7 +23,7 @@
 #'   one-stage model-based and the two-stage robust standard error, the
 #'   between-dataset and between-unit SDs from each, the gap on the contrast,
 #'   whether it exceeds the trigger, and `status`.
-fit_onestage_check <- function(rows, settings = analysis_settings()) {
+fit_onestage_check <- function(rows, settings = default_analysis_settings()) {
   result <- function(status, ...) {
     values <- list(
       k_datasets = NA_integer_,

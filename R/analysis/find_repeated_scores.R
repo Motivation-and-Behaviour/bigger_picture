@@ -26,8 +26,8 @@ find_repeated_scores <- function(
   scores,
   wave,
   nodes = character(),
-  min_rows = analysis_settings()$repeat_min_rows,
-  min_minority = analysis_settings()$repeat_min_minority
+  min_rows = default_analysis_settings()$repeat_min_rows,
+  min_minority = default_analysis_settings()$repeat_min_minority
 ) {
   empty <- tibble::tibble(
     wave = character(),

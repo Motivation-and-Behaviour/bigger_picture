@@ -33,7 +33,7 @@ derive_total_screen <- function(
   exposures,
   unit,
   exposure_registry,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   n <- nrow(exposures)
   content <- exposure_registry[

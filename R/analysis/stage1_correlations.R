@@ -35,7 +35,7 @@ stage1_correlations <- function(
   prepared,
   cells,
   outcome_registry,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   if (is.null(prepared) || nrow(prepared$base) == 0) {
     return(NULL)
@@ -135,7 +135,7 @@ stage1_correlations <- function(
 # Each row's contribution to the slope of a linear model of `y` on `x`, on
 # the rows and with the terms and clusters `fit_stage1_unit()` would use.
 # NULL where stage 1 would not fit the unit, or the score does not vary.
-stage1_scores <- function(data, settings = analysis_settings()) {
+stage1_scores <- function(data, settings = default_analysis_settings()) {
   if (nrow(data) == 0) {
     return(NULL)
   }

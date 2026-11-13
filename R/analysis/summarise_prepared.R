@@ -6,7 +6,10 @@
 #' @param prepared Output of `prepare_analysis_data()`.
 #' @param settings From `analysis_settings()`.
 #' @return A one-row tibble, or NULL when the dataset is not included.
-summarise_prepared <- function(prepared, settings = analysis_settings()) {
+summarise_prepared <- function(
+  prepared,
+  settings = default_analysis_settings()
+) {
   if (is.null(prepared)) {
     return(NULL)
   }

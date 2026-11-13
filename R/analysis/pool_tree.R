@@ -25,7 +25,7 @@ pool_tree <- function(
   estimates,
   outcome_registry,
   correlations = NULL,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   effects <- tree_effects(estimates, outcome_registry, settings)
   left_out <- dplyr::count(

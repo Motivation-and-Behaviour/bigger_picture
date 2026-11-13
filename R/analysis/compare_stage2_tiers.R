@@ -27,7 +27,7 @@ compare_stage2_tiers <- function(
   first,
   further,
   cells = NULL,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   if (is.null(further) || nrow(further) == 0) {
     return(tibble::tibble())

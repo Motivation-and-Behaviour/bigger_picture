@@ -36,7 +36,7 @@ count_cells <- function(
   outcome_registry,
   exposure_registry,
   dataschema,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   if (is.null(prepared) || nrow(prepared$base) == 0) {
     return(NULL)

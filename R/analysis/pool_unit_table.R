@@ -11,7 +11,12 @@
 #' @param settings From `analysis_settings()`.
 #' @return A tibble with `by`, `datasets`, `rows`, and for each value its
 #'   `<value>_mid`, `<value>_low` and `<value>_high`.
-pool_unit_table <- function(table, values, by, settings = analysis_settings()) {
+pool_unit_table <- function(
+  table,
+  values,
+  by,
+  settings = default_analysis_settings()
+) {
   per_dataset <- dplyr::summarise(
     table,
     dplyr::across(

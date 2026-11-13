@@ -31,7 +31,7 @@ fit_stage1_curves <- function(
   cells,
   outcome_registry,
   dataschema,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   if (is.null(prepared) || nrow(prepared$base) == 0) {
     return(NULL)
@@ -125,7 +125,7 @@ fit_stage1_curves <- function(
 #' @param settings From `analysis_settings()`.
 #' @return A matrix with one row per element of `hours` and one column per
 #'   curve term, named `s1`, `s2`, and so on.
-curve_basis <- function(hours, settings = analysis_settings()) {
+curve_basis <- function(hours, settings = default_analysis_settings()) {
   basis <- splines::ns(
     hours,
     knots = settings$curve_knots,
@@ -137,7 +137,7 @@ curve_basis <- function(hours, settings = analysis_settings()) {
 }
 
 # Fit one unit's curve and return a one-row tibble.
-fit_curve_unit <- function(data, settings = analysis_settings()) {
+fit_curve_unit <- function(data, settings = default_analysis_settings()) {
   grid <- settings$curve_grid
   available <- nrow(data)
   design <- stage1_design(data, settings, tier = 1L)

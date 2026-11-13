@@ -24,7 +24,7 @@ moderate_by_year <- function(
   units,
   exposure_registry,
   breaks,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   fitted <- stage1[stage1$status %in% "fitted", ]
   if (nrow(fitted) == 0) {

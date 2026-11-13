@@ -26,7 +26,7 @@ moderate_tree <- function(
   correlations = NULL,
   mapping_status = NULL,
   datasets = NULL,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   effects <- tree_effects(estimates, outcome_registry, settings)
   effects <- effects[effects$pools, ]

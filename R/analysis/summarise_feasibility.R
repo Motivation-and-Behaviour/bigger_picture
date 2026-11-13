@@ -44,7 +44,7 @@ summarise_feasibility <- function(
   exposure_registry,
   datasets,
   mapping_status = NULL,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   signed <- datasets$dataset_id[datasets$signed_off %in% TRUE]
   scope <- tibble::tibble(

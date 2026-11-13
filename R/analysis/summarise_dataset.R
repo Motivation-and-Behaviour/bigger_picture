@@ -20,7 +20,7 @@ summarise_dataset <- function(
   dataschema,
   invariants,
   exposures,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   # The manifest hashes every column; everything after it needs only the
   # columns the dataset fills.

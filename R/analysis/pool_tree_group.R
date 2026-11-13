@@ -20,7 +20,7 @@
 pool_tree_group <- function(
   effects,
   correlations = NULL,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   k_datasets <- dplyr::n_distinct(effects$dataset_id)
   keys <- paste(effects$unit, effects$outcome, sep = "\r")

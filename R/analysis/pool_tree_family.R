@@ -43,7 +43,11 @@
 #'   estimates, the p-value of the test that they are equal, `warning`,
 #'   `note`, `headline`, `status`, and the same estimate weighted by
 #'   datasets in the `_by_datasets` columns.
-pool_tree_family <- function(effects, groups, settings = analysis_settings()) {
+pool_tree_family <- function(
+  effects,
+  groups,
+  settings = default_analysis_settings()
+) {
   is_pooled <- vapply(
     groups,
     function(group) !is.null(group$M) && !is.na(group$row$estimate),

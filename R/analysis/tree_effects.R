@@ -21,7 +21,7 @@
 tree_effects <- function(
   estimates,
   outcome_registry,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   out <- estimates[
     estimates$status %in%

@@ -89,3 +89,23 @@ analysis_settings <- function() {
     smallest_effect = 0.10
   )
 }
+
+#' The settings a function falls back on when it is given none
+#'
+#' Functions take their settings as an argument, and the pipeline always
+#' passes the few each stage reads (`bp_prepare_settings()` and the like),
+#' so that changing one setting reruns only the stages that read it. A
+#' default of `analysis_settings()` in a function's arguments would undo
+#' that: `targets` counts every function a function names as something it
+#' depends on, so adding or changing any setting would rerun everything.
+#' The default therefore goes through this function, which finds the
+#' settings by name, where `targets` does not follow.
+#'
+#' That is only safe because no call inside the pipeline relies on the
+#' default: `tests/testthat/test-analysis-settings.R` fails if a function
+#' that takes settings is called without them.
+#'
+#' @return The list from `analysis_settings()`.
+default_analysis_settings <- function() {
+  get("analysis_settings", mode = "function")()
+}

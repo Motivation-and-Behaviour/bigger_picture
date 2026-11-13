@@ -26,7 +26,7 @@ trend_across_datasets <- function(
   exposure_registry,
   breaks,
   statistic = "mean",
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   overall <- screen[
     screen$grouping %in% "all" & !screen$variable_name %in% "total_screen",

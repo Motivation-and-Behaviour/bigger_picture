@@ -16,7 +16,11 @@
 #' @return A tibble with one row per variable, way of measuring it, grouping
 #'   and group: the number of datasets and rows, and for each statistic the
 #'   median across datasets and the 25th and 75th percentiles.
-pool_descriptives <- function(screen, units, settings = analysis_settings()) {
+pool_descriptives <- function(
+  screen,
+  units,
+  settings = default_analysis_settings()
+) {
   statistics <- c(
     "median",
     "p25",

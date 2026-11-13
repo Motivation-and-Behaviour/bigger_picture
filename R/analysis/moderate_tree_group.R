@@ -35,7 +35,7 @@ moderate_tree_group <- function(
   effects,
   moderator,
   correlations = NULL,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   effects$level <- as.character(effects[[moderator]])
   effects <- effects[!is.na(effects$level), ]

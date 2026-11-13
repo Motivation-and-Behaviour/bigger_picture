@@ -13,7 +13,7 @@ review_prepared <- function(
   prepared,
   variables,
   outcome_registry,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   list(
     summary = summarise_prepared(prepared, settings),

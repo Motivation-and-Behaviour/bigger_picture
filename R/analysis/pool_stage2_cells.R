@@ -9,7 +9,7 @@
 pool_stage2_cells <- function(
   estimates,
   cells = NULL,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   if (is.null(estimates)) {
     estimates <- tibble::tibble(

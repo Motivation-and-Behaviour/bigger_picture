@@ -17,7 +17,7 @@ summarise_levels <- function(
   harmonised,
   info,
   dataschema,
-  max_levels = analysis_settings()$max_levels
+  max_levels = default_analysis_settings()$max_levels
 ) {
   rows <- included_rows(harmonised, info)
   if (is.null(rows)) {

@@ -18,7 +18,7 @@
 fit_tree_model <- function(
   effects,
   correlations = NULL,
-  settings = analysis_settings(),
+  settings = default_analysis_settings(),
   mods = NULL
 ) {
   sampling <- tree_covariance(effects, correlations, settings)
