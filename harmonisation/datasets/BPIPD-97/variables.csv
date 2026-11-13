@@ -79,7 +79,7 @@ school_grade,unavailable,,,Not in the supplied extract.,,
 school_sector,unavailable,,,Not in the supplied extract.,,
 school_track,unavailable,,,Not in the supplied extract.,,
 st_measure_type,inferred,,"""Categorical""",Banded hours (none to 6 hours or more) in both waves.,,
-st_measure_name,inferred,,"""Custom""","ESPAD questionnaire items: 2019 hours gaming with other people on a school and a non-school day (C40a, C40b); 2015 hours of online gaming on a typical day (X15_C40b).",,
+st_measure_name,inferred,,"""Custom""","ESPAD questionnaire items: 2019 hours playing games on any electronic device on a school and a non-school day (C40a, C40b); 2015 hours of online gaming on a typical day (X15_C40b).",,
 st_responder,inferred,,"""Self""",Self-completed classroom questionnaire.,,
 st_total_wd,incompatible,C40a,,"Only a school-day gaming item (C40a), mapped to st_game_wd; no all-screen item (DR-0004).",,
 st_total_we,incompatible,C40b,,"Only a non-school-day gaming item (C40b), mapped to st_game_we; no all-screen item (DR-0004).",,
@@ -87,15 +87,15 @@ st_total,incompatible,"C40a, C40b, X15_C40b",,"Only gaming items, mapped to st_g
 st_watch_wd,unavailable,,,No weekday/weekend split.,,
 st_watch_we,unavailable,,,No weekday/weekend split.,,
 st_watch,unavailable,,,Not in the supplied extract.,,
-st_game_wd,partial,C40a,"recode_values(as.numeric(C40a), 1 ~ 0, 2 ~ 0.25, 3 ~ 1, 4 ~ 2.5, 5 ~ 4.5, 6 ~ 6)","2019 only. C40a, hours gaming with other people on any device on a school day, last 30 days: none 0, half an hour or less 0.25, about 1 hour 1, 2-3 hours 2.5, 4-5 hours 4.5, top band 6 hours or more at 6. Partial: gaming with other people only.",,
-st_game_we,partial,C40b,"recode_values(as.numeric(C40b), 1 ~ 0, 2 ~ 0.25, 3 ~ 1, 4 ~ 2.5, 5 ~ 4.5, 6 ~ 6)","2019 only. C40b, as st_game_wd for a non-school day (weekend, holidays), last 30 days; top band at 6. Partial: gaming with other people only.",,
+st_game_wd,compatible,C40a,"recode_values(as.numeric(C40a), 1 ~ 0, 2 ~ 0.25, 3 ~ 1, 4 ~ 2.5, 5 ~ 4.5, 6 ~ 6)","2019 only. C40a (C39a in the 2019 master questionnaire): 'During the last 30 days, how many hours (if any) did you play games using a computer, tablet, console, smartphone or other electronic device', on a school day (the file label reads 'LW'): none 0, half an hour or less 0.25, about 1 hour 1, 2-3 hours 2.5, 4-5 hours 4.5, top band 6 hours or more at 6.",,
+st_game_we,compatible,C40b,"recode_values(as.numeric(C40b), 1 ~ 0, 2 ~ 0.25, 3 ~ 1, 4 ~ 2.5, 5 ~ 4.5, 6 ~ 6)","2019 only. C40b, as st_game_wd for a non-school day (weekend, holidays), last 30 days; top band at 6.",,
 st_game,partial,"C40a, C40b, X15_C40b","coalesce(
   (recode_values(as.numeric(C40a), 1 ~ 0, 2 ~ 0.25, 3 ~ 1, 4 ~ 2.5, 5 ~ 4.5, 6 ~ 6) *
     5 +
     recode_values(as.numeric(C40b), 1 ~ 0, 2 ~ 0.25, 3 ~ 1, 4 ~ 2.5, 5 ~ 4.5, 6 ~ 6) * 2) /
     7,
   recode_values(as.numeric(X15_C40b), 1 ~ 0, 2 ~ 0.25, 3 ~ 1, 4 ~ 2.5, 5 ~ 4.5, 6 ~ 6)
-)","2019: (5 x C40a + 2 x C40b) / 7; 2015: X15_C40b, hours of online gaming on a typical day; last 30 days, bands as st_game_wd, top band at 6. Partial: gaming with other people (2019) or online gaming (2015) only.",,
+)","2019: (5 x C40a + 2 x C40b) / 7; 2015: X15_C40b, hours on the Internet 'playing online games' on a typical day; last 30 days, bands as st_game_wd, top band at 6. Partial: online gaming only in 2015 (games on any electronic device in 2019), two wordings spliced.",,
 st_game_comp_wd,unavailable,,,No device split; see st_game_wd.,,
 st_game_comp_we,unavailable,,,No device split; see st_game_we.,,
 st_game_comp,unavailable,,,No device split; see st_game.,,

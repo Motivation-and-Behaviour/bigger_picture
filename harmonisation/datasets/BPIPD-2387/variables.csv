@@ -245,7 +245,7 @@ school_sector,compatible,sch_typ,"recode_values(as.numeric(haven::zap_labels(sch
 school_track,unavailable,,,Not collected.,,
 st_measure_type,inferred,,"""Continuous""","Open entry of whole hours per day, with codes for more than 0 but less than 1 hour (94) and no TV or no PC access (93). The 2001 public-use file releases top-coded recodes (*_p).",,
 st_measure_name,inferred,,"""Custom""",Sedentary-time items written for the CHIS child and adolescent questionnaires.,,
-st_responder,inferred,cohort,"if_else(cohort == ""child"", ""Parent or carer"", ""Self"")","Child file (ages 0-11): the MKA, a parent or guardian, answers by proxy. Adolescent file (12-17): self-report. Cut by CHIS component (cohort).",,
+st_responder,inferred,cohort,"if_else(cohort == ""child"", ""Parent or carer"", ""Self"")","Child file (ages 0-11): the MKA, a parent or guardian, answers by proxy. Adolescent file (12-17): self-report. Cut by CHIS component (cohort). 2007 holds adolescents only (Self): the 2007 child questionnaire asked no screen item.",,
 st_total_wd,incompatible,"cg8_p, cg8, te12_p, te12, cg9_p, cg9, te13_p, te13",,"No item on all screen use; the TV-or-video-game items (mapped to st_watch_wd) and the computer items (st_comp_wd) are never summed (DR-0002, DR-0004).",,
 st_total_we,incompatible,"cg10_p, cg10, te14_p, te14, cg11_p, cg11, te15_p, te15",,"No item on all screen use; the TV-or-video-game items (mapped to st_watch_we) and the computer items (st_comp_we) are never summed (DR-0002, DR-0004).",,
 st_total,incompatible,"cg8_p, cg8, te12_p, te12, cg10_p, cg10, te14_p, te14, cg9_p, cg9, te13_p, te13, cg11_p, cg11, te15_p, te15",,"No item on all screen use; the TV-or-video-game items (st_watch) and the computer items (st_comp) are never summed (DR-0002, DR-0004).",,
@@ -298,7 +298,7 @@ st_watch,partial,"cg8_p, cg8, te12_p, te12, cg10_p, cg10, te14_p, te14, cg8_x, t
         )
       )) /
     7
-)","2001-2007 only: (5 x st_watch_wd + 2 x st_watch_we) / 7; 2009 asked weekends only. Top codes as st_watch_wd and st_watch_we. NA where CHIS imputed either day's answer (cg8_x, te12_x, cg10_x or te14_x other than -10; 153 rows, 2005 124, 2007 29). Partial: also counts video gaming at the TV.",,
+)","2001-2007 only: (5 x st_watch_wd + 2 x st_watch_we) / 7; 2009 asked weekends only. 2007 is adolescents only (self-report); 2001 and 2005 pool children by proxy with adolescents. Top codes as st_watch_wd and st_watch_we. NA where CHIS imputed either day's answer (cg8_x, te12_x, cg10_x or te14_x other than -10; 153 rows, 2005 124, 2007 29). Partial: also counts video gaming at the TV.",,
 st_game_wd,incompatible,"cg8_p, cg8, te12_p, te12",,"Video gaming is asked only pooled with TV watching (cg8_p, cg8, te12_p, te12); mapped to st_watch_wd.",,
 st_game_we,incompatible,"cg10_p, cg10, te14_p, te14",,"Video gaming is asked only pooled with TV watching (cg10_p, cg10, te14_p, te14); mapped to st_watch_we.",,
 st_game,incompatible,"cg8_p, cg8, te12_p, te12, cg10_p, cg10, te14_p, te14",,Video gaming is asked only pooled with TV watching; mapped to st_watch.,,
@@ -372,7 +372,7 @@ st_comp,partial,"cg9_p, cg9, te13_p, te13, cg11_p, cg11, te15_p, te15, cg9_x, te
         )
       )) /
     7
-)","2001-2007 only: (5 x st_comp_wd + 2 x st_comp_we) / 7; 2009 asked weekends only. Top codes as st_comp_wd and st_comp_we. NA where CHIS imputed either day's answer (cg9_x, te13_x, cg11_x or te15_x other than -10; 103 rows, 2005 89, 2007 14). Partial: leisure use only.",,
+)","2001-2007 only: (5 x st_comp_wd + 2 x st_comp_we) / 7; 2009 asked weekends only. 2007 is adolescents only (self-report); 2001 and 2005 pool children by proxy with adolescents. Top codes as st_comp_wd and st_comp_we. NA where CHIS imputed either day's answer (cg9_x, te13_x, cg11_x or te15_x other than -10; 103 rows, 2005 89, 2007 14). Partial: leisure use only.",,
 st_tablet_wd,unavailable,,,Not collected.,,
 st_tablet_we,unavailable,,,Not collected.,,
 st_tablet,unavailable,,,Not collected.,,

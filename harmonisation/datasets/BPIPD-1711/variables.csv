@@ -1,6 +1,6 @@
 target_variable,status,source_columns,expression,notes,lookup_table,measure
 participant_id,inferred,participant_id,as.character(participant_id),"Neither file releases an id: row position in the source file (H12-nnnn, H3-nnnn, built in the tidier), all waves. Each wide source row holds one adolescent's baseline and follow-up answers.",,
-wave,compatible,wave,wave,"baseline or follow_up, from each source column's questionnaire prefix (HERMES 1+2) or suffix (HERMES 3). Follow-up about one year after baseline in all three cohorts.",,
+wave,compatible,"cohort, wave","paste(cohort, wave)","Cohort and occasion, six labels ('HERMES1 baseline' ... 'HERMES3 follow_up'): the cohort from sample_component, the occasion (baseline or follow_up) from each source column's questionnaire prefix (HERMES 1+2) or suffix (HERMES 3). The cohort is in the label because the three cohorts are separate samples surveyed in different years (baselines 2012-2013, 2014-2015, 2023-2024), and HERMES 3 used a different questionnaire. Follow-up about one year after baseline in all three cohorts.",,
 data_year,inferred,"cohort, wave, jdatjjjj","case_when(
   cohort == ""HERMES3"" & wave == ""baseline"" ~ 2024,
   cohort == ""HERMES3"" ~ 2025,

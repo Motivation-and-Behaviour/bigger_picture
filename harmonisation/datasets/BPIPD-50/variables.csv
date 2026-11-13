@@ -243,7 +243,7 @@ st_watch,partial,"child_tv_hours_wd, child_tv_hours_we, child_tv_hours_sat, chil
   ya <- c(0, 2.5, 7, 12, 17, 22, 27, 32, 35)[as.numeric(ya_tv_hours_week_band)] / 7
   if_else(self, coalesce((child_tv[[1]] * 5 + child_we * 2) / 7, ya), (home_tv[[1]] * 5 + home_tv[[2]] * 2) / 7)
 })","(5 x weekday + 2 x weekend) / 7 for the child and the mother; young adults (2000-2016): weekly TV band / 7, none 0, under 5 2.5, closed bands at their midpoints, top band '35 or more hours per week' = 35. Partial: TV set, and from 2012 the young-adult item adds computers and mobile devices (two wordings spliced). Household TV-on hours and the 2012-2014 child weekly TV band are not used.",,
-st_game_wd,compatible,child_game_hours_wd,child_game_hours_wd,"Child self-report, 2006-2014: 'How much time do you spend playing video games on a typical weekday?' ('or on-line games' from 2012), hours (0-24); no device named.",,
+st_game_wd,compatible,child_game_hours_wd,child_game_hours_wd,"Child self-report, 2006-2014: 'How much time do you spend playing video games on a typical weekday?' ('video games or on-line games' from 2010, and on the Sunday item already in 2008), hours (0-24); no device named.",,
 st_game_we,compatible,"child_game_hours_sat, child_game_hours_sun",(child_game_hours_sat + child_game_hours_sun) / 2,"Child self-report, 2006-2014: (Saturday + Sunday hours playing video games) / 2; NA when either day is unanswered; no device named.",,
 st_game,compatible,"child_game_hours_wd, child_game_hours_sat, child_game_hours_sun, ya_game_hours_week_band","local({
   ya <- c(0, 2.5, 7, 12, 17, 22, 27, 32, 35)[as.numeric(ya_game_hours_week_band)] / 7
