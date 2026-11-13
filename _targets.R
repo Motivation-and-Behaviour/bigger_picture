@@ -1,18 +1,32 @@
 library(targets)
 library(tarchetypes)
 
-# Set target options:
+tar_source()
+
+# Set target options. Two worker pools: `main` for everything, and a smaller
+# `row_level` pool for the analysis targets that load a whole dataset, the
+# largest of which takes over 10 GB each time it is read (bp_row_level_workers()).
 tar_option_set(
   packages = c("dplyr"),
-  controller = crew::crew_controller_local(
-    workers = max(1, min(parallel::detectCores() - 2, 12)),
-    seconds_idle = 15
+  controller = crew::crew_controller_group(
+    crew::crew_controller_local(
+      name = "main",
+      workers = max(1, min(parallel::detectCores() - 2, 12)),
+      seconds_idle = 15
+    ),
+    crew::crew_controller_local(
+      name = "row_level",
+      workers = bp_row_level_workers(),
+      seconds_idle = 15
+    )
   ),
   format = "qs",
-  resources = tar_resources(qs = tar_resources_qs(nthreads = 4L))
+  resources = tar_resources(
+    qs = tar_resources_qs(nthreads = 4L),
+    crew = tar_resources_crew(controller = "main")
+  )
 )
 
-tar_source()
 
 # Static map expansion object for tar_map()
 .dataset_plan_full <- create_dataset_plan(
@@ -201,6 +215,11 @@ if (nrow(.dataset_map_plan) == 0) {
   }
 }
 
+# The analysis reads each dataset's harmonised table (R/analysis/).
+.analysis_section_targets <- analysis_targets(
+  dplyr::filter(.dataset_map_plan, has_harmonisation)
+)
+
 .analysis_registry_targets <- list(
   tar_target(outcome_tree_file, bp_outcome_tree_path(), format = "file"),
   tar_target(outcome_rows_file, bp_outcome_rows_path(), format = "file"),
@@ -251,6 +270,7 @@ list(
   .harmonised_targets,
   .analysis_target,
   .analysis_registry_targets,
+  .analysis_section_targets,
   .reference_targets,
   private_report_targets()
 )

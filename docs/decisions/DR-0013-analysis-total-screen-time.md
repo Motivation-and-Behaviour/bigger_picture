@@ -1,7 +1,7 @@
 # DR-0013: The analysis derives total screen time, and the harmonised row stays dedicated items only
 
 **Status:** Accepted  
-**Date:** 2026-11-11  
+**Date:** 2026-11-11 (amended 2026-11-12)  
 **Decision makers:** Taren  
 **Related issues:** NA
 
@@ -21,16 +21,27 @@ On dedicated items alone, overall screen use could not be pooled for some outcom
 
 DR-0002 and DR-0004 keep governing the harmonised rows: `st_total` holds dedicated items only.
 
-The analysis derives its own variable, `total_screen`, in the preparation step, and never writes it back to the harmonised data:
+The analysis derives its own variable, `total_screen`, in the preparation step, and never writes it back to the harmonised data.
+It is decided unit by unit (dataset, wave and country), so every row of a unit has a total built the same way:
 
-- where a dataset has a dedicated item, `total_screen` is that item;
-- otherwise it is the sum of the dataset's activity rows (such as watching, gaming, social media and educational use) within a wave, for participants with all of those rows;
+- where the unit has a dedicated item, `total_screen` is that item;
+- otherwise it is the sum of the unit's usual-day rows for the four content classes (watching, gaming, social media and educational use), for participants with all of the rows summed;
 - a sum needs watching and gaming at minimum;
+- a content class asked of only part of a unit is left out of that unit's sum, so that it does not remove the total from everyone else: it must be present on at least half of the unit's rows that have watching and gaming;
+- the narrower activity rows (messaging, video chat, email, shopping, creating, work) are never added, because they overlap the content classes;
 - device rows are never added to activity rows, because time on a phone already includes gaming on a phone, and rows that are a subset of another row, or a context such as school, are never added;
 - a sum above 24 hours is set to 24 and flagged.
 
-Each value carries its source (dedicated or summed), the rows that went into it and how many activity rows the dataset measured.
+Each value carries its source (dedicated or summed), the rows that went into it and how many content-class rows the unit measured.
 Source and coverage are examined as moderators when results are pooled, and hours of `total_screen` are never compared, or read against a threshold, across datasets that differ in them.
+
+For the models that adjust one content class for the rest of a child's screen use, the rest is the sum of the unit's other summed classes, or, where the total is a dedicated item, the total minus that class.
+
+**Amended on 12 November 2026.**
+As first accepted, the sum took every activity row a dataset had.
+On the data that gave implausible totals wherever a study asked about many activities: in the largest summed dataset the median was 9.1 hours a day, with about 27,000 values at the 24-hour cap, against 4.3 hours and none capped when only the four content classes are summed.
+A class asked of a subsample also removed the total from the rest of its unit, in one dataset for half its rows.
+The sum is therefore of the content classes only, decided per unit, with the half-of-rows rule above.
 
 ---
 
@@ -61,7 +72,9 @@ Source and coverage are examined as moderators when results are pooled, and hour
 ### Negative consequences or trade-offs
 
 - A summed total still counts concurrent use twice, because no dataset records which activities overlapped.
-- The level of a sum depends on how many activities a dataset asked about, so summed hours mean different things in different datasets.
+- The level of a sum depends on how many content classes a unit measured, so summed hours mean different things in different datasets.
+- Screen use outside the four content classes is not in a summed total.
+- Where a class was asked of only some ages in a unit, the total exists only for those ages.
 - Where a dedicated item and a sum exist together, they agree only moderately in some datasets.
 - A participant missing any one activity row has no summed total.
 
