@@ -135,3 +135,8 @@ dataset_id,exposure,day,from_year,waves,reason
 2319,watch,,2015,,TV or videos in 2006 and 2008 and TV or DVD or online video in a new questionnaire from 2015
 2387,comp,,2005,,The 2001 public file top-codes hours at 6 for children and 10 for adolescents and keeps imputed answers while later cycles release hours as entered with imputed answers dropped
 2387,watch,,2005,,The 2001 public file top-codes hours at 10 to 15 and keeps imputed answers while later cycles release hours as entered with imputed answers dropped
+2387,comp,,,2007,The 2007 cycle holds adolescents answering for themselves only where the other cycles pool children reported by a parent with adolescents
+2387,watch,,,2007,The 2007 cycle holds adolescents answering for themselves only where the other cycles pool children reported by a parent with adolescents
+176,game,,2008,,Wave 1 has no item on how often the child plays so non-players who skipped the section are missing where later waves record them as zero
+176,violent_game,,2008,,Wave 1 has no item on how often the child plays so non-players who skipped the section are missing where later waves record them as zero
+176,violent_game_index,,2008,,Wave 1 has no item on how often the child plays so non-players who skipped the section are missing where later waves record them as zero
