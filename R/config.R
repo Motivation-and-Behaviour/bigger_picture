@@ -247,12 +247,13 @@ bp_row_level_workers <- function() {
   4L
 }
 
-# Workers for the targets that fit models on a prepared dataset. The largest
-# prepared dataset peaks near 6 GB in a worker and every other one is far
-# smaller, so twelve copies at once stay well inside the machine's memory,
-# and never more than its cores allow.
+# Workers for the targets that fit models on a prepared dataset. Memory sets
+# the number, not cores: a worker holding the largest prepared dataset peaks
+# near 3.7 GB (measured with 12 and with 20 at once), and in a cold build the
+# `row_level` pool can hold over 40 GB at the same time. Sixteen at once is
+# about 59 GB. Every other prepared dataset is far smaller.
 bp_model_workers <- function() {
-  max(1L, min(parallel::detectCores() - 2L, 12L))
+  max(1L, min(parallel::detectCores() - 2L, 16L))
 }
 
 # Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).
