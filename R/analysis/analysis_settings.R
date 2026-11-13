@@ -56,6 +56,16 @@ analysis_settings <- function() {
     onestage_trigger = 0.05,
     # Two outcome rows are a repeat of one score when every co-observed value
     # is equal, on at least this many rows.
-    repeat_min_rows = 10L
+    repeat_min_rows = 10L,
+    # A log odds ratio divided by this joins the SD scale when a binary or
+    # short ordinal row is pooled into its specific outcome and family: the
+    # SD of the standard logistic distribution, pi / sqrt(3).
+    log_odds_per_sd = pi / sqrt(3),
+    # The correlation between two outcome rows' slopes in one unit, where
+    # the unit's rows give no estimate of it (provisional).
+    tree_default_correlation = 0.6,
+    # The smallest effect of interest in SD per hour a day: 0.10 SD on the
+    # contrast of 1 against 4 hours (provisional until the freeze).
+    smallest_effect_per_hour = 0.10 / 3
   )
 }
