@@ -140,3 +140,8 @@ dataset_id,exposure,day,from_year,waves,reason
 176,game,,2008,,Wave 1 has no item on how often the child plays so non-players who skipped the section are missing where later waves record them as zero
 176,violent_game,,2008,,Wave 1 has no item on how often the child plays so non-players who skipped the section are missing where later waves record them as zero
 176,violent_game_index,,2008,,Wave 1 has no item on how often the child plays so non-players who skipped the section are missing where later waves record them as zero
+1711,watch,,2024,,The 2012 to 2015 cohorts report open minutes in front of the TV set and the 2024 cohort reports banded video streaming on a smartphone and a tablet or laptop with no TV item
+1711,game,,2024,,The 2012 to 2015 cohorts report open minutes gaming on a computer laptop or tablet and the 2024 cohort reports banded gaming on a smartphone and a tablet or laptop
+1711,game_tablet,,2024,,The 2012 to 2015 cohorts report open minutes gaming on a computer laptop or tablet and the 2024 cohort reports banded gaming on a tablet or laptop
+1711,tablet,,2024,,The 2012 to 2015 cohorts report open tablet minutes outside school hours and the 2024 cohort reports a sum of banded activities on a tablet or laptop
+1711,phone,,2024,,The 2012 to 2015 cohorts report banded time on the internet on the phone and the 2024 cohort reports open minutes of whole-phone screen time
