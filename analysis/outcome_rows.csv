@@ -360,7 +360,7 @@ hlth_maturity_offset,,,covariate,continuous,,,,,,,health,FALSE,
 hlth_pa_days60,,,mediator,continuous,,,,,,,health,FALSE,
 hlth_birthweight,,mixed,negative_control,continuous,higher_better,,,,,,health,FALSE,
 hlth_preterm,,mixed,negative_control,binary,higher_worse,,,,,,health,FALSE,
-hlth_breastfed,,,covariate,binary,,,,,,,health,FALSE,
+hlth_breastfed,,mixed,negative_control,binary,higher_better,,,,,,health,FALSE,
 hlth_prenatalsmoking,,mixed,negative_control,binary,higher_worse,,,,,,health,FALSE,
 hlth_chroniccond_diagnosed,,mixed,covariate,diagnosis,,,,FALSE,,,health,FALSE,Diagnosis rows stay out of synthesis and are analysed separately [C7]
 hlth_disability,,,covariate,binary,,,,,,,health,FALSE,

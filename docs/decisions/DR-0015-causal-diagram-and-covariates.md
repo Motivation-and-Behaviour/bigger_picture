@@ -115,7 +115,8 @@ Rows on the path from screen use to the outcome are left alone because the prere
 
 - `fit_stage1()` fits the tiers asked for and records the tier, the measures used and the tier 1 slope on the tier's rows; `compare_stage2_tiers()` sets each further tier beside tier 1.
 - The feasibility report counts the datasets each tier keeps and the datasets with a negative-control row.
-- Not yet built: the sensitivity tier, the models of the negative-control outcomes, and breastfeeding as a negative-control row in the outcome registry.
+- The four negative-control rows have the role `negative_control` in the outcome registry.
+- Not yet built: the sensitivity tier and the models of the negative-control outcomes.
 
 ---
 
