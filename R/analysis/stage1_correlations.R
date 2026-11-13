@@ -139,39 +139,10 @@ stage1_scores <- function(data, settings = analysis_settings()) {
   if (nrow(data) == 0) {
     return(NULL)
   }
-  weighted <- any(!is.na(data$weight) & data$weight > 0)
-  if (weighted) {
-    data <- data[!is.na(data$weight) & data$weight > 0, ]
-  }
-  terms <- "x"
-  age_values <- dplyr::n_distinct(data$age, na.rm = TRUE)
-  age_span <- if (age_values == 0) {
-    0
-  } else {
-    diff(stats::quantile(data$age, c(0.05, 0.95), na.rm = TRUE, names = FALSE))
-  }
-  spline_works <- age_span >= 2 &&
-    !inherits(try(splines::ns(data$age, df = 2), silent = TRUE), "try-error")
-  if (age_values > 1 && age_values <= 5) {
-    terms <- c(terms, "factor(age)")
-  } else if (spline_works) {
-    terms <- c(terms, "splines::ns(age, df = 2)")
-  } else if (age_values > 1) {
-    terms <- c(terms, "age")
-  }
-  if (age_values > 1) {
-    data <- data[!is.na(data$age), ]
-  }
-  sex_known <- data$sex %in% c("Female", "Male")
-  sex_counts <- table(data$sex[sex_known])
-  if (
-    length(sex_counts) == 2 &&
-      min(sex_counts) >= 5 &&
-      mean(sex_known) >= settings$sex_known_min
-  ) {
-    data <- data[sex_known, ]
-    terms <- c(terms, "sex")
-  }
+  design <- stage1_design(data, settings, tier = 1L)
+  data <- design$data
+  terms <- design$terms
+  weighted <- design$weighted
   n <- nrow(data)
   if (
     n < settings$min_unit_rows ||

@@ -38,8 +38,11 @@
 #'   minority status, and urbanicity. A unit that does not record a tier's
 #'   covariates is not fitted at that tier, and says so. A covariate counts
 #'   as recorded where it is known for at least `covariate_known_min` of the
-#'   unit's rows and two of its groups have five rows or more; rows where it
-#'   is unknown are left out, and groups of fewer than five rows are merged;
+#'   unit's rows and two of its groups have five rows or more, and the rows
+#'   with all of the tier's covariates must be that share too; rows where
+#'   one is unknown are left out, and groups of fewer than five rows are
+#'   merged. A further tier also gives the tier 1 slope on its own rows
+#'   (`tier1_same_rows_estimate`);
 #' - a unit is fitted on complete cases, and only with at least the minimum
 #'   number of rows, variation in the exposure and, for a binary outcome, at
 #'   least ten rows in each class.
@@ -183,6 +186,9 @@ fit_stage1_unit <- function(
   settings = analysis_settings(),
   tier = 1L
 ) {
+  if (!tier %in% 1:3) {
+    stop("fit_stage1_unit(): `tier` must be 1, 2 or 3.", call. = FALSE)
+  }
   available <- nrow(data)
   counts <- list(
     n = available,
@@ -201,6 +207,11 @@ fit_stage1_unit <- function(
         weighted = FALSE,
         tier = as.integer(tier),
         ses_measure = NA_character_,
+        ethnicity_measure = NA_character_,
+        tier1_same_rows_estimate = NA_real_,
+        tier1_same_rows_se = NA_real_,
+        terms_dropped = NA_character_,
+        covariate_separation = NA,
         se_type = NA_character_,
         covariates = NA_character_,
         effect_measure = NA_character_,
@@ -216,106 +227,21 @@ fit_stage1_unit <- function(
     return(result("score type not modelled here"))
   }
 
-  # Weights: used where the unit has them, on the rows that have one.
-  weighted <- any(!is.na(data$weight) & data$weight > 0)
-  if (weighted) {
-    has_weight <- !is.na(data$weight) & data$weight > 0
-    counts$n_no_weight <- sum(!has_weight)
-    data <- data[has_weight, ]
-  }
-
-  # Covariates the unit can support.
-  terms <- "x"
-  covariates <- character()
-  age_values <- dplyr::n_distinct(data$age, na.rm = TRUE)
-  age_span <- if (age_values == 0) {
-    0
-  } else {
-    diff(stats::quantile(data$age, c(0.05, 0.95), na.rm = TRUE, names = FALSE))
-  }
-  spline_works <- age_span >= 2 &&
-    !inherits(try(splines::ns(data$age, df = 2), silent = TRUE), "try-error")
-  if (age_values > 1 && age_values <= 5) {
-    # A few distinct ages, as where age comes from the school grade: a
-    # category each is the most flexible form, and a spline has no room for
-    # its knot.
-    terms <- c(terms, "factor(age)")
-    covariates <- c(covariates, "age (categories)")
-  } else if (spline_works) {
-    terms <- c(terms, "splines::ns(age, df = 2)")
-    covariates <- c(covariates, "age (spline)")
-  } else if (age_values > 1) {
-    terms <- c(terms, "age")
-    covariates <- c(covariates, "age")
-  }
-  if (age_values > 1) {
-    data <- data[!is.na(data$age), ]
-  }
-  sex_known <- data$sex %in% c("Female", "Male")
-  sex_counts <- table(data$sex[sex_known])
-  if (
-    length(sex_counts) == 2 &&
-      min(sex_counts) >= 5 &&
-      mean(sex_known) >= settings$sex_known_min
-  ) {
-    counts$n_no_sex <- sum(!sex_known)
-    data <- data[sex_known, ]
-    terms <- c(terms, "sex")
-    covariates <- c(covariates, "sex")
-  }
-
-  # Further tiers: each needs its covariates recorded in the unit.
-  ses_measure <- NA_character_
-  missing_tier <- NA_character_
-  wanted <- list()
-  if (tier >= 2) {
-    wanted[["no socioeconomic measure in the unit"]] <- c(
-      "ses_household",
-      "parental_education",
-      "ses_area"
-    )
-  }
-  if (tier >= 3) {
-    wanted[["no ethnicity or minority measure in the unit"]] <- c(
-      "ethnicity",
-      "minority"
-    )
-    wanted[["no urbanicity measure in the unit"]] <- "urbanicity"
-  }
-  added <- character()
-  for (reason in names(wanted)) {
-    # The first of the candidates the unit records well enough.
-    found <- NA_character_
-    for (candidate in wanted[[reason]]) {
-      groups <- stage1_covariate_groups(data[[candidate]], settings)
-      if (!is.null(groups)) {
-        data[[candidate]] <- groups
-        found <- candidate
-        break
-      }
-    }
-    if (is.na(found)) {
-      missing_tier <- dplyr::coalesce(missing_tier, reason)
-    }
-    added <- c(added, found)
-  }
-  if (tier >= 2) {
-    ses_measure <- added[1]
-  }
-  added <- added[!is.na(added)]
-  if (length(added) > 0 && is.na(missing_tier)) {
-    known <- stats::complete.cases(data[added])
-    counts$n_no_covariate <- sum(!known)
-    data <- data[known, ]
-    terms <- c(terms, added)
-    covariates <- c(covariates, added)
-  }
+  design <- stage1_design(data, settings, tier)
+  data <- design$data
+  terms <- design$terms
+  covariates <- design$covariates
+  weighted <- design$weighted
+  ses_measure <- design$ses_measure
+  missing_tier <- design$not_fitted
+  counts[names(design$counts)] <- design$counts
 
   n <- nrow(data)
   counts$n <- n
   common <- list(
     weighted = weighted,
     ses_measure = ses_measure,
+    ethnicity_measure = design$ethnicity_measure,
     covariates = paste(covariates, collapse = " + ")
   )
   stop_with <- function(status) {
@@ -382,15 +308,18 @@ fit_stage1_unit <- function(
     )
   )
 
-  fitted <- tryCatch(
-    switch(
-      model,
-      linear = stage1_fixest(data, formula, cluster, "linear"),
-      logistic = stage1_fixest(data, formula, cluster, "logistic"),
-      ordinal = stage1_ordinal(data, formula)
-    ),
-    error = function(e) conditionMessage(e)
-  )
+  run <- function(formula) {
+    tryCatch(
+      switch(
+        model,
+        linear = stage1_fixest(data, formula, cluster, "linear"),
+        logistic = stage1_fixest(data, formula, cluster, "logistic"),
+        ordinal = stage1_ordinal(data, formula)
+      ),
+      error = function(e) conditionMessage(e)
+    )
+  }
+  fitted <- run(formula)
   if (is.character(fitted)) {
     return(stop_with(paste("model failed:", fitted)))
   }
@@ -413,8 +342,10 @@ fit_stage1_unit <- function(
         } else {
           "log_odds_per_hour"
         },
-        engine = fitted$engine
+        engine = fitted$engine,
+        terms_dropped = fitted$dropped
       ),
+      stage1_tier_extras(data, model, design$added, terms, run),
       common
     )
   )
@@ -447,13 +378,20 @@ stage1_fixest <- function(data, formula, cluster, model) {
   }
   table <- fixest::coeftable(fit)
   converged <- model == "linear" || isTRUE(fit$convStatus)
+  # A term that repeats another is left out of the fit, which is recorded.
+  dropped <- if (length(fit$collin.var) > 0) {
+    paste(fit$collin.var, collapse = ", ")
+  } else {
+    NA_character_
+  }
   if (!"x" %in% rownames(table)) {
     return(list(
       estimate = NA_real_,
       se = NA_real_,
       df = NA_real_,
       converged = converged,
-      engine = "fixest"
+      engine = "fixest",
+      dropped = dropped
     ))
   }
   list(
@@ -461,7 +399,8 @@ stage1_fixest <- function(data, formula, cluster, model) {
     se = unname(table["x", "Std. Error"]),
     df = fixest::degrees_freedom(fit, type = "t"),
     converged = converged,
-    engine = "fixest"
+    engine = "fixest",
+    dropped = dropped
   )
 }
 
@@ -482,7 +421,8 @@ stage1_ordinal <- function(data, formula) {
     se = unname(table["x", "Std. Error"]),
     df = survey::degf(design),
     converged = TRUE,
-    engine = "survey"
+    engine = "survey",
+    dropped = NA_character_
   )
 }
 
@@ -498,10 +438,168 @@ bp_stage1_covariates <- function() {
   )
 }
 
+# The rows and terms of one unit's model at a covariate tier: which rows the
+# weight, covariate, age and sex rules leave out, and the terms beside screen
+# use. `stage1_correlations()` uses the same function, so the two cannot
+# drift apart. The tier's covariates are settled first, so that age and sex
+# are judged on the rows that are left.
+#
+# `not_fitted` says why the unit cannot be fitted at the tier, or is NA.
+stage1_design <- function(data, settings = analysis_settings(), tier = 1L) {
+  counts <- list(n_no_weight = 0L, n_no_sex = 0L, n_no_covariate = 0L)
+  not_fitted <- NA_character_
+
+  # Weights: used where the unit has them, on the rows that have one.
+  weighted <- any(!is.na(data$weight) & data$weight > 0)
+  if (weighted) {
+    has_weight <- !is.na(data$weight) & data$weight > 0
+    counts$n_no_weight <- sum(!has_weight)
+    data <- data[has_weight, ]
+  }
+
+  # Further tiers: each needs its covariates recorded in the unit.
+  wanted <- list()
+  if (tier >= 2) {
+    wanted[["socioeconomic measure"]] <- c(
+      "ses_household",
+      "parental_education",
+      "ses_area"
+    )
+  }
+  if (tier >= 3) {
+    wanted[["ethnicity or minority measure"]] <- c("ethnicity", "minority")
+    wanted[["urbanicity measure"]] <- "urbanicity"
+  }
+  added <- character()
+  for (what in names(wanted)) {
+    # The first of the candidates the unit records well enough.
+    found <- NA_character_
+    for (candidate in wanted[[what]]) {
+      groups <- stage1_covariate_groups(data[[candidate]], settings)
+      if (!is.null(groups)) {
+        data[[candidate]] <- groups
+        found <- candidate
+        break
+      }
+    }
+    if (is.na(found) && is.na(not_fitted)) {
+      not_fitted <- paste("no", what, "that varies in the unit")
+    }
+    added <- c(added, found)
+  }
+  ses_measure <- if (tier >= 2) added[1] else NA_character_
+  ethnicity_measure <- if (tier >= 3) added[2] else NA_character_
+  added <- added[!is.na(added)]
+  if (length(added) > 0 && is.na(not_fitted)) {
+    known <- stats::complete.cases(data[added])
+    counts$n_no_covariate <- sum(!known)
+    # Each covariate is known for the minimum share of rows; together they
+    # must be too.
+    if (mean(known) < settings$covariate_known_min) {
+      not_fitted <- "too few rows have all of the tier's covariates"
+    }
+    data <- data[known, ]
+  }
+
+  # Covariates the unit can support.
+  terms <- "x"
+  covariates <- character()
+  age_values <- dplyr::n_distinct(data$age, na.rm = TRUE)
+  age_span <- if (age_values == 0) {
+    0
+  } else {
+    diff(stats::quantile(data$age, c(0.05, 0.95), na.rm = TRUE, names = FALSE))
+  }
+  spline_works <- age_span >= 2 &&
+    !inherits(try(splines::ns(data$age, df = 2), silent = TRUE), "try-error")
+  if (age_values > 1 && age_values <= 5) {
+    # A few distinct ages, as where age comes from the school grade: a
+    # category each is the most flexible form, and a spline has no room for
+    # its knot.
+    terms <- c(terms, "factor(age)")
+    covariates <- c(covariates, "age (categories)")
+  } else if (spline_works) {
+    terms <- c(terms, "splines::ns(age, df = 2)")
+    covariates <- c(covariates, "age (spline)")
+  } else if (age_values > 1) {
+    terms <- c(terms, "age")
+    covariates <- c(covariates, "age")
+  }
+  if (age_values > 1) {
+    data <- data[!is.na(data$age), ]
+  }
+  sex_known <- data$sex %in% c("Female", "Male")
+  sex_counts <- table(data$sex[sex_known])
+  if (
+    length(sex_counts) == 2 &&
+      min(sex_counts) >= 5 &&
+      mean(sex_known) >= settings$sex_known_min
+  ) {
+    counts$n_no_sex <- sum(!sex_known)
+    data <- data[sex_known, ]
+    terms <- c(terms, "sex")
+    covariates <- c(covariates, "sex")
+  }
+  if (is.na(not_fitted)) {
+    # The age and sex rules may have removed a covariate's second group.
+    varies <- vapply(
+      added,
+      function(name) dplyr::n_distinct(data[[name]]) > 1,
+      logical(1)
+    )
+    if (!all(varies)) {
+      not_fitted <- "a tier covariate does not vary in the rows left"
+    }
+    terms <- c(terms, added)
+    covariates <- c(covariates, added)
+  }
+  list(
+    data = data,
+    terms = terms,
+    covariates = covariates,
+    added = if (is.na(not_fitted)) added else character(),
+    weighted = weighted,
+    ses_measure = ses_measure,
+    ethnicity_measure = ethnicity_measure,
+    counts = counts,
+    not_fitted = not_fitted
+  )
+}
+
+# What a further tier records beside its slope: the slope of the tier 1
+# model on the same rows, so the change from adjusting is not mixed with the
+# change from losing rows, and whether a group of a covariate holds only one
+# class of a binary outcome, which a logistic model cannot estimate.
+stage1_tier_extras <- function(data, model, added, terms, run) {
+  if (length(added) == 0) {
+    return(list())
+  }
+  first <- run(stats::as.formula(paste(
+    "y ~",
+    paste(setdiff(terms, added), collapse = " + ")
+  )))
+  refit <- !is.character(first) && isTRUE(first$converged)
+  separation <- if (model == "logistic") {
+    any(vapply(
+      added,
+      function(name) any(tapply(data$y, data[[name]], stats::sd) %in% 0),
+      logical(1)
+    ))
+  } else {
+    NA
+  }
+  list(
+    tier1_same_rows_estimate = if (refit) first$estimate else NA_real_,
+    tier1_same_rows_se = if (refit) first$se else NA_real_,
+    covariate_separation = separation
+  )
+}
+
 # A categorical covariate ready for a unit's model, or NULL where the unit
 # does not record it well enough: known for the minimum share of rows, with
-# two groups of five rows or more. Smaller groups are merged into one, and
-# that one is left out (NA) if it is still under five rows.
+# two groups of five rows or more. Smaller groups are merged into one, which
+# then stands for unlike groups and only adjusts; that one is left out (NA)
+# if it is still under five rows.
 stage1_covariate_groups <- function(values, settings = analysis_settings()) {
   if (is.null(values) || mean(!is.na(values)) < settings$covariate_known_min) {
     return(NULL)

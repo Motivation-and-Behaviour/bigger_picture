@@ -610,8 +610,23 @@ test_that("the tree's settings hold everything its functions read", {
     code,
     gregexpr("(?<=settings\\$)[a-z_0-9]+", code, perl = TRUE)
   )))
-  expect_setequal(read, bp_tree_settings())
+  expect_true(all(read %in% bp_tree_settings()))
+  # `stage1_correlations()` also prepares rows with `stage1_design()`.
+  design <- readLines(file.path(repo_root, "R/analysis/fit_stage1.R"))
+  design <- unique(unlist(regmatches(
+    design,
+    gregexpr("(?<=settings\\$)[a-z_0-9]+", design, perl = TRUE)
+  )))
+  expect_true(all(
+    c("sex_known_min", "covariate_known_min") %in% bp_tree_settings()
+  ))
+  expect_setequal(
+    c(read, "sex_known_min", "covariate_known_min"),
+    bp_tree_settings()
+  )
   expect_true(all(bp_tree_settings() %in% names(analysis_settings())))
+  # Stage 1 and the tier comparison get `bp_model_settings()` only.
+  expect_true(all(design %in% bp_model_settings()))
 })
 
 test_that("uncertainty alone does not keep a family from the headline", {

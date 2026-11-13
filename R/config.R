@@ -207,6 +207,7 @@ bp_tree_settings <- function() {
     "min_unit_rows",
     "min_datasets",
     "sex_known_min",
+    "covariate_known_min",
     "log_odds_per_sd",
     "tree_default_correlation",
     "smallest_effect_per_hour"
