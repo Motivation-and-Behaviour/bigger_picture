@@ -674,8 +674,17 @@ test_that("moderator labels come from the registry, the unit and the mapping", {
     )
   )
   expect_equal(out$measure_type[c(1, 3)], c("Categorical", "Continuous"))
-  expect_equal(out$outcome_status, c("compatible", NA, "proximate", NA, NA))
-  expect_equal(out$exposure_status, c("partial", "partial", NA, NA, NA))
+  # A row with no mapping of its own is one the analysis derives.
+  expect_equal(
+    out$outcome_status,
+    c("compatible", "derived", "proximate", "derived", "derived")
+  )
+  expect_equal(
+    out$exposure_status,
+    c("partial", "partial", "derived", "derived", "derived")
+  )
+  # A mixed informant is not a kind of informant to compare.
+  expect_equal(out$informant, c("self", "parent", "self", "task", NA))
   # The source of the total applies to the derived total only.
   expect_equal(out$total_source, c(NA, NA, NA, "summed", NA))
   expect_equal(out$risk_of_bias, c("low", "low", NA, NA, NA))
@@ -712,6 +721,10 @@ test_that("a moderator's levels are compared, with a known difference", {
   expect_equal(out$status, rep("compared", 3))
   expect_equal(unique(out$k_levels), 2)
   expect_equal(unique(out$k_datasets_several), 4)
+  expect_equal(unique(out$largest_dataset_share), 4 / 48)
+  expect_equal(unique(out$difference_of), "self minus parent")
+  expect_equal(unique(out$test_status), "tested")
+  expect_gt(out$equal_df[1], 4)
   # The level with one dataset is counted and not estimated.
   expect_equal(out$level_status[3], "insufficient data")
   expect_true(is.na(out$estimate[3]))
@@ -740,7 +753,10 @@ test_that("a moderator's levels are compared, with a known difference", {
   )
   expect_equal(one$status, "fewer than two levels with enough datasets")
   effects$informant <- NA
-  expect_equal(nrow(moderate_tree_group(effects, "informant")), 0)
+  none <- moderate_tree_group(effects, "informant")
+  expect_equal(nrow(none), 1)
+  expect_true(is.na(none$level))
+  expect_equal(none$status, "no slope has this label")
 })
 
 test_that("three levels are tested together", {
@@ -757,4 +773,130 @@ test_that("three levels are tested together", {
   # A difference is given only between two levels.
   expect_true(all(is.na(out$difference)))
   expect_equal(out$estimate, c(0, 0, 0.15), tolerance = 0.04, scale = 1)
+})
+
+test_that("a teacher's report of both counts as the same reporter", {
+  effects <- tibble::tibble(
+    dataset_id = "1",
+    unit = c("u1", "u2", "u3", "u4"),
+    exposure = "st_watch",
+    outcome = "o",
+    informant = c("teacher", "self", "task", "parent"),
+    score_type = "continuous"
+  )
+  units <- tibble::tibble(
+    unit = c("u1", "u2", "u3", "u4"),
+    measure_type = "Categorical",
+    responder = c("Teacher", "Device or objective measure", "Self", "Unknown"),
+    total_source = NA
+  )
+  expect_equal(
+    tree_moderators(effects, units)$reporter,
+    c("same reporter", "different reporter", "different reporter", NA)
+  )
+})
+
+test_that("only the compared levels count towards the within-study basis", {
+  # Three datasets give a third level alongside the first, but it has too
+  # few datasets to be compared, so they are not within-study comparisons.
+  a <- tree_slopes(6, 0.05, "o_a", "n1", seed = 71)
+  b <- tree_slopes(6, 0.05, "o_b", "n1", seed = 72)
+  b$dataset_id <- sub("d", "e", b$dataset_id)
+  b$unit <- sub("d", "e", b$unit)
+  # Sorts between the two compared levels.
+  aa <- tree_slopes(2, 0.05, "o_aa", "n1", seed = 73)
+  effects <- dplyr::bind_rows(a, b, aa)
+  effects$instrument <- effects$outcome
+  effects <- effects[order(effects$unit), ]
+  out <- moderate_tree_group(effects, "instrument")
+  expect_equal(out$level, c("o_a", "o_aa", "o_b"))
+  expect_equal(out$level_status[2], "insufficient data")
+  expect_equal(unique(out$k_datasets_several), 0)
+  expect_equal(unique(out$difference_of), "o_b minus o_a")
+  expect_equal(out$difference[1], out$estimate[3] - out$estimate[1])
+})
+
+test_that("a comparison resting on few studies says so on the test", {
+  a <- tree_slopes(3, 0.0, "o_a", "n1", seed = 81, tau = 0.001)
+  b <- tree_slopes(3, 0.2, "o_b", "n1", seed = 82, tau = 0.001)
+  b$dataset_id <- sub("d", "e", b$dataset_id)
+  b$unit <- sub("d", "e", b$unit)
+  effects <- dplyr::bind_rows(a, b)
+  effects$instrument <- effects$outcome
+  out <- moderate_tree_group(effects, "instrument")
+  expect_equal(unique(out$status), "compared")
+  expect_lt(out$equal_df[1], 4)
+  expect_equal(unique(out$test_status), "too few studies to say")
+})
+
+test_that("the equality test rejects equal levels about as often as it says", {
+  # Two levels with one true mean, eight datasets each, two of them shared.
+  p <- vapply(
+    1:120,
+    function(seed) {
+      a <- tree_slopes(8, 0.05, "o_a", "n1", seed = 1000 + seed)
+      b <- tree_slopes(8, 0.05, "o_b", "n1", seed = 2000 + seed)
+      b$dataset_id <- sub("d0([3-8])", "e0\\1", b$dataset_id)
+      b$unit <- sub("d0([3-8])", "e0\\1", b$unit)
+      effects <- dplyr::bind_rows(a, b)
+      effects$instrument <- effects$outcome
+      effects <- effects[order(effects$unit), ]
+      moderate_tree_group(effects, "instrument")$equal_p[1]
+    },
+    numeric(1)
+  )
+  expect_lt(mean(p < 0.05), 0.12)
+  expect_gt(mean(p < 0.5), 0.3)
+})
+
+test_that("every moderator of every specific outcome is on record", {
+  registry <- list(
+    tree = tibble::tibble(
+      node = c("fam", "n1"),
+      parent = c(NA, "fam"),
+      level = c("L0", "L1")
+    ),
+    rows = tibble::tibble(
+      variable_name = c("score_self", "score_parent"),
+      node = "n1",
+      informant = c("self", "parent"),
+      direction = "higher_better",
+      score_type = "continuous",
+      synthesis = TRUE
+    )
+  )
+  slopes <- function(outcome, mean, seed) {
+    out <- tree_slopes(8, mean, outcome, NA, seed)
+    out$node <- NULL
+    out$exposure <- "st_watch"
+    out$score_type <- "continuous"
+    out$effect_measure <- "sd_per_hour"
+    out$status <- "fitted"
+    out
+  }
+  stage1 <- dplyr::bind_rows(
+    slopes("score_self", 0.02, 91),
+    slopes("score_parent", 0.12, 92)
+  )
+  units <- tibble::tibble(
+    unit = unique(stage1$unit),
+    measure_type = "Categorical",
+    responder = "Self",
+    total_source = NA
+  )
+  out <- moderate_tree(stage1, units, registry)
+  expect_setequal(out$moderator, bp_tree_moderators())
+  status <- function(name) unique(out$status[out$moderator == name])
+  expect_equal(status("informant"), "compared")
+  expect_equal(
+    status("measure_type"),
+    "fewer than two levels with enough datasets"
+  )
+  expect_equal(status("risk_of_bias"), "no slope has this label")
+  # Instrument and reporter sort these slopes exactly as informant does.
+  same <- function(name) unique(out$same_as[out$moderator == name])
+  expect_true(is.na(same("informant")))
+  expect_equal(same("reporter"), "informant")
+  expect_equal(same("instrument"), "informant")
+  expect_true(is.na(same("risk_of_bias")))
 })

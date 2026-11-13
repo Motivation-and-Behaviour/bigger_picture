@@ -16,7 +16,9 @@
 #' @return One row per exposure, specific outcome, moderator and level, as
 #'   `moderate_tree_group()` gives them. A moderator with one level or none
 #'   in a specific outcome has its rows too, so what could not be compared
-#'   is on record.
+#'   is on record. `same_as` names an earlier moderator that sorts the
+#'   specific outcome's slopes into the same groups, so the two are one
+#'   comparison under two names.
 moderate_tree <- function(
   estimates,
   units,
@@ -42,15 +44,31 @@ moderate_tree <- function(
         correlations$exposure %in% rows$exposure[1],
       ]
     }
+    # Two labels that sort the slopes into the same groups are one test.
+    grouping <- vapply(
+      bp_tree_moderators(),
+      function(moderator) {
+        level <- as.character(rows[[moderator]])
+        paste(match(level, unique(level)), collapse = " ")
+      },
+      character(1)
+    )
     dplyr::bind_rows(lapply(bp_tree_moderators(), function(moderator) {
       result <- moderate_tree_group(rows, moderator, correlations, settings)
-      if (nrow(result) == 0) {
-        return(NULL)
-      }
       result$exposure <- rows$exposure[1]
       result$family <- rows$family[1]
       result$node <- rows$node[1]
       result$moderator <- moderator
+      earlier <- names(grouping)[
+        seq_along(grouping) < match(moderator, names(grouping)) &
+          grouping == grouping[[moderator]]
+      ]
+      labelled <- any(!is.na(rows[[moderator]]))
+      result$same_as <- if (labelled && length(earlier) > 0) {
+        earlier[1]
+      } else {
+        NA_character_
+      }
       result
     }))
   })

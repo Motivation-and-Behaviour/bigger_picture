@@ -4,18 +4,24 @@
 #' the unit the slope was fitted in (ANALYSIS_PLAN.md, Step 7 task 4). A
 #' slope a moderator does not apply to has NA for it.
 #'
-#' - `informant`: who reported the outcome row.
+#' - `informant`: who reported the outcome row; NA where the row takes any
+#'   respondent (`mixed`) or none is recorded, which are not kinds of
+#'   informant to compare.
 #' - `reporter`: `same reporter` where the outcome row and the unit's screen
-#'   use have one reporter (the child for both, or a parent for both),
+#'   use have one kind of reporter (the child, a parent or a teacher for
+#'   both; it cannot tell whether two parent reports came from one adult),
 #'   `different reporter` where they differ or either is a test or a device,
-#'   and NA where either is mixed or not recorded.
+#'   and NA where either is mixed, other, unknown or not recorded. A unit's
+#'   reporter of screen use is the most common one among its rows.
 #' - `measure_type` and `responder`: the unit's screen-use response format
 #'   and who reported it.
 #' - `instrument`: the outcome row itself, which names the instrument where
 #'   the dataschema has a row per instrument.
 #' - `score_type`: the outcome row's score type.
 #' - `outcome_status` and `exposure_status`: the harmonisation status of the
-#'   dataset's mapping of the outcome row and of the exposure row.
+#'   dataset's mapping of the outcome row and of the exposure row, or
+#'   `derived` for a row the analysis computes from other rows, which has no
+#'   mapping of its own.
 #' - `total_source`: for the derived total only, whether the unit's total is
 #'   a dedicated item or a sum.
 #' - `risk_of_bias`: the dataset's rating, once rated.
@@ -41,15 +47,22 @@ tree_moderators <- function(
   screen <- unname(c(
     "Self" = "self",
     "Parent or carer" = "parent",
+    "Teacher" = "teacher",
     "Device or objective measure" = "device"
   )[out$responder])
-  known <- out$informant %in%
+  reported_by <- out$informant
+  known <- reported_by %in%
     c("self", "parent", "teacher", "task") &
     !is.na(screen)
   out$reporter <- ifelse(
     !known,
     NA_character_,
-    ifelse(out$informant == screen, "same reporter", "different reporter")
+    ifelse(reported_by == screen, "same reporter", "different reporter")
+  )
+  out$informant <- ifelse(
+    reported_by %in% c("mixed", "not recorded"),
+    NA_character_,
+    reported_by
   )
   out$instrument <- out$outcome
   status_of <- function(variable) {
@@ -60,7 +73,7 @@ tree_moderators <- function(
       paste(out$dataset_id, variable),
       paste(mapping_status$dataset_id, mapping_status$target_variable)
     )
-    mapping_status$status[at]
+    dplyr::coalesce(mapping_status$status[at], "derived")
   }
   out$outcome_status <- status_of(out$outcome)
   out$exposure_status <- status_of(out$exposure)

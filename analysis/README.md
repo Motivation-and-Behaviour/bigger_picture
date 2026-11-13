@@ -208,11 +208,24 @@ Rows with `synthesis` FALSE, no node or no direction do not pool; the result's `
 A level needs the minimum number of datasets to enter, and a moderator with fewer than two such levels is reported as not comparable.
 
 Most datasets have one level of a moderator, so a difference is mostly a difference between kinds of study, which also differ in country, age and instrument.
-`k_datasets_several` counts the datasets with more than one level.
-Age and collection year are continuous and are handled apart (`moderate_by_year()`; age comes with Step 12).
-`risk_of_bias` has no ratings yet, so it compares nothing.
+`k_datasets_several` counts the datasets with more than one of the compared levels, and `largest_dataset_share` the share of the compared slopes one dataset supplies.
 
-The tests in `tests/testthat/test-analysis-tree.R` hold the known answers these rules must give.
+Reading the table:
+
+- `test_status` says whether the test of equal means rests on enough studies; under four degrees of freedom it is `too few studies to say`, whatever the p-value.
+- `difference_of` names which level is taken from which.
+- `same_as` marks a moderator that sorts a specific outcome's slopes exactly as an earlier one does: the two are one comparison under two names.
+- P-values are not adjusted for the number of comparisons; the tiered procedure of Step 10 does that for the frozen model list.
+- The comparison has little power: in designs like the development cells', a true difference of one smallest effect of interest was found about a third of the time, so a test that does not reject is not evidence of no difference.
+- A row the analysis derives (the derived total, a derived outcome row) has no mapping of its own, so its harmonisation status is `derived`.
+
+Not built yet from the plan's list (Step 7 task 4):
+
+- age span and collection year are continuous and are handled apart (`moderate_by_year()`; age comes with Step 12);
+- `total_coverage`, which is also continuous;
+- within-study comparisons of response format and responder using tagged measure blocks: stage 1 fits the primary measure only, so those two moderators compare between datasets;
+- the compatible-only subset where five or more datasets remain;
+- `risk_of_bias` has no ratings yet, and `total_source` applies only to the derived total, which no development cell uses, so neither compares anything so far.
 
 ### Dataset outcomes
 

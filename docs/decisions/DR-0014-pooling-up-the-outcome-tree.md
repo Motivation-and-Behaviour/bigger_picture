@@ -39,7 +39,7 @@ Its standard error allows for any dependence among a dataset's slopes, within an
 The average weighted by each specific outcome's number of datasets is reported beside it as a sensitivity analysis.
 
 **The headline.**
-A family is always estimated and always reported.
+A family is estimated and reported whenever at least one of its specific outcomes could be pooled.
 Only evidence that its specific outcomes disagree keeps it from the headline:
 
 - two specific outcomes have intervals on opposite sides of zero; or
@@ -60,7 +60,7 @@ One specific outcome took 93% of a family's weight because its standard error wa
 Precision weights reward exactly the estimates whose uncertainty is understated.
 
 The headline rule asks for evidence of disagreement because estimates of equal effects differ by chance.
-In simulation, ten specific outcomes with one true effect spanned more than the smallest effect of interest in most draws, and a rule based on the span alone would have kept such a family from the headline 85% of the time.
+In simulation, ten specific outcomes with one true effect spanned more than the smallest effect of interest in most draws (between about 60% and 98%, depending on how many datasets each had), so a rule based on the span alone would usually have kept such a family from the headline.
 With the test, it does so about 4% of the time.
 Keeping a family from the headline for being uncertain would hide results for the reason they most need showing with their intervals.
 
@@ -78,6 +78,8 @@ Keeping a family from the headline for being uncertain would hide results for th
 
 ## Consequences
 
+- The headline rule misses real disagreement more often than it finds it when the specific outcome that differs is a thin one: in simulation, one thin specific outcome off by twice the smallest effect of interest was flagged about a quarter of the time, and a well-measured one about three quarters.
+  A family in the headline has not been shown to be coherent; it has not been shown to be incoherent.
 - One thin specific outcome can set a family's precision: a family measured by many datasets can have few degrees of freedom.
   The by-datasets average shows how much that matters.
 - The family's estimate is on the SD scale even where some of its rows are binary.
@@ -88,7 +90,7 @@ Keeping a family from the headline for being uncertain would hide results for th
 
 ## Implementation
 
-- `tree_effects()`, `tree_covariance()`, `pool_tree_group()`, `pool_tree_family()` and `pool_tree()` in `R/analysis/`.
+- `tree_effects()`, `tree_covariance()`, `fit_tree_model()`, `pool_tree_group()`, `pool_tree_family()` and `pool_tree()` in `R/analysis/`.
 - `stage1_correlations()` estimates the correlation between two slopes of one unit.
 - `tests/testthat/test-analysis-tree.R` holds the known answers, including that a score in two specific outcomes counts once.
 
