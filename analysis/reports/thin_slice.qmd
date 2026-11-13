@@ -1,0 +1,299 @@
+---
+title: "Thin slice: the engine on the development cells"
+subtitle: "Stage 1, stage 2 and the one-stage check, before the freeze"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(dplyr)
+library(ggplot2)
+library(targets)
+
+cells <- tar_read(development_cells)
+stage1 <- tar_read(stage1_all)
+stage2 <- tar_read(stage2_development)
+onestage <- tar_read(onestage_check)
+by_year <- tar_read(year_moderation_development)
+manifest <- tar_read(data_manifest)
+settings <- tar_read(settings)
+registry <- tar_read(outcome_registry)
+
+fmt <- function(x) format(x, big.mark = ",", trim = TRUE)
+num <- function(x, digits = 3) formatC(x, format = "f", digits = digits)
+theme_set(theme_minimal(base_size = 10))
+labels <- registry$rows[c("variable_name", "node")]
+```
+
+This report exists to check that the engine works, not to report findings.
+The cells here are the **development cells**: the only associations fitted before the specification is frozen, listed in `analysis/development_cells.csv` and in the deviations ledger.
+Their results are exploratory, go in no report to the funder as they stand, and are marked as seen before the freeze wherever they later appear.
+Data: `r nrow(manifest)` datasets, overall hash `r unique(manifest$overall_hash)`.
+
+## What was fitted
+
+`r nrow(cells)` cells: `r paste(unique(cells$exposure), collapse = ", ")` against `r n_distinct(cells$outcome)` outcome rows.
+`r n_distinct(stage1$outcome)` of those outcome rows are measured alongside the exposure in at least one dataset.
+
+```{r}
+#| label: stage1-status
+stage1 |>
+  mutate(status = ifelse(grepl("^model failed", status), "model failed", status)) |>
+  summarise(units = n(), datasets = n_distinct(dataset_id), rows = sum(n), .by = status) |>
+  arrange(desc(units)) |>
+  transmute(`Stage 1 outcome` = status, `Unit-by-cell fits` = fmt(units), Datasets = datasets, Rows = fmt(rows)) |>
+  knitr::kable(align = "lrrr")
+```
+
+```{r}
+#| label: stage1-how
+fitted <- filter(stage1, status == "fitted")
+fitted |>
+  count(effect_measure, engine, se_type, weighted) |>
+  arrange(desc(n)) |>
+  transmute(`Effect measure` = effect_measure, Engine = engine, `Standard errors` = se_type, Weighted = ifelse(weighted, "yes", "no"), Fits = fmt(n)) |>
+  knitr::kable(align = "llllr", caption = "How the fitted units were modelled.")
+```
+
+```{r}
+#| label: stage1-rows
+fitted |>
+  summarise(
+    units = n(),
+    available = sum(n_available),
+    used = sum(n),
+    no_weight = sum(n_no_weight),
+    no_sex = sum(n_no_sex),
+    lost_5 = sum(n < 0.95 * n_available),
+    few_clusters = sum(few_clusters %in% TRUE)
+  ) |>
+  transmute(
+    `Fitted unit-by-cell models` = fmt(units),
+    `Rows with exposure and outcome` = fmt(available),
+    `Rows used` = fmt(used),
+    `Left out: no weight in a weighted unit` = fmt(no_weight),
+    `Left out: sex unknown or other` = fmt(no_sex),
+    `Fits that use under 95% of their rows` = fmt(lost_5),
+    `Fits with fewer than 10 clusters` = fmt(few_clusters)
+  ) |>
+  tidyr::pivot_longer(everything(), names_to = " ", values_to = "Count") |>
+  knitr::kable(align = "lr", caption = "Rows a model could have used against rows it did.")
+```
+
+```{r}
+#| label: stage1-lost
+fitted |>
+  mutate(share_used = n / n_available) |>
+  filter(share_used < 0.95) |>
+  summarise(fits = n(), lowest = min(share_used), no_weight = sum(n_no_weight), no_sex = sum(n_no_sex), .by = dataset_id) |>
+  arrange(lowest) |>
+  transmute(Dataset = dataset_id, `Fits affected` = fits, `Lowest share of rows used` = sprintf("%.0f%%", 100 * lowest), `Rows without a weight` = fmt(no_weight), `Rows with sex unknown` = fmt(no_sex)) |>
+  knitr::kable(align = "lrrrr", caption = "Datasets where a fitted model uses under 95% of the rows that have the exposure and the outcome.")
+```
+
+```{r}
+#| label: stage1-covariates
+fitted |>
+  count(covariates) |>
+  arrange(desc(n)) |>
+  transmute(`Covariates in the unit's model` = covariates, Fits = fmt(n)) |>
+  knitr::kable(align = "lr")
+```
+
+## Stage 1 slopes
+
+```{r}
+#| label: fig-slopes
+#| fig-height: 3.5
+#| fig-cap: "Unit slopes in SD per hour against their standard errors, for every outcome together. Outcomes differ in direction, so no single funnel is expected; the plot is here to show units far from the rest."
+fitted |>
+  filter(effect_measure == "sd_per_hour") |>
+  ggplot(aes(estimate, se)) +
+  geom_point(alpha = 0.3, size = 0.8) +
+  scale_y_reverse() +
+  labs(x = "Slope, SD per hour a day", y = "Standard error")
+```
+
+```{r}
+#| label: extreme
+fitted |>
+  filter(effect_measure == "sd_per_hour") |>
+  mutate(z = estimate / se) |>
+  arrange(desc(abs(estimate))) |>
+  head(15) |>
+  transmute(Dataset = dataset_id, Wave = coalesce(wave, ""), Country = coalesce(country, ""), Outcome = outcome, Slope = num(estimate), SE = num(se), N = fmt(n)) |>
+  knitr::kable(align = "llllrrr", caption = "The 15 largest unit slopes, as a check for implausible values.")
+```
+
+## Stage 2
+
+A cell is pooled from `r settings$min_datasets` or more datasets.
+Where the robust estimate has fewer than 4 degrees of freedom the cell reads "too few studies to say".
+An SD shown as 0.000 is an estimate at its boundary, usually where one dataset carries most of the weight, and not a finding that slopes do not vary.
+Units of one dataset are treated as independent; where a panel's waves share children, some of that shared error is counted as variation between datasets.
+
+```{r}
+#| label: stage2-status
+stage2 |>
+  count(status) |>
+  knitr::kable(col.names = c("Stage 2 outcome", "Cells"))
+```
+
+```{r}
+#| label: stage2-table
+stage2 |>
+  filter(status != "insufficient data") |>
+  left_join(labels, by = c("outcome" = "variable_name")) |>
+  arrange(node, desc(k_datasets)) |>
+  transmute(
+    Node = node,
+    Outcome = outcome,
+    Measure = effect_measure,
+    Datasets = k_datasets,
+    Units = k_units,
+    Estimate = num(estimate),
+    `95% interval` = paste0(num(ci_low), " to ", num(ci_high)),
+    df = num(df, 1),
+    `SD between datasets` = num(tau_dataset),
+    `SD between units` = num(tau_unit),
+    `Prediction interval` = paste0(num(pi_low), " to ", num(pi_high)),
+    Status = status
+  ) |>
+  knitr::kable(align = "lllrrrlrrrll")
+```
+
+```{r}
+#| label: fig-robust-vs-model
+#| fig-height: 3.5
+#| fig-cap: "Width of the robust interval against the model-based one, by number of datasets. The two should converge as datasets increase."
+stage2 |>
+  filter(status != "insufficient data") |>
+  mutate(ratio = (ci_high - ci_low) / (model_ci_high - model_ci_low)) |>
+  ggplot(aes(k_datasets, ratio)) +
+  geom_hline(yintercept = 1, linetype = 2) +
+  geom_point() +
+  labs(x = "Datasets in the cell", y = "Robust interval width / model-based width")
+```
+
+## Forest plot for the one-stage cell
+
+```{r}
+#| label: fig-forest
+#| fig-height: 7
+#| fig-cap: "Unit slopes for the one-stage check's cell, grouped by dataset, with the pooled estimate and its interval. Dataset IDs only."
+cell <- tar_read(onestage_cell)
+forest <- fitted |>
+  filter(exposure == cell[["exposure"]], outcome == cell[["outcome"]]) |>
+  arrange(as.numeric(dataset_id), wave, country) |>
+  mutate(row = row_number())
+pooled <- filter(stage2, exposure == cell[["exposure"]], outcome == cell[["outcome"]])
+ggplot(forest, aes(y = reorder(unit, -row))) +
+  annotate("rect", xmin = pooled$ci_low, xmax = pooled$ci_high, ymin = -Inf, ymax = Inf, alpha = 0.15) +
+  geom_vline(xintercept = pooled$estimate, linetype = 2) +
+  geom_vline(xintercept = 0, colour = "grey60") +
+  geom_linerange(aes(xmin = estimate - qt(0.975, df) * se, xmax = estimate + qt(0.975, df) * se), colour = "grey40") +
+  geom_point(aes(x = estimate, size = 1 / se^2), show.legend = FALSE) +
+  scale_size_area(max_size = 3) +
+  labs(x = "Slope, SD per hour a day", y = "Unit (dataset | wave | country)") +
+  theme(axis.text.y = element_text(size = 5))
+```
+
+## One-stage check
+
+The one-stage model has an intercept per unit, the exposure centred within unit, a residual variance per unit and each unit's own age and sex effects, and lets the slope vary between datasets and between a dataset's units, as stage 2 does.
+It is unweighted, so it is compared with a two-stage estimate built the same way: unweighted per-unit models with linear age and sex, pooled with the same two levels of variation.
+The one-stage standard error is model-based and the two-stage one is robust, so they are not expected to match exactly.
+
+```{r}
+#| label: onestage
+tibble::tibble(
+  ` ` = c(
+    "Cell",
+    "Status",
+    "Datasets, units, rows",
+    "One-stage slope (SE)",
+    "Matched two-stage slope (SE)",
+    "SD between datasets: one-stage, two-stage",
+    "SD between units: one-stage, two-stage",
+    "Gap on the contrast of 1 against 4 hours",
+    "Trigger",
+    "Primary (weighted) two-stage slope, for reference"
+  ),
+  Value = c(
+    paste(cell[["exposure"]], "by", cell[["outcome"]]),
+    onestage$status,
+    paste(onestage$k_datasets, fmt(onestage$k_units), fmt(onestage$n), sep = ", "),
+    paste0(num(onestage$onestage_estimate, 4), " (", num(onestage$onestage_se, 4), ")"),
+    paste0(num(onestage$twostage_estimate, 4), " (", num(onestage$twostage_se, 4), ")"),
+    paste(num(onestage$onestage_tau), num(onestage$twostage_tau), sep = ", "),
+    paste(num(onestage$onestage_tau_unit), num(onestage$twostage_tau_unit), sep = ", "),
+    num(onestage$contrast_gap, 4),
+    paste0(num(onestage$trigger, 2), ifelse(isTRUE(onestage$exceeds_trigger), ": exceeded", ": not exceeded")),
+    if (nrow(pooled) == 1) paste0(num(pooled$estimate, 4), " (", num(pooled$se, 4), ")") else "not pooled"
+  )
+) |>
+  knitr::kable()
+```
+
+## Do the slopes differ by collection year?
+
+The code for the plan's test of whether associations are getting stronger or weaker over time, run here on the development cells only.
+Each unit's slope is regressed on its collection year, split into a between-study part (a dataset's mean year, adjusted for the units' ages and how screen use was asked) and a within-study part (like units of one study through its years: the same country, school stage, respondent and response format, with no recorded change to the question).
+Year stands in for content, which is not measured, so a result reads "the link was stronger in more recent data" and never that content has changed.
+A cell needs `r settings$year_min_datasets` or more datasets spanning `r settings$year_min_span` or more years.
+
+```{r}
+#| label: by-year-status
+by_year |>
+  count(status) |>
+  knitr::kable(col.names = c("Outcome of the year model", "Cells"))
+```
+
+```{r}
+#| label: by-year
+part <- function(est, low, high, status) case_when(
+  is.na(est) ~ "",
+  status == "too few studies to say" ~ "too few studies to say",
+  TRUE ~ paste0(num(est), " (", num(low), " to ", num(high), ")")
+)
+by_year |>
+  filter(status == "fitted") |>
+  arrange(desc(k_datasets)) |>
+  transmute(
+    Outcome = outcome,
+    Datasets = k_datasets,
+    Units = k_units,
+    Years = paste(round(first_year), "to", round(last_year)),
+    `Between studies, per decade` = part(between_per_decade, between_ci_low, between_ci_high, between_status),
+    `Within studies, per decade` = part(within_per_decade, within_ci_low, within_ci_high, within_status),
+    `Studies with a series over years` = k_within,
+    `Adjusted for` = adjusted_for
+  ) |>
+  knitr::kable(align = "lrrlrrrl")
+```
+
+```{r}
+#| label: fig-by-year
+#| fig-height: 4
+#| fig-cap: "Unit slopes for the one-stage check's cell against collection year. Point size shows precision."
+units <- tar_read(described_units)
+forest |>
+  left_join(units[c("unit", "year", "repeats_participants")], by = "unit") |>
+  filter(!is.na(year)) |>
+  ggplot(aes(year, estimate)) +
+  geom_hline(yintercept = 0, colour = "grey60") +
+  geom_point(aes(size = 1 / se^2, shape = repeats_participants), alpha = 0.5) +
+  scale_shape_manual(values = c(`TRUE` = 1, `FALSE` = 16), labels = c(`TRUE` = "follows the same children", `FALSE` = "new sample each time"), name = NULL) +
+  scale_size_area(max_size = 4, guide = "none") +
+  labs(x = "Collection year", y = "Slope, SD per hour a day") +
+  theme(legend.position = "bottom")
+```

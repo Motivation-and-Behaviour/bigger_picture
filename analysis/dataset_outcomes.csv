@@ -1,0 +1,7 @@
+outcome,datasets,definition
+included,,Datasets that we have
+agreed_awaiting_data,,Agreed to participate but did not provide data before the cut-off; may be included in later publications
+contacting_authors,,Data custodians still negotiating data access
+declined,,The data custodian actively declined to provide data
+non_response,,The data custodian did not respond after three or more attempts to contact
+cannot_access,,Access requirements mean we cannot access the data: costs to access the dataset; data sharing not possible such as restrictions on who data can be shared with; physical access requirements such as having to access data at a specific institution; or burdensome legal requirements we could not meet

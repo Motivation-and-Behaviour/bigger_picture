@@ -4,8 +4,9 @@
 #' rows kept and dropped, what was used, and how the total was built.
 #'
 #' @param prepared Output of `prepare_analysis_data()`.
+#' @param settings From `analysis_settings()`.
 #' @return A one-row tibble, or NULL when the dataset is not included.
-summarise_prepared <- function(prepared) {
+summarise_prepared <- function(prepared, settings = analysis_settings()) {
   if (is.null(prepared)) {
     return(NULL)
   }
@@ -20,7 +21,7 @@ summarise_prepared <- function(prepared) {
   }
   total <- exposures$total_screen
   source <- exposures$total_source
-  required <- intersect(analysis_settings()$total_required, names(exposures))
+  required <- intersect(settings$total_required, names(exposures))
   could_sum <- if (length(required) == 2) {
     source %in% "summed" & stats::complete.cases(exposures[required])
   } else {
@@ -31,7 +32,7 @@ summarise_prepared <- function(prepared) {
     rows_kept = nrow(base),
     participants = dplyr::n_distinct(base$participant_id),
     units = dplyr::n_distinct(base$unit),
-    units_small = sum(table(base$unit) < analysis_settings()$min_unit_rows),
+    units_small = sum(table(base$unit) < settings$min_unit_rows),
     dropped_age_missing = dropped_for("age_missing"),
     dropped_age_over_limit = dropped_for("age_over_limit"),
     dropped_trial_arm = dropped_for("trial_arm_after_baseline"),

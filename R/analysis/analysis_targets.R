@@ -11,6 +11,20 @@
 analysis_targets <- function(harmonise_plan) {
   shared <- list(
     targets::tar_target_raw("settings", quote(analysis_settings())),
+    # Each stage reads only the settings it uses, so changing one threshold
+    # reruns that stage and not every dataset's preparation.
+    targets::tar_target_raw(
+      "settings_prepare",
+      quote(settings[bp_prepare_settings()])
+    ),
+    targets::tar_target_raw(
+      "settings_summary",
+      quote(settings[bp_summary_settings()])
+    ),
+    targets::tar_target_raw(
+      "settings_model",
+      quote(settings[bp_model_settings()])
+    ),
     targets::tar_target_raw(
       "dataset_spec_files",
       quote(list_dataset_spec_files()),
@@ -33,6 +47,41 @@ analysis_targets <- function(harmonise_plan) {
     shared,
     list(
       targets::tar_target_raw(
+        "development_cells_file",
+        quote(bp_development_cells_path()),
+        format = "file"
+      ),
+      targets::tar_target_raw(
+        "development_cells",
+        quote(read_development_cells(
+          development_cells_file,
+          outcome_registry,
+          exposure_registry
+        ))
+      ),
+      targets::tar_target_raw(
+        "dataset_outcomes_file",
+        quote(bp_dataset_outcomes_path()),
+        format = "file"
+      ),
+      targets::tar_target_raw(
+        "dataset_outcomes",
+        quote(read_dataset_outcomes(dataset_outcomes_file))
+      ),
+      targets::tar_target_raw(
+        "series_breaks_file",
+        quote(bp_series_breaks_path()),
+        format = "file"
+      ),
+      targets::tar_target_raw(
+        "series_breaks",
+        quote(read_series_breaks(series_breaks_file, exposure_registry))
+      ),
+      targets::tar_target_raw(
+        "onestage_cell",
+        quote(check_onestage_cell(settings$onestage_cell, development_cells))
+      ),
+      targets::tar_target_raw(
         "invariants_file",
         quote(bp_invariants_path()),
         format = "file"
@@ -53,6 +102,14 @@ analysis_targets <- function(harmonise_plan) {
     harmonised = rlang::syms(paste0("harmonised_", harmonise_plan$dataset_key)),
     harmonisation_config = rlang::syms(
       paste0("harmonisation_config_", harmonise_plan$dataset_key)
+    ),
+    resource_index = rlang::syms(
+      paste0("resource_index_", harmonise_plan$dataset_key)
+    ),
+    has_exceptions = vapply(
+      as.character(harmonise_plan$dataset_id),
+      function(id) length(find_analysis_exceptions(id)) > 0,
+      logical(1)
     )
   )
   row_level <- targets::tar_resources(
@@ -80,7 +137,7 @@ analysis_targets <- function(harmonise_plan) {
         dataschema,
         invariants,
         exposure_registry,
-        settings
+        settings_summary
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -88,11 +145,11 @@ analysis_targets <- function(harmonise_plan) {
     ),
     targets::tar_target_raw(
       "exceptions_file",
-      quote(find_analysis_exceptions(dataset_id)),
-      format = "file",
-      # Looked for on every run: a dataset with no file tracks no path, so
-      # nothing else would notice one being added.
-      cue = targets::tar_cue(mode = "always")
+      # `has_exceptions` is worked out when the pipeline is defined, so adding
+      # or removing a dataset's file changes this target's command and it
+      # reruns; a file target with no path would otherwise never notice.
+      quote(find_analysis_exceptions(dataset_id, has_exceptions)),
+      format = "file"
     ),
     targets::tar_target_raw(
       "exceptions",
@@ -112,7 +169,51 @@ analysis_targets <- function(harmonise_plan) {
         derivation_registry,
         dataschema,
         exceptions,
-        settings
+        settings_prepare
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = row_level
+    ),
+    targets::tar_target_raw(
+      "stage1",
+      quote(fit_stage1(
+        prepared,
+        development_cells,
+        outcome_registry,
+        dataschema,
+        settings_model
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = row_level
+    ),
+    targets::tar_target_raw(
+      "descriptives",
+      quote(describe_dataset(
+        prepared,
+        outcome_registry,
+        exposure_registry,
+        settings_model
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = row_level
+    ),
+    targets::tar_target_raw(
+      "resource_count",
+      quote(count_resources(resource_index, dataset_id))
+    ),
+    targets::tar_target_raw(
+      "mapping_count",
+      quote(count_mapping(harmonisation_config$variables, dataset_id))
+    ),
+    targets::tar_target_raw(
+      "onestage_rows",
+      quote(extract_cell_rows(
+        prepared,
+        onestage_cell[["exposure"]],
+        onestage_cell[["outcome"]]
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -124,7 +225,7 @@ analysis_targets <- function(harmonise_plan) {
         prepared,
         harmonisation_config$variables,
         outcome_registry,
-        settings
+        settings_prepare
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -158,6 +259,151 @@ analysis_targets <- function(harmonise_plan) {
     reviews("rows_dropped_all", "dropped"),
     reviews("prepared_summary_all", "summary"),
     reviews("prepared_flags_all", "flags"),
+    bind("described_screen", "descriptives", "screen"),
+    bind("described_week", "descriptives", "week"),
+    bind("described_relations", "descriptives", "relations"),
+    bind("described_outcomes", "descriptives", "outcomes"),
+    bind("described_units", "descriptives", "units"),
+    targets::tar_target_raw(
+      "screen_pooled",
+      quote(pool_descriptives(
+        described_screen,
+        described_units,
+        settings_model
+      ))
+    ),
+    targets::tar_target_raw(
+      "series_breaks_unused",
+      quote(check_series_breaks(
+        series_breaks,
+        described_units,
+        described_screen,
+        exposure_registry
+      ))
+    ),
+    targets::tar_target_raw(
+      "screen_by_year",
+      quote(trend_across_datasets(
+        described_screen,
+        described_units,
+        exposure_registry,
+        series_breaks,
+        "mean",
+        settings_model
+      ))
+    ),
+    targets::tar_target_raw(
+      "screen_by_year_share",
+      quote(trend_across_datasets(
+        described_screen,
+        described_units,
+        exposure_registry,
+        series_breaks,
+        "share_2plus",
+        settings_model
+      ))
+    ),
+    targets::tar_target_raw(
+      "week_pooled",
+      quote(pool_unit_table(
+        described_week,
+        c("mean_weekday", "mean_weekend", "share_more_on_weekend"),
+        "exposure",
+        settings_model
+      ))
+    ),
+    targets::tar_target_raw(
+      "relations_pooled",
+      quote(pool_unit_table(
+        described_relations,
+        c("spearman", "share_both"),
+        c("variable_a", "variable_b"),
+        settings_model
+      ))
+    ),
+    targets::tar_target_raw(
+      "outcomes_pooled",
+      quote(pool_unit_table(
+        described_outcomes,
+        "prevalence",
+        c("variable_name", "grouping", "group"),
+        settings_model
+      ))
+    ),
+    targets::tar_target_raw(
+      "dataset_outcome_flow",
+      quote(summarise_dataset_outcomes(dataset_outcomes, data_manifest))
+    ),
+    targets::tar_target_raw(
+      "dataset_table",
+      quote(summarise_dataset_table(
+        described_units,
+        mapping_counts,
+        dataset_citations
+      ))
+    ),
+    targets::tar_target_raw(
+      "measured",
+      quote(summarise_measured(
+        analysis_row_audit,
+        outcome_registry,
+        exposure_registry
+      ))
+    ),
+    tarchetypes::tar_combine_raw(
+      "resource_counts",
+      per_dataset[["resource_count"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
+      "mapping_counts",
+      per_dataset[["mapping_count"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "work_scale",
+      quote(summarise_work_scale(
+        resource_counts,
+        mapping_counts,
+        dataschema,
+        data_manifest,
+        prepared_summary_all
+      ))
+    ),
+    tarchetypes::tar_combine_raw(
+      "stage1_all",
+      per_dataset[["stage1"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
+      "onestage_rows_all",
+      per_dataset[["onestage_rows"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    # The one-stage model holds several gigabytes while it fits, so it takes
+    # a place in the small pool with the targets that load whole datasets.
+    targets::tar_target_raw(
+      "onestage_check",
+      quote(fit_onestage_check(
+        onestage_rows_all,
+        c(settings_model, settings["onestage_trigger"])
+      )),
+      resources = row_level
+    ),
+    targets::tar_target_raw(
+      "stage2_development",
+      quote(pool_stage2_cells(stage1_all, development_cells, settings_model))
+    ),
+    targets::tar_target_raw(
+      "year_moderation_development",
+      quote(moderate_by_year(
+        stage1_all,
+        described_units,
+        exposure_registry,
+        series_breaks,
+        settings_model
+      ))
+    ),
     targets::tar_target_raw(
       "derived_codebook",
       quote(derived_variable_codebook(derivation_registry, settings))
@@ -213,6 +459,14 @@ analysis_targets <- function(harmonise_plan) {
     tarchetypes::tar_quarto_raw(
       "report_preparation",
       path = fs::path(bp_analysis_reports_dir(), "preparation.qmd")
+    ),
+    tarchetypes::tar_quarto_raw(
+      "report_descriptives",
+      path = fs::path(bp_analysis_reports_dir(), "descriptives.qmd")
+    ),
+    tarchetypes::tar_quarto_raw(
+      "report_thin_slice",
+      path = fs::path(bp_analysis_reports_dir(), "thin_slice.qmd")
     )
   )
 

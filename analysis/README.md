@@ -111,7 +111,18 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `exceptions_<key>` | The dataset's analysis exceptions, if it has a file |
 | `prepared_<key>`, `prepared_review_<key>` | The dataset prepared for modelling (below), and its summary, flags and audit |
 | `analysis_row_audit`, `rows_dropped_all`, `prepared_summary_all`, `prepared_flags_all` | What preparation used, dropped and flagged |
-| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
+| `development_cells` | The cells fitted before the freeze, from `development_cells.csv` |
+| `stage1_<key>`, `stage1_all` | One model per unit and cell: the slope on screen use, with how it was fitted or why it was not |
+| `stage2_development` | Each cell's slopes pooled across datasets |
+| `onestage_rows_<key>`, `onestage_check` | The one-stage check on one cell |
+| `descriptives_<key>`, `described_screen`, `described_week`, `described_relations`, `described_outcomes`, `described_units` | Per-unit descriptive statistics of screen use and of binary outcomes, weighted where a unit has weights |
+| `screen_pooled`, `week_pooled`, `relations_pooled`, `outcomes_pooled` | Those statistics pooled so each dataset counts once |
+| `series_breaks`, `series_breaks_unused`, `screen_by_year`, `screen_by_year_share` | Recorded changes to a dataset's screen items, the recorded changes that separate no units (none, when the file is right), and screen use against collection year, between studies and within like series of one study |
+| `year_moderation_development` | Whether the slopes differ by collection year, on the development cells |
+| `dataset_table` | One row per dataset, by number, with its citation keys from `references/` |
+| `dataset_outcomes`, `dataset_outcome_flow` | What became of every dataset the project sought, from hand-entered counts |
+| `measured`, `work_scale` | What was measured, and the scale of the harmonisation work, counted from the repository and the pipeline |
+| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation`, `report_descriptives`, `report_thin_slice` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
 
 A dataset is included until any dataset has `signed_off` set in `datasets.csv`; from then on only signed-off datasets are.
 
@@ -153,6 +164,32 @@ The tests read every such file, and the pipeline tracks one per dataset, so a ne
 Record one for each delivered report and at the freeze, and commit it with that state of the code.
 `compare_data_manifest()` lists what has been added, removed or changed since a record.
 
+### The engine
+
+Two-stage is the primary analysis (DR-0010).
+
+- `fit_stage1()` fits one model per stage 1 unit and cell: a linear model of the standardised score for continuous rows and for ordinal rows with five or more levels, a proportional-odds model for ordinal rows with three or four, and a logistic model for binary rows.
+  It uses the unit's weights where it has them, clusters standard errors on the sampling unit or the family, and adjusts for age and sex in the most flexible form the unit's ages allow.
+  A unit that cannot be fitted returns a row saying why.
+- `pool_stage2()` pools a cell's slopes with a multilevel random-effects model, units nested in datasets, and robust small-sample inference; it needs three datasets, and marks an estimate with fewer than four degrees of freedom as too few studies to say.
+- `fit_onestage_check()` fits a single model across datasets for one cell and compares it with a two-stage estimate built the same way.
+
+Until the freeze the engine runs only on the development cells in `development_cells.csv`: each line names an exposure row and either an outcome family or one outcome row, with a reason.
+These are the only associations seen before the specification is frozen, and the deviations ledger records them.
+
+### Dataset outcomes
+
+`dataset_outcomes.csv` holds the top of the dataset flow, which the repository cannot count for itself: how many of the datasets the project sought ended in each outcome.
+Type a whole number into `datasets` on each line; a line can stay blank until its number is known, and the reports then show "to be added".
+The outcomes are fixed: `included`, `agreed_awaiting_data`, `contacting_authors`, `declined`, `non_response` and `cannot_access`, each defined in the file.
+When `included` is filled in, the reports check it against the number of datasets in the analysis and say so if the two differ.
+
+### Citations and acknowledgements
+
+The dataset table carries each dataset's citation keys from `references/dataset_citations.csv` as a pandoc citation, and a report that lists `references/datasets.bib` as its bibliography formats them in its own style.
+Required acknowledgements come from `references/dataset_acknowledgements.csv`.
+Both are blank for a dataset until the references snapshot has it; nothing in `analysis/` holds a citation of its own.
+
 ## Deviations ledger
 
 `deviations.csv` records every place the analysis departs from the [preregistration](../docs/prereg/bigger_picture_preregistration.md), started before any analysis code so that nothing is reconstructed afterwards.
@@ -164,3 +201,16 @@ Record one for each delivered report and at the freeze, and commit it with that 
 - `decision_record` lists the decision records behind the entry, separated by `|`.
 
 Add a row when a decision changes what the preregistration promised; do not edit an entry's history away, but update its `status` when a planned departure takes effect.
+
+### Changes to a screen item
+
+`series_breaks.csv` lists where a repeated study changed how it asked about screen use: new wording, new response bands, another respondent, another instrument.
+A trend over collection years is read only along units on the same side of every line, so a redesign is not read as change over time.
+Each line names a `dataset_id`, an `exposure` and a `reason` taken from the study's own questionnaires and codebooks, and says where the changed item applies in one of two ways.
+`from_year` gives the first collection year of the changed item, for a change that holds from then on.
+`waves` lists the waves that used it, separated by semicolons and spelt as in the harmonised `wave` column, for a study whose waves share or straddle calendar years or whose item came and went.
+Fill in one of the two and leave the other blank.
+`day` limits a line to the `weekday`, `weekend` or `usual` row of the exposure; blank means all three.
+A list of waves is closed: when a study adds a wave that still uses the changed item, add the wave to every such list, or it is read as the old item.
+The derived total is built from whichever items a dataset has, so every line of the dataset splits its series, whatever the exposure or day.
+A line with no units that have the exposure on one of its two sides is listed in the `series_breaks_unused` target, which should be empty.

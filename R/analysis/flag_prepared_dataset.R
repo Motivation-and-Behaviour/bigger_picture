@@ -51,7 +51,7 @@ flag_prepared_dataset <- function(
   }
   audit <- prepared$row_audit
   registry <- outcome_registry$rows
-  summary <- summarise_prepared(prepared)
+  summary <- summarise_prepared(prepared, settings)
 
   base <- prepared$base
   exposures <- prepared$exposures

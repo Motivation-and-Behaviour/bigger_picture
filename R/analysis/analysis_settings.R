@@ -39,6 +39,21 @@ analysis_settings <- function() {
     # A second value needs this many rows before two rows can be called a
     # repeat of one score.
     repeat_min_minority = 5L,
+    # Sex is a covariate where it is known for at least this share of a
+    # unit's rows; below that it is left out and the rows stay.
+    sex_known_min = 0.9,
+    # Cluster-robust standard errors from fewer clusters than this are
+    # flagged: they tend to be too small.
+    min_clusters = 10L,
+    # A trend over collection years needs this many datasets, spanning this
+    # many years.
+    year_min_datasets = 10L,
+    year_min_span = 10,
+    # The one-stage check's cell before the freeze, and the gap between the
+    # two approaches, on the contrast of 1 against 4 hours a day, that
+    # prompts a look: half the smallest effect of interest.
+    onestage_cell = c(exposure = "st_watch", outcome = "wb_selfesteem_self"),
+    onestage_trigger = 0.05,
     # Two outcome rows are a repeat of one score when every co-observed value
     # is equal, on at least this many rows.
     repeat_min_rows = 10L

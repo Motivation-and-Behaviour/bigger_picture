@@ -1,0 +1,4 @@
+exposure,family,variable_name,reason
+st_watch,wellbeing,,One exposure and one whole family: enough rows of every continuous and ordinal form to build stage 1 and stage 2 and to prove pooling up the outcome tree
+st_watch,,acc_graderepeated,One binary outcome for the logistic engine
+st_watch,,acc_academachment_parentrated,One ordinal outcome with four levels for the proportional-odds engine

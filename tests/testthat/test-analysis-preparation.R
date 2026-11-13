@@ -777,15 +777,37 @@ test_that("the analysis section builds a target list from a dataset plan", {
       names
   ))
   expect_false(anyDuplicated(names) > 0)
-  # A dataset with no exceptions file tracks no path, so the file is looked
-  # for on every run; otherwise a new file would go unnoticed.
+  # A dataset with no exceptions file tracks no path, so whether one exists
+  # is written into each dataset's target when the pipeline is defined:
+  # adding a file then changes the target and it reruns.
   targets_list <- unlist(section)
-  exception_files <- targets_list[grepl("^exceptions_file_", names)]
-  expect_length(exception_files, 2)
-  for (target in exception_files) {
-    expect_equal(target$cue$mode, "always")
+  command_of <- function(name) {
+    paste(
+      deparse(targets_list[[which(names == name)]]$command$expr),
+      collapse = " "
+    )
   }
-  expect_length(analysis_targets(plan[0, ]), 6)
+  expect_match(command_of("exceptions_file_BPIPD_9991"), "FALSE", fixed = TRUE)
+  dir <- file.path(bp_harmonisation_dataset_dir("9991"))
+  dir.create(dir, recursive = TRUE)
+  withr::defer(unlink(dir, recursive = TRUE))
+  writeLines(
+    "variable_name,wave,action,value,reason",
+    file.path(dir, "analysis_exceptions.csv")
+  )
+  names_after <- unlist(lapply(
+    unlist(analysis_targets(plan)),
+    function(target) target$settings$name
+  ))
+  with_file <- unlist(analysis_targets(plan))[[which(
+    names_after == "exceptions_file_BPIPD_9991"
+  )]]
+  expect_match(
+    paste(deparse(with_file$command$expr), collapse = " "),
+    "TRUE",
+    fixed = TRUE
+  )
+  expect_length(analysis_targets(plan[0, ]), 16)
 })
 
 test_that("an excluded row stays excluded when a rule could derive it", {

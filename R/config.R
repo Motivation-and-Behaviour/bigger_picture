@@ -152,6 +152,63 @@ bp_deviations_path <- function() {
   fs::path(bp_analysis_dir(), "deviations.csv")
 }
 
+# Hand-entered counts of what became of every dataset the project sought.
+bp_dataset_outcomes_path <- function() {
+  fs::path(bp_analysis_dir(), "dataset_outcomes.csv")
+}
+
+# Points where a dataset's screen item changed (R/analysis/read_series_breaks.R).
+bp_series_breaks_path <- function() {
+  fs::path(bp_analysis_dir(), "series_breaks.csv")
+}
+
+bp_series_breaks_columns <- function() {
+  c("dataset_id", "exposure", "day", "from_year", "waves", "reason")
+}
+
+# The settings each stage reads, so a change to one reruns only that stage.
+bp_prepare_settings <- function() {
+  c(
+    "age_limit",
+    "exposure_max_hours",
+    "min_unit_rows",
+    "school_stage_breaks",
+    "school_stage_labels",
+    "total_required",
+    "total_row_min_share",
+    "part_cover_min",
+    "repeat_min_rows",
+    "repeat_min_minority"
+  )
+}
+
+bp_summary_settings <- function() {
+  c("max_levels", "age_limit")
+}
+
+bp_model_settings <- function() {
+  c(
+    "min_unit_rows",
+    "min_datasets",
+    "sex_known_min",
+    "min_clusters",
+    "year_min_datasets",
+    "year_min_span",
+    "school_stage_breaks",
+    "school_stage_labels"
+  )
+}
+
+# The cells fitted before the freeze, to build the engine on real data
+# (ANALYSIS_PLAN.md, Step 5).
+bp_development_cells_path <- function() {
+  fs::path(bp_analysis_dir(), "development_cells.csv")
+}
+
+bp_development_cells_columns <- function() {
+  c("exposure", "family", "variable_name", "reason")
+}
+
 # Workers for the analysis targets that load a whole dataset. Each can hold
 # well over 10 GB, so this pool is kept small whatever the machine's cores.
 bp_row_level_workers <- function() {
