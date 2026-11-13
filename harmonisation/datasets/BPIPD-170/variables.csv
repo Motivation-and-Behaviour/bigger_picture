@@ -183,7 +183,7 @@ st_watch_wd,partial,"watch_video_hrs_weekday, tv_hrs_weekday","coalesce(
 st_watch_we,partial,"watch_video_hrs_weekend, tv_hrs_weekend","coalesce(
   recode_values(watch_video_hrs_weekend, 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 3.5, 5 ~ 5.5, 6 ~ 7.5, 7 ~ 9),
   recode_values(tv_hrs_weekend, 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 3.5, 5 ~ 5.5, 6 ~ 7.5, 7 ~ 9) / 2
-)","TV over both weekend days, halved, to 2017 (8th/10th grade only); video, TV or movies per weekend day on any device from 2018. Band midpoints, <1 h = 0.5, 9+ = 9 (4.5 per day to 2017); partial as st_watch_wd.",,
+)","TV over both weekend days, halved, to 2017 (8th/10th grade only); video, TV or movies per weekend day on any device from 2018. Band midpoints, <1 h = 0.5, 9+ = 9 (4.5 per day to 2017); partial as st_watch_wd. The 2023-2024 12th-grade form 3 codebooks print 'On an average WEEKEND?', but the 2022 questionnaire-change list gives 'On an average WEEKEND DAY?' for 12th-grade forms 3 and 4 from 2018, with the same seven bands, so the item is read per day and not halved.",,
 st_watch,partial,"watch_video_hrs_weekday, watch_video_hrs_weekend, tv_hrs_weekday, tv_hrs_weekend","(coalesce(
   recode_values(watch_video_hrs_weekday, 1 ~ 0, 2 ~ 0.5, 3 ~ 1.5, 4 ~ 3.5, 5 ~ 5.5, 6 ~ 7.5, 7 ~ 9),
   recode_values(tv_hrs_weekday, 1 ~ 0, 2 ~ 0.25, 3 ~ 1, 4 ~ 2, 5 ~ 3, 6 ~ 4, 7 ~ 5)
