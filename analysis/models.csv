@@ -1,0 +1,51 @@
+model_name,step,tier,levels,exposure_set,outcome_set,moderator,covariate_tier,sample,engine,variant,analysis_class,built,notes
+tier1_total,10,1,L0|L1|L2|L3,total,core,,1,main,two_stage,,confirmatory,TRUE,H1: overall screen use and each outcome family
+tier2_content,10,2,L0|L1|L2|L3,content_classes,core,,1,main,two_stage,,confirmatory,TRUE,H2a to H2d: one content class at a time; predictions of no association are tested for equivalence
+tier2_content_adjusted,10,2,L0|L1,content_classes,core,,1,main,two_stage,other_screen_adjusted,prereg_secondary,TRUE,Each content class adjusted for the rest of the child's screen use; reported beside tier2_content
+tier2_content_contrast,10,2,L0,content_classes,core,content_class,1,main,class_contrast,,confirmatory,FALSE,H2: content type moderates the association; contrasts between classes within datasets that measure both
+other_exposures,10,5,L0|L1,other_included,core,,1,main,two_stage,,exploratory,TRUE,Device rows and content intended to educate; the latter reported once 3 or more datasets have it
+report_rows,10,5,L3,total|content_classes,report,,1,main,two_stage,,descriptive,TRUE,Outcome rows reported on their own and not pooled up the tree
+rare_binary_onestage,10,2,L3,total|content_classes,core_rare_binary,,1,main,one_stage_logistic,,confirmatory,FALSE,Binary rows where most units have few events: one-stage logistic with stratified intercepts as primary
+onestage_check,10,5,L3,total|content_classes,headline_cells,,1,main,one_stage,,exploratory,TRUE,One-stage check of Tier 1 and headline Tier 2 cells; built for the development cell
+curves,11,3,L0|L1,total|content_classes,core,,1,main,curve,,confirmatory,TRUE,H3: pooled curve and the threshold duration read from it in two ways; on total screen use only within one total source and coverage class
+breakpoints,11,3,L0|L1,total|content_classes,core,,1,main,breakpoint,,confirmatory,FALSE,H3: one common breakpoint per content class with a dataset-level bootstrap interval where 8 or more datasets contribute; built after the freeze
+curves_by_measure_type,11,5,L0,total|content_classes,core,measure_type,1,main,curve,,exploratory,FALSE,Curves by how screen use was measured
+curves_continuous_only,11,5,L0,total|content_classes,core,,1,continuous_exposure,curve,continuous_exposure_only,exploratory,FALSE,Check on band effects: units with a continuous screen measure only
+moderation_sex,12,4,L0|L1,total|content_classes,core,sex,1,main,stage1_interaction,,confirmatory,FALSE,H5b: interaction estimated per unit and pooled
+moderation_ses,12,4,L0|L1,total|content_classes,core,ses,1,main,stage1_interaction,,confirmatory,FALSE,H5c: household SES in three groups within wave and country; relative position within a study
+moderation_age,12,5,L0|L1,total|content_classes,core,school_stage,1,main,stage2_moderator,,exploratory,FALSE,H5a (registered as exploratory): units split into school-stage bands; within-dataset and between-dataset age separated
+moderation_location,12,4,L0,school,core,location,1,main,class_contrast,,confirmatory,FALSE,H4: school against any-location rows in datasets with both; equivalence test; insufficient evidence unless 3 or more datasets
+thresholds_by_moderator,12,4,L0,total|content_classes,core,sex|ses|school_stage,1,main,curve,,confirmatory,FALSE,RQ5 on the threshold duration; only where each stratum has support
+moderation_study_level,12,5,L0|L1,total|content_classes,core,informant|reporter|measure_type|responder|instrument|score_type|outcome_status|exposure_status|total_source|total_coverage|age_span|risk_of_bias,1,main,stage2_moderator,,exploratory,TRUE,Study-level moderators at stage 2; risk of bias is rated after the report; total_coverage and age_span are not built yet
+year_trend,12,5,L0|L1,total|content_classes,core,data_year,1,main,stage2_moderator,,exploratory,TRUE,Trend in the association per decade; within-dataset part from repeated cross-sections only
+longitudinal_lagged,13,5,L0|L1,total|content_classes,core,,1,panel,lagged,,exploratory,TRUE,Outcome at the next wave on screen use at this wave adjusting for the outcome at this wave; not preregistered
+longitudinal_within,13,5,L0|L1,total|content_classes,core,,1,panel,within_child,,exploratory,TRUE,Change in the outcome on change in screen use within a child between two waves; not preregistered
+longitudinal_matched,13,5,L0|L1,total|content_classes,core,,1,panel,two_stage,lagged_rows,exploratory,TRUE,The cross-sectional model on the rows the lagged model uses for comparison; not preregistered
+longitudinal_by_lag,13,5,L0,total|content_classes,core,lag_years,1,panel,stage2_moderator,,exploratory,FALSE,Lagged and within-child slopes by the gap between waves
+longitudinal_mi,13,5,L0,total|content_classes,core,,1,panel,lagged,imputed_outcomes,exploratory,FALSE,Standard imputation including outcomes in panels where earlier scores predict a missing outcome
+covariates_tier2,14,5,L0|L1,total|content_classes,core,,2,main,two_stage,,prereg_secondary,TRUE,Age and sex and a socioeconomic measure; read against tier 1 on the same rows
+covariates_tier3,14,5,L0|L1,total|content_classes,core,,3,main,two_stage,,prereg_secondary,TRUE,Tier 2 and ethnicity or minority status and urbanicity
+covariates_family,14,5,L0|L1,total|content_classes,core,,family,main,two_stage,,prereg_secondary,FALSE,Tier 2 and family environment and pubertal status where recorded (DR-0015)
+negative_controls,14,5,L3,total|content_classes,negative_control,,1,main,two_stage,,prereg_secondary,FALSE,Outcomes that precede any screen use; where 3 or more datasets support them
+sens_mad_exposure,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,mad_exposure,prereg_secondary,FALSE,The prereg's 3-MAD rule on non-zero exposure values
+sens_mad_outcome,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,mad_outcome,prereg_secondary,FALSE,The prereg's 3-MAD rule on scale scores within unit
+sens_total_dedicated,14,5,L0|L1,total,core,,1,main,two_stage,total_dedicated_only,prereg_secondary,FALSE,Tier 1 on dedicated total items only
+sens_total_class_average,14,5,L0|L1,content_classes,core,,1,main,two_stage,total_as_class_average,prereg_secondary,FALSE,Tier 1 as a stage 2 average across content classes in place of summing
+sens_total_over_24_excluded,14,5,L0|L1,total,core,,1,main,two_stage,total_over_24_excluded,prereg_secondary,FALSE,Summed totals over 24 hours excluded in place of capped
+sens_implausible_retained,14,5,L0|L1,total|content_classes,core,,1,implausible_retained,two_stage,implausible_retained,prereg_secondary,FALSE,Implausible values kept
+sens_complete_case,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,complete_case,prereg_secondary,TRUE,No imputation; this is what the engine fits until Step 8 lands
+sens_team_excluded,14,5,L0|L1,total|content_classes,core,,1,team_excluded,two_stage,team_excluded,prereg_secondary,FALSE,Team-contributed datasets excluded
+sens_fixed_study,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,fixed_study,prereg_secondary,FALSE,Study as a fixed effect in place of random
+sens_leave_one_out,14,5,L0,total|content_classes,core,,1,main,two_stage,leave_one_dataset_out,prereg_secondary,FALSE,Each headline estimate without each dataset in turn and without each of the five largest
+sens_compatible_only,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,compatible_only,prereg_secondary,FALSE,Rows mapped as compatible only; where 5 or more datasets remain
+sens_unweighted,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,unweighted,prereg_secondary,FALSE,No survey weights
+sens_continuous_exposure,14,5,L0|L1,total|content_classes,core,,1,continuous_exposure,two_stage,continuous_exposure_only,prereg_secondary,FALSE,Continuous exposure measures only
+sens_top_band,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,top_band_scoring,prereg_secondary,FALSE,Alternative scoring of the top band of banded screen items
+sens_all_arms,14,5,L0|L1,total|content_classes,core,,1,all_arms,two_stage,all_arms,prereg_secondary,FALSE,All trial arms with an arm covariate
+sens_year_fallback_excluded,14,5,L0|L1,total|content_classes,core,,1,year_recorded,two_stage,year_fallback_excluded,prereg_secondary,FALSE,Units whose collection year came from the publication fallback excluded; applies to year_trend first
+sens_reporter,14,5,L0|L1,total|content_classes,core,reporter,1,main,stage2_moderator,same_or_cross_reporter,prereg_secondary,TRUE,Same reporter for screen use and outcome against different reporters
+sens_binary_excluded,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,binary_rows_excluded,prereg_secondary,FALSE,Binary and short ordinal rows left out of pooling
+sens_weekday_only,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,weekday_rows,prereg_secondary,FALSE,The weekday rows in datasets that record weekdays only
+sens_curve_observed_exposure,14,5,L0,total|content_classes,core,,1,main,curve,observed_exposure_only,prereg_secondary,FALSE,Curves on observed exposure values only
+sens_plausible_values,14,5,L1,total|content_classes,core,,1,main,two_stage,all_plausible_values,prereg_secondary,FALSE,All plausible values in the largest dataset; only if literacy or numeracy become headline results
+sens_crosswalk,14,5,L1,total|content_classes,core,,1,main,two_stage,instrument_crosswalk,post_freeze,FALSE,A crosswalk between two behaviour instruments; only if worthwhile

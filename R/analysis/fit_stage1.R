@@ -57,6 +57,13 @@
 #' @param dataschema The dataschema, for the level order of ordinal rows.
 #' @param settings From `analysis_settings()`.
 #' @param tiers The covariate tiers to fit each cell at, among 1, 2 and 3.
+#' @param adjust_other Also adjust for the rest of the child's screen use
+#'   (`other_<exposure>` from `derive_total_screen()`): the secondary family
+#'   in which one content class is adjusted for the others. Rows without it
+#'   are left out (`n_no_other`), a unit that records none is not fitted,
+#'   and each estimate says what the rest was built from (`other_from`). The
+#'   slope without the adjustment on the same rows is in the
+#'   `tier1_same_rows_` columns where the tier is 1.
 #' @return A tibble with one row per unit, cell and tier that has data: the slope
 #'   (`estimate`, `se`), its `effect_measure`, the rows, clusters and degrees
 #'   of freedom behind it, the covariates and engine used, and `status`
@@ -68,7 +75,8 @@ fit_stage1 <- function(
   outcome_registry,
   dataschema,
   settings = default_analysis_settings(),
-  tiers = 1L
+  tiers = 1L,
+  adjust_other = FALSE
 ) {
   if (is.null(prepared) || nrow(prepared$base) == 0) {
     return(NULL)
@@ -84,21 +92,7 @@ fit_stage1 <- function(
   }
   registry <- outcome_registry$rows
   levels_of <- function(variable) schema_level_count(variable, dataschema)
-  column <- function(name) {
-    if (name %in% names(base)) base[[name]] else rep(NA, nrow(base))
-  }
-  frame <- data.frame(
-    unit = base$unit,
-    age = as.numeric(base$age_years),
-    sex = as.character(column("sex")),
-    weight = as.numeric(base$survey_weight_norm),
-    cluster = as.character(column("survey_cluster")),
-    family = as.character(column("family_id")),
-    stringsAsFactors = FALSE
-  )
-  for (covariate in bp_stage1_covariates()) {
-    frame[[covariate]] <- as.character(column(covariate))
-  }
+  frame <- stage1_frame(base)
   unit_rows <- split(seq_len(nrow(frame)), frame$unit)
 
   results <- list()
@@ -108,6 +102,7 @@ fit_stage1 <- function(
     score_type <- registry$score_type[match(outcome, registry$variable_name)]
     model <- stage1_model_type(score_type, levels_of(outcome))
     x <- prepared$exposures[[exposure]]
+    other <- if (adjust_other) stage1_other_screen(prepared, exposure)
     y <- if (model == "linear" && outcome %in% names(prepared$outcomes_z)) {
       prepared$outcomes_z[[outcome]]
     } else if (model == "linear") {
@@ -129,8 +124,27 @@ fit_stage1 <- function(
       data <- frame[index, ]
       data$x <- x[index]
       data$y <- y[index]
+      if (adjust_other) {
+        data$other <- other$value[index]
+      }
       for (tier in tiers) {
-        fit <- fit_stage1_unit(data, model, settings, tier)
+        fit <- fit_stage1_unit(
+          data,
+          model,
+          settings,
+          tier,
+          extra_terms = if (adjust_other) "other" else character()
+        )
+        fit$n_no_other <- if (adjust_other) {
+          sum(is.na(data$other))
+        } else {
+          NA_integer_
+        }
+        fit$other_from <- if (adjust_other) {
+          other$from[index[1]]
+        } else {
+          NA_character_
+        }
         fit$unit <- unit
         fit$exposure <- exposure
         fit$outcome <- outcome
@@ -157,6 +171,26 @@ fit_stage1 <- function(
   )
 }
 
+# The columns of the prepared base table a unit's model reads.
+stage1_frame <- function(base) {
+  column <- function(name) {
+    if (name %in% names(base)) base[[name]] else rep(NA, nrow(base))
+  }
+  frame <- data.frame(
+    unit = base$unit,
+    age = as.numeric(base$age_years),
+    sex = as.character(column("sex")),
+    weight = as.numeric(base$survey_weight_norm),
+    cluster = as.character(column("survey_cluster")),
+    family = as.character(column("family_id")),
+    stringsAsFactors = FALSE
+  )
+  for (covariate in bp_stage1_covariates()) {
+    frame[[covariate]] <- as.character(column(covariate))
+  }
+  frame
+}
+
 # The model a score type takes. Ordinal rows with five or more levels are
 # treated as numeric within unit. Diagnosis and nominal rows are not fitted
 # here: diagnoses are analysed on their own and nominal rows only described.
@@ -174,16 +208,25 @@ stage1_model_type <- function(score_type, n_levels) {
 }
 
 # Fit one unit's model and return a one-row tibble.
+#
+# `extra_terms` names further columns of `data` to adjust for (the rest of
+# the child's screen use, or the outcome at an earlier wave). Rows where one
+# is unknown are left out before anything else is judged, and a unit where
+# one is not recorded or does not vary is not fitted.
 fit_stage1_unit <- function(
   data,
   model,
   settings = default_analysis_settings(),
-  tier = 1L
+  tier = 1L,
+  extra_terms = character()
 ) {
   if (!tier %in% 1:3) {
     stop("fit_stage1_unit(): `tier` must be 1, 2 or 3.", call. = FALSE)
   }
   available <- nrow(data)
+  if (length(extra_terms) > 0) {
+    data <- data[stats::complete.cases(data[extra_terms]), ]
+  }
   counts <- list(
     n = available,
     n_available = available,
@@ -220,11 +263,17 @@ fit_stage1_unit <- function(
   if (model == "none") {
     return(result("score type not modelled here"))
   }
+  if (nrow(data) == 0) {
+    return(result(paste(
+      "no row has",
+      paste(extra_terms, collapse = " and ")
+    )))
+  }
 
   design <- stage1_design(data, settings, tier)
   data <- design$data
-  terms <- design$terms
-  covariates <- design$covariates
+  terms <- c(design$terms, extra_terms)
+  covariates <- c(design$covariates, extra_terms)
   weighted <- design$weighted
   ses_measure <- design$ses_measure
   missing_tier <- design$not_fitted
@@ -252,6 +301,11 @@ fit_stage1_unit <- function(
   }
   if (model == "linear" && stats::sd(data$y) == 0) {
     return(stop_with("no variation in the outcome"))
+  }
+  for (term in extra_terms) {
+    if (stats::sd(data[[term]]) == 0) {
+      return(stop_with(paste("no variation in", term)))
+    }
   }
   if (
     model == "logistic" && min(table(factor(data$y, levels = c(0, 1)))) < 10
@@ -321,7 +375,14 @@ fit_stage1_unit <- function(
         engine = fitted$engine,
         terms_dropped = fitted$dropped
       ),
-      stage1_tier_extras(data, model, design$added, terms, run),
+      stage1_tier_extras(
+        data,
+        model,
+        c(design$added, extra_terms),
+        design$added,
+        terms,
+        run
+      ),
       common
     )
   )
@@ -399,6 +460,25 @@ stage1_ordinal <- function(data, formula) {
     converged = TRUE,
     engine = "survey",
     dropped = NA_character_
+  )
+}
+
+# The rest of a child's screen use beside one exposure, and the rows it was
+# built from: `other_<exposure>` where the preparation step derived it. The
+# derived total has no rest, and nor has a row outside the content classes.
+stage1_other_screen <- function(prepared, exposure) {
+  n <- nrow(prepared$base)
+  column <- paste0("other_", sub("^st_", "", exposure))
+  if (!column %in% names(prepared$exposures)) {
+    return(list(value = rep(NA_real_, n), from = rep(NA_character_, n)))
+  }
+  list(
+    value = prepared$exposures[[column]],
+    from = paste0(
+      prepared$exposures$total_source,
+      ": ",
+      prepared$exposures$total_rows
+    )
   )
 }
 
@@ -550,7 +630,10 @@ stage1_design <- function(
 # model on the same rows, so the change from adjusting is not mixed with the
 # change from losing rows, and whether a group of a covariate holds only one
 # class of a binary outcome, which a logistic model cannot estimate.
-stage1_tier_extras <- function(data, model, added, terms, run) {
+#
+# `added` is every term beyond age and sex, and `grouped` those of them
+# that are groups, which are the ones that can separate a binary outcome.
+stage1_tier_extras <- function(data, model, added, grouped, terms, run) {
   if (length(added) == 0) {
     return(list())
   }
@@ -561,7 +644,7 @@ stage1_tier_extras <- function(data, model, added, terms, run) {
   refit <- !is.character(first) && isTRUE(first$converged)
   separation <- if (model == "logistic") {
     any(vapply(
-      added,
+      grouped,
       function(name) any(tapply(data$y, data[[name]], stats::sd) %in% 0),
       logical(1)
     ))

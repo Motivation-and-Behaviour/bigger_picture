@@ -61,6 +61,8 @@ The numeric prefix preserves chronological ordering.
 | DR-0014 | [A family is the plain average of its specific outcomes, and only disagreement keeps it from the headline](DR-0014-pooling-up-the-outcome-tree.md) | Accepted | 2026-11-13 |
 | DR-0015 | [What the models adjust for, and what they leave alone](DR-0015-causal-diagram-and-covariates.md) | Accepted | 2026-11-13 |
 | DR-0016 | [Curves are pooled from splines with fixed knots, and the threshold duration is read from the pooled curve](DR-0016-curves-and-threshold-duration.md) | Proposed | 2026-11-13 |
+| DR-0017 | [The tiered false discovery rate, written out as a rule](DR-0017-tiered-false-discovery-rate.md) | Proposed | 2026-11-15 |
+| DR-0018 | [A longitudinal strand of lagged and within-child models](DR-0018-longitudinal-strand.md) | Proposed | 2026-11-15 |
 
 When adding a new decision:
 

@@ -302,7 +302,9 @@ bp_build_sections <- function() {
       "stage1_adjusted",
       "slope_correlations",
       "cell_counts",
-      "curves"
+      "curves",
+      "stage1_other",
+      "longitudinal"
     )
   )
 }
@@ -519,4 +521,83 @@ bp_airtable_reference_fields <- function() {
 
 bp_airtable_api_url <- function() {
   "https://api.airtable.com/v0"
+}
+
+# The model list (ANALYSIS_PLAN.md, Step 9 task 3; analysis/README.md).
+bp_models_path <- function() {
+  fs::path(bp_analysis_dir(), "models.csv")
+}
+
+bp_models_columns <- function() {
+  c(
+    "model_name",
+    "step",
+    "tier",
+    "levels",
+    "exposure_set",
+    "outcome_set",
+    "moderator",
+    "covariate_tier",
+    "sample",
+    "engine",
+    "variant",
+    "analysis_class",
+    "built",
+    "notes"
+  )
+}
+
+bp_model_classes <- function() {
+  c(
+    "confirmatory",
+    "prereg_secondary",
+    "post_freeze",
+    "exploratory",
+    "descriptive"
+  )
+}
+
+bp_model_engines <- function() {
+  c(
+    "two_stage",
+    "class_contrast",
+    "one_stage",
+    "one_stage_logistic",
+    "curve",
+    "breakpoint",
+    "stage1_interaction",
+    "stage2_moderator",
+    "lagged",
+    "within_child"
+  )
+}
+
+bp_model_exposure_sets <- function() {
+  c("total", "content_classes", "other_included", "school")
+}
+
+bp_model_outcome_sets <- function() {
+  c("core", "report", "negative_control", "core_rare_binary", "headline_cells")
+}
+
+# The preregistered predictions, by exposure and outcome family.
+bp_hypotheses_path <- function() {
+  fs::path(bp_analysis_dir(), "hypotheses.csv")
+}
+
+bp_hypotheses_columns <- function() {
+  c("hypothesis", "exposure", "family", "prediction", "notes")
+}
+
+# The derived total's name among the exposures (DR-0013).
+bp_total_exposure <- function() {
+  "total_screen"
+}
+
+# Whether the specification is frozen (ANALYSIS_PLAN.md, Step 9). Until it
+# is, every model is fitted on the development cells only. The lead changes
+# this to TRUE in the tagged commit that freezes the specification, and
+# nobody else does.
+bp_specification_frozen <- function() {
+  FALSE
 }

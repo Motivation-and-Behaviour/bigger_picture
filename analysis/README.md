@@ -13,6 +13,8 @@ They hold dataschema variable names, node labels, dataset IDs and wave labels, w
 | `invariants.csv` | Row the harmonisation keeps constant within a participant | `tests/testthat/test-analysis-registry.R` |
 | `datasets.csv` | Dataset | `tests/testthat/test-analysis-registry.R` |
 | `deviations.csv` | Departure from the preregistration | `tests/testthat/test-analysis-deviations.R` |
+| `models.csv` | Model family | `read_model_spec()` |
+| `hypotheses.csv` | Preregistered prediction, by exposure and outcome family | `read_hypotheses()` |
 
 ## When the dataschema changes
 
@@ -135,6 +137,11 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `descriptives_<key>`, `described_screen`, `described_week`, `described_relations`, `described_outcomes`, `described_units` | Per-unit descriptive statistics of screen use and of binary outcomes, weighted where a unit has weights |
 | `screen_pooled`, `week_pooled`, `relations_pooled`, `outcomes_pooled` | Those statistics pooled so each dataset counts once |
 | `series_breaks`, `series_breaks_unused`, `screen_by_year`, `screen_by_year_share` | Recorded changes to a dataset's screen items, the recorded changes that separate no units (none, when the file is right), and screen use against collection year, between studies and within like series of one study |
+| `model_spec`, `hypotheses`, `model_cells`, `fit_cells` | The model list, the preregistered predictions, each model's exposure and outcome cells, and the distinct cells stage 1 fits; before the freeze these are the development cells only |
+| `stage1_other_<key>`, `stage1_other_all`, `tree_other` | The content-class cells adjusted for the rest of the child's screen use, and pooled up the tree |
+| `tree_tier2`, `tree_tier3` | The slopes at covariate tiers 2 and 3 pooled up the tree |
+| `longitudinal_<key>`, `longitudinal_all`, `longitudinal_development` | The lagged, within-child and matched cross-sectional models per pair of waves (DR-0018), and each pooled per outcome row and up the tree |
+| `results_development` | Every model built so far in one table: estimate, interval, p, tiered q with its K (DR-0017), the 1 against 4 hours contrast, the equivalence test and the preregistered prediction |
 | `year_moderation_development` | Whether the slopes differ by collection year, on the development cells |
 | `dataset_table` | One row per dataset, by number, with its citation keys from `references/` |
 | `dataset_outcomes`, `dataset_outcome_flow` | What became of every dataset the project sought, from hand-entered counts |
@@ -301,3 +308,31 @@ Fill in one of the two and leave the other blank.
 A list of waves is closed: when a study adds a wave that still uses the changed item, add the wave to every such list, or it is read as the old item.
 The derived total is built from whichever items a dataset has, so every line of the dataset splits its series, whatever the exposure or day.
 A line with no units that have the exposure on one of its two sides is listed in the `series_breaks_unused` target, which should be empty.
+
+## The model list
+
+`models.csv` has one row per model family, and everything the analysis fits is a row: a sensitivity analysis is a further row, never a further code path.
+It is a draft until the freeze, when it is fixed with the registries.
+
+| Column | Values |
+| --- | --- |
+| `model_name` | Lower case, unique |
+| `step` | The step of the analysis plan that runs it, 10 to 14 |
+| `tier` | The preregistered tier whose q-values it takes, 1 to 5; exploratory, descriptive and post-freeze models take 5 |
+| `levels` | The levels of the outcome tree it is reported at, pipe-separated: `L0`, `L1`, `L2`, `L3` |
+| `exposure_set` | Pipe-separated: `total` (the derived total), `content_classes`, `other_included`, `school` |
+| `outcome_set` | `core`, `report`, `negative_control`, or `core_rare_binary` and `headline_cells`, which are settled from the data where their models are built |
+| `moderator` | The moderators it tests, pipe-separated; blank for none |
+| `covariate_tier` | `1`, `2`, `3` or `family` (DR-0015) |
+| `sample` | `main`, or the subset of rows or datasets it uses |
+| `engine` | How it is fitted, one of `bp_model_engines()` |
+| `variant` | The one thing a secondary or sensitivity model changes; blank for a primary model |
+| `analysis_class` | `confirmatory`, `prereg_secondary`, `post_freeze`, `exploratory` or `descriptive`; shown in every results table |
+| `built` | Whether its code exists yet; code for Steps 11 to 14 may follow the freeze, its row may not |
+
+`expand_model_cells()` turns the sets into exposure and outcome cells from the registries, so a new schema row joins a model without an edit here.
+Until `bp_specification_frozen()` is TRUE, which the lead sets in the tagged commit that freezes the specification, a model's cells are only the development cells that fall in its sets.
+
+`hypotheses.csv` gives the direction the preregistration predicts for an exposure and a family: `negative`, `positive` or `none`.
+A prediction of `none` is tested for equivalence against the smallest effect of interest (DR-0017).
+Estimates are aligned so that positive means a better outcome with more screen use, so `negative` is a negative estimate in every family.
