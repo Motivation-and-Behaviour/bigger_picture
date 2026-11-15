@@ -107,7 +107,10 @@ analysis_targets <- function(harmonise_plan) {
       ),
       targets::tar_target_raw(
         "fit_cells",
-        quote(dplyr::distinct(model_cells[c("exposure", "outcome")]))
+        quote(dplyr::distinct(model_cells[
+          model_cells$model_name %in% bp_stage1_models(),
+          c("exposure", "outcome")
+        ]))
       ),
       targets::tar_target_raw(
         "other_cells",
@@ -678,7 +681,7 @@ analysis_targets <- function(harmonise_plan) {
           label_models(
             tree_development,
             model_cells,
-            c("tier1_total", "tier2_content", "other_exposures")
+            setdiff(bp_stage1_models(), "report_rows")
           ),
           dplyr::mutate(tree_other, model_name = "tier2_content_adjusted"),
           dplyr::mutate(tree_tier2, model_name = "covariates_tier2"),
@@ -689,7 +692,7 @@ analysis_targets <- function(harmonise_plan) {
           label_models(
             stage2_development,
             model_cells,
-            c("tier1_total", "tier2_content", "other_exposures", "report_rows")
+            bp_stage1_models()
           ),
           longitudinal_development$cells
         ),

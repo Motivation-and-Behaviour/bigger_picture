@@ -135,8 +135,34 @@ test_that("the model list is valid, and expands against the registries", {
     reg$outcomes,
     reg$exposures
   )
-  expect_equal(sum(hypotheses$hypothesis == "H1"), 5)
-  expect_true(all(table(hypotheses$exposure) == 5))
+  # The preregistration's predictions, family by family in the order
+  # learning, cognition, mental health, wellbeing, behaviour.
+  predicted <- function(exposure) {
+    families <- c(
+      "learning",
+      "cognition",
+      "mental_health",
+      "wellbeing",
+      "behaviour"
+    )
+    own <- hypotheses[hypotheses$exposure == exposure, ]
+    own$prediction[match(families, own$family)]
+  }
+  expect_equal(nrow(hypotheses), 25)
+  expect_equal(predicted("total_screen"), rep("negative", 5))
+  expect_equal(predicted("st_watch"), rep("negative", 5))
+  expect_equal(
+    predicted("st_educational"),
+    c("positive", "positive", "none", "none", "none")
+  )
+  expect_equal(
+    predicted("st_game"),
+    c("none", "none", "negative", "negative", "negative")
+  )
+  expect_equal(
+    predicted("st_socmedia"),
+    c("none", "none", "negative", "negative", "none")
+  )
 
   development <- read_development_cells(
     file.path(repo_root, bp_development_cells_path()),
@@ -179,6 +205,14 @@ test_that("the model list is valid, and expands against the registries", {
   # The primary models share no cell, so a pooled row has one model.
   both <- after[after$model_name %in% c("tier1_total", "tier2_content"), ]
   expect_false(anyDuplicated(both[c("exposure", "outcome")]) > 0)
+  # The cross-sectional stage 1 fits the cells of its own models only.
+  stage1 <- after[after$model_name %in% bp_stage1_models(), ]
+  expect_false(anyDuplicated(stage1[c("exposure", "outcome")]) > 0)
+  school <- reg$exposures$variable_name[reg$exposures$context %in% "school"]
+  expect_false(any(stage1$exposure %in% school))
+  expect_false(any(
+    rows$role[match(stage1$outcome, rows$variable_name)] == "negative_control"
+  ))
   controls <- after[after$model_name == "negative_controls", ]
   expect_true(all(
     rows$role[match(controls$outcome, rows$variable_name)] == "negative_control"
@@ -372,6 +406,28 @@ test_that("the longitudinal models separate change from standing differences", {
     c("fitted", "fitted", "screen item changed between the waves")
   )
 
+  # A panel in two countries gives a pair per country, each on its own
+  # children.
+  split <- function(rows) {
+    rows <- edit(rows)
+    people <- unique(rows$participant_id)
+    half <- people[seq_along(people) %% 2 == 0]
+    rows$country <- ifelse(rows$participant_id %in% half, "Wales", "England")
+    rows
+  }
+  two <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, split),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  expect_equal(nrow(two), 6)
+  expect_equal(dplyr::n_distinct(two$unit), 2)
+  expect_equal(two$n_pairs, rep(300L, 6))
+  expect_true(all(grepl("England|Wales", two$unit)))
+
   # Repeated cross-sections and single occasions follow nobody.
   for (id in c("9993", "9995")) {
     expect_null(fit_stage1_longitudinal(
@@ -383,6 +439,15 @@ test_that("the longitudinal models separate change from standing differences", {
       no_breaks(reg)
     ))
   }
+})
+
+test_that("the gap between waves comes from years, then from ages", {
+  expect_equal(longitudinal_lag(c(2, 2, 3), c(0, 0, 0)), 2)
+  # Years not recorded, or the same at both waves: ages are used.
+  expect_equal(longitudinal_lag(c(NA, NA), c(1.5, 2.5)), 2)
+  expect_equal(longitudinal_lag(c(0, 0), c(1, 1)), 1)
+  # Coarse ages and no years give no gap, not a gap of zero.
+  expect_true(is.na(longitudinal_lag(c(NA, NA), c(0, 0))))
 })
 
 test_that("an outcome's instrument column is found by its stem", {
@@ -452,6 +517,12 @@ test_that("results are labelled, tested and adjusted in one table", {
   # within the smallest effect of interest, and its q-value uses K = 5 + 1.
   game <- out[3, ]
   expect_true(game$equivalent)
+  # An estimate with too few studies to say is not called equivalent.
+  thin <- tree
+  thin$status[3] <- "too few studies to say"
+  thin <- assemble_results(thin, NULL, spec, hypotheses, reg$outcomes)
+  expect_true(is.na(thin$equivalent[3]))
+  expect_equal(thin$p_equivalence[3], game$p_equivalence)
   expect_equal(game$q_equivalence, min(game$p_equivalence * 6, 1))
   expect_true(is.na(out$q_equivalence[1]))
   # A family that could not be pooled has no p-value and is not counted.

@@ -39,6 +39,7 @@ Tests that share a path are one group.
 Within a group, q-values are Benjamini and Hochberg's with the number of comparisons set to K: the group's own tests plus the tests in every layer above it on the path.
 The ranks come from the group's own p-values only.
 
+- A primary test is one from a confirmatory model fitted as the main two-stage model with nothing varied; every other model of Tier 1 or 2 is secondary.
 - The first layer always counts five, the five outcome families, whether or not each can be estimated.
 - A layer with no test adds nothing.
 - A test that could not be run has no p-value and is not counted.
@@ -58,6 +59,7 @@ Only families and specific outcomes of the confirmatory models are described as 
 Where the preregistration predicts no or a negligible association, the estimate is tested for equivalence: two one-sided tests against the smallest effect of interest, 0.10 SD on the contrast of 1 against 4 hours a day, using the robust standard error and its degrees of freedom.
 The equivalence p-values of a group are adjusted among themselves with the group's K.
 The test of a difference from zero is still reported for those rows, with its q-value.
+An estimate is called equivalent only where it was pooled from enough studies to say.
 
 **When K is counted.**
 The rule is frozen with the model list.
@@ -68,7 +70,10 @@ K is worked out from the rule on the datasets in each run, so it can differ betw
 ## Rationale
 
 Ranking within a group and counting along the path is the reading that penalises a deeper test for the testing above it.
-The other reading, one adjustment over every test down to a tier, lets very small p-values in Tier 1 lower the q-values of Tier 2: in a worked example a Tier 2 p-value of 0.015 took a q-value of 0.04 that way against 0.09 with this rule, the opposite of the penalty the preregistration describes.
+The other reading, one adjustment over every test down to a tier, lets very small p-values in Tier 1 lower the q-values of Tier 2, the opposite of the penalty the preregistration describes.
+Take two families with Tier 1 p-values near zero and two content classes in one family with p-values of 0.015 and 0.04.
+One adjustment over the four tests gives the content classes q-values of 0.02 and 0.04.
+This rule gives them K = 5 + 2 = 7 and q-values of 0.105 and 0.14.
 
 Fixing the first layer at five means a family that cannot be estimated does not make the others easier to pass.
 
@@ -87,7 +92,12 @@ Fixing the first layer at five means a family that cannot be estimated does not 
 ## Consequences
 
 - A specific outcome's q-value depends on how many specific outcomes its family has for that exposure, so families with many specific outcomes are penalised more.
-- Tier 5 q-values carry every tier above them and will rarely be small; a sensitivity analysis is read by whether the estimate moves, not by its q-value.
+- K grows with depth, but so does the number of tests ranked together, and Benjamini and Hochberg's adjustment multiplies a p-value by K over its rank.
+  In a large group only the smallest p-values pay close to the full K, so a deeper test can take a smaller q-value than a shallower one with the same p-value.
+  This is a property of the registered procedure.
+  It is one reason lower-layer q-values are called a descriptive penalty, and a sensitivity analysis is read by whether the estimate moves, not by its q-value.
+- Only the first layer has a fixed count, so a content class that cannot be estimated in a family lowers K for that family's other classes.
+- Tiers 3, 4 and 5 each form one layer per family across exposures, levels and models, and K is counted over the models assembled in one table, so every model of a run is assembled together.
 - An equivalence test needs a narrow interval, so few predictions of no association will be confirmed where datasets are few.
 
 ---

@@ -6,7 +6,7 @@ tier2_content_contrast,10,2,L0,content_classes,core,content_class,1,main,class_c
 other_exposures,10,5,L0|L1,other_included,core,,1,main,two_stage,,exploratory,TRUE,Device rows and content intended to educate; the latter reported once 3 or more datasets have it
 report_rows,10,5,L3,total|content_classes,report,,1,main,two_stage,,descriptive,TRUE,Outcome rows reported on their own and not pooled up the tree
 rare_binary_onestage,10,2,L3,total|content_classes,core_rare_binary,,1,main,one_stage_logistic,,confirmatory,FALSE,Binary rows where most units have few events: one-stage logistic with stratified intercepts as primary
-onestage_check,10,5,L3,total|content_classes,headline_cells,,1,main,one_stage,,exploratory,TRUE,One-stage check of Tier 1 and headline Tier 2 cells; built for the development cell
+onestage_check,10,5,L3,total|content_classes,headline_cells,,1,main,one_stage,,prereg_secondary,TRUE,One-stage check of Tier 1 and headline Tier 2 cells; built for the development cell
 curves,11,3,L0|L1,total|content_classes,core,,1,main,curve,,confirmatory,TRUE,H3: pooled curve and the threshold duration read from it in two ways; on total screen use only within one total source and coverage class
 breakpoints,11,3,L0|L1,total|content_classes,core,,1,main,breakpoint,,confirmatory,FALSE,H3: one common breakpoint per content class with a dataset-level bootstrap interval where 8 or more datasets contribute; built after the freeze
 curves_by_measure_type,11,5,L0,total|content_classes,core,measure_type,1,main,curve,,exploratory,FALSE,Curves by how screen use was measured

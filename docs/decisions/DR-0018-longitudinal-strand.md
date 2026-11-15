@@ -20,15 +20,17 @@ The preregistration says longitudinal studies are included, and registers no lon
 ## Decision
 
 A secondary strand is fitted in datasets that measure a child at two or more waves.
-For each exposure and outcome, and each pair of successive waves in which the outcome was measured, three models are fitted on the children seen at both waves and pooled across datasets as the cross-sectional slopes are.
+For each exposure and outcome, and each pair of successive waves in which the outcome was measured, three models are fitted on children seen at both waves and pooled across datasets as the cross-sectional slopes are.
+A pair starts from one unit of the earlier wave, so countries stay apart as in the primary models.
 
 - **Lagged.** The outcome at the later wave on screen use at the earlier wave, adjusted for the outcome at the earlier wave and the covariates.
   Outcomes are standardised within their own wave.
 - **Within-child.** The change in the outcome on the change in screen use between the two waves.
   Anything about a child that does not change between the waves cannot explain this slope.
-  Changes are in units of the outcome's SD at the earlier wave, because scores standardised within each wave lose the change in the mean.
-  A pair of waves is left out where the screen item or the outcome's instrument changed between them.
-- **Matched cross-sectional.** The primary model at the earlier wave, on the children the lagged model uses, so the three are compared on the same children.
+  The change in the outcome is in units of its SD at the earlier wave, because scores standardised within each wave lose the change in the mean; the change in screen use is in hours.
+  It also needs screen use at the later wave, so it rests on fewer children than the other two.
+  A pair of waves is left out where the screen item changed between them, or where the data name the outcome's instrument and it differs.
+- **Matched cross-sectional.** The primary model at the earlier wave, on the children the lagged model uses, so those two are compared on the same children.
 
 The strand is labelled exploratory, takes Tier 5 q-values, and its models are rows of the model list fixed at the freeze.
 It is fitted for outcomes modelled linearly; binary and short ordinal rows are not in it.
@@ -40,6 +42,8 @@ It is fitted for outcomes modelled linearly; binary and short ordinal rows are n
   A lagged or within-child slope removes some explanations and not others: something that changes over time and affects both screen use and the outcome is still there.
 - A within-child slope smaller than the cross-sectional one is not by itself evidence that the cross-sectional slope is confounded.
   Error in measuring screen use pulls a slope of changes towards zero more than it pulls a slope of levels.
+- The outcome at the earlier wave is itself measured with error, so adjusting for it removes only part of what it stands for, and a lagged slope keeps some of the cross-sectional association for that reason alone.
+  The lagged model does not adjust for screen use at the later wave.
 - Gaps between waves differ across datasets from months to years, and the slopes are reported against the gap.
 
 ---
@@ -65,6 +69,10 @@ Two simple models that every panel can support are preferred to one elaborate mo
 - The strand rests on a minority of the datasets, and they are not a random subset: panels differ from one-off surveys in country, period and age.
   The matched cross-sectional model shows how far that matters.
 - Children who left a study before the later wave are not seen, so attrition is not accounted for.
+- Most outcome rows do not record which instrument was used, so for those a change of instrument between waves goes undetected in the within-child model.
+  The lagged model is not affected, because each wave is standardised on its own.
+- A dataset's successive pairs of waves share children.
+  The pooled interval allows for that, but with few panels its degrees of freedom are few, and many results will be marked as having too few studies to say.
 - A wave with no screen item is not in the harmonised data, so a gap is the gap between waves that have one.
 - The models are not preregistered, which the deviations ledger records.
 

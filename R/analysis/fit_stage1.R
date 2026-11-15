@@ -264,10 +264,13 @@ fit_stage1_unit <- function(
     return(result("score type not modelled here"))
   }
   if (nrow(data) == 0) {
-    return(result(paste(
-      "no row has",
-      paste(extra_terms, collapse = " and ")
-    )))
+    return(result(
+      if (length(extra_terms) == 0) {
+        "no rows"
+      } else {
+        paste("no row has", paste(extra_terms, collapse = " and "))
+      }
+    ))
   }
 
   design <- stage1_design(data, settings, tier)
@@ -474,10 +477,14 @@ stage1_other_screen <- function(prepared, exposure) {
   }
   list(
     value = prepared$exposures[[column]],
-    from = paste0(
-      prepared$exposures$total_source,
-      ": ",
-      prepared$exposures$total_rows
+    from = ifelse(
+      is.na(prepared$exposures$total_source),
+      NA_character_,
+      paste0(
+        prepared$exposures$total_source,
+        ": ",
+        prepared$exposures$total_rows
+      )
     )
   )
 }

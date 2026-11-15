@@ -16,7 +16,7 @@
 #' @param settings From `analysis_settings()`.
 #' @return A list of two tibbles, each with `model_name`
 #'   (`longitudinal_lagged` and so on): `tree`, the L0 to L2 rows, with the
-#'   median `lag_years` of the pairs behind each exposure and family; and
+#'   median `lag_years` of the pairs behind each family's row; and
 #'   `cells`, the L3 rows.
 pool_longitudinal <- function(
   estimates,
@@ -43,6 +43,7 @@ pool_longitudinal <- function(
       .by = c("exposure", "family")
     )
     out <- dplyr::left_join(out, lags, by = c("exposure", "family"))
+    out$lag_years[!out$level %in% "L0"] <- NA_real_
     out$model_name <- name(model)
     out
   })

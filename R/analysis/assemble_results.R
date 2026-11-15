@@ -11,7 +11,8 @@
 #'   (`contrast_estimate` and its interval), for estimates in SD per hour;
 #' - `p_equivalence` and `equivalent`, the test that the estimate lies
 #'   within the smallest effect of interest (`test_equivalence()`), for
-#'   estimates in SD per hour;
+#'   estimates in SD per hour; `equivalent` is given only where the status
+#'   is `pooled`;
 #' - the preregistered `hypothesis` and `prediction` for the row's exposure
 #'   and family, and for a prediction of no association `q_equivalence`,
 #'   the equivalence p-values adjusted among themselves with the row's
@@ -120,6 +121,7 @@ assemble_results <- function(
   at <- at[listed]
   primary <- model_spec$analysis_class[at] %in%
     "confirmatory" &
+    model_spec$engine[at] %in% "two_stage" &
     is.na(model_spec$variant[at])
   out$finding <- dplyr::case_when(
     !out$analysis_class %in% "confirmatory" ~ out$analysis_class,
@@ -151,6 +153,7 @@ assemble_results <- function(
   out$k_total[placed] <- adjusted$k_total
 
   in_sd <- out$effect_measure %in% "sd_per_hour"
+  # The contrast of 1 against 4 hours a day.
   hours <- 3
   out$contrast_estimate <- ifelse(in_sd, hours * out$estimate, NA_real_)
   out$contrast_low <- ifelse(in_sd, hours * out$ci_low, NA_real_)
@@ -162,7 +165,12 @@ assemble_results <- function(
     settings$smallest_effect_per_hour
   )
   out$p_equivalence <- equivalence$p_equivalence
-  out$equivalent <- equivalence$equivalent
+  # An estimate with too few studies to say cannot show equivalence either.
+  out$equivalent <- ifelse(
+    out$status %in% "pooled",
+    equivalence$equivalent,
+    NA
+  )
 
   predicted <- match(
     paste(out$exposure, out$family),

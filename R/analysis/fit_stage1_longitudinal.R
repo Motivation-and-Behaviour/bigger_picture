@@ -2,7 +2,7 @@
 #'
 #' For each exposure and outcome cell, and each pair of successive waves of
 #' a dataset in which the outcome was measured, three models are fitted on
-#' the children seen at both waves (ANALYSIS_PLAN.md, Step 13; DR-0018).
+#' children seen at both waves (ANALYSIS_PLAN.md, Step 13; DR-0018).
 #' Each gives a slope in SD per hour a day, with the covariates, weights and
 #' standard errors of `fit_stage1_unit()` taken from the earlier wave:
 #'
@@ -13,18 +13,23 @@
 #' - `matched`: the cross-sectional model at the earlier wave on the rows
 #'   the lagged model uses, so the two can be compared on the same
 #'   children;
-#' - `within`: the change in the outcome on the change in screen use
-#'   between the two waves, which removes every difference between
-#'   children that does not change. Both changes are in the outcome's SD at
-#'   the earlier wave: scores standardised within each wave would lose the
-#'   change in the mean. It needs the same item at both waves, so a pair is
-#'   left out where the screen item changed (`series_breaks.csv`, or a
-#'   different response format or respondent) or the outcome's instrument
-#'   did.
+#' - `within`: the change in the outcome on the change in screen use, in
+#'   hours, between the two waves, which removes every difference between
+#'   children that does not change. The change in the outcome is in its SD
+#'   in the earlier unit: scores standardised within each wave would lose
+#'   the change in the mean. It also needs screen use at the later wave, so
+#'   it has fewer children than the other two, and it needs the same item
+#'   at both waves: a pair is left out where the screen item changed
+#'   (`series_breaks.csv`, or a different response format or respondent),
+#'   or where the base table names the outcome's instrument and it
+#'   differs. Most outcome rows have no such column, and for those a change
+#'   of instrument between waves is not detected.
 #'
-#' A pair is a pseudo-unit, named by the dataset, the two waves and the
-#' country of the earlier wave's unit, and each row records the median gap
-#' between the waves in years of age (`lag_years`).
+#' A pair is a pseudo-unit: one unit of the earlier wave (so one country)
+#' and the later wave, on the children of that unit seen again. Each row
+#' records the typical gap between the waves in years (`lag_years`), from
+#' the collection years, or from the children's ages where those do not
+#' give one.
 #'
 #' Limits: only outcomes modelled linearly are fitted (continuous rows, and
 #' ordinal rows with five or more levels); a wave with no screen item is
@@ -111,8 +116,20 @@ fit_stage1_longitudinal <- function(
       function(wave) any(!is.na(z[wave_rows[[wave]]])),
       logical(1)
     )]
-    for (j in seq_len(max(length(measured) - 1, 0))) {
+    steps <- seq_len(max(length(measured) - 1, 0))
+    # One pair per unit of the earlier wave, so a wave's countries stay
+    # apart as they do in the cross-sectional models.
+    pairs <- do.call(
+      rbind,
+      lapply(steps, function(j) {
+        units <- unique(base$unit[wave_rows[[measured[j]]]])
+        data.frame(j = rep(j, length(units)), unit = units)
+      })
+    )
+    for (k in seq_len(NROW(pairs))) {
+      j <- pairs$j[k]
       from <- wave_rows[[measured[j]]]
+      from <- from[base$unit[from] %in% pairs$unit[k]]
       to <- wave_rows[[measured[j + 1]]]
       later <- to[match(base$participant_id[from], base$participant_id[to])]
       paired <- !is.na(later) &
@@ -122,9 +139,10 @@ fit_stage1_longitudinal <- function(
       if (!any(paired)) {
         next
       }
+      # The outcome's SD among all of the earlier unit's rows.
+      spread <- stats::sd(raw[from], na.rm = TRUE)
       from <- from[paired]
       later <- later[paired]
-      spread <- stats::sd(raw[wave_rows[[measured[j]]]], na.rm = TRUE)
       data <- frame[from, ]
       changed <- longitudinal_item_changed(
         base$dataset_id[1],
@@ -171,17 +189,13 @@ fit_stage1_longitudinal <- function(
           fit$status <- changed
         }
         fit$model <- version
-        fit$unit <- paste(
-          base$unit[from[1]],
-          measured[j + 1],
-          sep = " to "
-        )
+        fit$unit <- paste(pairs$unit[k], measured[j + 1], sep = " to ")
         fit$wave <- measured[j]
         fit$wave_from <- measured[j]
         fit$wave_to <- measured[j + 1]
-        fit$lag_years <- stats::median(
-          base$age_years[later] - base$age_years[from],
-          na.rm = TRUE
+        fit$lag_years <- longitudinal_lag(
+          base$data_year[later] - base$data_year[from],
+          base$age_years[later] - base$age_years[from]
         )
         fit$n_pairs <- length(from)
         fit$exposure <- exposure
@@ -208,6 +222,20 @@ fit_stage1_longitudinal <- function(
     "outcome",
     "score_type"
   )
+}
+
+# The typical gap between two waves in years: from the collection years,
+# or from the children's ages where the years are not recorded or do not
+# differ. Ages are often recorded coarsely, so they come second. NA where
+# neither gives a gap above zero.
+longitudinal_lag <- function(year_gap, age_gap) {
+  for (gap in list(year_gap, age_gap)) {
+    typical <- stats::median(gap, na.rm = TRUE)
+    if (!is.na(typical) && typical > 0) {
+      return(typical)
+    }
+  }
+  NA_real_
 }
 
 # The base column naming an outcome row's instrument, where there is one:

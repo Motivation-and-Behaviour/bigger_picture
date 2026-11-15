@@ -601,3 +601,10 @@ bp_total_exposure <- function() {
 bp_specification_frozen <- function() {
   FALSE
 }
+
+# The models whose cells the cross-sectional stage 1 fits: every other
+# model built on those slopes (curves, covariate tiers, moderators) uses a
+# subset of these cells. They share no cell, so a pooled row has one model.
+bp_stage1_models <- function() {
+  c("tier1_total", "tier2_content", "other_exposures", "report_rows")
+}
