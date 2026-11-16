@@ -87,7 +87,18 @@ analysis_settings <- function() {
     # of it.
     curve_interval_rows = 30L,
     curve_window = 0.5,
-    smallest_effect = 0.10
+    smallest_effect = 0.10,
+    # Multiple imputation (ANALYSIS_PLAN.md, Step 8; DR-0019). The number
+    # of imputations is small while the engine is developed, and 50 for
+    # the confirmatory run.
+    imputations = 5L,
+    imputation_iterations = 10L,
+    # A variable is imputed in a unit where it is known for at least this
+    # share of the unit's rows; below that its missingness is not sporadic.
+    impute_min_observed = 0.5,
+    # A predictor enters a variable's imputation model where the two
+    # correlate at least this much.
+    impute_min_correlation = 0.05
   )
 }
 

@@ -1,0 +1,198 @@
+---
+title: "Imputation: what was filled in, and whether it looks right"
+subtitle: "Multiple imputation of sporadically missing screen use and covariates, before the freeze"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(dplyr)
+library(ggplot2)
+library(targets)
+
+summary_tables <- tar_read(imputation_summary)
+numeric_all <- tar_read(imputation_numeric_all)
+levels_all <- tar_read(imputation_levels_all)
+units_all <- tar_read(imputation_units_all)
+settings <- tar_read(settings)
+
+fmt <- function(x) format(round(x), big.mark = ",", trim = TRUE)
+theme_set(theme_minimal(base_size = 10))
+options(knitr.kable.NA = "")
+```
+
+Missing screen use and covariates are imputed within each unit (dataset by wave by country), `r settings$imputations` times while the engine is developed and 50 times for the confirmatory run.
+A variable is imputed in a unit only where it is known for at least `r 100 * settings$impute_min_observed`% of the unit's rows.
+Outcomes are read by the imputation model and never imputed for analysis.
+Every dataset's imputations passed the hard checks in `review_imputation()`, or the build would have stopped.
+
+## What was imputed
+
+One line per variable and what became of its missing values, over all units with any.
+Cells are counted once, not once per imputation.
+
+```{r}
+#| label: variables
+summary_tables$variables |>
+  transmute(
+    Variable = variable,
+    Outcome = outcome,
+    Datasets = datasets,
+    Units = fmt(units),
+    `Cells missing` = fmt(cells_missing),
+    `Cells imputed` = fmt(cells_imputed)
+  ) |>
+  knitr::kable(align = "llrrrr")
+```
+
+```{r}
+#| label: failures
+failed <- units_all[
+  !units_all$status %in% "imputed" &
+    !grepl("^too little|^fewer rows|^not needed", units_all$status),
+]
+```
+
+`r nrow(failed)` unit and variable pairs failed or were only partly imputed.
+
+```{r}
+#| label: failures-table
+failed |>
+  count(dataset_id, variable, status, name = "units") |>
+  knitr::kable()
+```
+
+## Imputed against observed values
+
+An imputed value is always one its unit observed.
+Imputed values need not have the same distribution as observed ones: they differ where the children with a missing value differ from the rest.
+A large gap is still worth a look.
+
+### Screen use, in hours a day
+
+Each line pools the units that had values imputed, over all datasets.
+
+```{r}
+#| label: numeric
+pooled <- numeric_all |>
+  summarise(
+    datasets = n_distinct(dataset_id),
+    mean = weighted.mean(mean, n),
+    median = weighted.mean(q50, n),
+    q25 = weighted.mean(q25, n),
+    q75 = weighted.mean(q75, n),
+    n = sum(n),
+    .by = c(variable, source)
+  )
+pooled |>
+  arrange(variable, desc(source)) |>
+  transmute(
+    Variable = variable,
+    Values = source,
+    Datasets = datasets,
+    N = fmt(n),
+    Mean = round(mean, 2),
+    `Lower quartile` = round(q25, 2),
+    Median = round(median, 2),
+    `Upper quartile` = round(q75, 2)
+  ) |>
+  knitr::kable(align = "llrrrrrr")
+```
+
+The quartiles are averages of each dataset's quartiles, weighted by its number of values.
+
+```{r}
+#| label: numeric-figure
+#| fig-height: 5
+#| fig-width: 9
+by_dataset <- numeric_all |>
+  select(dataset_id, variable, source, mean) |>
+  tidyr::pivot_wider(names_from = source, values_from = mean)
+ggplot(by_dataset, aes(observed, imputed)) +
+  geom_abline(colour = "grey60") +
+  geom_point(alpha = 0.6, size = 1.2) +
+  facet_wrap(vars(variable), scales = "free") +
+  labs(
+    x = "Mean of observed values (hours a day)",
+    y = "Mean of imputed values",
+    caption = "One point per dataset; the line is equality."
+  )
+```
+
+### Covariates
+
+The share of each category among observed and imputed values, pooled over datasets.
+
+```{r}
+#| label: levels
+levels_all |>
+  summarise(n = sum(n), .by = c(variable, source, level)) |>
+  mutate(share = n / sum(n), .by = c(variable, source)) |>
+  select(variable, level, source, share) |>
+  tidyr::pivot_wider(names_from = source, values_from = share) |>
+  filter(coalesce(observed, 0) >= 0.02 | coalesce(imputed, 0) >= 0.02) |>
+  arrange(variable, desc(observed)) |>
+  transmute(
+    Variable = variable,
+    Category = level,
+    `Observed (%)` = round(100 * observed, 1),
+    `Imputed (%)` = round(100 * imputed, 1)
+  ) |>
+  knitr::kable(align = "llrr")
+```
+
+Categories under 2% of both are not shown.
+
+## What imputation changes for the models
+
+The slopes of the development cells fitted on complete cases and on imputed data, by covariate tier.
+
+```{r}
+#| label: gain
+summary_tables$gain |>
+  transmute(
+    Tier = tier,
+    `Slopes, complete cases` = fmt(slopes_complete),
+    `Slopes, imputed` = fmt(slopes_imputed),
+    `Datasets, complete cases` = datasets_complete,
+    `Datasets, imputed` = datasets_imputed,
+    `Rows, complete cases` = fmt(rows_complete),
+    `Rows, imputed` = fmt(rows_imputed),
+    `Fitted in some imputations only` = slopes_partly_fitted
+  ) |>
+  knitr::kable(align = "r")
+```
+
+A slope fitted in only some imputations is not carried forward.
+
+## How much information is missing
+
+The fraction of information missing for a unit's slope: the share of its variance that comes from not knowing the imputed values.
+
+```{r}
+#| label: fmi
+summary_tables$fmi |>
+  transmute(
+    Tier = tier,
+    Slopes = fmt(slopes),
+    Datasets = datasets,
+    `Nothing imputed` = fmt(nothing_imputed),
+    `Median` = round(fmi_median, 3),
+    `90th percentile` = round(fmi_q90, 3),
+    `Largest` = round(fmi_max, 3),
+    `Over a half` = fmi_over_half,
+    `Covariates differed between imputations` = design_varied
+  ) |>
+  knitr::kable(align = "r")
+```
+
+With `r settings$imputations` imputations these fractions are themselves rough; they settle with 50.

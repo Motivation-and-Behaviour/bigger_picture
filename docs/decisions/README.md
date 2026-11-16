@@ -63,6 +63,7 @@ The numeric prefix preserves chronological ordering.
 | DR-0016 | [Curves are pooled from splines with fixed knots, and the threshold duration is read from the pooled curve](DR-0016-curves-and-threshold-duration.md) | Accepted | 2026-11-13 |
 | DR-0017 | [The tiered false discovery rate, written out as a rule](DR-0017-tiered-false-discovery-rate.md) | Accepted | 2026-11-15 |
 | DR-0018 | [A longitudinal strand of lagged and within-child models](DR-0018-longitudinal-strand.md) | Accepted | 2026-11-15 |
+| DR-0019 | [Missing screen use and covariates are imputed within each unit](DR-0019-multiple-imputation.md) | Proposed | 2026-11-16 |
 
 When adding a new decision:
 

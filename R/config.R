@@ -304,7 +304,11 @@ bp_build_sections <- function() {
       "cell_counts",
       "curves",
       "stage1_other",
-      "longitudinal"
+      "longitudinal",
+      "imputed",
+      "imputation_review",
+      "stage1_imputed",
+      "stage1_other_imputed"
     )
   )
 }
@@ -608,4 +612,21 @@ bp_specification_frozen <- function() {
 # subset of these cells. They share no cell, so a pooled row has one model.
 bp_stage1_models <- function() {
   c("tier1_total", "tier2_content", "other_exposures", "report_rows")
+}
+
+# The settings imputation reads.
+bp_imputation_settings <- function() {
+  c(
+    "seed",
+    "min_unit_rows",
+    "imputation_iterations",
+    "impute_min_observed",
+    "impute_min_correlation",
+    "exposure_max_hours"
+  )
+}
+
+# The settings stage 1 reads when it fits imputed data.
+bp_imputed_model_settings <- function() {
+  c(bp_model_settings(), "exposure_max_hours")
 }
