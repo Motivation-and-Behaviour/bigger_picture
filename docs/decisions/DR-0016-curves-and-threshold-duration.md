@@ -1,6 +1,6 @@
 # DR-0016: Curves are pooled from splines with fixed knots, and the threshold duration is read from the pooled curve in two ways
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-11-13  
 **Decision makers:** Taren  
 **Related issues:** NA

@@ -1337,12 +1337,12 @@ test_that("a further covariate tier removes confounding the first leaves in", {
 test_that("a tier takes the first measure the unit records well enough", {
   data <- tier_unit()
   # Exactly at the minimum share it counts; just under, the next is taken.
-  data$ses_household[1:900] <- NA
+  data$ses_household[1:300] <- NA
   expect_equal(
     fit_stage1_unit(data, "linear", tier = 2L)$ses_measure,
     "ses_household"
   )
-  data$ses_household[1:901] <- NA
+  data$ses_household[1:301] <- NA
   expect_equal(
     fit_stage1_unit(data, "linear", tier = 2L)$ses_measure,
     "parental_education"
@@ -1386,12 +1386,12 @@ test_that("tier 3 adds ethnicity, or else minority status, and urbanicity", {
 
   # Each covariate known for most rows, but few rows with all three.
   data <- tier_unit()
-  data$ses_household[1:800] <- NA
-  data$minority[801:1600] <- NA
-  data$urbanicity[1601:2400] <- NA
+  data$ses_household[1:250] <- NA
+  data$minority[251:500] <- NA
+  data$urbanicity[501:750] <- NA
   third <- fit_stage1_unit(data, "linear", tier = 3L)
   expect_equal(third$status, "too few rows have all of the tier's covariates")
-  expect_equal(third$n_no_covariate, 2400)
+  expect_equal(third$n_no_covariate, 750)
 })
 
 test_that("a covariate that stops varying, repeats another or separates is said", {

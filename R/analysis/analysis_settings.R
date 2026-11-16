@@ -43,8 +43,9 @@ analysis_settings <- function() {
     # unit's rows; below that it is left out and the rows stay.
     sex_known_min = 0.9,
     # A covariate of a further tier counts as recorded in a unit where it is
-    # known for at least this share of the unit's rows (provisional).
-    covariate_known_min = 0.7,
+    # known for at least this share of the unit's rows, until missing
+    # values are imputed (Step 8).
+    covariate_known_min = 0.9,
     # Cluster-robust standard errors from fewer clusters than this are
     # flagged: they tend to be too small.
     min_clusters = 10L,

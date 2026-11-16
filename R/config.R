@@ -565,6 +565,7 @@ bp_model_engines <- function() {
     "one_stage_logistic",
     "curve",
     "breakpoint",
+    "two_lines",
     "stage1_interaction",
     "stage2_moderator",
     "lagged",

@@ -1,6 +1,6 @@
 # DR-0018: A longitudinal strand of lagged and within-child models
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-11-15  
 **Decision makers:** Taren  
 **Related issues:** NA

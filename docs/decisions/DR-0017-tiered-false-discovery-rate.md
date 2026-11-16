@@ -1,6 +1,6 @@
 # DR-0017: The tiered false discovery rate, written out as a rule
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-11-15  
 **Decision makers:** Taren  
 **Related issues:** NA
