@@ -621,6 +621,7 @@ bp_imputation_settings <- function() {
     "min_unit_rows",
     "imputation_iterations",
     "impute_min_observed",
+    "impute_min_observed_age",
     "impute_min_correlation",
     "exposure_max_hours"
   )
@@ -628,5 +629,5 @@ bp_imputation_settings <- function() {
 
 # The settings stage 1 reads when it fits imputed data.
 bp_imputed_model_settings <- function() {
-  c(bp_model_settings(), "exposure_max_hours")
+  union(bp_model_settings(), bp_imputation_settings())
 }

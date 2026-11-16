@@ -1,24 +1,26 @@
-#' Check a dataset's imputations, and set imputed beside observed values
+#' Check a dataset's imputed covariates, and set them beside observed ones
 #'
 #' The checks are hard: any failure stops the build, because an imputation
 #' that breaks one of them is wrong, not merely poor (ANALYSIS_PLAN.md,
 #' Step 8 task 5). They apply to imputed cells only; observed values may
 #' legitimately break them.
 #'
-#' - an imputed cell was missing before;
-#' - only screen use and covariates are imputed, never an outcome;
-#' - an imputed number lies within the values its unit observed, and
-#'   between zero and the plausibility limit;
-#' - an imputed category is one its unit observed;
-#' - nothing is imputed for a variable its unit observed on less than the
-#'   minimum share of rows;
-#' - a variable that cannot change within a child has one value per child
-#'   in each imputation;
-#' - two imputations of the dataset are not the same draw.
+#' - an imputed cell was missing before, and is imputed once;
+#' - only sex and the tier covariates are imputed here;
+#' - an imputed category is one its unit observed, or, for a row that
+#'   cannot change within a child, one observed for that child;
+#' - imputed sex is female or male;
+#' - nothing is imputed for a covariate its unit observed on less than the
+#'   minimum share of rows, or for a child at an age at which the unit
+#'   observed it on too few;
+#' - a row that cannot change within a child has one value per child in
+#'   each imputation;
+#' - two imputations that filled the same cells are not the same draw.
 #'
-#' The summaries hold no row of data: per variable, the distribution of
-#' the observed values and of the imputed ones, pooled over the dataset's
-#' units and imputations.
+#' Imputed screen use is checked where it is drawn
+#' (`impute_cell_exposure()`).
+#'
+#' The summaries hold no row of data.
 #'
 #' @param prepared Output of `prepare_analysis_data()` for one dataset.
 #' @param imputed Every imputation of the dataset, from
@@ -28,9 +30,8 @@
 #' @param settings From `analysis_settings()`.
 #' @return NULL where the dataset is not included; otherwise a list of
 #'   tibbles with `dataset_id`: `units` (the imputations' notes, counted
-#'   over imputations), `numeric` (quantiles, mean and SD of observed and
-#'   imputed values per variable) and `levels` (the share of each category
-#'   among observed and imputed values).
+#'   over imputations) and `levels` (the share of each category among
+#'   observed and imputed values, in the units that had values imputed).
 review_imputation <- function(
   prepared,
   imputed,
@@ -45,6 +46,8 @@ review_imputation <- function(
   id <- as.character(base$dataset_id[1])
   frame <- imputation_frame(prepared, outcome_registry, exposure_registry)
   data <- frame$data
+  cells <- imputed$cells
+  unit <- base$unit
   must <- function(ok, what) {
     if (!isTRUE(ok)) {
       stop(
@@ -56,71 +59,60 @@ review_imputation <- function(
       )
     }
   }
-  numeric <- imputed$numeric
-  categorical <- imputed$categorical
-  cells <- rbind(
-    numeric[c("imputation", "row", "variable")],
-    categorical[c("imputation", "row", "variable")]
+  must(
+    all(cells$variable %in% frame$covariates),
+    "a variable was imputed that is not a covariate"
   )
   must(
-    all(numeric$variable %in% frame$exposures) &&
-      all(categorical$variable %in% frame$covariates),
-    "a variable was imputed that is not screen use or a covariate"
-  )
-  must(
-    !anyDuplicated(cells) > 0,
+    !anyDuplicated(cells[c("imputation", "row", "variable")]) > 0,
     "a cell was imputed twice in one imputation"
   )
-  was_missing <- function(table) {
-    all(vapply(
-      unique(table$variable),
-      function(name) {
-        all(is.na(data[[name]][table$row[table$variable == name]]))
-      },
-      logical(1)
-    ))
-  }
-  must(was_missing(cells), "an observed value was imputed over")
-
-  unit <- base$unit
-  for (name in unique(numeric$variable)) {
-    own <- numeric[numeric$variable == name, ]
-    units_of <- unit[own$row]
-    seen <- !is.na(data[[name]]) & unit %in% units_of
-    low <- tapply(data[[name]][seen], unit[seen], min)
-    high <- tapply(data[[name]][seen], unit[seen], max)
+  age_year <- floor(data$aux_age)
+  for (name in unique(cells$variable)) {
+    own <- cells[cells$variable == name, ]
+    seen <- !is.na(data[[name]])
     must(
-      all(own$value >= low[units_of] & own$value <= high[units_of]),
-      paste0("`", name, "` imputed outside the values its unit observed")
+      !any(seen[own$row]),
+      paste0("an observed `", name, "` was imputed over")
     )
+    in_unit <- paste(unit, data[[name]], sep = "\r")
+    ok <- paste(unit[own$row], own$value, sep = "\r") %in% in_unit
+    if (name %in% frame$constant) {
+      in_child <- paste(base$participant_id, data[[name]], sep = "\r")
+      ok <- ok |
+        paste(base$participant_id[own$row], own$value, sep = "\r") %in% in_child
+    }
     must(
-      all(own$value >= 0 & own$value <= settings$exposure_max_hours),
-      paste0("`", name, "` imputed outside the plausible hours")
-    )
-  }
-  for (name in unique(categorical$variable)) {
-    own <- categorical[categorical$variable == name, ]
-    seen <- paste(unit, data[[name]], sep = "\r")
-    must(
-      all(paste(unit[own$row], own$value, sep = "\r") %in% seen),
+      all(ok),
       paste0("`", name, "` imputed with a category its unit did not observe")
     )
-  }
-  # Sporadic missingness only.
-  for (name in unique(cells$variable)) {
-    share <- tapply(!is.na(data[[name]]), unit, mean)
-    touched <- unique(unit[cells$row[cells$variable == name]])
+    share <- stats::ave(as.numeric(seen), unit, FUN = mean)
     must(
-      all(share[touched] >= settings$impute_min_observed),
+      all(share[own$row] >= settings$impute_min_observed),
       paste0("`", name, "` imputed in a unit that observed too little of it")
     )
+    by_age <- stats::ave(as.numeric(seen), unit, age_year, FUN = mean)
+    must(
+      all(!is.na(age_year[own$row])) &&
+        all(by_age[own$row] >= settings$impute_min_observed_age),
+      paste0("`", name, "` imputed for an age group that observed too little")
+    )
   }
+  must(
+    all(cells$value[cells$variable == "sex"] %in% c("Female", "Male")),
+    "sex imputed as something other than female or male"
+  )
   for (name in frame$constant) {
-    own <- categorical[categorical$variable == name, ]
+    own <- cells[cells$variable == name, ]
     if (nrow(own) == 0) {
       next
     }
-    seen <- !is.na(data[[name]])
+    people <- unique(base$participant_id[own$row])
+    seen <- !is.na(data[[name]]) & base$participant_id %in% people
+    # Another recorded sex is a record, not a gap, and is left as it is.
+    if (name == "sex") {
+      seen <- seen & data[[name]] %in% c("Female", "Male")
+    }
     all_values <- rbind(
       tibble::tibble(
         imputation = own$imputation,
@@ -135,9 +127,6 @@ review_imputation <- function(
         )
       )
     )
-    all_values <- all_values[
-      all_values$person %in% base$participant_id[own$row],
-    ]
     per_person <- dplyr::summarise(
       all_values,
       values = dplyr::n_distinct(.data$value),
@@ -148,51 +137,24 @@ review_imputation <- function(
       paste0("`", name, "` differs within a child after imputation")
     )
   }
-  indexes <- sort(unique(numeric$imputation))
+  indexes <- sort(unique(cells$imputation))
   if (length(indexes) >= 2) {
-    first <- numeric[numeric$imputation == indexes[1], ]
-    second <- numeric[numeric$imputation == indexes[2], ]
+    first <- cells[cells$imputation == indexes[1], ]
+    second <- cells[cells$imputation == indexes[2], ]
     same_cells <- nrow(first) == nrow(second) &&
       all(first$row == second$row) &&
       all(first$variable == second$variable)
-    must(same_cells, "two imputations filled different cells")
-    # A handful of cells can match by chance; many cannot.
+    # A few cells can match by chance; many cannot.
     must(
-      nrow(first) < 20 || !all(first$value == second$value),
+      !same_cells || nrow(first) < 50 || !all(first$value == second$value),
       "two imputations are the same draw"
     )
   }
 
-  describe <- function(values, source, name) {
-    tibble::tibble(
-      variable = name,
-      source = source,
-      n = length(values),
-      mean = mean(values),
-      sd = stats::sd(values),
-      q05 = stats::quantile(values, 0.05, names = FALSE),
-      q25 = stats::quantile(values, 0.25, names = FALSE),
-      q50 = stats::quantile(values, 0.50, names = FALSE),
-      q75 = stats::quantile(values, 0.75, names = FALSE),
-      q95 = stats::quantile(values, 0.95, names = FALSE)
-    )
-  }
-  numeric_summary <- dplyr::bind_rows(lapply(
-    unique(numeric$variable),
-    function(name) {
-      own <- numeric[numeric$variable == name, ]
-      # Observed values of the units that had values imputed.
-      in_units <- unit %in% unique(unit[own$row]) & !is.na(data[[name]])
-      rbind(
-        describe(data[[name]][in_units], "observed", name),
-        describe(own$value, "imputed", name)
-      )
-    }
-  ))
   level_summary <- dplyr::bind_rows(lapply(
-    unique(categorical$variable),
+    unique(cells$variable),
     function(name) {
-      own <- categorical[categorical$variable == name, ]
+      own <- cells[cells$variable == name, ]
       in_units <- unit %in% unique(unit[own$row]) & !is.na(data[[name]])
       shares <- function(values, source) {
         counts <- table(values)
@@ -214,15 +176,11 @@ review_imputation <- function(
     imputed$units,
     imputations = dplyr::n(),
     n_imputed = sum(.data$n_imputed),
-    .by = c("unit", "variable", "rows", "n_missing", "status")
+    .by = c("unit", "variable", "rows", "n_missing", "n_age_group", "status")
   )
   with_id <- function(table) {
     table$dataset_id <- rep(id, nrow(table))
     dplyr::relocate(table, "dataset_id")
   }
-  list(
-    units = with_id(units),
-    numeric = with_id(numeric_summary),
-    levels = with_id(level_summary)
-  )
+  list(units = with_id(units), levels = with_id(level_summary))
 }

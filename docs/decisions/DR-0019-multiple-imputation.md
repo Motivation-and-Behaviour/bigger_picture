@@ -1,4 +1,4 @@
-# DR-0019: Missing screen use and covariates are imputed within each unit
+# DR-0019: Covariates are imputed within each unit, and screen use within each model
 
 **Status:** Proposed  
 **Date:** 2026-11-16  
@@ -15,96 +15,104 @@ The deviations ledger already narrows that: imputation runs within each unit and
 Three things shape how it can be done.
 Datasets differ in what they measure, so a model across datasets would impute values a study never collected.
 Some datasets hold hundreds of thousands of rows per wave and dozens of outcome rows.
-And the analysis estimates relations, between screen use and outcomes, that an imputation model must contain or it will weaken them in the imputed rows.
+And the analysis estimates the relation between screen use and each outcome, which an imputation of screen use must contain or it will weaken that relation in the imputed rows.
+
+A first build imputed screen use once per unit, with the outcomes summarised as one score per outcome family.
+An independent review deleted observed screen use from real datasets and imputed it back: slopes came out 9 to 21% too small, worse than leaving the rows out, because an outcome is only loosely related to its family's score.
+The same review found whole age groups imputed where a unit had not asked them the item.
+This record is the design that replaced it.
 
 ---
 
 ## Decision
 
 **Where.**
-Each stage 1 unit (dataset by wave by country) is imputed on its own, so every relation the imputation preserves is that unit's.
+Everything is imputed within a stage 1 unit (dataset by wave by country), so every relation an imputation preserves is that unit's.
 
-**What is imputed.**
+**Covariates** (sex and the covariates of the further tiers) are imputed once per unit and imputation, by chained equations with predictive mean matching.
+Their models read each other, screen use, age, the survey weight, one score per outcome family, and in a panel the child's own mean on screen use and on those scores over their other waves.
 
-- The exposures the models use: the usual-day rows, and the total where it is a dedicated item.
-  A total that is a sum is worked out again from its imputed parts.
-- Sex and the covariates of the further tiers.
+**Screen use** is imputed for each model separately: among the unit's rows that have the model's outcome, a missing exposure is drawn by predictive mean matching from a model holding that outcome, age, sex, the tier covariates, the survey weight and, in a panel, the child's mean exposure over their other waves.
+Where a model also adjusts for the rest of the child's screen use, the two are imputed together.
 
-Outcomes are not imputed for analysis: a row without an outcome is not analysed for it.
+**Outcomes** are never imputed: a row without an outcome is not analysed for it.
 
 **Sporadic missingness only.**
-A variable is imputed in a unit where it is known for at least half of the unit's rows.
-Below that, and where a unit never measured it, it stays missing and the covariate tiers deal with it.
-
-**The imputation model.**
-Predictive mean matching for every variable, so an imputed value is always one the unit observed: a banded item stays in its bands and a category is a real category.
-Each variable's model reads:
-
-- the other exposures and covariates, where they correlate with it;
-- age and sex, and the survey weight where the unit has one;
-- the outcomes, as one score per outcome family, the mean of a row's standardised scores in that family;
-- in a panel, the child's own mean on each exposure and outcome score over their other waves.
+A variable is imputed where it is known for at least 70% of the rows concerned, and for a child only where it is known for at least half of the unit's children of the same age in whole years.
+So an item not asked of an age group, a grade or a form is not imputed for it.
+Elsewhere a missing value stays missing: a covariate is then dealt with by the covariate tiers, and a row without the exposure is left out of that model.
 
 **Things that cannot change within a child** (sex, ethnicity, minority status) take one value per child in each imputation.
+Sex is imputed as female or male; a child recorded as another sex keeps that record.
 
 **How many.**
-Five imputations while the engine is developed, 50 for the confirmatory run, ten iterations each.
-The seed of a unit's imputation comes from the project seed, the unit and the imputation number, so any imputation can be made again alone and adding imputations changes none already made.
+Five imputations while the engine is developed, 50 for the confirmatory run.
+Each imputation's seed comes from the project seed, the unit, the model and the imputation number, so any imputation can be made again alone and adding imputations changes none already made.
 
 **Analysis.**
 Each imputation is analysed with the stage 1 model, and each unit's slope is combined over imputations by Rubin's rules, with Barnard and Rubin's degrees of freedom.
 Stage 2 then pools one slope per unit as before.
 A slope that not every imputation could fit is not carried forward.
-The models on complete cases are kept as a sensitivity analysis.
+The primary models on complete cases are kept as a sensitivity analysis.
 
 **Checks that stop the build.**
-An imputed cell was missing before; only screen use and covariates are imputed; an imputed value is one its unit observed and within the plausible hours; nothing is imputed where too little was observed; values that cannot change within a child do not; and two imputations are not the same draw.
+An imputed covariate cell was missing before; its value is one its unit observed, or one observed for that child; nothing is imputed where too little was observed, in the unit or at the child's age; values that cannot change within a child do not; and two imputations are not the same draw.
+An imputed exposure is checked as it is drawn: it lies within the values the rows observed.
 
 ---
 
 ## Rationale
 
-Imputing within the unit matches the analysis, which estimates each unit's slope on its own.
-Predictive mean matching needs no assumption about the shape of a variable's distribution, which matters for hours of screen use reported in bands.
+Imputing an exposure inside each model makes the imputation model hold exactly what the analysis model estimates, for every outcome, at the cost of imputing the same child's screen use separately for each outcome.
+That cost is small, because only the slope is carried forward, never the imputed value.
 
-The outcomes have to inform the imputation of screen use, or the imputed rows would show no relation between them.
-Using one score per family in place of every outcome row keeps a unit's model to a few dozen variables whatever the dataset holds, and those scores are rarely missing.
+A row with a missing exposure adds little to a slope by itself.
+The gain from imputing it comes from what else is known about the child, chiefly their other waves, and from removing the bias that arises when the exposure is missing more often for children with particular outcomes.
+The larger gain is in the covariate tiers, where a row with screen use and an outcome is otherwise lost for want of one covariate.
+
+Predictive mean matching needs no assumption about the shape of a variable's distribution, which matters for hours of screen use reported in bands.
 
 ---
 
 ## Alternatives considered
 
+- **Screen use imputed once per unit, with outcomes as family scores.** Built first and rejected on the evidence above.
+- **Screen use imputed once per unit with every outcome row in the model.** Each outcome's own gaps would need imputing, and the model grows with the number of outcomes.
 - **Panels imputed in wide format, one column per variable and wave.** This is what the plan first said.
-  It uses a child's other waves well, but it must impute whole waves a child did not attend, only to discard them, and it grows with the square of the number of waves; the longest panels have more than twenty.
-  The child's mean over their other waves carries most of the same information in two columns.
-- **Every outcome row in the imputation model.** Faithful to each outcome's own model, but too large for the bigger datasets, and each outcome's missing values would need imputing too.
-- **A separate imputation for each exposure and outcome pair.** Exactly matched to each model, but tens of thousands of imputation runs.
+  It must impute whole waves a child did not attend, only to discard them, and it grows with the square of the number of waves.
+  The child's mean over their other waves carries most of the same information.
 - **Imputation trees or forests.** They capture interactions and curves without being told to, at many times the cost.
-- **Imputing below half observed.** Where most of a variable is missing in a unit, the imputed values would rest on a minority and on the model.
-- **Imputing a summed total directly.** It would disagree with its own parts.
+- **A lower or higher threshold than 70%.** At 50% a unit's values rest too much on the model; at 90% little is gained in the covariate tiers.
+- **One threshold for the unit only.** It imputes a whole age group that was never asked.
 
 ---
 
 ## Consequences
 
-- An imputed exposure is related to a specific outcome only through that outcome's family score, the other variables and, in panels, the child's other waves.
-  For an outcome only loosely related to its family's score, the slope in the imputed rows is pulled a little towards zero, the more so the more of the exposure is missing.
-  The complete-case sensitivity analysis shows the size of this.
-- The imputation model is linear in its predictors.
-  A curve of an outcome over hours of screen use, or a difference in slope between groups, is therefore pulled a little towards a straight line or towards no difference in the imputed rows.
-  The curves are also run on observed exposure values only, as a sensitivity analysis already in the model list.
-- Missingness is assumed to be at random given what the model reads.
+- The same child can be given different imputed screen use in the models of different outcomes.
+  Each model is valid by itself; the imputed values are not a dataset and are not stored.
+- Covariates are imputed from family scores, not from each outcome, so the relation between a covariate and a specific outcome is a little weakened in the rows where the covariate was imputed.
+  This affects how well a tier adjusts, not the slope directly.
+- The imputation models are linear in their predictors.
+  A curve of an outcome over hours of screen use, or a difference in slope between groups, is pulled a little towards a straight line or towards no difference in the imputed rows.
+  The curves are also run on observed exposure values only, a sensitivity analysis already in the model list.
+- Which covariate a tier uses is settled on the imputed data, so a tier can use a measure that the complete-case rule would have passed over.
+- The survey weight is a predictor; strata and clusters are not, and the imputation models are unweighted.
+- Missingness is assumed to be at random given what the models read.
 - With five imputations the fraction of information missing is rough; it settles with 50.
-- The longitudinal strand and the curves are on complete cases until they are wired to the imputations.
+- Study-level moderators are not imputed; the child-level ones (sex, the socioeconomic measure, age) are, or are never missing.
+- The longitudinal strand and the curves are on complete cases until they are wired to the imputations, and no convergence diagnostics are kept yet.
 
 ---
 
 ## Implementation
 
-- `impute_dataset()` makes one imputation of a dataset, `apply_imputation()` fills a prepared dataset with it, and `fit_stage1_imputed()` fits and combines with `pool_rubin()`.
-- `review_imputation()` holds the checks, and `analysis/reports/imputation.qmd` sets imputed beside observed values.
-- Settings: `imputations`, `imputation_iterations`, `impute_min_observed`, `impute_min_correlation`.
-- `tests/testthat/test-analysis-imputation.R` holds the known answers, among them a case where complete cases are biased and imputation is not.
+- `impute_dataset()` makes one imputation of a dataset's covariates and `apply_imputation()` fills a prepared dataset with it.
+- `impute_cell_exposure()` imputes a model's exposure, called from `fit_stage1()`.
+- `fit_stage1_imputed()` fits each imputation and combines with `pool_rubin()`.
+- `review_imputation()` holds the checks, and `analysis/reports/imputation.qmd` reports what was imputed.
+- Settings: `imputations`, `imputation_iterations`, `impute_min_observed`, `impute_min_observed_age`, `impute_min_correlation`.
+- `tests/testthat/test-analysis-imputation.R` holds the known answers, among them a case where complete cases are biased and imputation is not, and a case where an outcome is unrelated to the rest of its family and its slope is not weakened.
 
 ---
 

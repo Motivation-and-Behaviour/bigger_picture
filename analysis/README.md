@@ -141,8 +141,8 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `stage1_other_<key>`, `stage1_other_all`, `tree_other` | The content-class cells adjusted for the rest of the child's screen use, and pooled up the tree |
 | `tree_tier2`, `tree_tier3` | The slopes at covariate tiers 2 and 3 pooled up the tree |
 | `longitudinal_<key>`, `longitudinal_all`, `longitudinal_development` | The lagged, within-child and matched cross-sectional models per pair of waves (DR-0018), and each pooled per outcome row and up the tree |
-| `imputed_<key>`, `imputation_review_<key>`, `imputation_units_all`, `imputation_numeric_all`, `imputation_levels_all`, `imputation_summary` | Each dataset's imputations of sporadically missing screen use and covariates, one branch per imputation (DR-0019); their hard checks; and imputed values set beside observed ones |
-| `stage1_imputed_<key>`, `stage1_imputed_all`, `stage1_other_imputed_<key>`, `stage1_other_imputed_all` | Stage 1 fitted on each imputation and combined by Rubin's rules, at covariate tiers 1 to 3 and adjusted for other screen use |
+| `imputed_<key>`, `imputation_review_<key>`, `imputation_units_all`, `imputation_levels_all`, `imputation_summary` | Each dataset's imputations of sporadically missing covariates, one branch per imputation (DR-0019); their hard checks; and imputed values set beside observed ones |
+| `stage1_imputed_<key>`, `stage1_imputed_all`, `stage1_other_imputed_<key>`, `stage1_other_imputed_all` | Stage 1 fitted on each imputation, with each model's missing screen use imputed for that model, and combined by Rubin's rules, at covariate tiers 1 to 3 and adjusted for other screen use |
 | `stage2_imputed`, `tree_imputed`, `tree_imputed_tier2`, `tree_imputed_tier3`, `tree_other_imputed` | Those slopes pooled across datasets and up the outcome tree |
 | `results_development` | Every model built so far in one table: estimate, interval, p, tiered q with its K (DR-0017), the 1 against 4 hours contrast, the equivalence test and the preregistered prediction |
 | `year_moderation_development` | Whether the slopes differ by collection year, on the development cells |

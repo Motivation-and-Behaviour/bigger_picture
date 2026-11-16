@@ -5,11 +5,11 @@
 #'   `fit_stage1_imputed()`, bound.
 #' @param complete The same cells fitted on complete cases, from
 #'   `fit_stage1()` at the same tiers.
-#' @return A list of tibbles: `variables`, per variable the units and cells
+#' @return A list of tibbles: `variables`, per covariate the units and cells
 #'   imputed and the units and cells left because too little was observed
 #'   or the imputation failed; `fmi`, per covariate tier the distribution
 #'   over unit slopes of the fraction of information missing, and how many
-#'   slopes every imputation fitted; and `gain`, per tier the slopes and
+#'   slopes had screen use imputed and what share of their rows; and `gain`, per tier the slopes and
 #'   rows fitted on complete cases and on imputed data.
 summarise_imputation <- function(units, estimates, complete) {
   per_cell <- units$n_imputed / pmax(units$imputations, 1)
@@ -27,6 +27,7 @@ summarise_imputation <- function(units, estimates, complete) {
     units = dplyr::n(),
     cells_missing = sum(.data$n_missing),
     cells_imputed = sum(.data$cells_imputed),
+    cells_age_group = sum(.data$n_age_group),
     .by = c("variable", "outcome")
   )
   fitted <- estimates[estimates$status %in% "fitted", ]
@@ -40,11 +41,23 @@ summarise_imputation <- function(units, estimates, complete) {
     fitted,
     slopes = dplyr::n(),
     datasets = dplyr::n_distinct(.data$dataset_id),
-    nothing_imputed = sum(.data$m == 0 | .data$fmi %in% 0),
+    nothing_imputed = sum(.data$fmi %in% 0),
     fmi_median = quantile_of(.data$fmi, 0.5),
     fmi_q90 = quantile_of(.data$fmi, 0.9),
     fmi_max = quantile_of(.data$fmi, 1),
     fmi_over_half = sum(.data$fmi > 0.5, na.rm = TRUE),
+    exposure_imputed = sum(.data$n_exposure_imputed > 0, na.rm = TRUE),
+    exposure_failed = sum(!is.na(.data$exposure_imputation_failed)),
+    exposure_share_median = quantile_of(
+      (.data$n_exposure_imputed / .data$n_available)[
+        .data$n_exposure_imputed > 0
+      ],
+      0.5
+    ),
+    exposure_share_max = quantile_of(
+      .data$n_exposure_imputed / .data$n_available,
+      1
+    ),
     design_varied = sum(.data$design_varied),
     .by = "tier"
   )

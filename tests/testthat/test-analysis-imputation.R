@@ -1,6 +1,7 @@
 # Multiple imputation (ANALYSIS_PLAN.md, Step 8): what is imputed and what
 # is left alone, that an imputation can be made again from its seed, that
-# it removes a bias complete cases have, and Rubin's rules.
+# it removes a bias complete cases have without weakening a slope, and
+# Rubin's rules.
 
 skip_if_not_installed("mice")
 skip_if_not_installed("fixest")
@@ -45,6 +46,20 @@ imputation_prepare <- function(id, reg, edit = identity) {
     read_analysis_exceptions(character(), reg$schema, reg$outcomes)
   )
 }
+imputation_settings <- function() {
+  analysis_settings()
+}
+fit_imputed <- function(prepared, imputed, cells, reg, m, ...) {
+  fit_stage1_imputed(
+    prepared,
+    imputed,
+    seq_len(m),
+    cells,
+    reg$outcomes,
+    reg$schema,
+    ...
+  )
+}
 impute_all <- function(prepared, reg, m = 3L) {
   bind_imputations(lapply(seq_len(m), function(index) {
     impute_dataset(prepared, reg$outcomes, reg$exposures, index)
@@ -77,18 +92,28 @@ test_that("Rubin's rules match a worked example and mice", {
   expect_error(pool_rubin(c(0.1, NA), c(0.03, 0.03), c(50, 50)), "needs")
 })
 
-test_that("only sporadic gaps in screen use and covariates are imputed", {
+test_that("only sporadic gaps in covariates are imputed, unit by unit", {
   reg <- imputation_registries()
   edit <- function(rows) {
     set.seed(71)
     n <- nrow(rows)
     rows$st_socmedia <- NA_real_
-    rows$st_game[sample(n, 300)] <- NA
     rows$sex[sample(n, 100)] <- NA
+    rows$sex[1:3] <- "Other"
     rows$mh_dep_self[sample(n, 200)] <- NA
+    rows$urbanicity <- sample(c("Urban", "Rural"), n, replace = TRUE)
+    rows$urbanicity[sample(n, 200)] <- NA
     # Known for a third of the rows: not sporadic, so left alone.
     rows$ses_household <- sample(c("Low", "Medium", "High"), n, replace = TRUE)
     rows$ses_household[sample(n, 1000)] <- NA
+    # Never asked of the nine year olds, and asked of everyone else.
+    rows$parental_education <- sample(
+      c("Secondary school or less", "Bachelor degree or higher"),
+      n,
+      replace = TRUE
+    )
+    rows$parental_education[floor(rows$age_years) == 9] <- NA
+    rows$parental_education[sample(which(floor(rows$age_years) > 9), 60)] <- NA
     rows
   }
   prepared <- imputation_prepare("9995", reg, edit)
@@ -97,72 +122,160 @@ test_that("only sporadic gaps in screen use and covariates are imputed", {
   second <- impute_dataset(prepared, reg$outcomes, reg$exposures, 2L)
   # The same number gives the same imputation, and another number another.
   expect_equal(again, first)
-  expect_equal(second$numeric$row, first$numeric$row)
-  expect_false(all(second$numeric$value == first$numeric$value))
+  expect_equal(second$cells$row, first$cells$row)
+  expect_false(all(second$cells$value == first$cells$value))
 
-  expect_setequal(first$numeric$variable, "st_game")
-  expect_setequal(first$categorical$variable, "sex")
-  game <- first$numeric
-  expect_equal(nrow(game), 300)
-  expect_true(all(is.na(prepared$exposures$st_game[game$row])))
-  # Predictive mean matching draws values the unit observed.
-  expect_true(all(game$value %in% prepared$exposures$st_game))
-  expect_true(all(first$categorical$value %in% c("Female", "Male")))
+  # Screen use and outcomes are not imputed here.
+  expect_setequal(
+    first$cells$variable,
+    c("sex", "urbanicity", "parental_education")
+  )
+  cells <- function(name) first$cells[first$cells$variable == name, ]
+  expect_equal(nrow(cells("sex")), sum(is.na(prepared$base$sex)))
+  # A child recorded as another sex keeps the record and is no donor.
+  expect_true(all(cells("sex")$value %in% c("Female", "Male")))
+  expect_equal(sum(prepared$base$sex %in% "Other"), 3)
+  expect_true(all(cells("urbanicity")$value %in% c("Urban", "Rural")))
   notes <- first$units
+  note <- function(name) notes[notes$variable == name, ]
   expect_equal(
-    notes$status[notes$variable == "ses_household"],
+    note("ses_household")$status,
     "too little observed in the unit to impute"
   )
-  expect_equal(notes$n_imputed[notes$variable == "st_game"], 300L)
-  # The summed total is not imputed in its own right.
-  expect_false(bp_total_exposure() %in% first$numeric$variable)
+  # The nine year olds were never asked, so they are left; the others'
+  # gaps are filled.
+  nine <- floor(prepared$base$age_years) == 9
+  education <- cells("parental_education")
+  expect_false(any(nine[education$row]))
+  expect_equal(nrow(education), 60)
+  expect_equal(note("parental_education")$n_age_group, sum(nine))
+  expect_equal(note("parental_education")$status, "imputed")
 
-  # Applied: the gaps are filled, the total is the sum again, the rest of
-  # the child's screen use follows, and outcomes are untouched.
   filled <- apply_imputation(prepared, first, 1L)
-  expect_false(anyNA(filled$exposures$st_game))
-  expect_false(anyNA(filled$exposures$total_screen))
-  expect_equal(
-    filled$exposures$total_screen[game$row],
-    filled$exposures$st_watch[game$row] + game$value
-  )
-  expect_equal(filled$exposures$other_game, filled$exposures$st_watch)
-  expect_equal(filled$outcomes, prepared$outcomes)
   expect_equal(sum(is.na(filled$base$sex)), 0)
+  expect_equal(sum(is.na(filled$base$urbanicity)), 0)
   expect_equal(sum(is.na(filled$base$ses_household)), 1000)
-  # The other imputation's cells are not applied with this one.
+  expect_equal(sum(is.na(filled$base$parental_education)), sum(nine))
+  expect_equal(filled$exposures, prepared$exposures)
+  expect_equal(filled$outcomes, prepared$outcomes)
   both <- bind_imputations(list(first, second, NULL))
   expect_equal(apply_imputation(prepared, both, 1L), filled)
+  expect_equal(bind_imputations(first)$cells, first$cells)
   expect_error(apply_imputation(filled, first, 1L), "already has a value")
 
   # The checks pass, and fail when an imputed value is tampered with.
   review <- review_imputation(prepared, both, reg$outcomes, reg$exposures)
-  expect_setequal(review$numeric$source, c("observed", "imputed"))
+  expect_setequal(review$levels$source, c("observed", "imputed"))
   expect_equal(unique(review$units$imputations), 2L)
-  expect_equal(review$numeric$n[review$numeric$source == "imputed"], 600)
-  tampered <- both
-  tampered$numeric$value[1] <- 23.9
-  expect_error(
-    review_imputation(prepared, tampered, reg$outcomes, reg$exposures),
-    "outside the values its unit observed"
+  tamper <- function(change, message) {
+    tampered <- both
+    tampered$cells <- change(tampered$cells)
+    expect_error(
+      review_imputation(prepared, tampered, reg$outcomes, reg$exposures),
+      message
+    )
+  }
+  tamper(
+    function(cells) {
+      cells$value[cells$variable == "urbanicity"][1] <- "Suburban"
+      cells
+    },
+    "category its unit did not observe"
   )
-  tampered <- both
-  tampered$numeric$row[1] <- which(!is.na(prepared$exposures$st_game))[1]
-  expect_error(
-    review_imputation(prepared, tampered, reg$outcomes, reg$exposures),
-    "observed value was imputed over"
+  tamper(
+    function(cells) {
+      cells$row[1] <- which(!is.na(prepared$base[[cells$variable[1]]]))[1]
+      cells
+    },
+    "was imputed over"
   )
-  tampered <- both
-  tampered$numeric$value[tampered$numeric$imputation == 2] <-
-    tampered$numeric$value[tampered$numeric$imputation == 1]
-  expect_error(
-    review_imputation(prepared, tampered, reg$outcomes, reg$exposures),
+  tamper(
+    function(cells) {
+      at <- which(cells$variable == "parental_education")[1]
+      cells$row[at] <- which(nine)[1]
+      cells
+    },
+    "age group that observed too little"
+  )
+  tamper(
+    function(cells) {
+      cells$value[cells$imputation == 2] <- cells$value[cells$imputation == 1]
+      cells
+    },
     "same draw"
   )
   expect_error(
     impute_dataset(prepared, reg$outcomes, reg$exposures, 1L, list()),
     "needs a `seed`"
   )
+})
+
+test_that("screen use is imputed for an outcome's own model, where sporadic", {
+  set.seed(83)
+  n <- 2000
+  data <- data.frame(
+    age = stats::runif(n, 10, 14),
+    sex = sample(c("Female", "Male"), n, replace = TRUE),
+    weight = NA_real_,
+    cluster = NA_character_,
+    family = NA_character_,
+    stringsAsFactors = FALSE
+  )
+  for (name in bp_stage1_covariates()) {
+    data[[name]] <- NA_character_
+  }
+  data$x <- sample(c(0.5, 1.5, 2.5, 4), n, replace = TRUE)
+  data$y <- 0.2 * data$x + stats::rnorm(n)
+  whole <- data
+  gaps <- sample(n, 500)
+  data$x[gaps] <- NA
+  settings <- imputation_settings()
+  filled <- impute_cell_exposure(data, 11L, settings)
+  expect_equal(attr(filled, "imputed"), 500L)
+  expect_false(anyNA(filled$x))
+  expect_equal(filled$x[-gaps], data$x[-gaps])
+  # Drawn from the values the rows observed, and the same from one seed.
+  expect_true(all(filled$x[gaps] %in% c(0.5, 1.5, 2.5, 4)))
+  expect_equal(impute_cell_exposure(data, 11L, settings), filled)
+  expect_false(identical(impute_cell_exposure(data, 12L, settings)$x, filled$x))
+  # The imputed rows keep the relation to the outcome.
+  slope <- function(rows) unname(stats::coef(stats::lm(y ~ x, rows))["x"])
+  expect_equal(slope(filled[gaps, ]), slope(whole), tolerance = 0.06, scale = 1)
+
+  # A covariate that repeats another does not stop the imputation.
+  repeated <- data
+  repeated$ethnicity <- sample(c("A", "B", "C"), n, replace = TRUE)
+  repeated$minority <- ifelse(repeated$ethnicity == "A", "No", "Yes")
+  expect_equal(
+    attr(impute_cell_exposure(repeated, 11L, settings), "imputed"),
+    500L
+  )
+
+  # Never asked of the ten year olds: they are left without it.
+  by_age <- whole
+  ten <- floor(by_age$age) == 10
+  by_age$x[ten] <- NA
+  by_age$x[sample(which(!ten), 100)] <- NA
+  left <- impute_cell_exposure(by_age, 11L, settings)
+  expect_equal(attr(left, "imputed"), 100L)
+  expect_true(all(is.na(left$x[ten])))
+  expect_false(anyNA(left$x[!ten]))
+
+  # Known for too few of the rows: nothing is imputed.
+  sparse <- whole
+  sparse$x[sample(n, 1200)] <- NA
+  expect_equal(attr(impute_cell_exposure(sparse, 11L, settings), "imputed"), 0L)
+  expect_equal(impute_cell_exposure(sparse, 11L, settings)$x, sparse$x)
+  expect_equal(attr(impute_cell_exposure(whole, 11L, settings), "imputed"), 0L)
+
+  # With the rest of the child's screen use, the two are imputed together.
+  two <- whole
+  two$other <- pmax(3 - two$x + stats::rnorm(n, 0, 0.5), 0)
+  two$x[gaps] <- NA
+  two$other[gaps] <- NA
+  joint <- impute_cell_exposure(two, 11L, settings)
+  expect_false(anyNA(joint$x) || anyNA(joint$other))
+  expect_lt(stats::cor(joint$x[gaps], joint$other[gaps]), -0.3)
 })
 
 test_that("imputation removes the bias of complete cases", {
@@ -173,7 +286,7 @@ test_that("imputation removes the bias of complete cases", {
   edit <- function(rows) {
     set.seed(73)
     rows$st_socmedia <- NA_real_
-    chance <- stats::plogis(-1.2 + 1.5 * as.numeric(scale(rows$mh_dep_self)))
+    chance <- stats::plogis(-1.7 + 1.5 * as.numeric(scale(rows$mh_dep_self)))
     rows$st_game[stats::runif(nrow(rows)) < chance] <- NA
     rows
   }
@@ -188,20 +301,15 @@ test_that("imputation removes the bias of complete cases", {
   )
   prepared <- imputation_prepare("9995", reg, edit)
   share <- mean(is.na(prepared$exposures$st_game))
-  expect_gt(share, 0.2)
-  expect_lt(share, 0.5)
+  expect_gt(share, 0.15)
+  expect_lt(share, 0.3)
   complete <- fit_stage1(prepared, cell, reg$outcomes, reg$schema)
   imputed <- impute_all(prepared, reg, m = 10L)
-  pooled <- fit_stage1_imputed(
-    prepared,
-    imputed,
-    cell,
-    reg$outcomes,
-    reg$schema
-  )
+  pooled <- fit_imputed(prepared, imputed, cell, reg, 10L)
   expect_equal(pooled$status, "fitted")
   expect_equal(pooled$m, 10L)
   expect_equal(pooled$n, whole$n)
+  expect_equal(pooled$n_exposure_imputed, whole$n - complete$n)
   expect_gt(pooled$fmi, 0.05)
   expect_lt(pooled$fmi, 0.9)
   # Complete cases miss the slope of the whole sample; imputation is
@@ -214,17 +322,98 @@ test_that("imputation removes the bias of complete cases", {
   expect_lt(abs(pooled$estimate - whole$estimate), 2 * pooled$se)
   expect_gt(pooled$se, whole$se)
   expect_false(pooled$design_varied)
+  # The same again from the same seed.
+  expect_equal(fit_imputed(prepared, imputed, cell, reg, 10L), pooled)
 
-  # With nothing imputed the dataset is fitted once, as it is.
-  none <- fit_stage1_imputed(
-    prepared,
-    bind_imputations(list()),
+  # Too much of the exposure missing: it is not imputed, and the model is
+  # the complete-case one.
+  sparse <- imputation_prepare("9995", reg, function(rows) {
+    set.seed(75)
+    rows$st_socmedia <- NA_real_
+    rows$st_game[sample(nrow(rows), 0.5 * nrow(rows))] <- NA
+    rows
+  })
+  plain <- fit_stage1(sparse, cell, reg$outcomes, reg$schema)
+  kept <- fit_imputed(sparse, impute_all(sparse, reg, 2L), cell, reg, 2L)
+  expect_equal(kept$n_exposure_imputed, 0)
+  expect_equal(kept$estimate, plain$estimate)
+  expect_equal(kept$fmi, 0)
+})
+
+test_that("a slope is not weakened where its outcome differs from its family", {
+  reg <- imputation_registries()
+  # Three outcomes of one family: gaming is related to the first, and not
+  # to the other two, which the family's score is mostly made of.
+  edit <- function(rows) {
+    set.seed(89)
+    n <- nrow(rows)
+    rows$st_socmedia <- NA_real_
+    rows$mh_dep_self <- 0.25 * rows$st_game + stats::rnorm(n)
+    rows$mh_distress_self <- stats::rnorm(n)
+    rows$mh_stress_self <- stats::rnorm(n)
+    rows
+  }
+  holes <- function(rows) {
+    rows <- edit(rows)
+    rows$st_game[sample(nrow(rows), 0.28 * nrow(rows))] <- NA
+    rows
+  }
+  cell <- tibble::tibble(exposure = "st_game", outcome = "mh_dep_self")
+  whole <- fit_stage1(
+    imputation_prepare("9995", reg, edit),
     cell,
     reg$outcomes,
     reg$schema
   )
-  expect_equal(none$m, 0L)
-  expect_equal(none$estimate, complete$estimate)
+  prepared <- imputation_prepare("9995", reg, holes)
+  pooled <- fit_imputed(
+    prepared,
+    impute_all(prepared, reg, 10L),
+    cell,
+    reg,
+    10L
+  )
+  expect_equal(pooled$n_exposure_imputed, round(0.28 * 1500))
+  # Within a twentieth of the slope with nothing missing.
+  expect_lt(abs(pooled$estimate / whole$estimate - 1), 0.05)
+})
+
+test_that("imputed covariates bring a tier's rows back", {
+  reg <- imputation_registries()
+  cell <- tibble::tibble(exposure = "st_game", outcome = "mh_dep_self")
+  edit <- function(rows) {
+    set.seed(41)
+    rows$st_socmedia <- NA_real_
+    level <- sample(1:3, nrow(rows), replace = TRUE)
+    rows$ses_household <- c("Low", "Medium", "High")[level]
+    rows$st_game <- rows$st_game + level
+    rows$mh_dep_self <- rows$mh_dep_self + 1.5 * level
+    rows$ses_household[sample(nrow(rows), 300)] <- NA
+    rows
+  }
+  prepared <- imputation_prepare("9995", reg, edit)
+  complete <- fit_stage1(prepared, cell, reg$outcomes, reg$schema, tiers = 2L)
+  expect_equal(
+    complete$status,
+    "no socioeconomic measure that varies in the unit"
+  )
+  pooled <- fit_imputed(
+    prepared,
+    impute_all(prepared, reg, 5L),
+    cell,
+    reg,
+    5L,
+    tiers = 1:2
+  )
+  second <- pooled[pooled$tier == 2, ]
+  expect_equal(second$status, "fitted")
+  expect_equal(second$ses_measure, "ses_household")
+  expect_equal(second$n, nrow(prepared$base))
+  # Adjusting still takes out what SES added to the slope, and the tier 1
+  # slope on the same rows is combined over the imputations too.
+  first <- pooled[pooled$tier == 1, ]
+  expect_lt(second$estimate, first$estimate - 0.1)
+  expect_equal(second$tier1_same_rows_estimate, first$estimate)
 })
 
 test_that("a child's sex is the same at every wave after imputation", {
@@ -270,16 +459,19 @@ test_that("a child's sex is the same at every wave after imputation", {
   whole <- both
   whole$base$minority[is.na(whole$base$minority)] <- "Minority"
   expect_no_error(impute_dataset(whole, reg$outcomes, reg$exposures, 1L))
-  expect_true("ethnicity" %in% one$categorical$variable)
-  expect_false("minority" %in% one$categorical$variable)
+  expect_true("ethnicity" %in% one$cells$variable)
+  expect_false("minority" %in% one$cells$variable)
   expect_equal(
     unique(one$units$status[one$units$variable == "minority"]),
     "not needed: the unit records ethnicity"
   )
 
-  # In a panel the child's other wave is among the predictors.
+  # In a panel the child's other wave is among the predictors, and a
+  # family's score turns each outcome so that higher is better.
   frame <- imputation_frame(prepared, reg$outcomes, reg$exposures)
   expect_true("aux_other_st_game" %in% names(frame$data))
-  expect_true("aux_mental_health" %in% names(frame$data))
   expect_false(anyNA(frame$data$aux_other_st_game))
+  expect_equal(frame$data$aux_mental_health, -prepared$outcomes_z$mh_dep_self)
+  # The seed of an imputation is never missing.
+  expect_false(is.na(imputation_seed(1, "a", 2)))
 })

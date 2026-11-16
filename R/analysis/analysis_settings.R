@@ -94,8 +94,14 @@ analysis_settings <- function() {
     imputations = 5L,
     imputation_iterations = 10L,
     # A variable is imputed in a unit where it is known for at least this
-    # share of the unit's rows; below that its missingness is not sporadic.
-    impute_min_observed = 0.5,
+    # share of the unit's rows, and for a child at an age at which the
+    # unit knows it for that share; below that its missingness is not
+    # sporadic (provisional).
+    impute_min_observed = 0.7,
+    # And for a child only where it is known for at least this share of
+    # the unit's children of the same age in whole years: an item not
+    # asked of an age group is not imputed for it.
+    impute_min_observed_age = 0.5,
     # A predictor enters a variable's imputation model where the two
     # correlate at least this much.
     impute_min_correlation = 0.05

@@ -64,6 +64,13 @@
 #'   and each estimate says what the rest was built from (`other_from`). The
 #'   slope without the adjustment on the same rows is in the
 #'   `tier1_same_rows_` columns where the tier is 1.
+#' @param imputation NULL to fit on the rows that have the exposure, or a
+#'   list of `index` (the imputation number) and `seed` to first impute the
+#'   exposure missing from a unit's rows for each outcome
+#'   (`impute_cell_exposure()`); `settings` then needs the imputation
+#'   settings. `n_exposure_imputed` counts the rows filled, and
+#'   `exposure_imputation_failed` gives the reason where a draw failed and
+#'   the rows were left as they were.
 #' @return A tibble with one row per unit, cell and tier that has data: the slope
 #'   (`estimate`, `se`), its `effect_measure`, the rows, clusters and degrees
 #'   of freedom behind it, the covariates and engine used, and `status`
@@ -76,7 +83,8 @@ fit_stage1 <- function(
   dataschema,
   settings = default_analysis_settings(),
   tiers = 1L,
-  adjust_other = FALSE
+  adjust_other = FALSE,
+  imputation = NULL
 ) {
   if (is.null(prepared) || nrow(prepared$base) == 0) {
     return(NULL)
@@ -115,10 +123,16 @@ fit_stage1 <- function(
     } else {
       prepared$outcomes[[outcome]]
     }
+    x_other_waves <- if (!is.null(imputation)) {
+      stage1_other_waves(x, base$participant_id)
+    }
     for (unit in names(unit_rows)) {
       index <- unit_rows[[unit]]
-      index <- index[!is.na(x[index]) & !is.na(y[index])]
-      if (length(index) == 0) {
+      index <- index[!is.na(y[index])]
+      if (is.null(imputation)) {
+        index <- index[!is.na(x[index])]
+      }
+      if (length(index) == 0 || all(is.na(x[index]))) {
         next
       }
       data <- frame[index, ]
@@ -126,6 +140,27 @@ fit_stage1 <- function(
       data$y <- y[index]
       if (adjust_other) {
         data$other <- other$value[index]
+      }
+      n_exposure_imputed <- NA_integer_
+      exposure_imputation <- NA_character_
+      if (!is.null(imputation)) {
+        data$x_other_waves <- x_other_waves[index]
+        data <- impute_cell_exposure(
+          data,
+          imputation_seed(
+            imputation$seed,
+            base$dataset_id[1],
+            unit,
+            exposure,
+            outcome,
+            adjust_other,
+            imputation$index
+          ),
+          settings
+        )
+        n_exposure_imputed <- attr(data, "imputed")
+        exposure_imputation <- attr(data, "failed") %||% NA_character_
+        data <- data[!is.na(data$x), ]
       }
       for (tier in tiers) {
         fit <- fit_stage1_unit(
@@ -140,6 +175,8 @@ fit_stage1 <- function(
         } else {
           NA_integer_
         }
+        fit$n_exposure_imputed <- n_exposure_imputed
+        fit$exposure_imputation_failed <- exposure_imputation
         fit$other_from <- if (adjust_other) {
           other$from[index[1]]
         } else {
@@ -169,6 +206,16 @@ fit_stage1 <- function(
     "outcome",
     "score_type"
   )
+}
+
+# A child's mean on a variable over their other rows (their other waves),
+# NA where they have none with a value.
+stage1_other_waves <- function(values, participant) {
+  seen <- !is.na(values)
+  total <- stats::ave(ifelse(seen, values, 0), participant, FUN = sum)
+  count <- stats::ave(as.numeric(seen), participant, FUN = sum)
+  others <- count - seen
+  ifelse(others > 0, (total - ifelse(seen, values, 0)) / others, NA_real_)
 }
 
 # The columns of the prepared base table a unit's model reads.

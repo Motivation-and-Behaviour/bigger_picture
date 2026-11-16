@@ -376,6 +376,7 @@ analysis_targets <- function(harmonise_plan) {
       quote(fit_stage1_imputed(
         prepared,
         bind_imputations(imputed),
+        imputation_index,
         fit_cells,
         outcome_registry,
         dataschema,
@@ -391,6 +392,7 @@ analysis_targets <- function(harmonise_plan) {
       quote(fit_stage1_imputed(
         prepared,
         bind_imputations(imputed),
+        imputation_index,
         other_cells,
         outcome_registry,
         dataschema,
@@ -759,7 +761,6 @@ analysis_targets <- function(harmonise_plan) {
       ))
     ),
     reviews_of_imputation("imputation_units_all", "units"),
-    reviews_of_imputation("imputation_numeric_all", "numeric"),
     reviews_of_imputation("imputation_levels_all", "levels"),
     tarchetypes::tar_combine_raw(
       "stage1_imputed_all",
@@ -819,7 +820,14 @@ analysis_targets <- function(harmonise_plan) {
           ),
           dplyr::mutate(tree_imputed_tier2, model_name = "covariates_tier2"),
           dplyr::mutate(tree_imputed_tier3, model_name = "covariates_tier3"),
-          dplyr::mutate(tree_development, model_name = "sens_complete_case"),
+          dplyr::mutate(
+            label_models(
+              tree_development,
+              model_cells,
+              c("tier1_total", "tier2_content")
+            ),
+            model_name = "sens_complete_case"
+          ),
           longitudinal_development$tree
         ),
         dplyr::bind_rows(
