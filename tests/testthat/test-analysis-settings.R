@@ -201,10 +201,13 @@ test_that("the build sections match the pools the targets run in", {
 })
 
 test_that("the model pool is four unless a build asks for more", {
+  # The pool never takes more than all but two of the machine's cores, so
+  # on a small machine (such as a CI runner) the default is below four.
+  expected <- max(1L, min(parallel::detectCores() - 2L, 4L))
   withr::local_envvar(BP_MODEL_WORKERS = NA)
-  expect_equal(bp_model_workers(), 4L)
+  expect_equal(bp_model_workers(), expected)
   withr::local_envvar(BP_MODEL_WORKERS = "16")
   expect_equal(bp_model_workers(), min(parallel::detectCores() - 2L, 16L))
   withr::local_envvar(BP_MODEL_WORKERS = "many")
-  expect_equal(bp_model_workers(), 4L)
+  expect_equal(bp_model_workers(), expected)
 })
