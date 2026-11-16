@@ -26,7 +26,8 @@ longitudinal_matched,13,5,L0|L1,total|content_classes,core,,1,panel,two_stage,la
 longitudinal_by_lag,13,5,L0,total|content_classes,core,lag_years,1,panel,stage2_moderator,,exploratory,FALSE,Lagged and within-child slopes by the gap between waves
 longitudinal_mi,13,5,L0,total|content_classes,core,,1,panel,lagged,imputed_outcomes,exploratory,FALSE,Standard imputation including outcomes in panels where earlier scores predict a missing outcome
 covariates_tier2,14,5,L0|L1,total|content_classes,core,,2,main,two_stage,,prereg_secondary,TRUE,Age and sex and a socioeconomic measure; read against tier 1 on the same rows
-covariates_tier3,14,5,L0|L1,total|content_classes,core,,3,main,two_stage,,prereg_secondary,TRUE,Tier 2 and ethnicity or minority status and urbanicity
+covariates_tier3,14,5,L0|L1,total|content_classes,core,,3,main,two_stage,,prereg_secondary,TRUE,Tier 2 and ethnicity or minority status and urbanicity; rests largely on imputed ethnicity so it is always reported beside covariates_tier3_complete_case
+covariates_tier3_complete_case,14,5,L0|L1,total|content_classes,core,,3,main,two_stage,complete_case,prereg_secondary,TRUE,Tier 3 on complete cases; reported beside covariates_tier3 (DR-0019)
 covariates_family,14,5,L0|L1,total|content_classes,core,,family,main,two_stage,,prereg_secondary,FALSE,Tier 2 and family environment and pubertal status where recorded (DR-0015)
 negative_controls,14,5,L3,total|content_classes,negative_control,,1,main,two_stage,,prereg_secondary,FALSE,Outcomes that precede any screen use; where 3 or more datasets support them
 sens_mad_exposure,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,mad_exposure,prereg_secondary,FALSE,The prereg's 3-MAD rule on non-zero exposure values
@@ -35,7 +36,7 @@ sens_total_dedicated,14,5,L0|L1,total,core,,1,main,two_stage,total_dedicated_onl
 sens_total_class_average,14,5,L0|L1,content_classes,core,,1,main,two_stage,total_as_class_average,prereg_secondary,FALSE,Tier 1 as a stage 2 average across content classes in place of summing
 sens_total_over_24_excluded,14,5,L0|L1,total,core,,1,main,two_stage,total_over_24_excluded,prereg_secondary,FALSE,Summed totals over 24 hours excluded in place of capped
 sens_implausible_retained,14,5,L0|L1,total|content_classes,core,,1,implausible_retained,two_stage,implausible_retained,prereg_secondary,FALSE,Implausible values kept
-sens_complete_case,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,complete_case,prereg_secondary,TRUE,No imputation; this is what the engine fits until Step 8 lands
+sens_complete_case,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,complete_case,prereg_secondary,TRUE,The primary models with no imputation
 sens_team_excluded,14,5,L0|L1,total|content_classes,core,,1,team_excluded,two_stage,team_excluded,prereg_secondary,FALSE,Team-contributed datasets excluded
 sens_fixed_study,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,fixed_study,prereg_secondary,FALSE,Study as a fixed effect in place of random
 sens_leave_one_out,14,5,L0,total|content_classes,core,,1,main,two_stage,leave_one_dataset_out,prereg_secondary,FALSE,Each headline estimate without each dataset in turn and without each of the five largest

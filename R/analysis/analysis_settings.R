@@ -95,7 +95,7 @@ analysis_settings <- function() {
     imputation_iterations = 10L,
     # A variable is imputed in a unit where it is known for at least this
     # share of the unit's rows; below that its missingness is not sporadic
-    # (provisional).
+    # (DR-0019).
     impute_min_observed = 0.7,
     # And for a child only where it is known for at least this share of
     # the unit's children of the same age in whole years: an item not

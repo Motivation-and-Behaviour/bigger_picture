@@ -1,6 +1,6 @@
 # DR-0019: Covariates are imputed within each unit, and screen use within each model
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-11-16  
 **Decision makers:** Taren  
 **Related issues:** NA
@@ -20,7 +20,7 @@ And the analysis estimates the relation between screen use and each outcome, whi
 A first build imputed screen use once per unit, with the outcomes summarised as one score per outcome family.
 An independent review deleted observed screen use from real datasets and imputed it back: slopes came out clearly too small, worse than leaving the rows out, because an outcome is only loosely related to its family's score.
 The same review found whole age groups imputed where a unit had not asked them the item.
-This record is the design that replaced it.
+This record describes the design that replaced it.
 
 ---
 
@@ -56,7 +56,9 @@ Each imputation's seed comes from the project seed, the unit, the model and the 
 Each imputation is analysed with the stage 1 model, and each unit's slope is combined over imputations by Rubin's rules, with Barnard and Rubin's degrees of freedom.
 Stage 2 then pools one slope per unit as before.
 A slope that not every imputation could fit is not carried forward.
-The primary models on complete cases are kept as a sensitivity analysis.
+**What is primary.**
+The models on imputed data are the primary analysis at covariate tiers 1 and 2, with the primary models on complete cases beside them as a sensitivity analysis.
+The third tier is reported on imputed data and on complete cases side by side, and is described from both: it rests largely on units where a fifth or more of ethnicity is imputed.
 
 **Checks that stop the build.**
 An imputed covariate cell was missing before; its value is one its unit observed, or one observed for that child; nothing is imputed where too little was observed, in the unit or at the child's age; a child's imputed values of something that cannot change agree with each other; and two imputations are not the same draw.
@@ -86,6 +88,8 @@ Predictive mean matching needs no assumption about the shape of a variable's dis
   The child's mean over their other waves carries most of the same information.
 - **Imputation trees or forests.** They capture interactions and curves without being told to, at many times the cost.
 - **A lower or higher threshold than 70%.** At 50% a unit's values rest too much on the model; at 90% little is gained in the covariate tiers.
+- **Not imputing screen use, and imputing covariates only.** Simpler and cheaper, and imputing an exposure adds little precision, but the preregistration says screen time is imputed and the analysis already departs from it in several places.
+- **Complete cases as the primary analysis.** The plan allows it where imputation is not validated by the freeze, and at the first tier the two barely differ; it would move the preregistered analysis out of the report to the funder.
 - **One threshold for the unit only.** It imputes a whole age group that was never asked.
 
 ---
@@ -110,7 +114,8 @@ Predictive mean matching needs no assumption about the shape of a variable's dis
 - Missingness is assumed to be at random given what the models read.
 - With five imputations the fraction of information missing is rough; it settles with 50.
 - Study-level moderators are not imputed; the child-level ones (sex, the socioeconomic measure, age) are, or are never missing.
-- The longitudinal strand and the curves are on complete cases until they are wired to the imputations, and no convergence diagnostics are kept yet.
+- The longitudinal strand and the curves are fitted on complete cases, and no convergence diagnostics are kept.
+  Wiring those to the imputations is work still to do.
 
 ---
 
@@ -121,6 +126,7 @@ Predictive mean matching needs no assumption about the shape of a variable's dis
 - `fit_stage1_imputed()` fits each imputation and combines with `pool_rubin()`.
 - `review_imputation()` holds the checks, and `analysis/reports/imputation.qmd` reports what was imputed.
 - Settings: `imputations`, `imputation_iterations`, `impute_min_observed`, `impute_min_observed_age`, `impute_min_correlation`.
+- Model list rows `sens_complete_case` and `covariates_tier3_complete_case` are the complete-case analyses reported beside the imputed ones.
 - `tests/testthat/test-analysis-imputation.R` holds the known answers, among them a case where complete cases are biased and imputation is not, and a case where an outcome is unrelated to the rest of its family and its slope is not weakened.
 
 ---

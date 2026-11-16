@@ -802,8 +802,8 @@ analysis_targets <- function(harmonise_plan) {
     ),
     # One table of every model built so far, with p, q and equivalence
     # tests. Before the freeze it holds development results only. The
-    # models are fitted on imputed data, with the primary models on
-    # complete cases beside them as a sensitivity analysis; the
+    # models are fitted on imputed data, with the primary models and the
+    # third covariate tier on complete cases beside them (DR-0019); the
     # longitudinal strand is on complete cases for now.
     targets::tar_target_raw(
       "results_development",
@@ -820,6 +820,10 @@ analysis_targets <- function(harmonise_plan) {
           ),
           dplyr::mutate(tree_imputed_tier2, model_name = "covariates_tier2"),
           dplyr::mutate(tree_imputed_tier3, model_name = "covariates_tier3"),
+          dplyr::mutate(
+            tree_tier3,
+            model_name = "covariates_tier3_complete_case"
+          ),
           dplyr::mutate(
             label_models(
               tree_development,
