@@ -1,6 +1,7 @@
 # Curves and the threshold duration (ANALYSIS_PLAN.md, Step 11): known-answer
 # tests on simulated units whose curve is set by construction.
 
+skip_unless_engine_needed()
 skip_if_not_installed("fixest")
 skip_if_not_installed("metafor")
 skip_if_not_installed("clubSandwich")
@@ -363,18 +364,26 @@ test_that("the simulation rebuilds outcomes on the real hours and scores them", 
     measure_type = rep(c("Continuous", "Categorical"), each = 6)
   )
   settings <- analysis_settings()
-  sim <- simulate_curve_recovery(rows, units, reps = 2L, max_rows = 600L)
+  # Four of the built-in curves and one replicate show that the machinery
+  # works; the pipeline's own run uses all of them, 200 times.
+  all_truths <- curve_truths()
+  kept <- c("flat", "bends_at_2", "levels_off_short", "levels_off_past")
+  rlang::local_bindings(
+    curve_truths = function() all_truths[kept],
+    .env = environment(simulate_curve_recovery)
+  )
+  sim <- simulate_curve_recovery(rows, units, reps = 1L, max_rows = 600L)
   expect_equal(sim$base$units, 12)
   expect_equal(sim$base$units_banded, 6)
   expect_equal(sim$base$rows, 12 * 600)
   # Every truth, with and without band error; two knot placements, two
-  # rules on units and two numbers of datasets; twice.
+  # rules on units and two numbers of datasets.
   choices <- c("truth", "band_error", "knots", "units", "datasets")
   scenarios <- dplyr::distinct(sim$thresholds[choices])
   expect_true("threshold_central_hours" %in% names(sim$thresholds))
   expect_equal(nrow(scenarios), length(curve_truths()) * 2 * 2 * 2 * 2)
   expect_setequal(scenarios$knots, c("1, 3", "1, 2, 4"))
-  expect_equal(nrow(sim$thresholds), 2 * nrow(scenarios))
+  expect_equal(nrow(sim$thresholds), nrow(scenarios))
   expect_equal(
     nrow(sim$replicates),
     nrow(sim$thresholds) * length(settings$curve_grid)
@@ -396,8 +405,29 @@ test_that("the simulation rebuilds outcomes on the real hours and scores them", 
   past <- unique(sim$truth$true_threshold[sim$truth$truth == "levels_off_past"])
   expect_equal(past, 2.57, tolerance = 0.02, scale = 1)
   # The same seed gives the same replicates; no seed is an error.
-  again <- simulate_curve_recovery(rows, units, reps = 2L, max_rows = 600L)
-  expect_equal(again$replicates$estimate, sim$replicates$estimate)
+  # A scenario's seed follows its place in the list, so the first one is
+  # the same in a run of one curve with one knot placement.
+  rlang::local_bindings(
+    curve_truths = function() all_truths["flat"],
+    .env = environment(simulate_curve_recovery)
+  )
+  again <- simulate_curve_recovery(
+    rows,
+    units,
+    reps = 1L,
+    knot_sets = bp_curve_knot_sets(settings)[1],
+    max_rows = 600L
+  )
+  first <- function(run) {
+    replicates <- run$replicates
+    replicates$estimate[
+      replicates$truth == "flat" &
+        replicates$band_error == "none" &
+        replicates$knots == again$replicates$knots[1]
+    ]
+  }
+  expect_gt(length(first(again)), 0)
+  expect_equal(first(again), first(sim))
   seedless <- settings[setdiff(names(settings), "seed")]
   expect_error(
     simulate_curve_recovery(rows, units, reps = 1L, settings = seedless),

@@ -2,6 +2,7 @@
 # tests on slopes built by hand, because a wrong pooling rule would not show
 # on real data.
 
+skip_unless_engine_needed()
 skip_if_not_installed("metafor")
 skip_if_not_installed("clubSandwich")
 

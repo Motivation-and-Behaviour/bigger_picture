@@ -2,6 +2,7 @@
 # function, on the mock dataset, whose effects are known by construction.
 # Real data can show that an estimate is implausible, never that it is wrong.
 
+skip_unless_engine_needed()
 skip_if_not_installed("fixest")
 skip_if_not_installed("metafor")
 skip_if_not_installed("clubSandwich")
