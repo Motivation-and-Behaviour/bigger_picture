@@ -38,8 +38,9 @@
 #' Screen use and the scores have gaps of their own, which are filled
 #' within the model so that it can run and are never kept. A predictor
 #' enters a covariate's model where the two correlate
-#' (`mice::quickpred()`), always with age, sex, the weight and the outcome
-#' scores, where the unit has enough of each.
+#' (`mice::quickpred()`), always with age, sex, the weight, screen use and
+#' the outcome scores, where the unit has enough of each. A unit that
+#' knows too little of an exposure imputes its covariates without it.
 #'
 #' Sex is imputed as female or male: a child recorded as another sex keeps
 #' that record, and is not a donor. Sex, ethnicity and minority status do
@@ -193,7 +194,7 @@ imputation_frame <- function(prepared, outcome_registry, exposure_registry) {
     exposures = exposures,
     covariates = covariates,
     outcomes = outcomes,
-    always = c("aux_age", "aux_weight", "sex", outcomes),
+    always = c("aux_age", "aux_weight", "sex", outcomes, exposures),
     constant = intersect(covariates, c("sex", "ethnicity", "minority"))
   )
 }
@@ -246,11 +247,14 @@ impute_unit <- function(data, frame, seed, settings) {
     ))
   }
   wanted <- intersect(targets, reported)
+  left <- setdiff(reported, c(wanted, unneeded))
+  one_value <- left[values[left] < 2]
   not_imputed <- dplyr::bind_rows(
     note(
-      setdiff(reported, c(wanted, unneeded)),
+      setdiff(left, one_value),
       "too little observed in the unit to impute"
     ),
+    note(one_value, "takes one value in the unit"),
     note(unneeded, "not needed: the unit records ethnicity")
   )
   if (length(wanted) == 0) {
@@ -359,6 +363,11 @@ imputation_hold_constant <- function(cells, data, base, constant) {
     person <- base$participant_id[cells$row[own]]
     observed <- data[[name]]
     seen <- !is.na(observed)
+    # Sex is imputed as female or male, whatever else the child's record
+    # says at another wave.
+    if (name == "sex") {
+      seen <- seen & observed %in% c("Female", "Male")
+    }
     first_seen <- observed[seen][match(person, base$participant_id[seen])]
     order_in <- order(base$wave_order[cells$row[own]], cells$row[own])
     first_drawn <- cells$value[own][order_in][match(person, person[order_in])]

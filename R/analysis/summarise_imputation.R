@@ -19,6 +19,7 @@ summarise_imputation <- function(units, estimates, complete) {
     grepl("^too little", units$status) ~ "left: too little observed",
     grepl("^fewer rows", units$status) ~ "left: unit too small",
     grepl("^not needed", units$status) ~ "left: not needed",
+    grepl("^takes one value", units$status) ~ "left: one value in the unit",
     .default = "failed or incomplete"
   )
   variables <- dplyr::summarise(
@@ -86,6 +87,7 @@ summarise_imputation <- function(units, estimates, complete) {
     partial,
     by = "tier"
   )
+  gain$slopes_partly_fitted <- dplyr::coalesce(gain$slopes_partly_fitted, 0L)
   list(
     variables = variables[order(variables$variable, variables$outcome), ],
     fmi = fmi[order(fmi$tier), ],

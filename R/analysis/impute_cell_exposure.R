@@ -20,8 +20,14 @@
 #' Rows left without the exposure are dropped by the model as before.
 #'
 #' The predictors are the outcome, age, the survey weight, in a panel the
-#' child's mean exposure over their other waves, and sex and the tier
-#' covariates where they are complete and vary in these rows.
+#' child's mean exposure over their other waves, sex and the tier
+#' covariates, with a covariate's unknown values as a group of their own,
+#' and the rest of the child's screen use where the model adjusts for it
+#' and it has no gap to fill.
+#'
+#' Nothing is imputed for a row the model cannot use: one with no age, no
+#' weight in a weighted unit, or a rest of screen use that is missing and
+#' cannot be imputed.
 #'
 #' @param data The unit's rows that have the outcome: `x`, `y`, the columns
 #'   of `stage1_frame()`, `x_other_waves` (NA where there is none), and
@@ -39,15 +45,19 @@ impute_cell_exposure <- function(
 ) {
   n <- nrow(data)
   targets <- intersect(c("x", "other"), names(data))
-  targets <- targets[vapply(targets, function(name) anyNA(data[[name]]), NA)]
   done <- function(data, imputed = 0L) {
     attr(data, "imputed") <- as.integer(imputed)
     data
   }
-  if (length(targets) == 0 || n < settings$min_unit_rows) {
+  if (!anyNA(data$x) || n < settings$min_unit_rows) {
     return(done(data))
   }
-  # Where each target may be imputed: the unit observed enough of it, and
+  # Rows the model cannot use whatever is imputed: no weight in a weighted
+  # unit, or no age to place the child by.
+  weighted <- any(!is.na(data$weight) & data$weight > 0)
+  usable <- !is.na(data$age) &
+    (!weighted | (!is.na(data$weight) & data$weight > 0))
+  # Where each target may be imputed: the rows observed enough of it, and
   # enough of it at the child's age.
   age_year <- floor(data$age)
   eligible <- lapply(targets, function(name) {
@@ -59,20 +69,28 @@ impute_cell_exposure <- function(
       return(rep(FALSE, n))
     }
     by_age <- stats::ave(as.numeric(seen), age_year, FUN = mean)
-    !seen & !is.na(age_year) & by_age >= settings$impute_min_observed_age
+    !seen & usable & by_age >= settings$impute_min_observed_age
   })
   names(eligible) <- targets
-  targets <- targets[vapply(eligible, any, logical(1))]
-  if (length(targets) == 0) {
+  if ("other" %in% targets) {
+    # A row whose rest of screen use is missing and cannot be imputed is
+    # dropped by the model, so its exposure is not imputed and it does not
+    # inform the draws.
+    usable <- usable & (!is.na(data$other) | eligible$other)
+    eligible$x <- eligible$x & usable
+  }
+  if (!any(eligible$x)) {
     return(done(data))
   }
+  joint <- "other" %in% targets && any(eligible$other)
 
-  # Predictors: complete in these rows, and varying.
+  # Predictors. A covariate's gaps are a group of their own, so a
+  # covariate the model adjusts for is always in the exposure's model.
   predictors <- data.frame(y = as.numeric(data$y), age = data$age)
-  if (any(!is.na(data$weight) & data$weight > 0)) {
-    predictors$weight <- log(data$weight)
+  if (weighted) {
+    predictors$weight <- log(ifelse(usable, data$weight, 1))
   }
-  if ("x_other_waves" %in% names(data)) {
+  if ("x_other_waves" %in% names(data) && any(!is.na(data$x_other_waves))) {
     has <- !is.na(data$x_other_waves)
     predictors$other_waves <- ifelse(
       has,
@@ -82,18 +100,18 @@ impute_cell_exposure <- function(
     predictors$no_other_wave <- as.numeric(!has)
   }
   for (name in c("sex", bp_stage1_covariates())) {
-    predictors[[name]] <- data[[name]]
+    values <- data[[name]]
+    if (!all(is.na(values))) {
+      predictors[[name]] <- dplyr::coalesce(values, "(unknown)")
+    }
   }
-  usable <- vapply(
+  predictors$age[is.na(predictors$age)] <- mean(predictors$age, na.rm = TRUE)
+  varies <- vapply(
     predictors,
-    function(column) {
-      !anyNA(column) &&
-        all(is.finite(column) | is.character(column)) &&
-        dplyr::n_distinct(column) >= 2
-    },
+    function(column) dplyr::n_distinct(column[usable]) >= 2,
     logical(1)
   )
-  predictors <- predictors[usable]
+  predictors <- predictors[varies]
   if (!"y" %in% names(predictors)) {
     return(done(data))
   }
@@ -106,32 +124,49 @@ impute_cell_exposure <- function(
     keep <- decomposed$pivot[seq_len(decomposed$rank)]
     matrix[, setdiff(keep, 1) - 1, drop = FALSE]
   }
+  # One draw of a target by predictive mean matching. The match is between
+  # draws of the regression for both the donors and the rows imputed, which
+  # keeps the donors varied where the outcome takes few values.
   draw <- function(name, extra = NULL) {
     values <- data[[name]]
-    seen <- !is.na(values)
+    seen <- !is.na(values) & usable
     mice::mice.impute.pmm(
       values,
       ry = seen,
       x = independent(cbind(design, extra), seen),
-      wy = eligible[[name]]
+      wy = eligible[[name]],
+      matchtype = 2L
     )
   }
   filled <- tryCatch(
     withr::with_seed(seed, {
-      if (length(targets) == 1) {
-        stats::setNames(list(draw(targets)), targets)
+      if (!joint) {
+        # The rest of the child's screen use, where the model adjusts for
+        # it and it is known, is a predictor like any other.
+        rest <- if ("other" %in% targets) {
+          ifelse(usable, data$other, 0)
+        }
+        list(x = draw("x", extra = rest))
       } else {
-        # Two targets: each in turn given the other, from a random start.
+        # Both have gaps: each in turn given the other, from a random
+        # start.
         current <- lapply(targets, function(name) {
           values <- data[[name]]
-          gaps <- is.na(values)
-          values[gaps] <- sample(values[!gaps], sum(gaps), replace = TRUE)
-          values
+          gaps <- eligible[[name]]
+          values[gaps] <- sample(
+            values[!is.na(values)],
+            sum(gaps),
+            replace = TRUE
+          )
+          ifelse(usable, values, 0)
         })
         names(current) <- targets
         drawn <- list()
         for (iteration in seq_len(settings$imputation_iterations)) {
           for (name in targets) {
+            if (!any(eligible[[name]])) {
+              next
+            }
             other <- setdiff(targets, name)
             drawn[[name]] <- draw(name, extra = current[[other]])
             current[[name]][eligible[[name]]] <- drawn[[name]]
@@ -147,16 +182,14 @@ impute_cell_exposure <- function(
     attr(data, "failed") <- filled
     return(done(data))
   }
-  for (name in targets) {
-    range_seen <- range(data[[name]], na.rm = TRUE)
+  for (name in names(filled)) {
     stopifnot(
       length(filled[[name]]) == sum(eligible[[name]]),
-      !anyNA(filled[[name]]),
-      all(filled[[name]] >= range_seen[1] & filled[[name]] <= range_seen[2])
+      !anyNA(filled[[name]])
     )
     data[[name]][eligible[[name]]] <- filled[[name]]
   }
-  done(data, if ("x" %in% targets) sum(eligible[["x"]]) else 0L)
+  done(data, sum(eligible$x))
 }
 
 # A seed from text, for a unit's or a cell's imputation. `digest2int()` can

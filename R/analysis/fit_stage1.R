@@ -43,7 +43,9 @@
 #'   one is unknown are left out, and groups of fewer than five rows are
 #'   merged. A further tier also gives the tier 1 slope on its own rows
 #'   (`tier1_same_rows_estimate`);
-#' - a unit is fitted on complete cases, and only with at least the minimum
+#' - a unit is fitted on the rows that have everything its model reads
+#'   (after imputation, where that is asked for), and only with at least
+#'   the minimum
 #'   number of rows, variation in the exposure and, for a binary outcome, at
 #'   least ten rows in each class.
 #'

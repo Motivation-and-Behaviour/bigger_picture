@@ -58,7 +58,7 @@ summary_tables$variables |>
 #| label: failures
 failed <- units_all[
   !units_all$status %in% "imputed" &
-    !grepl("^too little|^fewer rows|^not needed", units_all$status),
+    !grepl("^too little|^fewer rows|^not needed|^takes one", units_all$status),
 ]
 ```
 
@@ -73,7 +73,7 @@ failed |>
 
 ## Imputed against observed covariates
 
-An imputed value is always one its unit observed.
+An imputed value is one its unit observed, or one recorded for the same child at another wave.
 Imputed values need not have the same distribution as observed ones: they differ where the children with a missing value differ from the rest.
 A large gap is still worth a look.
 
@@ -123,7 +123,8 @@ A slope fitted in only some imputations is not carried forward.
 
 ## How much information is missing
 
-The fraction of information missing for a unit's slope: the share of its variance that comes from not knowing the imputed values.
+The fraction of information missing for a unit's slope: roughly the share of its variance that comes from not knowing the imputed values.
+It also rises where a slope has few degrees of freedom, so a unit with few clusters can show a large fraction with little imputed.
 
 ```{r}
 #| label: fmi

@@ -278,6 +278,88 @@ test_that("screen use is imputed for an outcome's own model, where sporadic", {
   expect_lt(stats::cor(joint$x[gaps], joint$other[gaps]), -0.3)
 })
 
+test_that("what a model adjusts for is in its exposure's imputation", {
+  settings <- imputation_settings()
+  n <- 3000
+  frame <- function() {
+    data <- data.frame(
+      age = stats::runif(n, 10, 14),
+      sex = sample(c("Female", "Male"), n, replace = TRUE),
+      weight = NA_real_,
+      cluster = NA_character_,
+      family = NA_character_,
+      stringsAsFactors = FALSE
+    )
+    for (name in bp_stage1_covariates()) {
+      data[[name]] <- NA_character_
+    }
+    data
+  }
+  # The mean slope over ten imputations, each fitted as the model is.
+  imputed_slope <- function(data, tier = 1L, extra = character()) {
+    mean(vapply(
+      1:10,
+      function(seed) {
+        filled <- impute_cell_exposure(data, seed, settings)
+        filled <- filled[!is.na(filled$x), ]
+        fit_stage1_unit(filled, "linear", settings, tier, extra)$estimate
+      },
+      numeric(1)
+    ))
+  }
+
+  # A covariate that confounds, with a few gaps of its own: it stays in
+  # the exposure's model, so the adjusted slope is the one with nothing
+  # missing and not the unadjusted one.
+  set.seed(97)
+  data <- frame()
+  level <- sample(1:3, n, replace = TRUE)
+  data$ses_household <- c("Low", "Medium", "High")[level]
+  data$x <- pmax(stats::rnorm(n, 1 + level), 0)
+  data$y <- -0.10 * data$x - 0.6 * level + stats::rnorm(n)
+  data$ses_household[sample(n, 150)] <- NA
+  whole <- fit_stage1_unit(data, "linear", settings, 2L)$estimate
+  unadjusted <- fit_stage1_unit(data, "linear", settings, 1L)$estimate
+  expect_gt(abs(unadjusted - whole), 0.2)
+  gaps <- data
+  gaps$x[sample(n, 750)] <- NA
+  expect_lt(abs(imputed_slope(gaps, tier = 2L) / whole - 1), 0.08)
+
+  # The rest of the child's screen use, known for every row: the exposure
+  # is drawn given it, so the slope adjusted for it is kept.
+  set.seed(101)
+  data <- frame()
+  shared <- stats::rgamma(n, 2, 1)
+  data$x <- shared + stats::rgamma(n, 1, 1)
+  data$other <- 0.8 * shared + stats::rgamma(n, 1, 1)
+  data$y <- -0.10 * data$x - 0.10 * data$other + stats::rnorm(n)
+  whole <- fit_stage1_unit(data, "linear", settings, 1L, "other")$estimate
+  gaps <- data
+  gaps$x[sample(n, 750)] <- NA
+  expect_lt(abs(imputed_slope(gaps, extra = "other") / whole - 1), 0.08)
+  # A row whose rest of screen use is missing and cannot be imputed is
+  # left alone: the model drops it.
+  never <- gaps
+  ten <- floor(never$age) == 10
+  never$other[ten] <- NA
+  filled <- impute_cell_exposure(never, 3L, settings)
+  expect_equal(filled$x[ten], never$x[ten])
+  expect_false(anyNA(filled$x[!ten]))
+
+  # A binary outcome: the slope keeps most of the precision of complete
+  # cases, which it would not if a few donors supplied most of the draws.
+  set.seed(103)
+  data <- frame()
+  data$x <- sample(c(0.5, 1.5, 2.5, 3.5, 5), n, replace = TRUE)
+  data$y <- stats::rbinom(n, 1, stats::plogis(-2.3 + 0.25 * data$x))
+  gaps <- data
+  gaps$x[sample(n, 750)] <- NA
+  filled <- impute_cell_exposure(gaps, 5L, settings)
+  drawn <- table(filled$x[is.na(gaps$x)])
+  expect_length(drawn, 5)
+  expect_lt(max(drawn) / sum(drawn), 0.4)
+})
+
 test_that("imputation removes the bias of complete cases", {
   reg <- imputation_registries()
   cell <- tibble::tibble(exposure = "st_game", outcome = "mh_dep_self")
@@ -440,6 +522,42 @@ test_that("a child's sex is the same at every wave after imputation", {
   expect_silent(
     review_imputation(prepared, imputed, reg$outcomes, reg$exposures)
   )
+  # Records that look odd but are legitimate do not stop the build: a sex
+  # known at one wave and missing at the other, so every imputation is the
+  # same; another recorded sex at one wave; and an ethnicity recorded
+  # differently at two waves.
+  legitimate <- function(edit) {
+    data <- imputation_prepare("9992", reg, edit)
+    drawn <- impute_all(data, reg, m = 2L)
+    expect_no_error(
+      review_imputation(data, drawn, reg$outcomes, reg$exposures)
+    )
+    drawn
+  }
+  people <- unique(as.character(
+    imputation_mock$data$participant_id[
+      imputation_mock$data$dataset_id == "9992"
+    ]
+  ))
+  legitimate(function(rows) {
+    rows$sex[rows$participant_id %in% people[1:200] & rows$wave == "2"] <- NA
+    rows
+  })
+  other <- legitimate(function(rows) {
+    odd <- rows$participant_id %in% people[1:5]
+    rows$sex[odd & rows$wave == "1"] <- "Other"
+    rows$sex[odd & rows$wave == "2"] <- NA
+    rows$sex[rows$participant_id %in% people[6:100] & rows$wave == "2"] <- NA
+    rows
+  })
+  expect_true(all(other$cells$value %in% c("Female", "Male")))
+  legitimate(function(rows) {
+    set.seed(107)
+    rows$ethnicity <- sample(c("White", "Asian"), nrow(rows), replace = TRUE)
+    rows$ethnicity[sample(nrow(rows), 200)] <- NA
+    rows
+  })
+
   # Minority status is left alone where the unit records ethnicity.
   both <- imputation_prepare("9992", reg, function(rows) {
     set.seed(79)

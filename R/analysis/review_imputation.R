@@ -13,9 +13,10 @@
 #' - nothing is imputed for a covariate its unit observed on less than the
 #'   minimum share of rows, or for a child at an age at which the unit
 #'   observed it on too few;
-#' - a row that cannot change within a child has one value per child in
-#'   each imputation;
-#' - two imputations that filled the same cells are not the same draw.
+#' - the imputed cells of a row that cannot change within a child agree
+#'   for each child in each imputation;
+#' - two imputations that filled the same cells are not the same draw,
+#'   judged on the covariates that can change within a child.
 #'
 #' Imputed screen use is checked where it is drawn
 #' (`impute_cell_exposure()`).
@@ -102,33 +103,16 @@ review_imputation <- function(
     all(cells$value[cells$variable == "sex"] %in% c("Female", "Male")),
     "sex imputed as something other than female or male"
   )
+  # Imputed cells of one child agree with each other. Observed values may
+  # differ between waves, and are not held to this.
   for (name in frame$constant) {
     own <- cells[cells$variable == name, ]
-    if (nrow(own) == 0) {
-      next
-    }
-    people <- unique(base$participant_id[own$row])
-    seen <- !is.na(data[[name]]) & base$participant_id %in% people
-    # Another recorded sex is a record, not a gap, and is left as it is.
-    if (name == "sex") {
-      seen <- seen & data[[name]] %in% c("Female", "Male")
-    }
-    all_values <- rbind(
+    per_person <- dplyr::summarise(
       tibble::tibble(
         imputation = own$imputation,
         person = base$participant_id[own$row],
         value = own$value
       ),
-      tidyr::expand_grid(
-        imputation = unique(own$imputation),
-        tibble::tibble(
-          person = base$participant_id[seen],
-          value = data[[name]][seen]
-        )
-      )
-    )
-    per_person <- dplyr::summarise(
-      all_values,
       values = dplyr::n_distinct(.data$value),
       .by = c("imputation", "person")
     )
@@ -137,10 +121,13 @@ review_imputation <- function(
       paste0("`", name, "` differs within a child after imputation")
     )
   }
-  indexes <- sort(unique(cells$imputation))
+  # Cells set by a child's own record are the same in every imputation, so
+  # only the others can show two imputations to be one draw.
+  free <- cells[!cells$variable %in% frame$constant, ]
+  indexes <- sort(unique(free$imputation))
   if (length(indexes) >= 2) {
-    first <- cells[cells$imputation == indexes[1], ]
-    second <- cells[cells$imputation == indexes[2], ]
+    first <- free[free$imputation == indexes[1], ]
+    second <- free[free$imputation == indexes[2], ]
     same_cells <- nrow(first) == nrow(second) &&
       all(first$row == second$row) &&
       all(first$variable == second$variable)
