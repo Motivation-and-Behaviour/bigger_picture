@@ -42,6 +42,10 @@ analysis_settings <- function() {
     # Sex is a covariate where it is known for at least this share of a
     # unit's rows; below that it is left out and the rows stay.
     sex_known_min = 0.9,
+    # A covariate of a further tier counts as recorded in a unit where it is
+    # known for at least this share of the unit's rows, until missing
+    # values are imputed (Step 8).
+    covariate_known_min = 0.9,
     # Cluster-robust standard errors from fewer clusters than this are
     # flagged: they tend to be too small.
     min_clusters = 10L,
@@ -56,6 +60,53 @@ analysis_settings <- function() {
     onestage_trigger = 0.05,
     # Two outcome rows are a repeat of one score when every co-observed value
     # is equal, on at least this many rows.
-    repeat_min_rows = 10L
+    repeat_min_rows = 10L,
+    # A log odds ratio divided by this joins the SD scale when a binary or
+    # short ordinal row is pooled into its specific outcome and family: the
+    # SD of the standard logistic distribution, pi / sqrt(3).
+    log_odds_per_sd = pi / sqrt(3),
+    # The correlation between two outcome rows' slopes in one unit, where
+    # the unit's rows give no estimate of it (provisional).
+    tree_default_correlation = 0.6,
+    # The smallest effect of interest in SD per hour a day: 0.10 SD on the
+    # contrast of 1 against 4 hours (provisional until the freeze).
+    smallest_effect_per_hour = 0.10 / 3,
+    # Curves (ANALYSIS_PLAN.md, Step 11): a natural cubic spline of screen
+    # use with knots fixed in hours, so every unit has the same curve terms;
+    # the hours a pooled curve is read at; and the low-use reference each
+    # hour is compared with. A threshold is the lowest duration whose
+    # interval lies beyond `smallest_effect` SD from the reference
+    # (provisional until the freeze).
+    curve_knots = c(1, 2, 4),
+    curve_boundary = c(0, 6),
+    curve_grid = seq(0, 8, by = 0.5),
+    curve_reference = 1,
+    # A unit's curve needs this many rows in each stretch between knots, so
+    # no part of it rests on a handful of children; and a unit supports an
+    # hour where it has the minimum number of rows within this many hours
+    # of it.
+    curve_interval_rows = 30L,
+    curve_window = 0.5,
+    smallest_effect = 0.10
   )
+}
+
+#' The settings a function falls back on when it is given none
+#'
+#' Functions take their settings as an argument, and the pipeline always
+#' passes the few each stage reads (`bp_prepare_settings()` and the like),
+#' so that changing one setting reruns only the stages that read it. A
+#' default of `analysis_settings()` in a function's arguments would undo
+#' that: `targets` counts every function a function names as something it
+#' depends on, so adding or changing any setting would rerun everything.
+#' The default therefore goes through this function, which finds the
+#' settings by name, where `targets` does not follow.
+#'
+#' That is only safe because no call inside the pipeline relies on the
+#' default: `tests/testthat/test-analysis-settings.R` fails if a function
+#' that takes settings is called without them.
+#'
+#' @return The list from `analysis_settings()`.
+default_analysis_settings <- function() {
+  get("analysis_settings", mode = "function")()
 }

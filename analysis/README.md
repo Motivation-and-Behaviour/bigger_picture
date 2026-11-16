@@ -13,6 +13,8 @@ They hold dataschema variable names, node labels, dataset IDs and wave labels, w
 | `invariants.csv` | Row the harmonisation keeps constant within a participant | `tests/testthat/test-analysis-registry.R` |
 | `datasets.csv` | Dataset | `tests/testthat/test-analysis-registry.R` |
 | `deviations.csv` | Departure from the preregistration | `tests/testthat/test-analysis-deviations.R` |
+| `models.csv` | Model family | `read_model_spec()` |
+| `hypotheses.csv` | Preregistered prediction, by exposure and outcome family | `read_hypotheses()` |
 
 ## When the dataschema changes
 
@@ -95,6 +97,16 @@ A dataset with no row reads as a blank one, so it has no baseline and is not sig
 Dataset branches never edit this folder, so a new dataset gets its row on `main` after it merges; a test warns until it has one.
 The row matters for panels and trials, which need `baseline_wave`.
 
+## Building
+
+`Rscript make.R` builds the pipeline in three sections: the per-dataset targets that load whole datasets, then the per-dataset targets that fit models and count on prepared datasets, then everything else.
+The two kinds of work never overlap, so the models section can use more workers (`bp_model_workers_wide()`) than is safe while whole datasets are loading.
+A plain `targets::tar_make()` builds the same targets with four model workers.
+`bp_build_sections()` lists what each section builds, and a test checks it against the pool each target runs in.
+
+Functions take their settings as an argument, and the pipeline hands each stage only the settings it reads, so changing one setting reruns only the stages that read it.
+A function's default goes through `default_analysis_settings()` and never names `analysis_settings()` itself, which the pipeline would count as a dependency of every function; `tests/testthat/test-analysis-settings.R` fails if a function that takes settings is called without them.
+
 ## The analysis section of the pipeline
 
 `analysis_targets()` (`R/analysis/analysis_targets.R`) adds everything downstream of harmonisation to `_targets.R`.
@@ -114,15 +126,27 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `development_cells` | The cells fitted before the freeze, from `development_cells.csv` |
 | `stage1_<key>`, `stage1_all` | One model per unit and cell: the slope on screen use, with how it was fitted or why it was not |
 | `stage2_development` | Each cell's slopes pooled across datasets |
+| `curves_<key>`, `curves_all`, `curves_development` | Each unit's curve of the outcome over hours of screen use for the development cells, and the pooled curve of each cell with its threshold duration |
+| `curve_simulation`, `curve_simulation_summary` | Whether the curve method recovers curves built into the real hours of one cell: 200 simulated outcomes per scenario, with and without error inside the bands of banded items |
+| `cell_counts_<key>`, `cell_counts_all`, `cell_units_all`, `feasibility` | Rows and participants with each exposure together with each outcome row, per unit, and what the signed-off datasets can therefore pool at each level of the tree, at each covariate tier, by moderator and over collection years; counts only, no model |
+| `stage1_adjusted_<key>`, `stage1_adjusted_all`, `tiers_development` | The development cells fitted at covariate tiers 2 and 3 (DR-0015), and each tier's pooled slope beside tier 1 pooled over the same units |
+| `slope_correlations_<key>`, `slope_correlations_all` | How strongly the slopes of two rows of one specific outcome share their error in a unit, estimated from the unit's rows |
+| `tree_development` | The development cells' slopes pooled up the outcome tree: specific outcome by informant, specific outcome, and family |
+| `mapping_status_<key>`, `mapping_status_all`, `moderation_development` | Each dataset's harmonisation status per mapped variable, and whether the development cells' slopes differ by informant, reporter, response format, instrument, score type, harmonisation status and the other stage 2 moderators, within each specific outcome |
 | `onestage_rows_<key>`, `onestage_check` | The one-stage check on one cell |
 | `descriptives_<key>`, `described_screen`, `described_week`, `described_relations`, `described_outcomes`, `described_units` | Per-unit descriptive statistics of screen use and of binary outcomes, weighted where a unit has weights |
 | `screen_pooled`, `week_pooled`, `relations_pooled`, `outcomes_pooled` | Those statistics pooled so each dataset counts once |
 | `series_breaks`, `series_breaks_unused`, `screen_by_year`, `screen_by_year_share` | Recorded changes to a dataset's screen items, the recorded changes that separate no units (none, when the file is right), and screen use against collection year, between studies and within like series of one study |
+| `model_spec`, `hypotheses`, `model_cells`, `fit_cells` | The model list, the preregistered predictions, each model's exposure and outcome cells, and the distinct cells stage 1 fits; before the freeze these are the development cells only |
+| `stage1_other_<key>`, `stage1_other_all`, `tree_other` | The content-class cells adjusted for the rest of the child's screen use, and pooled up the tree |
+| `tree_tier2`, `tree_tier3` | The slopes at covariate tiers 2 and 3 pooled up the tree |
+| `longitudinal_<key>`, `longitudinal_all`, `longitudinal_development` | The lagged, within-child and matched cross-sectional models per pair of waves (DR-0018), and each pooled per outcome row and up the tree |
+| `results_development` | Every model built so far in one table: estimate, interval, p, tiered q with its K (DR-0017), the 1 against 4 hours contrast, the equivalence test and the preregistered prediction |
 | `year_moderation_development` | Whether the slopes differ by collection year, on the development cells |
 | `dataset_table` | One row per dataset, by number, with its citation keys from `references/` |
 | `dataset_outcomes`, `dataset_outcome_flow` | What became of every dataset the project sought, from hand-entered counts |
 | `measured`, `work_scale` | What was measured, and the scale of the harmonisation work, counted from the repository and the pipeline |
-| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation`, `report_descriptives`, `report_thin_slice` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
+| `report_data_health`, `report_harmonisation_diagnostics`, `report_preparation`, `report_descriptives`, `report_thin_slice`, `report_feasibility` | Reports rendered beside their sources in `analysis/reports/`, which are gitignored |
 
 A dataset is included until any dataset has `signed_off` set in `datasets.csv`; from then on only signed-off datasets are.
 
@@ -177,6 +201,76 @@ Two-stage is the primary analysis (DR-0010).
 Until the freeze the engine runs only on the development cells in `development_cells.csv`: each line names an exposure row and either an outcome family or one outcome row, with a reason.
 These are the only associations seen before the specification is frozen, and the deviations ledger records them.
 
+### Pooling up the outcome tree
+
+`pool_tree()` takes the stage 1 slopes above the outcome row.
+`tree_effects()` first puts them on one scale and one direction: a slope in log odds is divided by pi / sqrt(3) to give SD per hour, and a slope on a row where higher is worse changes sign, so a positive slope always means a better outcome with more screen use.
+Rows with `synthesis` FALSE, no node or no direction do not pool; the result's `left_out` attribute counts them by row and reason.
+
+- A specific outcome by informant (L2) and a specific outcome (L1) pool their rows with `pool_tree_group()`: the stage 2 model, with the covariance of slopes fitted on the same children and, where a unit gives several rows, variation between a unit's rows.
+  An L2 group of log-odds rows of one direction also reports an odds ratio in the rows' own direction, as stage 2 does for a row.
+- That covariance comes from `stage1_correlations()`, which estimates how strongly two slopes of one unit share their error, on the rows, terms and clusters stage 1 uses but treating every score as numeric.
+  It sets the working model's weights, and the robust inference does not depend on it being right.
+  A pair with too few shared rows takes `tree_default_correlation`, and correlations that cannot all hold at once are shrunk towards zero; both are counted in the result.
+- A family (L0) is the plain average of its pooled specific outcomes, from `pool_tree_family()`, so each specific outcome counts once however many rows or datasets it has.
+  Its standard error allows for any dependence among a dataset's slopes, so a score that sits in two specific outcomes adds nothing to the family's precision.
+- A family is estimated whenever one of its specific outcomes pooled, and one that could not be pooled is named in `nodes_left_out`.
+  A specific outcome with too few studies to say still enters the average; `k_nodes_thin` counts them.
+- `headline` is TRUE for a family with no warning, and only evidence of disagreement warns (DR-0014): two specific outcomes with intervals on opposite sides of zero, or estimates that span more than the smallest effect of interest where a robust test rejects that they are equal.
+  Uncertainty does not: one specific outcome only, a test that could not be run and too few studies to say are recorded in `note` and `status`.
+  A specific outcome is warned in the same way where two of its informants have intervals on opposite sides of zero.
+- The `_by_datasets` columns give the family weighted by each specific outcome's number of datasets, as a sensitivity analysis.
+- A family averages every specific outcome that pools, whether or not the registry marks it `headline`: that column decides what a report leads with.
+
+### Stage 2 moderators
+
+`moderate_tree()` asks, within each specific outcome, whether the slopes differ between the levels of each label in `bp_tree_moderators()`; `tree_moderators()` says where each label comes from.
+`moderate_tree_group()` fits the specific outcome's model with one mean per level and tests that the means are equal, with the robust small-sample test used for families.
+A level needs the minimum number of datasets to enter, and a moderator with fewer than two such levels is reported as not comparable.
+
+Most datasets have one level of a moderator, so a difference is mostly a difference between kinds of study, which also differ in country, age and instrument.
+`k_datasets_several` counts the datasets with more than one of the compared levels, and `largest_dataset_share` the share of the compared slopes one dataset supplies.
+
+Reading the table:
+
+- `test_status` says whether the test of equal means rests on enough studies; under four degrees of freedom it is `too few studies to say`, whatever the p-value.
+- `difference_of` names which level is taken from which.
+- `same_as` marks a moderator that sorts a specific outcome's slopes exactly as an earlier one does: the two are one comparison under two names.
+- P-values are not adjusted for the number of comparisons; the tiered procedure of Step 10 does that for the frozen model list.
+- The comparison has little power: in designs like the development cells', a true difference of one smallest effect of interest was found about a third of the time, so a test that does not reject is not evidence of no difference.
+- A row the analysis derives (the derived total, a derived outcome row) has no mapping of its own, so its harmonisation status is `derived`.
+
+Not built yet from the plan's list (Step 7 task 4):
+
+- age span and collection year are continuous and are handled apart (`moderate_by_year()`; age comes with Step 12);
+- `total_coverage`, which is also continuous;
+- within-study comparisons of response format and responder using tagged measure blocks: stage 1 fits the primary measure only, so those two moderators compare between datasets;
+- the compatible-only subset where five or more datasets remain;
+- `risk_of_bias` has no ratings yet, and `total_source` applies only to the derived total, which no development cell uses, so neither compares anything so far.
+
+### Curves and the threshold duration
+
+`fit_stage1_curves()` fits, in each unit, a natural cubic spline of screen use with knots fixed in hours (`curve_knots`, `curve_boundary`), so every unit estimates the same curve terms.
+It is the linear stage 1 model at tier 1 with the curve in place of the slope, for rows that take a linear model.
+`pool_curve()` pools the terms across datasets and reads the curve at each hour of `curve_grid` as the difference from the low-use reference (`curve_reference`), in SD of the outcome.
+
+- A unit's curve needs more distinct values of screen use than the curve has terms, the minimum number of rows in every stretch between knots (`curve_interval_rows`), and more clusters than terms; a unit that falls short is not fitted and says why.
+- The pooled model lets each term vary between datasets and, where there are more units than datasets, between a dataset's units.
+- A unit supports an hour where it has the minimum number of rows within `curve_window` hours of it.
+  A curve is interpretable at an hour inside the boundary knots that at least the minimum number of datasets support, counting only datasets that also support the reference; beyond the boundary knots the curve is a straight line continued and is not read.
+- The threshold duration is read two ways, each the lowest interpretable hour above the reference that meets its rule (DR-0016).
+  Conservative (`threshold_hours`): the interval lies wholly beyond the smallest effect of interest (`smallest_effect`) from the reference, with at least four robust degrees of freedom there.
+  Central (`threshold_central_hours`): the estimate is beyond the smallest effect of interest and the interval excludes no difference.
+  Each has a direction, given as a better or worse outcome, and a flag saying whether the curve goes on meeting the rule at every later hour.
+- `simulate_curve_recovery()` checks the method on real hours of screen use with a simulated outcome that follows a known curve (a plasmode simulation); `curve_truths()` lists the curves it builds in, and DR-0016 says what it found.
+
+A conservative threshold depends on how precisely a curve is estimated as well as on the curve, so thresholds are not comparable between cells without their intervals.
+In the simulation it was almost never reported where there was none, was usually reported an hour or more after the true one, and was never reported from five datasets.
+The central threshold was on time on average, and was reported for a curve levelling off just short of the smallest effect in about a third of runs.
+
+The breakpoint of the preregistered piecewise model is not built yet.
+Also not built: response format as a moderator of the curve with a continuous-only check, a sensitivity analysis of how the top band is scored, and reading the derived total's curve within one source of the total.
+
 ### Dataset outcomes
 
 `dataset_outcomes.csv` holds the top of the dataset flow, which the repository cannot count for itself: how many of the datasets the project sought ended in each outcome.
@@ -214,3 +308,31 @@ Fill in one of the two and leave the other blank.
 A list of waves is closed: when a study adds a wave that still uses the changed item, add the wave to every such list, or it is read as the old item.
 The derived total is built from whichever items a dataset has, so every line of the dataset splits its series, whatever the exposure or day.
 A line with no units that have the exposure on one of its two sides is listed in the `series_breaks_unused` target, which should be empty.
+
+## The model list
+
+`models.csv` has one row per model family, and everything the analysis fits is a row: a sensitivity analysis is a further row, never a further code path.
+It is a draft until the freeze, when it is fixed with the registries.
+
+| Column | Values |
+| --- | --- |
+| `model_name` | Lower case, unique |
+| `step` | The step of the analysis plan that runs it, 10 to 14 |
+| `tier` | The preregistered tier whose q-values it takes, 1 to 5; exploratory, descriptive and post-freeze models take 5 |
+| `levels` | The levels of the outcome tree it is reported at, pipe-separated: `L0`, `L1`, `L2`, `L3` |
+| `exposure_set` | Pipe-separated: `total` (the derived total), `content_classes`, `other_included`, `school` |
+| `outcome_set` | `core`, `report`, `negative_control`, or `core_rare_binary` (binary rows where more than half the units that measure the row have fewer than 10 events) and `headline_cells`, both settled from the data where their models are built |
+| `moderator` | The moderators it tests, pipe-separated; blank for none |
+| `covariate_tier` | `1`, `2`, `3` or `family` (DR-0015) |
+| `sample` | `main`, or the subset of rows or datasets it uses |
+| `engine` | How it is fitted, one of `bp_model_engines()` |
+| `variant` | The one thing a secondary or sensitivity model changes; blank for a primary model |
+| `analysis_class` | `confirmatory`, `prereg_secondary`, `post_freeze`, `exploratory` or `descriptive`; shown in every results table |
+| `built` | Whether its code exists yet; code for Steps 11 to 14 may follow the freeze, its row may not |
+
+`expand_model_cells()` turns the sets into exposure and outcome cells from the registries, so a new schema row joins a model without an edit here.
+Until `bp_specification_frozen()` is TRUE, which the lead sets in the tagged commit that freezes the specification, a model's cells are only the development cells that fall in its sets.
+
+`hypotheses.csv` gives the direction the preregistration predicts for an exposure and a family: `negative`, `positive` or `none`.
+A prediction of `none` is tested for equivalence against the smallest effect of interest (DR-0017).
+Estimates are aligned so that positive means a better outcome with more screen use, so `negative` is a negative estimate in every family.

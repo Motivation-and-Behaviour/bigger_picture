@@ -26,6 +26,18 @@ analysis_targets <- function(harmonise_plan) {
       quote(settings[bp_model_settings()])
     ),
     targets::tar_target_raw(
+      "settings_curve",
+      quote(settings[bp_curve_settings()])
+    ),
+    targets::tar_target_raw(
+      "settings_simulation",
+      quote(settings[c(bp_curve_settings(), "seed")])
+    ),
+    targets::tar_target_raw(
+      "settings_tree",
+      quote(settings[bp_tree_settings()])
+    ),
+    targets::tar_target_raw(
       "dataset_spec_files",
       quote(list_dataset_spec_files()),
       format = "file"
@@ -58,6 +70,61 @@ analysis_targets <- function(harmonise_plan) {
           outcome_registry,
           exposure_registry
         ))
+      ),
+      targets::tar_target_raw(
+        "models_file",
+        quote(bp_models_path()),
+        format = "file"
+      ),
+      targets::tar_target_raw(
+        "model_spec",
+        quote(read_model_spec(models_file))
+      ),
+      targets::tar_target_raw(
+        "hypotheses_file",
+        quote(bp_hypotheses_path()),
+        format = "file"
+      ),
+      targets::tar_target_raw(
+        "hypotheses",
+        quote(read_hypotheses(
+          hypotheses_file,
+          outcome_registry,
+          exposure_registry
+        ))
+      ),
+      # Every model's cells. Until the freeze these are the development
+      # cells that fall in each model's sets, and nothing else is fitted.
+      targets::tar_target_raw(
+        "model_cells",
+        quote(expand_model_cells(
+          model_spec,
+          outcome_registry,
+          exposure_registry,
+          development_cells,
+          frozen = bp_specification_frozen()
+        ))
+      ),
+      targets::tar_target_raw(
+        "fit_cells",
+        quote(dplyr::distinct(model_cells[
+          model_cells$model_name %in% bp_stage1_models(),
+          c("exposure", "outcome")
+        ]))
+      ),
+      targets::tar_target_raw(
+        "other_cells",
+        quote(dplyr::distinct(model_cells[
+          model_cells$model_name %in% "tier2_content_adjusted",
+          c("exposure", "outcome")
+        ]))
+      ),
+      targets::tar_target_raw(
+        "longitudinal_cells",
+        quote(dplyr::distinct(model_cells[
+          model_cells$model_name %in% "longitudinal_lagged",
+          c("exposure", "outcome")
+        ]))
       ),
       targets::tar_target_raw(
         "dataset_outcomes_file",
@@ -115,6 +182,11 @@ analysis_targets <- function(harmonise_plan) {
   row_level <- targets::tar_resources(
     qs = targets::tar_resources_qs(nthreads = 4L),
     crew = targets::tar_resources_crew(controller = "row_level")
+  )
+  # The targets that fit or count on a prepared dataset run in a wider pool.
+  model_level <- targets::tar_resources(
+    qs = targets::tar_resources_qs(nthreads = 4L),
+    crew = targets::tar_resources_crew(controller = "model")
   )
   # Three targets per dataset read row-level data: the summaries, the
   # prepared tables and their review. Keeping it to three bounds how many
@@ -179,14 +251,95 @@ analysis_targets <- function(harmonise_plan) {
       "stage1",
       quote(fit_stage1(
         prepared,
-        development_cells,
+        fit_cells,
         outcome_registry,
         dataschema,
         settings_model
       )),
       memory = "transient",
       garbage_collection = TRUE,
-      resources = row_level
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "curves",
+      quote(fit_stage1_curves(
+        prepared,
+        fit_cells,
+        outcome_registry,
+        dataschema,
+        settings_curve
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "cell_counts",
+      quote(count_cells(
+        prepared,
+        outcome_registry,
+        exposure_registry,
+        dataschema,
+        settings_model
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "stage1_adjusted",
+      quote(fit_stage1(
+        prepared,
+        fit_cells,
+        outcome_registry,
+        dataschema,
+        settings_model,
+        tiers = 2:3
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "stage1_other",
+      quote(fit_stage1(
+        prepared,
+        other_cells,
+        outcome_registry,
+        dataschema,
+        settings_model,
+        adjust_other = TRUE
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "longitudinal",
+      quote(fit_stage1_longitudinal(
+        prepared,
+        longitudinal_cells,
+        outcome_registry,
+        exposure_registry,
+        dataschema,
+        series_breaks,
+        settings_model
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "slope_correlations",
+      quote(stage1_correlations(
+        prepared,
+        fit_cells,
+        outcome_registry,
+        settings_tree
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
     ),
     targets::tar_target_raw(
       "descriptives",
@@ -218,6 +371,10 @@ analysis_targets <- function(harmonise_plan) {
       memory = "transient",
       garbage_collection = TRUE,
       resources = row_level
+    ),
+    targets::tar_target_raw(
+      "mapping_status",
+      quote(list_mapping_status(harmonisation_config$variables, dataset_id))
     ),
     targets::tar_target_raw(
       "prepared_review",
@@ -376,6 +533,72 @@ analysis_targets <- function(harmonise_plan) {
       command = quote(dplyr::bind_rows(!!!.x))
     ),
     tarchetypes::tar_combine_raw(
+      "curves_all",
+      per_dataset[["curves"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "curves_development",
+      quote(pool_curve_cells(curves_all, settings_curve, outcome_registry))
+    ),
+    # The simulation runs its replicates in processes of its own.
+    targets::tar_target_raw(
+      "curve_simulation",
+      quote(simulate_curve_recovery(
+        onestage_rows_all,
+        described_units,
+        reps = 200L,
+        settings = settings_simulation,
+        cores = bp_simulation_cores()
+      ))
+    ),
+    targets::tar_target_raw(
+      "curve_simulation_summary",
+      quote(summarise_curve_recovery(curve_simulation))
+    ),
+    tarchetypes::tar_combine_raw(
+      "cell_counts_all",
+      per_dataset[["cell_counts"]],
+      command = quote(bind_part(list(!!!.x), "cells"))
+    ),
+    tarchetypes::tar_combine_raw(
+      "cell_units_all",
+      per_dataset[["cell_counts"]],
+      command = quote(bind_part(list(!!!.x), "units"))
+    ),
+    targets::tar_target_raw(
+      "feasibility",
+      quote(summarise_feasibility(
+        cell_counts_all,
+        cell_units_all,
+        described_units,
+        outcome_registry,
+        exposure_registry,
+        analysis_datasets,
+        mapping_status_all,
+        settings_model
+      ))
+    ),
+    tarchetypes::tar_combine_raw(
+      "stage1_adjusted_all",
+      per_dataset[["stage1_adjusted"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "tiers_development",
+      quote(compare_stage2_tiers(
+        stage1_all,
+        stage1_adjusted_all,
+        fit_cells,
+        settings_model
+      ))
+    ),
+    tarchetypes::tar_combine_raw(
+      "slope_correlations_all",
+      per_dataset[["slope_correlations"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
       "onestage_rows_all",
       per_dataset[["onestage_rows"]],
       command = quote(dplyr::bind_rows(!!!.x))
@@ -392,7 +615,110 @@ analysis_targets <- function(harmonise_plan) {
     ),
     targets::tar_target_raw(
       "stage2_development",
-      quote(pool_stage2_cells(stage1_all, development_cells, settings_model))
+      quote(pool_stage2_cells(stage1_all, fit_cells, settings_model))
+    ),
+    targets::tar_target_raw(
+      "tree_development",
+      quote(pool_tree(
+        stage1_all,
+        outcome_registry,
+        slope_correlations_all,
+        settings_tree
+      ))
+    ),
+    tarchetypes::tar_combine_raw(
+      "stage1_other_all",
+      per_dataset[["stage1_other"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "tree_other",
+      quote(pool_tree(
+        stage1_other_all,
+        outcome_registry,
+        slope_correlations_all,
+        settings_tree
+      ))
+    ),
+    targets::tar_target_raw(
+      "tree_tier2",
+      quote(pool_tree(
+        stage1_adjusted_all[stage1_adjusted_all$tier %in% 2L, ],
+        outcome_registry,
+        slope_correlations_all,
+        settings_tree
+      ))
+    ),
+    targets::tar_target_raw(
+      "tree_tier3",
+      quote(pool_tree(
+        stage1_adjusted_all[stage1_adjusted_all$tier %in% 3L, ],
+        outcome_registry,
+        slope_correlations_all,
+        settings_tree
+      ))
+    ),
+    tarchetypes::tar_combine_raw(
+      "longitudinal_all",
+      per_dataset[["longitudinal"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "longitudinal_development",
+      quote(pool_longitudinal(
+        longitudinal_all,
+        longitudinal_cells,
+        outcome_registry,
+        settings_tree
+      ))
+    ),
+    # One table of every model built so far, with p, q and equivalence
+    # tests. Before the freeze it holds development results only.
+    targets::tar_target_raw(
+      "results_development",
+      quote(assemble_results(
+        dplyr::bind_rows(
+          label_models(
+            tree_development,
+            model_cells,
+            setdiff(bp_stage1_models(), "report_rows")
+          ),
+          dplyr::mutate(tree_other, model_name = "tier2_content_adjusted"),
+          dplyr::mutate(tree_tier2, model_name = "covariates_tier2"),
+          dplyr::mutate(tree_tier3, model_name = "covariates_tier3"),
+          longitudinal_development$tree
+        ),
+        dplyr::bind_rows(
+          label_models(
+            stage2_development,
+            model_cells,
+            bp_stage1_models()
+          ),
+          longitudinal_development$cells
+        ),
+        model_spec,
+        hypotheses,
+        outcome_registry,
+        settings_tree,
+        frozen = bp_specification_frozen()
+      ))
+    ),
+    tarchetypes::tar_combine_raw(
+      "mapping_status_all",
+      per_dataset[["mapping_status"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "moderation_development",
+      quote(moderate_tree(
+        stage1_all,
+        described_units,
+        outcome_registry,
+        slope_correlations_all,
+        mapping_status_all,
+        analysis_datasets,
+        settings_tree
+      ))
     ),
     targets::tar_target_raw(
       "year_moderation_development",
@@ -463,6 +789,10 @@ analysis_targets <- function(harmonise_plan) {
     tarchetypes::tar_quarto_raw(
       "report_descriptives",
       path = fs::path(bp_analysis_reports_dir(), "descriptives.qmd")
+    ),
+    tarchetypes::tar_quarto_raw(
+      "report_feasibility",
+      path = fs::path(bp_analysis_reports_dir(), "feasibility.qmd")
     ),
     tarchetypes::tar_quarto_raw(
       "report_thin_slice",

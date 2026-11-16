@@ -31,7 +31,7 @@
 #'   `estimate` with its robust `se`, `df` and 95% interval, the model-based
 #'   interval, the between-dataset and between-unit SDs, the prediction
 #'   interval and `status`.
-pool_stage2 <- function(estimates, settings = analysis_settings()) {
+pool_stage2 <- function(estimates, settings = default_analysis_settings()) {
   if (nrow(estimates) == 0) {
     estimates <- tibble::tibble(
       dataset_id = character(),

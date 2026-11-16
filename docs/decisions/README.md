@@ -58,6 +58,11 @@ The numeric prefix preserves chronological ordering.
 | DR-0011 | [Primary analyses exclude only implausible values; the 3-MAD rule is a sensitivity analysis](DR-0011-exclusions.md) | Accepted | 2026-11-11 |
 | DR-0012 | [Age eligibility is decided row by row, keeping rows aged under 19](DR-0012-age-eligibility.md) | Accepted | 2026-11-11 |
 | DR-0013 | [The analysis derives total screen time, and the harmonised row stays dedicated items only](DR-0013-analysis-total-screen-time.md) | Accepted | 2026-11-11 |
+| DR-0014 | [A family is the plain average of its specific outcomes, and only disagreement keeps it from the headline](DR-0014-pooling-up-the-outcome-tree.md) | Accepted | 2026-11-13 |
+| DR-0015 | [What the models adjust for, and what they leave alone](DR-0015-causal-diagram-and-covariates.md) | Accepted | 2026-11-13 |
+| DR-0016 | [Curves are pooled from splines with fixed knots, and the threshold duration is read from the pooled curve](DR-0016-curves-and-threshold-duration.md) | Accepted | 2026-11-13 |
+| DR-0017 | [The tiered false discovery rate, written out as a rule](DR-0017-tiered-false-discovery-rate.md) | Accepted | 2026-11-15 |
+| DR-0018 | [A longitudinal strand of lagged and within-child models](DR-0018-longitudinal-strand.md) | Accepted | 2026-11-15 |
 
 When adding a new decision:
 

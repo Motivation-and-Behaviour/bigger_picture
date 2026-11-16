@@ -4,6 +4,11 @@
 #
 # Runs inside the devcontainer's base image, which already has R and the
 # project's packages, so there is no R or package setup to repeat per run.
+#
+# The slow known-answer tests of the analysis engine (the files that call
+# skip_unless_engine_needed()) depend only on the analysis code, the
+# registries and the dataschema. A pull request that changes none of those,
+# such as a dataset mapping, skips them; a push to main always runs them.
 on:
   push:
     branches: [main, master]
@@ -14,9 +19,42 @@ name: test-project.yaml
 permissions: read-all
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      skip_engine: ${{ steps.diff.outputs.skip_engine }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Decide whether the engine tests are needed
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          # Anything unexpected leaves the engine tests on.
+          skip=false
+          if [ "$EVENT" = "pull_request" ]; then
+            if changed="$(git diff --name-only "origin/${BASE_REF}...HEAD")"; then
+              echo "$changed"
+              needs='^(R/|analysis/|tests/|\.github/|harmonisation/dataschema\.csv$|DESCRIPTION$|_targets\.R$|make\.R$)'
+              # A dataset's tidier is the one kind of R file they do not read.
+              if ! echo "$changed" | grep -Ev '^R/tidy/' | grep -Eq "$needs"; then
+                skip=true
+              fi
+            fi
+          fi
+          echo "skip_engine=$skip" >> "$GITHUB_OUTPUT"
+          echo "skip engine tests: $skip"
+
   test-project:
+    needs: changes
     runs-on: ubuntu-latest
     container: ghcr.io/tarensanders/r-base:latest
+    env:
+      BP_SKIP_ENGINE_TESTS: ${{ needs.changes.outputs.skip_engine }}
     steps:
       - uses: actions/checkout@v7
 

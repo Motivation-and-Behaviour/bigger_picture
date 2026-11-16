@@ -12,6 +12,17 @@ for (project_file in list.files(
   source(project_file)
 }
 
+# The slow known-answer tests of the analysis engine depend only on the
+# analysis code, the registries and the dataschema. CI sets
+# BP_SKIP_ENGINE_TESTS on a pull request that changes none of them (see
+# .github/workflows/test-project.yaml); everywhere else they run.
+skip_unless_engine_needed <- function() {
+  testthat::skip_if(
+    identical(Sys.getenv("BP_SKIP_ENGINE_TESTS"), "true"),
+    "no analysis code, registry or schema change in this pull request"
+  )
+}
+
 # Minimal dataschema for engine tests: the engine only reads
 # `variable_name` and `data_type`.
 make_test_dataschema <- function() {

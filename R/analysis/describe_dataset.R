@@ -26,7 +26,7 @@ describe_dataset <- function(
   prepared,
   outcome_registry,
   exposure_registry,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   if (is.null(prepared) || nrow(prepared$base) == 0) {
     return(NULL)

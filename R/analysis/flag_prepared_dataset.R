@@ -35,7 +35,7 @@ flag_prepared_dataset <- function(
   prepared,
   variables,
   outcome_registry,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   if (is.null(prepared)) {
     return(NULL)

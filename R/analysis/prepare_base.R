@@ -15,7 +15,12 @@
 #' @param settings From `analysis_settings()`.
 #' @return A list: `base` (the kept rows), `keep` (a logical index into
 #'   `rows`) and `dropped` (rows dropped per wave and reason).
-prepare_base <- function(rows, info, carry, settings = analysis_settings()) {
+prepare_base <- function(
+  rows,
+  info,
+  carry,
+  settings = default_analysis_settings()
+) {
   n <- nrow(rows)
   dataset_id <- as.character(info$dataset_id)
   wave <- as.character(rows$wave)

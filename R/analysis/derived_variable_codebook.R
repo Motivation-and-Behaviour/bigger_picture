@@ -8,7 +8,7 @@
 #' @return A tibble of `variable`, `table`, `definition` and `source`.
 derived_variable_codebook <- function(
   derivations,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   fixed <- tibble::tribble(
     ~variable                , ~table       , ~definition                                                                                                                                                                                                                                                                                                                                       , ~source   ,

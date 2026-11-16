@@ -9,7 +9,11 @@
 #' @param settings From `analysis_settings()`.
 #' @return A tibble with one row per wave and country, or NULL. A country of
 #'   `Unknown` is no country.
-summarise_units <- function(harmonised, info, settings = analysis_settings()) {
+summarise_units <- function(
+  harmonised,
+  info,
+  settings = default_analysis_settings()
+) {
   rows <- included_rows(harmonised, info, primary_only = TRUE)
   if (is.null(rows)) {
     return(NULL)

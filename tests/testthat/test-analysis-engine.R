@@ -2,6 +2,7 @@
 # function, on the mock dataset, whose effects are known by construction.
 # Real data can show that an estimate is implausible, never that it is wrong.
 
+skip_unless_engine_needed()
 skip_if_not_installed("fixest")
 skip_if_not_installed("metafor")
 skip_if_not_installed("clubSandwich")
@@ -1229,4 +1230,701 @@ test_that("year moderation and the cross-dataset trend use unit descriptions", {
   expect_equal(unique(trend$periods$variable_name), "st_watch")
   expect_true(all(trend$periods$datasets >= 3))
   expect_true(all(trend$periods$low <= trend$periods$mid))
+})
+
+test_that("the tree pools the mock's rows, counting a copied score once", {
+  reg <- engine_registries()
+  ids <- unique(as.character(engine_mock$data$dataset_id))
+  cells <- tibble::tibble(
+    exposure = "st_game",
+    outcome = c("mh_dep_self", "mh_anx_self", "mh_distress_self")
+  )
+  # The depression score is entered again as an anxiety row, a different
+  # specific outcome, so the preparation step keeps both; and a distress row
+  # is made that shares half its variation with depression.
+  set.seed(11)
+  edit <- function(rows) {
+    rows$mh_anx_self <- rows$mh_dep_self
+    rows$mh_distress_self <- rows$mh_dep_self +
+      stats::rnorm(nrow(rows), 0, stats::sd(rows$mh_dep_self, na.rm = TRUE))
+    rows
+  }
+  prepared <- lapply(ids, engine_prepare, reg = reg, edit = edit)
+  stage1 <- dplyr::bind_rows(lapply(prepared, function(p) {
+    fit_stage1(p, cells, reg$outcomes, reg$schema)
+  }))
+  # Each row is its own specific outcome, so no pair is within one.
+  expect_null(stage1_correlations(prepared[[1]], cells, reg$outcomes))
+
+  tree <- pool_tree(stage1, reg$outcomes)
+  level <- function(name) tree[tree$level == name, ]
+  l1 <- level("L1")
+  expect_setequal(l1$node, c("depression", "anxiety", "psychological_distress"))
+  expect_true(all(tree$family == "mental_health"))
+  # Higher depression is worse, so the mock's positive slope turns negative,
+  # and a specific outcome of one row is that row's stage 2 estimate.
+  dep <- l1[l1$node == "depression", ]
+  stage2 <- pool_stage2(stage1[stage1$outcome == "mh_dep_self", ])
+  expect_equal(dep$estimate, -stage2$estimate)
+  expect_equal(dep$se, stage2$se)
+  anx <- l1[l1$node == "anxiety", ]
+  expect_equal(anx$estimate, dep$estimate)
+
+  # Depression and its copy alone: the family is exactly one of them.
+  pair <- pool_tree(
+    stage1[stage1$outcome != "mh_distress_self", ],
+    reg$outcomes
+  )
+  l0 <- pair[pair$level == "L0", ]
+  expect_equal(l0$k_nodes, 2)
+  expect_equal(l0$estimate, dep$estimate)
+  expect_equal(l0$se, dep$se)
+  expect_equal(l0$df, dep$df)
+
+  # With distress the family is the plain average of the three.
+  l0 <- level("L0")
+  expect_equal(l0$k_nodes, 3)
+  expect_equal(l0$estimate, mean(l1$estimate))
+  expect_equal(l0$status, "pooled")
+})
+
+# One unit where screen use and the outcome both rise with household SES;
+# the true slope is 0.10.
+tier_unit <- function(n = 3000, seed = 31) {
+  set.seed(seed)
+  ses <- sample(c("Low", "Medium", "High"), n, replace = TRUE)
+  level <- match(ses, c("Low", "Medium", "High"))
+  data <- data.frame(
+    x = stats::rgamma(n, shape = 2) + level,
+    age = stats::runif(n, 8, 12),
+    sex = sample(c("Female", "Male"), n, replace = TRUE),
+    weight = NA_real_,
+    cluster = NA_character_,
+    family = NA_character_,
+    ses_household = ses,
+    parental_education = sample(c("A", "B"), n, replace = TRUE),
+    ses_area = sample(c("P", "Q"), n, replace = TRUE),
+    ethnicity = NA_character_,
+    minority = sample(c("Minority", "Non-minority"), n, replace = TRUE),
+    urbanicity = sample(c("Rural", "Urban"), n, replace = TRUE),
+    stringsAsFactors = FALSE
+  )
+  data$y <- 0.10 * data$x + 0.8 * level + stats::rnorm(n)
+  data
+}
+
+test_that("a further covariate tier removes confounding the first leaves in", {
+  data <- tier_unit()
+  data$ses_household[1:100] <- NA
+  first <- fit_stage1_unit(data, "linear", tier = 1L)
+  second <- fit_stage1_unit(data, "linear", tier = 2L)
+  expect_equal(c(first$tier, second$tier), 1:2)
+  expect_gt(first$estimate, 0.2)
+  expect_equal(second$estimate, 0.10, tolerance = 0.03, scale = 1)
+  # Household SES is used first, and rows where it is unknown are left out.
+  expect_equal(second$ses_measure, "ses_household")
+  expect_true(is.na(first$ses_measure))
+  expect_equal(second$n_no_covariate, 100)
+  expect_equal(second$n, 2900)
+  expect_match(second$covariates, "ses_household")
+  # The tier 1 model on the tier's 2,900 rows is still confounded, and is
+  # not the tier 1 slope on all 3,000.
+  expect_gt(second$tier1_same_rows_estimate, 0.2)
+  expect_false(second$tier1_same_rows_estimate == first$estimate)
+  expect_true(is.na(first$tier1_same_rows_estimate))
+  expect_error(fit_stage1_unit(data, "linear", tier = 4L), "must be 1, 2 or 3")
+})
+
+test_that("a tier takes the first measure the unit records well enough", {
+  data <- tier_unit()
+  # Exactly at the minimum share it counts; just under, the next is taken.
+  data$ses_household[1:300] <- NA
+  expect_equal(
+    fit_stage1_unit(data, "linear", tier = 2L)$ses_measure,
+    "ses_household"
+  )
+  data$ses_household[1:301] <- NA
+  expect_equal(
+    fit_stage1_unit(data, "linear", tier = 2L)$ses_measure,
+    "parental_education"
+  )
+  data$parental_education <- NA_character_
+  expect_equal(
+    fit_stage1_unit(data, "linear", tier = 2L)$ses_measure,
+    "ses_area"
+  )
+  data$ses_area <- NA_character_
+  none <- fit_stage1_unit(data, "linear", tier = 2L)
+  expect_equal(none$status, "no socioeconomic measure that varies in the unit")
+  expect_true(is.na(none$estimate))
+})
+
+test_that("tier 3 adds ethnicity, or else minority status, and urbanicity", {
+  data <- tier_unit()
+  third <- fit_stage1_unit(data, "linear", tier = 3L)
+  expect_equal(third$status, "fitted")
+  expect_equal(third$ethnicity_measure, "minority")
+  expect_equal(
+    third$covariates,
+    paste(
+      "age (spline) + sex + ses_household + minority + urbanicity"
+    )
+  )
+  expect_equal(third$estimate, 0.10, tolerance = 0.03, scale = 1)
+  # Ethnicity is taken before minority status where it is recorded, and a
+  # group of fewer than five is merged with the other small ones.
+  data$ethnicity <- sample(c("A", "B", "C"), nrow(data), replace = TRUE)
+  data$ethnicity[1:3] <- "D"
+  data$ethnicity[4:6] <- "E"
+  third <- fit_stage1_unit(data, "linear", tier = 3L)
+  expect_equal(third$ethnicity_measure, "ethnicity")
+  expect_equal(third$status, "fitted")
+
+  # Three rural rows are too few for a group: urbanicity does not vary.
+  data$urbanicity <- c(rep("Rural", 3), rep("Urban", nrow(data) - 3))
+  third <- fit_stage1_unit(data, "linear", tier = 3L)
+  expect_equal(third$status, "no urbanicity measure that varies in the unit")
+
+  # Each covariate known for most rows, but few rows with all three.
+  data <- tier_unit()
+  data$ses_household[1:250] <- NA
+  data$minority[251:500] <- NA
+  data$urbanicity[501:750] <- NA
+  third <- fit_stage1_unit(data, "linear", tier = 3L)
+  expect_equal(third$status, "too few rows have all of the tier's covariates")
+  expect_equal(third$n_no_covariate, 750)
+})
+
+test_that("a covariate that stops varying, repeats another or separates is said", {
+  # Every rural row is of unknown sex, so urbanicity has one group left.
+  data <- tier_unit()
+  data$urbanicity <- c(rep("Rural", 100), rep("Urban", nrow(data) - 100))
+  data$sex[1:100] <- NA
+  third <- fit_stage1_unit(data, "linear", tier = 3L)
+  expect_equal(third$status, "a tier covariate does not vary in the rows left")
+
+  # Minority status repeats household SES: the fit leaves it out, and says.
+  data <- tier_unit()
+  data$minority <- ifelse(
+    data$ses_household == "Low",
+    "Minority",
+    "Non-minority"
+  )
+  data$ses_household <- ifelse(data$ses_household == "Low", "Low", "Other")
+  third <- fit_stage1_unit(data, "linear", tier = 3L)
+  expect_equal(third$status, "fitted")
+  expect_match(third$terms_dropped, "minority")
+  expect_true(is.na(fit_stage1_unit(data, "linear", tier = 2L)$terms_dropped))
+
+  # A binary outcome that never occurs in one SES group.
+  data <- tier_unit()
+  data$y <- as.numeric(data$y > stats::median(data$y))
+  expect_false(
+    fit_stage1_unit(data, "logistic", tier = 2L)$covariate_separation
+  )
+  data$y[data$ses_household == "Low"] <- 0
+  expect_true(fit_stage1_unit(data, "logistic", tier = 2L)$covariate_separation)
+  expect_true(is.na(
+    fit_stage1_unit(data, "linear", tier = 2L)$covariate_separation
+  ))
+})
+
+test_that("small groups of a covariate are merged, or left out", {
+  values <- c(rep("a", 50), rep("b", 40), rep("c", 3), rep("d", 4), NA)
+  groups <- stage1_covariate_groups(values)
+  expect_equal(sum(groups %in% "(small groups)"), 7)
+  values <- c(rep("a", 50), rep("b", 40), rep("c", 3), NA)
+  groups <- stage1_covariate_groups(values)
+  expect_equal(sum(is.na(groups)), 4)
+  expect_null(stage1_covariate_groups(c(rep("a", 50), rep("b", 3))))
+  expect_null(stage1_covariate_groups(c(rep("a", 5), rep("b", 5), rep(NA, 10))))
+  expect_null(stage1_covariate_groups(NULL))
+})
+
+test_that("stage 1 fits each cell at each tier, from the prepared tables", {
+  reg <- engine_registries()
+  # The mock records no socioeconomic measure, so one is added that both
+  # screen use and the outcome follow.
+  edit <- function(rows) {
+    set.seed(41)
+    level <- sample(1:3, nrow(rows), replace = TRUE)
+    rows$ses_household <- c("Low", "Medium", "High")[level]
+    rows$st_game <- rows$st_game + level
+    rows$mh_dep_self <- rows$mh_dep_self + 1.5 * level
+    rows
+  }
+  prepared <- engine_prepare("9995", reg, edit)
+  fits <- fit_stage1(
+    prepared,
+    engine_cells[1, ],
+    reg$outcomes,
+    reg$schema,
+    tiers = 1:3
+  )
+  expect_equal(sort(unique(fits$tier)), 1:3)
+  expect_equal(nrow(fits), 3 * dplyr::n_distinct(fits$unit))
+  one <- fit_stage1(prepared, engine_cells[1, ], reg$outcomes, reg$schema)
+  expect_equal(fits[fits$tier == 1, ], one)
+  second <- fits[fits$tier == 2, ]
+  expect_true(all(second$status == "fitted"))
+  expect_true(all(second$ses_measure == "ses_household"))
+  # Adjusting takes out what SES added to the slope.
+  expect_true(all(second$estimate < one$estimate - 0.1))
+  expect_equal(second$tier1_same_rows_estimate, one$estimate)
+  expect_true(all(
+    fits$status[fits$tier == 3] ==
+      "no ethnicity or minority measure that varies in the unit"
+  ))
+})
+
+test_that("a further tier is set beside tier 1 on its own rows", {
+  slopes <- function(tier, estimate, datasets, same_rows = NA_real_) {
+    tibble::tibble(
+      dataset_id = rep(datasets, each = 2),
+      unit = paste(rep(datasets, each = 2), 1:2),
+      exposure = "st_watch",
+      outcome = "o",
+      score_type = "continuous",
+      effect_measure = "sd_per_hour",
+      tier = tier,
+      estimate = estimate,
+      se = 0.01,
+      tier1_same_rows_estimate = same_rows,
+      tier1_same_rows_se = 0.01,
+      n = 90,
+      n_no_covariate = 10,
+      status = "fitted"
+    )
+  }
+  # Tier 1 over all rows is 0.10 in datasets a to d and 0.30 in e and f.
+  # Tier 2 is 0.06 in a to d, where tier 1 on the tier's rows is 0.12; it
+  # cannot be fitted in e, f, or the second unit of d.
+  first <- dplyr::bind_rows(
+    slopes(1L, 0.10, c("a", "b", "c", "d")),
+    slopes(1L, 0.30, c("e", "f"))
+  )
+  further <- dplyr::bind_rows(
+    slopes(2L, 0.06, c("a", "b", "c", "d"), same_rows = 0.12),
+    dplyr::mutate(
+      slopes(2L, NA_real_, c("e", "f")),
+      status = "no socioeconomic measure that varies in the unit"
+    )
+  )
+  further$status[
+    further$unit == "d 2"
+  ] <- "fewer rows than the minimum unit size"
+  further$estimate[further$unit == "a 1"] <- 0.02
+  out <- compare_stage2_tiers(first, further)
+  expect_equal(nrow(out), 1)
+  expect_equal(out$tier, 2L)
+  expect_equal(out$k_datasets, 4)
+  expect_equal(out$k_units, 7)
+  # Against tier 1 on the tier's rows (0.12), not on all rows (0.10) or in
+  # all six datasets.
+  expect_equal(out$tier1_estimate, 0.12)
+  expect_equal(out$change, out$estimate - 0.12)
+  expect_equal(out$change_unit_median, -0.06)
+  expect_equal(out$change_unit_q25, -0.06)
+  expect_equal(out$rows_lost_share, 0.1)
+  # Four units in e and f, and one in d.
+  expect_equal(out$k_units_lost, 5L)
+  expect_equal(nrow(compare_stage2_tiers(first, further[0, ])), 0)
+
+  # A cell the tier cannot pool is reported, with no change.
+  few <- further[further$dataset_id %in% c("a", "b"), ]
+  thin <- compare_stage2_tiers(first, few)
+  expect_equal(thin$status, "insufficient data")
+  expect_true(is.na(thin$change))
+})
+
+test_that("cells are counted from the rows that have both", {
+  prepared <- list(
+    base = tibble::tibble(
+      dataset_id = "9001",
+      participant_id = c(1:50, 1:50),
+      unit = rep(c("9001|1|X", "9001|2|X"), each = 50),
+      ses_household = rep(c("Low", "High"), 50),
+      ethnicity = NA_character_,
+      urbanicity = c(rep("Urban", 50), rep(c("Urban", "Rural"), 25))
+    ),
+    exposures = tibble::tibble(
+      st_watch = c(rep(1, 40), rep(NA, 10), 1:50),
+      st_game = NA_real_,
+      st_watch_school = c(1:50, rep(NA, 50)),
+      total_screen = c(1:50, 1:50),
+      total_source = "summed",
+      st_archived = 1
+    ),
+    outcomes = tibble::tibble(
+      core_row = c(rep(NA, 10), rep(1, 90)),
+      binary_row = c(rep(c(0, 1), 25), rep(0, 45), rep(1, 5)),
+      diagnosis_row = 1,
+      control_row = 1,
+      archive_row = 1,
+      empty_row = NA_real_
+    ),
+    # The standardised score is missing for ten more rows of the first unit.
+    outcomes_z = tibble::tibble(core_row = c(rep(NA, 20), rep(1, 80)))
+  )
+  registry <- list(
+    rows = tibble::tibble(
+      variable_name = c(
+        "core_row",
+        "binary_row",
+        "diagnosis_row",
+        "control_row",
+        "archive_row",
+        "empty_row"
+      ),
+      use = c("core", "core", "report", NA, "archive", "core"),
+      role = c(rep("outcome", 3), "negative_control", "outcome", "outcome"),
+      score_type = c(
+        "continuous",
+        "binary",
+        "diagnosis",
+        "continuous",
+        "continuous",
+        "continuous"
+      )
+    )
+  )
+  exposures <- tibble::tibble(
+    variable_name = c("st_watch", "st_game", "st_watch_school", "st_archived"),
+    include = c(TRUE, TRUE, FALSE, FALSE),
+    context = c("any", "any", "school", "any")
+  )
+  schema <- tibble::tibble(
+    variable_name = registry$rows$variable_name,
+    allowed_values = NA_character_
+  )
+  counted <- count_cells(prepared, registry, exposures, schema)
+  cells <- counted$cells
+  cell <- function(exposure, outcome) {
+    cells[cells$exposure == exposure & cells$outcome == outcome, ]
+  }
+  # Analysed exposures, the school row and the derived total; analysed
+  # outcome rows and the negative control; only pairs with a row.
+  expect_setequal(
+    cells$exposure,
+    c("st_watch", "st_watch_school", "total_screen")
+  )
+  expect_setequal(
+    cells$outcome,
+    c("core_row", "binary_row", "diagnosis_row", "control_row")
+  )
+  # A linear row is counted on its standardised score.
+  watch <- cell("st_watch", "core_row")
+  expect_equal(watch$n_rows, c(20, 50))
+  expect_equal(watch$n_participants, c(20, 50))
+  expect_equal(watch$model, c("linear", "linear"))
+  # Twenty rows are under the minimum; the first unit's screen use is also
+  # constant, but the first check that fails is the one named.
+  expect_equal(
+    watch$not_usable,
+    c("fewer rows than the minimum unit size", NA)
+  )
+  expect_equal(
+    cell("st_watch", "control_row")$not_usable,
+    c("no variation in the exposure", NA)
+  )
+  expect_equal(cell("total_screen", "core_row")$n_rows, c(30, 50))
+  expect_true(all(is.na(cell("total_screen", "core_row")$not_usable)))
+  # A binary row needs ten in each class; the second unit has five.
+  binary <- cell("total_screen", "binary_row")
+  expect_equal(binary$model, c("logistic", "logistic"))
+  expect_equal(binary$not_usable, c(NA, "fewer than 10 rows in one class"))
+  expect_equal(
+    unique(cell("total_screen", "diagnosis_row")$not_usable),
+    "score type not modelled here"
+  )
+  expect_equal(cell("st_watch_school", "control_row")$n_rows, 50)
+  expect_equal(unique(cells$dataset_id), "9001")
+  # What each tier would use: SES in both units, no ethnicity, and
+  # urbanicity only where it varies.
+  expect_equal(counted$units$rows, c(50, 50))
+  expect_equal(counted$units$ses_measure, rep("ses_household", 2))
+  expect_true(all(is.na(counted$units$ethnicity_measure)))
+  expect_equal(counted$units$urbanicity_measure, c(NA, "urbanicity"))
+
+  # Several rows per participant in a unit: a participant counts once, and
+  # only for a row that has both. Screen use is on each child's first row
+  # and the control row on their second for children 41 to 50.
+  prepared$base$unit <- "9001|1|X"
+  prepared$exposures$total_screen[51:100] <- NA
+  prepared$outcomes$control_row[41:50] <- NA
+  again <- count_cells(prepared, registry, exposures, schema)$cells
+  control <- again[
+    again$exposure == "total_screen" & again$outcome == "control_row",
+  ]
+  expect_equal(control$n_rows, 40)
+  expect_equal(control$n_participants, 40)
+  watch <- again[
+    again$exposure == "st_watch" & again$outcome == "control_row",
+  ]
+  expect_equal(watch$n_rows, 90)
+  expect_equal(watch$n_participants, 50)
+  expect_null(count_cells(NULL, registry, exposures, schema))
+})
+
+test_that("feasibility counts datasets, units and participants per level", {
+  registry <- list(
+    tree = tibble::tibble(
+      node = c("fam", "n1", "n2", "n3"),
+      parent = c(NA, "fam", "fam", "fam"),
+      level = c("L0", "L1", "L1", "L2")
+    ),
+    rows = tibble::tibble(
+      variable_name = c("a_self", "a_parent", "b_self", "alone", "c", "nodir"),
+      node = c("n1", "n1", "n2", NA, "n3", "n2"),
+      informant = c("self", "parent", "self", "self", "self", "self"),
+      direction = c(rep("higher_better", 5), "none"),
+      synthesis = c(TRUE, TRUE, TRUE, FALSE, TRUE, TRUE),
+      score_type = "continuous",
+      role = "outcome",
+      use = "core"
+    )
+  )
+  exposures <- tibble::tibble(
+    variable_name = c("st_watch", "st_watch_wd", "st_watch_school"),
+    exposure = c("watch", "watch", "watch_school"),
+    day = c("usual", "weekday", "weekday"),
+    context = c("any", "any", "school"),
+    headline = c(TRUE, TRUE, FALSE)
+  )
+  cell <- function(dataset, wave, outcome, n, exposure = "st_watch", why = NA) {
+    tibble::tibble(
+      dataset_id = dataset,
+      unit = paste(dataset, wave, "X", sep = "|"),
+      exposure = exposure,
+      outcome = outcome,
+      n_rows = n,
+      n_participants = n,
+      model = "linear",
+      not_usable = as.character(why)
+    )
+  }
+  small <- "fewer rows than the minimum unit size"
+  cells <- dplyr::bind_rows(
+    # Four datasets give `a_self`. d1 is a panel of two waves; d2 is a
+    # repeated cross-section of two.
+    cell("d1", 1, "a_self", 100),
+    cell("d1", 2, "a_self", 80),
+    cell("d2", 1, "a_self", 200),
+    cell("d2", 2, "a_self", 250),
+    cell("d3", 1, "a_self", 300),
+    cell("d4", 1, "a_self", 400),
+    # Two usable datasets give `a_parent`; one unit is not usable.
+    cell("d1", 1, "a_parent", 90),
+    cell("d2", 1, "a_parent", 10, why = small),
+    cell("d5", 1, "a_parent", 500),
+    # One gives `b_self`; rows that pool nowhere.
+    cell("d1", 1, "b_self", 100),
+    cell("d1", 1, "alone", 100),
+    cell("d1", 1, "c", 100),
+    cell("d1", 1, "nodir", 100),
+    # d6 has watching on a weekday row only, and at school.
+    cell("d6", 1, "a_self", 600, exposure = "st_watch_wd"),
+    cell("d6", 1, "a_self", 600, exposure = "st_watch_school"),
+    cell("d1", 1, "a_self", 100, exposure = "st_watch_school"),
+    # d5 has a school row for an outcome row its any-location row lacks.
+    cell("d5", 1, "a_self", 50, exposure = "st_watch_school"),
+    # Not signed off: not counted.
+    cell("d9", 1, "a_self", 900)
+  )
+  units <- tibble::tibble(
+    unit = unique(cells$unit),
+    dataset_id = sub("\\|.*", "", unit),
+    country = "X",
+    year = c(2000, 2001, 2005, 2016, 2010, 2012, 2015, 2018, 2020),
+    measure_type = "Categorical",
+    responder = c(rep("Self", 6), rep("Parent or carer", 3)),
+    total_source = NA,
+    repeats_participants = dataset_id == "d1"
+  )
+  measures <- tibble::tibble(
+    unit = units$unit,
+    ses_measure = c(
+      "ses_household",
+      NA,
+      "ses_household",
+      NA,
+      "ses_area",
+      rep(NA, 4)
+    ),
+    ethnicity_measure = c("ethnicity", NA, NA, NA, "minority", rep(NA, 4)),
+    urbanicity_measure = c("urbanicity", rep(NA, 8))
+  )
+  datasets <- tibble::tibble(
+    dataset_id = c("d1", "d2", "d3", "d4", "d5", "d6", "d9"),
+    signed_off = c(rep(TRUE, 6), FALSE),
+    risk_of_bias = NA_character_
+  )
+  out <- summarise_feasibility(
+    cells,
+    measures,
+    units,
+    registry,
+    exposures,
+    datasets
+  )
+  expect_equal(out$scope$datasets_with_cells, 7)
+  expect_equal(out$scope$datasets_signed_off, 6)
+  expect_equal(out$not_usable$unit_cells[out$not_usable$reason == small], 1)
+  watch <- out$levels[out$levels$exposure == "st_watch", ]
+  level <- function(name) watch[watch$level == name, ]
+
+  row <- level("L3")
+  a_self <- row[row$outcome == "a_self", ]
+  expect_equal(a_self$k_datasets, 4)
+  expect_equal(a_self$k_units, 6)
+  # The panel's larger wave, and the sum of the cross-section's two.
+  expect_equal(a_self$participants, 100 + (200 + 250) + 300 + 400)
+  expect_true(a_self$poolable)
+  a_parent <- row[row$outcome == "a_parent", ]
+  expect_equal(a_parent$k_datasets, 2)
+  expect_false(a_parent$poolable)
+  # Rows that pool nowhere are counted as rows only.
+  expect_true(all(c("alone", "c", "nodir") %in% row$outcome))
+  expect_setequal(level("L1")$node, c("n1", "n2"))
+
+  n1 <- level("L1")[level("L1")$node == "n1", ]
+  expect_equal(n1$k_datasets, 5)
+  expect_equal(n1$k_rows, 2)
+  expect_equal(n1$participants, 100 + 450 + 300 + 400 + 500)
+  expect_equal(nrow(level("L2")), 3)
+  family <- level("L0")
+  expect_equal(family$k_datasets, 5)
+  expect_equal(family$k_nodes_poolable, 1)
+  expect_true(family$poolable)
+  expect_equal(family$exposure_group, "watch")
+  # A family with datasets but no specific outcome to pool cannot be pooled.
+  weekday <- out$levels[
+    out$levels$exposure == "st_watch_wd" & out$levels$level == "L0",
+  ]
+  expect_equal(weekday$k_datasets, 1)
+  expect_false(weekday$poolable)
+  # The school row is not an any-location exposure.
+  expect_false("st_watch_school" %in% out$levels$exposure)
+
+  tiers <- out$tiers[
+    out$tiers$exposure == "st_watch" & out$tiers$node == "n1",
+  ]
+  expect_equal(
+    c(tiers$k_datasets_tier1, tiers$k_datasets_tier2, tiers$k_datasets_tier3),
+    c(5, 3, 1)
+  )
+  expect_equal(tiers$participants_tier3, 100)
+  # Informant: four datasets by the child and two by a parent; by reporter,
+  # the child reports both in four and the parent's report differs in two.
+  moderator <- function(name) {
+    found <- out$moderators[
+      out$moderators$exposure == "st_watch" &
+        out$moderators$node == "n1" &
+        out$moderators$moderator == name,
+    ]
+    found[order(found$level), ]
+  }
+  expect_equal(moderator("informant")$k_datasets, c(2, 4))
+  expect_false(any(moderator("informant")$comparable))
+  expect_equal(moderator("informant")$participants, c(590, 1250))
+  expect_equal(moderator("instrument")$level, c("a_parent", "a_self"))
+  expect_equal(nrow(moderator("risk_of_bias")), 0)
+  # d5 has a parent reporting screen use, the other four the child.
+  expect_equal(moderator("responder")$k_datasets, c(1, 4))
+
+  # Fifteen years across five datasets is too few datasets for a trend; the
+  # within-study part would rest on the one repeated cross-section.
+  years <- out$years[
+    out$years$exposure == "st_watch" & out$years$node %in% "n1",
+  ]
+  l1 <- years[years$level == "L1", ]
+  expect_equal(c(l1$first_year, l1$last_year), c(2000, 2016))
+  expect_equal(l1$k_repeated_cross_sections, 1)
+  expect_false(l1$trend_can_run)
+  expect_setequal(out$years$level, c("L0", "L1", "L3"))
+
+  # d6 has watching on a weekday row only.
+  expect_equal(out$days$k_datasets_any_day, 6)
+  expect_equal(out$days$k_datasets_usual_day, 5)
+  # Three datasets have a school row; two also have an any-location row of
+  # the same exposure, on any day, for the same outcome row.
+  expect_equal(out$school_home$k_datasets_school, 3)
+  expect_equal(out$school_home$k_datasets_matched, 2)
+})
+
+test_that("a trend can run with enough datasets over enough years", {
+  registry <- list(
+    tree = tibble::tibble(
+      node = c("fam", "n1"),
+      parent = c(NA, "fam"),
+      level = c("L0", "L1")
+    ),
+    rows = tibble::tibble(
+      variable_name = "a",
+      node = "n1",
+      informant = "self",
+      direction = "higher_better",
+      synthesis = TRUE,
+      score_type = "continuous",
+      role = "outcome",
+      use = "core"
+    )
+  )
+  exposures <- tibble::tibble(
+    variable_name = "st_watch",
+    exposure = "watch",
+    day = "usual",
+    context = "any",
+    headline = TRUE
+  )
+  ids <- sprintf("d%02d", 1:10)
+  cells <- tibble::tibble(
+    dataset_id = ids,
+    unit = paste0(ids, "|1|X"),
+    exposure = "st_watch",
+    outcome = "a",
+    n_rows = 30L,
+    n_participants = 30L,
+    model = "linear",
+    not_usable = NA_character_
+  )
+  units <- tibble::tibble(
+    unit = cells$unit,
+    dataset_id = ids,
+    country = "X",
+    year = 2001:2010,
+    measure_type = rep(c("Categorical", "Continuous"), 5),
+    responder = "Self",
+    total_source = NA,
+    repeats_participants = FALSE
+  )
+  measures <- tibble::tibble(
+    unit = cells$unit,
+    ses_measure = NA_character_,
+    ethnicity_measure = NA_character_,
+    urbanicity_measure = NA_character_
+  )
+  datasets <- tibble::tibble(
+    dataset_id = ids,
+    signed_off = TRUE,
+    risk_of_bias = NA_character_
+  )
+  run <- function(units) {
+    summarise_feasibility(cells, measures, units, registry, exposures, datasets)
+  }
+  out <- run(units)
+  # Ten datasets over nine years: one year short.
+  expect_false(any(out$years$trend_can_run))
+  units$year[10] <- 2011
+  out <- run(units)
+  expect_true(all(out$years$trend_can_run))
+  # Five datasets at each response format: the two can be compared.
+  format <- out$moderators[out$moderators$moderator == "measure_type", ]
+  expect_equal(format$k_datasets, c(5, 5))
+  expect_true(all(format$comparable))
+  # A dataset with no year is left out of the trend count only.
+  units$year[1] <- NA
+  out <- run(units)
+  expect_equal(unique(out$years$k_datasets), 9)
+  expect_equal(out$levels$k_datasets[out$levels$level == "L1"], 10)
 })

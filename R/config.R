@@ -191,11 +191,62 @@ bp_model_settings <- function() {
     "min_unit_rows",
     "min_datasets",
     "sex_known_min",
+    "covariate_known_min",
     "min_clusters",
     "year_min_datasets",
     "year_min_span",
     "school_stage_breaks",
     "school_stage_labels"
+  )
+}
+
+# The settings pooling up the outcome tree reads, kept apart so changing
+# one does not refit stage 1.
+bp_tree_settings <- function() {
+  c(
+    "min_unit_rows",
+    "min_datasets",
+    "sex_known_min",
+    "covariate_known_min",
+    "log_odds_per_sd",
+    "tree_default_correlation",
+    "smallest_effect_per_hour"
+  )
+}
+
+# The settings the curve functions read: stage 1's row rules and the curve's
+# own.
+bp_curve_settings <- function() {
+  c(
+    "min_unit_rows",
+    "min_datasets",
+    "sex_known_min",
+    "covariate_known_min",
+    "min_clusters",
+    "curve_knots",
+    "curve_boundary",
+    "curve_grid",
+    "curve_reference",
+    "curve_interval_rows",
+    "curve_window",
+    "smallest_effect"
+  )
+}
+
+# The categorical stage 2 moderators (ANALYSIS_PLAN.md, Step 7 task 4), as
+# columns of `tree_moderators()`.
+bp_tree_moderators <- function() {
+  c(
+    "informant",
+    "reporter",
+    "measure_type",
+    "responder",
+    "instrument",
+    "score_type",
+    "outcome_status",
+    "exposure_status",
+    "total_source",
+    "risk_of_bias"
   )
 }
 
@@ -213,6 +264,63 @@ bp_development_cells_columns <- function() {
 # well over 10 GB, so this pool is kept small whatever the machine's cores.
 bp_row_level_workers <- function() {
   4L
+}
+
+# Workers for the targets that fit models on a prepared dataset. Memory sets
+# the number, not cores. A worker holding the largest prepared dataset peaks
+# near 3.7 GB, but in a plain `tar_make()` each dataset's model targets all
+# start as its preparation finishes, while the `row_level` pool goes on
+# loading whole harmonised datasets: with sixteen model workers, and again
+# with eight, a full rerun fell below 25 GB available. So the default is
+# four. `make.R` builds in sections, and raises this for the section in
+# which nothing loads a harmonised dataset, through `BP_MODEL_WORKERS`.
+bp_model_workers <- function() {
+  asked <- suppressWarnings(as.integer(Sys.getenv("BP_MODEL_WORKERS", "4")))
+  if (is.na(asked) || asked < 1L) {
+    asked <- 4L
+  }
+  max(1L, min(parallel::detectCores() - 2L, asked))
+}
+
+# The sections `make.R` builds in, in order: each is the per-dataset targets
+# whose names start with one of these, and everything they need. Whatever
+# is left is built last. Section one loads whole datasets; section two only
+# fits and counts on prepared ones, and is the one given more workers.
+bp_build_sections <- function() {
+  list(
+    datasets = c(
+      "prepared",
+      "dataset_summary",
+      "prepared_review",
+      "descriptives",
+      "onestage_rows",
+      "mapping_status",
+      "mapping_count"
+    ),
+    models = c(
+      "stage1",
+      "stage1_adjusted",
+      "slope_correlations",
+      "cell_counts",
+      "curves",
+      "stage1_other",
+      "longitudinal"
+    )
+  )
+}
+
+# The model workers `make.R` uses for the models section: measured with
+# twenty workers each holding the largest prepared dataset, which left over
+# 40 GB available.
+bp_model_workers_wide <- function() {
+  16L
+}
+
+# Processes for a simulation target. Each holds little memory, but nothing
+# stops the target starting while the other pools are busy, so run a build
+# that reruns the simulation under the memory watchdog.
+bp_simulation_cores <- function() {
+  max(1L, min(parallel::detectCores() - 2L, 24L))
 }
 
 # Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).
@@ -413,4 +521,91 @@ bp_airtable_reference_fields <- function() {
 
 bp_airtable_api_url <- function() {
   "https://api.airtable.com/v0"
+}
+
+# The model list (ANALYSIS_PLAN.md, Step 9 task 3; analysis/README.md).
+bp_models_path <- function() {
+  fs::path(bp_analysis_dir(), "models.csv")
+}
+
+bp_models_columns <- function() {
+  c(
+    "model_name",
+    "step",
+    "tier",
+    "levels",
+    "exposure_set",
+    "outcome_set",
+    "moderator",
+    "covariate_tier",
+    "sample",
+    "engine",
+    "variant",
+    "analysis_class",
+    "built",
+    "notes"
+  )
+}
+
+bp_model_classes <- function() {
+  c(
+    "confirmatory",
+    "prereg_secondary",
+    "post_freeze",
+    "exploratory",
+    "descriptive"
+  )
+}
+
+bp_model_engines <- function() {
+  c(
+    "two_stage",
+    "class_contrast",
+    "one_stage",
+    "one_stage_logistic",
+    "curve",
+    "breakpoint",
+    "two_lines",
+    "stage1_interaction",
+    "stage2_moderator",
+    "lagged",
+    "within_child"
+  )
+}
+
+bp_model_exposure_sets <- function() {
+  c("total", "content_classes", "other_included", "school")
+}
+
+bp_model_outcome_sets <- function() {
+  c("core", "report", "negative_control", "core_rare_binary", "headline_cells")
+}
+
+# The preregistered predictions, by exposure and outcome family.
+bp_hypotheses_path <- function() {
+  fs::path(bp_analysis_dir(), "hypotheses.csv")
+}
+
+bp_hypotheses_columns <- function() {
+  c("hypothesis", "exposure", "family", "prediction", "notes")
+}
+
+# The derived total's name among the exposures (DR-0013).
+bp_total_exposure <- function() {
+  "total_screen"
+}
+
+# Whether the specification is frozen (ANALYSIS_PLAN.md, Step 9). Until it
+# is, every model is fitted on the development cells only. The lead changes
+# this to TRUE in the tagged commit that freezes the specification, and
+# nobody else does.
+bp_specification_frozen <- function() {
+  FALSE
+}
+
+# The models whose cells the cross-sectional stage 1 fits: every other
+# model built on those slopes (curves, covariate tiers, moderators) uses a
+# subset of these cells. They share no cell, so a pooled row has one model.
+bp_stage1_models <- function() {
+  c("tier1_total", "tier2_content", "other_exposures", "report_rows")
 }

@@ -16,7 +16,7 @@ prepare_exposures <- function(
   wave,
   unit,
   exposure_registry,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   registry <- exposure_registry[
     exposure_registry$unit %in%

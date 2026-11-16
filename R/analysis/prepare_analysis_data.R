@@ -41,7 +41,7 @@ prepare_analysis_data <- function(
   derivations,
   dataschema,
   exceptions,
-  settings = analysis_settings()
+  settings = default_analysis_settings()
 ) {
   all_rows <- included_rows(drop_empty_columns(harmonised), info)
   rm(harmonised)
