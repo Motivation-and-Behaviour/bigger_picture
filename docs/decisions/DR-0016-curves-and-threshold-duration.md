@@ -47,9 +47,12 @@ Each is reported with its direction (a better or a worse outcome) and with wheth
 **How they are reported.**
 
 - The pooled curve with its interval, and the number of datasets supporting each hour, is the primary result.
-- The conservative threshold is the one to rely on: it reads "by this many hours", never as the point at which harm begins, because it is usually later than the true crossing.
-- The central threshold is an alternative reading, given beside it: an estimate of where the curve crosses 0.10 SD, which is reported for about a quarter of curves that in truth level off just short of it, and can sit half an hour either side of the true crossing.
-- Where neither is reported, the report says that no threshold could be established, not that there is none.
+- The conservative threshold is the primary threshold, and the only one in the main text: it reads "by this many hours", never as the point at which harm begins, because it is usually later than the true crossing.
+- The central threshold is descriptive and goes in an appendix, with its caveats beside it (amended 17 November 2026: it was first given beside the conservative one).
+  It estimates where the curve crosses 0.10 SD.
+  It is reported for about a quarter of curves that in truth level off just short of that, however many datasets are pooled, it is more than a quarter of an hour early for up to a fifth of curves that do cross, and it can turn on a difference in the third decimal place.
+  It is never described as a finding, never compared between exposures or outcomes, and takes no part in the confirmatory tests.
+- Where no conservative threshold is reported, the report says that no threshold could be established, not that there is none.
 - Thresholds are not compared between exposures or outcomes without their curves and intervals, because the same curve gives a later conservative threshold where datasets are fewer or differ more.
 - Curves with a sharp local feature, a bend or a dip, are described cautiously near that feature, where the interval covers the truth less often than it claims.
 
