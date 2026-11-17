@@ -25,13 +25,15 @@ And most exposure and outcome pairs are measured by few datasets.
 **The curve.**
 Each unit fits a natural cubic spline of hours of screen use, with interior knots at 1, 2 and 4 hours and boundary knots at 0 and 6, in the linear stage 1 model at covariate tier 1.
 The knots are fixed in hours, so every unit estimates the same terms.
-A unit is fitted only with at least 30 rows in every stretch between knots, more distinct values of screen use than the curve has terms, and more clusters than terms.
+A unit is fitted only with at least 30 rows in every stretch between knots, the last stretch running from four hours to six, more distinct values of screen use than the curve has terms, and at least ten clusters where its errors are clustered.
 
 The terms are pooled across datasets in a multivariate random-effects model, each term varying between datasets and between a dataset's units, with inference robust to the dependence of a dataset's units.
+The robust standard error at an hour is never taken below the working model's (amended 17 November 2026): with few datasets it was sometimes smaller than the units' own sampling error allows, and intervals there covered the truth about four times in five.
 The pooled curve is read every half hour as the difference from one hour a day, in SD of the outcome.
 
 **Where a curve is read.**
 A unit supports an hour where it has at least 30 rows within half an hour of it.
+A curve is pooled only from five or more datasets (amended 17 November 2026): from three or four, the curve itself moved by up to 0.10 SD with the choice of working model.
 The curve is interpretable at an hour between the boundary knots that at least three datasets support, counting only datasets that also support the reference.
 Beyond six hours the curve is a straight line continued, and is not read.
 Rows above six hours still help to place the curve below it: in one cell they are 3% of rows, and leaving them out or capping them moved a threshold by half an hour to an hour, so that is a sensitivity analysis to add.
@@ -42,7 +44,7 @@ Each is the lowest interpretable hour above the reference that meets its rule.
 - **Conservative:** the 95% interval lies wholly beyond 0.10 SD from the reference, in either direction, with at least three robust degrees of freedom at that hour.
 - **Central:** the estimate itself is beyond 0.10 SD from the reference, the 95% interval excludes no difference and there are at least three robust degrees of freedom, at that hour and at the next half hour too (amended 17 November 2026: the first version read it from one hour alone, with no floor on the degrees of freedom).
 
-Each is reported with its direction (a better or a worse outcome) and with whether the curve stays beyond at every later hour: for the conservative reading, whether the whole interval does.
+Each is reported with its direction (a better or a worse outcome), with whether the curve's estimate stays beyond 0.10 SD on the same side at every later hour, and with whether its interval goes on meeting the rule there.
 
 **How they are reported.**
 
@@ -69,26 +71,28 @@ Each was run 200 times, with and without error inside the bands, with two knot p
 With the rule on rows, nine of the cell's 14 datasets have a unit to pool, so "all" below is nine datasets.
 The truth each pooled curve is scored against is the mean of the datasets' curves.
 
-The figures below were corrected on 17 November 2026 after an independent review: the first version of this record misquoted three of them, scored bends against the curve as written and not the mean curve the simulation generates, and called "five datasets" a scenario that pooled about three.
+The figures below are from the run of 17 November 2026, made after two independent reviews and the changes that followed them: the truth is the mean curve the simulation generates, the five-dataset scenario pools five, the interval is never narrower than the working model's, the floor on degrees of freedom is three, and the central reading needs two half hours in a row.
+The first version of this record misquoted several figures and they should not be relied on.
 
-What it showed, with three interior knots and the rule on rows:
+What it showed, with three interior knots and the rule on rows, and no error inside the bands unless said:
 
-- **The curve is recovered.** For the flat, straight and levelling-off curves the interval covered the truth 84 to 98% of the time at every hour from half an hour to six, lowest at half an hour, below the reference.
-  For bends at two and three hours it covered 88 to 98%, and for a rise then a fall 87 to 96%.
-- **A dip is smoothed.** On the way down into a dip coverage fell to 44% at an hour and a half and 71% at two hours, with errors of up to 0.04 SD, and was 93% or more from its lowest point on.
-- **A false conservative threshold is rare.** One was reported where none exists, or more than a quarter of an hour early, in at most 2% of runs of any scenario (a rise then a fall, with error inside the bands), and for a flat curve in none of the runs with nine datasets and one in 200 with five.
-- **A real threshold is found late by the conservative rule, or not at all.** With nine datasets, a curve bending at two hours had its threshold found in 95% of runs, a median hour late.
-  A straight line was found in 63%, an hour and a half late.
-  A curve levelling off past 0.10 SD was found in 14%.
-- **Five datasets give a conservative threshold about half as often.** With the floor of three robust degrees of freedom, five datasets found the bend at two hours in 53% of runs and the straight line in 25%, as late as nine datasets did.
-  Their curves' intervals covered the truth 88 to 99% of the time away from a dip.
-  Under the first version of the rule, with a floor of four, five datasets never gave one.
+- **The curve is recovered.** For the flat, straight and levelling-off curves the interval covered the truth 93 to 100% of the time at every hour from half an hour to six, with nine datasets and with five.
+  For bends at two and three hours it covered 90 to 99%, and for a rise then a fall 88 to 99%.
+- **A dip is smoothed.** On the way down into a dip coverage fell to 57% at an hour and a half with nine datasets (74% with five), with errors of up to 0.05 SD on its way back up, and was above 90% at its lowest point.
+- **A false conservative threshold is rare.** One was reported where none exists, or more than a quarter of an hour early, in at most 1% of runs of any scenario, with or without error inside the bands, and with nine datasets or five.
+- **A real threshold is found late by the conservative rule, or not at all.** With nine datasets, a curve bending at two hours had its threshold found in 90% of runs, a median hour and a half late.
+  A straight line was found in 53%, an hour and a half late.
+  A curve levelling off past 0.10 SD was found in 9%.
+- **Five datasets give a conservative threshold about half as often as nine:** the bend at two hours in 51% of runs and the straight line in 24%.
 - **The central threshold is near the true crossing on average, and is wrong often enough to matter.**
-  With nine datasets it was found in 74 to 99% of runs of every curve with a threshold, with a median at the true crossing or within half an hour after it.
-  It was reported more than a quarter of an hour early in 4 to 22% of those runs, and in up to 38% with error inside the bands.
-  It was reported for a flat curve in 2% of runs, and for a curve that levels off at 0.08 SD in 28%.
-  From five datasets it was found in 30 to 77% of runs, with a flat curve reported in 1% and the curve levelling off at 0.08 SD in 14%.
-  Asking for two half hours in a row and a floor on the degrees of freedom halved the reports for a flat curve and did not help the curve that levels off just short: it sits beside the line for hours, and an independent simulation found it reported about a quarter of the time whether five, ten or twenty datasets were pooled.
+  With nine datasets it was found in 63 to 99% of runs of every curve with a threshold, with a median at the true crossing or within half an hour after it.
+  It was reported more than a quarter of an hour early in up to 19% of those runs, and in up to 34% with error inside the bands.
+  It was reported for a flat curve in 2% of runs (6% with error inside the bands), and for a curve that levels off at 0.08 SD in 21%.
+  From five datasets it was found in 29 to 73% of runs, with a flat curve reported in under 1% and the curve levelling off at 0.08 SD in 12%.
+  An independent simulation found a curve levelling off just short reported about a quarter of the time whether five, ten or twenty datasets were pooled.
+- **Whether a threshold holds.** For every curve that does stay beyond, the estimate was said to hold in 92 to 100% of thresholds found.
+  For a dip, which comes back, the estimate was still said to hold in a third of the conservative thresholds found and an eighth of the central ones, because the pooled curve smooths its return; the interval was said to go on meeting the rule in almost none.
+  For a curve levelling off just past 0.10 SD the interval went on meeting the conservative rule in two thirds, so a FALSE there does not mean the curve came back.
 - **Three interior knots follow a bend better than two** (coverage at a bend at two hours 94% against 70%).
   For a dip the two placements each do better at some hours and worse at others.
 - **The rule on rows per stretch** costs units (9 of the cell's 14 datasets remain) and changed coverage little in the simulation, but without it a unit with a handful of children at long hours is fitted with a standard error far too small.
@@ -111,7 +115,7 @@ So the curve can carry the result, and the threshold duration is a conservative 
 
 ## Consequences
 
-- Few exposure and outcome pairs will report a conservative threshold: it needs more than five datasets, in practice about ten, and a curve that clearly passes 0.10 SD.
+- Few exposure and outcome pairs will report a conservative threshold: it needs five or more datasets and a curve that clearly passes 0.10 SD, and from five datasets it is found about half as often as from nine.
   More will report a central one, and a reader must not take the two as equally firm.
 - The simulation used one cell, unweighted fits and normal outcomes, and the mild kind of band error: recorded hours that are right on average.
   It did not test weights or clustered errors, outcomes on five-point scales, answers that misreport hours, or confounding by age that is not smooth.

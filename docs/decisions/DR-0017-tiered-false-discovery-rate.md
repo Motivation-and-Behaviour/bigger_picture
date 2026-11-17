@@ -61,7 +61,8 @@ An estimate with too few studies to say is never described as a finding, whateve
 Where the preregistration predicts no or a negligible association, the estimate is tested for equivalence: two one-sided tests against the smallest effect of interest, 0.10 SD on the contrast of 1 against 4 hours a day, using the robust standard error and its degrees of freedom.
 The equivalence p-values of a group are adjusted among themselves with the group's K.
 The test of a difference from zero is still reported for those rows, with its q-value.
-An estimate is called equivalent only where it was pooled from enough studies to say.
+An estimate is called equivalent only where it was predicted to show no association, was pooled from enough studies to say, and its adjusted equivalence p-value is below 0.05 (amended 17 November 2026: the first version used the unadjusted p-value, for every estimate).
+A family kept from the headline because its specific outcomes disagree (DR-0014) is not described as a finding.
 
 **Moderation.**
 The confirmatory moderation tests are the combinations the preregistration predicts: sex for social media and the mental health and wellbeing families, and socioeconomic status for the learning, mental health and behaviour families.
