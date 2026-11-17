@@ -207,7 +207,11 @@ pool_tree_family <- function(
   } else {
     NA_character_
   }
-  status <- if (robust$df[1] < 4) "too few studies to say" else "pooled"
+  status <- if (robust$df[1] < settings$min_robust_df) {
+    "too few studies to say"
+  } else {
+    "pooled"
+  }
   result(
     status,
     estimate = robust$Est[1],

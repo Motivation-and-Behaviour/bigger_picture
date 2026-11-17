@@ -25,11 +25,12 @@
 #'
 #' `finding` says how a row may be described: `finding` at L0 and L1 of a
 #' confirmatory model, otherwise the model's class, or `exploratory` for
-#' L2 and L3 (ANALYSIS_PLAN.md, Step 10 task 6).
+#' L2 and L3 (ANALYSIS_PLAN.md, Step 10 task 6); and `too few studies to
+#' say` wherever that is the row's status.
 #'
 #' A test that could not be run has no p-value and is not counted. One with
-#' too few studies to say keeps its p-value and its place in the count, and
-#' its `status` says so.
+#' too few studies to say keeps its p-value and its place in the count, but
+#' is not ranked and has no q-value, and is never described as a finding.
 #'
 #' @param tree Rows of `pool_tree()` for any number of models, with
 #'   `model_name`.
@@ -128,6 +129,7 @@ assemble_results <- function(
     model_spec$engine[at] %in% "two_stage" &
     is.na(model_spec$variant[at])
   out$finding <- dplyr::case_when(
+    out$status %in% "too few studies to say" ~ "too few studies to say",
     !out$analysis_class %in% "confirmatory" ~ out$analysis_class,
     out$level %in% c("L0", "L1") ~ "finding",
     .default = "exploratory"
@@ -152,7 +154,13 @@ assemble_results <- function(
   out$q <- NA_real_
   out$k_total <- NA_integer_
   placed <- !is.na(out$fdr_path)
-  adjusted <- adjust_tiered_fdr(out$p[placed], out$fdr_path[placed])
+  # A row with too few studies to say counts towards K and is not ranked.
+  thin <- out$status %in% "too few studies to say"
+  adjusted <- adjust_tiered_fdr(
+    out$p[placed],
+    out$fdr_path[placed],
+    ranked = !thin[placed]
+  )
   out$q[placed] <- adjusted$q
   out$k_total[placed] <- adjusted$k_total
 
@@ -185,7 +193,11 @@ assemble_results <- function(
   out$hypothesis <- hypotheses$hypothesis[predicted]
   out$prediction <- hypotheses$prediction[predicted]
   out$q_equivalence <- NA_real_
-  none <- out$prediction %in% "none" & !is.na(out$p_equivalence) & placed
+  none <- out$prediction %in%
+    "none" &
+    !is.na(out$p_equivalence) &
+    placed &
+    !thin
   for (path in unique(out$fdr_path[none])) {
     index <- which(none & out$fdr_path == path)
     out$q_equivalence[index] <- stats::p.adjust(

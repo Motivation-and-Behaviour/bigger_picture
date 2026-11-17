@@ -39,6 +39,9 @@ Age enters as the analysis model can take it: a category each for a few distinct
 Where a model also adjusts for the rest of the child's screen use, whichever of the two has gaps is imputed given the other, and where both have gaps the two are imputed in turn.
 An exposure is imputed only where the model's own minimum sizes are met by the rows that have it, so an imputed exposure never makes a model fittable.
 
+Screen use is imputed for the linear models only, which are the models of continuous outcomes and of ordinal outcomes with five or more levels.
+The logistic and proportional-odds models, of binary outcomes and of ordinal outcomes with three or four levels, are fitted on the rows that have the exposure, with their covariates imputed as for every other model.
+
 **Outcomes** are never imputed: a row without an outcome is not analysed for it.
 
 **Sporadic missingness only.**
@@ -89,6 +92,8 @@ Predictive mean matching needs no assumption about the shape of a variable's dis
   It must impute whole waves a child did not attend, only to discard them, and it grows with the square of the number of waves.
   The child's mean over their other waves carries most of the same information.
 - **Imputation trees or forests.** They capture interactions and curves without being told to, at many times the cost.
+- **Imputing screen use for binary and short ordinal outcomes too.** In simulation the imputed slope was noisier than the complete-case one while claiming a smaller standard error, and complete cases are unbiased for those models where missingness depends on the outcome.
+- **Imputing covariates for each outcome's own model, as screen use is.** It would remove the loss of adjustment described below, at a much larger cost in computing; it is left for the publications.
 - **A lower or higher threshold than 70%.** At 50% a unit's values rest too much on the model; at 90% little is gained in the covariate tiers.
 - **Not imputing screen use, and imputing covariates only.** Simpler and cheaper, and imputing an exposure adds little precision, but the preregistration says screen time is imputed and the analysis already departs from it in several places.
 - **Complete cases as the primary analysis.** The plan allows it where imputation is not validated by the freeze, and at the first tier the two barely differ; it would move the preregistered analysis out of the report to the funder.

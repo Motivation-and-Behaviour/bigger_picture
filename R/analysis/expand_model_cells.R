@@ -5,10 +5,13 @@
 #'
 #' - exposures: `total` is the derived total; `content_classes` the
 #'   usual-day activity rows of the prereg's content classes that are
-#'   included and in scope for the report; `other_included` the other
+#'   included and in scope for the report; `social_media` that class
+#'   alone; `other_included` the other
 #'   included usual-day rows, bar the dedicated total; `school` the rows for
 #'   use at school;
-#' - outcomes: `core` the outcome rows pooled up the tree; `report` the
+#' - outcomes: `core` the outcome rows pooled up the tree, and `core_h5b`,
+#'   `core_h5c` and `core_other_h5c` those of the families the registered
+#'   moderation hypotheses name, or do not; `report` the
 #'   outcome rows reported on their own; `negative_control` the rows of that
 #'   role. `core_rare_binary` and `headline_cells` depend on the data and
 #'   are settled where their models are built, so they expand to nothing
@@ -44,6 +47,9 @@ expand_model_cells <- function(
   exposures <- list(
     total = bp_total_exposure(),
     content_classes = classes,
+    social_media = included$variable_name[
+      included$content_class %in% "social_media" & included$axis %in% "activity"
+    ],
     other_included = setdiff(
       included$variable_name,
       c(classes, included$variable_name[included$exposure %in% "total"])
@@ -55,8 +61,18 @@ expand_model_cells <- function(
   rows <- outcome_registry$rows
   is_outcome <- rows$role %in% "outcome"
   pooled <- is_outcome & rows$use %in% "core" & rows$synthesis %in% TRUE
+  in_family <- function(families) {
+    rows$variable_name[pooled & rows$prereg_family %in% families]
+  }
+  h5c <- c("learning", "mental_health", "behaviour")
   outcomes <- list(
     core = rows$variable_name[pooled],
+    # The families the registered moderation hypotheses name.
+    core_h5b = in_family(c("mental_health", "wellbeing")),
+    core_h5c = in_family(h5c),
+    core_other_h5c = rows$variable_name[
+      pooled & !rows$prereg_family %in% h5c
+    ],
     report = rows$variable_name[
       is_outcome & rows$use %in% c("core", "report") & !pooled
     ],

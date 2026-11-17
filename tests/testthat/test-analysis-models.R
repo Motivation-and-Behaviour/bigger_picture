@@ -61,6 +61,17 @@ test_that("tiered q-values match hand-worked examples", {
   # A q-value never exceeds 1.
   expect_equal(adjust_tiered_fdr(0.9, specific)$q, 1)
 
+  # A test that is not ranked still counts in K, for its own group and the
+  # one below, and has no q-value: with it ranked the other two would take
+  # 0.02 * 8 / 2 and 0.04 * 8 / 3.
+  thin <- adjust_tiered_fdr(
+    c(0.001, 0.02, 0.04, 0.03),
+    c(rep(classes, 3), specific),
+    ranked = c(FALSE, TRUE, TRUE, TRUE)
+  )
+  expect_equal(thin$q, c(NA, 0.02 * 8 / 1, 0.04 * 8 / 2, 0.03 * 9 / 1))
+  expect_equal(thin$k_total, c(8L, 8L, 8L, 9L))
+
   expect_error(
     adjust_tiered_fdr(rep(0.1, 6), rep("families", 6)),
     "fixed count"
@@ -213,6 +224,28 @@ test_that("the model list is valid, and expands against the registries", {
   expect_false(any(
     rows$role[match(stage1$outcome, rows$variable_name)] == "negative_control"
   ))
+  # The registered moderation hypotheses name their exposures and families.
+  families_of <- function(model) {
+    own <- after[after$model_name == model, ]
+    unique(rows$prereg_family[match(own$outcome, rows$variable_name)])
+  }
+  sex <- after[after$model_name == "moderation_sex", ]
+  expect_equal(unique(sex$exposure), "st_socmedia")
+  expect_setequal(
+    families_of("moderation_sex"),
+    c("mental_health", "wellbeing")
+  )
+  expect_setequal(
+    families_of("moderation_ses"),
+    c("learning", "mental_health", "behaviour")
+  )
+  expect_length(
+    intersect(
+      families_of("moderation_ses"),
+      families_of("moderation_ses_other")
+    ),
+    0
+  )
   controls <- after[after$model_name == "negative_controls", ]
   expect_true(all(
     rows$role[match(controls$outcome, rows$variable_name)] == "negative_control"
@@ -522,12 +555,18 @@ test_that("results are labelled, tested and adjusted in one table", {
   # within the smallest effect of interest, and its q-value uses K = 5 + 1.
   game <- out[3, ]
   expect_true(game$equivalent)
-  # An estimate with too few studies to say is not called equivalent.
+  # An estimate with too few studies to say is not called equivalent or a
+  # finding, and is counted but not ranked: it has no q-value, and K is
+  # what it was.
   thin <- tree
   thin$status[3] <- "too few studies to say"
   thin <- assemble_results(thin, NULL, spec, hypotheses, reg$outcomes)
   expect_true(is.na(thin$equivalent[3]))
   expect_equal(thin$p_equivalence[3], game$p_equivalence)
+  expect_equal(thin$finding[3], "too few studies to say")
+  expect_true(is.na(thin$q[3]) && is.na(thin$q_equivalence[3]))
+  expect_equal(thin$k_total[3], game$k_total)
+  expect_equal(thin$q[-3], out$q[-3])
   expect_equal(game$q_equivalence, min(game$p_equivalence * 6, 1))
   expect_true(is.na(out$q_equivalence[1]))
   # A family that could not be pooled has no p-value and is not counted.

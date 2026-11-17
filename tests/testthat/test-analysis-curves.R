@@ -185,18 +185,32 @@ test_that("the threshold is two-sided and needs the whole interval beyond", {
     is.na(noisy$summary$threshold_hours) || noisy$summary$threshold_hours > 3
   )
   # The central reading comes no later than the conservative one, and is
-  # the first hour with an estimate beyond 0.10 and an interval clear of
-  # zero.
-  curve <- noisy$curve
+  # the first hour with an estimate beyond 0.10, an interval clear of zero
+  # and the minimum degrees of freedom, where the next hour read has them
+  # too: an estimate brushing the line at one hour is not a threshold.
+  curve <- noisy$curve[order(noisy$curve$hours), ]
   meets <- curve$hours > 1 &
     curve$interpretable &
     abs(curve$estimate) >= 0.10 &
-    (curve$ci_low > 0 | curve$ci_high < 0)
-  expect_true(any(meets))
+    (curve$ci_low > 0 | curve$ci_high < 0) &
+    curve$df >= analysis_settings()$min_robust_df
+  meets[is.na(meets)] <- FALSE
+  twice <- meets & c(meets[-1], FALSE)
+  expect_true(any(twice))
   expect_equal(
     noisy$summary$threshold_central_hours,
-    min(curve$hours[meets])
+    min(curve$hours[twice])
   )
+  # One hour alone beyond the line gives none.
+  alone <- function(x) ifelse(abs(x - 3) < 0.26, -0.3, 0)
+  expect_false(isTRUE(
+    pool_curve(curve_fits(
+      10,
+      alone,
+      seed = 9
+    ))$summary$threshold_central_hours ==
+      3
+  ))
   expect_true(
     is.na(noisy$summary$threshold_hours) ||
       noisy$summary$threshold_central_hours <= noisy$summary$threshold_hours

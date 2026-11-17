@@ -151,17 +151,23 @@ regress_units_on_year <- function(
     within_ci_high = pick("decade_within", "CI_U"),
     within_df = pick("decade_within", "df"),
     k_within = as.integer(k_within),
-    between_status = few_to_say(pick("decade_between", "df")),
-    within_status = few_to_say(pick("decade_within", "df")),
+    between_status = few_to_say(
+      pick("decade_between", "df"),
+      settings$min_robust_df
+    ),
+    within_status = few_to_say(
+      pick("decade_within", "df"),
+      settings$min_robust_df
+    ),
     adjusted_for = paste(adjusted, collapse = ", ")
   )
 }
 
-# The stage 2 rule for a robust estimate: under four degrees of freedom there
-# are too few studies to say.
-few_to_say <- function(df) {
+# The stage 2 rule for a robust estimate: under the minimum degrees of
+# freedom there are too few studies to say.
+few_to_say <- function(df, minimum) {
   if (is.na(df)) {
     return(NA_character_)
   }
-  if (df < 4) "too few studies to say" else "estimated"
+  if (df < minimum) "too few studies to say" else "estimated"
 }

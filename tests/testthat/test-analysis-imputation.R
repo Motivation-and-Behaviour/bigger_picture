@@ -379,7 +379,11 @@ test_that("what a model adjusts for is in its exposure's imputation", {
 })
 
 test_that("an imputed exposure never makes a model fittable", {
+  # The exposure is imputed for linear models only (DR-0019); the sizes a
+  # model needs are checked here as if every kind were imputed.
+  expect_equal(imputation_settings()$impute_exposure_models, "linear")
   settings <- imputation_settings()
+  settings$impute_exposure_models <- c("linear", "logistic", "ordinal")
   rows <- data.frame(x = c(rep(1, 50), rep(NA, 50)), y = rep(0:1, 50))
   expect_true(stage1_may_impute(rows, "logistic", settings))
   # Nine of one class among the rows that have the exposure.

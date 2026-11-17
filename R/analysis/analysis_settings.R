@@ -16,6 +16,13 @@ analysis_settings <- function() {
     min_unit_rows = 30L,
     # A cell is pooled from this many datasets (DR-0010).
     min_datasets = 3L,
+    # A pooled estimate with fewer robust degrees of freedom than this has
+    # too few studies to say: its interval cannot be relied on. They cannot
+    # exceed the number of datasets less one, and in practice three needs
+    # five or more datasets. In simulation, intervals with three to four
+    # covered the truth as often as those with more (96%), and those with
+    # fewer than two did not (90%).
+    min_robust_df = 3,
     # A categorical column with more distinct values than this is treated as
     # an identifier and not tabulated.
     max_levels = 200L,
@@ -101,8 +108,12 @@ analysis_settings <- function() {
     # the unit's children of the same age in whole years: an item not
     # asked of an age group is not imputed for it.
     impute_min_observed_age = 0.5,
-    # The kinds of stage 1 model whose exposure is imputed.
-    impute_exposure_models = c("linear", "logistic", "ordinal"),
+    # The kinds of stage 1 model whose exposure is imputed. Logistic and
+    # proportional-odds models are fitted on the rows that have the
+    # exposure: complete cases are unbiased for them where missingness
+    # depends on the outcome, and an imputed exposure understates their
+    # standard errors (DR-0019).
+    impute_exposure_models = "linear",
     # A predictor enters a variable's imputation model where the two
     # correlate at least this much.
     impute_min_correlation = 0.05

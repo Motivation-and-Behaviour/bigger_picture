@@ -23,8 +23,9 @@
 #'   same curve gives a later threshold where datasets are fewer or differ
 #'   more.
 #' - central (`threshold_central_hours`): the estimate itself is beyond the
-#'   smallest effect of interest, and the interval excludes no difference.
-#'   It is close to the true crossing on average, and is sometimes reported
+#'   smallest effect of interest and the interval excludes no difference,
+#'   with the minimum degrees of freedom, at that hour and at the next hour
+#'   read. It is close to the true crossing on average, and can be reported
 #'   for a curve that levels off just short of the smallest effect.
 #'
 #' `threshold_holds` and `threshold_central_holds` say whether the curve
@@ -194,7 +195,7 @@ pool_curve <- function(
   curve$ci_high[!at_reference] <- robust$CI_U
 
   readable <- curve$interpretable & curve$hours > reference
-  sure <- readable & !is.na(curve$df) & curve$df >= 4
+  sure <- readable & !is.na(curve$df) & curve$df >= settings$min_robust_df
   beyond <- !is.na(curve$ci_low) &
     (curve$ci_low > settings$smallest_effect |
       curve$ci_high < -settings$smallest_effect)
@@ -225,10 +226,19 @@ pool_curve <- function(
   # later hours, not on their degrees of freedom: an hour few datasets
   # reach has few, without the curve having come back.
   conservative <- read_threshold(sure & beyond, beyond)
+  # The central reading: the estimate beyond the smallest effect with an
+  # interval that excludes no difference and enough degrees of freedom, at
+  # this hour and at the next one read, so that an estimate brushing the
+  # line at one hour is not a threshold.
   clear <- !is.na(curve$ci_low) & (curve$ci_low > 0 | curve$ci_high < 0)
-  central <- read_threshold(
-    clear & abs(curve$estimate) >= settings$smallest_effect
+  past <- sure & clear & abs(curve$estimate) >= settings$smallest_effect
+  in_order <- order(curve$hours)
+  next_too <- rep(FALSE, nrow(curve))
+  next_too[in_order] <- c(
+    (past & readable)[in_order][-1],
+    FALSE
   )
+  central <- read_threshold(past & next_too, past)
   finish(
     if (any(sure)) "pooled" else "too few studies to say",
     interpretable_from = min(curve$hours[curve$interpretable]),

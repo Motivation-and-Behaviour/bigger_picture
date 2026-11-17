@@ -28,7 +28,8 @@ An earlier plan fitted one-stage models with a random slope, and dropped the slo
    It reports the mean, the between-dataset standard deviation and a prediction interval.
 3. **A cell is pooled only with 3 or more datasets.**
    Below that it is reported as insufficient data, with no estimate.
-   Where the pooled estimate has fewer than 4 degrees of freedom it is described as too few studies to say, and never as showing no relationship.
+   Where the pooled estimate has fewer than 3 robust degrees of freedom it is described as too few studies to say, and never as showing no relationship.
+   Degrees of freedom cannot exceed the number of datasets less one, and in practice 3 needs five or more datasets, so a cell is estimated from three datasets and called pooled from about five (amended 17 November 2026: the floor was 4, which five datasets could never reach; in a simulation of 19,000 pooled cells, intervals with 3 to 4 degrees of freedom covered the truth as often as those with more, 96%, and those with fewer than 2 did not, 90%).
 4. **There is no fallback to a simpler model.**
    Stage 2 always estimates between-dataset variation.
 5. **One-stage is a pre-specified check** on the overall-screen-use results and the headline results by type of screen use, and is primary only for rare binary outcomes, where most units have too few events for a model of their own.

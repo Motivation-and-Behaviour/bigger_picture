@@ -198,7 +198,7 @@ Two-stage is the primary analysis (DR-0010).
 - `fit_stage1()` fits one model per stage 1 unit and cell: a linear model of the standardised score for continuous rows and for ordinal rows with five or more levels, a proportional-odds model for ordinal rows with three or four, and a logistic model for binary rows.
   It uses the unit's weights where it has them, clusters standard errors on the sampling unit or the family, and adjusts for age and sex in the most flexible form the unit's ages allow.
   A unit that cannot be fitted returns a row saying why.
-- `pool_stage2()` pools a cell's slopes with a multilevel random-effects model, units nested in datasets, and robust small-sample inference; it needs three datasets, and marks an estimate with fewer than four degrees of freedom as too few studies to say.
+- `pool_stage2()` pools a cell's slopes with a multilevel random-effects model, units nested in datasets, and robust small-sample inference; it needs three datasets, and marks an estimate with fewer than three degrees of freedom as too few studies to say.
 - `fit_onestage_check()` fits a single model across datasets for one cell and compares it with a two-stage estimate built the same way.
 
 Until the freeze the engine runs only on the development cells in `development_cells.csv`: each line names an exposure row and either an outcome family or one outcome row, with a reason.
@@ -236,7 +236,7 @@ Most datasets have one level of a moderator, so a difference is mostly a differe
 
 Reading the table:
 
-- `test_status` says whether the test of equal means rests on enough studies; under four degrees of freedom it is `too few studies to say`, whatever the p-value.
+- `test_status` says whether the test of equal means rests on enough studies; under three degrees of freedom it is `too few studies to say`, whatever the p-value.
 - `difference_of` names which level is taken from which.
 - `same_as` marks a moderator that sorts a specific outcome's slopes exactly as an earlier one does: the two are one comparison under two names.
 - P-values are not adjusted for the number of comparisons; the tiered procedure of Step 10 does that for the frozen model list.
@@ -262,9 +262,9 @@ It is the linear stage 1 model at tier 1 with the curve in place of the slope, f
 - A unit supports an hour where it has the minimum number of rows within `curve_window` hours of it.
   A curve is interpretable at an hour inside the boundary knots that at least the minimum number of datasets support, counting only datasets that also support the reference; beyond the boundary knots the curve is a straight line continued and is not read.
 - The threshold duration is read two ways, each the lowest interpretable hour above the reference that meets its rule (DR-0016).
-  Conservative (`threshold_hours`): the interval lies wholly beyond the smallest effect of interest (`smallest_effect`) from the reference, with at least four robust degrees of freedom there.
-  Central (`threshold_central_hours`): the estimate is beyond the smallest effect of interest and the interval excludes no difference.
-  Each has a direction, given as a better or worse outcome, and a flag saying whether the curve goes on meeting the rule at every later hour.
+  Conservative (`threshold_hours`): the interval lies wholly beyond the smallest effect of interest (`smallest_effect`) from the reference, with at least the minimum robust degrees of freedom there (`min_robust_df`).
+  Central (`threshold_central_hours`): the estimate is beyond the smallest effect of interest, the interval excludes no difference and the degrees of freedom reach the minimum, at that hour and at the next hour read.
+  Each has a direction, given as a better or worse outcome, and a flag saying whether the curve stays beyond at every later hour.
 - `simulate_curve_recovery()` checks the method on real hours of screen use with a simulated outcome that follows a known curve (a plasmode simulation); `curve_truths()` lists the curves it builds in, and DR-0016 says what it found.
 
 A conservative threshold depends on how precisely a curve is estimated as well as on the curve, so thresholds are not comparable between cells without their intervals.

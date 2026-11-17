@@ -13,11 +13,14 @@ breakpoints,11,3,L0|L1,total|content_classes,core,,1,main,breakpoint,,confirmato
 sign_change,11,3,L0|L1,total|content_classes,core,,1,main,two_lines,,confirmatory,FALSE,The two-lines test; used only for a claim that an association changes sign as hours rise; built after the freeze
 curves_by_measure_type,11,5,L0,total|content_classes,core,measure_type,1,main,curve,,exploratory,FALSE,Curves by how screen use was measured
 curves_continuous_only,11,5,L0,total|content_classes,core,,1,continuous_exposure,curve,continuous_exposure_only,exploratory,FALSE,Check on band effects: units with a continuous screen measure only
-moderation_sex,12,4,L0|L1,total|content_classes,core,sex,1,main,stage1_interaction,,confirmatory,FALSE,H5b: interaction estimated per unit and pooled
-moderation_ses,12,4,L0|L1,total|content_classes,core,ses,1,main,stage1_interaction,,confirmatory,FALSE,H5c: household SES in three groups within wave and country; relative position within a study
+moderation_sex,12,4,L0|L1,social_media,core_h5b,sex,1,main,stage1_interaction,,confirmatory,FALSE,H5b as registered: social media and the mental health and wellbeing families; interaction estimated per unit and pooled
+moderation_sex_other,12,5,L0|L1,total|content_classes,core,sex,1,main,stage1_interaction,,exploratory,FALSE,Moderation by sex for every other exposure and family
+moderation_ses,12,4,L0|L1,total|content_classes,core_h5c,ses,1,main,stage1_interaction,,confirmatory,FALSE,H5c as registered: the learning and mental health and behaviour families; household SES in three groups within wave and country so relative position within a study
+moderation_ses_other,12,5,L0|L1,total|content_classes,core_other_h5c,ses,1,main,stage1_interaction,,exploratory,FALSE,Moderation by SES for the families H5c does not name
 moderation_age,12,5,L0|L1,total|content_classes,core,school_stage,1,main,stage2_moderator,,exploratory,FALSE,H5a (registered as exploratory): units split into school-stage bands; within-dataset and between-dataset age separated
 moderation_location,12,4,L0,school,core,location,1,main,class_contrast,,confirmatory,FALSE,H4: school against any-location rows in datasets with both; equivalence test; insufficient evidence unless 3 or more datasets
-thresholds_by_moderator,12,4,L0,total|content_classes,core,sex|ses|school_stage,1,main,curve,,confirmatory,FALSE,RQ5 on the threshold duration; only where each stratum has support
+thresholds_by_moderator,12,4,L0,total|content_classes,core,sex|ses,1,main,curve,,confirmatory,FALSE,RQ5 on the threshold duration by sex and SES; only where each stratum has support
+thresholds_by_age,12,5,L0,total|content_classes,core,school_stage,1,main,curve,,exploratory,FALSE,RQ5 on the threshold duration by school stage; age is registered as exploratory
 moderation_study_level,12,5,L0|L1,total|content_classes,core,informant|reporter|measure_type|responder|instrument|score_type|outcome_status|exposure_status|total_source|total_coverage|age_span|risk_of_bias,1,main,stage2_moderator,,exploratory,TRUE,Study-level moderators at stage 2; risk of bias is rated after the report; total_coverage and age_span are not built yet
 year_trend,12,5,L0|L1,total|content_classes,core,data_year,1,main,stage2_moderator,,exploratory,TRUE,Trend in the association per decade; within-dataset part from repeated cross-sections only
 longitudinal_lagged,13,5,L0|L1,total|content_classes,core,,1,panel,lagged,,exploratory,TRUE,Outcome at the next wave on screen use at this wave adjusting for the outcome at this wave; not preregistered

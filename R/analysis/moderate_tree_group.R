@@ -28,7 +28,7 @@
 #'   `df` and 95% interval, and `level_status`; and on every row the number
 #'   of levels compared, `equal_p` (the test that the levels' means are
 #'   equal) with its degrees of freedom and `test_status` (`tested`, or `too
-#'   few studies to say` under four degrees of freedom), for two levels the
+#'   few studies to say` under the minimum degrees of freedom), for two levels the
 #'   `difference` with its interval and `difference_of` naming which level
 #'   is taken from which, and `status`.
 moderate_tree_group <- function(
@@ -112,7 +112,7 @@ moderate_tree_group <- function(
   out$ci_low[at] <- robust$CI_L
   out$ci_high[at] <- robust$CI_U
   out$level_status[at] <- ifelse(
-    robust$df < 4,
+    robust$df < settings$min_robust_df,
     "too few studies to say",
     "estimated"
   )
@@ -150,7 +150,7 @@ moderate_tree_group <- function(
   }
   out$test_status <- if (all(is.na(out$equal_p))) {
     "could not be tested"
-  } else if (out$equal_df[1] < 4) {
+  } else if (out$equal_df[1] < settings$min_robust_df) {
     "too few studies to say"
   } else {
     "tested"

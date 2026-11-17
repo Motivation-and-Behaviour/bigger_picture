@@ -15,7 +15,8 @@
 #' not a finding of no variation.
 #'
 #' A cell is pooled only from the minimum number of datasets. Where the
-#' robust estimate has fewer than four degrees of freedom the cell is marked
+#' robust estimate has fewer than `min_robust_df` degrees of freedom (three,
+#' which in practice needs five or more datasets) the cell is marked
 #' `too few studies to say`, because an interval that wide cannot support
 #' "no clear relationship" either.
 #'
@@ -115,7 +116,11 @@ pool_stage2 <- function(estimates, settings = default_analysis_settings()) {
   critical <- stats::qt(0.975, df = robust$df[1])
   half_width <- critical * sqrt(robust$SE[1]^2 + between)
   result(
-    if (robust$df[1] < 4) "too few studies to say" else "pooled",
+    if (robust$df[1] < settings$min_robust_df) {
+      "too few studies to say"
+    } else {
+      "pooled"
+    },
     estimate = estimate,
     se = robust$SE[1],
     df = robust$df[1],

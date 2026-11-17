@@ -190,6 +190,7 @@ bp_model_settings <- function() {
   c(
     "min_unit_rows",
     "min_datasets",
+    "min_robust_df",
     "sex_known_min",
     "covariate_known_min",
     "min_clusters",
@@ -206,6 +207,7 @@ bp_tree_settings <- function() {
   c(
     "min_unit_rows",
     "min_datasets",
+    "min_robust_df",
     "sex_known_min",
     "covariate_known_min",
     "log_odds_per_sd",
@@ -220,6 +222,7 @@ bp_curve_settings <- function() {
   c(
     "min_unit_rows",
     "min_datasets",
+    "min_robust_df",
     "sex_known_min",
     "covariate_known_min",
     "min_clusters",
@@ -581,11 +584,20 @@ bp_model_engines <- function() {
 }
 
 bp_model_exposure_sets <- function() {
-  c("total", "content_classes", "other_included", "school")
+  c("total", "content_classes", "social_media", "other_included", "school")
 }
 
 bp_model_outcome_sets <- function() {
-  c("core", "report", "negative_control", "core_rare_binary", "headline_cells")
+  c(
+    "core",
+    "core_h5b",
+    "core_h5c",
+    "core_other_h5c",
+    "report",
+    "negative_control",
+    "core_rare_binary",
+    "headline_cells"
+  )
 }
 
 # The preregistered predictions, by exposure and outcome family.

@@ -846,7 +846,14 @@ test_that("a comparison resting on few studies says so on the test", {
   effects$instrument <- effects$outcome
   out <- moderate_tree_group(effects, "instrument")
   expect_equal(unique(out$status), "compared")
+  # The test has between three and four degrees of freedom: enough under
+  # the minimum of three, and too few under a stricter one.
+  expect_gte(out$equal_df[1], 3)
   expect_lt(out$equal_df[1], 4)
+  expect_equal(unique(out$test_status), "tested")
+  strict <- analysis_settings()
+  strict$min_robust_df <- 4
+  out <- moderate_tree_group(effects, "instrument", settings = strict)
   expect_equal(unique(out$test_status), "too few studies to say")
 })
 
