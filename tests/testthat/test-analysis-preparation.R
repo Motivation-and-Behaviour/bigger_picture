@@ -477,6 +477,78 @@ test_that("total screen time is the dedicated item, else a guarded sum", {
   expect_true(all(is.na(no_game$other_watch)))
 })
 
+test_that("a partial total gives way to a sum, and stands where none can be made", {
+  reg <- repo_registries()
+  # Unit a has the classes a sum needs; unit b has gaming but no watching.
+  exposures <- tibble::tibble(
+    st_total = c(1, 2, 3, 3, 4, 5),
+    st_watch = c(2, 2, 2, NA, NA, NA),
+    st_game = c(1, 1, 1, 1, 1, 1)
+  )
+  unit <- rep(c("a", "b"), each = 3)
+  wave <- rep(c("1", "2"), each = 3)
+  whole <- derive_total_screen(exposures, unit, reg$exposures)
+  expect_equal(whole$total_source, rep("dedicated", 6))
+  partial <- derive_total_screen(
+    exposures,
+    unit,
+    reg$exposures,
+    total_partial = TRUE,
+    wave = wave
+  )
+  # A device item beside a separate television item is replaced by the sum.
+  expect_equal(
+    partial$total_source,
+    rep(c("summed", "dedicated_partial"), each = 3)
+  )
+  expect_equal(partial$total_screen, c(3, 3, 3, 3, 4, 5))
+  expect_equal(partial$total_rows[1], "st_watch|st_game")
+  # An exception says the item is a total after all at one wave.
+  excepted <- derive_total_screen(
+    exposures,
+    unit,
+    reg$exposures,
+    total_partial = TRUE,
+    wave = wave,
+    dedicated_waves = "1"
+  )
+  expect_equal(
+    excepted$total_source,
+    rep(c("dedicated", "dedicated_partial"), each = 3)
+  )
+  expect_equal(excepted$total_screen[1:3], c(1, 2, 3))
+
+  # The rest of screen use is the total less the class only where the
+  # class was asked as part of the total: in unit a the total is below
+  # watching for two children of three, so watching has no rest there;
+  # gaming is within the total for every child, so it has one.
+  expect_true(all(is.na(whole$other_watch[1:3])))
+  expect_equal(whole$other_game[1:3], c(0, 1, 2))
+  expect_equal(whole$other_game[4:6], c(2, 3, 4))
+})
+
+test_that("an exception can leave a screen item out at one wave", {
+  reg <- repo_registries()
+  rows <- tibble::tibble(
+    st_total = c(4, 5, 6, 7),
+    st_watch = c(1, 1, 1, 1),
+    st_game = c(1, 1, 1, 1)
+  )
+  out <- prepare_exposures(
+    rows,
+    c("1", "1", "2", "2"),
+    c("a", "a", "b", "b"),
+    reg$exposures,
+    left_out = tibble::tibble(variable_name = "st_total", wave = "2")
+  )$exposures
+  expect_equal(out$st_total, c(4, 5, NA, NA))
+  expect_equal(
+    out$total_source,
+    c("dedicated", "dedicated", "summed", "summed")
+  )
+  expect_equal(out$total_screen, c(4, 5, 2, 2))
+})
+
 test_that("a row asked of part of a unit does not remove everyone's total", {
   reg <- repo_registries()
   exposures <- tibble::tibble(

@@ -39,6 +39,7 @@ covariates_family,14,5,L0|L1,total|content_classes,core,,family,main,two_stage,,
 negative_controls,14,5,L3,total|content_classes,negative_control,,1,main,two_stage,,prereg_secondary,FALSE,Outcomes that precede any screen use; where 3 or more datasets support them
 sens_mad_exposure,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,mad_exposure,prereg_secondary,FALSE,The prereg's 3-MAD rule on non-zero exposure values
 sens_mad_outcome,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,mad_outcome,prereg_secondary,FALSE,The prereg's 3-MAD rule on scale scores within unit
+sens_total_partial_excluded,14,5,L0|L1,total,core,,1,main,two_stage,total_partial_excluded,prereg_secondary,FALSE,Tier 1 without the units whose total is a partial item standing in for one (DR-0013)
 sens_total_dedicated,14,5,L0|L1,total,core,,1,main,two_stage,total_dedicated_only,prereg_secondary,FALSE,Tier 1 on dedicated total items only
 sens_total_class_average,14,5,L0|L1,content_classes,core,,1,main,two_stage,total_as_class_average,prereg_secondary,FALSE,Tier 1 as a stage 2 average across content classes in place of summing
 sens_total_over_24_excluded,14,5,L0|L1,total,core,,1,main,two_stage,total_over_24_excluded,prereg_secondary,FALSE,Summed totals over 24 hours excluded in place of capped

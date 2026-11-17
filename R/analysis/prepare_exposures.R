@@ -9,6 +9,9 @@
 #' @param unit The stage 1 unit of each row.
 #' @param exposure_registry The exposure registry.
 #' @param settings From `analysis_settings()`.
+#' @param total_partial,dedicated_waves See `derive_total_screen()`.
+#' @param left_out The dataset's `exclude` exceptions (`variable_name` and
+#'   `wave`); those about an exposure row blank it at that wave.
 #' @return A list: `exposures` (one row per base row) and `audit` (one row
 #'   per wave and exposure row with any value).
 prepare_exposures <- function(
@@ -16,7 +19,10 @@ prepare_exposures <- function(
   wave,
   unit,
   exposure_registry,
-  settings = default_analysis_settings()
+  settings = default_analysis_settings(),
+  total_partial = FALSE,
+  dedicated_waves = character(),
+  left_out = NULL
 ) {
   registry <- exposure_registry[
     exposure_registry$unit %in%
@@ -67,6 +73,23 @@ prepare_exposures <- function(
     NA_character_
   ))
 
-  total <- derive_total_screen(exposures, unit, exposure_registry, settings)
+  # An exception can leave an exposure row out at a wave, or at every wave:
+  # its values there are not used for anything.
+  for (i in seq_len(NROW(left_out))) {
+    name <- left_out$variable_name[i]
+    if (name %in% names(exposures)) {
+      at <- is.na(left_out$wave[i]) | wave %in% left_out$wave[i]
+      exposures[[name]][at] <- NA
+    }
+  }
+  total <- derive_total_screen(
+    exposures,
+    unit,
+    exposure_registry,
+    settings,
+    total_partial = total_partial,
+    wave = wave,
+    dedicated_waves = dedicated_waves
+  )
   list(exposures = dplyr::bind_cols(exposures, total), audit = audit)
 }

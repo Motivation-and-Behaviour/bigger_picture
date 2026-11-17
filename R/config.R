@@ -176,6 +176,7 @@ bp_prepare_settings <- function() {
     "school_stage_labels",
     "total_required",
     "total_row_min_share",
+    "other_min_share",
     "part_cover_min",
     "repeat_min_rows",
     "repeat_min_minority"

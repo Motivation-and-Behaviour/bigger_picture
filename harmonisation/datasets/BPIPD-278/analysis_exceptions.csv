@@ -1,0 +1,5 @@
+variable_name,wave,action,value,reason
+st_total,9,exclude,,"In 2016 the item is the caregiver's report of smartphone and PC hours, beside a separate TV cell of the time-use grid, and the grid has no games cell yet, so no sum of content classes can stand in for it: the wave has no total."
+st_total,14,total_dedicated,,"From 2021 the child's media-use item equals the sum of its five purpose parts (learning, information search, games, entertainment, social networks) and is at least the grid's watching and games cells for all but 2 to 3% of children, so it is used as the total although the row is partial for its earlier waves."
+st_total,15,total_dedicated,,"As at wave 14."
+st_total,16,total_dedicated,,"As at wave 14."

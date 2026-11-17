@@ -30,6 +30,9 @@
 #' @param outcome_registry,exposure_registry,derivations The registries.
 #' @param dataschema The dataschema.
 #' @param exceptions The dataset's analysis exceptions.
+#' @param total_status The harmonisation status of the dataset's `st_total`
+#'   mapping (`total_mapping_status()`); a `partial` one is not a total of
+#'   all screen use (DR-0013).
 #' @param settings From `analysis_settings()`.
 #' @return A named list of the tables above, or NULL when the dataset is not
 #'   included.
@@ -41,7 +44,8 @@ prepare_analysis_data <- function(
   derivations,
   dataschema,
   exceptions,
-  settings = default_analysis_settings()
+  settings = default_analysis_settings(),
+  total_status = NA_character_
 ) {
   all_rows <- included_rows(drop_empty_columns(harmonised), info)
   rm(harmonised)
@@ -73,7 +77,12 @@ prepare_analysis_data <- function(
     base$wave,
     base$unit,
     exposure_registry,
-    settings
+    settings,
+    total_partial = total_status %in% "partial",
+    dedicated_waves = exceptions$wave[
+      exceptions$action %in% "total_dedicated"
+    ],
+    left_out = exceptions[exceptions$action %in% "exclude", ]
   )
   outcomes <- prepare_outcomes(
     kept,

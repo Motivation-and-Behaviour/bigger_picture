@@ -40,6 +40,11 @@ analysis_settings <- function() {
     # A content-class row enters a unit's sum when it is present on at least
     # this share of the unit's rows that have the required rows.
     total_row_min_share = 0.5,
+    # The rest of a child's screen use beside a content class is the total
+    # less the class only where the total is at least the class for this
+    # share of the unit's rows that have both: below that the class was not
+    # asked as part of the total (DR-0013).
+    other_min_share = 0.95,
     # A part is dropped for its whole when the whole is observed on at least
     # this share of the rows where the part is.
     part_cover_min = 0.9,

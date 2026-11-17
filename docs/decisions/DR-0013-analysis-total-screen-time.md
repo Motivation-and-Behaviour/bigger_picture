@@ -1,7 +1,7 @@
 # DR-0013: The analysis derives total screen time, and the harmonised row stays dedicated items only
 
 **Status:** Accepted  
-**Date:** 2026-11-11 (amended 2026-11-12)  
+**Date:** 2026-11-11 (amended 2026-11-12 and 2026-11-17)  
 **Decision makers:** Taren  
 **Related issues:** NA
 
@@ -43,6 +43,21 @@ On the data that gave implausible totals wherever a study asked about many activ
 A class asked of a subsample also removed the total from the rest of its unit, in one dataset for half its rows.
 The sum is therefore of the content classes only, decided per unit, with the half-of-rows rule above.
 
+**Amended on 17 November 2026.**
+
+An independent review found that in some datasets the item mapped as the total is not a total of all screen use: it asks about computers, phones or "digital resources", beside a separate television item or with television not named.
+There the item could be smaller than a child's watching time alone, and it was being used as overall screen use and to work out the rest of a child's screen use.
+A check of the studies' codebooks confirmed it, and showed that the cases differ, so the rule works wave by wave.
+
+- A total item whose harmonisation status is `partial` is not taken as a total of all screen use.
+  Where the wave has the content classes a sum needs, the sum of content classes is used in its place.
+  Where it has not, the item stands and the total's source is recorded as `dedicated_partial`, so that it can be told apart as a moderator and left out in a sensitivity analysis.
+- A dataset's exceptions file can say that at given waves a `partial` item is a total after all, or leave the item out at a wave, each with its reason from the codebook.
+- The rest of a child's screen use beside a content class is the total less the class only where the class was asked as part of the total.
+  That is judged from the data, with no list of datasets: the total is at least the class for 95% of the unit's children who have both.
+  Otherwise the unit has no such value and is left out of the models that adjust a class for the rest of screen use.
+  Two instruments in one questionnaire can disagree within a child without either excluding the other, and a class cannot be subtracted from a total it was not part of.
+
 ---
 
 ## Rationale
@@ -83,6 +98,8 @@ Sensitivity analyses repeat the overall-screen-use models on dedicated items onl
 ---
 
 ## Implementation
+
+- `derive_total_screen()` applies the 17 November amendment, with the mapping's status from `total_mapping_status()`, the `total_dedicated` and `exclude` actions of the exceptions files, and the setting `other_min_share`.
 
 ```md
 analysis/exposures.csv     `axis` says which rows a derived total may sum

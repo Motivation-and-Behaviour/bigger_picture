@@ -255,7 +255,8 @@ analysis_targets <- function(harmonise_plan) {
         derivation_registry,
         dataschema,
         exceptions,
-        settings_prepare
+        settings_prepare,
+        total_status = total_mapping_status(harmonisation_config$variables)
       )),
       memory = "transient",
       garbage_collection = TRUE,

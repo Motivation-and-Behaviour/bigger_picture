@@ -41,10 +41,13 @@ dataset_id,exposure,day,from_year,waves,reason
 50,watch,,2002,,Child item reworded and moved from written-in hours to on-screen entry capped at 24 and mother item becomes interviewer-entered to the nearest half hour
 50,watch,usual,2013,,Young-adult item widens from TV to TV programs or movies on a television or computer or mobile device
 50,watch,,2017,,Child self-report items end after 2014 so the weekday and weekend rows are mother report only and the usual-day row is mother report or the young-adult item
+50,leisure,,2015,,Young-adult item drops its list of example activities after the 2012 wave
+50,total,,2015,,The not-work-or-school part of the item drops its list of example activities after the 2012 wave
 67,socmedia,,2021,,One typical-day item in four bands in 2015 and separate weekday and weekend items with finer bands from 2021
 67,watch,,2016,,TV on a typical day in five bands to 2015 and TV or videos on any device in four bands with a lower top band in 2016
 67,watch,,2017,,Separate weekday and weekend items on television and streaming videos with commercials with new bands from 2017
 97,game,,2019,,One item on internet gaming on a typical day in 2015 and a weighted mean of new school-day and non-school-day gaming items in 2019
+107,socmedia,,2025,,Example social networks named in the item change from Facebook in the 2022 cycle to TikTok in the 2025 cycle
 170,comp,,2006,,Seven weekly bands topping at 20 or more to 2005 and eight bands topping at 30 or more from 2006
 170,comp,,2010,,Eight weekly bands topping at 30 or more to 2009 and nine bands topping at 40 or more from 2010
 170,educational,,2006,,Seven weekly bands topping at 20 or more to 2005 and eight bands topping at 30 or more from 2006

@@ -17,23 +17,41 @@
 #'   overlap the content classes;
 #' - a sum above the plausibility limit is set to the limit and flagged.
 #'
+#' A dedicated item whose mapping is `partial` is not a total of all screen
+#' use. Where the unit has the content classes a sum needs, the sum is used
+#' in its place; where it has not, the item stands and its source is
+#' `dedicated_partial`. An exception (`total_dedicated`) can say that at
+#' some waves a `partial` item is a total after all.
+#'
 #' `other_<exposure>` is the rest of a row's screen use, for the models that
 #' adjust one content class for the others: the sum of the unit's other
-#' summed rows, or the dedicated total minus the exposure.
+#' summed rows, or the dedicated total minus the exposure. The total is
+#' reduced by a class only where the class was asked as part of it, which
+#' is judged from the data: the total is at least the class for
+#' `other_min_share` of the unit's rows that have both. Otherwise the unit
+#' has no `other_<exposure>` and is left out of those models.
 #'
 #' @param exposures A tibble of exposure columns, one row per base row.
 #' @param unit The stage 1 unit of each row.
 #' @param exposure_registry The exposure registry.
 #' @param settings From `analysis_settings()`.
+#' @param total_partial Whether the dataset's `st_total` is mapped as
+#'   `partial`.
+#' @param wave The wave of each row, for the exceptions.
+#' @param dedicated_waves Waves at which a `partial` item is used as a
+#'   total all the same; NA for every wave.
 #' @return A tibble with one row per input row: `total_screen`,
-#'   `total_source` (`dedicated` or `summed`), `total_rows` (the rows used),
+#'   `total_source` (`dedicated`, `dedicated_partial` or `summed`), `total_rows` (the rows used),
 #'   `total_coverage` (how many content-class rows the unit measures),
 #'   `total_capped`, and `other_<exposure>` for each content class present.
 derive_total_screen <- function(
   exposures,
   unit,
   exposure_registry,
-  settings = default_analysis_settings()
+  settings = default_analysis_settings(),
+  total_partial = FALSE,
+  wave = rep(NA_character_, nrow(exposures)),
+  dedicated_waves = character()
 ) {
   n <- nrow(exposures)
   content <- exposure_registry[
@@ -89,14 +107,39 @@ derive_total_screen <- function(
     )]
     out$total_coverage[index] <- length(measured)
 
-    if (any(observed(dedicated, index))) {
+    # A dedicated item mapped as `partial` covers only part of screen use
+    # (device time beside a separate television item, say), unless an
+    # exception says that at this wave it is a total after all.
+    excepted <- length(dedicated_waves) > 0 &&
+      (anyNA(dedicated_waves) || all(wave[index] %in% dedicated_waves))
+    partial <- isTRUE(total_partial) && !excepted
+    needed <- Reduce(
+      `&`,
+      lapply(settings$total_required, observed, index = index)
+    )
+    can_sum <- all(settings$total_required %in% measured) && any(needed)
+    # A partial item gives way to a sum of content classes where one can
+    # be made, and stands, marked as partial, where it cannot.
+    if (any(observed(dedicated, index)) && !(partial && can_sum)) {
       total <- exposures[[dedicated]][index]
       out$total_screen[index] <- total
-      out$total_source[index] <- "dedicated"
+      out$total_source[index] <- if (partial) {
+        "dedicated_partial"
+      } else {
+        "dedicated"
+      }
       out$total_rows[index] <- dedicated
+      # The rest of a child's screen use is the total less the class only
+      # where the class was asked as part of the total, which shows in the
+      # total being at least the class for nearly every child.
       for (variable in measured) {
         own <- exposures[[variable]][index]
-        out[[other_column(variable)]][index] <- pmax(total - own, 0)
+        both <- !is.na(total) & !is.na(own)
+        within <- any(both) &&
+          mean(total[both] >= own[both]) >= settings$other_min_share
+        if (within) {
+          out[[other_column(variable)]][index] <- pmax(total - own, 0)
+        }
       }
       next
     }

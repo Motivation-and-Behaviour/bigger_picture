@@ -9,8 +9,11 @@
 #'   and `standardise_by`);
 #' - `action`: `exclude` (leave the row out), `keep_out_of_bounds` (do not
 #'   drop values outside the schema's bounds, for a documented score form),
-#'   `node` (assign to another node of the outcome tree) or `standardise_by`
-#'   (replace the row's standardisation keys);
+#'   `node` (assign to another node of the outcome tree), `standardise_by`
+#'   (replace the row's standardisation keys) or `total_dedicated` (on
+#'   `st_total`: at this wave, or every wave, the item is a total of all
+#'   screen use although its mapping is `partial`, so it is used as the
+#'   total and not replaced by a sum, DR-0013);
 #' - `value`: the node or the pipe-separated keys, blank otherwise;
 #' - `reason`: why, in a sentence.
 #'
@@ -51,6 +54,10 @@ read_analysis_exceptions <- function(path, dataschema, outcome_registry) {
   if (any(whole_dataset & !is.na(exceptions$wave))) {
     fail("`node` and `standardise_by` apply to every wave; leave `wave` blank")
   }
+  dedicated <- exceptions$action %in% "total_dedicated"
+  if (any(dedicated & !exceptions$variable_name %in% "st_total")) {
+    fail("`total_dedicated` is about `st_total`")
+  }
   nodes <- exceptions$value[exceptions$action %in% "node"]
   bad_node <- setdiff(nodes, outcome_registry$tree$node)
   if (length(bad_node) > 0) {
@@ -64,5 +71,11 @@ bp_analysis_exception_columns <- function() {
 }
 
 bp_analysis_exception_actions <- function() {
-  c("exclude", "keep_out_of_bounds", "node", "standardise_by")
+  c(
+    "exclude",
+    "keep_out_of_bounds",
+    "node",
+    "standardise_by",
+    "total_dedicated"
+  )
 }
