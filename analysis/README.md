@@ -144,6 +144,7 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `imputed_<key>`, `imputation_review_<key>`, `imputation_units_all`, `imputation_levels_all`, `imputation_summary` | Each dataset's imputations of sporadically missing covariates, one branch per imputation (DR-0019); their hard checks; and imputed values set beside observed ones |
 | `stage1_imputed_<key>`, `stage1_imputed_all`, `stage1_other_imputed_<key>`, `stage1_other_imputed_all` | Stage 1 fitted on each imputation, with each model's missing screen use imputed for that model, and combined by Rubin's rules, at covariate tiers 1 to 3 and adjusted for other screen use |
 | `stage2_imputed`, `tree_imputed`, `tree_imputed_tier2`, `tree_imputed_tier3`, `tree_other_imputed` | Those slopes pooled across datasets and up the outcome tree |
+| `panel_pairs_<key>`, `panel_pairs_all` | For each panel and pair of successive waves, the children kept and how the screen use and age of those who stay differ from those who leave (DR-0018); no outcome is read |
 | `results_development` | Every model built so far in one table: estimate, interval, p, tiered q with its K (DR-0017), the 1 against 4 hours contrast, the equivalence test and the preregistered prediction |
 | `year_moderation_development` | Whether the slopes differ by collection year, on the development cells |
 | `dataset_table` | One row per dataset, by number, with its citation keys from `references/` |

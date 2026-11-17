@@ -37,7 +37,7 @@ An exposure or a family score the unit knows for too few rows is not in them.
 **Screen use** is imputed for each model separately: among the unit's rows that have the model's outcome, a missing exposure is drawn by predictive mean matching from a model holding that outcome, age, sex, the tier covariates (a covariate's unknown values as a group of their own), the survey weight and, in a panel, the child's mean exposure over their other waves.
 Age enters as the analysis model can take it: a category each for a few distinct ages, a cubic otherwise.
 Where a model also adjusts for the rest of the child's screen use, whichever of the two has gaps is imputed given the other, and where both have gaps the two are imputed in turn.
-An exposure is imputed only where the model's own minimum sizes are met by the rows that have it, so an imputed exposure never makes a model fittable.
+An exposure is imputed only where the model's own minimum sizes are met by the rows that have it and that the model would keep, so an imputed exposure does not make a model fittable at the first tier; at a further tier, imputed rows can still raise the share of rows with a covariate known past the minimum.
 
 Screen use is imputed for the linear models only, which are the models of continuous outcomes and of ordinal outcomes with five or more levels.
 The logistic and proportional-odds models, of binary outcomes and of ordinal outcomes with three or four levels, are fitted on the rows that have the exposure, with their covariates imputed as for every other model.
@@ -66,7 +66,9 @@ The models on imputed data are the primary analysis at covariate tiers 1 and 2, 
 The third tier is reported on imputed data and on complete cases side by side, and is described from both: it rests largely on units where a fifth or more of ethnicity is imputed.
 
 **Checks that stop the build.**
-An imputed covariate cell was missing before; its value is one its unit observed, or for something that cannot change within a child the child's own record, or failing that a value the dataset holds; nothing is imputed where too little was observed, in the unit or at the child's age; a child's imputed values of something that cannot change agree with each other; no two imputations are the same draw; and an imputation that was asked for was made.
+An imputed covariate cell was missing before; its value is one its unit observed, or for something that cannot change within a child the child's own record, or failing that a value the dataset holds; nothing is imputed where too little was observed, in the unit or at the child's age; a child's imputed values of something that cannot change agree with each other; the cells are exactly those each imputation recorded filling; and an imputation that was asked for was made.
+The models on imputed data take these checks as an input, so none is fitted on imputations that have not passed them.
+Whether two imputations are the same draw is not checked on their values, because legitimate imputations can be identical; each imputation's seed is distinct by construction.
 An imputed exposure is by construction a value the rows observed.
 
 ---
@@ -106,16 +108,19 @@ Predictive mean matching needs no assumption about the shape of a variable's dis
 - The same child can be given different imputed screen use in the models of different outcomes.
   Each model is valid by itself; the imputed values are not a dataset and are not stored.
 - Covariates are imputed from family scores, not from each outcome, so the relation between a covariate and a specific outcome is weakened in the rows where the covariate was imputed.
-  A tier then adjusts less than it should.
-  In a deletion test on real data, with a fifth of the socioeconomic measure deleted, the second tier's slope moved about a quarter of the way back to the first tier's on average, and more than half of the way in some datasets; where the covariate was missing more often for children with particular outcomes, a simulation moved it the other way.
-  The size is small against a slope's own uncertainty, about a seventh of a standard error at a fifth missing, and the share actually imputed is under 3% for half the slopes and under 10% for nine in ten.
-  The share of the covariate imputed is reported beside each adjusted result.
+  A tier then adjusts differently from how it should, usually less.
+  In deletion tests on real data, with a fifth of the socioeconomic measure deleted, two independent reviews measured the second tier's slope moving back towards the first tier's by about a twentieth of the gap between them in one test and about a quarter in the other, and by a quarter to three quarters in the worst datasets.
+  For binary and short ordinal outcomes, which enter a family's score beside continuous ones, a simulation moved the slope the other way, by up to a fifth of its size with data missing at random.
+  The size is small against a slope's own uncertainty, about a tenth to a seventh of a standard error at a fifth missing, and the share actually imputed is under 3% for half the slopes and under 10% for nine in ten.
+  The share of an adjusted model's rows with an imputed covariate is recorded for every unit slope and summarised by tier in the imputation report.
+  A covariate's imputation leaves out an exposure or a family score that the unit knows for under 70% of its rows, which is so for about a tenth of the second tier's slopes and a third of the third's.
   Imputing covariates for each outcome's own model would remove this, at a much larger cost in computing.
 - Imputing a model's exposure adds little precision, and none where nothing but the outcome, age and sex predicts it.
-  In deletion tests on real data the imputed slopes of linear models were unbiased when values were deleted at random, and closer to the truth than complete cases when deletion depended on an outcome, with standard errors two to three per cent too small when a fifth of the exposure was missing.
+  In deletion tests on real data, with a fifth of the exposure deleted at random, the imputed slopes of linear models were about 1% smaller than complete-case slopes on average and 4 to 10% smaller in the smallest datasets; where deletion depended on an outcome they were closer to the truth than complete cases in simulation, and about as close on real data.
+  Their standard errors were one to three per cent too small.
   At the shares actually missing this is negligible for most slopes.
-- For binary and short ordinal outcomes an imputed exposure makes a slope noisier than complete cases while its standard error says otherwise: in a simulation with a quarter of the exposure missing, intervals covered the truth about nine times in ten where they claim nineteen in twenty.
-  Complete cases are unbiased for those models when missingness depends on the outcome.
+- For binary and short ordinal outcomes one review found an imputed exposure made a slope noisier than complete cases while its standard error said otherwise, with intervals covering the truth about nine times in ten; a second review did not reproduce that and found coverage of 93 to 96%.
+  Complete cases are unbiased for those models when missingness depends on the outcome, so their exposure is not imputed whichever review is right.
 - An exposure is imputed given its own model's outcome only, so missingness that depends on a different outcome is not corrected.
 - With a dedicated total, an imputed exposure and an imputed rest need not add up to it.
 - The imputation models are linear in their predictors.
@@ -128,7 +133,7 @@ Predictive mean matching needs no assumption about the shape of a variable's dis
 - Missingness is assumed to be at random given what the models read.
 - With five imputations the fraction of information missing is rough; it settles with 50.
 - Study-level moderators are not imputed; the child-level ones (sex, the socioeconomic measure, age) are, or are never missing.
-- The longitudinal strand and the curves are fitted on complete cases, and no convergence diagnostics are kept.
+- The longitudinal strand, the curves and the stage 2 moderators, including the trend over collection years, are fitted on complete cases, and no convergence diagnostics are kept.
   Wiring those to the imputations is work still to do.
 
 ---
@@ -139,7 +144,7 @@ Predictive mean matching needs no assumption about the shape of a variable's dis
 - `impute_cell_exposure()` imputes a model's exposure, called from `fit_stage1()`.
 - `fit_stage1_imputed()` fits each imputation and combines with `pool_rubin()`.
 - `review_imputation()` holds the checks, and `analysis/reports/imputation.qmd` reports what was imputed.
-- Settings: `imputations`, `imputation_iterations`, `impute_min_observed`, `impute_min_observed_age`, `impute_min_correlation`.
+- Settings: `imputations`, `imputation_iterations`, `impute_min_observed`, `impute_min_observed_age`, `impute_min_correlation`, `impute_exposure_models`.
 - Model list rows `sens_complete_case` and `covariates_tier3_complete_case` are the complete-case analyses reported beside the imputed ones.
 - `tests/testthat/test-analysis-imputation.R` holds the known answers, among them a case where complete cases are biased and imputation is not, and a case where an outcome is unrelated to the rest of its family and its slope is not weakened.
 
