@@ -145,6 +145,25 @@ summary_tables$fmi |>
   knitr::kable(align = "r")
 ```
 
+## Imputed covariates in the adjusted models
+
+The share of an adjusted model's rows whose covariate was imputed: the largest of its tier's covariates.
+It is recorded for every unit slope (`covariate_imputed_share`).
+
+```{r}
+#| label: covariate-share
+summary_tables$fmi |>
+  filter(tier > 1) |>
+  transmute(
+    Tier = tier,
+    Slopes = fmt(slopes),
+    `Median share imputed (%)` = round(100 * covariate_share_median, 1),
+    `90th percentile (%)` = round(100 * covariate_share_q90, 1),
+    `Largest (%)` = round(100 * covariate_share_max, 1)
+  ) |>
+  knitr::kable(align = "r")
+```
+
 ## Imputed screen use
 
 Screen use is imputed for one model at a time, from a model that holds that model's outcome, so it is not stored.

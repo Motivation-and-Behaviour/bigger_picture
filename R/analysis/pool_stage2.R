@@ -89,17 +89,26 @@ pool_stage2 <- function(estimates, settings = default_analysis_settings()) {
   } else {
     stats::as.formula("~ 1 | dataset_id")
   }
-  fit <- tryCatch(
-    metafor::rma.mv(
-      yi,
-      vi,
-      random = random,
-      data = data,
-      method = "REML",
-      test = "t"
-    ),
-    error = function(e) conditionMessage(e)
-  )
+  # The same model with a second optimiser where the first does not
+  # converge: a different route to the same estimate, not a simpler model.
+  fit <- NULL
+  for (optimiser in c("nlminb", "BFGS")) {
+    fit <- tryCatch(
+      metafor::rma.mv(
+        yi,
+        vi,
+        random = random,
+        data = data,
+        method = "REML",
+        test = "t",
+        control = list(optimizer = optimiser)
+      ),
+      error = function(e) conditionMessage(e)
+    )
+    if (!is.character(fit)) {
+      break
+    }
+  }
   if (is.character(fit)) {
     return(result(paste("model failed:", fit)))
   }

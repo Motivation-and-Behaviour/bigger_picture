@@ -376,6 +376,7 @@ analysis_targets <- function(harmonise_plan) {
       quote(fit_stage1_imputed(
         prepared,
         bind_imputations(imputed),
+        imputation_review,
         imputation_index,
         fit_cells,
         outcome_registry,
@@ -392,12 +393,23 @@ analysis_targets <- function(harmonise_plan) {
       quote(fit_stage1_imputed(
         prepared,
         bind_imputations(imputed),
+        imputation_review,
         imputation_index,
         other_cells,
         outcome_registry,
         dataschema,
         settings_imputed_model,
         adjust_other = TRUE
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "panel_pairs",
+      quote(describe_panel_pairs(
+        prepared,
+        unique(longitudinal_cells$exposure)
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -747,6 +759,11 @@ analysis_targets <- function(harmonise_plan) {
       ))
     ),
     tarchetypes::tar_combine_raw(
+      "panel_pairs_all",
+      per_dataset[["panel_pairs"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
       "longitudinal_all",
       per_dataset[["longitudinal"]],
       command = quote(dplyr::bind_rows(!!!.x))
@@ -815,22 +832,26 @@ analysis_targets <- function(harmonise_plan) {
             setdiff(bp_stage1_models(), "report_rows")
           ),
           dplyr::mutate(
-            tree_by_datasets(label_models(
-              tree_imputed,
-              model_cells,
-              c("tier1_total", "tier2_content")
-            )),
+            tree_by_datasets(
+              label_models(
+                tree_imputed,
+                model_cells,
+                c("tier1_total", "tier2_content")
+              ),
+              settings_tree
+            ),
             model_name = "sens_family_by_datasets"
           ),
           dplyr::mutate(
             tree_other_imputed,
             model_name = "tier2_content_adjusted"
           ),
-          dplyr::mutate(tree_imputed_tier2, model_name = "covariates_tier2"),
-          dplyr::mutate(tree_imputed_tier3, model_name = "covariates_tier3"),
-          dplyr::mutate(
+          label_models(tree_imputed_tier2, model_cells, "covariates_tier2"),
+          label_models(tree_imputed_tier3, model_cells, "covariates_tier3"),
+          label_models(
             tree_tier3,
-            model_name = "covariates_tier3_complete_case"
+            model_cells,
+            "covariates_tier3_complete_case"
           ),
           dplyr::mutate(
             label_models(

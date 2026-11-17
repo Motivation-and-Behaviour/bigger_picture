@@ -143,7 +143,9 @@ fit_curve_unit <- function(data, settings = default_analysis_settings()) {
   design <- stage1_design(data, settings, tier = 1L)
   data <- design$data
   n <- nrow(data)
-  breaks <- c(-Inf, settings$curve_knots, Inf)
+  # The stretches between knots, the last one ending at the upper boundary
+  # knot: rows beyond it do not count towards it.
+  breaks <- c(-Inf, settings$curve_knots, settings$curve_boundary[2])
   stretch <- if (n == 0) {
     0L
   } else {
@@ -193,7 +195,8 @@ fit_curve_unit <- function(data, settings = default_analysis_settings()) {
   clustering <- stage1_cluster(data)
   clustered <- !is.null(clustering$cluster)
   n_clusters <- dplyr::n_distinct(clustering$cluster_id)
-  if (clustered && n_clusters <= length(terms)) {
+  # A curve's covariance from a handful of clusters is close to singular.
+  if (clustered && n_clusters < settings$min_clusters) {
     return(result(
       "too few clusters for a curve",
       n_clusters = n_clusters,

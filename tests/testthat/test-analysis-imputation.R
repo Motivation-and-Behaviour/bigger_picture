@@ -53,6 +53,7 @@ fit_imputed <- function(prepared, imputed, cells, reg, m, ...) {
   fit_stage1_imputed(
     prepared,
     imputed,
+    review_imputation(prepared, imputed, reg$outcomes, reg$exposures),
     seq_len(m),
     cells,
     reg$outcomes,
@@ -197,13 +198,64 @@ test_that("only sporadic gaps in covariates are imputed, unit by unit", {
     },
     "age group that observed too little"
   )
+  # Cells lost from an imputation, or a whole imputation lost, no longer
+  # match what the imputations recorded filling.
   tamper(
-    function(cells) {
-      cells$value[cells$imputation == 2] <- cells$value[cells$imputation == 1]
-      cells
-    },
-    "same draw"
+    function(cells) cells[-1, ],
+    "not the ones the imputations recorded"
   )
+  tamper(
+    function(cells) cells[cells$imputation != 2, ],
+    "not the ones the imputations recorded"
+  )
+  # Two imputations may legitimately be the same, so that is not an error.
+  same <- both
+  same$cells$value[same$cells$imputation == 2] <-
+    same$cells$value[same$cells$imputation == 1]
+  expect_no_error(
+    review_imputation(prepared, same, reg$outcomes, reg$exposures)
+  )
+  # A model is fitted only with the review in hand, and only on
+  # imputations that were made.
+  one_cell <- tibble::tibble(exposure = "st_game", outcome = "mh_dep_self")
+  expect_error(
+    fit_stage1_imputed(
+      prepared,
+      both,
+      NULL,
+      1:2,
+      one_cell,
+      reg$outcomes,
+      reg$schema
+    ),
+    "needs the dataset's `review_imputation\\(\\)`"
+  )
+  expect_error(
+    fit_stage1_imputed(
+      prepared,
+      both,
+      review,
+      1:3,
+      one_cell,
+      reg$outcomes,
+      reg$schema
+    ),
+    "imputation 3 is missing"
+  )
+  fitted <- fit_stage1_imputed(
+    prepared,
+    both,
+    review,
+    1:2,
+    one_cell,
+    reg$outcomes,
+    reg$schema,
+    tiers = 1:2
+  )
+  # Each adjusted slope says what share of its rows had the covariate
+  # imputed; here no socioeconomic measure passes, so the tier is not
+  # fitted and has none.
+  expect_true(all(is.na(fitted$covariate_imputed_share[fitted$tier == 1])))
   expect_error(
     impute_dataset(prepared, reg$outcomes, reg$exposures, 1L, list()),
     "needs a `seed`"
@@ -392,17 +444,42 @@ test_that("an imputed exposure never makes a model fittable", {
     y = c(rep(1, 9), rep(0, 50), rep(1, 41))
   )
   expect_false(stage1_may_impute(rare, "logistic", settings))
-  expect_true(stage1_may_impute(rare, "linear", settings))
   levels <- data.frame(
     x = c(rep(1, 60), rep(NA, 40)),
     y = c(rep(1, 30), rep(2, 26), rep(3, 4), rep(3, 40))
   )
   expect_false(stage1_may_impute(levels, "ordinal", settings))
+  # A linear model needs the minimum unit size among the rows that have
+  # the exposure and that the model would keep: here 31 have it, and three
+  # of those are dropped for a sex the model does not use.
+  frame <- function(n) {
+    data <- data.frame(
+      age = seq(10, 12, length.out = n),
+      sex = rep(c("Female", "Male"), length.out = n),
+      weight = NA_real_,
+      cluster = NA_character_,
+      family = NA_character_,
+      y = seq_len(n) %% 7,
+      stringsAsFactors = FALSE
+    )
+    for (name in bp_stage1_covariates()) {
+      data[[name]] <- NA_character_
+    }
+    data
+  }
+  small <- frame(44)
+  small$x <- c(rep(c(1, 2, 3), length.out = 31), rep(NA, 13))
+  expect_true(stage1_may_impute(small, "linear", settings))
+  small$sex[1:3] <- "Other"
+  expect_false(stage1_may_impute(small, "linear", settings))
+
   # The settings say which kinds of model have their exposure imputed.
   linear_only <- settings
   linear_only$impute_exposure_models <- "linear"
   expect_false(stage1_may_impute(rows, "logistic", linear_only))
-  expect_true(stage1_may_impute(rows, "linear", linear_only))
+  enough <- frame(44)
+  enough$x <- c(rep(c(1, 2, 3), length.out = 31), rep(NA, 13))
+  expect_true(stage1_may_impute(enough, "linear", linear_only))
 })
 
 test_that("imputation removes the bias of complete cases", {
@@ -451,14 +528,6 @@ test_that("imputation removes the bias of complete cases", {
   expect_false(pooled$design_varied)
   # The same again from the same seed.
   expect_equal(fit_imputed(prepared, imputed, cell, reg, 10L), pooled)
-
-  # An imputation that was never made is an error, not a fit on gaps.
-  short <- imputed
-  short$cells <- short$cells[short$cells$imputation != 3, ]
-  short$units <- short$units[short$units$imputation != 3, ]
-  if (nrow(short$units) > 0) {
-    expect_error(fit_imputed(prepared, short, cell, reg, 10L), "is missing")
-  }
 
   # Too much of the exposure missing: it is not imputed, and the model is
   # the complete-case one.
@@ -544,6 +613,9 @@ test_that("imputed covariates bring a tier's rows back", {
   expect_equal(second$status, "fitted")
   expect_equal(second$ses_measure, "ses_household")
   expect_equal(second$n, nrow(prepared$base))
+  # A fifth of the rows had the measure imputed, and the slope says so.
+  expect_equal(second$covariate_imputed_share, 300 / nrow(prepared$base))
+  expect_true(is.na(pooled$covariate_imputed_share[pooled$tier == 1]))
   # Adjusting still takes out what SES added to the slope, and the tier 1
   # slope on the same rows is combined over the imputations too.
   first <- pooled[pooled$tier == 1, ]

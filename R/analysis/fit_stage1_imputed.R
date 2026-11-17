@@ -21,6 +21,9 @@
 #' @param prepared Output of `prepare_analysis_data()` for one dataset.
 #' @param imputed Every imputation of the dataset's covariates, from
 #'   `bind_imputations()`.
+#' @param review The dataset's `review_imputation()`, whose checks stop
+#'   the build when an imputation is wrong. It is asked for so that no
+#'   model is fitted on imputations that have not passed them.
 #' @param indexes The imputation numbers to fit.
 #' @param cells,outcome_registry,dataschema,tiers,adjust_other As for
 #'   `fit_stage1()`.
@@ -31,6 +34,7 @@
 fit_stage1_imputed <- function(
   prepared,
   imputed,
+  review,
   indexes,
   cells,
   outcome_registry,
@@ -44,6 +48,14 @@ fit_stage1_imputed <- function(
   }
   if (is.null(settings$seed)) {
     stop("fit_stage1_imputed(): `settings` needs a `seed`.", call. = FALSE)
+  }
+  # The imputations are fitted only once they have passed their checks:
+  # taking the review as an argument makes the fit wait for it.
+  if (!is.list(review) || !"units" %in% names(review)) {
+    stop(
+      "fit_stage1_imputed(): needs the dataset's `review_imputation()`.",
+      call. = FALSE
+    )
   }
   # An imputation that was never made must not be fitted as if it had
   # nothing to fill.
@@ -81,6 +93,7 @@ fit_stage1_imputed <- function(
   key <- paste(fits$unit, fits$exposure, fits$outcome, fits$tier, sep = "\r")
   m <- length(indexes)
   counts <- c(
+    "covariate_imputed_share",
     "n",
     "n_available",
     "n_no_weight",

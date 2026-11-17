@@ -25,8 +25,9 @@
 #'
 #' `finding` says how a row may be described: `finding` at L0 and L1 of a
 #' confirmatory model, otherwise the model's class, or `exploratory` for
-#' L2 and L3 (ANALYSIS_PLAN.md, Step 10 task 6); and `too few studies to
-#' say` wherever that is the row's status.
+#' L2 and L3 (ANALYSIS_PLAN.md, Step 10 task 6); `too few studies to say`
+#' wherever that is the row's status; and `not estimated` for a row that
+#' could not be pooled at all.
 #'
 #' A test that could not be run has no p-value and is not counted. One with
 #' too few studies to say keeps its p-value and its place in the count, but
@@ -75,6 +76,9 @@ assemble_results <- function(
     "headline",
     "warning",
     "note",
+    "lag_years",
+    "lag_years_min",
+    "lag_years_max",
     "k_nodes",
     "k_nodes_thin",
     "nodes_differ_p",
@@ -130,6 +134,7 @@ assemble_results <- function(
     is.na(model_spec$variant[at])
   out$finding <- dplyr::case_when(
     out$status %in% "too few studies to say" ~ "too few studies to say",
+    !out$status %in% "pooled" | is.na(out$estimate) ~ "not estimated",
     !out$analysis_class %in% "confirmatory" ~ out$analysis_class,
     out$level %in% c("L0", "L1") ~ "finding",
     .default = "exploratory"
@@ -184,6 +189,9 @@ assemble_results <- function(
     NA
   )
 
+  # The slope predictions; those about thresholds and moderation attach
+  # where those models are assembled.
+  hypotheses <- hypotheses[hypotheses$test %in% "slope", ]
   predicted <- match(
     paste(out$exposure, out$family),
     paste(hypotheses$exposure, hypotheses$family)

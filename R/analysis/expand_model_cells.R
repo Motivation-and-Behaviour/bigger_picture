@@ -17,6 +17,9 @@
 #'   are settled where their models are built, so they expand to nothing
 #'   here.
 #'
+#' A model named `<model>_other` holds the cells of its sets that `<model>`
+#' does not, so the two never share a cell.
+#'
 #' Until the specification is frozen only the development cells are kept
 #' (ANALYSIS_PLAN.md, Step 5): a model's cells are then the development
 #' cells that fall in its sets.
@@ -90,6 +93,16 @@ expand_model_cells <- function(
     out
   })
   cells <- dplyr::bind_rows(cells)
+  # A model named `<model>_other` is everything in its sets that `<model>`
+  # does not hold, so a registered test is never also an exploratory one.
+  others <- grep("_other$", model_spec$model_name, value = TRUE)
+  for (other in others) {
+    registered <- cells[cells$model_name == sub("_other$", "", other), ]
+    drop <- cells$model_name == other &
+      paste(cells$exposure, cells$outcome) %in%
+        paste(registered$exposure, registered$outcome)
+    cells <- cells[!drop, ]
+  }
   if (!frozen) {
     cells <- dplyr::semi_join(
       cells,

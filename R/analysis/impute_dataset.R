@@ -380,6 +380,13 @@ imputation_hold_constant <- function(cells, data, base, constant) {
       next
     }
     person <- base$participant_id[cells$row[own]]
+    if (anyNA(person)) {
+      stop(
+        "impute_dataset(): a row with no participant id cannot be held ",
+        "constant within its child.",
+        call. = FALSE
+      )
+    }
     observed <- data[[name]]
     seen <- !is.na(observed)
     # Sex is imputed as female or male, whatever else the child's record

@@ -1,7 +1,9 @@
 #' Fill a prepared dataset's covariates with one imputation
 #'
-#' Puts one imputation's cells into the prepared base table. Screen use is
-#' imputed later, for each outcome's own model, and outcomes never are.
+#' Puts one imputation's cells into the prepared base table, and marks them
+#' in a `<covariate>.imputed` column, so that a model can say what share of
+#' its rows had the covariate imputed. Screen use is imputed later, for
+#' each outcome's own model, and outcomes never are.
 #'
 #' @param prepared Output of `prepare_analysis_data()` for one dataset.
 #' @param imputed Output of `impute_dataset()`, for one imputation or
@@ -21,6 +23,9 @@ apply_imputation <- function(prepared, imputed, index) {
       )
     }
     prepared$base[[name]][own$row] <- own$value
+    marker <- rep(FALSE, nrow(prepared$base))
+    marker[own$row] <- TRUE
+    prepared$base[[paste0(name, ".imputed")]] <- marker
   }
   prepared
 }

@@ -16,7 +16,9 @@
 #' @param settings From `analysis_settings()`.
 #' @return A list of two tibbles, each with `model_name`
 #'   (`longitudinal_lagged` and so on): `tree`, the L0 to L2 rows, with the
-#'   median `lag_years` of the pairs behind each family's row; and
+#'   typical gap between waves behind each family and specific outcome
+#'   (`lag_years`, the median over datasets of each dataset's median, and
+#'   the shortest and longest dataset); and
 #'   `cells`, the L3 rows.
 pool_longitudinal <- function(
   estimates,
@@ -35,15 +37,37 @@ pool_longitudinal <- function(
     if (nrow(out) == 0) {
       return(out)
     }
+    # The typical gap behind each family and specific outcome: the median
+    # over datasets of each dataset's median gap, with the shortest and
+    # longest dataset, so that one large panel does not set it.
     fitted <- rows[rows$status %in% "fitted", ]
-    fitted$family <- tree_place(fitted$outcome, outcome_registry)$family
-    lags <- dplyr::summarise(
-      fitted,
-      lag_years = stats::median(.data$lag_years, na.rm = TRUE),
-      .by = c("exposure", "family")
+    place <- tree_place(fitted$outcome, outcome_registry)
+    fitted$family <- place$family
+    fitted$node <- place$node
+    fitted <- fitted[is.na(place$left_out), ]
+    gaps <- function(by) {
+      per_dataset <- dplyr::summarise(
+        fitted,
+        gap = stats::median(.data$lag_years, na.rm = TRUE),
+        .by = dplyr::all_of(c(by, "dataset_id"))
+      )
+      dplyr::summarise(
+        per_dataset,
+        lag_years = stats::median(.data$gap, na.rm = TRUE),
+        lag_years_min = min(.data$gap, na.rm = TRUE),
+        lag_years_max = max(.data$gap, na.rm = TRUE),
+        .by = dplyr::all_of(by)
+      )
+    }
+    family_gaps <- gaps(c("exposure", "family"))
+    family_gaps$level <- rep("L0", nrow(family_gaps))
+    node_gaps <- gaps(c("exposure", "family", "node"))
+    node_gaps$level <- rep("L1", nrow(node_gaps))
+    out <- dplyr::left_join(
+      out,
+      dplyr::bind_rows(family_gaps, node_gaps),
+      by = c("exposure", "family", "node", "level")
     )
-    out <- dplyr::left_join(out, lags, by = c("exposure", "family"))
-    out$lag_years[!out$level %in% "L0"] <- NA_real_
     out$model_name <- name(model)
     out
   })

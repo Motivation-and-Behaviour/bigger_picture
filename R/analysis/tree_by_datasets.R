@@ -5,11 +5,17 @@
 #' weighted one in the estimate's columns so that it can be assembled and
 #' tested as a model of its own.
 #'
+#' The weighted average has degrees of freedom of its own, often far more
+#' or fewer than the plain average's, so whether it has too few studies to
+#' say is judged again on those.
+#'
 #' @param tree Rows of `pool_tree()`.
-#' @return The family (L0) rows of `tree`, with `estimate`, `se`, `df` and
-#'   the interval taken from the `_by_datasets` columns. The prediction
-#'   interval is not carried over: it belongs to the plain average.
-tree_by_datasets <- function(tree) {
+#' @param settings From `analysis_settings()`.
+#' @return The family (L0) rows of `tree`, with `estimate`, `se`, `df`, the
+#'   interval and `status` taken from the `_by_datasets` columns. The
+#'   prediction interval is not carried over: it belongs to the plain
+#'   average.
+tree_by_datasets <- function(tree, settings = default_analysis_settings()) {
   if (is.null(tree) || nrow(tree) == 0) {
     return(tibble::tibble())
   }
@@ -19,5 +25,15 @@ tree_by_datasets <- function(tree) {
   }
   out$pi_low <- NA_real_
   out$pi_high <- NA_real_
+  estimated <- out$status %in% c("pooled", "too few studies to say")
+  out$status[estimated] <- ifelse(
+    is.na(out$df[estimated]),
+    "robust inference failed",
+    ifelse(
+      out$df[estimated] < settings$min_robust_df,
+      "too few studies to say",
+      "pooled"
+    )
+  )
   out
 }

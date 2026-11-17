@@ -34,8 +34,8 @@ summarise_imputation <- function(units, estimates, complete) {
   )
   # The models adjusted for the rest of the child's screen use are counted
   # apart from the others at the same tier.
-  estimates$adjusted_other <- !is.na(estimates$other_from)
-  complete$adjusted_other <- !is.na(complete$other_from)
+  estimates$adjusted_other <- !is.na(estimates$n_no_other)
+  complete$adjusted_other <- !is.na(complete$n_no_other)
   fitted <- estimates[estimates$status %in% "fitted", ]
   quantile_of <- function(x, p) {
     if (all(is.na(x))) {
@@ -52,6 +52,9 @@ summarise_imputation <- function(units, estimates, complete) {
     fmi_q90 = quantile_of(.data$fmi, 0.9),
     fmi_max = quantile_of(.data$fmi, 1),
     fmi_over_half = sum(.data$fmi > 0.5, na.rm = TRUE),
+    covariate_share_median = quantile_of(.data$covariate_imputed_share, 0.5),
+    covariate_share_q90 = quantile_of(.data$covariate_imputed_share, 0.9),
+    covariate_share_max = quantile_of(.data$covariate_imputed_share, 1),
     exposure_imputed = sum(.data$n_exposure_imputed > 0, na.rm = TRUE),
     exposure_failed = sum(!is.na(.data$exposure_imputation_failed)),
     exposure_share_median = quantile_of(

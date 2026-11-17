@@ -27,7 +27,7 @@
 #'   slopes per decade with robust intervals and degrees of freedom, the
 #'   number of datasets with a series spanning more than one year, which is
 #'   what the within slope rests on, a status for each slope (`estimated`, or
-#'   `too few studies to say` under four robust degrees of freedom), and
+#'   `too few studies to say` under the minimum robust degrees of freedom), and
 #'   `status`.
 regress_units_on_year <- function(
   units,

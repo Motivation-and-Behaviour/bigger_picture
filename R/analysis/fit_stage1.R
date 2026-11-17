@@ -230,7 +230,9 @@ stage1_may_impute <- function(data, model, settings) {
     counts <- table(seen$y)
     return(length(counts) >= 3 && min(counts) >= 5)
   }
-  TRUE
+  # A linear model needs the minimum unit size among the rows it would
+  # keep of those that have the exposure.
+  nrow(stage1_design(seen, settings, 1L)$data) >= settings$min_unit_rows
 }
 
 # A child's mean on a variable over their other rows (their other waves),
@@ -259,6 +261,10 @@ stage1_frame <- function(base) {
   )
   for (covariate in bp_stage1_covariates()) {
     frame[[covariate]] <- as.character(column(covariate))
+  }
+  # Which covariate values were imputed, where `apply_imputation()` says.
+  for (marker in grep("\\.imputed$", names(base), value = TRUE)) {
+    frame[[marker]] <- base[[marker]]
   }
   frame
 }
@@ -317,6 +323,7 @@ fit_stage1_unit <- function(
         tier = as.integer(tier),
         ses_measure = NA_character_,
         ethnicity_measure = NA_character_,
+        covariate_imputed_share = NA_real_,
         tier1_same_rows_estimate = NA_real_,
         tier1_same_rows_se = NA_real_,
         terms_dropped = NA_character_,
@@ -356,7 +363,18 @@ fit_stage1_unit <- function(
 
   n <- nrow(data)
   counts$n <- n
+  # The largest share, among the tier's covariates, of the model's rows
+  # whose value was imputed.
+  markers <- intersect(paste0(design$added, ".imputed"), names(data))
+  imputed_share <- if (length(markers) > 0 && nrow(data) > 0) {
+    max(vapply(markers, function(name) mean(data[[name]]), numeric(1)))
+  } else if (length(design$added) > 0 && nrow(data) > 0) {
+    0
+  } else {
+    NA_real_
+  }
   common <- list(
+    covariate_imputed_share = imputed_share,
     weighted = weighted,
     ses_measure = ses_measure,
     ethnicity_measure = design$ethnicity_measure,

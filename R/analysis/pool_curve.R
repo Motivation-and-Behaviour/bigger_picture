@@ -18,7 +18,7 @@
 #'
 #' - conservative (`threshold_hours`): the whole interval lies beyond the
 #'   smallest effect of interest from the reference, in either direction,
-#'   with at least four robust degrees of freedom. It is rarely wrong and
+#'   with at least the minimum robust degrees of freedom. It is rarely wrong and
 #'   usually late, and depends on how precisely the curve is estimated: the
 #'   same curve gives a later threshold where datasets are fewer or differ
 #'   more.
@@ -28,12 +28,14 @@
 #'   read. It is close to the true crossing on average, and can be reported
 #'   for a curve that levels off just short of the smallest effect.
 #'
-#' `threshold_holds` and `threshold_central_holds` say whether the curve
-#' stays beyond at every later interpretable hour: for the conservative
-#' reading, whether the whole interval does (whatever the degrees of
-#' freedom there); for the central reading, whether the rule is met. Where
-#' FALSE the curve comes back, or its interval widens to take in less than
-#' the smallest effect.
+#' `threshold_holds` and `threshold_central_holds` say whether the curve's
+#' estimate stays beyond the smallest effect, on the same side, at every
+#' later interpretable hour; where FALSE the curve comes back. The
+#' `_interval_holds` columns say whether the interval goes on meeting the
+#' rule as well (wholly beyond for the conservative reading, excluding no
+#' difference for the central one), whatever the degrees of freedom there:
+#' an estimate that stays beyond with an interval that widens has not come
+#' back.
 #'
 #' @param curves Rows of `fit_stage1_curves()` for one exposure and outcome.
 #' @param settings From `analysis_settings()`.
@@ -104,9 +106,11 @@ pool_curve <- function(
       threshold_hours = NA_real_,
       threshold_direction = NA_character_,
       threshold_holds = NA,
+      threshold_interval_holds = NA,
       threshold_central_hours = NA_real_,
       threshold_central_direction = NA_character_,
       threshold_central_holds = NA,
+      threshold_central_interval_holds = NA,
       random_levels = NA_character_,
       status = status
     )
@@ -199,15 +203,25 @@ pool_curve <- function(
   beyond <- !is.na(curve$ci_low) &
     (curve$ci_low > settings$smallest_effect |
       curve$ci_high < -settings$smallest_effect)
-  # The first hour that meets a rule, its direction, and whether every later
-  # interpretable hour meets it too.
-  read_threshold <- function(meets, later_meets = meets) {
+  # The first hour that meets a rule, its direction, and what the curve
+  # does at every later interpretable hour: whether its estimate stays
+  # beyond the smallest effect on the same side (`holds`), and whether its
+  # interval goes on meeting the rule too (`interval_holds`). An estimate
+  # that stays beyond with an interval that widens has not come back.
+  read_threshold <- function(meets, interval_meets) {
     found <- readable & meets
+    none <- list(
+      hours = NA_real_,
+      direction = NA_character_,
+      holds = NA,
+      interval_holds = NA
+    )
     if (!any(found)) {
-      return(list(hours = NA_real_, direction = NA_character_, holds = NA))
+      return(none)
     }
     hours <- min(curve$hours[found])
-    rises <- curve$estimate[match(hours, curve$hours)] > 0
+    start <- curve$estimate[match(hours, curve$hours)]
+    rises <- start > 0
     direction <- if (is.na(higher_is)) {
       if (rises) "higher outcome" else "lower outcome"
     } else if (rises == (higher_is == "better")) {
@@ -216,15 +230,15 @@ pool_curve <- function(
       "worse outcome"
     }
     later <- readable & curve$hours > hours
+    stays <- sign(curve$estimate) == sign(start) &
+      abs(curve$estimate) >= settings$smallest_effect
     list(
       hours = hours,
       direction = direction,
-      holds = all(later_meets[later])
+      holds = all(stays[later]),
+      interval_holds = all((stays & interval_meets)[later])
     )
   }
-  # Whether the conservative threshold holds is judged on the interval at
-  # later hours, not on their degrees of freedom: an hour few datasets
-  # reach has few, without the curve having come back.
   conservative <- read_threshold(sure & beyond, beyond)
   # The central reading: the estimate beyond the smallest effect with an
   # interval that excludes no difference and enough degrees of freedom, at
@@ -238,7 +252,7 @@ pool_curve <- function(
     (past & readable)[in_order][-1],
     FALSE
   )
-  central <- read_threshold(past & next_too, past)
+  central <- read_threshold(past & next_too, clear)
   finish(
     if (any(sure)) "pooled" else "too few studies to say",
     interpretable_from = min(curve$hours[curve$interpretable]),
@@ -246,9 +260,11 @@ pool_curve <- function(
     threshold_hours = conservative$hours,
     threshold_direction = conservative$direction,
     threshold_holds = conservative$holds,
+    threshold_interval_holds = conservative$interval_holds,
     threshold_central_hours = central$hours,
     threshold_central_direction = central$direction,
     threshold_central_holds = central$holds,
+    threshold_central_interval_holds = central$interval_holds,
     random_levels = levels_used
   )
 }

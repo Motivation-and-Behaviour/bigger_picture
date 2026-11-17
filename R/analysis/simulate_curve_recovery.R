@@ -212,6 +212,9 @@ simulate_curve_recovery <- function(
             "threshold_hours",
             "threshold_direction",
             "threshold_holds",
+            "threshold_interval_holds",
+            "threshold_central_holds",
+            "threshold_central_interval_holds",
             "threshold_central_hours",
             "threshold_central_direction",
             "status"
@@ -314,6 +317,8 @@ summarise_curve_recovery <- function(simulation) {
   central <- both
   central$threshold_hours <- both$threshold_central_hours
   central$threshold_direction <- both$threshold_central_direction
+  central$threshold_holds <- both$threshold_central_holds
+  central$threshold_interval_holds <- both$threshold_central_interval_holds
   both$rule <- "conservative"
   central$rule <- "central"
   thresholds <- dplyr::left_join(
@@ -351,6 +356,10 @@ summarise_curve_recovery <- function(simulation) {
     q75 = stats::quantile(.data$threshold_hours, 0.75, na.rm = TRUE),
     false_or_early = mean(.data$false_or_early),
     wrong_direction = mean(.data$wrong),
+    # Among the thresholds found: the curve said to stay beyond, and its
+    # interval said to go on meeting the rule.
+    holds = mean(.data$threshold_holds, na.rm = TRUE),
+    interval_holds = mean(.data$threshold_interval_holds, na.rm = TRUE),
     .groups = "drop"
   )
   list(curve = curve, threshold = threshold)

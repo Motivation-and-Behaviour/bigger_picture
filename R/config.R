@@ -308,6 +308,7 @@ bp_build_sections <- function() {
       "curves",
       "stage1_other",
       "longitudinal",
+      "panel_pairs",
       "imputed",
       "imputation_review",
       "stage1_imputed",
@@ -606,7 +607,7 @@ bp_hypotheses_path <- function() {
 }
 
 bp_hypotheses_columns <- function() {
-  c("hypothesis", "exposure", "family", "prediction", "notes")
+  c("hypothesis", "test", "exposure", "family", "prediction", "notes")
 }
 
 # The derived total's name among the exposures (DR-0013).
@@ -646,4 +647,16 @@ bp_imputation_settings <- function() {
 # The settings stage 1 reads when it fits imputed data.
 bp_imputed_model_settings <- function() {
   union(bp_model_settings(), bp_imputation_settings())
+}
+
+# The kinds of test a registered prediction is about, and what each may
+# predict (analysis/hypotheses.csv).
+bp_hypothesis_predictions <- function() {
+  list(
+    slope = c("negative", "positive", "none"),
+    threshold = "threshold",
+    moderation_location = "none",
+    moderation_sex = "stronger_for_girls",
+    moderation_ses = "stronger_for_lower_ses"
+  )
 }

@@ -16,9 +16,13 @@
 #'   observed it on too few;
 #' - the imputed cells of a row that cannot change within a child agree
 #'   for each child in each imputation;
-#' - no two imputations are the same draw, judged on the covariates that
-#'   can change within a child, where there are enough cells with enough
-#'   spread to tell.
+#' - the cells are exactly those each imputation recorded filling, and
+#'   every imputation covers the same units and variables.
+#'
+#' Whether two imputations are the same draw is not checked on their
+#' values: legitimate imputations can be identical (a covariate settled by
+#' another, or by a child's own record), and each imputation's seed is
+#' distinct by construction and tested.
 #'
 #' Imputed screen use is checked where it is drawn
 #' (`impute_cell_exposure()`).
@@ -137,30 +141,36 @@ review_imputation <- function(
       paste0("`", name, "` differs within a child after imputation")
     )
   }
-  # Two imputations that are one draw: judged on covariates that can
-  # change within a child, and only where there are enough cells with
-  # enough spread that identical draws cannot be chance.
-  free <- cells[!cells$variable %in% frame$constant, ]
-  by_index <- split(free, free$imputation)
-  varied <- function(table) {
-    shares <- sort(table(table$value), decreasing = TRUE) / nrow(table)
-    nrow(table) >= 200 && length(shares) >= 2 && shares[2] >= 0.1
-  }
-  pairs <- if (length(by_index) >= 2) {
-    utils::combn(names(by_index), 2, simplify = FALSE)
-  }
-  for (pair in pairs) {
-    first <- by_index[[pair[1]]]
-    second <- by_index[[pair[2]]]
-    same <- nrow(first) == nrow(second) &&
-      all(first$row == second$row) &&
-      all(first$variable == second$variable) &&
-      all(first$value == second$value)
-    must(
-      !(same && varied(first)),
-      "two imputations are the same draw"
-    )
-  }
+  # The cells are the ones the imputations' notes say were filled: an
+  # imputation with cells missing, or missing altogether, is caught here.
+  noted <- imputed$units[imputed$units$n_imputed > 0, ]
+  filled <- dplyr::count(
+    tibble::tibble(
+      imputation = cells$imputation,
+      unit = unit[cells$row],
+      variable = cells$variable
+    ),
+    .data$imputation,
+    .data$unit,
+    .data$variable,
+    name = "cells"
+  )
+  both <- dplyr::full_join(
+    noted[c("imputation", "unit", "variable", "n_imputed")],
+    filled,
+    by = c("imputation", "unit", "variable")
+  )
+  must(
+    !anyNA(both$n_imputed) &&
+      !anyNA(both$cells) &&
+      all(both$n_imputed == both$cells),
+    "the imputed cells are not the ones the imputations recorded"
+  )
+  per_index <- dplyr::count(imputed$units, .data$imputation)
+  must(
+    dplyr::n_distinct(per_index$n) <= 1,
+    "the imputations do not cover the same units and variables"
+  )
 
   level_summary <- dplyr::bind_rows(lapply(
     unique(cells$variable),

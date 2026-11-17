@@ -1,26 +1,73 @@
-hypothesis,exposure,family,prediction,notes
-H1,total_screen,learning,negative,
-H1,total_screen,cognition,negative,
-H1,total_screen,mental_health,negative,
-H1,total_screen,wellbeing,negative,
-H1,total_screen,behaviour,negative,
-H2a,st_educational,learning,positive,Tested on study and homework use; the row is not content intended to educate
-H2a,st_educational,cognition,positive,Tested on study and homework use; the row is not content intended to educate
-H2a,st_educational,mental_health,none,
-H2a,st_educational,wellbeing,none,
-H2a,st_educational,behaviour,none,
-H2b,st_watch,learning,negative,
-H2b,st_watch,cognition,negative,
-H2b,st_watch,mental_health,negative,
-H2b,st_watch,wellbeing,negative,
-H2b,st_watch,behaviour,negative,
-H2c,st_game,learning,none,
-H2c,st_game,cognition,none,
-H2c,st_game,mental_health,negative,
-H2c,st_game,wellbeing,negative,
-H2c,st_game,behaviour,negative,
-H2d,st_socmedia,learning,none,
-H2d,st_socmedia,cognition,none,
-H2d,st_socmedia,mental_health,negative,
-H2d,st_socmedia,wellbeing,negative,
-H2d,st_socmedia,behaviour,none,
+hypothesis,test,exposure,family,prediction,notes
+H1,slope,total_screen,learning,negative,
+H1,slope,total_screen,cognition,negative,
+H1,slope,total_screen,mental_health,negative,
+H1,slope,total_screen,wellbeing,negative,
+H1,slope,total_screen,behaviour,negative,
+H2a,slope,st_educational,learning,positive,Tested on study and homework use; the row is not content intended to educate
+H2a,slope,st_educational,cognition,positive,Tested on study and homework use; the row is not content intended to educate
+H2a,slope,st_educational,mental_health,none,
+H2a,slope,st_educational,wellbeing,none,
+H2a,slope,st_educational,behaviour,none,
+H2b,slope,st_watch,learning,negative,
+H2b,slope,st_watch,cognition,negative,
+H2b,slope,st_watch,mental_health,negative,
+H2b,slope,st_watch,wellbeing,negative,
+H2b,slope,st_watch,behaviour,negative,
+H2c,slope,st_game,learning,none,
+H2c,slope,st_game,cognition,none,
+H2c,slope,st_game,mental_health,negative,
+H2c,slope,st_game,wellbeing,negative,
+H2c,slope,st_game,behaviour,negative,
+H2d,slope,st_socmedia,learning,none,
+H2d,slope,st_socmedia,cognition,none,
+H2d,slope,st_socmedia,mental_health,negative,
+H2d,slope,st_socmedia,wellbeing,negative,
+H2d,slope,st_socmedia,behaviour,none,
+H3,threshold,total_screen,learning,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,total_screen,cognition,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,total_screen,mental_health,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,total_screen,wellbeing,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,total_screen,behaviour,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_educational,learning,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_educational,cognition,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_educational,mental_health,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_educational,wellbeing,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_educational,behaviour,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_watch,learning,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_watch,cognition,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_watch,mental_health,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_watch,wellbeing,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_watch,behaviour,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_game,learning,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_game,cognition,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_game,mental_health,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_game,wellbeing,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_game,behaviour,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_socmedia,learning,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_socmedia,cognition,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_socmedia,mental_health,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_socmedia,wellbeing,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H3,threshold,st_socmedia,behaviour,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
+H4,moderation_location,total_screen,learning,none,Not moderated by where the screen use occurs; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
+H4,moderation_location,total_screen,cognition,none,Not moderated by where the screen use occurs; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
+H4,moderation_location,total_screen,mental_health,none,Not moderated by where the screen use occurs; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
+H4,moderation_location,total_screen,wellbeing,none,Not moderated by where the screen use occurs; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
+H4,moderation_location,total_screen,behaviour,none,Not moderated by where the screen use occurs; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
+H5b,moderation_sex,st_socmedia,mental_health,stronger_for_girls,Stronger negative association for girls
+H5b,moderation_sex,st_socmedia,wellbeing,stronger_for_girls,Stronger negative association for girls
+H5c,moderation_ses,total_screen,learning,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,total_screen,mental_health,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,total_screen,behaviour,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_educational,learning,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_educational,mental_health,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_educational,behaviour,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_watch,learning,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_watch,mental_health,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_watch,behaviour,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_game,learning,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_game,mental_health,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_game,behaviour,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_socmedia,learning,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_socmedia,mental_health,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds
+H5c,moderation_ses,st_socmedia,behaviour,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds

@@ -69,7 +69,9 @@ test_that("a unit's curve is fitted, or says why not", {
   grid <- analysis_settings()$curve_grid
   expect_length(fit$rows_near[[1]], length(grid))
   expect_equal(fit$rows_near[[1]][grid == 2], sum(abs(rows$x - 2) <= 0.5))
-  stretches <- table(cut(rows$x, c(-Inf, 1, 2, 4, Inf)))
+  # The last stretch ends at the upper boundary knot: rows above six hours
+  # do not count towards it.
+  stretches <- table(cut(rows$x, c(-Inf, 1, 2, 4, 6)))
   expect_equal(fit$rows_least_stretch, min(stretches))
 
   # Four bands cannot carry four curve terms.
@@ -87,9 +89,11 @@ test_that("a unit's curve is fitted, or says why not", {
 })
 
 test_that("a unit with few children in part of the range is not fitted", {
-  # Twenty-nine rows above four hours are one short of the minimum.
+  # Twenty-nine rows between four and six hours are one short of the
+  # minimum, however many there are above six.
   rows <- curve_rows(3000, kinked, seed = 4)
-  long <- which(rows$x > 4)
+  expect_gt(sum(rows$x > 6), 0)
+  long <- which(rows$x > 4 & rows$x <= 6)
   thin <- rows[-long[-(1:29)], ]
   fit <- fit_curve_unit(thin)
   expect_equal(fit$rows_least_stretch, 29)
@@ -231,7 +235,21 @@ test_that("a flat curve has no threshold, and a dip is said not to hold", {
   back <- pool_curve(curve_fits(10, dip, seed = 3))
   expect_false(is.na(back$summary$threshold_hours))
   expect_lt(back$summary$threshold_hours, 3.5)
-  expect_false(back$summary$threshold_holds)
+  # By six hours the pooled curve's interval reaches back inside 0.10 SD,
+  # so it no longer meets the rule there. Whether the curve is said to
+  # hold follows its estimate: beyond 0.10 SD on the same side at every
+  # later hour read.
+  expect_false(back$summary$threshold_interval_holds)
+  read <- back$curve[
+    back$curve$interpretable &
+      back$curve$hours > back$summary$threshold_hours,
+  ]
+  expect_equal(back$summary$threshold_holds, all(read$estimate <= -0.10))
+  # A curve that returns to nothing well inside the hours read comes back.
+  spike <- function(x) -0.5 * exp(-((x - 2) / 0.5)^2)
+  gone <- pool_curve(curve_fits(10, spike, seed = 3))
+  expect_false(is.na(gone$summary$threshold_hours))
+  expect_false(gone$summary$threshold_holds)
 })
 
 test_that("a curve is read only at hours with data near them, inside the knots", {
@@ -295,7 +313,9 @@ test_that("the reference must be supported, and a threshold needs studies", {
   # Three datasets pool, but with too few degrees of freedom for a
   # threshold: the curve is given and no threshold is.
   three <- pool_curve(curve_fits(3, kinked, seed = 8))
-  expect_true(all(three$curve$df[three$curve$hours > 1] < 4))
+  expect_true(all(
+    three$curve$df[three$curve$hours > 1] < analysis_settings()$min_robust_df
+  ))
   expect_equal(three$summary$status, "too few studies to say")
   expect_true(is.na(three$summary$threshold_hours))
   expect_false(is.na(at_hour(three$curve, 4)$estimate))
@@ -481,6 +501,9 @@ test_that("the simulation's summary counts failures, early and false thresholds"
       threshold_hours = threshold,
       threshold_direction = if (is.na(threshold)) NA_character_ else direction,
       threshold_holds = NA,
+      threshold_interval_holds = NA,
+      threshold_central_holds = NA,
+      threshold_central_interval_holds = NA,
       threshold_central_hours = if (is.na(threshold)) 2 else threshold - 0.5,
       threshold_central_direction = direction,
       status = status
