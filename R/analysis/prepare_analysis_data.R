@@ -72,6 +72,23 @@ prepare_analysis_data <- function(
   kept <- if (all(prepared$keep)) rows else rows[prepared$keep, ]
   rm(rows)
 
+  # Exceptions about a screen-time row are for the exposures; the rest are
+  # for the outcomes.
+  on_exposure <- exceptions$variable_name %in% exposure_registry$variable_name
+  misplaced <- on_exposure &
+    !exceptions$action %in% c("exclude", "total_dedicated")
+  if (any(misplaced)) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": an exception on a screen-time row can only exclude it or say its ",
+      "total is dedicated: ",
+      paste(unique(exceptions$variable_name[misplaced]), collapse = ", "),
+      call. = FALSE
+    )
+  }
+  exposure_exceptions <- exceptions[on_exposure, ]
+  exceptions <- exceptions[!on_exposure, ]
   exposures <- prepare_exposures(
     kept,
     base$wave,
@@ -79,10 +96,12 @@ prepare_analysis_data <- function(
     exposure_registry,
     settings,
     total_partial = total_status %in% "partial",
-    dedicated_waves = exceptions$wave[
-      exceptions$action %in% "total_dedicated"
+    dedicated_waves = exposure_exceptions$wave[
+      exposure_exceptions$action %in% "total_dedicated"
     ],
-    left_out = exceptions[exceptions$action %in% "exclude", ]
+    left_out = exposure_exceptions[
+      exposure_exceptions$action %in% "exclude",
+    ]
   )
   outcomes <- prepare_outcomes(
     kept,

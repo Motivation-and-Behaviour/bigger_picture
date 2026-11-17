@@ -1007,7 +1007,23 @@ test_that("exceptions must name analysed outcomes, and a node moves a row", {
       exceptions
     )
   }
-  expect_error(prepare(read("st_watch,,exclude,,why")), "not analysed outcomes")
+  # An exception on a screen-time row goes to the exposures: it can leave
+  # the row out or say the total is dedicated, and nothing else.
+  left <- prepare(read("st_game,,exclude,,Not asked in a comparable way"))
+  expect_true(all(is.na(left$exposures$st_game)))
+  expect_no_error(prepare(read(
+    "st_total,,total_dedicated,,A total of all screens"
+  )))
+  expect_error(
+    prepare(read("st_game,,keep_out_of_bounds,,No")),
+    "an exception on a screen-time row"
+  )
+  expect_error(
+    read("st_game,,total_dedicated,,No"),
+    "is about `st_total`"
+  )
+  # A row that is neither an analysed outcome nor a screen-time row.
+  expect_error(prepare(read("sex,,exclude,,why")), "not analysed outcomes")
   expect_error(read("mh_dep_self,1,node,anxiety,why"), "every wave")
   moved <- prepare(read("mh_dep_self,,node,anxiety,Anxiety scale here"))
   expect_equal(moved$nodes$variable_name, "mh_dep_self")
