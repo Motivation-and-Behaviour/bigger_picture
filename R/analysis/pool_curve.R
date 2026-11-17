@@ -88,6 +88,7 @@ pool_curve <- function(
     hours = grid,
     estimate = NA_real_,
     se = NA_real_,
+    se_floored = NA,
     df = NA_real_,
     ci_low = NA_real_,
     ci_high = NA_real_,
@@ -118,7 +119,9 @@ pool_curve <- function(
     values[names(extra)] <- extra
     list(curve = curve, summary = tibble::as_tibble(values))
   }
-  if (k_datasets < settings$min_datasets) {
+  # A curve from fewer datasets than this depends on how their differences
+  # are modelled, so none is drawn.
+  if (k_datasets < settings$curve_min_datasets) {
     return(finish("insufficient data"))
   }
   if (!curve$interpretable[which(at_reference)[1]]) {
@@ -191,12 +194,21 @@ pool_curve <- function(
   if (is.character(robust)) {
     return(finish(paste("robust inference failed:", robust)))
   }
+  # The robust standard error is not allowed below the working model's:
+  # with few datasets it is sometimes smaller than the units' own sampling
+  # error allows, and intervals there cover the truth too seldom.
+  own <- contrasts[!at_reference, , drop = FALSE]
+  model_se <- sqrt(pmax(diag(own %*% fit$vb %*% t(own)), 0))
+  floored <- model_se > robust$SE
+  se <- pmax(robust$SE, model_se)
+  half <- stats::qt(0.975, df = robust$df) * se
   curve$estimate[at_reference] <- 0
   curve$estimate[!at_reference] <- robust$Est
-  curve$se[!at_reference] <- robust$SE
+  curve$se[!at_reference] <- se
+  curve$se_floored[!at_reference] <- floored
   curve$df[!at_reference] <- robust$df
-  curve$ci_low[!at_reference] <- robust$CI_L
-  curve$ci_high[!at_reference] <- robust$CI_U
+  curve$ci_low[!at_reference] <- robust$Est - half
+  curve$ci_high[!at_reference] <- robust$Est + half
 
   readable <- curve$interpretable & curve$hours > reference
   sure <- readable & !is.na(curve$df) & curve$df >= settings$min_robust_df

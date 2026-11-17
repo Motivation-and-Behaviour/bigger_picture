@@ -92,6 +92,9 @@ analysis_settings <- function() {
     # no part of it rests on a handful of children; and a unit supports an
     # hour where it has the minimum number of rows within this many hours
     # of it.
+    # A curve is pooled from at least this many datasets: from fewer, the
+    # curve itself moves with the working model (DR-0016).
+    curve_min_datasets = 5L,
     curve_interval_rows = 30L,
     curve_window = 0.5,
     smallest_effect = 0.10,

@@ -9,14 +9,13 @@
 #'   (`adjust_tiered_fdr()`), counted along `fdr_path`;
 #' - the effect on the contrast of 1 against 4 hours a day
 #'   (`contrast_estimate` and its interval), for estimates in SD per hour;
-#' - `p_equivalence` and `equivalent`, the test that the estimate lies
-#'   within the smallest effect of interest (`test_equivalence()`), for
-#'   estimates in SD per hour; `equivalent` is given only where the status
-#'   is `pooled`;
+#' - `p_equivalence`, the test that the estimate lies within the smallest
+#'   effect of interest (`test_equivalence()`), for estimates in SD per
+#'   hour;
 #' - the preregistered `hypothesis` and `prediction` for the row's exposure
 #'   and family, and for a prediction of no association `q_equivalence`,
 #'   the equivalence p-values adjusted among themselves with the row's
-#'   `k_total`.
+#'   `k_total`, and `equivalent`, TRUE where that is below 0.05.
 #'
 #' Estimates at L0 to L2 are in SD per hour and aligned, positive where
 #' more screen use goes with a better outcome, so a predicted `negative`
@@ -26,8 +25,9 @@
 #' `finding` says how a row may be described: `finding` at L0 and L1 of a
 #' confirmatory model, otherwise the model's class, or `exploratory` for
 #' L2 and L3 (ANALYSIS_PLAN.md, Step 10 task 6); `too few studies to say`
-#' wherever that is the row's status; and `not estimated` for a row that
-#' could not be pooled at all.
+#' wherever that is the row's status; `not estimated` for a row that
+#' could not be pooled at all; and `specific outcomes disagree` for a
+#' family kept from the headline because they do (DR-0014).
 #'
 #' A test that could not be run has no p-value and is not counted. One with
 #' too few studies to say keeps its p-value and its place in the count, but
@@ -135,6 +135,8 @@ assemble_results <- function(
   out$finding <- dplyr::case_when(
     out$status %in% "too few studies to say" ~ "too few studies to say",
     !out$status %in% "pooled" | is.na(out$estimate) ~ "not estimated",
+    out$level %in% "L0" & out$headline %in% FALSE ~
+      "specific outcomes disagree",
     !out$analysis_class %in% "confirmatory" ~ out$analysis_class,
     out$level %in% c("L0", "L1") ~ "finding",
     .default = "exploratory"
@@ -182,12 +184,7 @@ assemble_results <- function(
     settings$smallest_effect_per_hour
   )
   out$p_equivalence <- equivalence$p_equivalence
-  # An estimate with too few studies to say cannot show equivalence either.
-  out$equivalent <- ifelse(
-    out$status %in% "pooled",
-    equivalence$equivalent,
-    NA
-  )
+  out$equivalent <- NA
 
   # The slope predictions; those about thresholds and moderation attach
   # where those models are assembled.
@@ -214,6 +211,10 @@ assemble_results <- function(
       n = out$k_total[index][1]
     )
   }
+  # An estimate is called equivalent where it was predicted to show no
+  # association, was pooled from enough studies to say, and its adjusted
+  # equivalence p-value is below 0.05.
+  out$equivalent[none] <- out$q_equivalence[none] < 0.05
   dplyr::relocate(
     out,
     "model_name",

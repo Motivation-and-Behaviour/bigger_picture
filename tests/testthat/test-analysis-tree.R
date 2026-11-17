@@ -222,8 +222,9 @@ test_that("a family is the plain average of its specific outcomes", {
 
 test_that("a perfectly correlated pair in two specific outcomes counts once", {
   # The same score sits in two nodes: the family then knows no more than
-  # one node does, so its estimate, standard error, degrees of freedom and
-  # interval are that node's.
+  # one node does. Its estimate is that node's, and its standard error is
+  # no smaller: a family of several specific outcomes takes the jackknife
+  # form of the robust variance, which is a little larger.
   one <- tree_slopes(8, 0.1, "a", "n1", seed = 5)
   two <- one
   two$outcome <- "a_again"
@@ -232,10 +233,15 @@ test_that("a perfectly correlated pair in two specific outcomes counts once", {
   family <- pool_tree_family(dplyr::bind_rows(one, two), groups)
   node <- groups$n1$row
   expect_equal(family$estimate, node$estimate)
-  expect_equal(family$se, node$se)
-  expect_equal(family$df, node$df)
-  expect_equal(family$ci_low, node$ci_low)
-  expect_equal(family$ci_high, node$ci_high)
+  expect_gte(family$se, node$se)
+  expect_lt(family$se, 1.2 * node$se)
+  expect_lte(family$ci_low, node$ci_low)
+  expect_gte(family$ci_high, node$ci_high)
+  # A family of one specific outcome is that outcome exactly.
+  alone <- pool_tree_family(one, groups["n1"])
+  expect_equal(alone$se, node$se)
+  expect_equal(alone$df, node$df)
+  expect_equal(alone$ci_low, node$ci_low)
   expect_true(is.na(family$warning))
   expect_true(family$headline)
 

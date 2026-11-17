@@ -226,6 +226,7 @@ bp_curve_settings <- function() {
     "sex_known_min",
     "covariate_known_min",
     "min_clusters",
+    "curve_min_datasets",
     "curve_knots",
     "curve_boundary",
     "curve_grid",

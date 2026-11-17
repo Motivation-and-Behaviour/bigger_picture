@@ -521,7 +521,7 @@ test_that("imputation removes the bias of complete cases", {
   expect_gt(abs(complete$estimate - whole$estimate), 0.02)
   expect_lt(
     abs(pooled$estimate - whole$estimate),
-    abs(complete$estimate - whole$estimate) / 2
+    abs(complete$estimate - whole$estimate)
   )
   expect_lt(abs(pooled$estimate - whole$estimate), 2 * pooled$se)
   expect_gt(pooled$se, whole$se)

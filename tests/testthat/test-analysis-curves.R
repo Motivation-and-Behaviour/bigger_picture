@@ -310,15 +310,26 @@ test_that("the reference must be supported, and a threshold needs studies", {
   expect_true(is.na(unsupported$summary$threshold_hours))
   expect_true(all(is.na(unsupported$curve$estimate)))
 
-  # Three datasets pool, but with too few degrees of freedom for a
-  # threshold: the curve is given and no threshold is.
-  three <- pool_curve(curve_fits(3, kinked, seed = 8))
-  expect_true(all(
-    three$curve$df[three$curve$hours > 1] < analysis_settings()$min_robust_df
-  ))
-  expect_equal(three$summary$status, "too few studies to say")
-  expect_true(is.na(three$summary$threshold_hours))
-  expect_false(is.na(at_hour(three$curve, 4)$estimate))
+  # Fewer than five datasets: no curve is drawn, because from so few it
+  # depends on how their differences are modelled.
+  four <- pool_curve(curve_fits(4, kinked, seed = 8))
+  expect_equal(four$summary$status, "insufficient data")
+  expect_true(all(is.na(four$curve$estimate)))
+  expect_true(is.na(four$summary$threshold_hours))
+  # Five pool. Where the degrees of freedom fall short at every hour the
+  # curve is given and no threshold is.
+  strict <- analysis_settings()
+  strict$min_robust_df <- 10
+  five <- pool_curve(curve_fits(5, kinked, seed = 8), strict)
+  expect_equal(five$summary$status, "too few studies to say")
+  expect_true(is.na(five$summary$threshold_hours))
+  expect_false(is.na(at_hour(five$curve, 4)$estimate))
+  # The interval is never narrower than the working model's.
+  pooled_five <- pool_curve(curve_fits(5, kinked, seed = 8))
+  expect_true(is.logical(pooled_five$curve$se_floored))
+  expect_false(anyNA(pooled_five$curve$se_floored[
+    pooled_five$curve$hours != 1
+  ]))
 })
 
 test_that("the curve's settings hold everything its functions read", {

@@ -139,9 +139,9 @@ impute_cell_exposure <- function(
     keep <- decomposed$pivot[seq_len(decomposed$rank)]
     matrix[, setdiff(keep, 1) - 1, drop = FALSE]
   }
-  # One draw of a target by predictive mean matching, with the match
-  # between draws of the regression for both the donors and the rows
-  # imputed.
+  # One draw of a target by predictive mean matching, with the package's
+  # default match: the donors' fitted values against a fresh draw for the
+  # rows imputed.
   draw <- function(name, extra = NULL) {
     values <- data[[name]]
     seen <- !is.na(values) & usable
@@ -149,8 +149,7 @@ impute_cell_exposure <- function(
       values,
       ry = seen,
       x = independent(cbind(design, extra), seen),
-      wy = eligible[[name]],
-      matchtype = 2L
+      wy = eligible[[name]]
     )
   }
   filled <- tryCatch(
