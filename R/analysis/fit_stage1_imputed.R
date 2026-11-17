@@ -45,6 +45,19 @@ fit_stage1_imputed <- function(
   if (is.null(settings$seed)) {
     stop("fit_stage1_imputed(): `settings` needs a `seed`.", call. = FALSE)
   }
+  # An imputation that was never made must not be fitted as if it had
+  # nothing to fill.
+  made <- unique(imputed$units$imputation)
+  if (length(made) > 0 && !all(indexes %in% made)) {
+    stop(
+      "fit_stage1_imputed(): imputation ",
+      paste(setdiff(indexes, made), collapse = ", "),
+      " is missing for dataset ",
+      prepared$base$dataset_id[1],
+      ".",
+      call. = FALSE
+    )
+  }
   fits <- lapply(indexes, function(index) {
     out <- fit_stage1(
       apply_imputation(prepared, imputed, index),

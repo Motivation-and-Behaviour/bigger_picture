@@ -26,10 +26,13 @@
 #'   of instrument between waves is not detected.
 #'
 #' A pair is a pseudo-unit: one unit of the earlier wave (so one country)
-#' and the later wave, on the children of that unit seen again. Each row
-#' records the typical gap between the waves in years (`lag_years`), from
-#' the collection years, or from the children's ages where those do not
-#' give one.
+#' and the later wave, on the children of that unit seen again. The lagged
+#' and matched models pair successive waves that have the outcome; the
+#' within-child model pairs successive waves that have the outcome and
+#' screen use, so its pairs can span more than theirs. Each row records
+#' the typical gap between the waves in years (`lag_years`): the mean gap
+#' in the children's ages where ages are recorded finely, otherwise the
+#' mean gap in collection years.
 #'
 #' Limits: only outcomes modelled linearly are fitted (continuous rows, and
 #' ordinal rows with five or more levels); a wave with no screen item is
@@ -111,97 +114,120 @@ fit_stage1_longitudinal <- function(
     } else {
       standardise_within(raw, base$unit, settings$min_unit_rows)
     }
-    measured <- waves[vapply(
+    # The lagged and matched models pair successive waves that have the
+    # outcome. The within-child model also needs screen use at the later
+    # wave, so it pairs successive waves that have both: an outcome
+    # measured more often than screen use would otherwise never be in it.
+    has_outcome <- waves[vapply(
       waves,
       function(wave) any(!is.na(z[wave_rows[[wave]]])),
       logical(1)
     )]
-    steps <- seq_len(max(length(measured) - 1, 0))
-    # One pair per unit of the earlier wave, so a wave's countries stay
-    # apart as they do in the cross-sectional models.
-    pairs <- do.call(
-      rbind,
-      lapply(steps, function(j) {
-        units <- unique(base$unit[wave_rows[[measured[j]]]])
-        data.frame(j = rep(j, length(units)), unit = units)
-      })
+    has_both <- waves[vapply(
+      waves,
+      function(wave) {
+        rows <- wave_rows[[wave]]
+        any(!is.na(z[rows]) & !is.na(x[rows]))
+      },
+      logical(1)
+    )]
+    passes <- list(
+      list(measured = has_outcome, models = c("lagged", "matched")),
+      list(measured = has_both, models = "within")
     )
-    for (k in seq_len(NROW(pairs))) {
-      j <- pairs$j[k]
-      from <- wave_rows[[measured[j]]]
-      from <- from[base$unit[from] %in% pairs$unit[k]]
-      to <- wave_rows[[measured[j + 1]]]
-      later <- to[match(base$participant_id[from], base$participant_id[to])]
-      paired <- !is.na(later) &
-        !is.na(x[from]) &
-        !is.na(z[from]) &
-        !is.na(z[later])
-      if (!any(paired)) {
-        next
-      }
-      # The outcome's SD among all of the earlier unit's rows.
-      spread <- stats::sd(raw[from], na.rm = TRUE)
-      from <- from[paired]
-      later <- later[paired]
-      data <- frame[from, ]
-      changed <- longitudinal_item_changed(
-        base$dataset_id[1],
-        exposure,
-        measured[j + c(0, 1)],
-        year[measured[j + c(0, 1)]],
-        list(
-          responder = column("st_responder"),
-          format = column("st_measure_type"),
-          instrument = column(longitudinal_measure_column(outcome, base))
-        ),
-        list(from, later),
-        exposure_registry,
-        series_breaks
+    for (pass in passes) {
+      measured <- pass$measured
+      steps <- seq_len(max(length(measured) - 1, 0))
+      # One pair per unit of the earlier wave, so a wave's countries stay
+      # apart as they do in the cross-sectional models.
+      pairs <- do.call(
+        rbind,
+        lapply(steps, function(j) {
+          units <- unique(base$unit[wave_rows[[measured[j]]]])
+          data.frame(j = rep(j, length(units)), unit = units)
+        })
       )
-      versions <- list(
-        lagged = list(x = x[from], y = z[later], y0 = z[from]),
-        matched = list(x = x[from], y = z[from]),
-        within = list(
-          x = x[later] - x[from],
-          y = (raw[later] - raw[from]) / spread
-        )
-      )
-      for (version in names(versions)) {
-        values <- versions[[version]]
-        one <- data
-        one$x <- values$x
-        one$y <- values$y
-        one$y0 <- values$y0
-        usable <- !is.na(one$x) & !is.na(one$y) & is.finite(one$y)
-        fit <- if (version == "within" && !is.na(changed)) {
-          fit_stage1_unit(one[0, ], "none", settings)
-        } else if (!any(usable)) {
+      for (k in seq_len(NROW(pairs))) {
+        j <- pairs$j[k]
+        from <- wave_rows[[measured[j]]]
+        from <- from[base$unit[from] %in% pairs$unit[k]]
+        to <- wave_rows[[measured[j + 1]]]
+        later <- to[match(base$participant_id[from], base$participant_id[to])]
+        paired <- !is.na(later) &
+          !is.na(x[from]) &
+          !is.na(z[from]) &
+          !is.na(z[later])
+        if ("within" %in% pass$models) {
+          paired <- paired & !is.na(x[later])
+        }
+        if (!any(paired)) {
           next
-        } else {
-          fit_stage1_unit(
-            one[usable, ],
-            "linear",
-            settings,
-            extra_terms = if (version == "lagged") "y0" else character()
-          )
         }
-        if (version == "within" && !is.na(changed)) {
-          fit$status <- changed
-        }
-        fit$model <- version
-        fit$unit <- paste(pairs$unit[k], measured[j + 1], sep = " to ")
-        fit$wave <- measured[j]
-        fit$wave_from <- measured[j]
-        fit$wave_to <- measured[j + 1]
-        fit$lag_years <- longitudinal_lag(
-          base$data_year[later] - base$data_year[from],
-          base$age_years[later] - base$age_years[from]
+        # The outcome's SD among all of the earlier unit's rows.
+        spread <- stats::sd(raw[from], na.rm = TRUE)
+        from <- from[paired]
+        later <- later[paired]
+        data <- frame[from, ]
+        changed <- longitudinal_item_changed(
+          base$dataset_id[1],
+          exposure,
+          measured[j + c(0, 1)],
+          year[measured[j + c(0, 1)]],
+          list(
+            responder = column("st_responder"),
+            format = column("st_measure_type"),
+            instrument = column(longitudinal_measure_column(outcome, base))
+          ),
+          list(from, later),
+          exposure_registry,
+          series_breaks
         )
-        fit$n_pairs <- length(from)
-        fit$exposure <- exposure
-        fit$outcome <- outcome
-        fit$score_type <- score_type
-        results[[length(results) + 1]] <- fit
+        versions <- list(
+          lagged = list(x = x[from], y = z[later], y0 = z[from]),
+          matched = list(x = x[from], y = z[from]),
+          within = list(
+            x = x[later] - x[from],
+            y = (raw[later] - raw[from]) / spread
+          )
+        )
+        for (version in pass$models) {
+          values <- versions[[version]]
+          one <- data
+          one$x <- values$x
+          one$y <- values$y
+          one$y0 <- values$y0
+          usable <- !is.na(one$x) & !is.na(one$y) & is.finite(one$y)
+          fit <- if (version == "within" && !is.na(changed)) {
+            fit_stage1_unit(one[0, ], "none", settings)
+          } else if (!any(usable)) {
+            next
+          } else {
+            fit_stage1_unit(
+              one[usable, ],
+              "linear",
+              settings,
+              extra_terms = if (version == "lagged") "y0" else character()
+            )
+          }
+          if (version == "within" && !is.na(changed)) {
+            fit$status <- changed
+          }
+          fit$model <- version
+          fit$unit <- paste(pairs$unit[k], measured[j + 1], sep = " to ")
+          fit$wave <- measured[j]
+          fit$wave_from <- measured[j]
+          fit$wave_to <- measured[j + 1]
+          fit$lag_years <- longitudinal_lag(
+            base$data_year[later] - base$data_year[from],
+            base$age_years[later] - base$age_years[from],
+            base$age_years[from]
+          )
+          fit$n_pairs <- length(from)
+          fit$exposure <- exposure
+          fit$outcome <- outcome
+          fit$score_type <- score_type
+          results[[length(results) + 1]] <- fit
+        }
       }
     }
   }
@@ -224,18 +250,23 @@ fit_stage1_longitudinal <- function(
   )
 }
 
-# The typical gap between two waves in years: from the collection years,
-# or from the children's ages where the years are not recorded or do not
-# differ. Ages are often recorded coarsely, so they come second. NA where
-# neither gives a gap above zero.
-longitudinal_lag <- function(year_gap, age_gap) {
-  for (gap in list(year_gap, age_gap)) {
-    typical <- stats::median(gap, na.rm = TRUE)
-    if (!is.na(typical) && typical > 0) {
-      return(typical)
-    }
+# The typical gap between two waves in years. Where ages are recorded
+# finely (more than ten distinct values at the earlier wave) it is the mean
+# gap in the children's ages, which follows the months between interviews.
+# Otherwise it is the mean gap in collection years, and failing that in
+# ages. NA where none gives a gap above zero.
+longitudinal_lag <- function(year_gap, age_gap, age) {
+  mean_of <- function(gap) {
+    typical <- mean(gap, na.rm = TRUE)
+    if (is.finite(typical) && typical > 0) typical else NA_real_
   }
-  NA_real_
+  fine <- dplyr::n_distinct(age, na.rm = TRUE) > 10
+  candidates <- if (fine) {
+    c(mean_of(age_gap), mean_of(year_gap))
+  } else {
+    c(mean_of(year_gap), mean_of(age_gap))
+  }
+  candidates[!is.na(candidates)][1]
 }
 
 # The base column naming an outcome row's instrument, where there is one:

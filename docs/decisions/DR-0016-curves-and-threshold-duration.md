@@ -34,6 +34,7 @@ The pooled curve is read every half hour as the difference from one hour a day, 
 A unit supports an hour where it has at least 30 rows within half an hour of it.
 The curve is interpretable at an hour between the boundary knots that at least three datasets support, counting only datasets that also support the reference.
 Beyond six hours the curve is a straight line continued, and is not read.
+Rows above six hours still help to place the curve below it: in one cell they are 3% of rows, and leaving them out or capping them moved a threshold by half an hour to an hour, so that is a sensitivity analysis to add.
 
 **The threshold duration** is read from the pooled curve in two ways, and both are reported.
 Each is the lowest interpretable hour above the reference that meets its rule.
@@ -41,13 +42,13 @@ Each is the lowest interpretable hour above the reference that meets its rule.
 - **Conservative:** the 95% interval lies wholly beyond 0.10 SD from the reference, in either direction, with at least four robust degrees of freedom at that hour.
 - **Central:** the estimate itself is beyond 0.10 SD from the reference, and the 95% interval excludes no difference.
 
-Each is reported with its direction (a better or a worse outcome) and with whether the curve goes on meeting the rule at every later hour.
+Each is reported with its direction (a better or a worse outcome) and with whether the curve stays beyond at every later hour: for the conservative reading, whether the whole interval does.
 
 **How they are reported.**
 
 - The pooled curve with its interval, and the number of datasets supporting each hour, is the primary result.
 - The conservative threshold is the one to rely on: it reads "by this many hours", never as the point at which harm begins, because it is usually later than the true crossing.
-- The central threshold is an alternative reading, given beside it: the best single estimate of where the curve crosses 0.10 SD, which will sometimes be reported for a curve that in truth levels off just short of it.
+- The central threshold is an alternative reading, given beside it: an estimate of where the curve crosses 0.10 SD, which is reported for about a quarter of curves that in truth level off just short of it, and can sit half an hour either side of the true crossing.
 - Where neither is reported, the report says that no threshold could be established, not that there is none.
 - Thresholds are not compared between exposures or outcomes without their curves and intervals, because the same curve gives a later conservative threshold where datasets are fewer or differ more.
 - Curves with a sharp local feature, a bend or a dip, are described cautiously near that feature, where the interval covers the truth less often than it claims.
@@ -61,18 +62,31 @@ Each is reported with its direction (a better or a worse outcome) and with wheth
 The method was tested by replacing the outcome of one real cell with a simulated one that follows a known curve, keeping the real hours of screen use, ages, sexes and sizes of its 85 units in 14 datasets, 59 of them with banded items.
 Datasets were made to differ in the strength of the curve, in where its shape sits along the hours, and by a slope of their own.
 Eight curves were built in: flat, a straight line, a bend at two hours and at three, curves levelling off just short of and just past 0.10 SD, a dip that recovers, and a rise then a fall.
-Each was run 200 times, with and without error inside the bands, with two knot placements, with and without the rule on rows per stretch, and with all 14 datasets or five drawn at random.
+Each was run 200 times, with and without error inside the bands, with two knot placements, with and without the rule on rows per stretch, and with all of the cell's datasets or five drawn at random from those the rule leaves.
+With the rule on rows, nine of the cell's 14 datasets have a unit to pool, so "all" below is nine datasets.
+The truth each pooled curve is scored against is the mean of the datasets' curves.
+
+The figures below were corrected on 17 November 2026 after an independent review: the first version of this record misquoted three of them, scored bends against the curve as written and not the mean curve the simulation generates, and called "five datasets" a scenario that pooled about three.
 
 What it showed, with three interior knots and the rule on rows:
 
-- **The curve is recovered.** For the flat, straight and levelling-off curves, the interval covered the truth 88 to 98% of the time at every hour from half an hour to six.
-- **Sharp features are smoothed.** Coverage fell to 82% at a bend at two hours, 88% at a bend at three, and 68 to 86% around a dip, with errors of 0.02 to 0.06 SD.
-- **A false conservative threshold is rare.** One was reported where none exists, or more than a quarter of an hour early, in at most 1.5% of runs of any scenario, and never for a flat curve.
-- **A real threshold is found late by the conservative rule, or not at all.** With 14 datasets, a curve bending at two hours had its threshold found in 95% of runs, a median hour late. A straight line was found in 66%, an hour and a half late. A curve levelling off past 0.10 SD was found in 16%.
-- **Five datasets never give a conservative threshold,** because the degrees of freedom are too few, although their curves' intervals still cover the truth 86 to 98% of the time.
-- **The central threshold is on time and less sure.** With 14 datasets its median was the true crossing or within half an hour of it for every curve with a threshold, and it was found in 75 to 100% of runs. It was reported for a flat curve in 4% of runs, and for a curve that levels off at 0.08 SD in 32%. From five datasets it was found in 14 to 49% of runs, with a flat curve reported in 5%.
-- **A threshold from the estimate alone,** without asking that the interval exclude no difference, was reported for a flat curve in 8% of runs with 14 datasets and 18% with five, so it is not used.
-- **Three interior knots follow a bend or a dip better than two** (coverage at a bend at two hours 82% against 40%; at a dip's lowest point 81% against 35%) and are no worse elsewhere.
+- **The curve is recovered.** For the flat, straight and levelling-off curves the interval covered the truth 84 to 98% of the time at every hour from half an hour to six, lowest at half an hour, below the reference.
+  For bends at two and three hours it covered 88 to 98%, and for a rise then a fall 87 to 96%.
+- **A dip is smoothed.** On the way down into a dip coverage fell to 44% at an hour and a half and 71% at two hours, with errors of up to 0.04 SD, and was 93% or more from its lowest point on.
+- **A false conservative threshold is rare.** One was reported where none exists, or more than a quarter of an hour early, in at most 2% of runs of any scenario (a rise then a fall, with error inside the bands), and never for a flat curve.
+- **A real threshold is found late by the conservative rule, or not at all.** With nine datasets, a curve bending at two hours had its threshold found in 95% of runs, a median hour late.
+  A straight line was found in 63%, an hour and a half late.
+  A curve levelling off past 0.10 SD was found in 14%.
+- **Five datasets never gave a conservative threshold,** because the degrees of freedom are too few, although their curves' intervals still covered the truth 88 to 99% of the time away from a dip.
+  A separate simulation by the reviewer, on made-up units, found the same at five datasets and found the rule working by ten.
+- **The central threshold is near the true crossing on average, and is wrong often enough to matter.**
+  With nine datasets it was found in 77 to 100% of runs of every curve with a threshold, with a median at the true crossing or within half an hour after it.
+  It was reported more than a quarter of an hour early in 4 to 22% of those runs, and in up to 38% with error inside the bands.
+  It was reported for a flat curve in 4% of runs, and for a curve that levels off at 0.08 SD in 29%.
+  The reviewer's simulation found that last figure at about a quarter whether five, ten or twenty datasets were pooled: more datasets do not cure it.
+  From five datasets it was found in 42 to 86% of runs, with a flat curve reported in 5% and the curve levelling off at 0.08 SD in 21%.
+- **Three interior knots follow a bend better than two** (coverage at a bend at two hours 94% against 70%).
+  For a dip the two placements each do better at some hours and worse at others.
 - **The rule on rows per stretch** costs units (9 of the cell's 14 datasets remain) and changed coverage little in the simulation, but without it a unit with a handful of children at long hours is fitted with a standard error far too small.
 - **Error inside the bands** moved the curve by 0.02 SD or less at most hours.
 
@@ -86,14 +100,14 @@ So the curve can carry the result, and the threshold duration is a conservative 
 - **Fitting every unit a curve can be fitted in.** More datasets, at the cost of curve terms resting on a few children.
 - **Reading the curve to eight hours.** Beyond the last knot the curve is extrapolated.
 - **One threshold only.** The conservative rule alone is silent for most pairs; the central rule alone overstates how well the crossing is known.
-- **A threshold from the point estimate crossing 0.10 SD, with no condition on the interval.** It reports a threshold for a flat curve too often.
+- **A threshold from the point estimate crossing 0.10 SD, with no condition on the interval.** In an earlier run of the simulation it reported a threshold for a flat curve about twice as often as the central rule.
 - **Waiting for the breakpoint before the freeze.** The plan allows it to follow.
 
 ---
 
 ## Consequences
 
-- Few exposure and outcome pairs will report a conservative threshold: it needs more than five datasets and a curve that clearly passes 0.10 SD.
+- Few exposure and outcome pairs will report a conservative threshold: it needs more than five datasets, in practice about ten, and a curve that clearly passes 0.10 SD.
   More will report a central one, and a reader must not take the two as equally firm.
 - The simulation used one cell, unweighted fits and normal outcomes, and the mild kind of band error: recorded hours that are right on average.
   It did not test weights or clustered errors, outcomes on five-point scales, answers that misreport hours, or confounding by age that is not smooth.

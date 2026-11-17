@@ -7,16 +7,18 @@
 #'
 #' - an imputed cell was missing before, and is imputed once;
 #' - only sex and the tier covariates are imputed here;
-#' - an imputed category is one its unit observed, or, for a row that
-#'   cannot change within a child, one observed for that child;
+#' - an imputed category is one its unit observed; for a row that cannot
+#'   change within a child it is the child's own record where they have
+#'   one, and otherwise a category the dataset holds;
 #' - imputed sex is female or male;
 #' - nothing is imputed for a covariate its unit observed on less than the
 #'   minimum share of rows, or for a child at an age at which the unit
 #'   observed it on too few;
 #' - the imputed cells of a row that cannot change within a child agree
 #'   for each child in each imputation;
-#' - two imputations that filled the same cells are not the same draw,
-#'   judged on the covariates that can change within a child.
+#' - no two imputations are the same draw, judged on the covariates that
+#'   can change within a child, where there are enough cells with enough
+#'   spread to tell.
 #'
 #' Imputed screen use is checked where it is drawn
 #' (`impute_cell_exposure()`).
@@ -76,12 +78,26 @@ review_imputation <- function(
       !any(seen[own$row]),
       paste0("an observed `", name, "` was imputed over")
     )
-    in_unit <- paste(unit, data[[name]], sep = "\r")
-    ok <- paste(unit[own$row], own$value, sep = "\r") %in% in_unit
+    # A row that cannot change within a child may take the value drawn at
+    # the child's earliest wave, so it need only be one the dataset holds;
+    # and where the child has a record of their own it must be that.
     if (name %in% frame$constant) {
-      in_child <- paste(base$participant_id, data[[name]], sep = "\r")
-      ok <- ok |
-        paste(base$participant_id[own$row], own$value, sep = "\r") %in% in_child
+      ok <- own$value %in% data[[name]]
+      record <- data[[name]]
+      if (name == "sex") {
+        record[!record %in% c("Female", "Male")] <- NA
+      }
+      known <- !is.na(record)
+      children <- base$participant_id[own$row]
+      recorded <- paste(children, own$value, sep = "\r") %in%
+        paste(base$participant_id[known], record[known], sep = "\r")
+      must(
+        all(recorded | !children %in% base$participant_id[known]),
+        paste0("`", name, "` imputed against the child's own record")
+      )
+    } else {
+      in_unit <- paste(unit, data[[name]], sep = "\r")
+      ok <- paste(unit[own$row], own$value, sep = "\r") %in% in_unit
     }
     must(
       all(ok),
@@ -121,19 +137,27 @@ review_imputation <- function(
       paste0("`", name, "` differs within a child after imputation")
     )
   }
-  # Cells set by a child's own record are the same in every imputation, so
-  # only the others can show two imputations to be one draw.
+  # Two imputations that are one draw: judged on covariates that can
+  # change within a child, and only where there are enough cells with
+  # enough spread that identical draws cannot be chance.
   free <- cells[!cells$variable %in% frame$constant, ]
-  indexes <- sort(unique(free$imputation))
-  if (length(indexes) >= 2) {
-    first <- free[free$imputation == indexes[1], ]
-    second <- free[free$imputation == indexes[2], ]
-    same_cells <- nrow(first) == nrow(second) &&
+  by_index <- split(free, free$imputation)
+  varied <- function(table) {
+    shares <- sort(table(table$value), decreasing = TRUE) / nrow(table)
+    nrow(table) >= 200 && length(shares) >= 2 && shares[2] >= 0.1
+  }
+  pairs <- if (length(by_index) >= 2) {
+    utils::combn(names(by_index), 2, simplify = FALSE)
+  }
+  for (pair in pairs) {
+    first <- by_index[[pair[1]]]
+    second <- by_index[[pair[2]]]
+    same <- nrow(first) == nrow(second) &&
       all(first$row == second$row) &&
-      all(first$variable == second$variable)
-    # A few cells can match by chance; many cannot.
+      all(first$variable == second$variable) &&
+      all(first$value == second$value)
     must(
-      !same_cells || nrow(first) < 50 || !all(first$value == second$value),
+      !(same && varied(first)),
       "two imputations are the same draw"
     )
   }

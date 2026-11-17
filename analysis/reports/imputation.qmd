@@ -108,6 +108,7 @@ The slopes of the development cells fitted on complete cases and on imputed data
 summary_tables$gain |>
   transmute(
     Tier = tier,
+    `Adjusted for other screen use` = ifelse(adjusted_other, "Yes", ""),
     `Slopes, complete cases` = fmt(slopes_complete),
     `Slopes, imputed` = fmt(slopes_imputed),
     `Datasets, complete cases` = datasets_complete,
@@ -131,6 +132,7 @@ It also rises where a slope has few degrees of freedom, so a unit with few clust
 summary_tables$fmi |>
   transmute(
     Tier = tier,
+    `Adjusted for other screen use` = ifelse(adjusted_other, "Yes", ""),
     Slopes = fmt(slopes),
     Datasets = datasets,
     `Nothing imputed` = fmt(nothing_imputed),
@@ -153,6 +155,7 @@ The table counts the slopes that had any screen use imputed, and the share of th
 summary_tables$fmi |>
   transmute(
     Tier = tier,
+    `Adjusted for other screen use` = ifelse(adjusted_other, "Yes", ""),
     Slopes = fmt(slopes),
     `With screen use imputed` = fmt(exposure_imputed),
     `Draw failed, rows left out` = exposure_failed,

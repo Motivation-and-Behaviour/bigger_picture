@@ -441,13 +441,18 @@ test_that("the longitudinal models separate change from standing differences", {
   }
 })
 
-test_that("the gap between waves comes from years, then from ages", {
-  expect_equal(longitudinal_lag(c(2, 2, 3), c(0, 0, 0)), 2)
+test_that("the gap between waves follows ages where they are fine", {
+  fine <- seq(10, 12, length.out = 40)
+  coarse <- rep(c(13.5, 16.5), 20)
+  # Interviews nine months apart that cross a new year.
+  expect_equal(longitudinal_lag(rep(1, 40), rep(0.75, 40), fine), 0.75)
+  # Coarse ages: the collection years are used.
+  expect_equal(longitudinal_lag(rep(2, 40), rep(0, 40), coarse), 2)
   # Years not recorded, or the same at both waves: ages are used.
-  expect_equal(longitudinal_lag(c(NA, NA), c(1.5, 2.5)), 2)
-  expect_equal(longitudinal_lag(c(0, 0), c(1, 1)), 1)
-  # Coarse ages and no years give no gap, not a gap of zero.
-  expect_true(is.na(longitudinal_lag(c(NA, NA), c(0, 0))))
+  expect_equal(longitudinal_lag(rep(NA, 40), rep(1.5, 40), coarse), 1.5)
+  expect_equal(longitudinal_lag(rep(0, 40), rep(1, 40), coarse), 1)
+  # Neither gives a gap: none is recorded, not a gap of zero.
+  expect_true(is.na(longitudinal_lag(rep(NA, 40), rep(0, 40), coarse)))
 })
 
 test_that("an outcome's instrument column is found by its stem", {

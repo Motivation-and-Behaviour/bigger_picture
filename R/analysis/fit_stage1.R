@@ -21,9 +21,10 @@
 #' - standard errors are clustered on the sampling unit where the unit
 #'   records one, a row without one forming a cluster of its own; otherwise
 #'   on the family where families repeat; otherwise they are
-#'   heteroskedasticity-robust. Strata are not used: against stratified fits
-#'   of the same models the standard error was between about 13% smaller and
-#'   7% larger, so this is not uniformly conservative;
+#'   heteroskedasticity-robust. Strata are not used: against stratified
+#'   fits of 112 of the same models in six stratified datasets the standard
+#'   error was between about 4% smaller and 8% larger (median equal), so
+#'   this is close but not uniformly conservative;
 #' - age enters as categories where it takes five or fewer distinct values,
 #'   as a natural spline with two degrees of freedom where the middle 90% of
 #'   ages span two or more years and a knot can be placed, linearly
@@ -145,7 +146,10 @@ fit_stage1 <- function(
       }
       n_exposure_imputed <- NA_integer_
       exposure_imputation <- NA_character_
-      if (!is.null(imputation)) {
+      if (!is.null(imputation) && !stage1_may_impute(data, model, settings)) {
+        n_exposure_imputed <- 0L
+        data <- data[!is.na(data$x), ]
+      } else if (!is.null(imputation)) {
         data$x_other_waves <- x_other_waves[index]
         data <- impute_cell_exposure(
           data,
@@ -208,6 +212,25 @@ fit_stage1 <- function(
     "outcome",
     "score_type"
   )
+}
+
+# Whether a unit's exposure may be imputed for a model. The model's own
+# minimum sizes must be met by the rows that have the exposure, so that an
+# imputed exposure never makes a model fittable; and the exposure is
+# imputed only for the kinds of model the settings name.
+stage1_may_impute <- function(data, model, settings) {
+  if (!model %in% settings$impute_exposure_models) {
+    return(FALSE)
+  }
+  seen <- data[!is.na(data$x), ]
+  if (model == "logistic") {
+    return(min(table(factor(seen$y, levels = c(0, 1)))) >= 10)
+  }
+  if (model == "ordinal") {
+    counts <- table(seen$y)
+    return(length(counts) >= 3 && min(counts) >= 5)
+  }
+  TRUE
 }
 
 # A child's mean on a variable over their other rows (their other waves),

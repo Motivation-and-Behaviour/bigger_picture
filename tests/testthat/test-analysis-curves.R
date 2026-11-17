@@ -395,15 +395,21 @@ test_that("the simulation rebuilds outcomes on the real hours and scores them", 
   expect_true(all(five$k_datasets == 5))
   # The outcome in the rows is never used: the estimates are not near 99.
   expect_lt(max(abs(sim$replicates$estimate), na.rm = TRUE), 5)
-  # The truth is the built-in curve against the reference, and its
-  # threshold where that passes the smallest effect of interest.
+  # The truth is the mean of the datasets' curves against the reference,
+  # and its threshold where that passes the smallest effect of interest.
+  # Each dataset's curve is stretched along the hours, so a bend at two
+  # hours is a little softer on average than the curve as written, which
+  # gives -0.2 at four hours and a threshold at three.
   bends <- sim$truth[sim$truth$truth == "bends_at_2", ]
-  expect_equal(at_hour(bends, 4)$true_value, -0.2)
-  expect_equal(unique(bends$true_threshold), 3)
+  expect_equal(at_hour(bends, 4)$true_value, -0.2, tolerance = 0.01, scale = 1)
+  expect_lt(at_hour(bends, 4)$true_value, -0.2)
+  expect_equal(unique(bends$true_threshold), 2.97, tolerance = 0.02, scale = 1)
+  flat <- sim$truth[sim$truth$truth == "flat", ]
+  expect_equal(flat$true_value, rep(0, nrow(flat)))
   none <- c("flat", "levels_off_short")
   expect_true(all(is.na(sim$truth$true_threshold[sim$truth$truth %in% none])))
   past <- unique(sim$truth$true_threshold[sim$truth$truth == "levels_off_past"])
-  expect_equal(past, 2.57, tolerance = 0.02, scale = 1)
+  expect_equal(past, 2.61, tolerance = 0.02, scale = 1)
   # The same seed gives the same replicates; no seed is an error.
   # A scenario's seed follows its place in the list, so the first one is
   # the same in a run of one curve with one knot placement.

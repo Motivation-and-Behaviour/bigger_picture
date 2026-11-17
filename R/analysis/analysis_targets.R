@@ -776,8 +776,8 @@ analysis_targets <- function(harmonise_plan) {
       "imputation_summary",
       quote(summarise_imputation(
         imputation_units_all,
-        stage1_imputed_all,
-        dplyr::bind_rows(stage1_all, stage1_adjusted_all)
+        dplyr::bind_rows(stage1_imputed_all, stage1_other_imputed_all),
+        dplyr::bind_rows(stage1_all, stage1_adjusted_all, stage1_other_all)
       ))
     ),
     targets::tar_target_raw(
@@ -813,6 +813,14 @@ analysis_targets <- function(harmonise_plan) {
             tree_imputed,
             model_cells,
             setdiff(bp_stage1_models(), "report_rows")
+          ),
+          dplyr::mutate(
+            tree_by_datasets(label_models(
+              tree_imputed,
+              model_cells,
+              c("tier1_total", "tier2_content")
+            )),
+            model_name = "sens_family_by_datasets"
           ),
           dplyr::mutate(
             tree_other_imputed,

@@ -626,8 +626,13 @@ test_that("the tree's settings hold everything its functions read", {
     bp_tree_settings()
   )
   expect_true(all(bp_tree_settings() %in% names(analysis_settings())))
-  # Stage 1 and the tier comparison get `bp_model_settings()` only.
-  expect_true(all(design %in% bp_model_settings()))
+  # Stage 1 and the tier comparison get `bp_model_settings()` only, and
+  # stage 1 the imputation settings too where it imputes.
+  expect_true(all(design %in% bp_imputed_model_settings()))
+  expect_setequal(
+    setdiff(design, bp_model_settings()),
+    "impute_exposure_models"
+  )
 })
 
 test_that("uncertainty alone does not keep a family from the headline", {

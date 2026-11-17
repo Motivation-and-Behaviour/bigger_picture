@@ -28,7 +28,7 @@ A pair starts from one unit of the earlier wave, so countries stay apart as in t
 - **Within-child.** The change in the outcome on the change in screen use between the two waves.
   Anything about a child that does not change between the waves cannot explain this slope.
   The change in the outcome is in units of its SD at the earlier wave, because scores standardised within each wave lose the change in the mean; the change in screen use is in hours.
-  It also needs screen use at the later wave, so it rests on fewer children than the other two.
+  It also needs screen use at the later wave, so it pairs successive waves that have both the outcome and screen use, and rests on fewer children than the other two.
   A pair of waves is left out where the screen item changed between them, or where the data name the outcome's instrument and it differs.
 - **Matched cross-sectional.** The primary model at the earlier wave, on the children the lagged model uses, so those two are compared on the same children.
 
@@ -42,9 +42,18 @@ It is fitted for outcomes modelled linearly; binary and short ordinal rows are n
   A lagged or within-child slope removes some explanations and not others: something that changes over time and affects both screen use and the outcome is still there.
 - A within-child slope smaller than the cross-sectional one is not by itself evidence that the cross-sectional slope is confounded.
   Error in measuring screen use pulls a slope of changes towards zero more than it pulls a slope of levels.
-- The outcome at the earlier wave is itself measured with error, so adjusting for it removes only part of what it stands for, and a lagged slope keeps some of the cross-sectional association for that reason alone.
-  The lagged model does not adjust for screen use at the later wave.
-- Gaps between waves differ across datasets from months to years, and the slopes are reported against the gap.
+- **A lagged slope smaller than the cross-sectional one is not evidence that screen use comes first.**
+  The outcome at the earlier wave stands in for whatever lasting differences between children lie behind both screen use and the outcome, and it stands in for them only in part, less well the longer the gap.
+  In a simulation with a lasting trait, no effect of screen use and no measurement error, the lagged slope kept about half of the cross-sectional slope at a gap of one wave and three quarters at four.
+  So a lagged slope at about half the cross-sectional one, with a within-child slope near zero, is what lasting confounding with no effect would give.
+- **Each model is blind to some truths.**
+  If screen use affects the outcome only at the same time, the lagged slope is near zero, so a null lagged slope is not evidence of no effect.
+  If it affects the outcome only later, the within-child slope can take the wrong sign, and the lagged slope is too small because the earlier outcome already carries earlier screen use.
+  If the outcome affects later screen use, the within-child and cross-sectional slopes can have opposite signs.
+  The three slopes are read together, and none of them alone settles direction.
+- The lagged model does not adjust for screen use at the later wave.
+- Gaps between waves differ across datasets from months to years, and the slopes are reported against the gap, taken from the children's ages where those are recorded finely and from collection years otherwise.
+- Only successive waves are paired, so a child who misses a wave drops out of the pairs either side of it; the share of children lost this way, and how those who stay differ in screen use, is reported per dataset.
 
 ---
 
@@ -69,7 +78,7 @@ Two simple models that every panel can support are preferred to one elaborate mo
 - The strand rests on a minority of the datasets, and they are not a random subset: panels differ from one-off surveys in country, period and age.
   The matched cross-sectional model shows how far that matters.
 - Children who left a study before the later wave are not seen, so attrition is not accounted for.
-- Most outcome rows do not record which instrument was used, so for those a change of instrument between waves goes undetected in the within-child model.
+- Most outcome rows do not record which instrument was used, and the check compares the instrument's label and not its items, so a change of instrument or of an item's wording between waves can go undetected in the within-child model.
   The lagged model is not affected, because each wave is standardised on its own.
 - A dataset's successive pairs of waves share children.
   The pooled interval allows for that, but with few panels its degrees of freedom are few, and many results will be marked as having too few studies to say.

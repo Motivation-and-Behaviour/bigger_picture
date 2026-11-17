@@ -31,16 +31,18 @@ Everything is imputed within a stage 1 unit (dataset by wave by country), so eve
 
 **Covariates** (sex and the covariates of the further tiers) are imputed once per unit and imputation, by chained equations with predictive mean matching.
 Their models read each other, age, the survey weight, one score per outcome family, the unit's screen use, and in a panel the child's own mean on screen use and on those scores over their other waves.
-An exposure the unit knows for too few rows is not in them.
+A family's score is the mean of a row's scores in that family, each standardised and turned so that higher is better, with binary and ordinal rows included.
+An exposure or a family score the unit knows for too few rows is not in them.
 
 **Screen use** is imputed for each model separately: among the unit's rows that have the model's outcome, a missing exposure is drawn by predictive mean matching from a model holding that outcome, age, sex, the tier covariates (a covariate's unknown values as a group of their own), the survey weight and, in a panel, the child's mean exposure over their other waves.
-Where a model also adjusts for the rest of the child's screen use, that is a predictor too, and where both have gaps the two are imputed in turn, each given the other.
-Donors are matched on a fresh draw of the regression for both sides, which keeps them varied where an outcome takes few values.
+Age enters as the analysis model can take it: a category each for a few distinct ages, a cubic otherwise.
+Where a model also adjusts for the rest of the child's screen use, whichever of the two has gaps is imputed given the other, and where both have gaps the two are imputed in turn.
+An exposure is imputed only where the model's own minimum sizes are met by the rows that have it, so an imputed exposure never makes a model fittable.
 
 **Outcomes** are never imputed: a row without an outcome is not analysed for it.
 
 **Sporadic missingness only.**
-A variable is imputed where it is known for at least 70% of the rows concerned, and for a child only where it is known for at least half of the unit's children of the same age in whole years.
+A variable is imputed where it is known for at least 70% of the rows concerned, on at least 30 rows, with two values or more, and for a child only where it is known for at least half of the unit's children of the same age in whole years.
 So an item not asked of an age group is not imputed for it.
 A grade or a form that does not follow age is not protected in this way.
 Elsewhere a missing value stays missing: a covariate is then dealt with by the covariate tiers, and a row without the exposure is left out of that model.
@@ -50,7 +52,7 @@ Sex is imputed as female or male; a child recorded as another sex keeps that rec
 
 **How many.**
 Five imputations while the engine is developed, 50 for the confirmatory run.
-Each imputation's seed comes from the project seed, the unit, the model and the imputation number, so any imputation can be made again alone and adding imputations changes none already made.
+Each imputation's seed comes from the project seed, the unit and the imputation number, and for an exposure from its model too, so any imputation can be made again alone and adding imputations changes none already made.
 
 **Analysis.**
 Each imputation is analysed with the stage 1 model, and each unit's slope is combined over imputations by Rubin's rules, with Barnard and Rubin's degrees of freedom.
@@ -61,7 +63,7 @@ The models on imputed data are the primary analysis at covariate tiers 1 and 2, 
 The third tier is reported on imputed data and on complete cases side by side, and is described from both: it rests largely on units where a fifth or more of ethnicity is imputed.
 
 **Checks that stop the build.**
-An imputed covariate cell was missing before; its value is one its unit observed, or one observed for that child; nothing is imputed where too little was observed, in the unit or at the child's age; a child's imputed values of something that cannot change agree with each other; and two imputations are not the same draw.
+An imputed covariate cell was missing before; its value is one its unit observed, or for something that cannot change within a child the child's own record, or failing that a value the dataset holds; nothing is imputed where too little was observed, in the unit or at the child's age; a child's imputed values of something that cannot change agree with each other; no two imputations are the same draw; and an imputation that was asked for was made.
 An imputed exposure is by construction a value the rows observed.
 
 ---
@@ -99,17 +101,24 @@ Predictive mean matching needs no assumption about the shape of a variable's dis
 - The same child can be given different imputed screen use in the models of different outcomes.
   Each model is valid by itself; the imputed values are not a dataset and are not stored.
 - Covariates are imputed from family scores, not from each outcome, so the relation between a covariate and a specific outcome is weakened in the rows where the covariate was imputed.
-  A tier then adjusts a little less than it should, and its slope sits a little towards the less adjusted one: in a simulation, by about half the share of the covariate imputed times the gap between the two tiers, and more where the covariate is missing more often for children with particular outcomes.
+  A tier then adjusts less than it should.
+  In a deletion test on real data, with a fifth of the socioeconomic measure deleted, the second tier's slope moved about a quarter of the way back to the first tier's on average, and more than half of the way in some datasets; where the covariate was missing more often for children with particular outcomes, a simulation moved it the other way.
+  The size is small against a slope's own uncertainty, about a seventh of a standard error at a fifth missing, and the share actually imputed is under 3% for half the slopes and under 10% for nine in ten.
+  The share of the covariate imputed is reported beside each adjusted result.
+  Imputing covariates for each outcome's own model would remove this, at a much larger cost in computing.
 - Imputing a model's exposure adds little precision, and none where nothing but the outcome, age and sex predicts it.
-  In a deletion test on real data the imputed slopes were unbiased but no closer to the truth than complete cases, with standard errors a few per cent too small when a quarter of the exposure was missing.
+  In deletion tests on real data the imputed slopes of linear models were unbiased when values were deleted at random, and closer to the truth than complete cases when deletion depended on an outcome, with standard errors two to three per cent too small when a fifth of the exposure was missing.
   At the shares actually missing this is negligible for most slopes.
+- For binary and short ordinal outcomes an imputed exposure makes a slope noisier than complete cases while its standard error says otherwise: in a simulation with a quarter of the exposure missing, intervals covered the truth about nine times in ten where they claim nineteen in twenty.
+  Complete cases are unbiased for those models when missingness depends on the outcome.
 - An exposure is imputed given its own model's outcome only, so missingness that depends on a different outcome is not corrected.
 - With a dedicated total, an imputed exposure and an imputed rest need not add up to it.
 - The imputation models are linear in their predictors.
   A curve of an outcome over hours of screen use, or a difference in slope between groups, is pulled a little towards a straight line or towards no difference in the imputed rows.
   The curves are also run on observed exposure values only, a sensitivity analysis already in the model list.
 - Which covariate a tier uses is settled on the imputed data, so a tier can use a measure that the complete-case rule would have passed over, and a unit can enter a tier it could not enter on complete cases.
-  The third tier in particular then rests largely on units with a fifth or more of ethnicity imputed.
+  The third tier in particular then rests largely on one dataset with about a fifth of its ethnicity imputed, which has no third-tier fit on complete cases at all, so the two versions of the third tier differ in which datasets they hold as well as in how.
+- The rules on what is sporadic look at the unit and the child's age, not at schools or classes, so an item missing for whole schools within a unit is imputed where the unit as a whole passes.
 - The survey weight is a predictor; strata and clusters are not, and the imputation models are unweighted.
 - Missingness is assumed to be at random given what the models read.
 - With five imputations the fraction of information missing is rough; it settles with 50.

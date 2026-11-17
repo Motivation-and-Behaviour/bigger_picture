@@ -27,8 +27,12 @@
 #'   It is close to the true crossing on average, and is sometimes reported
 #'   for a curve that levels off just short of the smallest effect.
 #'
-#' `threshold_holds` and `threshold_central_holds` say whether every later
-#' interpretable hour meets the rule too; where FALSE the curve comes back.
+#' `threshold_holds` and `threshold_central_holds` say whether the curve
+#' stays beyond at every later interpretable hour: for the conservative
+#' reading, whether the whole interval does (whatever the degrees of
+#' freedom there); for the central reading, whether the rule is met. Where
+#' FALSE the curve comes back, or its interval widens to take in less than
+#' the smallest effect.
 #'
 #' @param curves Rows of `fit_stage1_curves()` for one exposure and outcome.
 #' @param settings From `analysis_settings()`.
@@ -196,7 +200,7 @@ pool_curve <- function(
       curve$ci_high < -settings$smallest_effect)
   # The first hour that meets a rule, its direction, and whether every later
   # interpretable hour meets it too.
-  read_threshold <- function(meets) {
+  read_threshold <- function(meets, later_meets = meets) {
     found <- readable & meets
     if (!any(found)) {
       return(list(hours = NA_real_, direction = NA_character_, holds = NA))
@@ -211,9 +215,16 @@ pool_curve <- function(
       "worse outcome"
     }
     later <- readable & curve$hours > hours
-    list(hours = hours, direction = direction, holds = all(meets[later]))
+    list(
+      hours = hours,
+      direction = direction,
+      holds = all(later_meets[later])
+    )
   }
-  conservative <- read_threshold(sure & beyond)
+  # Whether the conservative threshold holds is judged on the interval at
+  # later hours, not on their degrees of freedom: an hour few datasets
+  # reach has few, without the curve having come back.
+  conservative <- read_threshold(sure & beyond, beyond)
   clear <- !is.na(curve$ci_low) & (curve$ci_low > 0 | curve$ci_high < 0)
   central <- read_threshold(
     clear & abs(curve$estimate) >= settings$smallest_effect

@@ -36,6 +36,7 @@ sens_total_dedicated,14,5,L0|L1,total,core,,1,main,two_stage,total_dedicated_onl
 sens_total_class_average,14,5,L0|L1,content_classes,core,,1,main,two_stage,total_as_class_average,prereg_secondary,FALSE,Tier 1 as a stage 2 average across content classes in place of summing
 sens_total_over_24_excluded,14,5,L0|L1,total,core,,1,main,two_stage,total_over_24_excluded,prereg_secondary,FALSE,Summed totals over 24 hours excluded in place of capped
 sens_implausible_retained,14,5,L0|L1,total|content_classes,core,,1,implausible_retained,two_stage,implausible_retained,prereg_secondary,FALSE,Implausible values kept
+sens_family_by_datasets,14,5,L0,total|content_classes,core,,1,main,two_stage,family_weighted_by_datasets,prereg_secondary,TRUE,The family as an average of its specific outcomes weighted by their number of datasets in place of the plain average (DR-0014)
 sens_complete_case,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,complete_case,prereg_secondary,TRUE,The primary models with no imputation
 sens_team_excluded,14,5,L0|L1,total|content_classes,core,,1,team_excluded,two_stage,team_excluded,prereg_secondary,FALSE,Team-contributed datasets excluded
 sens_fixed_study,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,fixed_study,prereg_secondary,FALSE,Study as a fixed effect in place of random

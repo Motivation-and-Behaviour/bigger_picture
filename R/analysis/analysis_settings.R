@@ -101,6 +101,8 @@ analysis_settings <- function() {
     # the unit's children of the same age in whole years: an item not
     # asked of an age group is not imputed for it.
     impute_min_observed_age = 0.5,
+    # The kinds of stage 1 model whose exposure is imputed.
+    impute_exposure_models = c("linear", "logistic", "ordinal"),
     # A predictor enters a variable's imputation model where the two
     # correlate at least this much.
     impute_min_correlation = 0.05

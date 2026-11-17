@@ -346,6 +346,24 @@ test_that("what a model adjusts for is in its exposure's imputation", {
   expect_equal(filled$x[ten], never$x[ten])
   expect_false(anyNA(filled$x[!ten]))
 
+  # One age group cannot be imputed and the rest of screen use has gaps
+  # too: the other ages are still imputed, and nothing fails.
+  mixed <- data
+  ten <- floor(mixed$age) == 10
+  mixed$x[ten & seq_len(n) %% 2 == 0] <- NA
+  mixed$x[sample(which(!ten), 300)] <- NA
+  mixed$other[sample(which(!ten), 200)] <- NA
+  filled <- impute_cell_exposure(mixed, 7L, settings)
+  expect_null(attr(filled, "failed"))
+  expect_false(anyNA(filled$x[!ten]) || anyNA(filled$other[!ten]))
+  expect_equal(filled$x[ten], mixed$x[ten])
+  # The rest of screen use alone has gaps: it is imputed given the exposure.
+  rest_only <- data
+  rest_only$other[sample(n, 300)] <- NA
+  filled <- impute_cell_exposure(rest_only, 7L, settings)
+  expect_false(anyNA(filled$other))
+  expect_equal(attr(filled, "imputed"), 0L)
+
   # A binary outcome: the slope keeps most of the precision of complete
   # cases, which it would not if a few donors supplied most of the draws.
   set.seed(103)
@@ -358,6 +376,29 @@ test_that("what a model adjusts for is in its exposure's imputation", {
   drawn <- table(filled$x[is.na(gaps$x)])
   expect_length(drawn, 5)
   expect_lt(max(drawn) / sum(drawn), 0.4)
+})
+
+test_that("an imputed exposure never makes a model fittable", {
+  settings <- imputation_settings()
+  rows <- data.frame(x = c(rep(1, 50), rep(NA, 50)), y = rep(0:1, 50))
+  expect_true(stage1_may_impute(rows, "logistic", settings))
+  # Nine of one class among the rows that have the exposure.
+  rare <- data.frame(
+    x = c(rep(1, 59), rep(NA, 41)),
+    y = c(rep(1, 9), rep(0, 50), rep(1, 41))
+  )
+  expect_false(stage1_may_impute(rare, "logistic", settings))
+  expect_true(stage1_may_impute(rare, "linear", settings))
+  levels <- data.frame(
+    x = c(rep(1, 60), rep(NA, 40)),
+    y = c(rep(1, 30), rep(2, 26), rep(3, 4), rep(3, 40))
+  )
+  expect_false(stage1_may_impute(levels, "ordinal", settings))
+  # The settings say which kinds of model have their exposure imputed.
+  linear_only <- settings
+  linear_only$impute_exposure_models <- "linear"
+  expect_false(stage1_may_impute(rows, "logistic", linear_only))
+  expect_true(stage1_may_impute(rows, "linear", linear_only))
 })
 
 test_that("imputation removes the bias of complete cases", {
@@ -406,6 +447,14 @@ test_that("imputation removes the bias of complete cases", {
   expect_false(pooled$design_varied)
   # The same again from the same seed.
   expect_equal(fit_imputed(prepared, imputed, cell, reg, 10L), pooled)
+
+  # An imputation that was never made is an error, not a fit on gaps.
+  short <- imputed
+  short$cells <- short$cells[short$cells$imputation != 3, ]
+  short$units <- short$units[short$units$imputation != 3, ]
+  if (nrow(short$units) > 0) {
+    expect_error(fit_imputed(prepared, short, cell, reg, 10L), "is missing")
+  }
 
   # Too much of the exposure missing: it is not imputed, and the model is
   # the complete-case one.
@@ -558,6 +607,22 @@ test_that("a child's sex is the same at every wave after imputation", {
     rows
   })
 
+  # An imputed sex that contradicts the child's own record is caught.
+  one_wave <- imputation_prepare("9992", reg, function(rows) {
+    rows$sex[rows$participant_id %in% people[1:200] & rows$wave == "2"] <- NA
+    rows
+  })
+  wrong <- impute_all(one_wave, reg, m = 2L)
+  wrong$cells$value[1:50] <- ifelse(
+    wrong$cells$value[1:50] == "Female",
+    "Male",
+    "Female"
+  )
+  expect_error(
+    review_imputation(one_wave, wrong, reg$outcomes, reg$exposures),
+    "against the child's own record"
+  )
+
   # Minority status is left alone where the unit records ethnicity.
   both <- imputation_prepare("9992", reg, function(rows) {
     set.seed(79)
@@ -589,7 +654,11 @@ test_that("a child's sex is the same at every wave after imputation", {
   frame <- imputation_frame(prepared, reg$outcomes, reg$exposures)
   expect_true("aux_other_st_game" %in% names(frame$data))
   expect_false(anyNA(frame$data$aux_other_st_game))
-  expect_equal(frame$data$aux_mental_health, -prepared$outcomes_z$mh_dep_self)
+  # Depression (higher is worse) and the diagnosis row both enter, turned.
+  expect_lt(
+    stats::cor(frame$data$aux_mental_health, prepared$outcomes_z$mh_dep_self),
+    -0.6
+  )
   # The seed of an imputation is never missing.
   expect_false(is.na(imputation_seed(1, "a", 2)))
 })

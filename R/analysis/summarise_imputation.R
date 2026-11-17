@@ -2,9 +2,10 @@
 #'
 #' @param units The `units` tables of `review_imputation()`, bound.
 #' @param estimates Stage 1 slopes fitted on imputed data, from
-#'   `fit_stage1_imputed()`, bound.
+#'   `fit_stage1_imputed()`, bound: the tiers, and the models adjusted for
+#'   the rest of the child's screen use.
 #' @param complete The same cells fitted on complete cases, from
-#'   `fit_stage1()` at the same tiers.
+#'   `fit_stage1()`.
 #' @return A list of tibbles: `variables`, per covariate the units and cells
 #'   imputed and the units and cells left because too little was observed
 #'   or the imputation failed; `fmi`, per covariate tier the distribution
@@ -31,6 +32,10 @@ summarise_imputation <- function(units, estimates, complete) {
     cells_age_group = sum(.data$n_age_group),
     .by = c("variable", "outcome")
   )
+  # The models adjusted for the rest of the child's screen use are counted
+  # apart from the others at the same tier.
+  estimates$adjusted_other <- !is.na(estimates$other_from)
+  complete$adjusted_other <- !is.na(complete$other_from)
   fitted <- estimates[estimates$status %in% "fitted", ]
   quantile_of <- function(x, p) {
     if (all(is.na(x))) {
@@ -60,7 +65,7 @@ summarise_imputation <- function(units, estimates, complete) {
       1
     ),
     design_varied = sum(.data$design_varied),
-    .by = "tier"
+    .by = c("tier", "adjusted_other")
   )
   count <- function(table, label) {
     out <- dplyr::summarise(
@@ -68,29 +73,29 @@ summarise_imputation <- function(units, estimates, complete) {
       slopes = dplyr::n(),
       datasets = dplyr::n_distinct(.data$dataset_id),
       rows = sum(.data$n),
-      .by = "tier"
+      .by = c("tier", "adjusted_other")
     )
-    names(out)[-1] <- paste(names(out)[-1], label, sep = "_")
+    names(out)[-(1:2)] <- paste(names(out)[-(1:2)], label, sep = "_")
     out
   }
   partial <- dplyr::summarise(
     estimates[grepl("^fitted in", estimates$status), ],
     slopes_partly_fitted = dplyr::n(),
-    .by = "tier"
+    .by = c("tier", "adjusted_other")
   )
   gain <- dplyr::left_join(
     dplyr::full_join(
       count(complete, "complete"),
       count(estimates, "imputed"),
-      by = "tier"
+      by = c("tier", "adjusted_other")
     ),
     partial,
-    by = "tier"
+    by = c("tier", "adjusted_other")
   )
   gain$slopes_partly_fitted <- dplyr::coalesce(gain$slopes_partly_fitted, 0L)
   list(
     variables = variables[order(variables$variable, variables$outcome), ],
-    fmi = fmi[order(fmi$tier), ],
-    gain = gain[order(gain$tier), ]
+    fmi = fmi[order(fmi$adjusted_other, fmi$tier), ],
+    gain = gain[order(gain$adjusted_other, gain$tier), ]
   )
 }

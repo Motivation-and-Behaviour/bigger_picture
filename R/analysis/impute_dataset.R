@@ -28,8 +28,8 @@
 #'
 #' - screen use: the included usual-day rows and the dedicated total;
 #' - the outcomes, as one score per outcome family: the mean of a row's
-#'   standardised scores in that family, each turned so that higher is
-#'   better;
+#'   scores in that family, each standardised (binary and ordinal rows
+#'   within the unit) and turned so that higher is better;
 #' - age, and the survey weight where the unit has one;
 #' - in a panel, the child's mean on each exposure and outcome score over
 #'   their other waves, with the unit's mean and a marker where they have
@@ -50,7 +50,8 @@
 #'
 #' The seed of a unit's imputation comes from the project seed, the unit
 #' and the imputation number, so an imputation is the same whichever
-#' others are made, and whichever other units the dataset has.
+#' others are made. In a panel a unit's imputation reads the children's
+#' other waves, so it does depend on the dataset's other units.
 #'
 #' @param prepared Output of `prepare_analysis_data()` for one dataset.
 #' @param outcome_registry The outcome registry.
@@ -143,30 +144,48 @@ imputation_frame <- function(prepared, outcome_registry, exposure_registry) {
   # One score per outcome family: the mean of the row's standardised
   # scores, each turned so that higher is better.
   rows <- outcome_registry$rows
-  scored <- intersect(
-    rows$variable_name[
-      rows$role %in%
-        "outcome" &
-        rows$direction %in% c("higher_better", "higher_worse")
-    ],
-    names(prepared$outcomes_z)
-  )
+  directed <- rows$variable_name[
+    rows$role %in%
+      "outcome" &
+      rows$direction %in% c("higher_better", "higher_worse")
+  ]
+  scored <- intersect(directed, names(prepared$outcomes))
   at <- match(scored, rows$variable_name)
   families <- rows$prereg_family[at]
   turn <- ifelse(rows$direction[at] %in% "higher_worse", -1, 1)
+  # A row's standardised score: the preparation step's where it made one,
+  # and otherwise (binary and ordinal rows) its value standardised within
+  # the unit.
+  score_of <- function(name) {
+    if (name %in% names(prepared$outcomes_z)) {
+      return(prepared$outcomes_z[[name]])
+    }
+    values <- prepared$outcomes[[name]]
+    if (!is.numeric(values) && !is.logical(values)) {
+      return(NULL)
+    }
+    standardise_within(as.numeric(values), base$unit, 2L)
+  }
   outcomes <- character()
+  # The mean is built up one outcome at a time, so that a dataset with many
+  # outcome rows is never copied whole.
   for (family in unique(stats::na.omit(families))) {
-    own <- families %in% family
-    scores <- sweep(
-      as.matrix(prepared$outcomes_z[scored[own]]),
-      2,
-      turn[own],
-      `*`
-    )
-    score <- rowMeans(scores, na.rm = TRUE)
-    score[!is.finite(score)] <- NA_real_
+    total <- numeric(nrow(base))
+    count <- numeric(nrow(base))
+    for (i in which(families %in% family)) {
+      values <- score_of(scored[i])
+      if (is.null(values)) {
+        next
+      }
+      seen <- !is.na(values)
+      total[seen] <- total[seen] + turn[i] * values[seen]
+      count <- count + seen
+    }
+    if (!any(count > 0)) {
+      next
+    }
     name <- paste0("aux_", family)
-    data[[name]] <- score
+    data[[name]] <- ifelse(count > 0, total / count, NA_real_)
     outcomes <- c(outcomes, name)
   }
 

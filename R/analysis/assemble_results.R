@@ -74,6 +74,10 @@ assemble_results <- function(
     "headline",
     "warning",
     "note",
+    "k_nodes",
+    "k_nodes_thin",
+    "nodes_differ_p",
+    "nodes_left_out",
     "status"
   )
   if (!is.null(tree) && nrow(tree) > 0) {

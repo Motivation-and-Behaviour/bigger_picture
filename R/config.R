@@ -313,11 +313,14 @@ bp_build_sections <- function() {
   )
 }
 
-# The model workers `make.R` uses for the models section: measured with
-# twenty workers each holding the largest prepared dataset, which left over
-# 40 GB available.
+# The model workers `make.R` uses for the models section. Each worker
+# holding the largest prepared dataset peaks near 5 GB, and since the
+# imputation targets joined this section a dataset has about a dozen model
+# targets, so many workers can hold one of the largest datasets at once:
+# with sixteen workers a full rerun fell below 25 GB available, where it
+# had left 36 GB before the last of those targets were added.
 bp_model_workers_wide <- function() {
-  16L
+  10L
 }
 
 # Processes for a simulation target. Each holds little memory, but nothing
@@ -622,6 +625,7 @@ bp_imputation_settings <- function() {
     "imputation_iterations",
     "impute_min_observed",
     "impute_min_observed_age",
+    "impute_exposure_models",
     "impute_min_correlation",
     "exposure_max_hours"
   )

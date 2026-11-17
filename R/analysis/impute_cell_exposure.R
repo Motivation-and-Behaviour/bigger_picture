@@ -6,7 +6,8 @@
 #' analysis model can use (DR-0019). The imputation model therefore
 #' contains the relation the analysis estimates, whichever outcome it is.
 #' Where the analysis also adjusts for the rest of the child's screen use
-#' (`other`), the two are imputed in turn, each given the other.
+#' (`other`), whichever of the two has gaps is imputed given the other, and
+#' where both have gaps they are imputed in turn, each given the other.
 #'
 #' An exposure is imputed only where its missingness is sporadic:
 #'
@@ -23,7 +24,9 @@
 #' child's mean exposure over their other waves, sex and the tier
 #' covariates, with a covariate's unknown values as a group of their own,
 #' and the rest of the child's screen use where the model adjusts for it
-#' and it has no gap to fill.
+#' and it has no gap to fill. Age enters as a category each where the rows
+#' have five or fewer distinct ages, and as a cubic otherwise, so that it
+#' can follow the form the analysis model gives it.
 #'
 #' Nothing is imputed for a row the model cannot use: one with no age, no
 #' weight in a weighted unit, or a rest of screen use that is missing and
@@ -49,7 +52,8 @@ impute_cell_exposure <- function(
     attr(data, "imputed") <- as.integer(imputed)
     data
   }
-  if (!anyNA(data$x) || n < settings$min_unit_rows) {
+  gaps <- vapply(targets, function(name) anyNA(data[[name]]), logical(1))
+  if (!any(gaps) || n < settings$min_unit_rows) {
     return(done(data))
   }
   # Rows the model cannot use whatever is imputed: no weight in a weighted
@@ -72,21 +76,33 @@ impute_cell_exposure <- function(
     !seen & usable & by_age >= settings$impute_min_observed_age
   })
   names(eligible) <- targets
-  if ("other" %in% targets) {
-    # A row whose rest of screen use is missing and cannot be imputed is
-    # dropped by the model, so its exposure is not imputed and it does not
-    # inform the draws.
-    usable <- usable & (!is.na(data$other) | eligible$other)
-    eligible$x <- eligible$x & usable
+  # A row with a value missing that cannot be imputed is dropped by the
+  # model, so nothing is imputed for it and it does not inform the draws.
+  for (name in targets) {
+    usable <- usable & (!is.na(data[[name]]) | eligible[[name]])
   }
-  if (!any(eligible$x)) {
+  eligible <- lapply(eligible, function(rows) rows & usable)
+  drawn_for <- targets[vapply(eligible, any, logical(1))]
+  if (length(drawn_for) == 0) {
     return(done(data))
   }
-  joint <- "other" %in% targets && any(eligible$other)
+  joint <- length(drawn_for) == 2
 
   # Predictors. A covariate's gaps are a group of their own, so a
   # covariate the model adjusts for is always in the exposure's model.
-  predictors <- data.frame(y = as.numeric(data$y), age = data$age)
+  # Age enters as the analysis model can take it: a category each for a
+  # few distinct ages, otherwise a cubic.
+  predictors <- data.frame(y = as.numeric(data$y))
+  ages <- data$age
+  ages[is.na(ages)] <- mean(ages, na.rm = TRUE)
+  if (dplyr::n_distinct(ages[usable]) <= 5) {
+    predictors$age <- as.character(ages)
+  } else {
+    centred <- (ages - mean(ages[usable])) / stats::sd(ages[usable])
+    predictors$age <- centred
+    predictors$age2 <- centred^2
+    predictors$age3 <- centred^3
+  }
   if (weighted) {
     predictors$weight <- log(ifelse(usable, data$weight, 1))
   }
@@ -105,7 +121,6 @@ impute_cell_exposure <- function(
       predictors[[name]] <- dplyr::coalesce(values, "(unknown)")
     }
   }
-  predictors$age[is.na(predictors$age)] <- mean(predictors$age, na.rm = TRUE)
   varies <- vapply(
     predictors,
     function(column) dplyr::n_distinct(column[usable]) >= 2,
@@ -124,9 +139,9 @@ impute_cell_exposure <- function(
     keep <- decomposed$pivot[seq_len(decomposed$rank)]
     matrix[, setdiff(keep, 1) - 1, drop = FALSE]
   }
-  # One draw of a target by predictive mean matching. The match is between
-  # draws of the regression for both the donors and the rows imputed, which
-  # keeps the donors varied where the outcome takes few values.
+  # One draw of a target by predictive mean matching, with the match
+  # between draws of the regression for both the donors and the rows
+  # imputed.
   draw <- function(name, extra = NULL) {
     values <- data[[name]]
     seen <- !is.na(values) & usable
@@ -141,12 +156,13 @@ impute_cell_exposure <- function(
   filled <- tryCatch(
     withr::with_seed(seed, {
       if (!joint) {
-        # The rest of the child's screen use, where the model adjusts for
-        # it and it is known, is a predictor like any other.
-        rest <- if ("other" %in% targets) {
-          ifelse(usable, data$other, 0)
+        # One of the two has gaps to fill. The other, where the model
+        # adjusts for both, is known and is a predictor like any other.
+        known <- setdiff(targets, drawn_for)
+        rest <- if (length(known) == 1) {
+          ifelse(usable, data[[known]], 0)
         }
-        list(x = draw("x", extra = rest))
+        stats::setNames(list(draw(drawn_for, extra = rest)), drawn_for)
       } else {
         # Both have gaps: each in turn given the other, from a random
         # start.
@@ -164,9 +180,6 @@ impute_cell_exposure <- function(
         drawn <- list()
         for (iteration in seq_len(settings$imputation_iterations)) {
           for (name in targets) {
-            if (!any(eligible[[name]])) {
-              next
-            }
             other <- setdiff(targets, name)
             drawn[[name]] <- draw(name, extra = current[[other]])
             current[[name]][eligible[[name]]] <- drawn[[name]]
