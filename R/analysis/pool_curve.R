@@ -43,7 +43,10 @@
 #'   the threshold's direction can be given as better or worse; NA gives it
 #'   as higher or lower.
 #' @return A list: `curve`, one row per hour with the `estimate` (difference
-#'   from the reference), robust `se`, `df` and 95% interval, the datasets
+#'   from the reference), its `se` (the robust one, or the working
+#'   model's, `se_model`, where that is larger: `se_floored`), `df` and 95%
+#'   interval,
+#'   the datasets
 #'   supporting the hour and `interpretable`; and `summary`, one row with
 #'   the counts, the units left out, each threshold with its direction and
 #'   whether it holds, the hours the curve is interpretable over, the
@@ -89,6 +92,7 @@ pool_curve <- function(
     estimate = NA_real_,
     se = NA_real_,
     se_floored = NA,
+    se_model = NA_real_,
     df = NA_real_,
     ci_low = NA_real_,
     ci_high = NA_real_,
@@ -123,6 +127,12 @@ pool_curve <- function(
   # are modelled, so none is drawn.
   if (k_datasets < settings$curve_min_datasets) {
     return(finish("insufficient data"))
+  }
+  if (!any(at_reference)) {
+    stop(
+      "pool_curve(): the reference is not an hour of the grid.",
+      call. = FALSE
+    )
   }
   if (!curve$interpretable[which(at_reference)[1]]) {
     return(finish("too few datasets support the reference"))
@@ -206,20 +216,59 @@ pool_curve <- function(
   curve$estimate[!at_reference] <- robust$Est
   curve$se[!at_reference] <- se
   curve$se_floored[!at_reference] <- floored
+  curve$se_model[!at_reference] <- model_se
   curve$df[!at_reference] <- robust$df
   curve$ci_low[!at_reference] <- robust$Est - half
   curve$ci_high[!at_reference] <- robust$Est + half
 
+  read <- read_curve_thresholds(curve, reference, settings, higher_is)
+  finish(
+    if (read$sure) "pooled" else "too few studies to say",
+    interpretable_from = min(curve$hours[curve$interpretable]),
+    interpretable_to = max(curve$hours[curve$interpretable]),
+    threshold_hours = read$conservative$hours,
+    threshold_direction = read$conservative$direction,
+    threshold_holds = read$conservative$holds,
+    threshold_interval_holds = read$conservative$interval_holds,
+    threshold_central_hours = read$central$hours,
+    threshold_central_direction = read$central$direction,
+    threshold_central_holds = read$central$holds,
+    threshold_central_interval_holds = read$central$interval_holds,
+    random_levels = levels_used
+  )
+}
+
+#' Read both thresholds from a pooled curve
+#'
+#' The conservative threshold is the first interpretable hour above the
+#' reference where the whole interval is beyond the smallest effect, with
+#' enough robust degrees of freedom. The central reading is the first where
+#' the estimate is beyond the smallest effect, the interval excludes no
+#' difference and there are enough degrees of freedom, at that hour and,
+#' on the same side, at the next interpretable hour; so it cannot fall on
+#' the last interpretable hour.
+#'
+#' For each, `holds` says whether the estimate stays beyond the smallest
+#' effect on the same side at every later interpretable hour, and
+#' `interval_holds` whether the interval goes on meeting the rule there
+#' too. An estimate that stays beyond with an interval that widens has not
+#' come back. Both are NA where there is no later hour to judge.
+#'
+#' @param curve A pooled curve by hour: `hours`, `interpretable`,
+#'   `estimate`, `ci_low`, `ci_high` and `df`.
+#' @param reference The reference hour.
+#' @param settings From `analysis_settings()`.
+#' @param higher_is `"better"` or `"worse"`, or NA for directions as higher
+#'   or lower.
+#' @return A list: `sure` (whether any hour has enough degrees of freedom),
+#'   and `conservative` and `central`, each a list of `hours`, `direction`,
+#'   `holds` and `interval_holds`.
+read_curve_thresholds <- function(curve, reference, settings, higher_is = NA) {
   readable <- curve$interpretable & curve$hours > reference
   sure <- readable & !is.na(curve$df) & curve$df >= settings$min_robust_df
   beyond <- !is.na(curve$ci_low) &
     (curve$ci_low > settings$smallest_effect |
       curve$ci_high < -settings$smallest_effect)
-  # The first hour that meets a rule, its direction, and what the curve
-  # does at every later interpretable hour: whether its estimate stays
-  # beyond the smallest effect on the same side (`holds`), and whether its
-  # interval goes on meeting the rule too (`interval_holds`). An estimate
-  # that stays beyond with an interval that widens has not come back.
   read_threshold <- function(meets, interval_meets) {
     found <- readable & meets
     none <- list(
@@ -247,38 +296,29 @@ pool_curve <- function(
     list(
       hours = hours,
       direction = direction,
-      holds = all(stays[later]),
-      interval_holds = all((stays & interval_meets)[later])
+      holds = if (any(later)) all(stays[later]) else NA,
+      interval_holds = if (any(later)) {
+        all((stays & interval_meets)[later])
+      } else {
+        NA
+      }
     )
   }
   conservative <- read_threshold(sure & beyond, beyond)
-  # The central reading: the estimate beyond the smallest effect with an
-  # interval that excludes no difference and enough degrees of freedom, at
-  # this hour and at the next one read, so that an estimate brushing the
-  # line at one hour is not a threshold.
   clear <- !is.na(curve$ci_low) & (curve$ci_low > 0 | curve$ci_high < 0)
   past <- sure & clear & abs(curve$estimate) >= settings$smallest_effect
-  in_order <- order(curve$hours)
+  # The next interpretable hour of each readable hour, and whether it is
+  # past the line too, on the same side.
   next_too <- rep(FALSE, nrow(curve))
-  next_too[in_order] <- c(
-    (past & readable)[in_order][-1],
-    FALSE
-  )
+  read_at <- which(readable)[order(curve$hours[readable])]
+  for (i in seq_len(max(length(read_at) - 1, 0))) {
+    here <- read_at[i]
+    after <- read_at[i + 1]
+    next_too[here] <- past[after] &&
+      sign(curve$estimate[after]) == sign(curve$estimate[here])
+  }
   central <- read_threshold(past & next_too, clear)
-  finish(
-    if (any(sure)) "pooled" else "too few studies to say",
-    interpretable_from = min(curve$hours[curve$interpretable]),
-    interpretable_to = max(curve$hours[curve$interpretable]),
-    threshold_hours = conservative$hours,
-    threshold_direction = conservative$direction,
-    threshold_holds = conservative$holds,
-    threshold_interval_holds = conservative$interval_holds,
-    threshold_central_hours = central$hours,
-    threshold_central_direction = central$direction,
-    threshold_central_holds = central$holds,
-    threshold_central_interval_holds = central$interval_holds,
-    random_levels = levels_used
-  )
+  list(sure = any(sure), conservative = conservative, central = central)
 }
 
 #' Pooled curves for every cell in a table of stage 1 curves

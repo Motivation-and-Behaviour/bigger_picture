@@ -12,8 +12,8 @@
 #' of screen use than the curve has terms, which a banded item with few
 #' bands does not have; a minimum number of rows in every stretch between
 #' knots (`curve_interval_rows`), so that no part of its curve rests on a
-#' handful of children; and, where its errors are clustered, more clusters
-#' than curve terms.
+#' handful of children; and, where its errors are clustered, at least
+#' `min_clusters` clusters.
 #'
 #' @param prepared Output of `prepare_analysis_data()` for one dataset.
 #' @param cells A tibble of `exposure` and `outcome` rows to fit.

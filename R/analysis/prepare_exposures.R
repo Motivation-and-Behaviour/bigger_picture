@@ -10,8 +10,9 @@
 #' @param exposure_registry The exposure registry.
 #' @param settings From `analysis_settings()`.
 #' @param total_partial,dedicated_waves See `derive_total_screen()`.
-#' @param left_out The dataset's `exclude` exceptions (`variable_name` and
-#'   `wave`); those about an exposure row blank it at that wave.
+#' @param left_out The dataset's `exclude` exceptions about exposure rows
+#'   (`variable_name`, `wave` and `reason`): each blanks its row at that
+#'   wave, or at every wave, and is recorded in the audit.
 #' @return A list: `exposures` (one row per base row) and `audit` (one row
 #'   per wave and exposure row with any value).
 prepare_exposures <- function(
@@ -74,13 +75,36 @@ prepare_exposures <- function(
   ))
 
   # An exception can leave an exposure row out at a wave, or at every wave:
-  # its values there are not used for anything.
+  # its values there are not used for anything, and the audit says so. One
+  # that names a row or a wave the dataset does not have is a mistake.
   for (i in seq_len(NROW(left_out))) {
     name <- left_out$variable_name[i]
-    if (name %in% names(exposures)) {
-      at <- is.na(left_out$wave[i]) | wave %in% left_out$wave[i]
-      exposures[[name]][at] <- NA
+    at_wave <- left_out$wave[i]
+    if (!name %in% names(exposures)) {
+      stop(
+        "prepare_exposures(): an exception excludes `",
+        name,
+        "`, which is not an exposure with values in this dataset.",
+        call. = FALSE
+      )
     }
+    if (!is.na(at_wave) && !at_wave %in% wave) {
+      stop(
+        "prepare_exposures(): an exception excludes `",
+        name,
+        "` at wave `",
+        at_wave,
+        "`, which is not a wave of this dataset.",
+        call. = FALSE
+      )
+    }
+    at <- is.na(at_wave) | wave %in% at_wave
+    exposures[[name]][at] <- NA
+    noted <- audit$variable_name == name &
+      (is.na(at_wave) | audit$wave %in% at_wave)
+    audit$n_used[noted] <- 0L
+    audit$status[noted] <- "excluded"
+    audit$detail[noted] <- paste0("exception: ", left_out$reason[i])
   }
   total <- derive_total_screen(
     exposures,

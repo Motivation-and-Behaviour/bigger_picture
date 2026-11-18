@@ -58,8 +58,10 @@
 #' @param exposure_registry The exposure registry.
 #' @param index The imputation number.
 #' @param settings From `analysis_settings()`, with `seed`.
-#' @return NULL where the dataset is not included; otherwise a list of two
-#'   tibbles, each with `imputation`: `cells`, the imputed cells as `row`
+#' @return NULL where the dataset is not included; otherwise a list of
+#'   `made`, the imputation number (so an imputation with nothing to fill
+#'   is still known to have been made), and two tibbles, each with
+#'   `imputation`: `cells`, the imputed cells as `row`
 #'   (the row of the prepared tables), `variable` and `value`; and `units`,
 #'   one row per unit and covariate with missing values, saying how many
 #'   were imputed, how many were left because the child's age group
@@ -106,7 +108,8 @@ impute_dataset <- function(
   }
   list(
     cells = labelled(cells),
-    units = labelled(dplyr::relocate(dplyr::bind_rows(notes), "unit"))
+    units = labelled(dplyr::relocate(dplyr::bind_rows(notes), "unit")),
+    made = as.integer(index)
   )
 }
 

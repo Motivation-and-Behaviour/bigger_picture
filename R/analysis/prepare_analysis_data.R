@@ -88,6 +88,33 @@ prepare_analysis_data <- function(
     )
   }
   exposure_exceptions <- exceptions[on_exposure, ]
+  # Saying a total is dedicated only means something for a total mapped as
+  # partial, at a wave the dataset has.
+  made_dedicated <- exposure_exceptions[
+    exposure_exceptions$action %in% "total_dedicated",
+  ]
+  unknown_wave <- setdiff(
+    made_dedicated$wave[!is.na(made_dedicated$wave)],
+    as.character(base$wave)
+  )
+  if (nrow(made_dedicated) > 0 && !total_status %in% "partial") {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": a `total_dedicated` exception needs `st_total` mapped as partial.",
+      call. = FALSE
+    )
+  }
+  if (length(unknown_wave) > 0) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": a `total_dedicated` exception names a wave the dataset does not ",
+      "have: ",
+      paste(unknown_wave, collapse = ", "),
+      call. = FALSE
+    )
+  }
   exceptions <- exceptions[!on_exposure, ]
   exposures <- prepare_exposures(
     kept,

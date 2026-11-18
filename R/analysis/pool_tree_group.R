@@ -70,6 +70,9 @@ pool_tree_group <- function(
     clubSandwich::conf_int(fit, vcov = "CR2", cluster = data$dataset_id),
     error = function(e) conditionMessage(e)
   )
+  if (!is.character(robust) && (is.na(robust$df[1]) || is.na(robust$SE[1]))) {
+    robust <- "no degrees of freedom"
+  }
   if (is.character(robust)) {
     return(list(
       row = result(paste("robust inference failed:", robust)),

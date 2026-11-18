@@ -20,7 +20,7 @@ The preregistration says longitudinal studies are included, and registers no lon
 ## Decision
 
 A secondary strand is fitted in datasets that measure a child at two or more waves.
-For each exposure and outcome, and each pair of successive waves in which the outcome was measured, three models are fitted on children seen at both waves and pooled across datasets as the cross-sectional slopes are.
+For each exposure and outcome, and each pair of waves in which the outcome was measured, three models are fitted on children seen at both waves and pooled across datasets as the cross-sectional slopes are.
 A pair starts from one unit of the earlier wave, so countries stay apart as in the primary models.
 
 - **Lagged.** The outcome at the later wave on screen use at the earlier wave, adjusted for the outcome at the earlier wave and the covariates.
@@ -32,8 +32,10 @@ A pair starts from one unit of the earlier wave, so countries stay apart as in t
   A pair of waves is left out where the screen item changed between them, or where the data name the outcome's instrument and it differs; and a child is left out of a pair where their screen use was reported by a different respondent, or in a different response format, at the two waves.
 - **Matched cross-sectional.** The primary model at the earlier wave, on the children the lagged model uses, so those two are compared on the same children.
 
-A pair is one unit of the earlier wave and that unit's next wave: the first later wave at which at least the minimum number of the unit's children have what the model needs.
-It is found unit by unit, so a country or a cohort that lacks an item at one wave is paired with the wave after, and a unit with no such wave is recorded as having none.
+A pair is one unit of the earlier wave and a later wave, on the children of the unit seen again there.
+Each child goes to their own next wave: the first later wave at which the child has what the model needs (amended 18 November 2026: the first version chose one next wave for the whole unit, which dropped the children of a cohort or a subsample followed up at another wave).
+Children of a unit who share a next wave are one pair where there are at least the minimum number of them, so a unit can have more than one pair from the same earlier wave, no child is in two of them, and a pair can skip waves.
+Children whose next wave too few of the unit share are left out and counted, and a unit with no pair is recorded as having none.
 
 The strand is labelled exploratory, takes Tier 5 q-values, and its models are rows of the model list fixed at the freeze.
 It is fitted for outcomes modelled linearly; binary and short ordinal rows are not in it.
@@ -47,20 +49,27 @@ It is fitted for outcomes modelled linearly; binary and short ordinal rows are n
   Error in measuring screen use pulls a slope of changes towards zero more than it pulls a slope of levels.
 - **A lagged slope smaller than the cross-sectional one is not evidence that screen use comes first.**
   The outcome at the earlier wave stands in, only in part, for whatever lasting differences between children lie behind both screen use and the outcome.
-  In simulations with a lasting trait and no effect of screen use, the lagged slope kept between a fifth and seven tenths of the cross-sectional slope at a gap of one wave, and between a third and nine tenths at four, depending on how stable and how reliably measured the outcome is.
+  In simulations with a lasting trait and no effect of screen use, the lagged slope kept between a twentieth and nine tenths of the cross-sectional slope at a gap of one wave, depending on how stable and how reliably measured the outcome is: the less the outcome at one wave predicts it at the next, the more is kept.
+  These are examples and not bounds.
   So the ratio of the two slopes says nothing by itself, and a lagged slope at about half the cross-sectional one with a within-child slope near zero is among the things lasting confounding with no effect would give.
 - **Each model is blind to some truths, and none of them alone settles direction.**
   If screen use affects the outcome only at the same time, the lagged slope is roughly that effect times how stable screen use is, less a part that grows with how stable the outcome is: it can be most of the effect, near zero, or of the opposite sign.
   A null lagged slope is therefore not evidence of no effect, and a lagged slope is not evidence of a delayed one.
-  If screen use affects the outcome only later, the within-child slope can take the wrong sign, and the lagged slope is too small where the outcome is stable.
+  If screen use affects the outcome only later, the within-child slope can take the wrong sign, and the lagged slope is too small where the outcome or screen use is stable.
   If the outcome affects later screen use, the within-child and cross-sectional slopes can have opposite signs.
   Something that changes over time and affects both screen use and the outcome biases the within-child slope too, and can bias it more than the cross-sectional one.
   The three slopes are read together.
 - The lagged model does not adjust for screen use at the later wave.
 - Gaps between waves differ across datasets from months to years, and each family and specific outcome is reported with its typical gap and the shortest and longest dataset's, taken from the children's ages where those are recorded finely and from collection years otherwise.
+  The ages are used where they are recorded finely, or where every child's age moves by the same part of a year; a pair whose ages and collection years disagree by more than 0.3 years is marked.
   Where an outcome is measured more often than screen use, the lagged and within-child slopes of one dataset can sit on different gaps.
-- A child who misses a wave drops out of the pairs either side of it.
-  How many children each panel keeps between successive waves, and how the screen use and age of those who stay differ from those who leave, is computed per dataset (`panel_pairs_all`).
+- The three slopes do not rest on the same children or the same datasets.
+  The matched cross-sectional slope is on the lagged model's children.
+  The within-child slope needs screen use at the later wave, the same item at both waves and the same respondent, so it has fewer datasets, and in a panel that moves from parent report to self report as children grow it rests on the younger children.
+- A child is in a pair only where they have what the model needs at a later wave, and children who left the study are not seen.
+  Each stage 1 row counts the unit's children at the earlier wave, those paired, and those left out because too few shared their next wave.
+  Separately, for each panel and each pair of successive waves that ask about screen use, how many children have the item again and how their screen use and age differ from the others' is computed per dataset (`panel_pairs_all`).
+  That table describes follow-up of the screen item and not the models' pairs: a child without the item at the later wave may have left, aged out of it, or belong to a cohort or a subsample not asked it.
 
 ---
 

@@ -141,8 +141,10 @@ review_imputation <- function(
       paste0("`", name, "` differs within a child after imputation")
     )
   }
-  # The cells are the ones the imputations' notes say were filled: an
-  # imputation with cells missing, or missing altogether, is caught here.
+  # The cells are the ones the imputations' notes say were filled, so an
+  # imputation with cells missing is caught here. One that was never made
+  # is caught by `fit_stage1_imputed()`, which knows how many were asked
+  # for.
   noted <- imputed$units[imputed$units$n_imputed > 0, ]
   filled <- dplyr::count(
     tibble::tibble(
@@ -203,5 +205,9 @@ review_imputation <- function(
     table$dataset_id <- rep(id, nrow(table))
     dplyr::relocate(table, "dataset_id")
   }
-  list(units = with_id(units), levels = with_id(level_summary))
+  list(
+    dataset_id = id,
+    units = with_id(units),
+    levels = with_id(level_summary)
+  )
 }

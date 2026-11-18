@@ -222,7 +222,12 @@ stage1_may_impute <- function(data, model, settings) {
   if (!model %in% settings$impute_exposure_models) {
     return(FALSE)
   }
+  # The rows a complete-case model would have: the exposure, and the rest
+  # of screen use where the model adjusts for it, which is imputed too.
   seen <- data[!is.na(data$x), ]
+  if ("other" %in% names(data)) {
+    seen <- seen[!is.na(seen$other), ]
+  }
   if (model == "logistic") {
     return(min(table(factor(seen$y, levels = c(0, 1)))) >= 10)
   }
@@ -363,11 +368,11 @@ fit_stage1_unit <- function(
 
   n <- nrow(data)
   counts$n <- n
-  # The largest share, among the tier's covariates, of the model's rows
-  # whose value was imputed.
+  # The share of the model's rows with any of the tier's covariates
+  # imputed.
   markers <- intersect(paste0(design$added, ".imputed"), names(data))
   imputed_share <- if (length(markers) > 0 && nrow(data) > 0) {
-    max(vapply(markers, function(name) mean(data[[name]]), numeric(1)))
+    mean(rowSums(as.matrix(data[markers])) > 0)
   } else if (length(design$added) > 0 && nrow(data) > 0) {
     0
   } else {

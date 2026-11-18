@@ -58,8 +58,9 @@ analysis_settings <- function() {
     # known for at least this share of the unit's rows, until missing
     # values are imputed (Step 8).
     covariate_known_min = 0.9,
-    # Cluster-robust standard errors from fewer clusters than this are
-    # flagged: they tend to be too small.
+    # Cluster-robust standard errors from fewer clusters than this tend to
+    # be too small: a slope from fewer is flagged, and a curve is not
+    # fitted.
     min_clusters = 10L,
     # A trend over collection years needs this many datasets, spanning this
     # many years.
@@ -97,10 +98,11 @@ analysis_settings <- function() {
     # no part of it rests on a handful of children; and a unit supports an
     # hour where it has the minimum number of rows within this many hours
     # of it.
+    curve_interval_rows = 30L,
     # A curve is pooled from at least this many datasets: from fewer, the
     # curve itself moves with the working model (DR-0016).
     curve_min_datasets = 5L,
-    curve_interval_rows = 30L,
+
     curve_window = 0.5,
     smallest_effect = 0.10,
     # Multiple imputation (ANALYSIS_PLAN.md, Step 8; DR-0019). The number

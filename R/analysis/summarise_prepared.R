@@ -47,12 +47,19 @@ summarise_prepared <- function(
     outcomes_excluded = variables_with("outcome", "excluded"),
     outcomes_archive = variables_with("outcome", "archive"),
     total_dedicated = sum(source %in% "dedicated" & !is.na(total)),
+    total_dedicated_partial = sum(
+      source %in% "dedicated_partial" & !is.na(total)
+    ),
     total_summed = sum(source %in% "summed" & !is.na(total)),
     total_capped = sum(exposures$total_capped),
     total_lost_to_incomplete = sum(could_sum & is.na(total)),
     total_coverage_max = bp_stat(exposures$total_coverage, max),
     total_median_dedicated = bp_stat(
       total[source %in% "dedicated"],
+      stats::median
+    ),
+    total_median_dedicated_partial = bp_stat(
+      total[source %in% "dedicated_partial"],
       stats::median
     ),
     total_median_summed = bp_stat(total[source %in% "summed"], stats::median),

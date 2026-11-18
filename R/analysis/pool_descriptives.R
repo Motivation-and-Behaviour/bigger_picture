@@ -37,10 +37,11 @@ pool_descriptives <- function(
   )
   screen$built <- ifelse(
     screen$variable_name == "total_screen",
-    ifelse(
-      screen$total_source %in% "dedicated",
-      "dedicated item",
-      paste("sum of", screen$total_coverage, "content classes")
+    dplyr::case_when(
+      screen$total_source %in% "dedicated" ~ "dedicated item",
+      screen$total_source %in% "dedicated_partial" ~
+        "dedicated item covering part of screen use",
+      .default = paste("sum of", screen$total_coverage, "content classes")
     ),
     "as asked"
   )

@@ -228,7 +228,7 @@ test_that("only sporadic gaps in covariates are imputed, unit by unit", {
       reg$outcomes,
       reg$schema
     ),
-    "needs the dataset's `review_imputation\\(\\)`"
+    "needs the dataset's own `review_imputation\\(\\)`"
   )
   expect_error(
     fit_stage1_imputed(
@@ -242,6 +242,35 @@ test_that("only sporadic gaps in covariates are imputed, unit by unit", {
     ),
     "imputation 3 is missing"
   )
+  # Another dataset's review will not do.
+  elsewhere <- review
+  elsewhere$dataset_id <- "9993"
+  expect_error(
+    fit_stage1_imputed(
+      prepared,
+      both,
+      elsewhere,
+      1:2,
+      one_cell,
+      reg$outcomes,
+      reg$schema
+    ),
+    "needs the dataset's own"
+  )
+  # No imputation at all is not the same as nothing to fill.
+  expect_error(
+    fit_stage1_imputed(
+      prepared,
+      bind_imputations(list()),
+      review,
+      1:2,
+      one_cell,
+      reg$outcomes,
+      reg$schema
+    ),
+    "imputation 1, 2 is missing"
+  )
+  expect_equal(both$made, 1:2)
   fitted <- fit_stage1_imputed(
     prepared,
     both,
@@ -472,6 +501,14 @@ test_that("an imputed exposure never makes a model fittable", {
   expect_true(stage1_may_impute(small, "linear", settings))
   small$sex[1:3] <- "Other"
   expect_false(stage1_may_impute(small, "linear", settings))
+  # A model adjusted for the rest of screen use needs that too on the
+  # rows counted, since it is imputed with the exposure.
+  rest <- frame(44)
+  rest$x <- c(rep(c(1, 2, 3), length.out = 34), rep(NA, 10))
+  rest$other <- c(rep(NA, 10), rep(1, 34))
+  expect_false(stage1_may_impute(rest, "linear", settings))
+  rest$other <- 1
+  expect_true(stage1_may_impute(rest, "linear", settings))
 
   # The settings say which kinds of model have their exposure imputed.
   linear_only <- settings

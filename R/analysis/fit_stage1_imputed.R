@@ -51,19 +51,25 @@ fit_stage1_imputed <- function(
   }
   # The imputations are fitted only once they have passed their checks:
   # taking the review as an argument makes the fit wait for it.
-  if (!is.list(review) || !"units" %in% names(review)) {
+  if (
+    !is.list(review) ||
+      !"units" %in% names(review) ||
+      !identical(
+        review$dataset_id,
+        as.character(prepared$base$dataset_id[1])
+      )
+  ) {
     stop(
-      "fit_stage1_imputed(): needs the dataset's `review_imputation()`.",
+      "fit_stage1_imputed(): needs the dataset's own `review_imputation()`.",
       call. = FALSE
     )
   }
   # An imputation that was never made must not be fitted as if it had
   # nothing to fill.
-  made <- unique(imputed$units$imputation)
-  if (length(made) > 0 && !all(indexes %in% made)) {
+  if (!all(indexes %in% imputed$made)) {
     stop(
       "fit_stage1_imputed(): imputation ",
-      paste(setdiff(indexes, made), collapse = ", "),
+      paste(setdiff(indexes, imputed$made), collapse = ", "),
       " is missing for dataset ",
       prepared$base$dataset_id[1],
       ".",

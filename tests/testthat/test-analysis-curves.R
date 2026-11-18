@@ -122,9 +122,11 @@ test_that("a unit's curve uses the clustered errors, and needs enough clusters",
   expect_false(clustered$few_clusters)
   expect_equal(clustered$coef[[1]], plain$coef[[1]])
   expect_false(isTRUE(all.equal(clustered$vcov[[1]], plain$vcov[[1]])))
-  # Eight clusters are flagged; four cannot carry four terms.
-  rows$cluster <- as.character(school %% 8)
-  expect_true(fit_curve_unit(rows)$few_clusters)
+  # Ten clusters are the fewest a curve is fitted from.
+  rows$cluster <- as.character(school %% 10)
+  expect_equal(fit_curve_unit(rows)$status, "fitted")
+  rows$cluster <- as.character(school %% 9)
+  expect_equal(fit_curve_unit(rows)$status, "too few clusters for a curve")
   rows$cluster <- as.character(school %% 4)
   few <- fit_curve_unit(rows)
   expect_equal(few$status, "too few clusters for a curve")
@@ -324,12 +326,79 @@ test_that("the reference must be supported, and a threshold needs studies", {
   expect_equal(five$summary$status, "too few studies to say")
   expect_true(is.na(five$summary$threshold_hours))
   expect_false(is.na(at_hour(five$curve, 4)$estimate))
-  # The interval is never narrower than the working model's.
-  pooled_five <- pool_curve(curve_fits(5, kinked, seed = 8))
-  expect_true(is.logical(pooled_five$curve$se_floored))
-  expect_false(anyNA(pooled_five$curve$se_floored[
-    pooled_five$curve$hours != 1
-  ]))
+  # The interval is never narrower than the working model's, and is built
+  # from the standard error reported and the robust degrees of freedom.
+  for (seed in c(8, 3)) {
+    one <- pool_curve(curve_fits(5, kinked, seed = seed))$curve
+    one <- one[one$hours != 1, ]
+    expect_false(anyNA(one$se_floored))
+    expect_true(all(one$se >= one$se_model - 1e-12))
+    expect_equal(one$se[one$se_floored], one$se_model[one$se_floored])
+    expect_true(all(one$se[!one$se_floored] > one$se_model[!one$se_floored]))
+    half <- stats::qt(0.975, one$df) * one$se
+    expect_equal(one$ci_low, one$estimate - half)
+    expect_equal(one$ci_high, one$estimate + half)
+  }
+})
+
+test_that("thresholds are read from a curve by the rules as written", {
+  settings <- analysis_settings()
+  # A curve by hand: an estimate with a narrow interval at each hour.
+  drawn <- function(estimate, width = 0.01, interpretable = TRUE, df = 20) {
+    hours <- seq(0, 6, by = 0.5)
+    tibble::tibble(
+      hours = hours,
+      interpretable = interpretable,
+      estimate = estimate,
+      ci_low = estimate - width,
+      ci_high = estimate + width,
+      df = df
+    )
+  }
+  read <- function(...) read_curve_thresholds(drawn(...), 1, settings)
+  flat <- rep(0, 13)
+  # Past the line from three hours on: both thresholds there, both hold.
+  step <- replace(flat, 7:13, -0.2)
+  both <- read(step)
+  expect_equal(both$conservative$hours, 3)
+  expect_equal(both$central$hours, 3)
+  expect_true(both$conservative$holds && both$conservative$interval_holds)
+  expect_equal(both$conservative$direction, "lower outcome")
+  # One hour alone past the line: the conservative threshold, which then
+  # does not hold; and no central one, which needs the next hour too.
+  alone <- read(replace(flat, 7, -0.2))
+  expect_equal(alone$conservative$hours, 3)
+  expect_false(alone$conservative$holds)
+  expect_true(is.na(alone$central$hours))
+  # The next hour past the line on the other side does not count.
+  flipped <- read(replace(replace(flat, 7, 0.2), 8, -0.2))
+  expect_true(is.na(flipped$central$hours))
+  expect_false(flipped$conservative$holds)
+  # Past the line only at the last hour: nothing later to judge, and no
+  # central threshold.
+  last <- read(replace(flat, 13, -0.2))
+  expect_equal(last$conservative$hours, 6)
+  expect_true(is.na(last$conservative$holds))
+  expect_true(is.na(last$conservative$interval_holds))
+  expect_true(is.na(last$central$hours))
+  # The next hour is the next interpretable one, across a gap.
+  gap <- read(step, interpretable = !seq(0, 6, by = 0.5) %in% c(3.5, 4))
+  expect_equal(gap$central$hours, 3)
+  # The estimate stays past the line while the interval widens over it:
+  # it holds, its interval does not.
+  wide <- drawn(step)
+  wide$ci_high[11:13] <- 0.05
+  widened <- read_curve_thresholds(wide, 1, settings)
+  expect_true(widened$conservative$holds)
+  expect_false(widened$conservative$interval_holds)
+  expect_true(widened$central$holds)
+  expect_false(widened$central$interval_holds)
+  # Too few degrees of freedom: nothing is read.
+  thin <- read(step, df = 2)
+  expect_false(thin$sure)
+  expect_true(is.na(thin$conservative$hours) && is.na(thin$central$hours))
+  # Hours at or below the reference are never a threshold.
+  expect_true(is.na(read(replace(flat, 1:3, -0.2))$conservative$hours))
 })
 
 test_that("the curve's settings hold everything its functions read", {
@@ -434,10 +503,9 @@ test_that("the simulation rebuilds outcomes on the real hours and scores them", 
     nrow(sim$thresholds) * length(settings$curve_grid)
   )
   # Five datasets are pooled where five are asked for.
-  five <- sim$thresholds[
-    sim$thresholds$datasets == "five" & sim$thresholds$units == "any",
-  ]
+  five <- sim$thresholds[sim$thresholds$datasets == "five", ]
   expect_true(all(five$k_datasets == 5))
+  expect_true(all(c("any", "every stretch") %in% five$units))
   # The outcome in the rows is never used: the estimates are not near 99.
   expect_lt(max(abs(sim$replicates$estimate), na.rm = TRUE), 5)
   # The truth is the mean of the datasets' curves against the reference,

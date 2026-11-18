@@ -4,7 +4,7 @@
 #'   imputation, or one such result; NULL entries (a dataset that is not
 #'   included) are dropped.
 #' @return A list of `cells` and `units`, each the imputations' tables
-#'   bound by row.
+#'   bound by row, and `made`, the numbers of the imputations given.
 bind_imputations <- function(imputations) {
   if (all(c("cells", "units") %in% names(imputations))) {
     imputations <- list(imputations)
@@ -32,5 +32,10 @@ bind_imputations <- function(imputations) {
     tables <- lapply(imputations, function(one) one[[name]])
     dplyr::bind_rows(c(list(empty[[name]]), tables))
   }
-  list(cells = part("cells"), units = part("units"))
+  made <- unlist(lapply(imputations, function(one) one$made))
+  list(
+    cells = part("cells"),
+    units = part("units"),
+    made = sort(unique(as.integer(made)))
+  )
 }

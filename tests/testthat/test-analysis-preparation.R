@@ -539,14 +539,41 @@ test_that("an exception can leave a screen item out at one wave", {
     c("1", "1", "2", "2"),
     c("a", "a", "b", "b"),
     reg$exposures,
-    left_out = tibble::tibble(variable_name = "st_total", wave = "2")
-  )$exposures
+    left_out = tibble::tibble(
+      variable_name = "st_total",
+      wave = "2",
+      reason = "Another item"
+    )
+  )
+  # The audit says the values were not used, and why.
+  noted <- out$audit[out$audit$variable_name == "st_total", ]
+  expect_equal(noted$status[noted$wave == "2"], "excluded")
+  expect_equal(noted$n_used[noted$wave == "2"], 0L)
+  expect_equal(noted$detail[noted$wave == "2"], "exception: Another item")
+  expect_equal(noted$status[noted$wave == "1"], "used")
+  out <- out$exposures
   expect_equal(out$st_total, c(4, 5, NA, NA))
   expect_equal(
     out$total_source,
     c("dedicated", "dedicated", "summed", "summed")
   )
   expect_equal(out$total_screen, c(4, 5, 2, 2))
+  # A wave or a row the dataset does not have is a mistake, not a no-op.
+  wrong <- function(variable, at) {
+    prepare_exposures(
+      rows,
+      c("1", "1", "2", "2"),
+      c("a", "a", "b", "b"),
+      reg$exposures,
+      left_out = tibble::tibble(
+        variable_name = variable,
+        wave = at,
+        reason = "why"
+      )
+    )
+  }
+  expect_error(wrong("st_total", "two"), "not a wave of this dataset")
+  expect_error(wrong("st_socmedia", "2"), "not an exposure with values")
 })
 
 test_that("a row asked of part of a unit does not remove everyone's total", {
@@ -1011,9 +1038,26 @@ test_that("exceptions must name analysed outcomes, and a node moves a row", {
   # the row out or say the total is dedicated, and nothing else.
   left <- prepare(read("st_game,,exclude,,Not asked in a comparable way"))
   expect_true(all(is.na(left$exposures$st_game)))
-  expect_no_error(prepare(read(
-    "st_total,,total_dedicated,,A total of all screens"
-  )))
+  dedicated <- function(line, status) {
+    prepare_analysis_data(
+      mock_dataset("9995"),
+      mock_info("9995"),
+      reg$outcomes,
+      reg$exposures,
+      reg$derivations,
+      reg$schema,
+      read(line),
+      total_status = status
+    )
+  }
+  whole <- "st_total,,total_dedicated,,A total of all screens"
+  expect_no_error(dedicated(whole, "partial"))
+  # It means something only for a total mapped as partial, at a real wave.
+  expect_error(dedicated(whole, "compatible"), "mapped as partial")
+  expect_error(
+    dedicated("st_total,nine,total_dedicated,,Why", "partial"),
+    "names a wave the dataset does not have"
+  )
   expect_error(
     prepare(read("st_game,,keep_out_of_bounds,,No")),
     "an exception on a screen-time row"

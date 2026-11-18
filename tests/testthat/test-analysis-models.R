@@ -270,7 +270,12 @@ test_that("the model list is valid, and expands against the registries", {
     ]
     nrow(dplyr::inner_join(own, rest, by = c("exposure", "outcome")))
   }
-  for (model in c("moderation_sex", "moderation_ses", "thresholds_by_sex")) {
+  for (model in c(
+    "moderation_sex",
+    "moderation_ses",
+    "thresholds_by_sex",
+    "thresholds_by_ses"
+  )) {
     expect_gt(sum(after$model_name == paste0(model, "_other")), 0)
     expect_equal(overlap(model), 0, info = model)
   }
@@ -522,6 +527,83 @@ test_that("the longitudinal models separate change from standing differences", {
   expect_equal(spanning$lag_years[spanning$model == "within"], 4)
   expect_true(all(spanning$status == "fitted"))
 
+  # A subsample followed up at the second wave and everyone else at the
+  # third: each child goes to their own next wave, so the unit has two
+  # pairs and nobody is dropped. A group too small to be a pair is counted.
+  subsample <- function(rows) {
+    rows <- three_waves(rows)
+    rows$st_game[rows$wave == "2"] <- rows$st_game[rows$wave == "3"]
+    people <- unique(rows$participant_id)
+    rows$mh_dep_self[
+      rows$wave == "2" & !rows$participant_id %in% people[1:200]
+    ] <- NA
+    rows$mh_dep_self[
+      rows$wave == "3" & rows$participant_id %in% people[1:200]
+    ] <- NA
+    rows[!(rows$wave != "1" & rows$participant_id %in% people[581:600]), ]
+  }
+  parts <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, subsample),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  first <- parts[parts$wave_from == "1" & parts$model == "lagged", ]
+  expect_equal(first$wave_to, c("2", "3"))
+  expect_equal(first$n_pairs, c(200L, 380L))
+  expect_equal(first$n_earlier, c(600L, 600L))
+  expect_equal(first$n_left, c(0L, 0L))
+  expect_equal(dplyr::n_distinct(first$unit), 2)
+  few <- function(rows) {
+    rows <- subsample(rows)
+    people <- unique(rows$participant_id)
+    rows$mh_dep_self[
+      rows$wave == "2" & !rows$participant_id %in% people[1:40]
+    ] <- NA
+    # Twenty of the forty have no gaming at the first wave, so only twenty
+    # of the unit's children go to the second wave.
+    rows$st_game[rows$wave == "1" & rows$participant_id %in% people[21:40]] <-
+      NA
+    rows
+  }
+  small <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, few),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  small <- small[small$wave_from == "1" & small$model == "lagged", ]
+  expect_equal(small$wave_to, "3")
+  expect_equal(small$n_left, 20L)
+
+  # A child whose screen use is reported by someone else at the later wave
+  # is left out of the within-child model only.
+  reporter <- function(rows) {
+    rows <- edit(rows)
+    people <- unique(rows$participant_id)
+    rows$st_responder <- ifelse(
+      rows$wave == "2" & rows$participant_id %in% people[1:150],
+      "Self",
+      "Parent"
+    )
+    rows
+  }
+  moved <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, reporter),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  expect_equal(moved$n_switched[moved$model == "within"], 150L)
+  expect_equal(moved$n[moved$model == "within"], 450L)
+  expect_equal(moved$n[moved$model == "lagged"], 600L)
+
   # Who is kept between waves is described without any outcome.
   kept <- describe_panel_pairs(
     models_prepare("9992", reg, function(rows) {
@@ -570,18 +652,28 @@ test_that("the longitudinal models separate change from standing differences", {
   }
 })
 
-test_that("the gap between waves follows ages where they are fine", {
+test_that("the gap between waves follows ages where they can show it", {
   fine <- seq(10, 12, length.out = 40)
   coarse <- rep(c(13.5, 16.5), 20)
+  gap <- function(...) longitudinal_lag(...)$years
   # Interviews nine months apart that cross a new year.
-  expect_equal(longitudinal_lag(rep(1, 40), rep(0.75, 40), fine), 0.75)
+  expect_equal(gap(rep(1, 40), rep(0.75, 40), fine), 0.75)
+  expect_false(longitudinal_lag(rep(1, 40), rep(0.75, 40), fine)$differ)
   # Coarse ages: the collection years are used.
-  expect_equal(longitudinal_lag(rep(2, 40), rep(0, 40), coarse), 2)
+  expect_equal(gap(rep(2, 40), rep(0, 40), coarse), 2)
+  # Age recorded as age at entry plus the time since: every child moves
+  # by the same part of a year, which the calendar years overstate.
+  entry <- rep(c(6.5, 7), 20)
+  steady <- longitudinal_lag(rep(1, 40), rep(0.25, 40), entry)
+  expect_equal(steady$years, 0.25)
+  expect_true(steady$differ)
+  # Whole-year ages that all move by a year say nothing the years do not.
+  expect_equal(gap(rep(2, 40), rep(1, 40), rep(c(10, 11), 20)), 2)
   # Years not recorded, or the same at both waves: ages are used.
-  expect_equal(longitudinal_lag(rep(NA, 40), rep(1.5, 40), coarse), 1.5)
-  expect_equal(longitudinal_lag(rep(0, 40), rep(1, 40), coarse), 1)
+  expect_equal(gap(rep(NA, 40), rep(1.5, 40), coarse), 1.5)
+  expect_equal(gap(rep(0, 40), rep(1, 40), coarse), 1)
   # Neither gives a gap: none is recorded, not a gap of zero.
-  expect_true(is.na(longitudinal_lag(rep(NA, 40), rep(0, 40), coarse)))
+  expect_true(is.na(gap(rep(NA, 40), rep(0, 40), coarse)))
 })
 
 test_that("an outcome's instrument column is found by its stem", {
