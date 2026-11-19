@@ -716,6 +716,68 @@ test_that("the longitudinal models separate change from standing differences", {
   }
 })
 
+test_that("the longitudinal slopes are pooled model by model, with their gaps", {
+  reg <- models_registries()
+  cell <- tibble::tibble(exposure = "st_game", outcome = "mh_dep_self")
+  one <- fit_stage1_longitudinal(
+    models_prepare("9992", reg),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  # Six panels made from the one: each with its own slopes and gap, and
+  # the last with a second pair of waves nine years apart.
+  set.seed(71)
+  copy <- function(id, gap, pair = "a") {
+    rows <- one
+    rows$dataset_id <- id
+    rows$unit <- paste(id, pair)
+    rows$estimate <- rows$estimate + stats::rnorm(nrow(rows), 0, 0.02)
+    rows$lag_years <- gap
+    rows
+  }
+  gaps <- c(1, 1, 2, 4, 6, 1)
+  estimates <- dplyr::bind_rows(
+    lapply(seq_along(gaps), function(i) copy(paste0("p", i), gaps[i])),
+    list(copy("p6", 9, "b"))
+  )
+  pooled <- pool_longitudinal(estimates, cell, reg$outcomes)
+  expect_setequal(
+    pooled$tree$model_name,
+    paste0("longitudinal_", c("lagged", "matched", "within"))
+  )
+  expect_setequal(pooled$cells$model_name, pooled$tree$model_name)
+  for (model in c("lagged", "matched", "within")) {
+    rows <- estimates[estimates$model == model, ]
+    name <- paste0("longitudinal_", model)
+    # Each model is pooled on its own slopes, as the cross-sectional ones
+    # are.
+    alone <- pool_tree(rows, reg$outcomes, NULL)
+    own <- pooled$tree[pooled$tree$model_name == name, ]
+    expect_equal(own$estimate, alone$estimate, info = model)
+    expect_equal(own$se, alone$se, info = model)
+    expect_equal(
+      pooled$cells$estimate[pooled$cells$model_name == name],
+      pool_stage2_cells(rows, cell)$estimate,
+      info = model
+    )
+    # The gap is the median over datasets of each dataset's median, so
+    # the panel with two pairs (1 and 9 years, median 5) counts once:
+    # the median of 1, 1, 2, 4, 6 and 5.
+    family <- own[own$level == "L0", ]
+    expect_equal(family$k_datasets, 6L, info = model)
+    expect_equal(family$lag_years, 3, info = model)
+    expect_equal(family$lag_years_min, 1, info = model)
+    expect_equal(family$lag_years_max, 6, info = model)
+    expect_equal(own$lag_years[own$level == "L1"], 3, info = model)
+    expect_true(all(is.na(own$lag_years[own$level == "L2"])), info = model)
+  }
+  empty <- pool_longitudinal(estimates[0, ], cell, reg$outcomes)
+  expect_equal(nrow(empty$tree), 0)
+})
+
 test_that("the gap between waves follows ages where they can show it", {
   fine <- seq(10, 12, length.out = 40)
   coarse <- rep(c(13.5, 16.5), 20)
@@ -833,6 +895,46 @@ test_that("results are labelled, tested and adjusted in one table", {
   expect_true(is.na(split$q[3]) && is.na(split$equivalent[3]))
   expect_equal(split$k_total[3], game$k_total)
   expect_equal(split$q[-3], out$q[-3])
+  # A moderator test comes with its own p-value: it joins the family's
+  # exploratory layer, is counted and adjusted there, has no equivalence
+  # test, and leaves the layers above it as they were.
+  tests <- tibble::tibble(
+    model_name = c("moderation_study_level", "year_trend"),
+    exposure = "st_watch",
+    level = c("L0", "L1"),
+    family = "wellbeing",
+    node = c(NA, "self_esteem"),
+    moderator = c("informant", "data_year"),
+    term = c("levels equal", "between datasets"),
+    effect_measure = c("sd_per_hour_difference", "sd_per_hour_per_decade"),
+    estimate = c(NA, -0.05),
+    df = c(8, 10),
+    p_test = c(0.03, NA),
+    status = c("pooled", "too few datasets or years")
+  )
+  with_tests <- assemble_results(
+    tree,
+    NULL,
+    spec,
+    hypotheses,
+    reg$outcomes,
+    tests = tests
+  )
+  expect_equal(nrow(with_tests), nrow(out) + 2)
+  moderated <- with_tests[
+    with_tests$model_name == "moderation_study_level",
+  ]
+  expect_equal(moderated$p, 0.03)
+  expect_equal(moderated$moderator, "informant")
+  expect_equal(moderated$finding, "exploratory")
+  expect_equal(moderated$tier, 5L)
+  expect_false(is.na(moderated$q))
+  expect_gt(moderated$k_total, 5L)
+  expect_true(is.na(moderated$p_equivalence))
+  trend <- with_tests[with_tests$model_name == "year_trend", ]
+  expect_equal(trend$finding, "not estimated")
+  expect_true(is.na(trend$p) && is.na(trend$k_total))
+  expect_equal(with_tests$q[seq_len(nrow(out))], out$q)
   # A family that could not be pooled has no p-value and is not counted.
   last <- out[out$family == "cognition", ]
   expect_true(is.na(last$p) && is.na(last$q) && is.na(last$k_total))

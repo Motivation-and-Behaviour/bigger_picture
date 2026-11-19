@@ -876,7 +876,8 @@ analysis_targets <- function(harmonise_plan) {
         hypotheses,
         outcome_registry,
         settings_tree,
-        frozen = bp_specification_frozen()
+        frozen = bp_specification_frozen(),
+        tests = moderator_tests(moderation_development, trend_development)
       ))
     ),
     tarchetypes::tar_combine_raw(
@@ -894,6 +895,20 @@ analysis_targets <- function(harmonise_plan) {
         mapping_status_all,
         analysis_datasets,
         settings_tree
+      ))
+    ),
+    # The year trend up the outcome tree reads the tree's settings and the
+    # year rules of the model settings.
+    targets::tar_target_raw(
+      "trend_development",
+      quote(trend_tree(
+        stage1_all,
+        described_units,
+        outcome_registry,
+        exposure_registry,
+        series_breaks,
+        slope_correlations_all,
+        utils::modifyList(settings_model, settings_tree)
       ))
     ),
     targets::tar_target_raw(

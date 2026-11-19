@@ -37,6 +37,10 @@
 #'   `model_name`.
 #' @param cells Rows of `pool_stage2_cells()` for the same models, with
 #'   `model_name`; the L3 level. NULL for none.
+#' @param tests Rows of `moderator_tests()`: tests that come with their own
+#'   p-value (`p_test`), such as whether a moderator's levels differ. They
+#'   are counted and adjusted with the rest, and have no equivalence test.
+#'   NULL for none.
 #' @param model_spec From `read_model_spec()`.
 #' @param hypotheses From `read_hypotheses()`.
 #' @param outcome_registry The outcome registry.
@@ -51,7 +55,8 @@ assemble_results <- function(
   hypotheses,
   outcome_registry,
   settings = default_analysis_settings(),
-  frozen = FALSE
+  frozen = FALSE,
+  tests = NULL
 ) {
   keep <- c(
     "model_name",
@@ -83,6 +88,9 @@ assemble_results <- function(
     "k_nodes_thin",
     "nodes_differ_p",
     "nodes_left_out",
+    "moderator",
+    "term",
+    "p_test",
     "status"
   )
   if (!is.null(tree) && nrow(tree) > 0) {
@@ -100,7 +108,7 @@ assemble_results <- function(
     )]
     cells$informant <- place$informant
   }
-  out <- dplyr::bind_rows(tree, cells)
+  out <- dplyr::bind_rows(tree, cells, tests)
   if (nrow(out) == 0) {
     return(tibble::tibble())
   }
@@ -134,7 +142,8 @@ assemble_results <- function(
     is.na(model_spec$variant[at])
   out$finding <- dplyr::case_when(
     out$status %in% "too few studies to say" ~ "too few studies to say",
-    !out$status %in% "pooled" | is.na(out$estimate) ~ "not estimated",
+    !out$status %in% "pooled" |
+      (is.na(out$estimate) & is.na(out$p_test)) ~ "not estimated",
     out$level %in% "L0" & out$headline %in% FALSE ~
       "specific outcomes disagree",
     !out$analysis_class %in% "confirmatory" ~ out$analysis_class,
@@ -150,6 +159,10 @@ assemble_results <- function(
       -abs(out$estimate[usable] / out$se[usable]),
       df = out$df[usable]
     )
+  # A test that brings its own p-value keeps it.
+  given <- !is.na(out$p_test)
+  out$p[given] <- out$p_test[given]
+  out$p_test <- NULL
   out$fdr_path <- tiered_fdr_path(
     out$tier,
     out$level,

@@ -70,40 +70,11 @@ regress_units_on_year <- function(
     return(result("too few datasets or years"))
   }
 
-  dataset_year <- stats::ave(units$year, units$dataset_id, FUN = mean)
-  units$decade_between <- (dataset_year - 2010) / 10
-  series_year <- stats::ave(units$year, units$series, FUN = mean)
-  units$decade_within <- (units$year - series_year) / 10
-  varies_within <- tapply(
-    abs(units$decade_within) > 0.01,
-    units$dataset_id,
-    any
-  )
-  k_within <- sum(varies_within)
-
-  terms <- "decade_between"
-  adjusted <- character()
-  if (k_within > 0) {
-    terms <- c(terms, "decade_within")
-  }
-  if (!anyNA(units$age_median) && stats::sd(units$age_median) > 0) {
-    units$age_c <- units$age_median - mean(units$age_median)
-    terms <- c(terms, "age_c")
-    adjusted <- c(adjusted, "median age")
-  }
-  varying <- function(values) {
-    counts <- table(values)
-    !anyNA(values) && length(counts) > 1 && min(counts) >= 3
-  }
-  if (varying(units$measure_type)) {
-    terms <- c(terms, "measure_type")
-    adjusted <- c(adjusted, "response format")
-  }
-  units$self_report <- ifelse(units$responder %in% "Self", "self", "other")
-  if (!anyNA(units$responder) && varying(units$self_report)) {
-    terms <- c(terms, "self_report")
-    adjusted <- c(adjusted, "who reported")
-  }
+  built <- year_terms(units)
+  units <- built$units
+  terms <- built$terms
+  adjusted <- built$adjusted
+  k_within <- built$k_within
 
   units$vi <- units$sei^2
   nested <- nrow(units) > k_datasets
@@ -170,4 +141,45 @@ few_to_say <- function(df, minimum) {
     return(NA_character_)
   }
   if (df < minimum) "too few studies to say" else "estimated"
+}
+
+# The terms of a regression on collection year, and the columns they need:
+# year between datasets and within series, per decade, the units' median
+# age, and where they vary the response format and who reported.
+year_terms <- function(units) {
+  dataset_year <- stats::ave(units$year, units$dataset_id, FUN = mean)
+  units$decade_between <- (dataset_year - 2010) / 10
+  series_year <- stats::ave(units$year, units$series, FUN = mean)
+  units$decade_within <- (units$year - series_year) / 10
+  varies_within <- tapply(
+    abs(units$decade_within) > 0.01,
+    units$dataset_id,
+    any
+  )
+  k_within <- sum(varies_within)
+
+  terms <- "decade_between"
+  adjusted <- character()
+  if (k_within > 0) {
+    terms <- c(terms, "decade_within")
+  }
+  if (!anyNA(units$age_median) && stats::sd(units$age_median) > 0) {
+    units$age_c <- units$age_median - mean(units$age_median)
+    terms <- c(terms, "age_c")
+    adjusted <- c(adjusted, "median age")
+  }
+  varying <- function(values) {
+    counts <- table(values)
+    !anyNA(values) && length(counts) > 1 && min(counts) >= 3
+  }
+  if (varying(units$measure_type)) {
+    terms <- c(terms, "measure_type")
+    adjusted <- c(adjusted, "response format")
+  }
+  units$self_report <- ifelse(units$responder %in% "Self", "self", "other")
+  if (!anyNA(units$responder) && varying(units$self_report)) {
+    terms <- c(terms, "self_report")
+    adjusted <- c(adjusted, "who reported")
+  }
+  list(units = units, terms = terms, adjusted = adjusted, k_within = k_within)
 }
