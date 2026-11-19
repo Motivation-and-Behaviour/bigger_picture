@@ -751,6 +751,7 @@ st_game_wd,partial,"he17b2, he17b2a, he17a, he17c2b_k16, he17c2b_k18, he17c2b_b1
       cohort == ""K"" & .wave == ""8"" ~ if_else(as.numeric(he17c2b_k18) >= 0, as.numeric(he17c2b_k18) / 60, NA_real_),
       cohort == ""B"" & .wave == ""10"" ~ if_else(as.numeric(he17c2b_b19) >= 0, as.numeric(he17c2b_b19) / 60, NA_real_),
       cohort == ""K"" & .wave == ""10"" ~ if_else(as.numeric(he17c2b_k23) >= 0, as.numeric(he17c2b_k23) / 60, NA_real_),
+      cohort == ""K"" & .wave == ""6"" ~ NA_real_,
       .wave %in% c(""2.5"", ""3.5"") ~ if_else(
         as.numeric(he17b3a) == -1,
         0,
@@ -762,7 +763,7 @@ st_game_wd,partial,"he17b2, he17b2a, he17a, he17c2b_k16, he17c2b_k18, he17c2b_b1
     )
   })
   if_else(blank, NA_real_, x)
-})","Weekday. Parent report at K waves 2-5, B waves 3-8 and the mail-outs: time playing electronic games (waves 2-4 filtered on 'Has electronic game system', waves 5-7 on 'access to electronic games'), the study's total minutes (he17b2, he17c2) / 60; no system or access, or 'does not play' = 0 (Non-users), -9 NA. The young person's own report at K wave 7 (SC CAI D5), K wave 8 (SC CASI J3) and wave 10 (SC CAWI I5), total minutes / 60; at K wave 7, 553 young people who answered the TV items were not asked the games items (NA). K wave 2's he17b1 is labelled 'Weekend' but is question G11.2, the weekday item. Mail-outs: weekday and whole-weekend totals / 5 and / 2, 'Doesn't apply' (-1) = 0. Weekend items per weekend day ('Weekend day time e-games'). Partial: the early items are filtered on owning an electronic game system and name no phone or tablet. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+})","Weekday. Parent report at K waves 2-5, B waves 3-8 and the mail-outs: time playing electronic games (waves 2-4 filtered on 'Has electronic game system', waves 5-7 on 'access to electronic games'), the study's total minutes (he17b2, he17c2) / 60; no system or access, or 'does not play' = 0 (Non-users), -9 NA. K wave 6 asks the access item (he17a) but routes the K cohort past the time items, so no access there is NA. The young person's own report at K wave 7 (SC CAI D5), K wave 8 (SC CASI J3) and wave 10 (SC CAWI I5), total minutes / 60; at K wave 7, 553 young people who answered the TV items were not asked the games items (NA). K wave 2's he17b1 is labelled 'Weekend' but is question G11.2, the weekday item. Mail-outs: weekday and whole-weekend totals / 5 and / 2, 'Doesn't apply' (-1) = 0. Weekend items per weekend day ('Weekend day time e-games'). Partial: the early items are filtered on owning an electronic game system and name no phone or tablet. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
 st_game_we,partial,"he17c2, he17c2a_k6, he17c2a_b4, he17c2a_k8, he17c2a_b6, he17c2a_k10, he17c2a_b8, he17c2a_k12, he17c2a_b10, he17c2a_b12, he17c2a_b14, he17a, he17c3b_k16, he17c3b_k18, he17c3b_b19, he17c3b_k23, he17c3a_b3, he17c3a_b5, he17c3a_k9, he06j1i, he06g1i, he07b3a, he17b3a, he06j2i, he06g2i, he07c3a","local({
   blank <- cohort == ""B"" &
     .wave == ""2.5"" &
@@ -799,12 +800,13 @@ st_game_we,partial,"he17c2, he17c2a_k6, he17c2a_b4, he17c2a_k8, he17c2a_b6, he17
       cohort == ""K"" & .wave == ""8"" ~ if_else(as.numeric(he17c3b_k18) >= 0, as.numeric(he17c3b_k18) / 60, NA_real_),
       cohort == ""B"" & .wave == ""10"" ~ if_else(as.numeric(he17c3b_b19) >= 0, as.numeric(he17c3b_b19) / 60, NA_real_),
       cohort == ""K"" & .wave == ""10"" ~ if_else(as.numeric(he17c3b_k23) >= 0, as.numeric(he17c3b_k23) / 60, NA_real_),
+      cohort == ""K"" & .wave == ""6"" ~ NA_real_,
       .wave %in% c(""2.5"", ""3.5"") ~ mailout / 2 / 60,
       .default = main
     )
   })
   if_else(blank, NA_real_, x)
-})","Weekend. Parent report at K waves 2-5, B waves 3-8 and the mail-outs: time playing electronic games (waves 2-4 filtered on 'Has electronic game system', waves 5-7 on 'access to electronic games'), the study's total minutes (he17b2, he17c2) / 60; no system or access, or 'does not play' = 0 (Non-users), -9 NA. The young person's own report at K wave 7 (SC CAI D5), K wave 8 (SC CASI J3) and wave 10 (SC CAWI I5), total minutes / 60; at K wave 7, 553 young people who answered the TV items were not asked the games items (NA). K wave 2's he17b1 is labelled 'Weekend' but is question G11.2, the weekday item. Mail-outs: weekday and whole-weekend totals / 5 and / 2, 'Doesn't apply' (-1) = 0. Weekend items per weekend day ('Weekend day time e-games'). Partial: the early items are filtered on owning an electronic game system and name no phone or tablet. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+})","Weekend. Parent report at K waves 2-5, B waves 3-8 and the mail-outs: time playing electronic games (waves 2-4 filtered on 'Has electronic game system', waves 5-7 on 'access to electronic games'), the study's total minutes (he17b2, he17c2) / 60; no system or access, or 'does not play' = 0 (Non-users), -9 NA. K wave 6 asks the access item (he17a) but routes the K cohort past the time items, so no access there is NA. The young person's own report at K wave 7 (SC CAI D5), K wave 8 (SC CASI J3) and wave 10 (SC CAWI I5), total minutes / 60; at K wave 7, 553 young people who answered the TV items were not asked the games items (NA). K wave 2's he17b1 is labelled 'Weekend' but is question G11.2, the weekday item. Mail-outs: weekday and whole-weekend totals / 5 and / 2, 'Doesn't apply' (-1) = 0. Weekend items per weekend day ('Weekend day time e-games'). Partial: the early items are filtered on owning an electronic game system and name no phone or tablet. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
 st_game,partial,"he17b2, he17b2a, he17a, he17c2b_k16, he17c2b_k18, he17c2b_b19, he17c2b_k23, he17b3a, he17c2, he17c2a_k6, he17c2a_b4, he17c2a_k8, he17c2a_b6, he17c2a_k10, he17c2a_b8, he17c2a_k12, he17c2a_b10, he17c2a_b12, he17c2a_b14, he17a, he17c3b_k16, he17c3b_k18, he17c3b_b19, he17c3b_k23, he17c3a_b3, he17c3a_b5, he17c3a_k9, he06j1i, he06g1i, he07b3a, he06j2i, he06g2i, he07c3a","local({
   blank <- (cohort == ""B"" &
     .wave == ""2.5"" &
@@ -830,6 +832,7 @@ st_game,partial,"he17b2, he17b2a, he17a, he17c2b_k16, he17c2b_k18, he17c2b_b19, 
         cohort == ""K"" & .wave == ""8"" ~ if_else(as.numeric(he17c2b_k18) >= 0, as.numeric(he17c2b_k18) / 60, NA_real_),
         cohort == ""B"" & .wave == ""10"" ~ if_else(as.numeric(he17c2b_b19) >= 0, as.numeric(he17c2b_b19) / 60, NA_real_),
         cohort == ""K"" & .wave == ""10"" ~ if_else(as.numeric(he17c2b_k23) >= 0, as.numeric(he17c2b_k23) / 60, NA_real_),
+        cohort == ""K"" & .wave == ""6"" ~ NA_real_,
         .wave %in% c(""2.5"", ""3.5"") ~ if_else(
           as.numeric(he17b3a) == -1,
           0,
@@ -877,6 +880,7 @@ st_game,partial,"he17b2, he17b2a, he17a, he17c2b_k16, he17c2b_k18, he17c2b_b19, 
         cohort == ""K"" & .wave == ""8"" ~ if_else(as.numeric(he17c3b_k18) >= 0, as.numeric(he17c3b_k18) / 60, NA_real_),
         cohort == ""B"" & .wave == ""10"" ~ if_else(as.numeric(he17c3b_b19) >= 0, as.numeric(he17c3b_b19) / 60, NA_real_),
         cohort == ""K"" & .wave == ""10"" ~ if_else(as.numeric(he17c3b_k23) >= 0, as.numeric(he17c3b_k23) / 60, NA_real_),
+        cohort == ""K"" & .wave == ""6"" ~ NA_real_,
         .wave %in% c(""2.5"", ""3.5"") ~ mailout / 2 / 60,
         .default = main
       )
@@ -884,7 +888,7 @@ st_game,partial,"he17b2, he17b2a, he17a, he17c2b_k16, he17c2b_k18, he17c2b_b19, 
     (5 * wd + 2 * we) / 7
   })
   if_else(blank, NA_real_, x)
-})","(5 x st_game_wd + 2 x st_game_we) / 7, same items and rules. Partial: the early items are filtered on owning an electronic game system and name no phone or tablet. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
+})","(5 x st_game_wd + 2 x st_game_we) / 7, same items and rules; K wave 6 is NA (access item only, no time items asked). Partial: the early items are filtered on owning an electronic game system and name no phone or tablet. B wave 2.5: the released hours, minutes and totals carry no missing code (every value is 0 or more in all 3,246 rows, while the device items have up to 704 blanks; the study's data issues paper reports high missingness and zero answers left blank on that questionnaire), so a day type whose four totals (TV, DVD/video, computer, games) are all 0 is read as left blank and is NA (73 weekday, 278 weekend rows).",,
 st_game_comp_wd,unavailable,,,No device split; see st_game.,,
 st_game_comp_we,unavailable,,,No device split; see st_game.,,
 st_game_comp,unavailable,,,No device split; see st_game.,,
