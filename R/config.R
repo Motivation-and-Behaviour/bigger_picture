@@ -333,8 +333,13 @@ bp_model_workers_wide <- function() {
 # build had to be stopped. Nothing stops the target starting while the
 # other pools are busy, so run a build that reruns the simulation under
 # the memory watchdog.
+# `BP_SIMULATION_CORES` lowers it for a build on a machine that is short of
+# memory at the time; it changes how long the target takes and not what it
+# gives.
 bp_simulation_cores <- function() {
-  max(1L, min(parallel::detectCores() - 2L, 24L))
+  asked <- suppressWarnings(as.integer(Sys.getenv("BP_SIMULATION_CORES", "")))
+  cap <- if (is.na(asked) || asked < 1L) 24L else min(asked, 24L)
+  max(1L, min(parallel::detectCores() - 2L, cap))
 }
 
 # Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).
