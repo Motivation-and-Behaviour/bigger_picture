@@ -1,7 +1,7 @@
 # DR-0017: The tiered false discovery rate, written out as a rule
 
 **Status:** Accepted  
-**Date:** 2026-11-15  
+**Date:** 2026-11-15 (amended 2026-11-17, 2026-11-19 and 2026-11-20)  
 **Decision makers:** Taren  
 **Related issues:** NA
 
@@ -30,7 +30,7 @@ A test's layer and every layer above it form its path.
 | A specific outcome | the path of its family's test for the same exposure, then that exposure's specific outcomes in the family |
 | A specific outcome by informant, or an outcome row | the specific outcome's path, then its informants, or its rows |
 | A secondary model of Tier 1 or 2, such as a content class adjusted for other screen use | the primary test's path at the same level, then a layer for that model |
-| A threshold (Tier 3) | families, the family's content classes, then the family's thresholds |
+| A test of a threshold (Tier 3), such as whether it differs between groups | families, the family's content classes, then the family's thresholds |
 | A moderation test (Tier 4) | the Tier 3 path, then the family's moderation tests |
 | An exploratory or sensitivity analysis (Tier 5) | the Tier 4 path, then the family's exploratory tests |
 
@@ -42,6 +42,7 @@ The ranks come from the group's own p-values only.
 - A primary test is one from a confirmatory model fitted as the main two-stage model with nothing varied; every other model of Tier 1 or 2 is secondary.
 - The first layer always counts five, the five outcome families, whether or not each can be estimated.
 - A layer with no test adds nothing.
+- A threshold duration is an estimate with an interval, read from a pooled curve (DR-0016), and has no p-value: it takes no q-value and is not counted, so the Tier 3 layer holds only tests about thresholds (amended 20 November 2026).
 - A test that is not a pooled slope, such as whether a moderator's levels differ or the trend over collection years, joins its family's exploratory layer with its own p-value and is counted and ranked there like any other (amended 20 November 2026).
 - A test that could not be run has no p-value and is not counted.
 - A test with too few studies to say keeps its p-value and is counted in K, for its own group and those below it, but it is not ranked and has no q-value (amended 17 November 2026).
@@ -108,7 +109,7 @@ Fixing the first layer at five means a family that cannot be estimated does not 
   This is a property of the registered procedure.
   It is one reason lower-layer q-values are called a descriptive penalty, and a sensitivity analysis is read by whether the estimate moves, not by its q-value.
 - Only the first layer has a fixed count, so a content class that cannot be estimated in a family lowers K for that family's other classes.
-- Tiers 3, 4 and 5 each form one layer per family across exposures, levels and models, and K is counted over the models assembled in one table, so every model of a run is assembled together.
+- Tiers 3, 4 and 5 each form one layer per family across exposures, levels and models, and K is counted over the models assembled in one table, so every model of a run that yields a test is assembled together; checks that yield none, such as the comparison of one-stage with two-stage estimates, are not.
 - An equivalence test needs a narrow interval, so few predictions of no association will be confirmed where datasets are few.
 
 ---

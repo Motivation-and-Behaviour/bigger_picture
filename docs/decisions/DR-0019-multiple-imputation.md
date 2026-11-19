@@ -1,7 +1,7 @@
 # DR-0019: Covariates are imputed within each unit, and screen use within each model
 
 **Status:** Accepted  
-**Date:** 2026-11-16  
+**Date:** 2026-11-16 (amended 2026-11-20)  
 **Decision makers:** Taren  
 **Related issues:** NA
 

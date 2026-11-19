@@ -63,7 +63,8 @@
 #' @param adjust_other Also adjust for the rest of the child's screen use
 #'   (`other_<exposure>` from `derive_total_screen()`): the secondary family
 #'   in which one content class is adjusted for the others. Rows without it
-#'   are left out (`n_no_other`), a unit that records none is not fitted,
+#'   are left out (`n_no_other`), as are rows whose class is larger than
+#'   the total it is part of (`n_other_inconsistent`), a unit that records none is not fitted,
 #'   and each estimate says what the rest was built from (`other_from`). The
 #'   slope without the adjustment on the same rows is in the
 #'   `tier1_same_rows_` columns where the tier is 1.
@@ -138,6 +139,19 @@ fit_stage1 <- function(
       if (length(index) == 0 || all(is.na(x[index]))) {
         next
       }
+      # A child whose class is larger than the total it is part of gave an
+      # inconsistent pair of answers: the row is left out of the adjusted
+      # model, with or without imputation, and counted.
+      n_inconsistent <- NA_integer_
+      if (adjust_other) {
+        inconsistent <- other$inconsistent[index] &
+          any(!is.na(other$value[index]))
+        n_inconsistent <- sum(inconsistent)
+        index <- index[!inconsistent]
+        if (length(index) == 0 || all(is.na(x[index]))) {
+          next
+        }
+      }
       data <- frame[index, ]
       data$x <- x[index]
       data$y <- y[index]
@@ -181,6 +195,7 @@ fit_stage1 <- function(
         } else {
           NA_integer_
         }
+        fit$n_other_inconsistent <- n_inconsistent
         fit$n_exposure_imputed <- n_exposure_imputed
         fit$exposure_imputation_failed <- exposure_imputation
         fit$other_from <- if (adjust_other) {
@@ -568,10 +583,26 @@ stage1_other_screen <- function(prepared, exposure) {
   n <- nrow(prepared$base)
   column <- paste0("other_", sub("^st_", "", exposure))
   if (!column %in% names(prepared$exposures)) {
-    return(list(value = rep(NA_real_, n), from = rep(NA_character_, n)))
+    return(list(
+      value = rep(NA_real_, n),
+      from = rep(NA_character_, n),
+      inconsistent = rep(FALSE, n)
+    ))
   }
+  # Where the rest comes from a dedicated total, a class above that total
+  # has no rest (`derive_total_screen()`).
+  own <- prepared$exposures[[exposure]]
+  total <- prepared$exposures$total_screen
   list(
     value = prepared$exposures[[column]],
+    inconsistent = startsWith(
+      dplyr::coalesce(prepared$exposures$total_source, ""),
+      "dedicated"
+    ) &
+      is.na(prepared$exposures[[column]]) &
+      !is.na(own) &
+      !is.na(total) &
+      own > total + 1e-8,
     from = ifelse(
       is.na(prepared$exposures$total_source),
       NA_character_,

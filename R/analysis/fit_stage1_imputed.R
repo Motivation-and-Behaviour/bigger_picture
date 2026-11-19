@@ -106,6 +106,7 @@ fit_stage1_imputed <- function(
     "n_no_sex",
     "n_no_covariate",
     "n_no_other",
+    "n_other_inconsistent",
     "n_exposure_imputed"
   )
   design <- c("covariates", "ses_measure", "ethnicity_measure", "n")

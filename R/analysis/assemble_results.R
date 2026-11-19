@@ -134,6 +134,17 @@ assemble_results <- function(
     out$level,
     model_spec$levels[at]
   )
+  # A test is made for a level on purpose, so one at a level its model is
+  # not listed for is a mistake in the list or the code, not a row to drop.
+  stray <- !listed & !is.na(out$p_test)
+  if (any(stray)) {
+    stop(
+      "assemble_results(): tests at a level the model list does not give ",
+      "their model: ",
+      paste(unique(out$model_name[stray]), collapse = ", "),
+      call. = FALSE
+    )
+  }
   out <- out[listed, ]
   at <- at[listed]
   primary <- model_spec$analysis_class[at] %in%

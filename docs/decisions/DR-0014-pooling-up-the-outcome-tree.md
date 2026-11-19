@@ -1,7 +1,7 @@
 # DR-0014: A family is the plain average of its specific outcomes, and only disagreement keeps it from the headline
 
 **Status:** Accepted  
-**Date:** 2026-11-13  
+**Date:** 2026-11-13 (amended 2026-11-17 and 2026-11-20)  
 **Decision makers:** Taren  
 **Related issues:** NA
 

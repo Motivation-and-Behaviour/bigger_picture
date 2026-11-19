@@ -1102,7 +1102,7 @@ test_that("moderator tests become rows the results table can count", {
     c(
       "moderation_study_level",
       "sens_reporter",
-      "moderation_study_level",
+      "moderation_study_level_family",
       "year_trend"
     )
   )

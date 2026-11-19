@@ -189,6 +189,40 @@ prepare_analysis_data <- function(
       exposure_exceptions$action %in% "exclude",
     ]
   )
+  # A line that passes the checks above and still changes nothing is a
+  # mistake too: the part must sit beside a dedicated total it has values
+  # with, and a total said to be dedicated must be there to use.
+  at_wave <- function(wave) {
+    is.na(wave) | as.character(base$wave) %in% wave
+  }
+  made <- exposures$exposures
+  for (i in seq_len(nrow(parts))) {
+    used <- at_wave(parts$wave[i]) &
+      startsWith(dplyr::coalesce(made$total_source, ""), "dedicated") &
+      !is.na(made[[parts$variable_name[i]]])
+    if (!any(used)) {
+      stop(
+        "Dataset ",
+        info$dataset_id[1],
+        ": the `part_of_total` line for `",
+        parts$variable_name[i],
+        "` has no effect: no row at its wave has the class beside a ",
+        "dedicated total.",
+        call. = FALSE
+      )
+    }
+  }
+  for (wave in made_dedicated$wave) {
+    if (!any(at_wave(wave) & made$total_source %in% "dedicated")) {
+      stop(
+        "Dataset ",
+        info$dataset_id[1],
+        ": a `total_dedicated` line has no effect: no row at its wave has ",
+        "the total.",
+        call. = FALSE
+      )
+    }
+  }
   outcomes <- prepare_outcomes(
     kept,
     base,
@@ -198,12 +232,22 @@ prepare_analysis_data <- function(
     exceptions,
     settings
   )
-  if (!all(series$variable_name %in% names(outcomes$outcomes))) {
+  has_outcome <- vapply(
+    seq_len(nrow(series)),
+    function(i) {
+      name <- series$variable_name[i]
+      name %in%
+        names(outcomes$outcomes) &&
+        any(!is.na(outcomes$outcomes[[name]][at_wave(series$wave[i])]))
+    },
+    logical(1)
+  )
+  if (!all(has_outcome)) {
     stop(
       "Dataset ",
       info$dataset_id[1],
       ": an `own_series` exception names an outcome the dataset does not ",
-      "have.",
+      "have at that wave.",
       call. = FALSE
     )
   }

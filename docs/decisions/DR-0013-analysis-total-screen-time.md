@@ -1,7 +1,7 @@
 # DR-0013: The analysis derives total screen time, and the harmonised row stays dedicated items only
 
 **Status:** Accepted  
-**Date:** 2026-11-11 (amended 2026-11-12 and 2026-11-17)  
+**Date:** 2026-11-11 (amended 2026-11-12, 2026-11-17, 2026-11-19 and 2026-11-20)  
 **Decision makers:** Taren  
 **Related issues:** NA
 
@@ -59,6 +59,8 @@ A check of the studies' codebooks confirmed it, and showed that the cases differ
   A class counts as part of a total where the same respondent reported both for the same days and the total item's wording, or its construction, covers the class's activity; a class from another questionnaire, another respondent or another recall frame does not.
   Without the record the unit has no such value and is left out of the models that adjust a class for the rest of screen use.
   A child whose class is larger than the total it is part of has given an inconsistent pair of answers, and has no value either (amended 20 November 2026: it was first set to zero).
+  The row is left out of the models that adjust that class for the rest, on complete cases and on imputed data alike, and is counted on each such slope; its rest is never imputed.
+  A class within a hundred-millionth of an hour of its total counts as equal to it.
 - A sum of content classes that stands in for a partial item is marked `summed_for_partial` (amended 19 November 2026).
   It can fall short of the item it replaces, where the item covered screen use that no content class asks about, so it is left out with the partial items in the sensitivity analysis that excludes them.
   Two instruments in one questionnaire can disagree within a child without either excluding the other, and a class cannot be subtracted from a total it was not part of.

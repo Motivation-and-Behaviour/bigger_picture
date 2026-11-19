@@ -35,7 +35,8 @@
 #' child has what the model needs, which is the outcome for the lagged and
 #' matched models and the outcome and screen use for the within-child
 #' model. Children of a unit who share a next wave are one pair where there
-#' are at least `longitudinal_min_pair` of them, so a unit can have more than
+#' are at least `longitudinal_min_pair` of them, and the pair is fitted
+#' only where that many rows remain for the model, so a unit can have more than
 #' one pair from the same earlier wave (a cohort or a subsample followed up
 #' at another wave), no child is in two of them, and pairs can skip waves.
 #' The within-child model's pairs can span more than the others'. Children
@@ -56,8 +57,11 @@
 #' ordinal rows with five or more levels); the lagged model's later wave
 #' needs the outcome and not the screen item, so its gap can run to a wave
 #' with no screen item; and children with no later wave (`n_no_later`: they
-#' left the study, or the outcome was not asked again) are not seen, so
-#' attrition is not accounted for.
+#' left the study, were not asked the outcome again, or for the
+#' within-child model were seen later only without screen use or only at
+#' waves where the item had changed) are not seen, so attrition is not
+#' accounted for. A change of the outcome's instrument is not routed
+#' past: it still leaves out the whole pair.
 #'
 #' @param prepared Output of `prepare_analysis_data()` for one dataset.
 #' @param cells A tibble of `exposure` and `outcome` rows to fit.
@@ -117,6 +121,17 @@ fit_stage1_longitudinal <- function(
   column <- function(name) {
     if (name %in% names(base)) as.character(base[[name]]) else NULL
   }
+
+  if (!is.numeric(settings$longitudinal_min_pair)) {
+    stop(
+      "fit_stage1_longitudinal(): `settings` needs `longitudinal_min_pair`.",
+      call. = FALSE
+    )
+  }
+  # A pair is fitted on at least as many rows as it needs children: the
+  # minimum applies again after the rows a model cannot use are gone.
+  pair_settings <- settings
+  pair_settings$min_unit_rows <- settings$longitudinal_min_pair
 
   results <- list()
   wave_of <- match(base$wave, waves)
@@ -198,8 +213,13 @@ fit_stage1_longitudinal <- function(
                 why <- "outcome asked differently at one of the waves"
               }
               if (!is.na(why)) {
-                met_block <- met_block | (is.na(destination) & !is.na(hit))
-                block_reason <- dplyr::coalesce(block_reason, why)
+                met_here <- is.na(destination) & !is.na(hit)
+                met_block <- met_block | met_here
+                # The reason given is that of the first changed wave a
+                # child of the unit was seen at.
+                if (any(met_here)) {
+                  block_reason <- dplyr::coalesce(block_reason, why)
+                }
                 next
               }
             }
@@ -334,7 +354,7 @@ fit_stage1_longitudinal <- function(
                 fit_stage1_unit(
                   one[usable, ],
                   "linear",
-                  settings,
+                  pair_settings,
                   extra_terms = if (version == "lagged") "y0" else character()
                 )
               }
@@ -406,12 +426,15 @@ longitudinal_lag <- function(year_gap, age_gap, age) {
     abs(by_age - round(by_age)) > 0.05
   shown <- length(fractions) > 2 || steady
   candidates <- if (shown) c(by_age, by_year) else c(by_year, by_age)
+  # Collection years are whole numbers, so their median is too; the two
+  # sources are compared on the mean gap in years.
+  mean_year <- mean(year_gap, na.rm = TRUE)
   list(
     years = candidates[!is.na(candidates)][1],
     differ = shown &&
       !is.na(by_age) &&
-      !is.na(by_year) &&
-      abs(by_age - by_year) > 0.3
+      is.finite(mean_year) &&
+      abs(by_age - mean_year) > 0.3
   )
 }
 

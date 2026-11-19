@@ -432,6 +432,41 @@ test_that("adjusting for other screen use removes what it adds to a slope", {
     adjust_other = TRUE
   )
   expect_equal(total$status, "no row has other")
+
+  # The rest from a dedicated total: a child whose class is larger than
+  # that total has no rest, and the row is left out and counted, whether
+  # or not anything is imputed.
+  dedicated <- prepared
+  n <- nrow(dedicated$base)
+  dedicated$exposures$total_source <- "dedicated"
+  dedicated$exposures$total_rows <- "st_total"
+  dedicated$exposures$total_screen <- dedicated$exposures$st_game +
+    dedicated$exposures$st_watch
+  dedicated$exposures$other_game <- dedicated$exposures$st_watch
+  odd <- seq_len(12)
+  dedicated$exposures$total_screen[odd] <- dedicated$exposures$st_game[odd] - 1
+  dedicated$exposures$other_game[odd] <- NA
+  kept <- fit_stage1(
+    dedicated,
+    cell,
+    reg$outcomes,
+    reg$schema,
+    adjust_other = TRUE
+  )
+  expect_equal(kept$n_other_inconsistent, 12L)
+  expect_equal(kept$n, n - 12L)
+  expect_equal(kept$n_no_other, 0L)
+  filled <- fit_stage1(
+    dedicated,
+    cell,
+    reg$outcomes,
+    reg$schema,
+    adjust_other = TRUE,
+    imputation = list(seed = 1L, index = 1L)
+  )
+  expect_equal(filled$n_other_inconsistent, 12L)
+  expect_equal(filled$n, n - 12L)
+  expect_equal(filled$estimate, kept$estimate)
 })
 
 test_that("the longitudinal models separate change from standing differences", {
@@ -733,6 +768,50 @@ test_that("the longitudinal models separate change from standing differences", {
   )
   expect_equal(unknown$n[unknown$model == "within"], 500L)
   expect_equal(unknown$n[unknown$model == "lagged"], 600L)
+
+  # A pair needs its minimum of children again after the rows a model
+  # cannot use are gone: 150 share the wave, and 60 are left once those
+  # whose respondent changed are out.
+  thin <- function(rows) {
+    rows <- edit(rows)
+    people <- unique(rows$participant_id)
+    rows <- rows[rows$participant_id %in% people[1:150], ]
+    rows$st_responder <- ifelse(
+      rows$wave == "2" & rows$participant_id %in% people[1:90],
+      "Self",
+      "Parent"
+    )
+    rows
+  }
+  short <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, thin),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  expect_equal(short$n_pairs, rep(150L, 3))
+  expect_equal(
+    short$status[short$model == "within"],
+    "fewer rows than the minimum unit size"
+  )
+  expect_equal(short$status[short$model == "lagged"], "fitted")
+  # The minimum for a pair must be among the settings.
+  without <- analysis_settings()
+  without$longitudinal_min_pair <- NULL
+  expect_error(
+    fit_stage1_longitudinal(
+      prepared,
+      cell,
+      reg$outcomes,
+      reg$exposures,
+      reg$schema,
+      no_breaks(reg),
+      without
+    ),
+    "needs `longitudinal_min_pair`"
+  )
 
   # A child whose screen use is reported by someone else at the later wave
   # is left out of the within-child model only.
@@ -1037,21 +1116,21 @@ test_that("results are labelled, tested and adjusted in one table", {
   expect_equal(trend$finding, "not estimated")
   expect_true(is.na(trend$p) && is.na(trend$k_total))
   expect_equal(with_tests$q[seq_len(nrow(out))], out$q)
-  # A level the model list does not give a model is not reported: the
-  # family-level moderator test is not built.
+  # A test at a level its model is not listed for is a mistake, and is
+  # refused and not dropped.
   at_family <- tests[1, ]
   at_family$level <- "L0"
   at_family$node <- NA
-  expect_equal(
-    nrow(assemble_results(
+  expect_error(
+    assemble_results(
       tree,
       NULL,
       spec,
       hypotheses,
       reg$outcomes,
       tests = at_family
-    )),
-    nrow(out)
+    ),
+    "tests at a level the model list does not give"
   )
   # A family that could not be pooled has no p-value and is not counted.
   last <- out[out$family == "cognition", ]

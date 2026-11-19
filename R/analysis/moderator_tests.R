@@ -7,9 +7,11 @@
 #' equal. The year trend is one: the between-dataset slope. A moderator that sorts the slopes exactly as an earlier one does
 #' (`same_as`) is the same test, and is left out.
 #'
-#' The comparison of same-reporter with different-reporter slopes is its
-#' own row of the model list (`sens_reporter`); every other categorical
-#' moderator is `moderation_study_level`.
+#' Within a specific outcome, the comparison of same-reporter with
+#' different-reporter slopes is its own row of the model list
+#' (`sens_reporter`) and every other categorical moderator is
+#' `moderation_study_level`; within a family they are all
+#' `moderation_study_level_family`.
 #'
 #' @param moderation Rows of `moderate_tree()`, or NULL.
 #' @param trend Rows of `trend_tree()`, or NULL.
@@ -33,10 +35,10 @@ moderator_tests <- function(moderation = NULL, trend = NULL) {
     key <- c("exposure", "tree_level", "family", "node", "moderator")
     own <- own[!duplicated(own[key]), ]
     compared <- tibble::tibble(
-      model_name = ifelse(
-        own$moderator %in% "reporter",
-        "sens_reporter",
-        "moderation_study_level"
+      model_name = dplyr::case_when(
+        own$tree_level %in% "L0" ~ "moderation_study_level_family",
+        own$moderator %in% "reporter" ~ "sens_reporter",
+        .default = "moderation_study_level"
       ),
       exposure = own$exposure,
       level = own$tree_level,

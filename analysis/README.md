@@ -185,7 +185,7 @@ A decision about one dataset that the registries cannot express goes in an optio
 | `reason` | Why, in a sentence |
 
 On a screen-time row an exception can `exclude` it, say that a total mapped as partial is a total of all screen use at a wave (`total_dedicated`, on `st_total`), or say that a content-class row is part of what the dataset's dedicated total measured (`part_of_total`); see DR-0013.
-On an outcome row, `own_series` says the row was asked differently at one wave, so the within-child model leaves out pairs of waves that cross it; the row is still used at that wave (DR-0018).
+On an outcome row, `own_series` says the row was asked differently at one wave, so for the within-child model that wave is not a child's next wave from any other, and no pair starts from it to a wave asked the usual way; the row is still used at that wave in every other model (DR-0018).
 
 The tests read every such file, and the pipeline tracks one per dataset, so a new file is noticed.
 

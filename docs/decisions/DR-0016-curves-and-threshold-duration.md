@@ -1,7 +1,7 @@
 # DR-0016: Curves are pooled from splines with fixed knots, and the threshold duration is read from the pooled curve in two ways
 
 **Status:** Accepted  
-**Date:** 2026-11-13  
+**Date:** 2026-11-13 (amended 2026-11-17, 2026-11-19 and 2026-11-20)  
 **Decision makers:** Taren  
 **Related issues:** NA
 
@@ -79,7 +79,7 @@ What it showed, with three interior knots and the rule on rows, and no error ins
 
 - **The curve is recovered.** For the flat, straight and levelling-off curves the interval covered the truth 92 to 100% of the time at every hour from half an hour to six, with eight datasets and with five.
   For bends at two and three hours it covered 90 to 100%, and for a rise then a fall 88 to 99%.
-- **A dip is smoothed.** On the way down into a dip coverage fell to 57% at an hour and a half with eight datasets (74% with five), with errors of up to 0.05 SD on its way back up, and was above 90% at its lowest point.
+- **A dip is smoothed.** On the way down into a dip coverage fell to 57% at an hour and a half with eight datasets (74% with five), with errors of up to 0.05 SD on its way back up (0.055 with five datasets), and was above 90% at its lowest point.
 - **A false conservative threshold is rare.** One was reported where none exists, or more than a quarter of an hour early, in at most 1% of runs of any scenario with the rules used here, and in at most 1.5% under any rule tried, with or without error inside the bands, and with eight datasets or five.
 - **A real threshold is found late by the conservative rule, or not at all.** With eight datasets, a curve bending at two hours had its threshold found in 90% of runs, a median hour and a half late.
   A straight line was found in 53%, an hour and a half late.

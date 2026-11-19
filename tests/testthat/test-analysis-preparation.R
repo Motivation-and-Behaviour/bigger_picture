@@ -1072,9 +1072,13 @@ test_that("exceptions must name analysed outcomes, and a node moves a row", {
   # the row out or say the total is dedicated, and nothing else.
   left <- prepare(read("st_game,,exclude,,Not asked in a comparable way"))
   expect_true(all(is.na(left$exposures$st_game)))
-  dedicated <- function(line, status) {
+  dedicated <- function(line, status, total = TRUE) {
+    rows <- mock_dataset("9995")
+    if (total) {
+      rows$st_total <- rows$st_game + 1
+    }
     prepare_analysis_data(
-      mock_dataset("9995"),
+      rows,
       mock_info("9995"),
       reg$outcomes,
       reg$exposures,
@@ -1097,6 +1101,8 @@ test_that("exceptions must name analysed outcomes, and a node moves a row", {
   expect_no_error(dedicated(whole, "partial"))
   # It means something only for a total mapped as partial, at a real wave.
   expect_error(dedicated(whole, "compatible"), "mapped as partial")
+  # And only where the dataset has the item to use.
+  expect_error(dedicated(whole, "partial", total = FALSE), "has no effect")
   expect_error(
     dedicated("st_total,nine,total_dedicated,,Why", "partial"),
     "names a wave the dataset does not have"
@@ -1131,6 +1137,34 @@ test_that("exceptions must name analysed outcomes, and a node moves a row", {
     panel("mh_dep_self,nine,own_series,,Why"),
     "names a wave the dataset does not have"
   )
+  read_lines <- function(lines) {
+    path <- file.path(dir, "analysis_exceptions.csv")
+    writeLines(c("variable_name,wave,action,value,reason", lines), path)
+    read_analysis_exceptions(path, reg$schema, reg$outcomes)
+  }
+  # A line that would pass and change nothing is refused: here the total
+  # is left out at the wave its part is recorded for.
+  with_total <- function(lines) {
+    rows <- mock_dataset("9992")
+    rows$st_total <- rows$st_game + 1
+    prepare_analysis_data(
+      rows,
+      mock_info("9992"),
+      reg$outcomes,
+      reg$exposures,
+      reg$derivations,
+      reg$schema,
+      read_lines(lines)
+    )
+  }
+  expect_no_error(with_total("st_game,1,part_of_total,,One of its parts"))
+  expect_error(
+    with_total(c(
+      "st_total,1,exclude,,Another item",
+      "st_game,1,part_of_total,,One of its parts"
+    )),
+    "has no effect"
+  )
   # A mistyped wave is an error for an outcome too, not a line that does
   # nothing.
   expect_error(
@@ -1140,11 +1174,6 @@ test_that("exceptions must name analysed outcomes, and a node moves a row", {
   expect_error(read("mh_dep_self,1,own_series,x,Why"), "takes no value")
   # The same line twice, or a row left out and also decided about at the
   # same wave.
-  read_lines <- function(lines) {
-    path <- file.path(dir, "analysis_exceptions.csv")
-    writeLines(c("variable_name,wave,action,value,reason", lines), path)
-    read_analysis_exceptions(path, reg$schema, reg$outcomes)
-  }
   expect_error(
     read_lines(c(
       "mh_dep_self,1,own_series,,Why",
