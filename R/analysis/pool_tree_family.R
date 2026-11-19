@@ -96,8 +96,6 @@ pool_tree_family <- function(
       estimate_by_datasets = NA_real_,
       se_by_datasets = NA_real_,
       df_by_datasets = NA_real_,
-      df_floor = NA_real_,
-      df_floor_by_datasets = NA_real_,
       ci_low_by_datasets = NA_real_,
       ci_high_by_datasets = NA_real_
     )
@@ -123,8 +121,6 @@ pool_tree_family <- function(
       estimate_by_datasets = rows$estimate,
       se_by_datasets = rows$se,
       df_by_datasets = rows$df,
-      df_floor = rows$df,
-      df_floor_by_datasets = rows$df,
       ci_low_by_datasets = rows$ci_low,
       ci_high_by_datasets = rows$ci_high
     ))
@@ -166,11 +162,11 @@ pool_tree_family <- function(
   if (is.character(fit)) {
     return(result(paste("model failed:", fit)))
   }
-  average <- function(weights, form = "CR3") {
+  average <- function(weights) {
     tryCatch(
       clubSandwich::linear_contrast(
         fit,
-        vcov = form,
+        vcov = "CR3",
         cluster = data$dataset_id,
         contrasts = matrix(weights / sum(weights), nrow = 1)
       ),
@@ -220,16 +216,9 @@ pool_tree_family <- function(
   } else {
     NA_character_
   }
-  # Whether there are too few studies to say is judged on the degrees of
-  # freedom of the form used for a single specific outcome (CR2), which the
-  # floor was set on. The jackknife form's are usually a little lower, and
-  # sometimes higher.
-  floor_df <- function(weights, fallback) {
-    plain <- average(weights, "CR2")
-    if (is.character(plain) || is.na(plain$df[1])) fallback else plain$df[1]
-  }
-  df_floor <- floor_df(rep(1, length(pooled)), robust$df[1])
-  status <- if (df_floor < settings$min_robust_df) {
+  # Too few studies to say is judged on the degrees of freedom the
+  # interval and the p-value use.
+  status <- if (robust$df[1] < settings$min_robust_df) {
     "too few studies to say"
   } else {
     "pooled"
@@ -254,8 +243,6 @@ pool_tree_family <- function(
     estimate_by_datasets = by_datasets$Est[1],
     se_by_datasets = by_datasets$SE[1],
     df_by_datasets = by_datasets$df[1],
-    df_floor = df_floor,
-    df_floor_by_datasets = floor_df(rows$k_datasets, by_datasets$df[1]),
     ci_low_by_datasets = by_datasets$CI_L[1],
     ci_high_by_datasets = by_datasets$CI_U[1]
   )

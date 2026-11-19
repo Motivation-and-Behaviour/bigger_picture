@@ -542,6 +542,19 @@ test_that("a partial total gives way to a sum, and stands where none can be made
   }
   everywhere <- recorded(NA_character_)
   expect_equal(everywhere$other_game, c(0, 1, 2, 2, 3, 4))
+  # A class larger than its total gives no rest, not a rest of zero.
+  over <- exposures
+  over$st_game[2] <- 5
+  expect_equal(
+    derive_total_screen(
+      over,
+      unit,
+      reg$exposures,
+      wave = wave,
+      parts = tibble::tibble(variable_name = "st_game", wave = NA_character_)
+    )$other_game,
+    c(0, NA, 2, 2, 3, 4)
+  )
   expect_true(all(is.na(everywhere$other_watch)))
   second <- recorded("2")
   expect_true(all(is.na(second$other_game[1:3])))
@@ -927,7 +940,7 @@ test_that("the analysis section builds a target list from a dataset plan", {
     "TRUE",
     fixed = TRUE
   )
-  expect_length(analysis_targets(plan[0, ]), 30)
+  expect_length(analysis_targets(plan[0, ]), 31)
 })
 
 test_that("an excluded row stays excluded when a rule could derive it", {

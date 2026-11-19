@@ -312,6 +312,7 @@ Each line names a `dataset_id`, an `exposure` and a `reason` taken from the stud
 `waves` lists the waves that used it, separated by semicolons and spelt as in the harmonised `wave` column, for a study whose waves share or straddle calendar years or whose item came and went.
 Fill in one of the two and leave the other blank.
 `day` limits a line to the `weekday`, `weekend` or `usual` row of the exposure; blank means all three.
+`scope` is blank for a change to the item itself, or `trend` for a line that only separates series for trends over years, such as a wave whose values mix respondents: the models that compare a child's own waves compare respondents child by child and ignore such a line.
 A list of waves is closed: when a study adds a wave that still uses the changed item, add the wave to every such list, or it is read as the old item.
 The derived total is built from whichever items a dataset has, so every line of the dataset splits its series, whatever the exposure or day.
 A line with no units that have the exposure on one of its two sides is listed in the `series_breaks_unused` target, which should be empty.
@@ -327,7 +328,7 @@ It is a draft until the freeze, when it is fixed with the registries.
 | `step` | The step of the analysis plan that runs it, 10 to 14 |
 | `tier` | The preregistered tier whose q-values it takes, 1 to 5; exploratory, descriptive and post-freeze models take 5 |
 | `levels` | The levels of the outcome tree it is reported at, pipe-separated: `L0`, `L1`, `L2`, `L3` |
-| `exposure_set` | Pipe-separated: `total` (the derived total), `content_classes`, `other_included`, `social_media`, `school_total` (overall screen use at school), `school_other` (the other rows asked about school) |
+| `exposure_set` | Pipe-separated: `total` (the derived total), `content_classes`, `other_included`, `social_media`, `school_content` (the content-class rows asked about school), `school_other` (the other rows asked about school) |
 | `outcome_set` | `core`, `report`, `negative_control`, or `core_rare_binary` (binary rows where more than half the units that measure the row have fewer than 10 events) and `headline_cells`, both settled from the data where their models are built |
 | `moderator` | The moderators it tests, pipe-separated; blank for none |
 | `covariate_tier` | `1`, `2`, `3` or `family` (DR-0015) |

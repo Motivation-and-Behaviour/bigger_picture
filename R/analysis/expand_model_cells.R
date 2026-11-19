@@ -7,9 +7,9 @@
 #'   usual-day activity rows of the prereg's content classes that are
 #'   included and in scope for the report; `social_media` that class
 #'   alone; `other_included` the other
-#'   included usual-day rows, bar the dedicated total; `school_total`
-#'   overall screen use at school and `school_other` the other rows for use
-#'   at school;
+#'   included usual-day rows, bar the dedicated total; `school_content`
+#'   the content-class rows for use at school and `school_other` the other
+#'   rows for use at school;
 #' - outcomes: `core` the outcome rows pooled up the tree, and `core_h5b`,
 #'   `core_h5c` and `core_other_h5c` those of the families the registered
 #'   moderation hypotheses name, or do not; `report` the
@@ -58,17 +58,18 @@ expand_model_cells <- function(
       included$variable_name,
       c(classes, included$variable_name[included$exposure %in% "total"])
     ),
-    # Overall screen use at school, the like-for-like partner of overall
-    # screen use anywhere (H4), and the other rows asked about school.
-    school_total = exposure_registry$variable_name[
+    # The rows asked about school that are a content class, so that
+    # location can be compared within content (H4), and the other rows
+    # asked about school: the total and the devices.
+    school_content = exposure_registry$variable_name[
       exposure_registry$context %in%
         "school" &
-        exposure_registry$exposure %in% "total_school"
+        !is.na(exposure_registry$content_class)
     ],
     school_other = exposure_registry$variable_name[
       exposure_registry$context %in%
         "school" &
-        !exposure_registry$exposure %in% "total_school"
+        is.na(exposure_registry$content_class)
     ]
   )
   rows <- outcome_registry$rows

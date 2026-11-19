@@ -89,6 +89,9 @@ analysis_settings <- function() {
     # hour is compared with. A threshold is the lowest duration whose
     # interval lies beyond `smallest_effect` SD from the reference
     # (provisional until the freeze).
+    # A pair of waves in the longitudinal strand needs this many of a
+    # unit's children (DR-0018).
+    longitudinal_min_pair = 100L,
     curve_knots = c(1, 2, 4),
     curve_boundary = c(0, 6),
     curve_grid = seq(0, 8, by = 0.5),

@@ -32,7 +32,8 @@
 #' item measured, which is a fact about the study's questionnaire and is
 #' recorded for the dataset (`parts`, from its `part_of_total`
 #' exceptions). Without that record the unit has no `other_<exposure>` and
-#' is left out of those models.
+#' is left out of those models. A row whose class is larger than its total
+#' has none either.
 #'
 #' @param exposures A tibble of exposure columns, one row per base row.
 #' @param unit The stage 1 unit of each row.
@@ -144,8 +145,12 @@ derive_total_screen <- function(
         within <- length(recorded) > 0 &&
           (anyNA(recorded) || all(wave[index] %in% recorded))
         if (within) {
+          # A class larger than the total it is part of is an inconsistent
+          # pair of answers, not a child with no other screen use.
           own <- exposures[[variable]][index]
-          out[[other_column(variable)]][index] <- pmax(total - own, 0)
+          rest <- total - own
+          rest[!is.na(rest) & rest < -1e-8] <- NA_real_
+          out[[other_column(variable)]][index] <- pmax(rest, 0)
         }
       }
       next

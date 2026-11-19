@@ -35,7 +35,7 @@
 #' child has what the model needs, which is the outcome for the lagged and
 #' matched models and the outcome and screen use for the within-child
 #' model. Children of a unit who share a next wave are one pair where there
-#' are at least the minimum number of them, so a unit can have more than
+#' are at least `longitudinal_min_pair` of them, so a unit can have more than
 #' one pair from the same earlier wave (a cohort or a subsample followed up
 #' at another wave), no child is in two of them, and pairs can skip waves.
 #' The within-child model's pairs can span more than the others'. Children
@@ -207,8 +207,13 @@ fit_stage1_longitudinal <- function(
             destination[fill] <- k
             later_row[fill] <- hit[fill]
           }
+          # A pair of waves needs more children than a unit does: a small
+          # group that shares a next wave is mostly children who missed
+          # the wave between, and its slope is noisy.
           sizes <- table(destination)
-          keep <- as.integer(names(sizes)[sizes >= settings$min_unit_rows])
+          keep <- as.integer(names(sizes)[
+            sizes >= settings$longitudinal_min_pair
+          ])
           n_left <- sum(!is.na(destination) & !destination %in% keep)
           n_no_later <- sum(is.na(destination))
           n_blocked <- sum(met_block)
@@ -442,7 +447,11 @@ longitudinal_item_changed <- function(
     exposure_registry$variable_name
   )]
   day <- exposure_registry$day[match(exposure, exposure_registry$variable_name)]
-  lines <- series_breaks[series_breaks$dataset_id %in% dataset_id, ]
+  # Lines that only separate series for trends are not changes to the
+  # item.
+  lines <- series_breaks[
+    series_breaks$dataset_id %in% dataset_id & is.na(series_breaks$scope),
+  ]
   # The derived total is built from every item, so any change counts; and
   # a usual-day value is built from the weekday and weekend items, so a
   # change to either counts for it.

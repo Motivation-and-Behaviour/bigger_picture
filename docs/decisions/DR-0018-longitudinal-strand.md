@@ -34,7 +34,7 @@ A pair starts from one unit of the earlier wave, so countries stay apart as in t
 
 A pair is one unit of the earlier wave and a later wave, on the children of the unit seen again there.
 Each child goes to their own next wave: the first later wave at which the child has what the model needs (amended 18 November 2026: the first version chose one next wave for the whole unit, which dropped the children of a cohort or a subsample followed up at another wave).
-Children of a unit who share a next wave are one pair where there are at least the minimum number of them, so a unit can have more than one pair from the same earlier wave, no child is in two of them, and a pair can skip waves.
+Children of a unit who share a next wave are one pair where there are at least 100 of them (amended 20 November 2026: the first minimum was the 30 a unit needs, and pairs that skip a wave were then small groups of the children who missed it, with slopes several times noisier), so a unit can have more than one pair from the same earlier wave, no child is in two of them, and a pair can skip waves.
 Children whose next wave too few of the unit share are left out and counted, and a unit with no pair is recorded as having none.
 
 The strand is labelled exploratory, takes Tier 5 q-values, and its models are rows of the model list fixed at the freeze.

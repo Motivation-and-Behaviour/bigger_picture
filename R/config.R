@@ -163,7 +163,7 @@ bp_series_breaks_path <- function() {
 }
 
 bp_series_breaks_columns <- function() {
-  c("dataset_id", "exposure", "day", "from_year", "waves", "reason")
+  c("dataset_id", "exposure", "day", "from_year", "waves", "scope", "reason")
 }
 
 # The settings each stage reads, so a change to one reruns only that stage.
@@ -184,6 +184,12 @@ bp_prepare_settings <- function() {
 
 bp_summary_settings <- function() {
   c("max_levels", "age_limit")
+}
+
+# The longitudinal strand reads the model settings and its own minimum for
+# a pair of waves.
+bp_longitudinal_settings <- function() {
+  c(bp_model_settings(), "longitudinal_min_pair")
 }
 
 bp_model_settings <- function() {
@@ -598,7 +604,7 @@ bp_model_exposure_sets <- function() {
     "content_classes",
     "social_media",
     "other_included",
-    "school_total",
+    "school_content",
     "school_other"
   )
 }

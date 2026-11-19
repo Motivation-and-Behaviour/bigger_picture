@@ -279,11 +279,11 @@ test_that("the model list is valid, and expands against the registries", {
       info = model
     )
   }
-  # H4 is overall screen use at school; the other school rows are
-  # exploratory.
+  # H4 compares location within a content class; the school total and
+  # the device rows are exploratory.
   location <- after[after$model_name == "moderation_location", ]
-  expect_equal(unique(location$exposure), "st_total_school")
-  expect_false(
+  expect_equal(unique(location$exposure), "st_educational_school")
+  expect_true(
     "st_total_school" %in%
       after$exposure[after$model_name == "moderation_location_other"]
   )
@@ -483,7 +483,7 @@ test_that("the longitudinal models separate change from standing differences", {
   writeLines(
     c(
       paste(bp_series_breaks_columns(), collapse = ","),
-      "9992,game,,2017,,New response bands"
+      "9992,game,,2017,,,New response bands"
     ),
     path
   )
@@ -499,6 +499,26 @@ test_that("the longitudinal models separate change from standing differences", {
     changed$status,
     c("fitted", "fitted", "screen item changed between the waves")
   )
+  # A line that only separates series for trends is not a change to the
+  # item, and blocks nothing here.
+  writeLines(
+    c(
+      paste(bp_series_breaks_columns(), collapse = ","),
+      "9992,game,,2017,,trend,Mixed respondents from this wave"
+    ),
+    path
+  )
+  expect_true(all(
+    fit_stage1_longitudinal(
+      prepared,
+      cell,
+      reg$outcomes,
+      reg$exposures,
+      reg$schema,
+      read_series_breaks(path, reg$exposures)
+    )$status ==
+      "fitted"
+  ))
 
   # So does an outcome recorded as asked differently at one of the waves;
   # at both waves it would be the same item again.

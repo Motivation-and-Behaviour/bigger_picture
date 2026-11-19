@@ -56,7 +56,9 @@ A check of the studies' codebooks confirmed it, and showed that the cases differ
 - The rest of a child's screen use beside a content class is the total less the class only where the class was asked as part of the total.
   That is a fact about the study's questionnaire, checked against its documents and recorded for the dataset as a `part_of_total` line of its exceptions file, with the reason (amended 19 November 2026).
   The first version judged it from the data, as the total being at least the class for 95% of a unit's children who have both; that measured the sizes of the two items and not whether one was asked inside the other, and it treated the units of one dataset differently by chance.
+  A class counts as part of a total where the same respondent reported both for the same days and the total item's wording, or its construction, covers the class's activity; a class from another questionnaire, another respondent or another recall frame does not.
   Without the record the unit has no such value and is left out of the models that adjust a class for the rest of screen use.
+  A child whose class is larger than the total it is part of has given an inconsistent pair of answers, and has no value either (amended 20 November 2026: it was first set to zero).
 - A sum of content classes that stands in for a partial item is marked `summed_for_partial` (amended 19 November 2026).
   It can fall short of the item it replaces, where the item covered screen use that no content class asks about, so it is left out with the partial items in the sensitivity analysis that excludes them.
   Two instruments in one questionnaire can disagree within a child without either excluding the other, and a class cannot be subtracted from a total it was not part of.

@@ -26,6 +26,10 @@ analysis_targets <- function(harmonise_plan) {
       quote(settings[bp_model_settings()])
     ),
     targets::tar_target_raw(
+      "settings_longitudinal",
+      quote(settings[bp_longitudinal_settings()])
+    ),
+    targets::tar_target_raw(
       "settings_curve",
       quote(settings[bp_curve_settings()])
     ),
@@ -338,7 +342,7 @@ analysis_targets <- function(harmonise_plan) {
         exposure_registry,
         dataschema,
         series_breaks,
-        settings_model
+        settings_longitudinal
       )),
       memory = "transient",
       garbage_collection = TRUE,
