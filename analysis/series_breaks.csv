@@ -2,7 +2,7 @@ dataset_id,exposure,day,from_year,waves,reason
 18,comp,,2006,,Five response bands at wave 1 and open hours and minutes from wave 2
 18,comp,,,2.5;3.5,Mail-out questionnaires between main interviews asking weekly totals with no home access filter
 18,game,,2012,,Filter changes from owning an electronic game system to having access to electronic games
-18,game,,2016,,Older cohort answers for itself from wave 7 while the younger cohort is still parent report
+18,game,,2018,,From wave 8 the younger cohort is no longer asked the access filter and the older cohort's item is reworded and self-completed with no none option; the older cohort's move to self report at wave 7 is a change of respondent and is handled child by child
 18,game,,,2.5;3.5,Mail-out questionnaires between main interviews asking weekly totals
 18,watch,,2006,,Five response bands at wave 1 and open hours and minutes from wave 2
 18,watch,,,2.5;3.5,Mail-out questionnaires between main interviews summing separate TV and DVD items asked as weekly totals
