@@ -406,3 +406,7 @@ dataset_id,target_variable,source_value,harmonised_value,mapping_status,notes
 279,ethnicity,"Non-Hispanic, Native American or Alaska Native",Other,proximate,I_RACEKR = 3: US Census race group with no schema equivalent; collapsed into Other and reported separately in indigenous
 279,ethnicity,"Non-Hispanic, Asian",Asian,compatible,I_RACEKR = 4 among non-Hispanic children
 279,ethnicity,"Non-Hispanic, other race",Other,compatible,"I_RACEKR = 5: the public file's residual race category (Other in the schema); the five-category recode has no Native Hawaiian or Pacific Islander group, and where NCHS put them is not documented"
+2315,ethnicity,White,White,compatible,"Q10 Branco (a), IBGE colour or race category"
+2315,ethnicity,Black,Black,compatible,"Q10 Negro (a), IBGE colour or race category"
+2315,ethnicity,Brown/mixed,Mixed,compatible,"Q10 Pardo (a), the Brazilian mixed-race category"
+2315,ethnicity,Yellow or Indigenous (combined),Asian,proximate,"Q10 Amarelo (a) and Indigena merged by the contributor for disclosure control; Indigenous has no schema category (Other), so the merge maps to the real value Asian, merge named"

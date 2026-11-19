@@ -1,0 +1,71 @@
+dataset_id: "2315"
+dataset_name: "Maciel"
+status: "in_progress"
+
+resources:
+  - name: "core"
+    role: "data"
+    glob: "01_data/IFCE2021_deidentified_core.dta"
+    reader: "stata"
+  - name: "variable_codebook"
+    role: "codebook"
+    glob: "02_codebook/IFCE2021_variable_codebook.csv"
+  - name: "codebook_and_validation"
+    role: "codebook"
+    glob: "02_codebook/IFCE2021_codebook_and_validation.xlsx"
+  - name: "readme"
+    role: "docs"
+    glob: "00_README_FIRST.md"
+  - name: "manifest"
+    role: "docs"
+    glob: "MANIFEST_SHA256.txt"
+  - name: "validation_report"
+    role: "docs"
+    glob: "03_reproducibility/VALIDATION_REPORT.md"
+  - name: "reconstruction_scripts"
+    role: "docs"
+    glob:
+      - "03_reproducibility/IFCE_Bigger_Picture_reconstruct.R"
+      - "03_reproducibility/IFCE_Bigger_Picture_reconstruct.py"
+  - name: "questionnaire"
+    role: "docs"
+    glob: "04_study_and_ethics_documents/IFCE_2021_questionnaire.pdf"
+  - name: "ethics_opinion"
+    role: "docs"
+    glob: "04_study_and_ethics_documents/IFCE_CEP_opinion_4648246.pdf"
+  - name: "consent_assent_forms"
+    role: "docs"
+    glob:
+      - "04_study_and_ethics_documents/TCLE_IFCE_2021.pdf"
+      - "04_study_and_ethics_documents/TALE_IFCE_2021.pdf"
+  - name: "data_management_plan"
+    role: "docs"
+    glob: "05_governance/DATA_MANAGEMENT_AND_DEIDENTIFICATION_PLAN.md"
+
+notes: |
+  IFCE 2021: a cross-sectional online survey of integrated technical
+  high-school students at the Federal Institute of Ceara (Brazil), delivered
+  as a curated, deidentified secure-transfer package prepared by the
+  contributor for Bigger Picture (00_README_FIRST.md).
+  One data table: 1,283 participants x 18 variables, one row per participant,
+  keyed by study_id (IFCE2021_####, generated after randomising row order).
+  01_data holds the same table as CSV and Stata; the Stata copy is declared
+  because it carries variable labels and full double precision (the two were
+  compared value by value and agree to within 1e-14). The CSV copy is not
+  declared.
+  02_codebook: the variable dictionary (CSV) and a workbook with the same
+  dictionary plus category counts and validation checks, both codebooks.
+  03_reproducibility: reconstructed R and Python preparation scripts (the
+  original Stata do-file is unavailable) and VALIDATION_REPORT.md, as docs.
+  04_study_and_ethics_documents: the Portuguese questionnaire (screen items
+  Q19-Q22, CES-D Q33, coronavirus threat Q35), the CEP ethics opinion
+  4.648.246 and the parent consent (TCLE) and student assent (TALE) forms,
+  as docs.
+  05_governance: the data-management and deidentification plan, as docs.
+  Not declared: the CSV copy of the data (duplicate of the .dta) and
+  05_governance/Bigger_Picture_OSF_protocol.md (a saved copy of Bigger
+  Picture's own OSF registration, not study documentation).
+  MANIFEST_SHA256.txt matches every file except the codebook workbook
+  (.xlsx), whose hash differs; the data files match.
+  Weekend screen time was not shared (the package says it holds no
+  observations); exact age was not collected (age bands only).
