@@ -2356,9 +2356,9 @@ wb_selfesteem_self,compatible,"GLBCN97, GLBCN02, GLBCN07, C14RSBGSE, C19RSBGSE",
   g <- coalesce(as.numeric(GLBCN97), as.numeric(GLBCN02), as.numeric(GLBCN07))
   g <- if_else(g >= 1 & g <= 7, g, NA_real_)
   r <- coalesce(as.numeric(C14RSBGSE), as.numeric(C19RSBGSE))
-  r <- if_else(r >= 1 & r <= 4, r, NA_real_)
+  r <- if_else(r >= 1 & r <= 4, 5 - r, NA_real_)
   coalesce(g, r)
-})","Child. 1997-2007: the study's Global Self-Concept Scale, released mean of 8 (1997, ages 8+; 1-7) or 6 items (2002, 2007; 1-5) such as 'I like being the way I am', 'I am proud of myself' and 'I do things as well as most people'. 2014 and 2019: five Rosenberg items (ages 10+), released mean 1-4. 0 inap. and 9 NA set to NA. Standardise within wave (scale changes in 2002 and 2014).",,
+})","Child. 1997-2007: the study's Global Self-Concept Scale, released mean of 8 (1997, ages 8+; 1 never to 7 always) or 6 items (2002, 2007; 1 never to 5 always), all positively worded, such as 'Overall, I have a lot to be proud of' and 'I can do things as well as most people'; used as released. 2014 and 2019: five positively worded Rosenberg items (ages 10+) such as 'On the whole, I am satisfied with myself', released as the unreversed mean of codes 1 strongly agree to 4 strongly disagree, so reversed here (5 - score, range 1-4). The study scores a child with at most one item missing. 0 inap. and 9 NA set to NA. Standardise within wave (scale changes in 2002 and 2014).",,
 wb_selfesteem_measure,inferred,.wave,"case_match(
   .wave,
   ""1997"" ~ ""Global Self-Concept Scale (CDS-I child interview), 8 items, 1-7 item scoring (range 1-7), mean, as released"",
@@ -2366,7 +2366,7 @@ wb_selfesteem_measure,inferred,.wave,"case_match(
   c(
     ""2014"",
     ""2019""
-  ) ~ ""Rosenberg Self-Esteem Scale, 5 of 10 items, 1-4 item scoring (range 1-4), mean, as released, keyed by the study"",
+  ) ~ ""Rosenberg Self-Esteem Scale, 5 of 10 items, 1-4 item scoring (range 1-4), mean; no negatively worded items; released unreversed on 1 = strongly agree to 4 = strongly disagree and reversed here (5 - score)"",
   .default = NA_character_
 )",Describes wb_selfesteem_self per wave; NA in 2020.,,
 wb_selfefficacy_gse_self,unavailable,,,GSE not administered.,,
