@@ -3,6 +3,11 @@ bp820_renames <- function() {
   c(
     # Time-invariant, and would collide with the per-wave `sex1`-`sex3`.
     sex_all_waves = "sex",
+    # One age per participant (T1 age, else T2 age minus one); would collide
+    # with the per-wave `alter1`-`alter3`.
+    alter_baseline = "alter",
+    # T3 measured empathy with a new item set (labelled H, J, K, L, M, N).
+    empat_new3 = "empat3",
     # T3 numbers the physical items one higher than the Scale Handbook does.
     aq08p3 = "aq09p3",
     aq09p3 = "aq10p3",
@@ -65,7 +70,7 @@ bp820_unify_wave_labels <- function(df) {
   df
 }
 
-#' Labels for the score columns, which the pivot drops from plain numerics
+#' Labels for the columns whose source label the pivot drops or the .sav lacks
 bp820_score_labels <- function() {
   # The .sav labels `aqp2`/`aqr2`/`aqv2` as each other's subscale.
   c(
@@ -79,14 +84,28 @@ bp820_score_labels <- function() {
     timepc_5pt = "Computer/video game use, pc_oft_5pt * pc_dau (T1, T2)",
     timepc_6pt = "Computer/video game use, pc_oft_6pt * pc_dau (T3)",
     timeme_5pt = "Total media use, timetv_5pt + timepc_5pt (T1, T2)",
-    timeme_6pt = "Total media use, timetv_6pt + timepc_6pt (T3)"
+    timeme_6pt = "Total media use, timetv_6pt + timepc_6pt (T3)",
+    norm = "Normative acceptance of aggression, 0 not at all ok to 3 totally ok",
+    empat = "Empathy, 0 not at all true to 4 completely true (T1, T2)",
+    empat_new = "Empathy, new T3 item set (H, J, K, L, M, N), 0 to 4",
+    nvme = "Non-violent media use: media with expert violence ratings < 2 x frequency",
+    mve = "Violent media use: media with expert violence ratings >= 2 x frequency",
+    note = "Report marks supplied by the teacher, mean of German, Maths, English (1-6)",
+    verbot = paste(
+      "Parental restriction: how often parents did not allow a show, film or",
+      "video game because it was too violent, mean of 2 items, 0-4 (T1, T2)"
+    ),
+    pc_frei = "Written-in daily computer/video game hours when more than 2 (T2)",
+    class = "School class (93 classes, each in one school type; no school id)",
+    alter_baseline = "Age at T1; T2 age minus one where T1 is missing",
+    mig_kom = "Migration background (combined indicator; derivation not documented)"
   )
 }
 
 #' Tidier for BPIPD-820 (Krahé)
 #'
-#' One wide SPSS file holding three annual waves of a Berlin school cohort;
-#' columns are renamed so each ends in its wave, then pivoted long.
+#' Two wide SPSS files on the same Berlin school cohort over three annual waves,
+#' joined on `vp`; columns are renamed so each ends in its wave, then pivoted.
 #'
 #' Input:
 #' - `raw_dataset`: output of `read_dataset_from_spec()`
@@ -95,11 +114,28 @@ bp820_score_labels <- function() {
 #' Output:
 #' - one tibble, one row per participant per wave (T1-T3)
 tidy_BPIPD_820 <- function(raw_dataset, spec) {
-  long <- raw_dataset$data[[1]] |>
+  first <- raw_dataset$data$data
+  # The extended file repeats 39 of the first file's columns with identical
+  # values; only its new columns are joined.
+  extended <- raw_dataset$data$data_extended
+  extended <- extended[c("vp", setdiff(names(extended), names(first)))]
+  # One value per participant, repeated on every wave by the pivot.
+  invariant <- c(
+    "vp",
+    "sex_all_waves",
+    "alter_baseline",
+    "class",
+    "type",
+    "nation",
+    "mig_kom"
+  )
+
+  long <- first |>
+    dplyr::left_join(extended, by = "vp", relationship = "one-to-one") |>
     dplyr::rename(dplyr::all_of(bp820_renames())) |>
     bp820_unify_wave_labels() |>
     tidyr::pivot_longer(
-      cols = -dplyr::all_of(c("vp", "sex_all_waves")),
+      cols = -dplyr::all_of(invariant),
       names_to = c(".value", "wave"),
       names_pattern = "^(.*)([123])$"
     ) |>
@@ -111,7 +147,7 @@ tidy_BPIPD_820 <- function(raw_dataset, spec) {
   }
 
   # No participation flag: a wave with no measured item was not attended.
-  measured <- setdiff(names(long), c("vp", "wave", "sex_all_waves"))
+  measured <- setdiff(names(long), c("wave", invariant))
   long <- long[rowSums(!is.na(long[measured])) > 0L, ]
 
   if (anyDuplicated(long[c("vp", "wave")]) > 0) {

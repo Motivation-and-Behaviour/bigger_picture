@@ -3,19 +3,32 @@ dataset_name: "Krahé"
 status: "harmonised"
 
 resources:
-  - name: "Krahé Dataset"
+  - name: "data"
     role: "data"
     glob: "Data_set_Krahé.sav"
+    reader: "spss"
+  - name: "data_extended"
+    role: "data"
+    glob: "Data_set_Krahé_extended.sav"
     reader: "spss"
   - name: "Scale Handbook"
     role: "codebook"
     glob: "Scale_Handbook.docx"
   - name: "Documentation"
     role: "docs"
-    glob: "{Data_description_Krahé.docx,Krahé_et al_PPMC_2012.pdf,Krahé_Möller_JOA_2011.pdf}"
+    glob: "{Data_description_Krahé.docx,Data_description_Krahé_extended.docx,Krahé_et al_PPMC_2012.pdf,Krahé_Möller_JOA_2011.pdf}"
 
 notes: |
   Dataset includes primary SPSS data and supporting documents.
   'Scale_Handbook.docx' was confirmed to hold item lists, response scales and
   scale-construction keys per wave, so it is declared as 'codebook'.
   The .sav file covers T1-T3 only; the handbook documents T1-T5.
+  The contributor later sent 'Data_set_Krahé_extended.sav' (1,715 rows x 68
+  columns, same participants in the same order): its 39 columns shared with
+  the first file hold identical values, and its 29 other columns add class,
+  school type, nationality, a migration-background flag, mother tongue and
+  home language, teacher-rated grades, empathy, normative acceptance of
+  aggression, violent and non-violent media use, parental restriction of
+  violent media and the written-in PC hours at T2. Both files are read; the
+  tidier joins the new columns on 'vp'. 'Data_description_Krahé_extended.docx'
+  documents the added columns.
