@@ -7,7 +7,8 @@
 #'
 #' The weighted average has degrees of freedom of its own, often far more
 #' or fewer than the plain average's, so whether it has too few studies to
-#' say is judged again on those.
+#' say is judged again on those (`df_floor_by_datasets`, the same form of
+#' them as the plain average's status uses).
 #'
 #' @param tree Rows of `pool_tree()`.
 #' @param settings From `analysis_settings()`.
@@ -26,11 +27,18 @@ tree_by_datasets <- function(tree, settings = default_analysis_settings()) {
   out$pi_low <- NA_real_
   out$pi_high <- NA_real_
   estimated <- out$status %in% c("pooled", "too few studies to say")
+  # Judged on the same degrees of freedom as the plain average's status.
+  floor_df <- if ("df_floor_by_datasets" %in% names(out)) {
+    dplyr::coalesce(out$df_floor_by_datasets, out$df)
+  } else {
+    out$df
+  }
+  out$df_floor <- floor_df
   out$status[estimated] <- ifelse(
     is.na(out$df[estimated]),
     "robust inference failed",
     ifelse(
-      out$df[estimated] < settings$min_robust_df,
+      floor_df[estimated] < settings$min_robust_df,
       "too few studies to say",
       "pooled"
     )

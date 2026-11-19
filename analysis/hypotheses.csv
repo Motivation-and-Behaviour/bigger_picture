@@ -49,11 +49,11 @@ H3,threshold,st_socmedia,cognition,threshold,A duration at which notable harm or
 H3,threshold,st_socmedia,mental_health,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
 H3,threshold,st_socmedia,wellbeing,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
 H3,threshold,st_socmedia,behaviour,threshold,A duration at which notable harm or benefit becomes apparent; predicted to vary by content
-H4,moderation_location,total_screen,learning,none,Not moderated by where the screen use occurs; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
-H4,moderation_location,total_screen,cognition,none,Not moderated by where the screen use occurs; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
-H4,moderation_location,total_screen,mental_health,none,Not moderated by where the screen use occurs; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
-H4,moderation_location,total_screen,wellbeing,none,Not moderated by where the screen use occurs; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
-H4,moderation_location,total_screen,behaviour,none,Not moderated by where the screen use occurs; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
+H4,moderation_location,st_total_school,learning,none,Not moderated by where the screen use occurs: overall screen use at school against overall screen use anywhere; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
+H4,moderation_location,st_total_school,cognition,none,Not moderated by where the screen use occurs: overall screen use at school against overall screen use anywhere; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
+H4,moderation_location,st_total_school,mental_health,none,Not moderated by where the screen use occurs: overall screen use at school against overall screen use anywhere; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
+H4,moderation_location,st_total_school,wellbeing,none,Not moderated by where the screen use occurs: overall screen use at school against overall screen use anywhere; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
+H4,moderation_location,st_total_school,behaviour,none,Not moderated by where the screen use occurs: overall screen use at school against overall screen use anywhere; tested for equivalence; insufficient evidence unless three or more datasets have matched rows
 H5b,moderation_sex,st_socmedia,mental_health,stronger_for_girls,Stronger negative association for girls
 H5b,moderation_sex,st_socmedia,wellbeing,stronger_for_girls,Stronger negative association for girls
 H5c,moderation_ses,total_screen,learning,stronger_for_lower_ses,Stronger negative association for children from lower socioeconomic backgrounds

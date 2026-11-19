@@ -455,7 +455,12 @@ test_that("total screen time is the dedicated item, else a guarded sum", {
     st_phone = c(9, 9, 9, 9, 9, 9)
   )
   unit <- c("a", "a", "b", "b", "b", "c")
-  total <- derive_total_screen(exposures, unit, reg$exposures)
+  total <- derive_total_screen(
+    exposures,
+    unit,
+    reg$exposures,
+    parts = tibble::tibble(variable_name = "st_watch", wave = NA_character_)
+  )
 
   expect_equal(total$total_source, c(rep("dedicated", 2), rep("summed", 4)))
   expect_equal(total$total_screen[1:2], c(5, 6))
@@ -467,8 +472,10 @@ test_that("total screen time is the dedicated item, else a guarded sum", {
   # Unit c: neither the device row nor the narrower activity row is added.
   expect_equal(total$total_screen[6], 2)
   expect_equal(total$total_rows[6], "st_watch|st_game")
-  # The rest of screen use: total minus own where dedicated, else the others.
+  # The rest of screen use: total minus own where dedicated and the class
+  # is recorded as part of the total, else the others.
   expect_equal(total$other_watch[1], 4)
+  expect_true(all(is.na(total$other_game[1:2])))
   expect_equal(total$other_watch[6], 1)
   expect_false("other_messaging" %in% names(total))
 
@@ -499,8 +506,9 @@ test_that("a partial total gives way to a sum, and stands where none can be made
   # A device item beside a separate television item is replaced by the sum.
   expect_equal(
     partial$total_source,
-    rep(c("summed", "dedicated_partial"), each = 3)
+    rep(c("summed_for_partial", "dedicated_partial"), each = 3)
   )
+  expect_true(all(total_is_summed(partial$total_source[1:3])))
   expect_equal(partial$total_screen, c(3, 3, 3, 3, 4, 5))
   expect_equal(partial$total_rows[1], "st_watch|st_game")
   # An exception says the item is a total after all at one wave.
@@ -519,12 +527,25 @@ test_that("a partial total gives way to a sum, and stands where none can be made
   expect_equal(excepted$total_screen[1:3], c(1, 2, 3))
 
   # The rest of screen use is the total less the class only where the
-  # class was asked as part of the total: in unit a the total is below
-  # watching for two children of three, so watching has no rest there;
-  # gaming is within the total for every child, so it has one.
-  expect_true(all(is.na(whole$other_watch[1:3])))
-  expect_equal(whole$other_game[1:3], c(0, 1, 2))
-  expect_equal(whole$other_game[4:6], c(2, 3, 4))
+  # class is recorded as part of the total, at every wave or at the
+  # unit's own; nothing is read from the sizes of the two.
+  expect_true(all(is.na(whole$other_watch)))
+  expect_true(all(is.na(whole$other_game)))
+  recorded <- function(wave_of_part) {
+    derive_total_screen(
+      exposures,
+      unit,
+      reg$exposures,
+      wave = wave,
+      parts = tibble::tibble(variable_name = "st_game", wave = wave_of_part)
+    )
+  }
+  everywhere <- recorded(NA_character_)
+  expect_equal(everywhere$other_game, c(0, 1, 2, 2, 3, 4))
+  expect_true(all(is.na(everywhere$other_watch)))
+  second <- recorded("2")
+  expect_true(all(is.na(second$other_game[1:3])))
+  expect_equal(second$other_game[4:6], c(2, 3, 4))
 })
 
 test_that("an exception can leave a screen item out at one wave", {
@@ -1050,6 +1071,15 @@ test_that("exceptions must name analysed outcomes, and a node moves a row", {
       total_status = status
     )
   }
+  # A class recorded as part of the total needs a dedicated total.
+  expect_error(
+    prepare(read("st_game,,part_of_total,,One of its parts")),
+    "needs a dedicated total"
+  )
+  expect_error(
+    read("st_total,,part_of_total,,No"),
+    "names the part"
+  )
   whole <- "st_total,,total_dedicated,,A total of all screens"
   expect_no_error(dedicated(whole, "partial"))
   # It means something only for a total mapped as partial, at a real wave.

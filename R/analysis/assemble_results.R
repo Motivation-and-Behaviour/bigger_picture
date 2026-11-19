@@ -161,8 +161,12 @@ assemble_results <- function(
   out$q <- NA_real_
   out$k_total <- NA_integer_
   placed <- !is.na(out$fdr_path)
-  # A row with too few studies to say counts towards K and is not ranked.
-  thin <- out$status %in% "too few studies to say"
+  # A row with too few studies to say counts towards K and is not ranked;
+  # nor is a family whose specific outcomes disagree, whose average is not
+  # read as one estimate.
+  thin <- out$status %in%
+    "too few studies to say" |
+    out$finding %in% "specific outcomes disagree"
   adjusted <- adjust_tiered_fdr(
     out$p[placed],
     out$fdr_path[placed],
@@ -212,8 +216,9 @@ assemble_results <- function(
     )
   }
   # An estimate is called equivalent where it was predicted to show no
-  # association, was pooled from enough studies to say, and its adjusted
-  # equivalence p-value is below 0.05.
+  # association, was pooled from enough studies to say, is not a family
+  # whose specific outcomes disagree, and its adjusted equivalence p-value
+  # is below 0.05.
   out$equivalent[none] <- out$q_equivalence[none] < 0.05
   dplyr::relocate(
     out,

@@ -20,16 +20,19 @@
 #' A dedicated item whose mapping is `partial` is not a total of all screen
 #' use. Where the unit has the content classes a sum needs, the sum is used
 #' in its place; where it has not, the item stands and its source is
-#' `dedicated_partial`. An exception (`total_dedicated`) can say that at
-#' some waves a `partial` item is a total after all.
+#' `dedicated_partial`. A sum that stands in for a `partial` item is
+#' `summed_for_partial`: it can fall short of the item it replaces, so it
+#' is told apart from an ordinary sum. An exception (`total_dedicated`) can
+#' say that at some waves a `partial` item is a total after all.
 #'
 #' `other_<exposure>` is the rest of a row's screen use, for the models that
 #' adjust one content class for the others: the sum of the unit's other
 #' summed rows, or the dedicated total minus the exposure. The total is
-#' reduced by a class only where the class was asked as part of it, which
-#' is judged from the data: the total is at least the class for
-#' `other_min_share` of the unit's rows that have both. Otherwise the unit
-#' has no `other_<exposure>` and is left out of those models.
+#' reduced by a class only where the class's time is part of what the total
+#' item measured, which is a fact about the study's questionnaire and is
+#' recorded for the dataset (`parts`, from its `part_of_total`
+#' exceptions). Without that record the unit has no `other_<exposure>` and
+#' is left out of those models.
 #'
 #' @param exposures A tibble of exposure columns, one row per base row.
 #' @param unit The stage 1 unit of each row.
@@ -40,8 +43,12 @@
 #' @param wave The wave of each row, for the exceptions.
 #' @param dedicated_waves Waves at which a `partial` item is used as a
 #'   total all the same; NA for every wave.
+#' @param parts The content-class rows recorded as parts of the dataset's
+#'   dedicated total: a tibble of `variable_name` and `wave` (NA for every
+#'   wave), or NULL.
 #' @return A tibble with one row per input row: `total_screen`,
-#'   `total_source` (`dedicated`, `dedicated_partial` or `summed`), `total_rows` (the rows used),
+#'   `total_source` (`dedicated`, `dedicated_partial`, `summed` or
+#'   `summed_for_partial`), `total_rows` (the rows used),
 #'   `total_coverage` (how many content-class rows the unit measures),
 #'   `total_capped`, and `other_<exposure>` for each content class present.
 derive_total_screen <- function(
@@ -51,7 +58,8 @@ derive_total_screen <- function(
   settings = default_analysis_settings(),
   total_partial = FALSE,
   wave = rep(NA_character_, nrow(exposures)),
-  dedicated_waves = character()
+  dedicated_waves = character(),
+  parts = NULL
 ) {
   n <- nrow(exposures)
   content <- exposure_registry[
@@ -130,14 +138,13 @@ derive_total_screen <- function(
       }
       out$total_rows[index] <- dedicated
       # The rest of a child's screen use is the total less the class only
-      # where the class was asked as part of the total, which shows in the
-      # total being at least the class for nearly every child.
+      # where the class is recorded as part of the total at this wave.
       for (variable in measured) {
-        own <- exposures[[variable]][index]
-        both <- !is.na(total) & !is.na(own)
-        within <- any(both) &&
-          mean(total[both] >= own[both]) >= settings$other_min_share
+        recorded <- parts$wave[parts$variable_name %in% variable]
+        within <- length(recorded) > 0 &&
+          (anyNA(recorded) || all(wave[index] %in% recorded))
         if (within) {
+          own <- exposures[[variable]][index]
           out[[other_column(variable)]][index] <- pmax(total - own, 0)
         }
       }
@@ -167,7 +174,11 @@ derive_total_screen <- function(
     total[over] <- limit
     out$total_screen[index] <- total
     out$total_capped[index] <- over
-    out$total_source[index] <- "summed"
+    out$total_source[index] <- if (partial && any(observed(dedicated, index))) {
+      "summed_for_partial"
+    } else {
+      "summed"
+    }
     out$total_rows[index] <- paste(summed, collapse = "|")
     for (variable in summed) {
       rest <- pmin(row_sum(setdiff(summed, variable), index), limit)
@@ -175,4 +186,12 @@ derive_total_screen <- function(
     }
   }
   out
+}
+
+#' Whether a total was built as a sum of content classes
+#'
+#' @param source `total_source` values.
+#' @return TRUE for `summed` and `summed_for_partial`.
+total_is_summed <- function(source) {
+  source %in% c("summed", "summed_for_partial")
 }

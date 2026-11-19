@@ -237,6 +237,21 @@ test_that("a perfectly correlated pair in two specific outcomes counts once", {
   expect_lt(family$se, 1.2 * node$se)
   expect_lte(family$ci_low, node$ci_low)
   expect_gte(family$ci_high, node$ci_high)
+  # Too few studies to say is judged on the degrees of freedom of the form
+  # a single specific outcome uses, which here are the outcome's own; the
+  # interval keeps the jackknife form's.
+  expect_equal(family$df_floor, node$df, tolerance = 1e-6)
+  between <- analysis_settings()
+  between$min_robust_df <- node$df + 0.01
+  expect_equal(
+    pool_tree_family(dplyr::bind_rows(one, two), groups, between)$status,
+    "too few studies to say"
+  )
+  between$min_robust_df <- node$df - 0.01
+  expect_equal(
+    pool_tree_family(dplyr::bind_rows(one, two), groups, between)$status,
+    "pooled"
+  )
   # A family of one specific outcome is that outcome exactly.
   alone <- pool_tree_family(one, groups["n1"])
   expect_equal(alone$se, node$se)

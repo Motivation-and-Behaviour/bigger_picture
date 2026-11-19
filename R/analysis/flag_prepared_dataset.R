@@ -151,8 +151,7 @@ flag_prepared_dataset <- function(
 
   required <- intersect(settings$total_required, names(exposures))
   if (length(required) == length(settings$total_required) && nrow(base) > 0) {
-    could <- exposures$total_source %in%
-      "summed" &
+    could <- total_is_summed(exposures$total_source) &
       stats::complete.cases(exposures[required])
     by_unit <- dplyr::summarise(
       tibble::tibble(

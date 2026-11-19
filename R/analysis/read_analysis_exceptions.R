@@ -10,10 +10,14 @@
 #' - `action`: `exclude` (leave the row out), `keep_out_of_bounds` (do not
 #'   drop values outside the schema's bounds, for a documented score form),
 #'   `node` (assign to another node of the outcome tree), `standardise_by`
-#'   (replace the row's standardisation keys) or `total_dedicated` (on
+#'   (replace the row's standardisation keys), `total_dedicated` (on
 #'   `st_total`: at this wave, or every wave, the item is a total of all
 #'   screen use although its mapping is `partial`, so it is used as the
-#'   total and not replaced by a sum, DR-0013);
+#'   total and not replaced by a sum, DR-0013) or `part_of_total` (on a
+#'   content-class row: at this wave, or every wave, the row's time is
+#'   part of what the dataset's dedicated total measured, by the study's
+#'   questionnaire, so the rest of a child's screen use can be the total
+#'   less the row, DR-0013);
 #' - `value`: the node or the pipe-separated keys, blank otherwise;
 #' - `reason`: why, in a sentence.
 #'
@@ -58,6 +62,13 @@ read_analysis_exceptions <- function(path, dataschema, outcome_registry) {
   if (any(dedicated & !exceptions$variable_name %in% "st_total")) {
     fail("`total_dedicated` is about `st_total`")
   }
+  part <- exceptions$action %in% "part_of_total"
+  if (any(part & !grepl("^st_", exceptions$variable_name))) {
+    fail("`part_of_total` is about a screen-time row")
+  }
+  if (any(part & exceptions$variable_name %in% "st_total")) {
+    fail("`part_of_total` names the part, not `st_total`")
+  }
   nodes <- exceptions$value[exceptions$action %in% "node"]
   bad_node <- setdiff(nodes, outcome_registry$tree$node)
   if (length(bad_node) > 0) {
@@ -76,6 +87,7 @@ bp_analysis_exception_actions <- function() {
     "keep_out_of_bounds",
     "node",
     "standardise_by",
-    "total_dedicated"
+    "total_dedicated",
+    "part_of_total"
   )
 }

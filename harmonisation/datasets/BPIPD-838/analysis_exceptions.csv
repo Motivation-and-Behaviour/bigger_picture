@@ -1,0 +1,4 @@
+variable_name,wave,action,value,reason
+st_watch,,part_of_total,,"The parent's eight activity items (television, study, games and other online activity by device) add up exactly to the overall item in every row at every wave."
+st_game,,part_of_total,,As for st_watch.
+st_educational,,part_of_total,,As for st_watch.

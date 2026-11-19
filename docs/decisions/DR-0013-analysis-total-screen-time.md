@@ -54,8 +54,11 @@ A check of the studies' codebooks confirmed it, and showed that the cases differ
   Where it has not, the item stands and the total's source is recorded as `dedicated_partial`, so that it can be told apart as a moderator and left out in a sensitivity analysis.
 - A dataset's exceptions file can say that at given waves a `partial` item is a total after all, or leave the item out at a wave, each with its reason from the codebook.
 - The rest of a child's screen use beside a content class is the total less the class only where the class was asked as part of the total.
-  That is judged from the data, with no list of datasets: the total is at least the class for 95% of the unit's children who have both.
-  Otherwise the unit has no such value and is left out of the models that adjust a class for the rest of screen use.
+  That is a fact about the study's questionnaire, checked against its documents and recorded for the dataset as a `part_of_total` line of its exceptions file, with the reason (amended 19 November 2026).
+  The first version judged it from the data, as the total being at least the class for 95% of a unit's children who have both; that measured the sizes of the two items and not whether one was asked inside the other, and it treated the units of one dataset differently by chance.
+  Without the record the unit has no such value and is left out of the models that adjust a class for the rest of screen use.
+- A sum of content classes that stands in for a partial item is marked `summed_for_partial` (amended 19 November 2026).
+  It can fall short of the item it replaces, where the item covered screen use that no content class asks about, so it is left out with the partial items in the sensitivity analysis that excludes them.
   Two instruments in one questionnaire can disagree within a child without either excluding the other, and a class cannot be subtracted from a total it was not part of.
 
 ---
@@ -99,7 +102,7 @@ Sensitivity analyses repeat the overall-screen-use models on dedicated items onl
 
 ## Implementation
 
-- `derive_total_screen()` applies the 17 November amendment, with the mapping's status from `total_mapping_status()`, the `total_dedicated` and `exclude` actions of the exceptions files, and the setting `other_min_share`.
+- `derive_total_screen()` applies the 17 November amendment, with the mapping's status from `total_mapping_status()`, the `total_dedicated` and `exclude` actions of the exceptions files, and the `part_of_total` action.
 
 ```md
 analysis/exposures.csv     `axis` says which rows a derived total may sum

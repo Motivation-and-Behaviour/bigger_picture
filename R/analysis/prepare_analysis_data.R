@@ -76,13 +76,13 @@ prepare_analysis_data <- function(
   # for the outcomes.
   on_exposure <- exceptions$variable_name %in% exposure_registry$variable_name
   misplaced <- on_exposure &
-    !exceptions$action %in% c("exclude", "total_dedicated")
+    !exceptions$action %in% c("exclude", "total_dedicated", "part_of_total")
   if (any(misplaced)) {
     stop(
       "Dataset ",
       info$dataset_id[1],
-      ": an exception on a screen-time row can only exclude it or say its ",
-      "total is dedicated: ",
+      ": an exception on a screen-time row can only exclude it, say its ",
+      "total is dedicated, or say it is part of the total: ",
       paste(unique(exceptions$variable_name[misplaced]), collapse = ", "),
       call. = FALSE
     )
@@ -102,6 +102,25 @@ prepare_analysis_data <- function(
       "Dataset ",
       info$dataset_id[1],
       ": a `total_dedicated` exception needs `st_total` mapped as partial.",
+      call. = FALSE
+    )
+  }
+  # A class is part of a dedicated total: there must be such a total, the
+  # class must have values, and the wave must be one of the dataset's.
+  parts <- exposure_exceptions[
+    exposure_exceptions$action %in% "part_of_total",
+  ]
+  bad_part <- nrow(parts) > 0 &&
+    (!"st_total" %in% names(kept) ||
+      all(is.na(kept$st_total)) ||
+      !all(parts$variable_name %in% names(kept)) ||
+      !all(parts$wave[!is.na(parts$wave)] %in% as.character(base$wave)))
+  if (bad_part) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": a `part_of_total` exception needs a dedicated total, a row the ",
+      "dataset has, and a wave the dataset has.",
       call. = FALSE
     )
   }
@@ -126,6 +145,7 @@ prepare_analysis_data <- function(
     dedicated_waves = exposure_exceptions$wave[
       exposure_exceptions$action %in% "total_dedicated"
     ],
+    parts = parts[c("variable_name", "wave")],
     left_out = exposure_exceptions[
       exposure_exceptions$action %in% "exclude",
     ]

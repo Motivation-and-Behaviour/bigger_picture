@@ -26,7 +26,7 @@ summarise_prepared <- function(
   source <- exposures$total_source
   required <- intersect(settings$total_required, names(exposures))
   could_sum <- if (length(required) == 2) {
-    source %in% "summed" & stats::complete.cases(exposures[required])
+    total_is_summed(source) & stats::complete.cases(exposures[required])
   } else {
     rep(FALSE, nrow(exposures))
   }
@@ -50,7 +50,10 @@ summarise_prepared <- function(
     total_dedicated_partial = sum(
       source %in% "dedicated_partial" & !is.na(total)
     ),
-    total_summed = sum(source %in% "summed" & !is.na(total)),
+    total_summed = sum(total_is_summed(source) & !is.na(total)),
+    total_summed_for_partial = sum(
+      source %in% "summed_for_partial" & !is.na(total)
+    ),
     total_capped = sum(exposures$total_capped),
     total_lost_to_incomplete = sum(could_sum & is.na(total)),
     total_coverage_max = bp_stat(exposures$total_coverage, max),
@@ -62,7 +65,10 @@ summarise_prepared <- function(
       total[source %in% "dedicated_partial"],
       stats::median
     ),
-    total_median_summed = bp_stat(total[source %in% "summed"], stats::median),
+    total_median_summed = bp_stat(
+      total[total_is_summed(source)],
+      stats::median
+    ),
     measure_rows = nrow(prepared$measures)
   )
 }

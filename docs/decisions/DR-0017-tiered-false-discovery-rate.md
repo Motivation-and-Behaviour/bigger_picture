@@ -63,6 +63,7 @@ The equivalence p-values of a group are adjusted among themselves with the group
 The test of a difference from zero is still reported for those rows, with its q-value.
 An estimate is called equivalent only where it was predicted to show no association, was pooled from enough studies to say, and its adjusted equivalence p-value is below 0.05 (amended 17 November 2026: the first version used the unadjusted p-value, for every estimate).
 A family kept from the headline because its specific outcomes disagree (DR-0014) is not described as a finding.
+Like a test with too few studies to say, it is counted in K and is not ranked, so it has no q-value, and it is never called equivalent (amended 19 November 2026).
 
 **Moderation.**
 The confirmatory moderation tests are the combinations the preregistration predicts: sex for social media and the mental health and wellbeing families, and socioeconomic status for the learning, mental health and behaviour families.

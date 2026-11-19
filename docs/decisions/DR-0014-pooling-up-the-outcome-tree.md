@@ -40,7 +40,8 @@ For a family of two or more specific outcomes that standard error is the jackkni
 With the form used for a single specific outcome, a simulation on the real design found a family's 95% interval covering the truth about 93% of the time, and 89% where two of its specific outcomes had a variance between datasets estimated at zero; the jackknife form gave 95 to 97%.
 A later independent simulation agreed at the heterogeneity estimated from the data (92 to 93% against 95 to 96%).
 The jackknife form is conservative where datasets differ little: where there was no variance between datasets at all, its 95% interval covered the truth 99% of the time.
-Its degrees of freedom are also a little lower, so a family is somewhat more often one with too few studies to say.
+Its degrees of freedom are also a little lower, and the floor of three was set on the other form's.
+So whether a family has too few studies to say is judged on the degrees of freedom of the form used for a single specific outcome, while its standard error, interval and p-value use the jackknife form and its own degrees of freedom (amended 19 November 2026).
 A family of one specific outcome keeps that outcome's standard error exactly.
 The average weighted by each specific outcome's number of datasets is reported beside it as a sensitivity analysis.
 

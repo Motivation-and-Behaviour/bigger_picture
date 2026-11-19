@@ -135,7 +135,7 @@ imputation_frame <- function(prepared, outcome_registry, exposure_registry) {
   covariates <- intersect(c("sex", bp_stage1_covariates()), names(base))
   data <- as.data.frame(prepared$exposures[exposures])
   # A summed total repeats its parts, so only a dedicated one is read.
-  summed <- prepared$exposures$total_source %in% "summed"
+  summed <- total_is_summed(prepared$exposures$total_source)
   data[[bp_total_exposure()]][summed] <- NA_real_
   for (covariate in covariates) {
     data[[covariate]] <- as.character(base[[covariate]])

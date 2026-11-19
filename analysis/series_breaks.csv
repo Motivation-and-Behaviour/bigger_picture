@@ -6,7 +6,6 @@ dataset_id,exposure,day,from_year,waves,reason
 18,game,,,2.5;3.5,Mail-out questionnaires between main interviews asking weekly totals
 18,watch,,2006,,Five response bands at wave 1 and open hours and minutes from wave 2
 18,watch,,,2.5;3.5,Mail-out questionnaires between main interviews summing separate TV and DVD items asked as weekly totals
-18,watch,,,7,Older cohort answers for itself at wave 7 while the younger cohort is still parent report
 27,game,,2012,,Computer use or electronic games in six bands to sweep 4 and electronic games only in seven bands from sweep 5
 27,game,,2015,,Parent report in seven bands to sweep 5 and self-report in eight bands from sweep 6
 27,game,,2018,,Games on a computer or games system to sweep 6 and games on any device including phones and tablets with a top band of 10 hours or more at sweep 7

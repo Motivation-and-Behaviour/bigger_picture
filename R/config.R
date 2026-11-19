@@ -176,7 +176,6 @@ bp_prepare_settings <- function() {
     "school_stage_labels",
     "total_required",
     "total_row_min_share",
-    "other_min_share",
     "part_cover_min",
     "repeat_min_rows",
     "repeat_min_minority"
@@ -329,11 +328,13 @@ bp_model_workers_wide <- function() {
   10L
 }
 
-# Processes for a simulation target. Each holds little memory, but nothing
-# stops the target starting while the other pools are busy, so run a build
-# that reruns the simulation under the memory watchdog.
+# Processes for a simulation target: every logical core but two, since the
+# work is one small model after another and gains a little from the second
+# thread of each core. Each process holds little memory, but nothing stops
+# the target starting while the other pools are busy, so run a build that
+# reruns the simulation under the memory watchdog.
 bp_simulation_cores <- function() {
-  max(1L, min(parallel::detectCores() - 2L, 24L))
+  max(1L, min(parallel::detectCores() - 2L, 46L))
 }
 
 # Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).
@@ -587,7 +588,14 @@ bp_model_engines <- function() {
 }
 
 bp_model_exposure_sets <- function() {
-  c("total", "content_classes", "social_media", "other_included", "school")
+  c(
+    "total",
+    "content_classes",
+    "social_media",
+    "other_included",
+    "school_total",
+    "school_other"
+  )
 }
 
 bp_model_outcome_sets <- function() {

@@ -3,3 +3,9 @@ st_total,9,exclude,,"In 2016 the item is the caregiver's report of smartphone an
 st_total,14,total_dedicated,,"From 2021 the child's media-use item equals the sum of its five purpose parts (learning, information search, games, entertainment, social networks) and is at least the grid's watching and games cells for all but 2 to 3% of children, so it is used as the total although the row is partial for its earlier waves."
 st_total,15,total_dedicated,,"As at wave 14."
 st_total,16,total_dedicated,,"As at wave 14."
+st_educational,14,part_of_total,,"Learning is one of the five purpose parts of the child's media-use item, which equals their sum. The watching and games rows come from the separate time-use grid and are not parts of it."
+st_socmedia,14,part_of_total,,Social networks are one of the five purpose parts of the child's media-use item.
+st_educational,15,part_of_total,,As at wave 14.
+st_socmedia,15,part_of_total,,As at wave 14.
+st_educational,16,part_of_total,,As at wave 14.
+st_socmedia,16,part_of_total,,As at wave 14.

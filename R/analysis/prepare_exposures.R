@@ -9,7 +9,7 @@
 #' @param unit The stage 1 unit of each row.
 #' @param exposure_registry The exposure registry.
 #' @param settings From `analysis_settings()`.
-#' @param total_partial,dedicated_waves See `derive_total_screen()`.
+#' @param total_partial,dedicated_waves,parts See `derive_total_screen()`.
 #' @param left_out The dataset's `exclude` exceptions about exposure rows
 #'   (`variable_name`, `wave` and `reason`): each blanks its row at that
 #'   wave, or at every wave, and is recorded in the audit.
@@ -23,6 +23,7 @@ prepare_exposures <- function(
   settings = default_analysis_settings(),
   total_partial = FALSE,
   dedicated_waves = character(),
+  parts = NULL,
   left_out = NULL
 ) {
   registry <- exposure_registry[
@@ -113,7 +114,8 @@ prepare_exposures <- function(
     settings,
     total_partial = total_partial,
     wave = wave,
-    dedicated_waves = dedicated_waves
+    dedicated_waves = dedicated_waves,
+    parts = parts
   )
   list(exposures = dplyr::bind_cols(exposures, total), audit = audit)
 }

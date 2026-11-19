@@ -261,6 +261,32 @@ test_that("the model list is valid, and expands against the registries", {
     ),
     0
   )
+  # Every registered moderation hypothesis is a cell of the confirmatory
+  # model that tests it, and that model tests nothing else: the exposures
+  # and families of the two are the same.
+  for (model in unique(grep("^moderation_", hypotheses$test, value = TRUE))) {
+    registered <- hypotheses[hypotheses$test == model, ]
+    own <- after[after$model_name == model, ]
+    tested <- unique(tibble::tibble(
+      exposure = own$exposure,
+      family = rows$prereg_family[match(own$outcome, rows$variable_name)]
+    ))
+    key <- function(table) sort(paste(table$exposure, table$family))
+    expect_equal(key(tested), key(registered), info = model)
+    expect_equal(
+      spec$analysis_class[spec$model_name == model],
+      "confirmatory",
+      info = model
+    )
+  }
+  # H4 is overall screen use at school; the other school rows are
+  # exploratory.
+  location <- after[after$model_name == "moderation_location", ]
+  expect_equal(unique(location$exposure), "st_total_school")
+  expect_false(
+    "st_total_school" %in%
+      after$exposure[after$model_name == "moderation_location_other"]
+  )
   # A registered test is never also an exploratory one.
   overlap <- function(model) {
     own <- after[after$model_name == model, c("exposure", "outcome")]
@@ -273,6 +299,7 @@ test_that("the model list is valid, and expands against the registries", {
   for (model in c(
     "moderation_sex",
     "moderation_ses",
+    "moderation_location",
     "thresholds_by_sex",
     "thresholds_by_ses"
   )) {
@@ -759,6 +786,16 @@ test_that("results are labelled, tested and adjusted in one table", {
   expect_equal(thin$q[-3], out$q[-3])
   expect_equal(game$q_equivalence, min(game$p_equivalence * 6, 1))
   expect_true(is.na(out$q_equivalence[1]))
+  # A family whose specific outcomes disagree is treated the same way: it
+  # is labelled so, counted, not ranked, and never called equivalent.
+  split <- tree
+  split$headline <- TRUE
+  split$headline[3] <- FALSE
+  split <- assemble_results(split, NULL, spec, hypotheses, reg$outcomes)
+  expect_equal(split$finding[3], "specific outcomes disagree")
+  expect_true(is.na(split$q[3]) && is.na(split$equivalent[3]))
+  expect_equal(split$k_total[3], game$k_total)
+  expect_equal(split$q[-3], out$q[-3])
   # A family that could not be pooled has no p-value and is not counted.
   last <- out[out$family == "cognition", ]
   expect_true(is.na(last$p) && is.na(last$q) && is.na(last$k_total))

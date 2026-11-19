@@ -44,7 +44,6 @@ analysis_settings <- function() {
     # less the class only where the total is at least the class for this
     # share of the unit's rows that have both: below that the class was not
     # asked as part of the total (DR-0013).
-    other_min_share = 0.95,
     # A part is dropped for its whole when the whole is observed on at least
     # this share of the rows where the part is.
     part_cover_min = 0.9,

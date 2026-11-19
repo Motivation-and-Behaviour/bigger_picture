@@ -57,8 +57,17 @@ expand_model_cells <- function(
       included$variable_name,
       c(classes, included$variable_name[included$exposure %in% "total"])
     ),
-    school = exposure_registry$variable_name[
-      exposure_registry$context %in% "school"
+    # Overall screen use at school, the like-for-like partner of overall
+    # screen use anywhere (H4), and the other rows asked about school.
+    school_total = exposure_registry$variable_name[
+      exposure_registry$context %in%
+        "school" &
+        exposure_registry$exposure %in% "total_school"
+    ],
+    school_other = exposure_registry$variable_name[
+      exposure_registry$context %in%
+        "school" &
+        !exposure_registry$exposure %in% "total_school"
     ]
   )
   rows <- outcome_registry$rows
