@@ -1,0 +1,50 @@
+dataset_id: "1871"
+dataset_name: "Adolescent Nutritional Assessment Longitudinal Study (ELANA)"
+status: "in_progress"
+
+resources:
+  - name: "elementary_w1"
+    role: "data"
+    glob: "Bigger_pic_elem_W1.dta"
+    reader: "stata"
+    encoding: "latin1"
+
+  - name: "elementary_w3"
+    role: "data"
+    glob: "Bigger_pic_elem_W3.dta"
+    reader: "stata"
+    encoding: "latin1"
+
+  - name: "elementary_w4"
+    role: "data"
+    glob: "Bigger_pic_elem_W4.dta"
+    reader: "stata"
+    encoding: "latin1"
+
+  - name: "high_school_w1"
+    role: "data"
+    glob: "Bigger_pic_high_school_W1.dta"
+    reader: "stata"
+    encoding: "latin1"
+
+  - name: "item_list"
+    role: "docs"
+    glob: "ELANA BRASIL.docx"
+
+notes: |
+  ELANA (Estudo Longitudinal de Avaliacao Nutricional de Adolescentes), a school-based
+  cohort study in two public and four private schools in the Rio de Janeiro metropolitan
+  area, Brazil, with two cohorts: one recruited in the 6th year of elementary school
+  (ensino fundamental) in 2010 and one recruited in the 1st year of high school in 2010.
+  The contributor prepared four Stata 14+ (release 118) extracts for Bigger Picture, all
+  declared as data: elementary cohort waves 1 (2010), 3 (2012) and 4 (2013), and the high
+  school cohort's first wave (2010) only. The elementary cohort's wave 2 (2011) was
+  fielded but did not ask the screen-time items, so no file was supplied for it.
+  Each file holds one row per adolescent keyed by `id`; ids are cohort-specific (777
+  high-school ids recur in the elementary files with different birth dates), so the tidier
+  must key on cohort and id together.
+  Value labels and variable labels are stored in Latin-1 despite the release-118 header,
+  so every file is read with encoding latin1.
+  ELANA BRASIL.docx is the contributor's one-page list of the items in each file (docs).
+  There is no codebook in the folder; the study documentation is published (see the
+  BPIPD-1871 notes file).
