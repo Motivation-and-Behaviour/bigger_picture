@@ -42,6 +42,7 @@ The ranks come from the group's own p-values only.
 - A primary test is one from a confirmatory model fitted as the main two-stage model with nothing varied; every other model of Tier 1 or 2 is secondary.
 - The first layer always counts five, the five outcome families, whether or not each can be estimated.
 - A layer with no test adds nothing.
+- A test that is not a pooled slope, such as whether a moderator's levels differ or the trend over collection years, joins its family's exploratory layer with its own p-value and is counted and ranked there like any other (amended 20 November 2026).
 - A test that could not be run has no p-value and is not counted.
 - A test with too few studies to say keeps its p-value and is counted in K, for its own group and those below it, but it is not ranked and has no q-value (amended 17 November 2026).
   Its p-value is the least trustworthy in its group, and ranking it lowered the q-values of the tests beside it.

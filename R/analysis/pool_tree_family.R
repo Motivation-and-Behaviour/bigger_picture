@@ -222,7 +222,8 @@ pool_tree_family <- function(
   }
   # Whether there are too few studies to say is judged on the degrees of
   # freedom of the form used for a single specific outcome (CR2), which the
-  # floor was set on: the jackknife form's are systematically lower.
+  # floor was set on. The jackknife form's are usually a little lower, and
+  # sometimes higher.
   floor_df <- function(weights, fallback) {
     plain <- average(weights, "CR2")
     if (is.character(plain) || is.na(plain$df[1])) fallback else plain$df[1]

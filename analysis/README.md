@@ -327,7 +327,7 @@ It is a draft until the freeze, when it is fixed with the registries.
 | `step` | The step of the analysis plan that runs it, 10 to 14 |
 | `tier` | The preregistered tier whose q-values it takes, 1 to 5; exploratory, descriptive and post-freeze models take 5 |
 | `levels` | The levels of the outcome tree it is reported at, pipe-separated: `L0`, `L1`, `L2`, `L3` |
-| `exposure_set` | Pipe-separated: `total` (the derived total), `content_classes`, `other_included`, `school` |
+| `exposure_set` | Pipe-separated: `total` (the derived total), `content_classes`, `other_included`, `social_media`, `school_total` (overall screen use at school), `school_other` (the other rows asked about school) |
 | `outcome_set` | `core`, `report`, `negative_control`, or `core_rare_binary` (binary rows where more than half the units that measure the row have fewer than 10 events) and `headline_cells`, both settled from the data where their models are built |
 | `moderator` | The moderators it tests, pipe-separated; blank for none |
 | `covariate_tier` | `1`, `2`, `3` or `family` (DR-0015) |

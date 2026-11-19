@@ -7,8 +7,9 @@
 #'   usual-day activity rows of the prereg's content classes that are
 #'   included and in scope for the report; `social_media` that class
 #'   alone; `other_included` the other
-#'   included usual-day rows, bar the dedicated total; `school` the rows for
-#'   use at school;
+#'   included usual-day rows, bar the dedicated total; `school_total`
+#'   overall screen use at school and `school_other` the other rows for use
+#'   at school;
 #' - outcomes: `core` the outcome rows pooled up the tree, and `core_h5b`,
 #'   `core_h5c` and `core_other_h5c` those of the families the registered
 #'   moderation hypotheses name, or do not; `report` the

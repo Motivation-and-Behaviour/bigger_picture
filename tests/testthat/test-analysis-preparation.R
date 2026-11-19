@@ -1118,6 +1118,45 @@ test_that("exceptions must name analysed outcomes, and a node moves a row", {
     panel("mh_dep_self,nine,own_series,,Why"),
     "names a wave the dataset does not have"
   )
+  # A mistyped wave is an error for an outcome too, not a line that does
+  # nothing.
+  expect_error(
+    panel("mh_dep_self,nine,exclude,,Why"),
+    "names a wave the dataset does not have"
+  )
+  expect_error(read("mh_dep_self,1,own_series,x,Why"), "takes no value")
+  # The same line twice, or a row left out and also decided about at the
+  # same wave.
+  read_lines <- function(lines) {
+    path <- file.path(dir, "analysis_exceptions.csv")
+    writeLines(c("variable_name,wave,action,value,reason", lines), path)
+    read_analysis_exceptions(path, reg$schema, reg$outcomes)
+  }
+  expect_error(
+    read_lines(c(
+      "mh_dep_self,1,own_series,,Why",
+      "mh_dep_self,1,own_series,,Again"
+    )),
+    "appears twice"
+  )
+  expect_error(
+    read_lines(c(
+      "mh_dep_self,1,exclude,,Why",
+      "mh_dep_self,1,own_series,,Why"
+    )),
+    "excluded and has another decision"
+  )
+  expect_error(
+    read_lines(c(
+      "st_total,,exclude,,Why",
+      "st_total,2,total_dedicated,,Why"
+    )),
+    "excluded and has another decision"
+  )
+  expect_no_error(read_lines(c(
+    "st_total,1,exclude,,Why",
+    "st_total,2,total_dedicated,,Why"
+  )))
   # A row that is neither an analysed outcome nor a screen-time row.
   expect_error(prepare(read("sex,,exclude,,why")), "not analysed outcomes")
   expect_error(read("mh_dep_self,1,node,anxiety,why"), "every wave")

@@ -82,6 +82,32 @@ read_analysis_exceptions <- function(path, dataschema, outcome_registry) {
       "`own_series` is about an outcome row; a screen item's change goes in series_breaks.csv"
     )
   }
+  if (any(own & !is.na(exceptions$value))) {
+    fail("`own_series` takes no value")
+  }
+  # The same decision twice, or a row left out at a wave and also decided
+  # about at that wave, is a mistake.
+  key <- exceptions[c("variable_name", "wave", "action")]
+  if (anyDuplicated(key) > 0) {
+    fail("the same line appears twice")
+  }
+  left_out <- exceptions[exceptions$action %in% "exclude", ]
+  for (i in seq_len(nrow(left_out))) {
+    same_row <- exceptions$variable_name %in%
+      left_out$variable_name[i] &
+      !exceptions$action %in% "exclude"
+    # A decision about every wave (a node, say) can sit beside leaving the
+    # row out at one of them.
+    same_wave <- is.na(left_out$wave[i]) |
+      exceptions$wave %in% left_out$wave[i]
+    if (any(same_row & same_wave)) {
+      fail(
+        "`",
+        left_out$variable_name[i],
+        "` is excluded and has another decision at the same wave"
+      )
+    }
+  }
   nodes <- exceptions$value[exceptions$action %in% "node"]
   bad_node <- setdiff(nodes, outcome_registry$tree$node)
   if (length(bad_node) > 0) {

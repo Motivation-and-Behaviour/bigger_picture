@@ -934,6 +934,12 @@ test_that("every moderator of every specific outcome is on record", {
     total_source = NA
   )
   out <- moderate_tree(stage1, units, registry)
+  # Specific outcomes only, unless the family level is asked for.
+  expect_equal(unique(out$tree_level), "L1")
+  expect_setequal(
+    moderate_tree(stage1, units, registry, levels = c("L1", "L0"))$tree_level,
+    c("L1", "L0")
+  )
   expect_setequal(out$moderator, bp_tree_moderators())
   status <- function(name) unique(out$status[out$moderator == name])
   expect_equal(status("informant"), "compared")
@@ -1091,32 +1097,34 @@ test_that("moderator tests become rows the results table can count", {
   tests <- moderator_tests(moderation, trend)
   # One row per test: the duplicate label is gone, and the reporter test
   # is the model list's own row.
-  expect_equal(nrow(tests), 5)
+  # The within-series trend is a description and is not a test.
+  expect_equal(nrow(tests), 4)
   expect_equal(
     tests$model_name,
     c(
       "moderation_study_level",
       "sens_reporter",
       "moderation_study_level",
-      "year_trend",
       "year_trend"
     )
   )
-  expect_equal(tests$level, c("L1", "L1", "L0", "L1", "L1"))
+  expect_equal(tests$level, c("L1", "L1", "L0", "L1"))
+  expect_equal(tests$term[4], "between datasets")
   expect_equal(
     tests$status,
-    c(
-      "pooled",
-      "too few studies to say",
-      "pooled",
-      "pooled",
-      "no series spans more than one year"
-    )
+    c("pooled", "too few studies to say", "pooled", "pooled")
   )
   # The trend's p-value is the one its interval and degrees of freedom
   # give.
   se <- 0.08 / (2 * stats::qt(0.975, 10))
   expect_equal(tests$p_test[4], 2 * stats::pt(-0.05 / se, 10))
-  expect_true(is.na(tests$p_test[5]))
+  # A trend that was not fitted has no p-value.
+  unfitted <- trend
+  unfitted$between_per_decade <- NA_real_
+  unfitted$between_status <- NA_character_
+  unfitted$status <- "too few datasets or years"
+  none <- moderator_tests(NULL, unfitted)
+  expect_true(is.na(none$p_test))
+  expect_equal(none$status, "too few datasets or years")
   expect_equal(nrow(moderator_tests(NULL, NULL)), 0)
 })

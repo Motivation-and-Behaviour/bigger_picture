@@ -115,10 +115,13 @@ Predictive mean matching needs no assumption about the shape of a variable's dis
   The share of an adjusted model's rows with an imputed covariate is recorded for every unit slope and summarised by tier in the imputation report.
   A covariate's imputation leaves out an exposure or a family score that the unit knows for under 70% of its rows, which is so for about a tenth of the second tier's slopes and a third of the third's.
   Imputing covariates for each outcome's own model would remove this, at a much larger cost in computing.
-- Imputing a model's exposure adds little precision, and none where nothing but the outcome, age and sex predicts it.
-  In deletion tests on real data, with a fifth of the exposure deleted at random, the imputed slopes of linear models were about 1% smaller than complete-case slopes on average and 4 to 10% smaller in the smallest datasets; where deletion depended on an outcome they were closer to the truth than complete cases in simulation, and about as close on real data.
-  Their standard errors were one to three per cent too small.
-  At the shares actually missing this is negligible for most slopes.
+- Imputing a model's exposure added no precision in the test made of it, and pulls slopes a little towards zero.
+  In an independent deletion test on four real datasets (amended 20 November 2026 from that test, which replaced earlier and smaller ones), with a fifth of the exposure deleted at random, the imputed slopes of linear models were 1.8% smaller than complete-case slopes on average and 2.8% smaller than the slopes on the full data, which complete cases matched to within 1%.
+  The shrinkage was about 2% in the smallest datasets and units, not more; it was 6.5% in one large dataset whose analysis is weighted, where the exposure is drawn without the weights.
+  Imputed standard errors equalled complete-case ones and were about 1% too small, and imputed slopes were no closer to the full-data slopes than complete-case slopes were.
+  Where deletion depended on an outcome, complete cases were not biased in that test, so it could not show imputation removing a bias; in simulation, with a stronger dependence, imputed slopes were closer to the truth.
+  At the shares actually missing, under 3% of a model's rows in the datasets tested, this is negligible for most slopes.
+  A slope whose exposure is observed on too few of the outcome's rows is fitted on those rows without imputation, so some slopes rest on a minority of the rows that have the outcome.
 - For binary and short ordinal outcomes one review found an imputed exposure made a slope noisier than complete cases while its standard error said otherwise, with intervals covering the truth about nine times in ten; a second review did not reproduce that and found coverage of 93 to 96%.
   Complete cases are unbiased for those models when missingness depends on the outcome, so their exposure is not imputed whichever review is right.
 - An exposure is imputed given its own model's outcome only, so missingness that depends on a different outcome is not corrected.

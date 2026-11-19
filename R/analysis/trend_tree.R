@@ -14,8 +14,12 @@
 #' years.
 #'
 #' The between-dataset part compares studies run in different periods,
-#' which differ in much else; the within-series part compares like with
-#' like and is the firmer evidence.
+#' which differ in much else. The within-series part compares like with
+#' like, but in practice rests on the one or two datasets with long
+#' series: it had about one robust degree of freedom in every group of the
+#' development cells, so it is reported as a description and is not
+#' tested. A series can be a panel's waves within a school stage as well
+#' as a repeated cross-section, and there year and age move together.
 #'
 #' @param estimates Stage 1 rows for any number of exposures.
 #' @param units Per-unit descriptions with `unit`, `wave`, `country`,
@@ -79,6 +83,14 @@ trend_tree <- function(
       split(effects, paste(effects$exposure, effects$family, "L0")),
       function(rows) list(rows = rows, level = "L0")
     )
+  )
+  # A family whose slopes all sit in one specific outcome has the same
+  # trend as that specific outcome, and is not fitted twice.
+  groups <- Filter(
+    function(group) {
+      group$level == "L1" || dplyr::n_distinct(group$rows$node) > 1
+    },
+    groups
   )
   out <- lapply(groups, function(group) {
     rows <- group$rows

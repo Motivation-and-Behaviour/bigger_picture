@@ -60,14 +60,15 @@ It is fitted for outcomes modelled linearly; binary and short ordinal rows are n
   Something that changes over time and affects both screen use and the outcome biases the within-child slope too, and can bias it more than the cross-sectional one.
   The three slopes are read together.
 - The lagged model does not adjust for screen use at the later wave.
-- Gaps between waves differ across datasets from months to years, and each family and specific outcome is reported with its typical gap and the shortest and longest dataset's, taken from the children's ages where those are recorded finely and from collection years otherwise.
+- Gaps between waves differ across datasets from months to years, and each family and specific outcome is reported with its typical gap and the shortest and longest dataset's, taken as the median over a pair's children, from their ages where those are recorded finely and from collection years otherwise.
   The ages are used where they are recorded finely, or where every child's age moves by the same part of a year; a pair whose ages and collection years disagree by more than 0.3 years is marked.
   Where an outcome is measured more often than screen use, the lagged and within-child slopes of one dataset can sit on different gaps.
 - The three slopes do not rest on the same children or the same datasets.
   The matched cross-sectional slope is on the lagged model's children.
-  The within-child slope needs screen use at the later wave, the same item at both waves and the same respondent, so it has fewer datasets, and in a panel that moves from parent report to self report as children grow it rests on the younger children.
+  The within-child slope needs screen use at the later wave, the same item at both waves and the same respondent, so it has fewer datasets (a child whose respondent is recorded at one of the two waves only is left out; where a dataset records none, the respondent cannot be checked), and in a panel that moves from parent report to self report as children grow it rests on the younger children.
 - A child is in a pair only where they have what the model needs at a later wave, and children who left the study are not seen.
-  Each stage 1 row counts the unit's children at the earlier wave, those paired, and those left out because too few shared their next wave.
+  Each stage 1 row counts the unit's children at the earlier wave, those paired, those left out because too few shared their next wave, and those with no later wave, who left the study or were not asked the outcome again.
+  For the within-child model a later wave at which the screen item or the outcome is recorded as changed is not a child's next wave: the child goes on to the next comparable one (amended 20 November 2026), so the pair that skips such a wave is on everyone seen after it and not on the few who missed it.
   Separately, for each panel and each pair of successive waves that ask about screen use, how many children have the item again and how their screen use and age differ from the others' is computed per dataset (`panel_pairs_all`).
   That table describes follow-up of the screen item and not the models' pairs: a child without the item at the later wave may have left, aged out of it, or belong to a cohort or a subsample not asked it.
 
@@ -98,8 +99,8 @@ Two simple models that every panel can support are preferred to one elaborate mo
   The lagged model is not affected, because each wave is standardised on its own.
 - A dataset's successive pairs of waves share children.
   The pooled interval allows for that, but with few panels its degrees of freedom are few, and many results will be marked as having too few studies to say.
-- A few panels carry most of each family's estimate, and the item-change checks leave out about a quarter of the within-child pairs.
-- A wave with no screen item is not in the harmonised data, so a gap is the gap between waves that have one.
+- A few panels carry most of each family's estimate, and the item-change checks leave out about a fifth of the within-child pairs.
+- The lagged model's later wave needs the outcome and not the screen item, so its gap can run to a wave that did not ask about screen use.
 - The models are not preregistered, which the deviations ledger records.
 
 ---

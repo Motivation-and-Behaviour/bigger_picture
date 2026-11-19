@@ -72,6 +72,17 @@ prepare_analysis_data <- function(
   kept <- if (all(prepared$keep)) rows else rows[prepared$keep, ]
   rm(rows)
 
+  # A wave no row of the dataset has is a mistake in any exception.
+  named <- exceptions$wave[!is.na(exceptions$wave)]
+  if (!all(named %in% as.character(base$wave))) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": an analysis exception names a wave the dataset does not have: ",
+      paste(setdiff(named, as.character(base$wave)), collapse = ", "),
+      call. = FALSE
+    )
+  }
   # Exceptions about a screen-time row are for the exposures; the rest are
   # for the outcomes.
   on_exposure <- exceptions$variable_name %in% exposure_registry$variable_name
@@ -110,17 +121,31 @@ prepare_analysis_data <- function(
   parts <- exposure_exceptions[
     exposure_exceptions$action %in% "part_of_total",
   ]
+  classes <- exposure_registry$variable_name[
+    exposure_registry$unit %in%
+      "hours" &
+      exposure_registry$day %in% "usual" &
+      exposure_registry$context %in% "any" &
+      exposure_registry$axis %in% "activity" &
+      !is.na(exposure_registry$content_class)
+  ]
+  has_total <- if ("st_total" %in% names(kept)) {
+    !is.na(kept$st_total)
+  } else {
+    rep(FALSE, nrow(kept))
+  }
+  total_at <- function(at_wave) {
+    any(has_total & (is.na(at_wave) | as.character(base$wave) %in% at_wave))
+  }
   bad_part <- nrow(parts) > 0 &&
-    (!"st_total" %in% names(kept) ||
-      all(is.na(kept$st_total)) ||
-      !all(parts$variable_name %in% names(kept)) ||
-      !all(parts$wave[!is.na(parts$wave)] %in% as.character(base$wave)))
+    (!all(parts$variable_name %in% intersect(classes, names(kept))) ||
+      !all(vapply(parts$wave, total_at, logical(1))))
   if (bad_part) {
     stop(
       "Dataset ",
       info$dataset_id[1],
-      ": a `part_of_total` exception needs a dedicated total, a row the ",
-      "dataset has, and a wave the dataset has.",
+      ": a `part_of_total` exception needs a dedicated total at its wave ",
+      "and a usual-day content-class row the dataset has.",
       call. = FALSE
     )
   }
@@ -173,6 +198,15 @@ prepare_analysis_data <- function(
     exceptions,
     settings
   )
+  if (!all(series$variable_name %in% names(outcomes$outcomes))) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": an `own_series` exception names an outcome the dataset does not ",
+      "have.",
+      call. = FALSE
+    )
+  }
 
   screen <- exposure_registry$variable_name[
     exposure_registry$unit %in% c("hours", "index")

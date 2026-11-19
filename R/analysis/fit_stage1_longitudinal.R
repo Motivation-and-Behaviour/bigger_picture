@@ -45,10 +45,18 @@
 #' `longitudinal_lag()`), and whether ages and collection years disagree
 #' about it (`lag_sources_differ`).
 #'
+#' For the within-child model a later wave at which the screen item or the
+#' outcome is recorded as changed is not a child's next wave: the child
+#' goes on to the next comparable one (`n_blocked` counts the unit's
+#' children who met such a wave). A child whose respondent is recorded at
+#' one of the two waves only is left out of that model too
+#' (`n_unknown_respondent`).
+#'
 #' Limits: only outcomes modelled linearly are fitted (continuous rows, and
-#' ordinal rows with five or more levels); a wave with no screen item is
-#' not in the data, so a lag is the gap between waves that have one; and
-#' children who left the study before the later wave are not seen, so
+#' ordinal rows with five or more levels); the lagged model's later wave
+#' needs the outcome and not the screen item, so its gap can run to a wave
+#' with no screen item; and children with no later wave (`n_no_later`: they
+#' left the study, or the outcome was not asked again) are not seen, so
 #' attrition is not accounted for.
 #'
 #' @param prepared Output of `prepare_analysis_data()` for one dataset.
@@ -62,8 +70,8 @@
 #'   `matched` or `within`), `wave_from`, `wave_to`, `lag_years`,
 #'   `lag_sources_differ`, `n_earlier` (the unit's children with screen use
 #'   and the outcome at the earlier wave), `n_pairs` (those paired with the
-#'   later wave), `n_left` (those with a next wave too few share) and
-#'   `n_switched`
+#'   later wave), `n_left` (those with a next wave too few share),
+#'   `n_no_later`, `n_blocked`, `n_unknown_respondent` and `n_switched`
 #'   (those left out of the within-child model for a change of respondent
 #'   or format). NULL where the dataset is not a panel or holds none
 #'   of the cells.
@@ -160,6 +168,13 @@ fit_stage1_longitudinal <- function(
           n_earlier <- length(from)
           destination <- rep(NA_integer_, length(from))
           later_row <- rep(NA_integer_, length(from))
+          # For the within-child model a later wave at which the item is
+          # not the one asked at the earlier wave is no destination: a
+          # child seen there goes on to the next wave that is comparable,
+          # so the pair that skips such a wave is not left to the few who
+          # missed it.
+          met_block <- rep(FALSE, length(from))
+          block_reason <- NA_character_
           for (k in seq(j + 1, length(waves))) {
             to <- wave_rows[[waves[k]]]
             to <- to[pass$later_has[to]]
@@ -167,6 +182,27 @@ fit_stage1_longitudinal <- function(
               base$participant_id[from],
               base$participant_id[to]
             )]
+            if ("within" %in% pass$models) {
+              candidate <- c(waves[j], waves[k])
+              why <- longitudinal_item_changed(
+                base$dataset_id[1],
+                exposure,
+                candidate,
+                year[candidate],
+                NULL,
+                list(),
+                exposure_registry,
+                series_breaks
+              )
+              if (is.na(why) && sum(candidate %in% own_series) == 1) {
+                why <- "outcome asked differently at one of the waves"
+              }
+              if (!is.na(why)) {
+                met_block <- met_block | (is.na(destination) & !is.na(hit))
+                block_reason <- dplyr::coalesce(block_reason, why)
+                next
+              }
+            }
             fill <- is.na(destination) & !is.na(hit)
             destination[fill] <- k
             later_row[fill] <- hit[fill]
@@ -174,6 +210,8 @@ fit_stage1_longitudinal <- function(
           sizes <- table(destination)
           keep <- as.integer(names(sizes)[sizes >= settings$min_unit_rows])
           n_left <- sum(!is.na(destination) & !destination %in% keep)
+          n_no_later <- sum(is.na(destination))
+          n_blocked <- sum(met_block)
           label <- function(fit, to_wave) {
             fit$unit <- paste(unit, to_wave, sep = " to ")
             fit$wave <- waves[j]
@@ -187,14 +225,23 @@ fit_stage1_longitudinal <- function(
           if (length(keep) == 0) {
             for (version in pass$models) {
               fit <- fit_stage1_unit(frame[0, ], "none", settings)
-              fit$status <- "no later wave with enough of the unit's children"
+              fit$status <- if (
+                n_blocked >= settings$min_unit_rows && !is.na(block_reason)
+              ) {
+                block_reason
+              } else {
+                "no later wave with enough of the unit's children"
+              }
               fit$model <- version
               fit$lag_years <- NA_real_
               fit$lag_sources_differ <- NA
               fit$n_earlier <- n_earlier
               fit$n_pairs <- 0L
               fit$n_left <- n_left
+              fit$n_no_later <- n_no_later
+              fit$n_blocked <- n_blocked
               fit$n_switched <- NA_integer_
+              fit$n_unknown_respondent <- NA_integer_
               results[[length(results) + 1]] <- label(fit, NA_character_)
             }
             next
@@ -239,6 +286,14 @@ fit_stage1_longitudinal <- function(
                 values[from] != values[later]
             }
             switched <- differs(respondent) | differs(format)
+            # A respondent recorded at one of the two waves only cannot be
+            # called the same; where a dataset records none at either
+            # wave there is nothing to compare.
+            unconfirmed <- if (is.null(respondent)) {
+              rep(FALSE, length(from))
+            } else {
+              xor(is.na(respondent[from]), is.na(respondent[later]))
+            }
             lag <- longitudinal_lag(
               base$data_year[later] - base$data_year[from],
               base$age_years[later] - base$age_years[from],
@@ -260,7 +315,7 @@ fit_stage1_longitudinal <- function(
               one$y0 <- values$y0
               usable <- !is.na(one$x) & !is.na(one$y) & is.finite(one$y)
               if (version == "within") {
-                usable <- usable & !switched
+                usable <- usable & !switched & !unconfirmed
               }
               fit <- if (version == "within" && !is.na(changed)) {
                 blocked <- fit_stage1_unit(frame[0, ], "none", settings)
@@ -284,8 +339,15 @@ fit_stage1_longitudinal <- function(
               fit$n_earlier <- n_earlier
               fit$n_pairs <- length(from)
               fit$n_left <- n_left
+              fit$n_no_later <- n_no_later
+              fit$n_blocked <- n_blocked
               fit$n_switched <- if (version == "within") {
                 sum(switched)
+              } else {
+                NA_integer_
+              }
+              fit$n_unknown_respondent <- if (version == "within") {
+                sum(unconfirmed & !switched)
               } else {
                 NA_integer_
               }
@@ -316,35 +378,35 @@ fit_stage1_longitudinal <- function(
 }
 
 # The typical gap between two waves in years, and whether the two sources
-# of it disagree. The mean gap in the children's ages is used where ages
+# of it disagree. The median gap in the children's ages is used where ages
 # can show it: where they are recorded finely (more than two distinct
 # fractions of a year at the earlier wave), or where every child's age
 # moves by the same amount that is not a whole number of years, as it does
 # where age was recorded as age at entry plus the time since. Otherwise it
-# is the mean gap in collection years, and failing that in ages. `years`
-# is NA where none gives a gap above zero; `differ` is TRUE where the two
-# sources are more than 0.3 years apart.
+# is the median gap in collection years, and failing that in ages. `years`
+# is NA where none gives a gap above zero; `differ` is TRUE where ages can
+# show the gap and the two sources are more than 0.3 years apart.
 longitudinal_lag <- function(year_gap, age_gap, age) {
-  mean_of <- function(gap) {
-    typical <- mean(gap, na.rm = TRUE)
+  typical_of <- function(gap) {
+    typical <- stats::median(gap, na.rm = TRUE)
     if (is.finite(typical) && typical > 0) typical else NA_real_
   }
-  by_age <- mean_of(age_gap)
-  by_year <- mean_of(year_gap)
+  by_age <- typical_of(age_gap)
+  by_year <- typical_of(year_gap)
   fractions <- unique(round(age[!is.na(age)] %% 1, 2))
   spread <- stats::sd(age_gap, na.rm = TRUE)
   steady <- !is.na(by_age) &&
     !is.na(spread) &&
     spread < 0.05 &&
     abs(by_age - round(by_age)) > 0.05
-  candidates <- if (length(fractions) > 2 || steady) {
-    c(by_age, by_year)
-  } else {
-    c(by_year, by_age)
-  }
+  shown <- length(fractions) > 2 || steady
+  candidates <- if (shown) c(by_age, by_year) else c(by_year, by_age)
   list(
     years = candidates[!is.na(candidates)][1],
-    differ = !is.na(by_age) && !is.na(by_year) && abs(by_age - by_year) > 0.3
+    differ = shown &&
+      !is.na(by_age) &&
+      !is.na(by_year) &&
+      abs(by_age - by_year) > 0.3
   )
 }
 

@@ -147,7 +147,8 @@ summary_tables$fmi |>
 
 ## Imputed covariates in the adjusted models
 
-The share of an adjusted model's rows whose covariate was imputed: the largest of its tier's covariates.
+The share of an adjusted model's rows with any of its tier's covariates imputed.
+Sex is not counted: it is in every model.
 It is recorded for every unit slope (`covariate_imputed_share`).
 
 ```{r}

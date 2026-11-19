@@ -251,7 +251,7 @@ pool_curve <- function(
 #' For each, `holds` says whether the estimate stays beyond the smallest
 #' effect on the same side at every later interpretable hour, and
 #' `interval_holds` whether the interval goes on meeting the rule there
-#' too. An estimate that stays beyond with an interval that widens has not
+#' too, degrees of freedom included. An estimate that stays beyond with an interval that widens has not
 #' come back. Both are NA where there is no later hour to judge.
 #'
 #' @param curve A pooled curve by hour: `hours`, `interpretable`,
@@ -304,7 +304,7 @@ read_curve_thresholds <- function(curve, reference, settings, higher_is = NA) {
       }
     )
   }
-  conservative <- read_threshold(sure & beyond, beyond)
+  conservative <- read_threshold(sure & beyond, sure & beyond)
   clear <- !is.na(curve$ci_low) & (curve$ci_low > 0 | curve$ci_high < 0)
   past <- sure & clear & abs(curve$estimate) >= settings$smallest_effect
   # The next interpretable hour of each readable hour, and whether it is
@@ -317,7 +317,7 @@ read_curve_thresholds <- function(curve, reference, settings, higher_is = NA) {
     next_too[here] <- past[after] &&
       sign(curve$estimate[after]) == sign(curve$estimate[here])
   }
-  central <- read_threshold(past & next_too, clear)
+  central <- read_threshold(past & next_too, sure & clear)
   list(sure = any(sure), conservative = conservative, central = central)
 }
 

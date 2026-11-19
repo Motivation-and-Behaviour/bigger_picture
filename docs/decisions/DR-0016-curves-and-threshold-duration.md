@@ -72,7 +72,7 @@ Each was run 200 times, with and without error inside the bands, with two knot p
 With the rule on rows, eight of the cell's 14 datasets have a unit to pool, so "all" below is eight datasets.
 The truth each pooled curve is scored against is the mean of the datasets' curves.
 
-The figures below are from the run of 17 November 2026, made after two independent reviews and the changes that followed them: the truth is the mean curve the simulation generates, the five-dataset scenario pools five, the interval is never narrower than the working model's, the floor on degrees of freedom is three, and the central reading needs two half hours in a row.
+The figures below are from the run of 19 November 2026, made after two independent reviews and the changes that followed them: the truth is the mean curve the simulation generates, the five-dataset scenario pools five, the interval is never narrower than the working model's, the floor on degrees of freedom is three, and the central reading needs the next interpretable hour to be past the line too, on the same side.
 The first version of this record misquoted several figures and they should not be relied on.
 
 What it showed, with three interior knots and the rule on rows, and no error inside the bands unless said:
@@ -94,6 +94,7 @@ What it showed, with three interior knots and the rule on rows, and no error ins
 - **Whether a threshold holds.** For every curve that does stay beyond, the estimate was said to hold in 92 to 100% of thresholds found.
   For a dip, which comes back, the estimate was still said to hold in a third of the conservative thresholds found and an eighth of the central ones, because the pooled curve smooths its return; the interval was said to go on meeting the rule in almost none.
   For a curve levelling off just past 0.10 SD the interval went on meeting the conservative rule in two thirds, so a FALSE there does not mean the curve came back.
+  The interval's statement applies the floor on degrees of freedom at the later hours too.
   Neither statement can be read alone: the estimate's says a dip holds too often, the interval's says a plateau does not, and both are read beside the plotted curve.
   Where a threshold falls on the last interpretable hour there is nothing later to judge, and neither is given.
 - **Three interior knots follow a bend better than two** (coverage at a bend at two hours 99% against 70%).

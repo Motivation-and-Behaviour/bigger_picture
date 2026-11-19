@@ -644,6 +644,76 @@ test_that("the longitudinal models separate change from standing differences", {
   expect_equal(small$wave_to, "3")
   expect_equal(small$n_left, 20L)
 
+  # An outcome reworded at the middle wave of three: for the within-child
+  # model every child goes on to the third wave, which asks what the first
+  # did, so that pair is on all of them and not on those who missed the
+  # second wave; the other models still use the second wave.
+  full_three <- function(rows) {
+    rows <- three_waves(rows)
+    rows$st_game[rows$wave == "2"] <- rows$st_game[rows$wave == "3"]
+    rows
+  }
+  middle <- models_prepare("9992", reg, full_three)
+  middle$series <- tibble::tibble(
+    variable_name = "mh_dep_self",
+    wave = "2",
+    reason = "Reworded"
+  )
+  past <- fit_stage1_longitudinal(
+    middle,
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  first_within <- past[past$model == "within" & past$wave_from == "1", ]
+  expect_equal(first_within$wave_to, "3")
+  expect_equal(first_within$status, "fitted")
+  expect_equal(first_within$n_pairs, 600L)
+  expect_equal(first_within$n_blocked, 600L)
+  expect_equal(first_within$n_no_later, 0L)
+  expect_equal(
+    past$wave_to[past$model == "lagged" & past$wave_from == "1"],
+    "2"
+  )
+  # From the reworded wave itself nothing later is comparable, and the row
+  # says why.
+  from_second <- past[past$model == "within" & past$wave_from == "2", ]
+  expect_equal(
+    from_second$status,
+    "outcome asked differently at one of the waves"
+  )
+  expect_equal(from_second$n_no_later, 600L)
+
+  # A respondent recorded at one of the two waves only cannot be called
+  # the same, so those children are left out of the within-child model and
+  # counted; one recorded at neither wave is not held against the child.
+  half_known <- function(rows) {
+    rows <- edit(rows)
+    people <- unique(rows$participant_id)
+    rows$st_responder <- "Parent"
+    rows$st_responder[
+      rows$wave == "2" & rows$participant_id %in% people[1:100]
+    ] <- NA
+    rows$st_responder[rows$participant_id %in% people[101:150]] <- NA
+    rows
+  }
+  unknown <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, half_known),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  expect_equal(
+    unknown$n_unknown_respondent[unknown$model == "within"],
+    100L
+  )
+  expect_equal(unknown$n[unknown$model == "within"], 500L)
+  expect_equal(unknown$n[unknown$model == "lagged"], 600L)
+
   # A child whose screen use is reported by someone else at the later wave
   # is left out of the within-child model only.
   reporter <- function(rows) {
@@ -787,6 +857,18 @@ test_that("the gap between waves follows ages where they can show it", {
   expect_false(longitudinal_lag(rep(1, 40), rep(0.75, 40), fine)$differ)
   # Coarse ages: the collection years are used.
   expect_equal(gap(rep(2, 40), rep(0, 40), coarse), 2)
+  # Banded ages that disagree with the years raise no flag: they cannot
+  # show the gap.
+  expect_false(
+    longitudinal_lag(
+      rep(1, 40),
+      rep(c(0, 0, 3, 0, 0), 8),
+      coarse
+    )$differ
+  )
+  # The gap is a median, so a few impossible ages do not move it.
+  ages <- c(rep(2, 36), -2, 14, 13, 12)
+  expect_equal(gap(rep(2, 40), ages, fine), 2)
   # Age recorded as age at entry plus the time since: every child moves
   # by the same part of a year, which the calendar years overstate.
   entry <- rep(c(6.5, 7), 20)
@@ -901,9 +983,9 @@ test_that("results are labelled, tested and adjusted in one table", {
   tests <- tibble::tibble(
     model_name = c("moderation_study_level", "year_trend"),
     exposure = "st_watch",
-    level = c("L0", "L1"),
+    level = c("L1", "L1"),
     family = "wellbeing",
-    node = c(NA, "self_esteem"),
+    node = c("self_esteem", "self_esteem"),
     moderator = c("informant", "data_year"),
     term = c("levels equal", "between datasets"),
     effect_measure = c("sd_per_hour_difference", "sd_per_hour_per_decade"),
@@ -935,6 +1017,22 @@ test_that("results are labelled, tested and adjusted in one table", {
   expect_equal(trend$finding, "not estimated")
   expect_true(is.na(trend$p) && is.na(trend$k_total))
   expect_equal(with_tests$q[seq_len(nrow(out))], out$q)
+  # A level the model list does not give a model is not reported: the
+  # family-level moderator test is not built.
+  at_family <- tests[1, ]
+  at_family$level <- "L0"
+  at_family$node <- NA
+  expect_equal(
+    nrow(assemble_results(
+      tree,
+      NULL,
+      spec,
+      hypotheses,
+      reg$outcomes,
+      tests = at_family
+    )),
+    nrow(out)
+  )
   # A family that could not be pooled has no p-value and is not counted.
   last <- out[out$family == "cognition", ]
   expect_true(is.na(last$p) && is.na(last$q) && is.na(last$k_total))

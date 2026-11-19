@@ -4,8 +4,7 @@
 #' that `assemble_results()` can count them in the tiered false discovery
 #' rate and give each its q-value. A categorical moderator is one test per
 #' exposure and specific outcome or family: that its levels' means are
-#' equal. The year trend is two: the between-dataset and the within-series
-#' slope. A moderator that sorts the slopes exactly as an earlier one does
+#' equal. The year trend is one: the between-dataset slope. A moderator that sorts the slopes exactly as an earlier one does
 #' (`same_as`) is the same test, and is left out.
 #'
 #' The comparison of same-reporter with different-reporter slopes is its
@@ -96,7 +95,9 @@ moderator_tests <- function(moderation = NULL, trend = NULL) {
         )
       )
     }
-    trends <- dplyr::bind_rows(part("between"), part("within"))
+    # The within-series slope is a description and is not tested (see
+    # `trend_tree()`).
+    trends <- part("between")
   }
   dplyr::bind_rows(compared, trends)
 }
