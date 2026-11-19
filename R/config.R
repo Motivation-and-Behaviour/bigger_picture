@@ -328,13 +328,13 @@ bp_model_workers_wide <- function() {
   10L
 }
 
-# Processes for a simulation target: every logical core but two, since the
-# work is one small model after another and gains a little from the second
-# thread of each core. Each process holds little memory, but nothing stops
-# the target starting while the other pools are busy, so run a build that
-# reruns the simulation under the memory watchdog.
+# Processes for a simulation target. More than this does not fit: with a
+# process on every logical core the target's memory passed 80 GB and the
+# build had to be stopped. Nothing stops the target starting while the
+# other pools are busy, so run a build that reruns the simulation under
+# the memory watchdog.
 bp_simulation_cores <- function() {
-  max(1L, min(parallel::detectCores() - 2L, 46L))
+  max(1L, min(parallel::detectCores() - 2L, 24L))
 }
 
 # Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).

@@ -135,6 +135,20 @@ prepare_analysis_data <- function(
     )
   }
   exceptions <- exceptions[!on_exposure, ]
+  # Waves at which an outcome row was asked differently: kept for the
+  # models that compare a child's waves.
+  series <- exceptions[
+    exceptions$action %in% "own_series",
+    c("variable_name", "wave", "reason")
+  ]
+  if (!all(series$wave %in% as.character(base$wave))) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": an `own_series` exception names a wave the dataset does not have.",
+      call. = FALSE
+    )
+  }
   exposures <- prepare_exposures(
     kept,
     base$wave,
@@ -210,6 +224,7 @@ prepare_analysis_data <- function(
     wave_order_declared = isTRUE(nzchar(info[["wave_order"]])),
     repeats = outcomes$repeats,
     nodes = outcomes$nodes,
-    derived = outcomes$derived
+    derived = outcomes$derived,
+    series = series
   )
 }

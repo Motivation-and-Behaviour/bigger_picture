@@ -17,7 +17,11 @@
 #'   content-class row: at this wave, or every wave, the row's time is
 #'   part of what the dataset's dedicated total measured, by the study's
 #'   questionnaire, so the rest of a child's screen use can be the total
-#'   less the row, DR-0013);
+#'   less the row, DR-0013) or `own_series` (on an outcome row, at one
+#'   wave: the row was asked differently there, so a change between that
+#'   wave and another is not a change in the outcome; the row is still
+#'   used at the wave, and only the within-child model leaves out pairs
+#'   that cross it, DR-0018);
 #' - `value`: the node or the pipe-separated keys, blank otherwise;
 #' - `reason`: why, in a sentence.
 #'
@@ -69,6 +73,15 @@ read_analysis_exceptions <- function(path, dataschema, outcome_registry) {
   if (any(part & exceptions$variable_name %in% "st_total")) {
     fail("`part_of_total` names the part, not `st_total`")
   }
+  own <- exceptions$action %in% "own_series"
+  if (any(own & is.na(exceptions$wave))) {
+    fail("`own_series` needs a wave")
+  }
+  if (any(own & grepl("^st_", exceptions$variable_name))) {
+    fail(
+      "`own_series` is about an outcome row; a screen item's change goes in series_breaks.csv"
+    )
+  }
   nodes <- exceptions$value[exceptions$action %in% "node"]
   bad_node <- setdiff(nodes, outcome_registry$tree$node)
   if (length(bad_node) > 0) {
@@ -88,6 +101,7 @@ bp_analysis_exception_actions <- function() {
     "node",
     "standardise_by",
     "total_dedicated",
-    "part_of_total"
+    "part_of_total",
+    "own_series"
   )
 }

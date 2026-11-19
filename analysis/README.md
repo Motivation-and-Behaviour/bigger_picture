@@ -179,10 +179,13 @@ A decision about one dataset that the registries cannot express goes in an optio
 | Column | Values |
 | --- | --- |
 | `variable_name` | The dataschema row |
-| `wave` | A wave label, or blank for every wave; always blank for `node` and `standardise_by` |
-| `action` | `exclude`, `keep_out_of_bounds`, `node` or `standardise_by` |
+| `wave` | A wave label, or blank for every wave; always blank for `node` and `standardise_by`, and always given for `own_series` |
+| `action` | `exclude`, `keep_out_of_bounds`, `node`, `standardise_by`, `total_dedicated`, `part_of_total` or `own_series` |
 | `value` | The node, or the pipe-separated keys; blank otherwise |
 | `reason` | Why, in a sentence |
+
+On a screen-time row an exception can `exclude` it, say that a total mapped as partial is a total of all screen use at a wave (`total_dedicated`, on `st_total`), or say that a content-class row is part of what the dataset's dedicated total measured (`part_of_total`); see DR-0013.
+On an outcome row, `own_series` says the row was asked differently at one wave, so the within-child model leaves out pairs of waves that cross it; the row is still used at that wave (DR-0018).
 
 The tests read every such file, and the pipeline tracks one per dataset, so a new file is noticed.
 

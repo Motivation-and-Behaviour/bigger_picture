@@ -1096,6 +1096,28 @@ test_that("exceptions must name analysed outcomes, and a node moves a row", {
     read("st_game,,total_dedicated,,No"),
     "is about `st_total`"
   )
+  # An outcome asked differently at one wave is kept and recorded.
+  panel <- function(line) {
+    prepare_analysis_data(
+      mock_dataset("9992"),
+      mock_info("9992"),
+      reg$outcomes,
+      reg$exposures,
+      reg$derivations,
+      reg$schema,
+      read(line)
+    )
+  }
+  own <- panel("mh_dep_self,1,own_series,,Reworded at this wave")
+  expect_equal(own$series$variable_name, "mh_dep_self")
+  expect_equal(own$series$wave, "1")
+  expect_false(all(is.na(own$outcomes$mh_dep_self[own$base$wave == "1"])))
+  expect_error(read("mh_dep_self,,own_series,,Why"), "needs a wave")
+  expect_error(read("st_game,1,own_series,,Why"), "about an outcome row")
+  expect_error(
+    panel("mh_dep_self,nine,own_series,,Why"),
+    "names a wave the dataset does not have"
+  )
   # A row that is neither an analysed outcome nor a screen-time row.
   expect_error(prepare(read("sex,,exclude,,why")), "not analysed outcomes")
   expect_error(read("mh_dep_self,1,node,anxiety,why"), "every wave")

@@ -29,7 +29,7 @@ A pair starts from one unit of the earlier wave, so countries stay apart as in t
   Something about a child that does not change between the waves cannot explain this slope, unless its influence on screen use and the outcome itself changes with age.
   The change in the outcome is in units of its SD at the earlier wave, because scores standardised within each wave lose the change in the mean; the change in screen use is in hours.
   It also needs screen use at the later wave, so its pairs can span further than the other two models' and it rests on fewer children.
-  A pair of waves is left out where the screen item changed between them, or where the data name the outcome's instrument and it differs; and a child is left out of a pair where their screen use was reported by a different respondent, or in a different response format, at the two waves.
+  A pair of waves is left out where the screen item changed between them, where the data name the outcome's instrument and it differs, or where the dataset's exceptions record that the outcome was asked differently at one of the two waves; and a child is left out of a pair where their screen use was reported by a different respondent, or in a different response format, at the two waves.
 - **Matched cross-sectional.** The primary model at the earlier wave, on the children the lagged model uses, so those two are compared on the same children.
 
 A pair is one unit of the earlier wave and a later wave, on the children of the unit seen again there.

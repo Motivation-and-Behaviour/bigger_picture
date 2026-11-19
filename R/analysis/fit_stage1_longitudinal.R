@@ -20,8 +20,10 @@
 #'   the change in the mean. It also needs screen use at the later wave, so
 #'   it has fewer children than the other two, and it needs the same item
 #'   at both waves: a pair is left out where the screen item changed
-#'   (`series_breaks.csv`), or where the base table names the outcome's
-#'   instrument and it differs; and a child is left out of a pair where
+#'   (`series_breaks.csv`), where the base table names the outcome's
+#'   instrument and it differs, or where the outcome was asked differently
+#'   at one of the two waves (an `own_series` line of the dataset's
+#'   exceptions file); and a child is left out of a pair where
 #'   their screen use was reported by a different respondent or in a
 #'   different response format at the two waves (`n_switched`). Most
 #'   outcome rows have no instrument column, and for those a change of
@@ -132,6 +134,9 @@ fit_stage1_longitudinal <- function(
       standardise_within(raw, base$unit, settings$min_unit_rows)
     }
     instrument <- column(longitudinal_measure_column(outcome, base))
+    own_series <- prepared$series$wave[
+      prepared$series$variable_name %in% outcome
+    ]
     # What a row needs at the later wave: the outcome, and for the
     # within-child model screen use too.
     passes <- list(
@@ -217,6 +222,12 @@ fit_stage1_longitudinal <- function(
               exposure_registry,
               series_breaks
             )
+            # An outcome asked differently at one of the two waves (the
+            # dataset's `own_series` exceptions) has no change to measure
+            # either.
+            if (is.na(changed) && sum(pair_waves %in% own_series) == 1) {
+              changed <- "outcome asked differently at one of the waves"
+            }
             # A child whose screen use was reported by someone else, or in
             # another format, at the later wave has no change to measure.
             differs <- function(values) {

@@ -500,6 +500,43 @@ test_that("the longitudinal models separate change from standing differences", {
     c("fitted", "fitted", "screen item changed between the waves")
   )
 
+  # So does an outcome recorded as asked differently at one of the waves;
+  # at both waves it would be the same item again.
+  reworded <- prepared
+  reworded$series <- tibble::tibble(
+    variable_name = "mh_dep_self",
+    wave = "2",
+    reason = "Reworded"
+  )
+  asked <- fit_stage1_longitudinal(
+    reworded,
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  expect_equal(
+    asked$status,
+    c("fitted", "fitted", "outcome asked differently at one of the waves")
+  )
+  reworded$series <- tibble::tibble(
+    variable_name = c("mh_dep_self", "mh_dep_self", "beh_ext_sdq_parent"),
+    wave = c("1", "2", "1"),
+    reason = "Reworded"
+  )
+  expect_true(all(
+    fit_stage1_longitudinal(
+      reworded,
+      cell,
+      reg$outcomes,
+      reg$exposures,
+      reg$schema,
+      no_breaks(reg)
+    )$status ==
+      "fitted"
+  ))
+
   # A panel in two countries gives a pair per country, each on its own
   # children.
   split <- function(rows) {
