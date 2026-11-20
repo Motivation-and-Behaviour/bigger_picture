@@ -1,0 +1,67 @@
+dataset_id: "1349"
+dataset_name: "Viros-Martin"
+status: "blocked"
+
+resources:
+  - name: "data"
+    role: "data"
+    glob: "SMARS_Adolescent_Social_Media_Spain_2024 (1).csv"
+    reader: "csv"
+  - name: "codebook"
+    role: "codebook"
+    glob: "Codebook_SMARS_2024 (1).csv"
+  - name: "codebook_xlsx"
+    role: "docs"
+    glob: "Codebook_SMARS_2024.xlsx"
+  - name: "instrument_export_concordance"
+    role: "docs"
+    glob: "Instrument_export (1).csv"
+  - name: "questionnaire"
+    role: "docs"
+    glob:
+      - "Questionnaire_ODEC_ES (1).docx"
+      - "Questionnaire_ODEC_ES (1).pdf"
+  - name: "readme"
+    role: "docs"
+    glob: "README (1).txt"
+
+notes: |
+  SMARS 2024: a cross-sectional online survey of 1,043 adolescents aged 12-18
+  across Spain, fieldwork 24 April to 6 May 2024 by the data-collection company ODEC.
+  The folder is the Figshare release doi:10.6084/m9.figshare.32626206 (version
+  2, 7 October 2026, CC BY 4.0). The README names the files with a _RECONCILED
+  suffix and without the " (1)" the folder has; the folder's files are those
+  files (the Figshare v2 file list uses the folder's names, and the data CSV,
+  codebook CSV, concordance CSV, PDF and README match its MD5 checksums).
+  The former 117-column public CSV the README warns against is not in the
+  folder.
+
+  Declared:
+  - data: the only data file, UTF-8 comma-separated, one header row, 1,043
+    rows x 188 columns, blank cells for missing. It has no participant id
+    (RESPID was removed before release); record order is the original export
+    order, so the mapping builds participant_id from the row number.
+  - codebook: Codebook_SMARS_2024 (1).csv, 188 rows (one per data column,
+    same order), with native value labels, counts, scoring and questionnaire
+    concordance. The xlsx copy is declared as docs only: its "Codebook" sheet
+    is identical to the CSV cell for cell, and its extra "Read first" sheet
+    repeats the README. The folder's xlsx and docx differ in bytes from the
+    Figshare copies only by document-store metadata parts; their cell and
+    text content is identical.
+  - instrument_export_concordance: the README's
+    Instrument_export_concordance.csv; its four columns are identical to the
+    codebook's variable, questionnaire_wording_ES, questionnaire_location and
+    instrument_export_concordance columns.
+  - questionnaire: the Spanish ODEC instrument; the .docx is the version the
+    codebook's "paragraph N" locations refer to, and the .pdf is a
+    LibreOffice rendering of it with the same text, kept for reading.
+  - readme: provenance, coding and scoring notes.
+
+  Not in the folder: DWB_PAF_varimax_loadings.csv,
+  Statistical_validation_settings.txt and software_versions.txt, which the
+  README lists as statistical validation files; none is needed to read the
+  data.
+
+  Out of scope: no dataschema outcome row takes any item (Blocks 3, 5, 8
+  and 9 reviewed); the tidier and mapping are kept for a return if a
+  digital well-being row is added or the Block 9 instrument is identified.
