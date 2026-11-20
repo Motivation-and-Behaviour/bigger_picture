@@ -510,6 +510,21 @@ analysis_targets <- function(harmonise_plan) {
       per_dataset[["dataset_summary"]],
       command = quote(combine_data_manifest(bind_part(list(!!!.x), "manifest")))
     ),
+    # The report's recorded manifest, and the datasets added, removed or
+    # changed since. Whether the file exists is worked out when the
+    # pipeline is defined, so recording it for the first time is noticed.
+    targets::tar_target_raw(
+      "report_manifest_file",
+      substitute(
+        find_recorded_manifest(has_manifest = recorded),
+        list(recorded = length(find_recorded_manifest()) > 0)
+      ),
+      format = "file"
+    ),
+    targets::tar_target_raw(
+      "manifest_changes",
+      quote(compare_data_manifest(data_manifest, report_manifest_file))
+    ),
     summaries("grain_all", "grain"),
     summaries("numeric_summary_all", "numeric_summary"),
     summaries("level_summary_all", "level_summary"),

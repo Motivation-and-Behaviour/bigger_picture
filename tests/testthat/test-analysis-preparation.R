@@ -126,6 +126,19 @@ test_that("a recorded manifest shows what was added, removed or changed", {
   diff <- diff[order(diff$dataset_id), ]
   expect_equal(diff$dataset_id, c("9991", "9992", "9993"))
   expect_equal(diff$change, c("removed", "changed", "added"))
+  # The report's manifest is found once it has been recorded.
+  expect_length(find_recorded_manifest("doe-report", dir), 0)
+  expect_equal(
+    find_recorded_manifest("test-record", dir),
+    as.character(path)
+  )
+  expect_equal(
+    nrow(compare_data_manifest(
+      combine_data_manifest(a, b),
+      find_recorded_manifest("doe-report", dir)
+    )),
+    0
+  )
   expect_equal(
     nrow(compare_data_manifest(combine_data_manifest(a), "no-such-file.csv")),
     0

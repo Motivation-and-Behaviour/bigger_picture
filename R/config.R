@@ -348,6 +348,12 @@ bp_simulation_cores <- function() {
   max(1L, min(parallel::detectCores() - 2L, cap))
 }
 
+# The manifest that fixes the datasets of the Department report
+# (ANALYSIS_PLAN.md, Step 9).
+bp_report_manifest_label <- function() {
+  "doe-report"
+}
+
 # Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).
 bp_manifest_dir <- function() {
   fs::path(bp_analysis_dir(), "manifests")
