@@ -43,6 +43,9 @@
 #'   p-value (`p_test`), such as whether a moderator's levels differ. They
 #'   are counted and adjusted with the rest, and have no equivalence test.
 #'   NULL for none.
+#' @param seen The development cells (`read_development_cells()`): the
+#'   exposures and families fitted before the freeze, whose rows are
+#'   marked `seen_before_freeze` whatever `frozen` is. NULL for none.
 #' @param model_spec From `read_model_spec()`.
 #' @param hypotheses From `read_hypotheses()`.
 #' @param outcome_registry The outcome registry.
@@ -58,7 +61,8 @@ assemble_results <- function(
   outcome_registry,
   settings = default_analysis_settings(),
   frozen = FALSE,
-  tests = NULL
+  tests = NULL,
+  seen = NULL
 ) {
   keep <- c(
     "model_name",
@@ -164,6 +168,18 @@ assemble_results <- function(
     .default = "exploratory"
   )
   out$development <- !frozen
+  # The exposures and families fitted while the code was developed were
+  # seen before the freeze, and stay marked after it (deviation D13).
+  out$seen_before_freeze <- FALSE
+  if (!is.null(seen) && nrow(seen) > 0) {
+    rows <- outcome_registry$rows
+    seen_family <- dplyr::coalesce(
+      seen$family,
+      rows$prereg_family[match(seen$variable_name, rows$variable_name)]
+    )
+    out$seen_before_freeze <- paste(out$exposure, out$family) %in%
+      paste(seen$exposure, seen_family)
+  }
 
   usable <- !is.na(out$estimate) & !is.na(out$se) & !is.na(out$df) & out$se > 0
   out$p <- NA_real_
@@ -225,16 +241,20 @@ assemble_results <- function(
     out$p_equivalence,
     settings
   )
-  ratable <- in_sd & out$level %in% c("L0", "L1", "L2") & !thin
+  ratable <- in_sd &
+    out$level %in% c("L0", "L1", "L2") &
+    !thin &
+    !out$finding %in% "not estimated"
   out$rating <- ifelse(ratable, rated$rating, NA_integer_)
-  out$rating_label <- ifelse(
-    ratable,
-    rated$rating_label,
-    ifelse(
-      in_sd & out$level %in% c("L0", "L1", "L2"),
-      "not rated: too uncertain to say",
-      NA_character_
-    )
+  # A row that cannot be rated says why in the words of its `finding`.
+  out$rating_label <- dplyr::case_when(
+    ratable ~ rated$rating_label,
+    !(in_sd & out$level %in% c("L0", "L1", "L2")) ~ NA_character_,
+    out$finding %in% "specific outcomes disagree" ~
+      "not rated: specific outcomes disagree",
+    out$finding %in% "too few studies to say" ~
+      "not rated: too few studies to say",
+    .default = "not rated: not estimated"
   )
 
   # The slope predictions; those about thresholds and moderation attach

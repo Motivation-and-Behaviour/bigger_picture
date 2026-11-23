@@ -49,7 +49,7 @@ sens_total_over_24_excluded,14,5,L0|L1,total,core,,1,main,two_stage,total_over_2
 sens_implausible_retained,14,5,L0|L1,total|content_classes,core,,1,implausible_retained,two_stage,implausible_retained,prereg_secondary,FALSE,Implausible values kept
 sens_family_by_datasets,14,5,L0,total|content_classes,core,,1,main,two_stage,family_weighted_by_datasets,prereg_secondary,TRUE,The family as an average of its specific outcomes weighted by their number of datasets in place of the plain average (DR-0014)
 sens_complete_case,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,complete_case,prereg_secondary,TRUE,The primary models with no imputation
-sens_team_excluded,14,5,L0|L1,total|content_classes,core,,1,team_excluded,two_stage,team_excluded,prereg_secondary,FALSE,Team-contributed datasets excluded
+sens_team_excluded,14,5,L0|L1,total|content_classes,core,,1,team_excluded,two_stage,team_excluded,prereg_secondary,FALSE,Team-contributed datasets excluded (`team_contributed` in analysis/datasets.csv); no dataset in the report's manifest is team-contributed so it is not run for the report and is run for the publications if any is by then
 sens_fixed_study,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,fixed_study,prereg_secondary,FALSE,Study as a fixed effect in place of random
 sens_leave_one_out,14,5,L0,total|content_classes,core,,1,main,two_stage,leave_one_dataset_out,prereg_secondary,FALSE,Each headline estimate without each dataset in turn and without each of the five largest
 sens_compatible_only,14,5,L0|L1,total|content_classes,core,,1,main,two_stage,compatible_only,prereg_secondary,FALSE,Rows mapped as compatible only; where 5 or more datasets remain

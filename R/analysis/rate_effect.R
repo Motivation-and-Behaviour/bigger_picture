@@ -6,7 +6,8 @@
 #' never from a p-value alone:
 #'
 #' - 0, no clear relationship: the equivalence test shows the effect lies
-#'   within the smallest effect of interest;
+#'   within the smallest effect of interest, which is to say its 90%
+#'   interval does;
 #' - 1 to 3, small, moderate or strong: the estimate is at least the
 #'   smallest effect of interest and its 95% interval excludes no
 #'   difference, with the band taken from the estimate's size and the sign
@@ -21,8 +22,11 @@
 #' @param estimate,low,high The effect on the contrast and its 95%
 #'   interval, in SD.
 #' @param p_equivalence The equivalence test's p-value.
-#' @param settings From `analysis_settings()`: `rating_bands` and
-#'   `smallest_effect`.
+#' @param settings From `analysis_settings()`: `rating_bands`,
+#'   `smallest_effect` and `smallest_effect_per_hour`, which must agree.
+#'   A band holds its lower edge: an estimate of exactly 0.40 is moderate.
+#'   Bands are read from the estimate as computed, not as rounded for
+#'   display.
 #' @return A tibble, one row per estimate: `rating` (-3 to 3, NA where not
 #'   rated) and `rating_label`.
 rate_effect <- function(
@@ -36,7 +40,8 @@ rate_effect <- function(
   if (
     is.null(bands) ||
       is.unsorted(bands, strictly = TRUE) ||
-      !isTRUE(all.equal(bands[[1]], settings$smallest_effect))
+      !isTRUE(all.equal(bands[[1]], settings$smallest_effect)) ||
+      !isTRUE(all.equal(bands[[1]], 3 * settings$smallest_effect_per_hour))
   ) {
     stop(
       "rate_effect(): `rating_bands` must rise from the smallest effect of ",

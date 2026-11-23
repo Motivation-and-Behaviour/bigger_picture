@@ -1029,6 +1029,15 @@ test_that("an effect is put in a band from its estimate and interval", {
   )
   expect_true(all(is.na(unsure$rating)))
   expect_equal(unique(unsure$rating_label), "not rated: too uncertain to say")
+  # The band's edge must also be the equivalence test's margin.
+  apart <- settings
+  apart$smallest_effect_per_hour <- 0.2 / 3
+  expect_error(
+    rate_effect(0.3, 0.2, 0.4, 0.9, apart),
+    "rise from the smallest effect"
+  )
+  # A band holds its lower edge.
+  expect_equal(rate(0.40, 0.2, 0.6, 0.9)$rating, 2L)
   # The first band is the smallest effect of interest.
   wrong <- settings
   wrong$rating_bands <- c(small = 0.2, moderate = 0.4, strong = 0.7)
@@ -1094,6 +1103,35 @@ test_that("results are labelled, tested and adjusted in one table", {
   # not rated.
   expect_equal(out$rating[1], -1L)
   expect_equal(out$rating_label[1], "small, harmful")
+  expect_equal(
+    out$rating_label[out$family == "cognition"],
+    "not rated: not estimated"
+  )
+  # Nothing is marked as seen before the freeze unless the development
+  # cells are given; with them, their exposure and families are, whether
+  # or not the specification is frozen.
+  expect_false(any(out$seen_before_freeze))
+  cells <- tibble::tibble(
+    exposure = c("st_watch", "st_game"),
+    family = c("wellbeing", NA),
+    variable_name = c(NA, "acc_graderepeated")
+  )
+  marked <- assemble_results(
+    tree,
+    NULL,
+    spec,
+    hypotheses,
+    reg$outcomes,
+    frozen = TRUE,
+    seen = cells
+  )
+  expect_false(any(marked$development))
+  expect_equal(
+    marked$seen_before_freeze,
+    marked$exposure == "st_watch" &
+      marked$family == "wellbeing" |
+      marked$exposure == "st_game" & marked$family == "learning"
+  )
 
   expect_equal(out$hypothesis[1:3], c("H1", "H2b", "H2c"))
   expect_equal(out$prediction[1:3], c("negative", "negative", "none"))
@@ -1108,6 +1146,8 @@ test_that("results are labelled, tested and adjusted in one table", {
   thin$status[3] <- "too few studies to say"
   thin <- assemble_results(thin, NULL, spec, hypotheses, reg$outcomes)
   expect_true(is.na(thin$equivalent[3]))
+  expect_equal(thin$rating_label[3], "not rated: too few studies to say")
+  expect_true(is.na(thin$rating[3]))
   expect_equal(thin$p_equivalence[3], game$p_equivalence)
   expect_equal(thin$finding[3], "too few studies to say")
   # A row that could not be pooled at all is not a finding either.
@@ -1124,6 +1164,10 @@ test_that("results are labelled, tested and adjusted in one table", {
   split$headline[3] <- FALSE
   split <- assemble_results(split, NULL, spec, hypotheses, reg$outcomes)
   expect_equal(split$finding[3], "specific outcomes disagree")
+  expect_equal(
+    split$rating_label[3],
+    "not rated: specific outcomes disagree"
+  )
   expect_true(is.na(split$q[3]) && is.na(split$equivalent[3]))
   expect_equal(split$k_total[3], game$k_total)
   expect_equal(split$q[-3], out$q[-3])

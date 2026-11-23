@@ -42,8 +42,8 @@ show(read("outcome_tree.csv"))
 ### Outcome rows
 
 One row per harmonised outcome or health variable.
-`node` is the specific outcome it belongs to, `informant` who reported it, `role` what it is used as (an outcome, a negative control, a mediator, or not analysed), `score_type` how it is modelled, and `direction` whether a higher score is better or worse.
-`use` is `core` for rows in the main analysis and `archive` for rows not used this round.
+`node` is the specific outcome it belongs to, `informant` who reported it, `role` what it is used as (`outcome`, `negative_control`, `mediator`, `covariate` or `measure`), `score_type` how it is modelled, and `direction` whether a higher score is better or worse.
+`use` is `core` for rows in the main analysis, `report` for rows shown in the report without being pooled into a family, and `archive` for rows not used this round; it is blank for rows that are not outcomes.
 `part_of` names a whole that the row is a part of, so the two are never pooled together.
 
 ```{r}
@@ -113,7 +113,13 @@ knitr::kable(tibble::tibble(
   setting = names(settings),
   value = vapply(
     settings,
-    function(value) paste(format(value, digits = 4), collapse = ", "),
+    function(value) {
+      shown <- trimws(format(value, digits = 4))
+      if (!is.null(names(value))) {
+        shown <- paste(names(value), shown, sep = " = ")
+      }
+      paste(shown, collapse = ", ")
+    },
     character(1)
   )
 ))

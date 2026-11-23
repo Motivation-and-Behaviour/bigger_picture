@@ -113,9 +113,11 @@ analysis_settings <- function() {
     curve_window = 0.5,
     smallest_effect = 0.10,
     # Multiple imputation (ANALYSIS_PLAN.md, Step 8; DR-0019). The number
-    # of imputations is small while the engine is developed, and 50 for
-    # the confirmatory run.
+    # of imputations is small while the engine is developed, and the
+    # preregistered 50 once the specification is frozen
+    # (`bp_imputations()`).
     imputations = 5L,
+    imputations_confirmatory = 50L,
     imputation_iterations = 10L,
     # A variable is imputed in a unit where it is known for at least this
     # share of the unit's rows; below that its missingness is not sporadic

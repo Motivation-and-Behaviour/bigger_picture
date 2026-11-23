@@ -49,7 +49,7 @@ analysis_targets <- function(harmonise_plan) {
     # number of imputations makes only the new ones.
     targets::tar_target_raw(
       "imputation_index",
-      quote(seq_len(settings$imputations))
+      quote(seq_len(bp_imputations(settings)))
     ),
     targets::tar_target_raw(
       "settings_tree",
@@ -523,7 +523,11 @@ analysis_targets <- function(harmonise_plan) {
     ),
     targets::tar_target_raw(
       "manifest_changes",
-      quote(compare_data_manifest(data_manifest, report_manifest_file))
+      quote(compare_data_manifest(
+        data_manifest,
+        report_manifest_file,
+        required = bp_specification_frozen()
+      ))
     ),
     summaries("grain_all", "grain"),
     summaries("numeric_summary_all", "numeric_summary"),
@@ -896,7 +900,8 @@ analysis_targets <- function(harmonise_plan) {
         outcome_registry,
         settings_tree,
         frozen = bp_specification_frozen(),
-        tests = moderator_tests(moderation_development, trend_development)
+        tests = moderator_tests(moderation_development, trend_development),
+        seen = development_cells
       ))
     ),
     tarchetypes::tar_combine_raw(

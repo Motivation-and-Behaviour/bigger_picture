@@ -25,20 +25,24 @@ They are applied to the effect on the contrast of 1 against 4 hours of screen us
 
 | Rating | Words | Size on the contrast |
 | --- | --- | --- |
-| 0 | No clear relationship | within 0.10 |
+| 0 | No clear relationship | shown to be within 0.10 |
 | ±1 | Small | 0.10 to 0.39 |
 | ±2 | Moderate | 0.40 to 0.69 |
 | ±3 | Strong | 0.70 or more |
 
 The sign is the direction for the child: negative is harmful and positive is beneficial.
 The lower edge of the small band is the smallest effect of interest, 0.10 SD (DR-0017).
+A band holds its lower edge, so an estimate of exactly 0.40 is moderate, and bands are read from the estimate as computed, not as rounded for display.
+The contrast is three times the linear slope per hour, not a reading of the pooled curve (DR-0016).
+Binary and short ordinal outcomes enter on the SD scale they are pooled on (DR-0014).
 
 **A rating is read from the estimate and its interval, not from a p-value alone.**
 
 - **0, no clear relationship:** the equivalence test shows the effect lies within the smallest effect of interest.
+  That test is passed where the 90% interval lies within 0.10 either side of zero, so the 95% interval shown beside the estimate can reach a little beyond it.
 - **±1 to ±3:** the estimate is at least 0.10 and its 95% interval excludes no difference; the band is taken from the size of the estimate.
-- **Not rated:** anything else, which is too uncertain to say.
-  This includes an estimate pooled from too few studies to say, and a family whose specific outcomes disagree.
+- **Not rated:** anything else.
+  The label says why: too uncertain to say, too few studies to say, not estimated, or a family whose specific outcomes disagree.
 
 Ratings are given to families, specific outcomes and specific outcomes by informant.
 An estimate for a single outcome row is in that row's own direction and is not rated.

@@ -652,6 +652,17 @@ bp_specification_frozen <- function() {
   FALSE
 }
 
+# How many imputations a build makes: the preregistered number once the
+# specification is frozen, and the smaller development number before
+# (DR-0019). Imputations already made are kept when the number rises.
+bp_imputations <- function(settings) {
+  if (bp_specification_frozen()) {
+    settings$imputations_confirmatory
+  } else {
+    settings$imputations
+  }
+}
+
 # The models whose cells the cross-sectional stage 1 fits: every other
 # model built on those slopes (curves, covariate tiers, moderators) uses a
 # subset of these cells. They share no cell, so a pooled row has one model.

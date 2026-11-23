@@ -211,3 +211,12 @@ test_that("the model pool is four unless a build asks for more", {
   withr::local_envvar(BP_MODEL_WORKERS = "many")
   expect_equal(bp_model_workers(), expected)
 })
+
+test_that("the number of imputations follows the freeze", {
+  settings <- analysis_settings()
+  expect_equal(settings$imputations_confirmatory, 50L)
+  expect_equal(
+    bp_imputations(settings),
+    if (bp_specification_frozen()) 50L else settings$imputations
+  )
+})
