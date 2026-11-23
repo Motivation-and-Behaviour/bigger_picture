@@ -5,7 +5,7 @@
 #' hours a day, in SD, and are read from the estimate and its interval,
 #' never from a p-value alone:
 #'
-#' - 0, no clear relationship: the equivalence test shows the effect lies
+#' - 0, negligible or no relationship: the equivalence test shows the effect lies
 #'   within the smallest effect of interest, which is to say its 90%
 #'   interval does;
 #' - 1 to 3, small, moderate or strong: the estimate is at least the
@@ -59,7 +59,7 @@ rate_effect <- function(
   rating <- rep(NA_integer_, length(estimate))
   rating[negligible] <- 0L
   rating[clear] <- as.integer(sign(estimate[clear]) * size[clear])
-  words <- c("no clear relationship", names(bands))
+  words <- c("negligible or no relationship", names(bands))
   label <- ifelse(
     is.na(rating),
     "not rated: too uncertain to say",

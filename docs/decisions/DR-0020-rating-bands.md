@@ -25,7 +25,7 @@ They are applied to the effect on the contrast of 1 against 4 hours of screen us
 
 | Rating | Words | Size on the contrast |
 | --- | --- | --- |
-| 0 | No clear relationship | shown to be within 0.10 |
+| 0 | Negligible or no relationship | shown to be within 0.10 |
 | ±1 | Small | 0.10 to 0.39 |
 | ±2 | Moderate | 0.40 to 0.69 |
 | ±3 | Strong | 0.70 or more |
@@ -38,11 +38,14 @@ Binary and short ordinal outcomes enter on the SD scale they are pooled on (DR-0
 
 **A rating is read from the estimate and its interval, not from a p-value alone.**
 
-- **0, no clear relationship:** the equivalence test shows the effect lies within the smallest effect of interest.
+- **0, negligible or no relationship:** the equivalence test shows the effect lies within the smallest effect of interest.
   That test is passed where the 90% interval lies within 0.10 either side of zero, so the 95% interval shown beside the estimate can reach a little beyond it.
 - **±1 to ±3:** the estimate is at least 0.10 and its 95% interval excludes no difference; the band is taken from the size of the estimate.
+  The rubric calls this band "no clear relationship"; here an effect can be clearly different from zero and still be shown to be negligible, so the words say both.
 - **Not rated:** anything else.
   The label says why: too uncertain to say, too few studies to say, not estimated, or a family whose specific outcomes disagree.
+- **The longitudinal strand is not rated.**
+  Its slopes are other estimands, and a null lagged or within-child slope is not evidence of no effect (DR-0018).
 
 Ratings are given to families, specific outcomes and specific outcomes by informant.
 An estimate for a single outcome row is in that row's own direction and is not rated.
@@ -59,7 +62,7 @@ If the team's sign-off changes them, the change is a deviation recorded in the l
 ## Rationale
 
 Reading the band from the interval keeps apart what the rubric's lowest band joins.
-With the equivalence tests already in the specification, "no clear relationship" can be reserved for effects the data show to be negligible, and the rest left unrated.
+With the equivalence tests already in the specification, the lowest band can be reserved for effects the data show to be negligible, and the rest left unrated.
 
 The contrast of 1 against 4 hours is not a standardised difference between two groups, so applying the rubric's bands for standardised differences to it is a convention.
 It is a coherent one: the lowest band's edge is the preregistered smallest effect of interest on the same contrast.
@@ -77,6 +80,9 @@ It is a coherent one: the lowest band's edge is the preregistered smallest effec
 ## Consequences
 
 - Most pooled effects in this field are small, so most rated results will be ±1, and many results will not be rated.
+- **The rating describes size, and the q-value decides support.**
+  A registered directional prediction is supported where the family estimate of its primary model is in the predicted direction with a q-value below 0.05; a prediction of no association is supported where that estimate is shown equivalent with its adjusted p-value (DR-0017).
+  A result that is rated with a q-value at or above 0.05 is described as a link of that size that does not hold once the number of comparisons is allowed for.
 - A result can have a q-value below 0.05 and not be rated, where its estimate is under 0.10 and it does not pass the equivalence test; and a result can be rated and have a q-value above 0.05, because the rating reads the 95% interval and the q-value carries the tiered count.
   The report gives both.
 - The rating uses the unadjusted equivalence test; whether a registered prediction of no association is confirmed uses the adjusted one (DR-0017).
@@ -85,7 +91,7 @@ It is a coherent one: the lowest band's edge is the preregistered smallest effec
 
 ## Implementation
 
-- `rate_effect()` gives the rating and its words; `assemble_results()` adds them to the results table as `rating` and `rating_label`.
+- `rate_effect()` gives the rating and its words; `assemble_results()` adds them to the results table as `rating` and `rating_label`, with `prediction_supported` for the family estimate of each primary model.
 - `analysis_settings()` holds the bands as `rating_bands`.
 - `tests/testthat/test-analysis-models.R` holds worked examples.
 

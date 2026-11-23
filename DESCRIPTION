@@ -15,6 +15,7 @@ Imports:
     clubSandwich,
     crew,
     data.table,
+    digest,
     dotenv,
     dplyr,
     fixest,
@@ -24,8 +25,10 @@ Imports:
     haven,
     httr2,
     knitr,
+    Matrix,
     mdbr,
     metafor,
+    mice,
     qs2,
     quarto,
     readr,
@@ -42,6 +45,7 @@ Imports:
     yaml
 Suggests:
     lintr,
+    MASS,
     testthat (>= 3.0.0),
     withr
 Config/Needs/website:

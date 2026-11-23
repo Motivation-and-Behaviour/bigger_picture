@@ -1000,7 +1000,7 @@ test_that("an effect is put in a band from its estimate and interval", {
   # Shown to be negligible: no clear relationship.
   none <- rate(-0.02, -0.06, 0.02, 0.001)
   expect_equal(none$rating, 0L)
-  expect_equal(none$rating_label, "no clear relationship")
+  expect_equal(none$rating_label, "negligible or no relationship")
   # Beyond the smallest effect with an interval that excludes zero: the
   # band is the estimate's, and the sign is the direction for the child.
   bands <- rate(
@@ -1103,6 +1103,14 @@ test_that("results are labelled, tested and adjusted in one table", {
   # not rated.
   expect_equal(out$rating[1], -1L)
   expect_equal(out$rating_label[1], "small, harmful")
+  # A registered prediction is supported on the family estimate of its
+  # primary model: a negative one with q below 0.05 here, and the
+  # prediction of no association for gaming and learning, which is
+  # equivalent. Other levels and models say nothing about support.
+  expect_true(out$prediction_supported[1])
+  expect_true(out$prediction_supported[3])
+  expect_true(all(is.na(out$prediction_supported[out$level != "L0"])))
+  expect_true(is.na(adjusted$prediction_supported))
   expect_equal(
     out$rating_label[out$family == "cognition"],
     "not rated: not estimated"

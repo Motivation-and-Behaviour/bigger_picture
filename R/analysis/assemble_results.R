@@ -17,7 +17,10 @@
 #' - the preregistered `hypothesis` and `prediction` for the row's exposure
 #'   and family, and for a prediction of no association `q_equivalence`,
 #'   the equivalence p-values adjusted among themselves with the row's
-#'   `k_total`, and `equivalent`, TRUE where that is below 0.05.
+#'   `k_total`, and `equivalent`, TRUE where that is below 0.05;
+#' - `prediction_supported`, for the family estimate of a primary model:
+#'   whether its q-value is below 0.05 in the predicted direction, or, for
+#'   a prediction of no association, whether it is `equivalent`.
 #'
 #' Estimates at L0 to L2 are in SD per hour and aligned, positive where
 #' more screen use goes with a better outcome, so a predicted `negative`
@@ -239,15 +242,21 @@ assemble_results <- function(
     out$p_equivalence,
     settings
   )
+  # The longitudinal strand's slopes are other estimands (a lagged slope,
+  # a slope of changes), and a null one is not evidence of no effect
+  # (DR-0018), so they are not put in the bands.
+  panel <- model_spec$sample[at] %in% "panel"
   ratable <- in_sd &
     out$level %in% c("L0", "L1", "L2") &
     !thin &
+    !panel &
     !out$finding %in% "not estimated"
   out$rating <- ifelse(ratable, rated$rating, NA_integer_)
   # A row that cannot be rated says why in the words of its `finding`.
   out$rating_label <- dplyr::case_when(
     ratable ~ rated$rating_label,
     !(in_sd & out$level %in% c("L0", "L1", "L2")) ~ NA_character_,
+    panel ~ "not rated: longitudinal models are not rated",
     out$finding %in% "specific outcomes disagree" ~
       "not rated: specific outcomes disagree",
     out$finding %in% "too few studies to say" ~
@@ -285,6 +294,19 @@ assemble_results <- function(
   # whose specific outcomes disagree, and its adjusted equivalence p-value
   # is below 0.05.
   out$equivalent[none] <- out$q_equivalence[none] < 0.05
+  # Whether a registered prediction is supported is said of the family
+  # estimate of its primary model: a predicted direction with a q-value
+  # below 0.05, or a prediction of no association shown equivalent. The
+  # rating describes the size; this says whether the prediction held.
+  family_test <- !is.na(out$prediction) & out$level %in% "L0" & !thin
+  directional <- family_test & out$prediction %in% c("negative", "positive")
+  out$prediction_supported <- NA
+  out$prediction_supported[directional] <- !is.na(out$q[directional]) &
+    out$q[directional] < 0.05 &
+    sign(out$estimate[directional]) ==
+      ifelse(out$prediction[directional] == "negative", -1, 1)
+  no_effect <- family_test & out$prediction %in% "none"
+  out$prediction_supported[no_effect] <- out$equivalent[no_effect] %in% TRUE
   dplyr::relocate(
     out,
     "model_name",

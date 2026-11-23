@@ -71,6 +71,19 @@ Like a test with too few studies to say, it is counted in K and is not ranked, s
 The confirmatory moderation tests are the combinations the preregistration predicts: sex for social media and the mental health and wellbeing families, and socioeconomic status for the learning, mental health and behaviour families.
 Moderation by sex or socioeconomic status elsewhere, and by age anywhere, is exploratory and takes Tier 5 q-values.
 
+**What is assembled.**
+Every built model that yields a test is assembled in one results table for a run, so that K is counted over all of them: the primary and secondary models of Tiers 1 and 2, the covariate tiers, the sensitivity analyses, the longitudinal strand, and the moderator and trend tests.
+Estimates that are not tests (pooled curves and thresholds, descriptive statistics, the comparison of one-stage with two-stage estimates) are reported beside it and are not counted (amended 23 November 2026).
+
+**When a prediction is supported.**
+A registered directional prediction is supported where the family estimate of its primary model is in the predicted direction with a q-value below 0.05.
+A prediction of no association is supported where that estimate is equivalent, as above.
+Specific outcomes are described with their own estimates and q-values, and do not decide whether the family's prediction is supported (amended 23 November 2026).
+
+**When a sensitivity analysis moves a result.**
+A sensitivity analysis is read by whether the estimate moves, not by its q-value.
+It moves a result where the effect on the contrast of 1 against 4 hours a day changes by more than 0.05 SD, half the smallest effect of interest, or the result changes rating band (DR-0020); otherwise the result is said to hold (amended 23 November 2026).
+
 **When K is counted.**
 The rule is frozen with the model list.
 K is worked out from the rule on the datasets in each run, so it can differ between the report to the funder and the publications, and the reconciliation lists each K that changed.
