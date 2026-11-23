@@ -1,14 +1,16 @@
 #' Read the preregistered predictions
 #'
-#' One row per exposure and outcome family the preregistration predicts
-#' about: a `negative` or `positive` association, or `none`, which is tested
-#' for equivalence against the smallest effect of interest.
+#' One row per test, exposure and outcome family the preregistration
+#' predicts about. A `slope` is predicted `negative`, `positive` or `none`,
+#' the last tested for equivalence against the smallest effect of interest.
+#' The other tests are the threshold (H3) and moderation by location (H4,
+#' predicted `none`), sex (H5b) and socioeconomic status (H5c).
 #'
 #' @param path Path to `hypotheses.csv`.
 #' @param outcome_registry The outcome registry.
 #' @param exposure_registry The exposure registry.
-#' @return A tibble of `hypothesis`, `exposure`, `family`, `prediction` and
-#'   `notes`.
+#' @return A tibble of `hypothesis`, `test`, `exposure`, `family`,
+#'   `prediction` and `notes`.
 read_hypotheses <- function(
   path = bp_hypotheses_path(),
   outcome_registry,
@@ -16,12 +18,25 @@ read_hypotheses <- function(
 ) {
   out <- read_registry_csv(path, bp_hypotheses_columns())
   fail <- function(...) stop(basename(path), ": ", ..., call. = FALSE)
-  if (anyNA(out[c("hypothesis", "exposure", "family", "prediction")])) {
+  needed <- c("hypothesis", "test", "exposure", "family", "prediction")
+  if (anyNA(out[needed])) {
     fail("only `notes` may be blank")
   }
-  bad <- setdiff(out$prediction, c("negative", "positive", "none"))
+  allowed <- bp_hypothesis_predictions()
+  bad <- setdiff(out$test, names(allowed))
   if (length(bad) > 0) {
-    fail("unknown prediction: ", paste(bad, collapse = ", "))
+    fail("unknown test: ", paste(bad, collapse = ", "))
+  }
+  fits <- mapply(
+    function(test, prediction) prediction %in% allowed[[test]],
+    out$test,
+    out$prediction
+  )
+  if (!all(fits)) {
+    fail(
+      "a prediction its test cannot make: ",
+      paste(unique(out$prediction[!fits]), collapse = ", ")
+    )
   }
   tree <- outcome_registry$tree
   bad <- setdiff(out$family, tree$node[tree$level %in% "L0"])
@@ -33,8 +48,8 @@ read_hypotheses <- function(
   if (length(bad) > 0) {
     fail("not exposures: ", paste(bad, collapse = ", "))
   }
-  if (anyDuplicated(out[c("exposure", "family")]) > 0) {
-    fail("an exposure and family has two predictions")
+  if (anyDuplicated(out[c("test", "exposure", "family")]) > 0) {
+    fail("a test of an exposure and family has two predictions")
   }
   out
 }

@@ -1,0 +1,2 @@
+variable_name,wave,action,value,reason
+wb_negaffect_self,13,exclude,,"The 2013 scores do not link to the same people's later scores (correlation 0.02 with 2017 across about 7,500 people, against 0.26 between 2017 and 2021), and the link varies in sign by region, while ids, ages and sexes link correctly; the documents do not explain it. Left out until the contributor can say what happened to the 2013 file."

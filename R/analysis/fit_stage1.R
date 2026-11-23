@@ -21,9 +21,10 @@
 #' - standard errors are clustered on the sampling unit where the unit
 #'   records one, a row without one forming a cluster of its own; otherwise
 #'   on the family where families repeat; otherwise they are
-#'   heteroskedasticity-robust. Strata are not used: against stratified fits
-#'   of the same models the standard error was between about 13% smaller and
-#'   7% larger, so this is not uniformly conservative;
+#'   heteroskedasticity-robust. Strata are not used: against stratified
+#'   fits of 112 of the same models in six stratified datasets the standard
+#'   error was between about 4% smaller and 8% larger (median equal), so
+#'   this is close but not uniformly conservative;
 #' - age enters as categories where it takes five or fewer distinct values,
 #'   as a natural spline with two degrees of freedom where the middle 90% of
 #'   ages span two or more years and a knot can be placed, linearly
@@ -43,7 +44,9 @@
 #'   one is unknown are left out, and groups of fewer than five rows are
 #'   merged. A further tier also gives the tier 1 slope on its own rows
 #'   (`tier1_same_rows_estimate`);
-#' - a unit is fitted on complete cases, and only with at least the minimum
+#' - a unit is fitted on the rows that have everything its model reads
+#'   (after imputation, where that is asked for), and only with at least
+#'   the minimum
 #'   number of rows, variation in the exposure and, for a binary outcome, at
 #'   least ten rows in each class.
 #'
@@ -60,10 +63,18 @@
 #' @param adjust_other Also adjust for the rest of the child's screen use
 #'   (`other_<exposure>` from `derive_total_screen()`): the secondary family
 #'   in which one content class is adjusted for the others. Rows without it
-#'   are left out (`n_no_other`), a unit that records none is not fitted,
+#'   are left out (`n_no_other`), as are rows whose class is larger than
+#'   the total it is part of (`n_other_inconsistent`), a unit that records none is not fitted,
 #'   and each estimate says what the rest was built from (`other_from`). The
 #'   slope without the adjustment on the same rows is in the
 #'   `tier1_same_rows_` columns where the tier is 1.
+#' @param imputation NULL to fit on the rows that have the exposure, or a
+#'   list of `index` (the imputation number) and `seed` to first impute the
+#'   exposure missing from a unit's rows for each outcome
+#'   (`impute_cell_exposure()`); `settings` then needs the imputation
+#'   settings. `n_exposure_imputed` counts the rows filled, and
+#'   `exposure_imputation_failed` gives the reason where a draw failed and
+#'   the rows were left as they were.
 #' @return A tibble with one row per unit, cell and tier that has data: the slope
 #'   (`estimate`, `se`), its `effect_measure`, the rows, clusters and degrees
 #'   of freedom behind it, the covariates and engine used, and `status`
@@ -76,7 +87,8 @@ fit_stage1 <- function(
   dataschema,
   settings = default_analysis_settings(),
   tiers = 1L,
-  adjust_other = FALSE
+  adjust_other = FALSE,
+  imputation = NULL
 ) {
   if (is.null(prepared) || nrow(prepared$base) == 0) {
     return(NULL)
@@ -115,17 +127,60 @@ fit_stage1 <- function(
     } else {
       prepared$outcomes[[outcome]]
     }
+    x_other_waves <- if (!is.null(imputation)) {
+      stage1_other_waves(x, base$participant_id)
+    }
     for (unit in names(unit_rows)) {
       index <- unit_rows[[unit]]
-      index <- index[!is.na(x[index]) & !is.na(y[index])]
-      if (length(index) == 0) {
+      index <- index[!is.na(y[index])]
+      if (is.null(imputation)) {
+        index <- index[!is.na(x[index])]
+      }
+      if (length(index) == 0 || all(is.na(x[index]))) {
         next
+      }
+      # A child whose class is larger than the total it is part of gave an
+      # inconsistent pair of answers: the row is left out of the adjusted
+      # model, with or without imputation, and counted.
+      n_inconsistent <- NA_integer_
+      if (adjust_other) {
+        inconsistent <- other$inconsistent[index] &
+          any(!is.na(other$value[index]))
+        n_inconsistent <- sum(inconsistent)
+        index <- index[!inconsistent]
+        if (length(index) == 0 || all(is.na(x[index]))) {
+          next
+        }
       }
       data <- frame[index, ]
       data$x <- x[index]
       data$y <- y[index]
       if (adjust_other) {
         data$other <- other$value[index]
+      }
+      n_exposure_imputed <- NA_integer_
+      exposure_imputation <- NA_character_
+      if (!is.null(imputation) && !stage1_may_impute(data, model, settings)) {
+        n_exposure_imputed <- 0L
+        data <- data[!is.na(data$x), ]
+      } else if (!is.null(imputation)) {
+        data$x_other_waves <- x_other_waves[index]
+        data <- impute_cell_exposure(
+          data,
+          imputation_seed(
+            imputation$seed,
+            base$dataset_id[1],
+            unit,
+            exposure,
+            outcome,
+            adjust_other,
+            imputation$index
+          ),
+          settings
+        )
+        n_exposure_imputed <- attr(data, "imputed")
+        exposure_imputation <- attr(data, "failed") %||% NA_character_
+        data <- data[!is.na(data$x), ]
       }
       for (tier in tiers) {
         fit <- fit_stage1_unit(
@@ -140,6 +195,9 @@ fit_stage1 <- function(
         } else {
           NA_integer_
         }
+        fit$n_other_inconsistent <- n_inconsistent
+        fit$n_exposure_imputed <- n_exposure_imputed
+        fit$exposure_imputation_failed <- exposure_imputation
         fit$other_from <- if (adjust_other) {
           other$from[index[1]]
         } else {
@@ -171,6 +229,42 @@ fit_stage1 <- function(
   )
 }
 
+# Whether a unit's exposure may be imputed for a model. The model's own
+# minimum sizes must be met by the rows that have the exposure, so that an
+# imputed exposure never makes a model fittable; and the exposure is
+# imputed only for the kinds of model the settings name.
+stage1_may_impute <- function(data, model, settings) {
+  if (!model %in% settings$impute_exposure_models) {
+    return(FALSE)
+  }
+  # The rows a complete-case model would have: the exposure, and the rest
+  # of screen use where the model adjusts for it, which is imputed too.
+  seen <- data[!is.na(data$x), ]
+  if ("other" %in% names(data)) {
+    seen <- seen[!is.na(seen$other), ]
+  }
+  if (model == "logistic") {
+    return(min(table(factor(seen$y, levels = c(0, 1)))) >= 10)
+  }
+  if (model == "ordinal") {
+    counts <- table(seen$y)
+    return(length(counts) >= 3 && min(counts) >= 5)
+  }
+  # A linear model needs the minimum unit size among the rows it would
+  # keep of those that have the exposure.
+  nrow(stage1_design(seen, settings, 1L)$data) >= settings$min_unit_rows
+}
+
+# A child's mean on a variable over their other rows (their other waves),
+# NA where they have none with a value.
+stage1_other_waves <- function(values, participant) {
+  seen <- !is.na(values)
+  total <- stats::ave(ifelse(seen, values, 0), participant, FUN = sum)
+  count <- stats::ave(as.numeric(seen), participant, FUN = sum)
+  others <- count - seen
+  ifelse(others > 0, (total - ifelse(seen, values, 0)) / others, NA_real_)
+}
+
 # The columns of the prepared base table a unit's model reads.
 stage1_frame <- function(base) {
   column <- function(name) {
@@ -187,6 +281,10 @@ stage1_frame <- function(base) {
   )
   for (covariate in bp_stage1_covariates()) {
     frame[[covariate]] <- as.character(column(covariate))
+  }
+  # Which covariate values were imputed, where `apply_imputation()` says.
+  for (marker in grep("\\.imputed$", names(base), value = TRUE)) {
+    frame[[marker]] <- base[[marker]]
   }
   frame
 }
@@ -245,6 +343,7 @@ fit_stage1_unit <- function(
         tier = as.integer(tier),
         ses_measure = NA_character_,
         ethnicity_measure = NA_character_,
+        covariate_imputed_share = NA_real_,
         tier1_same_rows_estimate = NA_real_,
         tier1_same_rows_se = NA_real_,
         terms_dropped = NA_character_,
@@ -284,7 +383,18 @@ fit_stage1_unit <- function(
 
   n <- nrow(data)
   counts$n <- n
+  # The share of the model's rows with any of the tier's covariates
+  # imputed.
+  markers <- intersect(paste0(design$added, ".imputed"), names(data))
+  imputed_share <- if (length(markers) > 0 && nrow(data) > 0) {
+    mean(rowSums(as.matrix(data[markers])) > 0)
+  } else if (length(design$added) > 0 && nrow(data) > 0) {
+    0
+  } else {
+    NA_real_
+  }
   common <- list(
+    covariate_imputed_share = imputed_share,
     weighted = weighted,
     ses_measure = ses_measure,
     ethnicity_measure = design$ethnicity_measure,
@@ -473,10 +583,26 @@ stage1_other_screen <- function(prepared, exposure) {
   n <- nrow(prepared$base)
   column <- paste0("other_", sub("^st_", "", exposure))
   if (!column %in% names(prepared$exposures)) {
-    return(list(value = rep(NA_real_, n), from = rep(NA_character_, n)))
+    return(list(
+      value = rep(NA_real_, n),
+      from = rep(NA_character_, n),
+      inconsistent = rep(FALSE, n)
+    ))
   }
+  # Where the rest comes from a dedicated total, a class above that total
+  # has no rest (`derive_total_screen()`).
+  own <- prepared$exposures[[exposure]]
+  total <- prepared$exposures$total_screen
   list(
     value = prepared$exposures[[column]],
+    inconsistent = startsWith(
+      dplyr::coalesce(prepared$exposures$total_source, ""),
+      "dedicated"
+    ) &
+      is.na(prepared$exposures[[column]]) &
+      !is.na(own) &
+      !is.na(total) &
+      own > total + 1e-8,
     from = ifelse(
       is.na(prepared$exposures$total_source),
       NA_character_,

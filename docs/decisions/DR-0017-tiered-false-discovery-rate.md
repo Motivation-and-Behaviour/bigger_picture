@@ -1,7 +1,7 @@
 # DR-0017: The tiered false discovery rate, written out as a rule
 
 **Status:** Accepted  
-**Date:** 2026-11-15  
+**Date:** 2026-11-15 (amended 2026-11-17, 2026-11-19 and 2026-11-20)  
 **Decision makers:** Taren  
 **Related issues:** NA
 
@@ -30,7 +30,7 @@ A test's layer and every layer above it form its path.
 | A specific outcome | the path of its family's test for the same exposure, then that exposure's specific outcomes in the family |
 | A specific outcome by informant, or an outcome row | the specific outcome's path, then its informants, or its rows |
 | A secondary model of Tier 1 or 2, such as a content class adjusted for other screen use | the primary test's path at the same level, then a layer for that model |
-| A threshold (Tier 3) | families, the family's content classes, then the family's thresholds |
+| A test of a threshold (Tier 3), such as whether it differs between groups | families, the family's content classes, then the family's thresholds |
 | A moderation test (Tier 4) | the Tier 3 path, then the family's moderation tests |
 | An exploratory or sensitivity analysis (Tier 5) | the Tier 4 path, then the family's exploratory tests |
 
@@ -42,8 +42,11 @@ The ranks come from the group's own p-values only.
 - A primary test is one from a confirmatory model fitted as the main two-stage model with nothing varied; every other model of Tier 1 or 2 is secondary.
 - The first layer always counts five, the five outcome families, whether or not each can be estimated.
 - A layer with no test adds nothing.
+- A threshold duration is an estimate with an interval, read from a pooled curve (DR-0016), and has no p-value: it takes no q-value and is not counted, so the Tier 3 layer holds only tests about thresholds (amended 20 November 2026).
+- A test that is not a pooled slope, such as whether a moderator's levels differ or the trend over collection years, joins its family's exploratory layer with its own p-value and is counted and ranked there like any other (amended 20 November 2026).
 - A test that could not be run has no p-value and is not counted.
-- A test with too few studies to say keeps its p-value and is counted.
+- A test with too few studies to say keeps its p-value and is counted in K, for its own group and those below it, but it is not ranked and has no q-value (amended 17 November 2026).
+  Its p-value is the least trustworthy in its group, and ranking it lowered the q-values of the tests beside it.
 
 So Tier 1 has K = 5.
 A content class in a family has K = 5 plus the content classes tested in that family.
@@ -54,12 +57,19 @@ Tier 1 q-values control the false discovery rate among the five families.
 Lower-layer q-values are a descriptive penalty and not a guaranteed error rate, and the reports say so.
 Every estimate shows its raw p and its q.
 Only families and specific outcomes of the confirmatory models are described as findings; informant-level and row-level estimates are labelled exploratory.
+An estimate with too few studies to say is never described as a finding, whatever its model or its p-value.
 
 **Predictions of no association.**
 Where the preregistration predicts no or a negligible association, the estimate is tested for equivalence: two one-sided tests against the smallest effect of interest, 0.10 SD on the contrast of 1 against 4 hours a day, using the robust standard error and its degrees of freedom.
 The equivalence p-values of a group are adjusted among themselves with the group's K.
 The test of a difference from zero is still reported for those rows, with its q-value.
-An estimate is called equivalent only where it was pooled from enough studies to say.
+An estimate is called equivalent only where it was predicted to show no association, was pooled from enough studies to say, and its adjusted equivalence p-value is below 0.05 (amended 17 November 2026: the first version used the unadjusted p-value, for every estimate).
+A family kept from the headline because its specific outcomes disagree (DR-0014) is not described as a finding.
+Like a test with too few studies to say, it is counted in K and is not ranked, so it has no q-value, and it is never called equivalent (amended 19 November 2026).
+
+**Moderation.**
+The confirmatory moderation tests are the combinations the preregistration predicts: sex for social media and the mental health and wellbeing families, and socioeconomic status for the learning, mental health and behaviour families.
+Moderation by sex or socioeconomic status elsewhere, and by age anywhere, is exploratory and takes Tier 5 q-values.
 
 **When K is counted.**
 The rule is frozen with the model list.
@@ -91,13 +101,15 @@ Fixing the first layer at five means a family that cannot be estimated does not 
 
 ## Consequences
 
+- Where nothing has a true effect, Tier 1 holds its 5%, but the chance of at least one false finding somewhere in Tiers 1 and 2 was 39 to 60% in a simulation with ten specific outcomes in a family.
+  With real effects mixed in, the false discovery rate stayed at or below 5.5% in every layer.
 - A specific outcome's q-value depends on how many specific outcomes its family has for that exposure, so families with many specific outcomes are penalised more.
 - K grows with depth, but so does the number of tests ranked together, and Benjamini and Hochberg's adjustment multiplies a p-value by K over its rank.
   In a large group only the smallest p-values pay close to the full K, so a deeper test can take a smaller q-value than a shallower one with the same p-value.
   This is a property of the registered procedure.
   It is one reason lower-layer q-values are called a descriptive penalty, and a sensitivity analysis is read by whether the estimate moves, not by its q-value.
 - Only the first layer has a fixed count, so a content class that cannot be estimated in a family lowers K for that family's other classes.
-- Tiers 3, 4 and 5 each form one layer per family across exposures, levels and models, and K is counted over the models assembled in one table, so every model of a run is assembled together.
+- Tiers 3, 4 and 5 each form one layer per family across exposures, levels and models, and K is counted over the models assembled in one table, so every model of a run that yields a test is assembled together; checks that yield none, such as the comparison of one-stage with two-stage estimates, are not.
 - An equivalence test needs a narrow interval, so few predictions of no association will be confirmed where datasets are few.
 
 ---

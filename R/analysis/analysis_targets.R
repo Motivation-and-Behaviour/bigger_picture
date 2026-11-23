@@ -26,12 +26,30 @@ analysis_targets <- function(harmonise_plan) {
       quote(settings[bp_model_settings()])
     ),
     targets::tar_target_raw(
+      "settings_longitudinal",
+      quote(settings[bp_longitudinal_settings()])
+    ),
+    targets::tar_target_raw(
       "settings_curve",
       quote(settings[bp_curve_settings()])
     ),
     targets::tar_target_raw(
       "settings_simulation",
       quote(settings[c(bp_curve_settings(), "seed")])
+    ),
+    targets::tar_target_raw(
+      "settings_imputation",
+      quote(settings[bp_imputation_settings()])
+    ),
+    targets::tar_target_raw(
+      "settings_imputed_model",
+      quote(settings[bp_imputed_model_settings()])
+    ),
+    # One branch of each dataset's imputation per number, so raising the
+    # number of imputations makes only the new ones.
+    targets::tar_target_raw(
+      "imputation_index",
+      quote(seq_len(settings$imputations))
     ),
     targets::tar_target_raw(
       "settings_tree",
@@ -241,7 +259,8 @@ analysis_targets <- function(harmonise_plan) {
         derivation_registry,
         dataschema,
         exceptions,
-        settings_prepare
+        settings_prepare,
+        total_status = total_mapping_status(harmonisation_config$variables)
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -323,7 +342,79 @@ analysis_targets <- function(harmonise_plan) {
         exposure_registry,
         dataschema,
         series_breaks,
-        settings_model
+        settings_longitudinal
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "imputed",
+      quote(impute_dataset(
+        prepared,
+        outcome_registry,
+        exposure_registry,
+        imputation_index,
+        settings_imputation
+      )),
+      pattern = quote(map(imputation_index)),
+      iteration = "list",
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "imputation_review",
+      quote(review_imputation(
+        prepared,
+        bind_imputations(imputed),
+        outcome_registry,
+        exposure_registry,
+        settings_imputation
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "stage1_imputed",
+      quote(fit_stage1_imputed(
+        prepared,
+        bind_imputations(imputed),
+        imputation_review,
+        imputation_index,
+        fit_cells,
+        outcome_registry,
+        dataschema,
+        settings_imputed_model,
+        tiers = 1:3
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "stage1_other_imputed",
+      quote(fit_stage1_imputed(
+        prepared,
+        bind_imputations(imputed),
+        imputation_review,
+        imputation_index,
+        other_cells,
+        outcome_registry,
+        dataschema,
+        settings_imputed_model,
+        adjust_other = TRUE
+      )),
+      memory = "transient",
+      garbage_collection = TRUE,
+      resources = model_level
+    ),
+    targets::tar_target_raw(
+      "panel_pairs",
+      quote(describe_panel_pairs(
+        prepared,
+        unique(longitudinal_cells$exposure)
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -398,6 +489,20 @@ analysis_targets <- function(harmonise_plan) {
     )
   }
   summaries <- function(name, part) bind(name, "dataset_summary", part)
+  reviews_of_imputation <- function(name, part) {
+    bind(name, "imputation_review", part)
+  }
+  imputed_tree <- function(name, tier) {
+    targets::tar_target_raw(
+      name,
+      bquote(pool_tree(
+        stage1_imputed_all[stage1_imputed_all$tier %in% .(tier), ],
+        outcome_registry,
+        slope_correlations_all,
+        settings_tree
+      ))
+    )
+  }
   reviews <- function(name, part) bind(name, "prepared_review", part)
   combined <- list(
     tarchetypes::tar_combine_raw(
@@ -659,6 +764,11 @@ analysis_targets <- function(harmonise_plan) {
       ))
     ),
     tarchetypes::tar_combine_raw(
+      "panel_pairs_all",
+      per_dataset[["panel_pairs"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
       "longitudinal_all",
       per_dataset[["longitudinal"]],
       command = quote(dplyr::bind_rows(!!!.x))
@@ -672,25 +782,95 @@ analysis_targets <- function(harmonise_plan) {
         settings_tree
       ))
     ),
+    reviews_of_imputation("imputation_units_all", "units"),
+    reviews_of_imputation("imputation_levels_all", "levels"),
+    tarchetypes::tar_combine_raw(
+      "stage1_imputed_all",
+      per_dataset[["stage1_imputed"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
+      "stage1_other_imputed_all",
+      per_dataset[["stage1_other_imputed"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "imputation_summary",
+      quote(summarise_imputation(
+        imputation_units_all,
+        dplyr::bind_rows(stage1_imputed_all, stage1_other_imputed_all),
+        dplyr::bind_rows(stage1_all, stage1_adjusted_all, stage1_other_all)
+      ))
+    ),
+    targets::tar_target_raw(
+      "stage2_imputed",
+      quote(pool_stage2_cells(
+        stage1_imputed_all[stage1_imputed_all$tier %in% 1L, ],
+        fit_cells,
+        settings_model
+      ))
+    ),
+    imputed_tree("tree_imputed", 1L),
+    imputed_tree("tree_imputed_tier2", 2L),
+    imputed_tree("tree_imputed_tier3", 3L),
+    targets::tar_target_raw(
+      "tree_other_imputed",
+      quote(pool_tree(
+        stage1_other_imputed_all,
+        outcome_registry,
+        slope_correlations_all,
+        settings_tree
+      ))
+    ),
     # One table of every model built so far, with p, q and equivalence
-    # tests. Before the freeze it holds development results only.
+    # tests. Before the freeze it holds development results only. The
+    # models are fitted on imputed data, with the primary models and the
+    # third covariate tier on complete cases beside them (DR-0019); the
+    # longitudinal strand is on complete cases for now.
     targets::tar_target_raw(
       "results_development",
       quote(assemble_results(
         dplyr::bind_rows(
           label_models(
-            tree_development,
+            tree_imputed,
             model_cells,
             setdiff(bp_stage1_models(), "report_rows")
           ),
-          dplyr::mutate(tree_other, model_name = "tier2_content_adjusted"),
-          dplyr::mutate(tree_tier2, model_name = "covariates_tier2"),
-          dplyr::mutate(tree_tier3, model_name = "covariates_tier3"),
+          dplyr::mutate(
+            tree_by_datasets(
+              label_models(
+                tree_imputed,
+                model_cells,
+                c("tier1_total", "tier2_content")
+              ),
+              settings_tree
+            ),
+            model_name = "sens_family_by_datasets"
+          ),
+          dplyr::mutate(
+            tree_other_imputed,
+            model_name = "tier2_content_adjusted"
+          ),
+          label_models(tree_imputed_tier2, model_cells, "covariates_tier2"),
+          label_models(tree_imputed_tier3, model_cells, "covariates_tier3"),
+          label_models(
+            tree_tier3,
+            model_cells,
+            "covariates_tier3_complete_case"
+          ),
+          dplyr::mutate(
+            label_models(
+              tree_development,
+              model_cells,
+              c("tier1_total", "tier2_content")
+            ),
+            model_name = "sens_complete_case"
+          ),
           longitudinal_development$tree
         ),
         dplyr::bind_rows(
           label_models(
-            stage2_development,
+            stage2_imputed,
             model_cells,
             bp_stage1_models()
           ),
@@ -700,7 +880,8 @@ analysis_targets <- function(harmonise_plan) {
         hypotheses,
         outcome_registry,
         settings_tree,
-        frozen = bp_specification_frozen()
+        frozen = bp_specification_frozen(),
+        tests = moderator_tests(moderation_development, trend_development)
       ))
     ),
     tarchetypes::tar_combine_raw(
@@ -718,6 +899,20 @@ analysis_targets <- function(harmonise_plan) {
         mapping_status_all,
         analysis_datasets,
         settings_tree
+      ))
+    ),
+    # The year trend up the outcome tree reads the tree's settings and the
+    # year rules of the model settings.
+    targets::tar_target_raw(
+      "trend_development",
+      quote(trend_tree(
+        stage1_all,
+        described_units,
+        outcome_registry,
+        exposure_registry,
+        series_breaks,
+        slope_correlations_all,
+        utils::modifyList(settings_model, settings_tree)
       ))
     ),
     targets::tar_target_raw(
@@ -793,6 +988,10 @@ analysis_targets <- function(harmonise_plan) {
     tarchetypes::tar_quarto_raw(
       "report_feasibility",
       path = fs::path(bp_analysis_reports_dir(), "feasibility.qmd")
+    ),
+    tarchetypes::tar_quarto_raw(
+      "report_imputation",
+      path = fs::path(bp_analysis_reports_dir(), "imputation.qmd")
     ),
     tarchetypes::tar_quarto_raw(
       "report_thin_slice",

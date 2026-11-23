@@ -9,14 +9,13 @@
 #'   (`adjust_tiered_fdr()`), counted along `fdr_path`;
 #' - the effect on the contrast of 1 against 4 hours a day
 #'   (`contrast_estimate` and its interval), for estimates in SD per hour;
-#' - `p_equivalence` and `equivalent`, the test that the estimate lies
-#'   within the smallest effect of interest (`test_equivalence()`), for
-#'   estimates in SD per hour; `equivalent` is given only where the status
-#'   is `pooled`;
+#' - `p_equivalence`, the test that the estimate lies within the smallest
+#'   effect of interest (`test_equivalence()`), for estimates in SD per
+#'   hour;
 #' - the preregistered `hypothesis` and `prediction` for the row's exposure
 #'   and family, and for a prediction of no association `q_equivalence`,
 #'   the equivalence p-values adjusted among themselves with the row's
-#'   `k_total`.
+#'   `k_total`, and `equivalent`, TRUE where that is below 0.05.
 #'
 #' Estimates at L0 to L2 are in SD per hour and aligned, positive where
 #' more screen use goes with a better outcome, so a predicted `negative`
@@ -25,16 +24,23 @@
 #'
 #' `finding` says how a row may be described: `finding` at L0 and L1 of a
 #' confirmatory model, otherwise the model's class, or `exploratory` for
-#' L2 and L3 (ANALYSIS_PLAN.md, Step 10 task 6).
+#' L2 and L3 (ANALYSIS_PLAN.md, Step 10 task 6); `too few studies to say`
+#' wherever that is the row's status; `not estimated` for a row that
+#' could not be pooled at all; and `specific outcomes disagree` for a
+#' family kept from the headline because they do (DR-0014).
 #'
 #' A test that could not be run has no p-value and is not counted. One with
-#' too few studies to say keeps its p-value and its place in the count, and
-#' its `status` says so.
+#' too few studies to say keeps its p-value and its place in the count, but
+#' is not ranked and has no q-value, and is never described as a finding.
 #'
 #' @param tree Rows of `pool_tree()` for any number of models, with
 #'   `model_name`.
 #' @param cells Rows of `pool_stage2_cells()` for the same models, with
 #'   `model_name`; the L3 level. NULL for none.
+#' @param tests Rows of `moderator_tests()`: tests that come with their own
+#'   p-value (`p_test`), such as whether a moderator's levels differ. They
+#'   are counted and adjusted with the rest, and have no equivalence test.
+#'   NULL for none.
 #' @param model_spec From `read_model_spec()`.
 #' @param hypotheses From `read_hypotheses()`.
 #' @param outcome_registry The outcome registry.
@@ -49,7 +55,8 @@ assemble_results <- function(
   hypotheses,
   outcome_registry,
   settings = default_analysis_settings(),
-  frozen = FALSE
+  frozen = FALSE,
+  tests = NULL
 ) {
   keep <- c(
     "model_name",
@@ -74,6 +81,16 @@ assemble_results <- function(
     "headline",
     "warning",
     "note",
+    "lag_years",
+    "lag_years_min",
+    "lag_years_max",
+    "k_nodes",
+    "k_nodes_thin",
+    "nodes_differ_p",
+    "nodes_left_out",
+    "moderator",
+    "term",
+    "p_test",
     "status"
   )
   if (!is.null(tree) && nrow(tree) > 0) {
@@ -91,7 +108,7 @@ assemble_results <- function(
     )]
     cells$informant <- place$informant
   }
-  out <- dplyr::bind_rows(tree, cells)
+  out <- dplyr::bind_rows(tree, cells, tests)
   if (nrow(out) == 0) {
     return(tibble::tibble())
   }
@@ -117,6 +134,17 @@ assemble_results <- function(
     out$level,
     model_spec$levels[at]
   )
+  # A test is made for a level on purpose, so one at a level its model is
+  # not listed for is a mistake in the list or the code, not a row to drop.
+  stray <- !listed & !is.na(out$p_test)
+  if (any(stray)) {
+    stop(
+      "assemble_results(): tests at a level the model list does not give ",
+      "their model: ",
+      paste(unique(out$model_name[stray]), collapse = ", "),
+      call. = FALSE
+    )
+  }
   out <- out[listed, ]
   at <- at[listed]
   primary <- model_spec$analysis_class[at] %in%
@@ -124,6 +152,11 @@ assemble_results <- function(
     model_spec$engine[at] %in% "two_stage" &
     is.na(model_spec$variant[at])
   out$finding <- dplyr::case_when(
+    out$status %in% "too few studies to say" ~ "too few studies to say",
+    !out$status %in% "pooled" |
+      (is.na(out$estimate) & is.na(out$p_test)) ~ "not estimated",
+    out$level %in% "L0" & out$headline %in% FALSE ~
+      "specific outcomes disagree",
     !out$analysis_class %in% "confirmatory" ~ out$analysis_class,
     out$level %in% c("L0", "L1") ~ "finding",
     .default = "exploratory"
@@ -137,6 +170,10 @@ assemble_results <- function(
       -abs(out$estimate[usable] / out$se[usable]),
       df = out$df[usable]
     )
+  # A test that brings its own p-value keeps it.
+  given <- !is.na(out$p_test)
+  out$p[given] <- out$p_test[given]
+  out$p_test <- NULL
   out$fdr_path <- tiered_fdr_path(
     out$tier,
     out$level,
@@ -148,7 +185,17 @@ assemble_results <- function(
   out$q <- NA_real_
   out$k_total <- NA_integer_
   placed <- !is.na(out$fdr_path)
-  adjusted <- adjust_tiered_fdr(out$p[placed], out$fdr_path[placed])
+  # A row with too few studies to say counts towards K and is not ranked;
+  # nor is a family whose specific outcomes disagree, whose average is not
+  # read as one estimate.
+  thin <- out$status %in%
+    "too few studies to say" |
+    out$finding %in% "specific outcomes disagree"
+  adjusted <- adjust_tiered_fdr(
+    out$p[placed],
+    out$fdr_path[placed],
+    ranked = !thin[placed]
+  )
   out$q[placed] <- adjusted$q
   out$k_total[placed] <- adjusted$k_total
 
@@ -165,13 +212,11 @@ assemble_results <- function(
     settings$smallest_effect_per_hour
   )
   out$p_equivalence <- equivalence$p_equivalence
-  # An estimate with too few studies to say cannot show equivalence either.
-  out$equivalent <- ifelse(
-    out$status %in% "pooled",
-    equivalence$equivalent,
-    NA
-  )
+  out$equivalent <- NA
 
+  # The slope predictions; those about thresholds and moderation attach
+  # where those models are assembled.
+  hypotheses <- hypotheses[hypotheses$test %in% "slope", ]
   predicted <- match(
     paste(out$exposure, out$family),
     paste(hypotheses$exposure, hypotheses$family)
@@ -181,7 +226,11 @@ assemble_results <- function(
   out$hypothesis <- hypotheses$hypothesis[predicted]
   out$prediction <- hypotheses$prediction[predicted]
   out$q_equivalence <- NA_real_
-  none <- out$prediction %in% "none" & !is.na(out$p_equivalence) & placed
+  none <- out$prediction %in%
+    "none" &
+    !is.na(out$p_equivalence) &
+    placed &
+    !thin
   for (path in unique(out$fdr_path[none])) {
     index <- which(none & out$fdr_path == path)
     out$q_equivalence[index] <- stats::p.adjust(
@@ -190,6 +239,11 @@ assemble_results <- function(
       n = out$k_total[index][1]
     )
   }
+  # An estimate is called equivalent where it was predicted to show no
+  # association, was pooled from enough studies to say, is not a family
+  # whose specific outcomes disagree, and its adjusted equivalence p-value
+  # is below 0.05.
+  out$equivalent[none] <- out$q_equivalence[none] < 0.05
   dplyr::relocate(
     out,
     "model_name",

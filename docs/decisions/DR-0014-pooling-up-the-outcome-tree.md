@@ -1,7 +1,7 @@
 # DR-0014: A family is the plain average of its specific outcomes, and only disagreement keeps it from the headline
 
 **Status:** Accepted  
-**Date:** 2026-11-13  
+**Date:** 2026-11-13 (amended 2026-11-17 and 2026-11-20)  
 **Decision makers:** Taren  
 **Related issues:** NA
 
@@ -36,6 +36,13 @@ Inference stays robust to the dependence of a dataset's slopes, so it does not r
 A family's estimate is the plain average of its pooled specific outcomes.
 Every specific outcome that pools enters it, whether or not the registry marks it for the headline, and including one with too few studies to say much on its own.
 Its standard error allows for any dependence among a dataset's slopes, within and across specific outcomes, so a score that sits in two specific outcomes adds nothing to the family's precision.
+For a family of two or more specific outcomes that standard error is the jackknife form of the robust variance (amended 17 November 2026).
+With the form used for a single specific outcome, a simulation on the real design found a family's 95% interval covering the truth about 93% of the time, and 89% where two of its specific outcomes had a variance between datasets estimated at zero; the jackknife form gave 95 to 97%.
+A later independent simulation agreed at the heterogeneity estimated from the data (92 to 93% against 95 to 96%).
+The jackknife form is conservative where datasets differ little: where there was no variance between datasets at all, its 95% interval covered the truth 99% of the time.
+Its degrees of freedom are usually a little lower, and sometimes higher.
+Whether a family has too few studies to say is judged on the jackknife form's own degrees of freedom, the ones its interval and p-value use (amended 20 November 2026: for a day the label was judged on the other form's, which let the label and the interval disagree).
+A family of one specific outcome keeps that outcome's standard error exactly.
 The average weighted by each specific outcome's number of datasets is reported beside it as a sensitivity analysis.
 
 **The headline.**

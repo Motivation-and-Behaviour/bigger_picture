@@ -151,8 +151,7 @@ flag_prepared_dataset <- function(
 
   required <- intersect(settings$total_required, names(exposures))
   if (length(required) == length(settings$total_required) && nrow(base) > 0) {
-    could <- exposures$total_source %in%
-      "summed" &
+    could <- total_is_summed(exposures$total_source) &
       stats::complete.cases(exposures[required])
     by_unit <- dplyr::summarise(
       tibble::tibble(
@@ -186,7 +185,12 @@ flag_prepared_dataset <- function(
 
   if (nrow(base) > 0) {
     weights <- dplyr::summarise(
-      tibble::tibble(unit = base$unit, has = !is.na(base$survey_weight_norm)),
+      # A weight of zero drops a row from a weighted model as a missing one
+      # does.
+      tibble::tibble(
+        unit = base$unit,
+        has = !is.na(base$survey_weight_norm) & base$survey_weight_norm > 0
+      ),
       with = sum(.data$has),
       rows = dplyr::n(),
       .by = "unit"

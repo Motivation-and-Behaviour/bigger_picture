@@ -9,8 +9,19 @@
 #'   and `standardise_by`);
 #' - `action`: `exclude` (leave the row out), `keep_out_of_bounds` (do not
 #'   drop values outside the schema's bounds, for a documented score form),
-#'   `node` (assign to another node of the outcome tree) or `standardise_by`
-#'   (replace the row's standardisation keys);
+#'   `node` (assign to another node of the outcome tree), `standardise_by`
+#'   (replace the row's standardisation keys), `total_dedicated` (on
+#'   `st_total`: at this wave, or every wave, the item is a total of all
+#'   screen use although its mapping is `partial`, so it is used as the
+#'   total and not replaced by a sum, DR-0013) or `part_of_total` (on a
+#'   content-class row: at this wave, or every wave, the row's time is
+#'   part of what the dataset's dedicated total measured, by the study's
+#'   questionnaire, so the rest of a child's screen use can be the total
+#'   less the row, DR-0013) or `own_series` (on an outcome row, at one
+#'   wave: the row was asked differently there, so a change between that
+#'   wave and another is not a change in the outcome; the row is still
+#'   used at the wave, and only the within-child model leaves out pairs
+#'   that cross it, DR-0018);
 #' - `value`: the node or the pipe-separated keys, blank otherwise;
 #' - `reason`: why, in a sentence.
 #'
@@ -51,6 +62,52 @@ read_analysis_exceptions <- function(path, dataschema, outcome_registry) {
   if (any(whole_dataset & !is.na(exceptions$wave))) {
     fail("`node` and `standardise_by` apply to every wave; leave `wave` blank")
   }
+  dedicated <- exceptions$action %in% "total_dedicated"
+  if (any(dedicated & !exceptions$variable_name %in% "st_total")) {
+    fail("`total_dedicated` is about `st_total`")
+  }
+  part <- exceptions$action %in% "part_of_total"
+  if (any(part & !grepl("^st_", exceptions$variable_name))) {
+    fail("`part_of_total` is about a screen-time row")
+  }
+  if (any(part & exceptions$variable_name %in% "st_total")) {
+    fail("`part_of_total` names the part, not `st_total`")
+  }
+  own <- exceptions$action %in% "own_series"
+  if (any(own & is.na(exceptions$wave))) {
+    fail("`own_series` needs a wave")
+  }
+  if (any(own & grepl("^st_", exceptions$variable_name))) {
+    fail(
+      "`own_series` is about an outcome row; a screen item's change goes in series_breaks.csv"
+    )
+  }
+  if (any(own & !is.na(exceptions$value))) {
+    fail("`own_series` takes no value")
+  }
+  # The same decision twice, or a row left out at a wave and also decided
+  # about at that wave, is a mistake.
+  key <- exceptions[c("variable_name", "wave", "action")]
+  if (anyDuplicated(key) > 0) {
+    fail("the same line appears twice")
+  }
+  left_out <- exceptions[exceptions$action %in% "exclude", ]
+  for (i in seq_len(nrow(left_out))) {
+    same_row <- exceptions$variable_name %in%
+      left_out$variable_name[i] &
+      !exceptions$action %in% "exclude"
+    # A decision about every wave (a node, say) can sit beside leaving the
+    # row out at one of them.
+    same_wave <- is.na(left_out$wave[i]) |
+      exceptions$wave %in% left_out$wave[i]
+    if (any(same_row & same_wave)) {
+      fail(
+        "`",
+        left_out$variable_name[i],
+        "` is excluded and has another decision at the same wave"
+      )
+    }
+  }
   nodes <- exceptions$value[exceptions$action %in% "node"]
   bad_node <- setdiff(nodes, outcome_registry$tree$node)
   if (length(bad_node) > 0) {
@@ -64,5 +121,13 @@ bp_analysis_exception_columns <- function() {
 }
 
 bp_analysis_exception_actions <- function() {
-  c("exclude", "keep_out_of_bounds", "node", "standardise_by")
+  c(
+    "exclude",
+    "keep_out_of_bounds",
+    "node",
+    "standardise_by",
+    "total_dedicated",
+    "part_of_total",
+    "own_series"
+  )
 }

@@ -911,20 +911,22 @@ test_that("units form a series only where they measure the same thing", {
 
   dir <- withr::local_tempdir()
   path <- file.path(dir, "series_breaks.csv")
-  header <- "dataset_id,exposure,day,from_year,waves,reason"
+  header <- "dataset_id,exposure,day,from_year,waves,scope,reason"
   write_breaks <- function(...) writeLines(c(header, ...), path)
-  write_breaks("1,not_an_exposure,,2000,,why")
+  write_breaks("1,not_an_exposure,,2000,,,why")
   expect_error(read_series_breaks(path, reg$exposures), "not exposures")
-  write_breaks("1,watch,someday,2000,,why")
+  write_breaks("1,watch,someday,2000,,,why")
   expect_error(read_series_breaks(path, reg$exposures), "not days")
-  write_breaks("1,watch,,,,why")
+  write_breaks("1,watch,,,,,why")
   expect_error(read_series_breaks(path, reg$exposures), "either a year")
-  write_breaks("1,watch,,2000,a;b,why")
+  write_breaks("1,watch,,2000,a;b,,why")
   expect_error(read_series_breaks(path, reg$exposures), "either a year")
-  write_breaks("1,watch,,soon,,why")
+  write_breaks("1,watch,,soon,,,why")
   expect_error(read_series_breaks(path, reg$exposures), "must be a year")
-  write_breaks("1,watch,,2000,,")
+  write_breaks("1,watch,,2000,,,")
   expect_error(read_series_breaks(path, reg$exposures), "a reason")
+  write_breaks("1,watch,,2000,,always,why")
+  expect_error(read_series_breaks(path, reg$exposures), "blank or `trend`")
 })
 
 test_that("a change keyed by waves or by day splits only those units", {
@@ -933,12 +935,12 @@ test_that("a change keyed by waves or by day splits only those units", {
   path <- file.path(dir, "series_breaks.csv")
   writeLines(
     c(
-      "dataset_id,exposure,day,from_year,waves,reason",
-      "p,watch,,2002,,new bands",
-      "p,watch,,,b; d,mail-out form",
-      "p,watch,weekend,2004,,weekend item only",
-      "p,game,,,zz,no such wave",
-      "q,game,,1990,,before any unit"
+      "dataset_id,exposure,day,from_year,waves,scope,reason",
+      "p,watch,,2002,,,new bands",
+      "p,watch,,,b; d,,mail-out form",
+      "p,watch,weekend,2004,,,weekend item only",
+      "p,game,,,zz,,no such wave",
+      "q,game,,1990,,,before any unit"
     ),
     path
   )
@@ -983,12 +985,12 @@ test_that("a change keyed by waves or by day splits only those units", {
   expect_equal(unused$matched, c(1L, 0L, 1L))
   expect_error(assign_series(units[names(units) != "wave"], "watch", breaks))
 
-  header <- "dataset_id,exposure,day,from_year,waves,reason"
-  writeLines(c(header, "p,watch,,,a;;b,why"), path)
+  header <- "dataset_id,exposure,day,from_year,waves,scope,reason"
+  writeLines(c(header, "p,watch,,,a;;b,,why"), path)
   expect_error(read_series_breaks(path, reg$exposures), "empty entry")
-  writeLines(c(header, "p,watch,,2012.5,,why"), path)
+  writeLines(c(header, "p,watch,,2012.5,,,why"), path)
   expect_error(read_series_breaks(path, reg$exposures), "must be a year")
-  writeLines(c(header, "p,watch,,2012,,why", "p,watch,,2012,,again"), path)
+  writeLines(c(header, "p,watch,,2012,,,why", "p,watch,,2012,,,again"), path)
   expect_error(read_series_breaks(path, reg$exposures), "appears twice")
 })
 
@@ -1278,8 +1280,11 @@ test_that("the tree pools the mock's rows, counting a copied score once", {
   l0 <- pair[pair$level == "L0", ]
   expect_equal(l0$k_nodes, 2)
   expect_equal(l0$estimate, dep$estimate)
-  expect_equal(l0$se, dep$se)
-  expect_equal(l0$df, dep$df)
+  # The copy adds no precision. A family of several specific outcomes takes
+  # the jackknife form of the robust variance, so its standard error is a
+  # little larger than the one outcome's, never smaller.
+  expect_gte(l0$se, dep$se)
+  expect_lt(l0$se, 1.2 * dep$se)
 
   # With distress the family is the plain average of the three.
   l0 <- level("L0")

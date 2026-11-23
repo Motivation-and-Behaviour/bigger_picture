@@ -50,7 +50,8 @@ curve_truths <- function() {
 #' - `units`: `every stretch` keeps a unit only with the minimum number of
 #'   rows in every stretch between knots (`curve_interval_rows`); `any`
 #'   keeps every unit a curve can be fitted in.
-#' - `datasets`: `all` of the cell's datasets, or `five` drawn at random,
+#' - `datasets`: `all` of the cell's datasets, or `five` drawn at random
+#'   from those with a unit to pool under the rule on units,
 #'   since most cells have few.
 #'
 #' Not simulated: weights and clustered errors, outcomes that are not
@@ -101,15 +102,28 @@ simulate_curve_recovery <- function(
   grid <- settings$curve_grid
   reference <- settings$curve_reference
   truths <- curve_truths()
+  # How much a dataset's curve is stretched along the hours (SD of the log).
+  stretch_sd <- 0.15
   scenarios <- expand.grid(
     truth = names(truths),
     band_error = c("none", "within bands"),
     stringsAsFactors = FALSE
   )
+  # The truth a pooled curve is scored against is the mean of the datasets'
+  # curves. Each dataset's curve is stretched along the hours, so for a
+  # curve that bends this is not the curve as written.
+  stretches <- exp(stats::qnorm(stats::ppoints(401)) * stretch_sd)
+  mean_curve <- function(name, hours) {
+    vapply(
+      hours,
+      function(hour) mean(truths[[name]](hour * stretches)),
+      numeric(1)
+    )
+  }
   truth <- dplyr::bind_rows(lapply(names(truths), function(name) {
-    value <- truths[[name]](grid) - truths[[name]](reference)
+    value <- mean_curve(name, grid) - mean_curve(name, reference)
     fine <- seq(reference, settings$curve_boundary[2], by = 0.01)
-    beyond <- abs(truths[[name]](fine) - truths[[name]](reference)) >=
+    beyond <- abs(mean_curve(name, fine) - mean_curve(name, reference)) >=
       settings$smallest_effect
     tibble::tibble(
       truth = name,
@@ -129,9 +143,10 @@ simulate_curve_recovery <- function(
     curve <- truths[[scenario$truth]]
     k <- length(datasets)
     strength <- stats::setNames(1 + stats::rnorm(k, 0, 0.3), datasets)
-    stretch <- stats::setNames(exp(stats::rnorm(k, 0, 0.15)), datasets)
+    stretch <- stats::setNames(exp(stats::rnorm(k, 0, stretch_sd)), datasets)
     tilt <- stats::setNames(stats::rnorm(k, 0, 0.03), datasets)
-    five <- sample(datasets, min(5L, k))
+    # The order datasets are taken in where only five are used.
+    drawn <- sample(datasets)
     simulated <- lapply(names(by_unit), function(name) {
       data <- by_unit[[name]]
       id <- data$dataset_id[1]
@@ -165,9 +180,13 @@ simulate_curve_recovery <- function(
       )
       lapply(seq_len(nrow(choices)), function(i) {
         choice <- choices[i, ]
+        # Five of the datasets that have a unit to pool under this rule,
+        # so that five are pooled and not the few of five that pass it.
+        kept <- choice$units == "any" | full
+        poolable <- fits$dataset_id[kept & fits$status %in% "fitted"]
+        five <- utils::head(drawn[drawn %in% poolable], 5L)
         used <- fits[
-          (choice$units == "any" | full) &
-            (choice$datasets == "all" | fits$dataset_id %in% five),
+          kept & (choice$datasets == "all" | fits$dataset_id %in% five),
         ]
         pooled <- pool_curve(used, with_knots)
         label <- function(table) {
@@ -193,6 +212,9 @@ simulate_curve_recovery <- function(
             "threshold_hours",
             "threshold_direction",
             "threshold_holds",
+            "threshold_interval_holds",
+            "threshold_central_holds",
+            "threshold_central_interval_holds",
             "threshold_central_hours",
             "threshold_central_direction",
             "status"
@@ -295,6 +317,8 @@ summarise_curve_recovery <- function(simulation) {
   central <- both
   central$threshold_hours <- both$threshold_central_hours
   central$threshold_direction <- both$threshold_central_direction
+  central$threshold_holds <- both$threshold_central_holds
+  central$threshold_interval_holds <- both$threshold_central_interval_holds
   both$rule <- "conservative"
   central$rule <- "central"
   thresholds <- dplyr::left_join(
@@ -332,6 +356,10 @@ summarise_curve_recovery <- function(simulation) {
     q75 = stats::quantile(.data$threshold_hours, 0.75, na.rm = TRUE),
     false_or_early = mean(.data$false_or_early),
     wrong_direction = mean(.data$wrong),
+    # Among the thresholds found: the curve said to stay beyond, and its
+    # interval said to go on meeting the rule.
+    holds = mean(.data$threshold_holds, na.rm = TRUE),
+    interval_holds = mean(.data$threshold_interval_holds, na.rm = TRUE),
     .groups = "drop"
   )
   list(curve = curve, threshold = threshold)

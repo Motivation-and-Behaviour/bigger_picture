@@ -25,9 +25,19 @@
 #'   q-value and is not counted.
 #' @param path The path of each test.
 #' @param fixed Named counts for layers whose size is set in advance.
+#' @param ranked Whether each test is ranked. A test that is not (one with
+#'   too few studies to say) still counts in `K`, for its own group and
+#'   for those below it, but takes no rank and gets no q-value: its
+#'   p-value is the least trustworthy, and ranking it would lower the
+#'   q-values of the tests beside it.
 #' @return A tibble, one row per element of `p`: `q` and `k_total`, the `K`
 #'   used.
-adjust_tiered_fdr <- function(p, path, fixed = c(families = 5L)) {
+adjust_tiered_fdr <- function(
+  p,
+  path,
+  fixed = c(families = 5L),
+  ranked = rep(TRUE, length(p))
+) {
   if (length(p) != length(path)) {
     stop("adjust_tiered_fdr(): `p` and `path` differ in length.", call. = FALSE)
   }
@@ -70,7 +80,7 @@ adjust_tiered_fdr <- function(p, path, fixed = c(families = 5L)) {
 
   q <- rep(NA_real_, length(p))
   for (one in paths) {
-    index <- which(path == one & tested)
+    index <- which(path == one & tested & ranked)
     if (length(index) > 0) {
       q[index] <- stats::p.adjust(p[index], method = "BH", n = totals[[one]])
     }

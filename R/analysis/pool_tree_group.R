@@ -70,6 +70,9 @@ pool_tree_group <- function(
     clubSandwich::conf_int(fit, vcov = "CR2", cluster = data$dataset_id),
     error = function(e) conditionMessage(e)
   )
+  if (!is.character(robust) && (is.na(robust$df[1]) || is.na(robust$SE[1]))) {
+    robust <- "no degrees of freedom"
+  }
   if (is.character(robust)) {
     return(list(
       row = result(paste("robust inference failed:", robust)),
@@ -83,7 +86,11 @@ pool_tree_group <- function(
   critical <- stats::qt(0.975, df = robust$df[1])
   half_width <- critical * sqrt(robust$SE[1]^2 + sum(fit$sigma2))
   row <- result(
-    if (robust$df[1] < 4) "too few studies to say" else "pooled",
+    if (robust$df[1] < settings$min_robust_df) {
+      "too few studies to say"
+    } else {
+      "pooled"
+    },
     estimate = estimate,
     se = robust$SE[1],
     df = robust$df[1],

@@ -20,6 +20,8 @@ library(ggplot2)
 library(targets)
 
 summary <- tar_read(prepared_summary_all)
+# A total from a dedicated item, whether it covers all of screen use or part.
+summary$total_item <- summary$total_dedicated + summary$total_dedicated_partial
 flags <- tar_read(prepared_flags_all)
 audit <- tar_read(analysis_row_audit)
 dropped <- tar_read(rows_dropped_all)
@@ -88,16 +90,18 @@ tibble::tibble(
     "Datasets with both, in different waves",
     "Datasets with no total",
     "Observations with a dedicated total",
+    "Observations with a dedicated item that covers part of screen use",
     "Observations with a summed total",
     "Summed totals capped at 24 hours",
     "Observations with watching and gaming but no sum, because another summed row is missing"
   ),
   Value = c(
-    sum(summary$total_dedicated > 0),
+    sum(summary$total_item > 0),
     sum(summary$total_summed > 0),
-    sum(summary$total_dedicated > 0 & summary$total_summed > 0),
-    sum(summary$total_dedicated == 0 & summary$total_summed == 0),
+    sum(summary$total_item > 0 & summary$total_summed > 0),
+    sum(summary$total_item == 0 & summary$total_summed == 0),
     fmt(sum(summary$total_dedicated)),
+    fmt(sum(summary$total_dedicated_partial)),
     fmt(sum(summary$total_summed)),
     paste0(fmt(sum(summary$total_capped)), " (", pct(sum(summary$total_capped) / sum(summary$total_summed)), ")"),
     fmt(sum(summary$total_lost_to_incomplete))
@@ -120,19 +124,23 @@ summary |>
 ```{r}
 #| label: total-both
 summary |>
-  filter(total_dedicated > 0 | total_summed > 0) |>
+  filter(total_item > 0 | total_summed > 0) |>
   by_id() |>
   transmute(
     Dataset = dataset_id,
     Dedicated = fmt(total_dedicated),
+    `Dedicated, part of screen use` = fmt(total_dedicated_partial),
     Summed = fmt(total_summed),
     `Content rows (most in a unit)` = total_coverage_max,
     Capped = fmt(total_capped),
     `Lost to incomplete rows` = fmt(total_lost_to_incomplete),
-    `Median, dedicated` = signif(total_median_dedicated, 3),
+    `Median, dedicated` = signif(
+      coalesce(total_median_dedicated, total_median_dedicated_partial),
+      3
+    ),
     `Median, summed` = signif(total_median_summed, 3)
   ) |>
-  knitr::kable(align = "lrrrrrrr")
+  knitr::kable(align = "lrrrrrrrr")
 ```
 
 ## What happened to each row

@@ -455,7 +455,12 @@ test_that("total screen time is the dedicated item, else a guarded sum", {
     st_phone = c(9, 9, 9, 9, 9, 9)
   )
   unit <- c("a", "a", "b", "b", "b", "c")
-  total <- derive_total_screen(exposures, unit, reg$exposures)
+  total <- derive_total_screen(
+    exposures,
+    unit,
+    reg$exposures,
+    parts = tibble::tibble(variable_name = "st_watch", wave = NA_character_)
+  )
 
   expect_equal(total$total_source, c(rep("dedicated", 2), rep("summed", 4)))
   expect_equal(total$total_screen[1:2], c(5, 6))
@@ -467,14 +472,142 @@ test_that("total screen time is the dedicated item, else a guarded sum", {
   # Unit c: neither the device row nor the narrower activity row is added.
   expect_equal(total$total_screen[6], 2)
   expect_equal(total$total_rows[6], "st_watch|st_game")
-  # The rest of screen use: total minus own where dedicated, else the others.
+  # The rest of screen use: total minus own where dedicated and the class
+  # is recorded as part of the total, else the others.
   expect_equal(total$other_watch[1], 4)
+  expect_true(all(is.na(total$other_game[1:2])))
   expect_equal(total$other_watch[6], 1)
   expect_false("other_messaging" %in% names(total))
 
   no_game <- derive_total_screen(exposures["st_watch"], unit, reg$exposures)
   expect_true(all(is.na(no_game$total_screen)))
   expect_true(all(is.na(no_game$other_watch)))
+})
+
+test_that("a partial total gives way to a sum, and stands where none can be made", {
+  reg <- repo_registries()
+  # Unit a has the classes a sum needs; unit b has gaming but no watching.
+  exposures <- tibble::tibble(
+    st_total = c(1, 2, 3, 3, 4, 5),
+    st_watch = c(2, 2, 2, NA, NA, NA),
+    st_game = c(1, 1, 1, 1, 1, 1)
+  )
+  unit <- rep(c("a", "b"), each = 3)
+  wave <- rep(c("1", "2"), each = 3)
+  whole <- derive_total_screen(exposures, unit, reg$exposures)
+  expect_equal(whole$total_source, rep("dedicated", 6))
+  partial <- derive_total_screen(
+    exposures,
+    unit,
+    reg$exposures,
+    total_partial = TRUE,
+    wave = wave
+  )
+  # A device item beside a separate television item is replaced by the sum.
+  expect_equal(
+    partial$total_source,
+    rep(c("summed_for_partial", "dedicated_partial"), each = 3)
+  )
+  expect_true(all(total_is_summed(partial$total_source[1:3])))
+  expect_equal(partial$total_screen, c(3, 3, 3, 3, 4, 5))
+  expect_equal(partial$total_rows[1], "st_watch|st_game")
+  # An exception says the item is a total after all at one wave.
+  excepted <- derive_total_screen(
+    exposures,
+    unit,
+    reg$exposures,
+    total_partial = TRUE,
+    wave = wave,
+    dedicated_waves = "1"
+  )
+  expect_equal(
+    excepted$total_source,
+    rep(c("dedicated", "dedicated_partial"), each = 3)
+  )
+  expect_equal(excepted$total_screen[1:3], c(1, 2, 3))
+
+  # The rest of screen use is the total less the class only where the
+  # class is recorded as part of the total, at every wave or at the
+  # unit's own; nothing is read from the sizes of the two.
+  expect_true(all(is.na(whole$other_watch)))
+  expect_true(all(is.na(whole$other_game)))
+  recorded <- function(wave_of_part) {
+    derive_total_screen(
+      exposures,
+      unit,
+      reg$exposures,
+      wave = wave,
+      parts = tibble::tibble(variable_name = "st_game", wave = wave_of_part)
+    )
+  }
+  everywhere <- recorded(NA_character_)
+  expect_equal(everywhere$other_game, c(0, 1, 2, 2, 3, 4))
+  # A class larger than its total gives no rest, not a rest of zero.
+  over <- exposures
+  over$st_game[2] <- 5
+  expect_equal(
+    derive_total_screen(
+      over,
+      unit,
+      reg$exposures,
+      wave = wave,
+      parts = tibble::tibble(variable_name = "st_game", wave = NA_character_)
+    )$other_game,
+    c(0, NA, 2, 2, 3, 4)
+  )
+  expect_true(all(is.na(everywhere$other_watch)))
+  second <- recorded("2")
+  expect_true(all(is.na(second$other_game[1:3])))
+  expect_equal(second$other_game[4:6], c(2, 3, 4))
+})
+
+test_that("an exception can leave a screen item out at one wave", {
+  reg <- repo_registries()
+  rows <- tibble::tibble(
+    st_total = c(4, 5, 6, 7),
+    st_watch = c(1, 1, 1, 1),
+    st_game = c(1, 1, 1, 1)
+  )
+  out <- prepare_exposures(
+    rows,
+    c("1", "1", "2", "2"),
+    c("a", "a", "b", "b"),
+    reg$exposures,
+    left_out = tibble::tibble(
+      variable_name = "st_total",
+      wave = "2",
+      reason = "Another item"
+    )
+  )
+  # The audit says the values were not used, and why.
+  noted <- out$audit[out$audit$variable_name == "st_total", ]
+  expect_equal(noted$status[noted$wave == "2"], "excluded")
+  expect_equal(noted$n_used[noted$wave == "2"], 0L)
+  expect_equal(noted$detail[noted$wave == "2"], "exception: Another item")
+  expect_equal(noted$status[noted$wave == "1"], "used")
+  out <- out$exposures
+  expect_equal(out$st_total, c(4, 5, NA, NA))
+  expect_equal(
+    out$total_source,
+    c("dedicated", "dedicated", "summed", "summed")
+  )
+  expect_equal(out$total_screen, c(4, 5, 2, 2))
+  # A wave or a row the dataset does not have is a mistake, not a no-op.
+  wrong <- function(variable, at) {
+    prepare_exposures(
+      rows,
+      c("1", "1", "2", "2"),
+      c("a", "a", "b", "b"),
+      reg$exposures,
+      left_out = tibble::tibble(
+        variable_name = variable,
+        wave = at,
+        reason = "why"
+      )
+    )
+  }
+  expect_error(wrong("st_total", "two"), "not a wave of this dataset")
+  expect_error(wrong("st_socmedia", "2"), "not an exposure with values")
 })
 
 test_that("a row asked of part of a unit does not remove everyone's total", {
@@ -807,7 +940,7 @@ test_that("the analysis section builds a target list from a dataset plan", {
     "TRUE",
     fixed = TRUE
   )
-  expect_length(analysis_targets(plan[0, ]), 27)
+  expect_length(analysis_targets(plan[0, ]), 31)
 })
 
 test_that("an excluded row stays excluded when a rule could derive it", {
@@ -935,7 +1068,139 @@ test_that("exceptions must name analysed outcomes, and a node moves a row", {
       exceptions
     )
   }
-  expect_error(prepare(read("st_watch,,exclude,,why")), "not analysed outcomes")
+  # An exception on a screen-time row goes to the exposures: it can leave
+  # the row out or say the total is dedicated, and nothing else.
+  left <- prepare(read("st_game,,exclude,,Not asked in a comparable way"))
+  expect_true(all(is.na(left$exposures$st_game)))
+  dedicated <- function(line, status, total = TRUE) {
+    rows <- mock_dataset("9995")
+    if (total) {
+      rows$st_total <- rows$st_game + 1
+    }
+    prepare_analysis_data(
+      rows,
+      mock_info("9995"),
+      reg$outcomes,
+      reg$exposures,
+      reg$derivations,
+      reg$schema,
+      read(line),
+      total_status = status
+    )
+  }
+  # A class recorded as part of the total needs a dedicated total.
+  expect_error(
+    prepare(read("st_game,,part_of_total,,One of its parts")),
+    "needs a dedicated total"
+  )
+  expect_error(
+    read("st_total,,part_of_total,,No"),
+    "names the part"
+  )
+  whole <- "st_total,,total_dedicated,,A total of all screens"
+  expect_no_error(dedicated(whole, "partial"))
+  # It means something only for a total mapped as partial, at a real wave.
+  expect_error(dedicated(whole, "compatible"), "mapped as partial")
+  # And only where the dataset has the item to use.
+  expect_error(dedicated(whole, "partial", total = FALSE), "has no effect")
+  expect_error(
+    dedicated("st_total,nine,total_dedicated,,Why", "partial"),
+    "names a wave the dataset does not have"
+  )
+  expect_error(
+    prepare(read("st_game,,keep_out_of_bounds,,No")),
+    "an exception on a screen-time row"
+  )
+  expect_error(
+    read("st_game,,total_dedicated,,No"),
+    "is about `st_total`"
+  )
+  # An outcome asked differently at one wave is kept and recorded.
+  panel <- function(line) {
+    prepare_analysis_data(
+      mock_dataset("9992"),
+      mock_info("9992"),
+      reg$outcomes,
+      reg$exposures,
+      reg$derivations,
+      reg$schema,
+      read(line)
+    )
+  }
+  own <- panel("mh_dep_self,1,own_series,,Reworded at this wave")
+  expect_equal(own$series$variable_name, "mh_dep_self")
+  expect_equal(own$series$wave, "1")
+  expect_false(all(is.na(own$outcomes$mh_dep_self[own$base$wave == "1"])))
+  expect_error(read("mh_dep_self,,own_series,,Why"), "needs a wave")
+  expect_error(read("st_game,1,own_series,,Why"), "about an outcome row")
+  expect_error(
+    panel("mh_dep_self,nine,own_series,,Why"),
+    "names a wave the dataset does not have"
+  )
+  read_lines <- function(lines) {
+    path <- file.path(dir, "analysis_exceptions.csv")
+    writeLines(c("variable_name,wave,action,value,reason", lines), path)
+    read_analysis_exceptions(path, reg$schema, reg$outcomes)
+  }
+  # A line that would pass and change nothing is refused: here the total
+  # is left out at the wave its part is recorded for.
+  with_total <- function(lines) {
+    rows <- mock_dataset("9992")
+    rows$st_total <- rows$st_game + 1
+    prepare_analysis_data(
+      rows,
+      mock_info("9992"),
+      reg$outcomes,
+      reg$exposures,
+      reg$derivations,
+      reg$schema,
+      read_lines(lines)
+    )
+  }
+  expect_no_error(with_total("st_game,1,part_of_total,,One of its parts"))
+  expect_error(
+    with_total(c(
+      "st_total,1,exclude,,Another item",
+      "st_game,1,part_of_total,,One of its parts"
+    )),
+    "has no effect"
+  )
+  # A mistyped wave is an error for an outcome too, not a line that does
+  # nothing.
+  expect_error(
+    panel("mh_dep_self,nine,exclude,,Why"),
+    "names a wave the dataset does not have"
+  )
+  expect_error(read("mh_dep_self,1,own_series,x,Why"), "takes no value")
+  # The same line twice, or a row left out and also decided about at the
+  # same wave.
+  expect_error(
+    read_lines(c(
+      "mh_dep_self,1,own_series,,Why",
+      "mh_dep_self,1,own_series,,Again"
+    )),
+    "appears twice"
+  )
+  expect_error(
+    read_lines(c(
+      "mh_dep_self,1,exclude,,Why",
+      "mh_dep_self,1,own_series,,Why"
+    )),
+    "excluded and has another decision"
+  )
+  expect_error(
+    read_lines(c(
+      "st_total,,exclude,,Why",
+      "st_total,2,total_dedicated,,Why"
+    )),
+    "excluded and has another decision"
+  )
+  expect_no_error(read_lines(c(
+    "st_total,1,exclude,,Why",
+    "st_total,2,total_dedicated,,Why"
+  )))
+  # A row that is neither an analysed outcome nor a screen-time row.
+  expect_error(prepare(read("sex,,exclude,,why")), "not analysed outcomes")
   expect_error(read("mh_dep_self,1,node,anxiety,why"), "every wave")
   moved <- prepare(read("mh_dep_self,,node,anxiety,Anxiety scale here"))
   expect_equal(moved$nodes$variable_name, "mh_dep_self")

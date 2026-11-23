@@ -19,8 +19,18 @@
 #' evidence of no difference. P-values here are not adjusted for the number
 #' of comparisons.
 #'
+#' For a family, the slopes of several specific outcomes are compared at
+#' once, and the specific outcomes differ in their own right, so the model
+#' also has a term for each specific outcome (`adjust`). The levels' means
+#' then belong to one specific outcome and are not reported: only their
+#' difference and the test are. A moderator that sorts the slopes exactly
+#' as the specific outcomes do cannot be told apart from them, and is not
+#' tested.
+#'
 #' @param effects Rows from `tree_moderators()` for one group.
 #' @param moderator The name of a moderator column.
+#' @param adjust A column whose values each get a term of their own, or
+#'   NULL.
 #' @param correlations See `tree_covariance()`.
 #' @param settings From `analysis_settings()`.
 #' @return One row per level (one row with an NA level where no slope has
@@ -28,14 +38,15 @@
 #'   `df` and 95% interval, and `level_status`; and on every row the number
 #'   of levels compared, `equal_p` (the test that the levels' means are
 #'   equal) with its degrees of freedom and `test_status` (`tested`, or `too
-#'   few studies to say` under four degrees of freedom), for two levels the
+#'   few studies to say` under the minimum degrees of freedom), for two levels the
 #'   `difference` with its interval and `difference_of` naming which level
 #'   is taken from which, and `status`.
 moderate_tree_group <- function(
   effects,
   moderator,
   correlations = NULL,
-  settings = default_analysis_settings()
+  settings = default_analysis_settings(),
+  adjust = NULL
 ) {
   effects$level <- as.character(effects[[moderator]])
   effects <- effects[!is.na(effects$level), ]
@@ -93,7 +104,17 @@ moderate_tree_group <- function(
 
   used <- compared
   used$level <- factor(used$level, levels = enough)
-  working <- fit_tree_model(used, correlations, settings, mods = ~ 0 + level)
+  adjusting <- !is.null(adjust) && dplyr::n_distinct(used[[adjust]]) > 1
+  mods <- ~ 0 + level
+  if (adjusting) {
+    used$adjusted_for <- factor(used[[adjust]])
+    mods <- ~ 0 + level + adjusted_for
+    design <- stats::model.matrix(mods, used)
+    if (qr(design)$rank < ncol(design)) {
+      return(finish("moderator not separable from the specific outcomes"))
+    }
+  }
+  working <- fit_tree_model(used, correlations, settings, mods = mods)
   if (is.character(working)) {
     return(finish(paste("model failed:", working)))
   }
@@ -106,16 +127,21 @@ moderate_tree_group <- function(
     return(finish(paste("robust inference failed:", robust)))
   }
   at <- match(enough, out$level)
-  out$estimate[at] <- robust$beta
-  out$se[at] <- robust$SE
-  out$df[at] <- robust$df
-  out$ci_low[at] <- robust$CI_L
-  out$ci_high[at] <- robust$CI_U
-  out$level_status[at] <- ifelse(
-    robust$df < 4,
-    "too few studies to say",
-    "estimated"
-  )
+  own <- seq_along(enough)
+  if (adjusting) {
+    out$level_status[at] <- "compared"
+  } else {
+    out$estimate[at] <- robust$beta[own]
+    out$se[at] <- robust$SE[own]
+    out$df[at] <- robust$df[own]
+    out$ci_low[at] <- robust$CI_L[own]
+    out$ci_high[at] <- robust$CI_U[own]
+    out$level_status[at] <- ifelse(
+      robust$df[own] < settings$min_robust_df,
+      "too few studies to say",
+      "estimated"
+    )
+  }
   equal <- tryCatch(
     clubSandwich::Wald_test(
       working$fit,
@@ -136,7 +162,10 @@ moderate_tree_group <- function(
         working$fit,
         vcov = "CR2",
         cluster = cluster,
-        contrasts = matrix(c(-1, 1), nrow = 1)
+        contrasts = matrix(
+          c(-1, 1, rep(0, nrow(robust) - 2)),
+          nrow = 1
+        )
       ),
       error = function(e) NULL
     )
@@ -150,7 +179,7 @@ moderate_tree_group <- function(
   }
   out$test_status <- if (all(is.na(out$equal_p))) {
     "could not be tested"
-  } else if (out$equal_df[1] < 4) {
+  } else if (out$equal_df[1] < settings$min_robust_df) {
     "too few studies to say"
   } else {
     "tested"

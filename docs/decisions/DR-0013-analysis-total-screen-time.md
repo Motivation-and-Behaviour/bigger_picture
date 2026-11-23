@@ -1,7 +1,7 @@
 # DR-0013: The analysis derives total screen time, and the harmonised row stays dedicated items only
 
 **Status:** Accepted  
-**Date:** 2026-11-11 (amended 2026-11-12)  
+**Date:** 2026-11-11 (amended 2026-11-12, 2026-11-17, 2026-11-19 and 2026-11-20)  
 **Decision makers:** Taren  
 **Related issues:** NA
 
@@ -43,6 +43,28 @@ On the data that gave implausible totals wherever a study asked about many activ
 A class asked of a subsample also removed the total from the rest of its unit, in one dataset for half its rows.
 The sum is therefore of the content classes only, decided per unit, with the half-of-rows rule above.
 
+**Amended on 17 November 2026.**
+
+An independent review found that in some datasets the item mapped as the total is not a total of all screen use: it asks about computers, phones or "digital resources", beside a separate television item or with television not named.
+There the item could be smaller than a child's watching time alone, and it was being used as overall screen use and to work out the rest of a child's screen use.
+A check of the studies' codebooks confirmed it, and showed that the cases differ, so the rule works wave by wave.
+
+- A total item whose harmonisation status is `partial` is not taken as a total of all screen use.
+  Where the wave has the content classes a sum needs, the sum of content classes is used in its place.
+  Where it has not, the item stands and the total's source is recorded as `dedicated_partial`, so that it can be told apart as a moderator and left out in a sensitivity analysis.
+- A dataset's exceptions file can say that at given waves a `partial` item is a total after all, or leave the item out at a wave, each with its reason from the codebook.
+- The rest of a child's screen use beside a content class is the total less the class only where the class was asked as part of the total.
+  That is a fact about the study's questionnaire, checked against its documents and recorded for the dataset as a `part_of_total` line of its exceptions file, with the reason (amended 19 November 2026).
+  The first version judged it from the data, as the total being at least the class for 95% of a unit's children who have both; that measured the sizes of the two items and not whether one was asked inside the other, and it treated the units of one dataset differently by chance.
+  A class counts as part of a total where the same respondent reported both for the same days and the total item's wording, or its construction, covers the class's activity; a class from another questionnaire, another respondent or another recall frame does not.
+  Without the record the unit has no such value and is left out of the models that adjust a class for the rest of screen use.
+  A child whose class is larger than the total it is part of has given an inconsistent pair of answers, and has no value either (amended 20 November 2026: it was first set to zero).
+  The row is left out of the models that adjust that class for the rest, on complete cases and on imputed data alike, and is counted on each such slope; its rest is never imputed.
+  A class within a hundred-millionth of an hour of its total counts as equal to it.
+- A sum of content classes that stands in for a partial item is marked `summed_for_partial` (amended 19 November 2026).
+  It can fall short of the item it replaces, where the item covered screen use that no content class asks about, so it is left out with the partial items in the sensitivity analysis that excludes them.
+  Two instruments in one questionnaire can disagree within a child without either excluding the other, and a class cannot be subtracted from a total it was not part of.
+
 ---
 
 ## Rationale
@@ -83,6 +105,8 @@ Sensitivity analyses repeat the overall-screen-use models on dedicated items onl
 ---
 
 ## Implementation
+
+- `derive_total_screen()` applies the 17 November amendment, with the mapping's status from `total_mapping_status()`, the `total_dedicated` and `exclude` actions of the exceptions files, and the `part_of_total` action.
 
 ```md
 analysis/exposures.csv     `axis` says which rows a derived total may sum

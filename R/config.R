@@ -163,7 +163,7 @@ bp_series_breaks_path <- function() {
 }
 
 bp_series_breaks_columns <- function() {
-  c("dataset_id", "exposure", "day", "from_year", "waves", "reason")
+  c("dataset_id", "exposure", "day", "from_year", "waves", "scope", "reason")
 }
 
 # The settings each stage reads, so a change to one reruns only that stage.
@@ -186,10 +186,17 @@ bp_summary_settings <- function() {
   c("max_levels", "age_limit")
 }
 
+# The longitudinal strand reads the model settings and its own minimum for
+# a pair of waves.
+bp_longitudinal_settings <- function() {
+  c(bp_model_settings(), "longitudinal_min_pair")
+}
+
 bp_model_settings <- function() {
   c(
     "min_unit_rows",
     "min_datasets",
+    "min_robust_df",
     "sex_known_min",
     "covariate_known_min",
     "min_clusters",
@@ -206,6 +213,7 @@ bp_tree_settings <- function() {
   c(
     "min_unit_rows",
     "min_datasets",
+    "min_robust_df",
     "sex_known_min",
     "covariate_known_min",
     "log_odds_per_sd",
@@ -220,9 +228,11 @@ bp_curve_settings <- function() {
   c(
     "min_unit_rows",
     "min_datasets",
+    "min_robust_df",
     "sex_known_min",
     "covariate_known_min",
     "min_clusters",
+    "curve_min_datasets",
     "curve_knots",
     "curve_boundary",
     "curve_grid",
@@ -304,23 +314,38 @@ bp_build_sections <- function() {
       "cell_counts",
       "curves",
       "stage1_other",
-      "longitudinal"
+      "longitudinal",
+      "panel_pairs",
+      "imputed",
+      "imputation_review",
+      "stage1_imputed",
+      "stage1_other_imputed"
     )
   )
 }
 
-# The model workers `make.R` uses for the models section: measured with
-# twenty workers each holding the largest prepared dataset, which left over
-# 40 GB available.
+# The model workers `make.R` uses for the models section. Each worker
+# holding the largest prepared dataset peaks near 5 GB, and since the
+# imputation targets joined this section a dataset has about a dozen model
+# targets, so many workers can hold one of the largest datasets at once:
+# with sixteen workers a full rerun fell below 25 GB available, where it
+# had left 36 GB before the last of those targets were added.
 bp_model_workers_wide <- function() {
-  16L
+  10L
 }
 
-# Processes for a simulation target. Each holds little memory, but nothing
-# stops the target starting while the other pools are busy, so run a build
-# that reruns the simulation under the memory watchdog.
+# Processes for a simulation target. More than this does not fit: with a
+# process on every logical core the target's memory passed 80 GB and the
+# build had to be stopped. Nothing stops the target starting while the
+# other pools are busy, so run a build that reruns the simulation under
+# the memory watchdog.
+# `BP_SIMULATION_CORES` lowers it for a build on a machine that is short of
+# memory at the time; it changes how long the target takes and not what it
+# gives.
 bp_simulation_cores <- function() {
-  max(1L, min(parallel::detectCores() - 2L, 24L))
+  asked <- suppressWarnings(as.integer(Sys.getenv("BP_SIMULATION_CORES", "")))
+  cap <- if (is.na(asked) || asked < 1L) 24L else min(asked, 24L)
+  max(1L, min(parallel::detectCores() - 2L, cap))
 }
 
 # Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).
@@ -574,11 +599,27 @@ bp_model_engines <- function() {
 }
 
 bp_model_exposure_sets <- function() {
-  c("total", "content_classes", "other_included", "school")
+  c(
+    "total",
+    "content_classes",
+    "social_media",
+    "other_included",
+    "school_content",
+    "school_other"
+  )
 }
 
 bp_model_outcome_sets <- function() {
-  c("core", "report", "negative_control", "core_rare_binary", "headline_cells")
+  c(
+    "core",
+    "core_h5b",
+    "core_h5c",
+    "core_other_h5c",
+    "report",
+    "negative_control",
+    "core_rare_binary",
+    "headline_cells"
+  )
 }
 
 # The preregistered predictions, by exposure and outcome family.
@@ -587,7 +628,7 @@ bp_hypotheses_path <- function() {
 }
 
 bp_hypotheses_columns <- function() {
-  c("hypothesis", "exposure", "family", "prediction", "notes")
+  c("hypothesis", "test", "exposure", "family", "prediction", "notes")
 }
 
 # The derived total's name among the exposures (DR-0013).
@@ -608,4 +649,35 @@ bp_specification_frozen <- function() {
 # subset of these cells. They share no cell, so a pooled row has one model.
 bp_stage1_models <- function() {
   c("tier1_total", "tier2_content", "other_exposures", "report_rows")
+}
+
+# The settings imputation reads.
+bp_imputation_settings <- function() {
+  c(
+    "seed",
+    "min_unit_rows",
+    "imputation_iterations",
+    "impute_min_observed",
+    "impute_min_observed_age",
+    "impute_exposure_models",
+    "impute_min_correlation",
+    "exposure_max_hours"
+  )
+}
+
+# The settings stage 1 reads when it fits imputed data.
+bp_imputed_model_settings <- function() {
+  union(bp_model_settings(), bp_imputation_settings())
+}
+
+# The kinds of test a registered prediction is about, and what each may
+# predict (analysis/hypotheses.csv).
+bp_hypothesis_predictions <- function() {
+  list(
+    slope = c("negative", "positive", "none"),
+    threshold = "threshold",
+    moderation_location = "none",
+    moderation_sex = "stronger_for_girls",
+    moderation_ses = "stronger_for_lower_ses"
+  )
 }

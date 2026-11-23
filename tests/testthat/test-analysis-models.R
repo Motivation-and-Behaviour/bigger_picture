@@ -61,6 +61,17 @@ test_that("tiered q-values match hand-worked examples", {
   # A q-value never exceeds 1.
   expect_equal(adjust_tiered_fdr(0.9, specific)$q, 1)
 
+  # A test that is not ranked still counts in K, for its own group and the
+  # one below, and has no q-value: with it ranked the other two would take
+  # 0.02 * 8 / 2 and 0.04 * 8 / 3.
+  thin <- adjust_tiered_fdr(
+    c(0.001, 0.02, 0.04, 0.03),
+    c(rep(classes, 3), specific),
+    ranked = c(FALSE, TRUE, TRUE, TRUE)
+  )
+  expect_equal(thin$q, c(NA, 0.02 * 8 / 1, 0.04 * 8 / 2, 0.03 * 9 / 1))
+  expect_equal(thin$k_total, c(8L, 8L, 8L, 9L))
+
   expect_error(
     adjust_tiered_fdr(rep(0.1, 6), rep("families", 6)),
     "fixed count"
@@ -145,10 +156,25 @@ test_that("the model list is valid, and expands against the registries", {
       "wellbeing",
       "behaviour"
     )
-    own <- hypotheses[hypotheses$exposure == exposure, ]
+    own <- hypotheses[
+      hypotheses$exposure == exposure & hypotheses$test == "slope",
+    ]
     own$prediction[match(families, own$family)]
   }
-  expect_equal(nrow(hypotheses), 25)
+  expect_equal(sum(hypotheses$test == "slope"), 25)
+  # The other registered hypotheses: a threshold for every exposure and
+  # family (H3), no moderation by location (H4), and moderation by sex
+  # and by socioeconomic status where the preregistration predicts it.
+  by_test <- function(test) hypotheses[hypotheses$test == test, ]
+  expect_equal(nrow(by_test("threshold")), 25)
+  expect_equal(unique(by_test("moderation_location")$prediction), "none")
+  sex_rows <- by_test("moderation_sex")
+  expect_equal(unique(sex_rows$exposure), "st_socmedia")
+  expect_setequal(sex_rows$family, c("mental_health", "wellbeing"))
+  expect_setequal(
+    by_test("moderation_ses")$family,
+    c("learning", "mental_health", "behaviour")
+  )
   expect_equal(predicted("total_screen"), rep("negative", 5))
   expect_equal(predicted("st_watch"), rep("negative", 5))
   expect_equal(
@@ -213,6 +239,74 @@ test_that("the model list is valid, and expands against the registries", {
   expect_false(any(
     rows$role[match(stage1$outcome, rows$variable_name)] == "negative_control"
   ))
+  # The registered moderation hypotheses name their exposures and families.
+  families_of <- function(model) {
+    own <- after[after$model_name == model, ]
+    unique(rows$prereg_family[match(own$outcome, rows$variable_name)])
+  }
+  sex <- after[after$model_name == "moderation_sex", ]
+  expect_equal(unique(sex$exposure), "st_socmedia")
+  expect_setequal(
+    families_of("moderation_sex"),
+    c("mental_health", "wellbeing")
+  )
+  expect_setequal(
+    families_of("moderation_ses"),
+    c("learning", "mental_health", "behaviour")
+  )
+  expect_length(
+    intersect(
+      families_of("moderation_ses"),
+      families_of("moderation_ses_other")
+    ),
+    0
+  )
+  # Every registered moderation hypothesis is a cell of the confirmatory
+  # model that tests it, and that model tests nothing else: the exposures
+  # and families of the two are the same.
+  for (model in unique(grep("^moderation_", hypotheses$test, value = TRUE))) {
+    registered <- hypotheses[hypotheses$test == model, ]
+    own <- after[after$model_name == model, ]
+    tested <- unique(tibble::tibble(
+      exposure = own$exposure,
+      family = rows$prereg_family[match(own$outcome, rows$variable_name)]
+    ))
+    key <- function(table) sort(paste(table$exposure, table$family))
+    expect_equal(key(tested), key(registered), info = model)
+    expect_equal(
+      spec$analysis_class[spec$model_name == model],
+      "confirmatory",
+      info = model
+    )
+  }
+  # H4 compares location within a content class; the school total and
+  # the device rows are exploratory.
+  location <- after[after$model_name == "moderation_location", ]
+  expect_equal(unique(location$exposure), "st_educational_school")
+  expect_true(
+    "st_total_school" %in%
+      after$exposure[after$model_name == "moderation_location_other"]
+  )
+  # A registered test is never also an exploratory one.
+  overlap <- function(model) {
+    own <- after[after$model_name == model, c("exposure", "outcome")]
+    rest <- after[
+      after$model_name == paste0(model, "_other"),
+      c("exposure", "outcome")
+    ]
+    nrow(dplyr::inner_join(own, rest, by = c("exposure", "outcome")))
+  }
+  for (model in c(
+    "moderation_sex",
+    "moderation_ses",
+    "moderation_location",
+    "thresholds_by_sex",
+    "thresholds_by_ses"
+  )) {
+    expect_gt(sum(after$model_name == paste0(model, "_other")), 0)
+    expect_equal(overlap(model), 0, info = model)
+  }
+  expect_true(all(spec$tier[spec$analysis_class == "confirmatory"] <= 4))
   controls <- after[after$model_name == "negative_controls", ]
   expect_true(all(
     rows$role[match(controls$outcome, rows$variable_name)] == "negative_control"
@@ -338,6 +432,41 @@ test_that("adjusting for other screen use removes what it adds to a slope", {
     adjust_other = TRUE
   )
   expect_equal(total$status, "no row has other")
+
+  # The rest from a dedicated total: a child whose class is larger than
+  # that total has no rest, and the row is left out and counted, whether
+  # or not anything is imputed.
+  dedicated <- prepared
+  n <- nrow(dedicated$base)
+  dedicated$exposures$total_source <- "dedicated"
+  dedicated$exposures$total_rows <- "st_total"
+  dedicated$exposures$total_screen <- dedicated$exposures$st_game +
+    dedicated$exposures$st_watch
+  dedicated$exposures$other_game <- dedicated$exposures$st_watch
+  odd <- seq_len(12)
+  dedicated$exposures$total_screen[odd] <- dedicated$exposures$st_game[odd] - 1
+  dedicated$exposures$other_game[odd] <- NA
+  kept <- fit_stage1(
+    dedicated,
+    cell,
+    reg$outcomes,
+    reg$schema,
+    adjust_other = TRUE
+  )
+  expect_equal(kept$n_other_inconsistent, 12L)
+  expect_equal(kept$n, n - 12L)
+  expect_equal(kept$n_no_other, 0L)
+  filled <- fit_stage1(
+    dedicated,
+    cell,
+    reg$outcomes,
+    reg$schema,
+    adjust_other = TRUE,
+    imputation = list(seed = 1L, index = 1L)
+  )
+  expect_equal(filled$n_other_inconsistent, 12L)
+  expect_equal(filled$n, n - 12L)
+  expect_equal(filled$estimate, kept$estimate)
 })
 
 test_that("the longitudinal models separate change from standing differences", {
@@ -389,7 +518,7 @@ test_that("the longitudinal models separate change from standing differences", {
   writeLines(
     c(
       paste(bp_series_breaks_columns(), collapse = ","),
-      "9992,game,,2017,,New response bands"
+      "9992,game,,2017,,,New response bands"
     ),
     path
   )
@@ -405,6 +534,63 @@ test_that("the longitudinal models separate change from standing differences", {
     changed$status,
     c("fitted", "fitted", "screen item changed between the waves")
   )
+  # A line that only separates series for trends is not a change to the
+  # item, and blocks nothing here.
+  writeLines(
+    c(
+      paste(bp_series_breaks_columns(), collapse = ","),
+      "9992,game,,2017,,trend,Mixed respondents from this wave"
+    ),
+    path
+  )
+  expect_true(all(
+    fit_stage1_longitudinal(
+      prepared,
+      cell,
+      reg$outcomes,
+      reg$exposures,
+      reg$schema,
+      read_series_breaks(path, reg$exposures)
+    )$status ==
+      "fitted"
+  ))
+
+  # So does an outcome recorded as asked differently at one of the waves;
+  # at both waves it would be the same item again.
+  reworded <- prepared
+  reworded$series <- tibble::tibble(
+    variable_name = "mh_dep_self",
+    wave = "2",
+    reason = "Reworded"
+  )
+  asked <- fit_stage1_longitudinal(
+    reworded,
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  expect_equal(
+    asked$status,
+    c("fitted", "fitted", "outcome asked differently at one of the waves")
+  )
+  reworded$series <- tibble::tibble(
+    variable_name = c("mh_dep_self", "mh_dep_self", "beh_ext_sdq_parent"),
+    wave = c("1", "2", "1"),
+    reason = "Reworded"
+  )
+  expect_true(all(
+    fit_stage1_longitudinal(
+      reworded,
+      cell,
+      reg$outcomes,
+      reg$exposures,
+      reg$schema,
+      no_breaks(reg)
+    )$status ==
+      "fitted"
+  ))
 
   # A panel in two countries gives a pair per country, each on its own
   # children.
@@ -428,6 +614,264 @@ test_that("the longitudinal models separate change from standing differences", {
   expect_equal(two$n_pairs, rep(300L, 6))
   expect_true(all(grepl("England|Wales", two$unit)))
 
+  # Three waves, with no gaming item at the second. The lagged and matched
+  # models pair the first wave with the second, which has the outcome; the
+  # within-child model pairs it with the third, the next that has both.
+  # Nothing starts from the second wave, which has no screen use.
+  three_waves <- function(rows) {
+    rows <- edit(rows)
+    third <- rows[rows$wave == "2", ]
+    third$wave <- "3"
+    third$age_years <- third$age_years + 2
+    third$data_year <- third$data_year + 2
+    set.seed(67)
+    third$st_game <- third$st_game + stats::rnorm(nrow(third), 0, 0.5)
+    third$mh_dep_self <- third$mh_dep_self + stats::rnorm(nrow(third), 0, 0.5)
+    rows$st_game[rows$wave == "2"] <- NA
+    rbind(rows, third)
+  }
+  spanning <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, three_waves),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  to_wave <- function(model) spanning$wave_to[spanning$model == model]
+  expect_equal(to_wave("lagged"), "2")
+  expect_equal(to_wave("matched"), "2")
+  expect_equal(to_wave("within"), "3")
+  expect_equal(unique(spanning$wave_from), "1")
+  expect_equal(spanning$lag_years[spanning$model == "within"], 4)
+  expect_true(all(spanning$status == "fitted"))
+
+  # A subsample followed up at the second wave and everyone else at the
+  # third: each child goes to their own next wave, so the unit has two
+  # pairs and nobody is dropped. A group too small to be a pair is counted.
+  subsample <- function(rows) {
+    rows <- three_waves(rows)
+    rows$st_game[rows$wave == "2"] <- rows$st_game[rows$wave == "3"]
+    people <- unique(rows$participant_id)
+    rows$mh_dep_self[
+      rows$wave == "2" & !rows$participant_id %in% people[1:200]
+    ] <- NA
+    rows$mh_dep_self[
+      rows$wave == "3" & rows$participant_id %in% people[1:200]
+    ] <- NA
+    rows[!(rows$wave != "1" & rows$participant_id %in% people[581:600]), ]
+  }
+  parts <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, subsample),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  first <- parts[parts$wave_from == "1" & parts$model == "lagged", ]
+  expect_equal(first$wave_to, c("2", "3"))
+  expect_equal(first$n_pairs, c(200L, 380L))
+  expect_equal(first$n_earlier, c(600L, 600L))
+  expect_equal(first$n_left, c(0L, 0L))
+  expect_equal(dplyr::n_distinct(first$unit), 2)
+  few <- function(rows) {
+    rows <- subsample(rows)
+    people <- unique(rows$participant_id)
+    rows$mh_dep_self[
+      rows$wave == "2" & !rows$participant_id %in% people[1:40]
+    ] <- NA
+    # Twenty of the forty have no gaming at the first wave, so only twenty
+    # of the unit's children go to the second wave.
+    rows$st_game[rows$wave == "1" & rows$participant_id %in% people[21:40]] <-
+      NA
+    rows
+  }
+  small <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, few),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  small <- small[small$wave_from == "1" & small$model == "lagged", ]
+  expect_equal(small$wave_to, "3")
+  expect_equal(small$n_left, 20L)
+
+  # An outcome reworded at the middle wave of three: for the within-child
+  # model every child goes on to the third wave, which asks what the first
+  # did, so that pair is on all of them and not on those who missed the
+  # second wave; the other models still use the second wave.
+  full_three <- function(rows) {
+    rows <- three_waves(rows)
+    rows$st_game[rows$wave == "2"] <- rows$st_game[rows$wave == "3"]
+    rows
+  }
+  middle <- models_prepare("9992", reg, full_three)
+  middle$series <- tibble::tibble(
+    variable_name = "mh_dep_self",
+    wave = "2",
+    reason = "Reworded"
+  )
+  past <- fit_stage1_longitudinal(
+    middle,
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  first_within <- past[past$model == "within" & past$wave_from == "1", ]
+  expect_equal(first_within$wave_to, "3")
+  expect_equal(first_within$status, "fitted")
+  expect_equal(first_within$n_pairs, 600L)
+  expect_equal(first_within$n_blocked, 600L)
+  expect_equal(first_within$n_no_later, 0L)
+  expect_equal(
+    past$wave_to[past$model == "lagged" & past$wave_from == "1"],
+    "2"
+  )
+  # From the reworded wave itself nothing later is comparable, and the row
+  # says why.
+  from_second <- past[past$model == "within" & past$wave_from == "2", ]
+  expect_equal(
+    from_second$status,
+    "outcome asked differently at one of the waves"
+  )
+  expect_equal(from_second$n_no_later, 600L)
+
+  # A respondent recorded at one of the two waves only cannot be called
+  # the same, so those children are left out of the within-child model and
+  # counted; one recorded at neither wave is not held against the child.
+  half_known <- function(rows) {
+    rows <- edit(rows)
+    people <- unique(rows$participant_id)
+    rows$st_responder <- "Parent"
+    rows$st_responder[
+      rows$wave == "2" & rows$participant_id %in% people[1:100]
+    ] <- NA
+    rows$st_responder[rows$participant_id %in% people[101:150]] <- NA
+    rows
+  }
+  unknown <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, half_known),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  expect_equal(
+    unknown$n_unknown_respondent[unknown$model == "within"],
+    100L
+  )
+  expect_equal(unknown$n[unknown$model == "within"], 500L)
+  expect_equal(unknown$n[unknown$model == "lagged"], 600L)
+
+  # A pair needs its minimum of children again after the rows a model
+  # cannot use are gone: 150 share the wave, and 60 are left once those
+  # whose respondent changed are out.
+  thin <- function(rows) {
+    rows <- edit(rows)
+    people <- unique(rows$participant_id)
+    rows <- rows[rows$participant_id %in% people[1:150], ]
+    rows$st_responder <- ifelse(
+      rows$wave == "2" & rows$participant_id %in% people[1:90],
+      "Self",
+      "Parent"
+    )
+    rows
+  }
+  short <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, thin),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  expect_equal(short$n_pairs, rep(150L, 3))
+  expect_equal(
+    short$status[short$model == "within"],
+    "fewer rows than the minimum unit size"
+  )
+  expect_equal(short$status[short$model == "lagged"], "fitted")
+  # The minimum for a pair must be among the settings.
+  without <- analysis_settings()
+  without$longitudinal_min_pair <- NULL
+  expect_error(
+    fit_stage1_longitudinal(
+      prepared,
+      cell,
+      reg$outcomes,
+      reg$exposures,
+      reg$schema,
+      no_breaks(reg),
+      without
+    ),
+    "needs `longitudinal_min_pair`"
+  )
+
+  # A child whose screen use is reported by someone else at the later wave
+  # is left out of the within-child model only.
+  reporter <- function(rows) {
+    rows <- edit(rows)
+    people <- unique(rows$participant_id)
+    rows$st_responder <- ifelse(
+      rows$wave == "2" & rows$participant_id %in% people[1:150],
+      "Self",
+      "Parent"
+    )
+    rows
+  }
+  moved <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, reporter),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  expect_equal(moved$n_switched[moved$model == "within"], 150L)
+  expect_equal(moved$n[moved$model == "within"], 450L)
+  expect_equal(moved$n[moved$model == "lagged"], 600L)
+
+  # Who is kept between waves is described without any outcome.
+  kept <- describe_panel_pairs(
+    models_prepare("9992", reg, function(rows) {
+      rows <- rows[!(rows$wave == "2" & rows$st_game > 2), ]
+      rows
+    }),
+    "st_game"
+  )
+  expect_equal(kept$n_earlier, 600L)
+  expect_lt(kept$retained, 0.9)
+  # Those who gamed most at the second wave left, which the first wave's
+  # gaming does not predict in the mock.
+  expect_lt(abs(kept$difference_sd), 0.2)
+  expect_null(describe_panel_pairs(models_prepare("9995", reg), "st_game"))
+
+  # A unit with no later wave that enough of its children reach says so.
+  ended <- function(rows) {
+    rows <- edit(rows)
+    rows$mh_dep_self[rows$wave == "2"] <- NA
+    rows
+  }
+  none <- fit_stage1_longitudinal(
+    models_prepare("9992", reg, ended),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  expect_equal(
+    unique(none$status),
+    "no later wave with enough of the unit's children"
+  )
+  expect_equal(nrow(none), 3)
+
   # Repeated cross-sections and single occasions follow nobody.
   for (id in c("9993", "9995")) {
     expect_null(fit_stage1_longitudinal(
@@ -441,13 +885,102 @@ test_that("the longitudinal models separate change from standing differences", {
   }
 })
 
-test_that("the gap between waves comes from years, then from ages", {
-  expect_equal(longitudinal_lag(c(2, 2, 3), c(0, 0, 0)), 2)
+test_that("the longitudinal slopes are pooled model by model, with their gaps", {
+  reg <- models_registries()
+  cell <- tibble::tibble(exposure = "st_game", outcome = "mh_dep_self")
+  one <- fit_stage1_longitudinal(
+    models_prepare("9992", reg),
+    cell,
+    reg$outcomes,
+    reg$exposures,
+    reg$schema,
+    no_breaks(reg)
+  )
+  # Six panels made from the one: each with its own slopes and gap, and
+  # the last with a second pair of waves nine years apart.
+  set.seed(71)
+  copy <- function(id, gap, pair = "a") {
+    rows <- one
+    rows$dataset_id <- id
+    rows$unit <- paste(id, pair)
+    rows$estimate <- rows$estimate + stats::rnorm(nrow(rows), 0, 0.02)
+    rows$lag_years <- gap
+    rows
+  }
+  gaps <- c(1, 1, 2, 4, 6, 1)
+  estimates <- dplyr::bind_rows(
+    lapply(seq_along(gaps), function(i) copy(paste0("p", i), gaps[i])),
+    list(copy("p6", 9, "b"))
+  )
+  pooled <- pool_longitudinal(estimates, cell, reg$outcomes)
+  expect_setequal(
+    pooled$tree$model_name,
+    paste0("longitudinal_", c("lagged", "matched", "within"))
+  )
+  expect_setequal(pooled$cells$model_name, pooled$tree$model_name)
+  for (model in c("lagged", "matched", "within")) {
+    rows <- estimates[estimates$model == model, ]
+    name <- paste0("longitudinal_", model)
+    # Each model is pooled on its own slopes, as the cross-sectional ones
+    # are.
+    alone <- pool_tree(rows, reg$outcomes, NULL)
+    own <- pooled$tree[pooled$tree$model_name == name, ]
+    expect_equal(own$estimate, alone$estimate, info = model)
+    expect_equal(own$se, alone$se, info = model)
+    expect_equal(
+      pooled$cells$estimate[pooled$cells$model_name == name],
+      pool_stage2_cells(rows, cell)$estimate,
+      info = model
+    )
+    # The gap is the median over datasets of each dataset's median, so
+    # the panel with two pairs (1 and 9 years, median 5) counts once:
+    # the median of 1, 1, 2, 4, 6 and 5.
+    family <- own[own$level == "L0", ]
+    expect_equal(family$k_datasets, 6L, info = model)
+    expect_equal(family$lag_years, 3, info = model)
+    expect_equal(family$lag_years_min, 1, info = model)
+    expect_equal(family$lag_years_max, 6, info = model)
+    expect_equal(own$lag_years[own$level == "L1"], 3, info = model)
+    expect_true(all(is.na(own$lag_years[own$level == "L2"])), info = model)
+  }
+  empty <- pool_longitudinal(estimates[0, ], cell, reg$outcomes)
+  expect_equal(nrow(empty$tree), 0)
+})
+
+test_that("the gap between waves follows ages where they can show it", {
+  fine <- seq(10, 12, length.out = 40)
+  coarse <- rep(c(13.5, 16.5), 20)
+  gap <- function(...) longitudinal_lag(...)$years
+  # Interviews nine months apart that cross a new year.
+  expect_equal(gap(rep(1, 40), rep(0.75, 40), fine), 0.75)
+  expect_false(longitudinal_lag(rep(1, 40), rep(0.75, 40), fine)$differ)
+  # Coarse ages: the collection years are used.
+  expect_equal(gap(rep(2, 40), rep(0, 40), coarse), 2)
+  # Banded ages that disagree with the years raise no flag: they cannot
+  # show the gap.
+  expect_false(
+    longitudinal_lag(
+      rep(1, 40),
+      rep(c(0, 0, 3, 0, 0), 8),
+      coarse
+    )$differ
+  )
+  # The gap is a median, so a few impossible ages do not move it.
+  ages <- c(rep(2, 36), -2, 14, 13, 12)
+  expect_equal(gap(rep(2, 40), ages, fine), 2)
+  # Age recorded as age at entry plus the time since: every child moves
+  # by the same part of a year, which the calendar years overstate.
+  entry <- rep(c(6.5, 7), 20)
+  steady <- longitudinal_lag(rep(1, 40), rep(0.25, 40), entry)
+  expect_equal(steady$years, 0.25)
+  expect_true(steady$differ)
+  # Whole-year ages that all move by a year say nothing the years do not.
+  expect_equal(gap(rep(2, 40), rep(1, 40), rep(c(10, 11), 20)), 2)
   # Years not recorded, or the same at both waves: ages are used.
-  expect_equal(longitudinal_lag(c(NA, NA), c(1.5, 2.5)), 2)
-  expect_equal(longitudinal_lag(c(0, 0), c(1, 1)), 1)
-  # Coarse ages and no years give no gap, not a gap of zero.
-  expect_true(is.na(longitudinal_lag(c(NA, NA), c(0, 0))))
+  expect_equal(gap(rep(NA, 40), rep(1.5, 40), coarse), 1.5)
+  expect_equal(gap(rep(0, 40), rep(1, 40), coarse), 1)
+  # Neither gives a gap: none is recorded, not a gap of zero.
+  expect_true(is.na(gap(rep(NA, 40), rep(0, 40), coarse)))
 })
 
 test_that("an outcome's instrument column is found by its stem", {
@@ -517,14 +1050,88 @@ test_that("results are labelled, tested and adjusted in one table", {
   # within the smallest effect of interest, and its q-value uses K = 5 + 1.
   game <- out[3, ]
   expect_true(game$equivalent)
-  # An estimate with too few studies to say is not called equivalent.
+  # An estimate with too few studies to say is not called equivalent or a
+  # finding, and is counted but not ranked: it has no q-value, and K is
+  # what it was.
   thin <- tree
   thin$status[3] <- "too few studies to say"
   thin <- assemble_results(thin, NULL, spec, hypotheses, reg$outcomes)
   expect_true(is.na(thin$equivalent[3]))
   expect_equal(thin$p_equivalence[3], game$p_equivalence)
+  expect_equal(thin$finding[3], "too few studies to say")
+  # A row that could not be pooled at all is not a finding either.
+  expect_equal(out$finding[out$family == "cognition"], "not estimated")
+  expect_true(is.na(thin$q[3]) && is.na(thin$q_equivalence[3]))
+  expect_equal(thin$k_total[3], game$k_total)
+  expect_equal(thin$q[-3], out$q[-3])
   expect_equal(game$q_equivalence, min(game$p_equivalence * 6, 1))
   expect_true(is.na(out$q_equivalence[1]))
+  # A family whose specific outcomes disagree is treated the same way: it
+  # is labelled so, counted, not ranked, and never called equivalent.
+  split <- tree
+  split$headline <- TRUE
+  split$headline[3] <- FALSE
+  split <- assemble_results(split, NULL, spec, hypotheses, reg$outcomes)
+  expect_equal(split$finding[3], "specific outcomes disagree")
+  expect_true(is.na(split$q[3]) && is.na(split$equivalent[3]))
+  expect_equal(split$k_total[3], game$k_total)
+  expect_equal(split$q[-3], out$q[-3])
+  # A moderator test comes with its own p-value: it joins the family's
+  # exploratory layer, is counted and adjusted there, has no equivalence
+  # test, and leaves the layers above it as they were.
+  tests <- tibble::tibble(
+    model_name = c("moderation_study_level", "year_trend"),
+    exposure = "st_watch",
+    level = c("L1", "L1"),
+    family = "wellbeing",
+    node = c("self_esteem", "self_esteem"),
+    moderator = c("informant", "data_year"),
+    term = c("levels equal", "between datasets"),
+    effect_measure = c("sd_per_hour_difference", "sd_per_hour_per_decade"),
+    estimate = c(NA, -0.05),
+    df = c(8, 10),
+    p_test = c(0.03, NA),
+    status = c("pooled", "too few datasets or years")
+  )
+  with_tests <- assemble_results(
+    tree,
+    NULL,
+    spec,
+    hypotheses,
+    reg$outcomes,
+    tests = tests
+  )
+  expect_equal(nrow(with_tests), nrow(out) + 2)
+  moderated <- with_tests[
+    with_tests$model_name == "moderation_study_level",
+  ]
+  expect_equal(moderated$p, 0.03)
+  expect_equal(moderated$moderator, "informant")
+  expect_equal(moderated$finding, "exploratory")
+  expect_equal(moderated$tier, 5L)
+  expect_false(is.na(moderated$q))
+  expect_gt(moderated$k_total, 5L)
+  expect_true(is.na(moderated$p_equivalence))
+  trend <- with_tests[with_tests$model_name == "year_trend", ]
+  expect_equal(trend$finding, "not estimated")
+  expect_true(is.na(trend$p) && is.na(trend$k_total))
+  expect_equal(with_tests$q[seq_len(nrow(out))], out$q)
+  # A test at a level its model is not listed for is a mistake, and is
+  # refused and not dropped.
+  at_family <- tests[1, ]
+  at_family$level <- "L0"
+  at_family$node <- NA
+  expect_error(
+    assemble_results(
+      tree,
+      NULL,
+      spec,
+      hypotheses,
+      reg$outcomes,
+      tests = at_family
+    ),
+    "tests at a level the model list does not give"
+  )
   # A family that could not be pooled has no p-value and is not counted.
   last <- out[out$family == "cognition", ]
   expect_true(is.na(last$p) && is.na(last$q) && is.na(last$k_total))

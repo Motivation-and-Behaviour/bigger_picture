@@ -12,8 +12,8 @@
 #' of screen use than the curve has terms, which a banded item with few
 #' bands does not have; a minimum number of rows in every stretch between
 #' knots (`curve_interval_rows`), so that no part of its curve rests on a
-#' handful of children; and, where its errors are clustered, more clusters
-#' than curve terms.
+#' handful of children; and, where its errors are clustered, at least
+#' `min_clusters` clusters.
 #'
 #' @param prepared Output of `prepare_analysis_data()` for one dataset.
 #' @param cells A tibble of `exposure` and `outcome` rows to fit.
@@ -143,7 +143,9 @@ fit_curve_unit <- function(data, settings = default_analysis_settings()) {
   design <- stage1_design(data, settings, tier = 1L)
   data <- design$data
   n <- nrow(data)
-  breaks <- c(-Inf, settings$curve_knots, Inf)
+  # The stretches between knots, the last one ending at the upper boundary
+  # knot: rows beyond it do not count towards it.
+  breaks <- c(-Inf, settings$curve_knots, settings$curve_boundary[2])
   stretch <- if (n == 0) {
     0L
   } else {
@@ -193,7 +195,8 @@ fit_curve_unit <- function(data, settings = default_analysis_settings()) {
   clustering <- stage1_cluster(data)
   clustered <- !is.null(clustering$cluster)
   n_clusters <- dplyr::n_distinct(clustering$cluster_id)
-  if (clustered && n_clusters <= length(terms)) {
+  # A curve's covariance from a handful of clusters is close to singular.
+  if (clustered && n_clusters < settings$min_clusters) {
     return(result(
       "too few clusters for a curve",
       n_clusters = n_clusters,

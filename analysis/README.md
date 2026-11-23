@@ -141,6 +141,10 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `stage1_other_<key>`, `stage1_other_all`, `tree_other` | The content-class cells adjusted for the rest of the child's screen use, and pooled up the tree |
 | `tree_tier2`, `tree_tier3` | The slopes at covariate tiers 2 and 3 pooled up the tree |
 | `longitudinal_<key>`, `longitudinal_all`, `longitudinal_development` | The lagged, within-child and matched cross-sectional models per pair of waves (DR-0018), and each pooled per outcome row and up the tree |
+| `imputed_<key>`, `imputation_review_<key>`, `imputation_units_all`, `imputation_levels_all`, `imputation_summary` | Each dataset's imputations of sporadically missing covariates, one branch per imputation (DR-0019); their hard checks; and imputed values set beside observed ones |
+| `stage1_imputed_<key>`, `stage1_imputed_all`, `stage1_other_imputed_<key>`, `stage1_other_imputed_all` | Stage 1 fitted on each imputation, with each model's missing screen use imputed for that model, and combined by Rubin's rules, at covariate tiers 1 to 3 and adjusted for other screen use |
+| `stage2_imputed`, `tree_imputed`, `tree_imputed_tier2`, `tree_imputed_tier3`, `tree_other_imputed` | Those slopes pooled across datasets and up the outcome tree |
+| `panel_pairs_<key>`, `panel_pairs_all` | For each panel and pair of successive waves, the children kept and how the screen use and age of those who stay differ from those who leave (DR-0018); no outcome is read |
 | `results_development` | Every model built so far in one table: estimate, interval, p, tiered q with its K (DR-0017), the 1 against 4 hours contrast, the equivalence test and the preregistered prediction |
 | `year_moderation_development` | Whether the slopes differ by collection year, on the development cells |
 | `dataset_table` | One row per dataset, by number, with its citation keys from `references/` |
@@ -175,10 +179,13 @@ A decision about one dataset that the registries cannot express goes in an optio
 | Column | Values |
 | --- | --- |
 | `variable_name` | The dataschema row |
-| `wave` | A wave label, or blank for every wave; always blank for `node` and `standardise_by` |
-| `action` | `exclude`, `keep_out_of_bounds`, `node` or `standardise_by` |
+| `wave` | A wave label, or blank for every wave; always blank for `node` and `standardise_by`, and always given for `own_series` |
+| `action` | `exclude`, `keep_out_of_bounds`, `node`, `standardise_by`, `total_dedicated`, `part_of_total` or `own_series` |
 | `value` | The node, or the pipe-separated keys; blank otherwise |
 | `reason` | Why, in a sentence |
+
+On a screen-time row an exception can `exclude` it, say that a total mapped as partial is a total of all screen use at a wave (`total_dedicated`, on `st_total`), or say that a content-class row is part of what the dataset's dedicated total measured (`part_of_total`); see DR-0013.
+On an outcome row, `own_series` says the row was asked differently at one wave, so for the within-child model that wave is not a child's next wave from any other, and no pair starts from it to a wave asked the usual way; the row is still used at that wave in every other model (DR-0018).
 
 The tests read every such file, and the pipeline tracks one per dataset, so a new file is noticed.
 
@@ -195,7 +202,7 @@ Two-stage is the primary analysis (DR-0010).
 - `fit_stage1()` fits one model per stage 1 unit and cell: a linear model of the standardised score for continuous rows and for ordinal rows with five or more levels, a proportional-odds model for ordinal rows with three or four, and a logistic model for binary rows.
   It uses the unit's weights where it has them, clusters standard errors on the sampling unit or the family, and adjusts for age and sex in the most flexible form the unit's ages allow.
   A unit that cannot be fitted returns a row saying why.
-- `pool_stage2()` pools a cell's slopes with a multilevel random-effects model, units nested in datasets, and robust small-sample inference; it needs three datasets, and marks an estimate with fewer than four degrees of freedom as too few studies to say.
+- `pool_stage2()` pools a cell's slopes with a multilevel random-effects model, units nested in datasets, and robust small-sample inference; it needs three datasets, and marks an estimate with fewer than three degrees of freedom as too few studies to say.
 - `fit_onestage_check()` fits a single model across datasets for one cell and compares it with a two-stage estimate built the same way.
 
 Until the freeze the engine runs only on the development cells in `development_cells.csv`: each line names an exposure row and either an outcome family or one outcome row, with a reason.
@@ -233,7 +240,7 @@ Most datasets have one level of a moderator, so a difference is mostly a differe
 
 Reading the table:
 
-- `test_status` says whether the test of equal means rests on enough studies; under four degrees of freedom it is `too few studies to say`, whatever the p-value.
+- `test_status` says whether the test of equal means rests on enough studies; under three degrees of freedom it is `too few studies to say`, whatever the p-value.
 - `difference_of` names which level is taken from which.
 - `same_as` marks a moderator that sorts a specific outcome's slopes exactly as an earlier one does: the two are one comparison under two names.
 - P-values are not adjusted for the number of comparisons; the tiered procedure of Step 10 does that for the frozen model list.
@@ -259,9 +266,9 @@ It is the linear stage 1 model at tier 1 with the curve in place of the slope, f
 - A unit supports an hour where it has the minimum number of rows within `curve_window` hours of it.
   A curve is interpretable at an hour inside the boundary knots that at least the minimum number of datasets support, counting only datasets that also support the reference; beyond the boundary knots the curve is a straight line continued and is not read.
 - The threshold duration is read two ways, each the lowest interpretable hour above the reference that meets its rule (DR-0016).
-  Conservative (`threshold_hours`): the interval lies wholly beyond the smallest effect of interest (`smallest_effect`) from the reference, with at least four robust degrees of freedom there.
-  Central (`threshold_central_hours`): the estimate is beyond the smallest effect of interest and the interval excludes no difference.
-  Each has a direction, given as a better or worse outcome, and a flag saying whether the curve goes on meeting the rule at every later hour.
+  Conservative (`threshold_hours`): the interval lies wholly beyond the smallest effect of interest (`smallest_effect`) from the reference, with at least the minimum robust degrees of freedom there (`min_robust_df`).
+  Central (`threshold_central_hours`): the estimate is beyond the smallest effect of interest, the interval excludes no difference and the degrees of freedom reach the minimum, at that hour and at the next hour read.
+  Each has a direction, given as a better or worse outcome, and a flag saying whether the curve stays beyond at every later hour.
 - `simulate_curve_recovery()` checks the method on real hours of screen use with a simulated outcome that follows a known curve (a plasmode simulation); `curve_truths()` lists the curves it builds in, and DR-0016 says what it found.
 
 A conservative threshold depends on how precisely a curve is estimated as well as on the curve, so thresholds are not comparable between cells without their intervals.
@@ -305,6 +312,7 @@ Each line names a `dataset_id`, an `exposure` and a `reason` taken from the stud
 `waves` lists the waves that used it, separated by semicolons and spelt as in the harmonised `wave` column, for a study whose waves share or straddle calendar years or whose item came and went.
 Fill in one of the two and leave the other blank.
 `day` limits a line to the `weekday`, `weekend` or `usual` row of the exposure; blank means all three.
+`scope` is blank for a change to the item itself, or `trend` for a line that only separates series for trends over years, such as a wave whose values mix respondents: the models that compare a child's own waves compare respondents child by child and ignore such a line.
 A list of waves is closed: when a study adds a wave that still uses the changed item, add the wave to every such list, or it is read as the old item.
 The derived total is built from whichever items a dataset has, so every line of the dataset splits its series, whatever the exposure or day.
 A line with no units that have the exposure on one of its two sides is listed in the `series_breaks_unused` target, which should be empty.
@@ -320,7 +328,7 @@ It is a draft until the freeze, when it is fixed with the registries.
 | `step` | The step of the analysis plan that runs it, 10 to 14 |
 | `tier` | The preregistered tier whose q-values it takes, 1 to 5; exploratory, descriptive and post-freeze models take 5 |
 | `levels` | The levels of the outcome tree it is reported at, pipe-separated: `L0`, `L1`, `L2`, `L3` |
-| `exposure_set` | Pipe-separated: `total` (the derived total), `content_classes`, `other_included`, `school` |
+| `exposure_set` | Pipe-separated: `total` (the derived total), `content_classes`, `other_included`, `social_media`, `school_content` (the content-class rows asked about school), `school_other` (the other rows asked about school) |
 | `outcome_set` | `core`, `report`, `negative_control`, or `core_rare_binary` (binary rows where more than half the units that measure the row have fewer than 10 events) and `headline_cells`, both settled from the data where their models are built |
 | `moderator` | The moderators it tests, pipe-separated; blank for none |
 | `covariate_tier` | `1`, `2`, `3` or `family` (DR-0015) |

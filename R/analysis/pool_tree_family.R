@@ -8,9 +8,15 @@
 #' group's own working covariance.
 #'
 #' The standard error is robust to any dependence among a dataset's slopes,
-#' within and across specific outcomes. A score that sits in two specific
-#' outcomes therefore adds nothing to the family's precision: it counts
-#' once.
+#' within and across specific outcomes, so a score that sits in two
+#' specific outcomes adds nothing to the family's precision: it counts
+#' once. For a family of several specific outcomes it is the jackknife
+#' form of the robust variance (CR3), which is a little larger than the
+#' form used for a single specific outcome (CR2, which the test that the
+#' specific outcomes are equal also keeps). On the real design, with CR2, a
+#' family's 95% interval covered the truth about 93% of the time, and with
+#' CR3 95 to 97%; CR3 is conservative where datasets differ little
+#' (DR-0014).
 #'
 #' The family is estimated whenever one of its specific outcomes pooled, and
 #' with one it is that specific outcome. A specific outcome that could not
@@ -160,7 +166,7 @@ pool_tree_family <- function(
     tryCatch(
       clubSandwich::linear_contrast(
         fit,
-        vcov = "CR2",
+        vcov = "CR3",
         cluster = data$dataset_id,
         contrasts = matrix(weights / sum(weights), nrow = 1)
       ),
@@ -170,6 +176,9 @@ pool_tree_family <- function(
   robust <- average(rep(1, length(pooled)))
   if (is.character(robust)) {
     return(result(paste("robust inference failed:", robust)))
+  }
+  if (is.na(robust$df[1]) || is.na(robust$SE[1])) {
+    return(result("robust inference failed: no degrees of freedom"))
   }
   by_datasets <- average(rows$k_datasets)
   if (is.character(by_datasets)) {
@@ -207,7 +216,13 @@ pool_tree_family <- function(
   } else {
     NA_character_
   }
-  status <- if (robust$df[1] < 4) "too few studies to say" else "pooled"
+  # Too few studies to say is judged on the degrees of freedom the
+  # interval and the p-value use.
+  status <- if (robust$df[1] < settings$min_robust_df) {
+    "too few studies to say"
+  } else {
+    "pooled"
+  }
   result(
     status,
     estimate = robust$Est[1],

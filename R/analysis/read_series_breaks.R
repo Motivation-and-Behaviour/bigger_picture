@@ -14,12 +14,16 @@
 #' semicolons, for a study whose waves share or straddle calendar years or
 #' whose item came and went (a mail-out questionnaire between main
 #' interviews). `day` limits a line to the weekday, weekend or usual-day
-#' variable of the exposure; blank means all of them.
+#' variable of the exposure; blank means all of them. `scope` is blank for
+#' a change to the item itself, which every use of the list respects, or
+#' `trend` for a line that only separates series for trends over years: a
+#' wave whose values mix respondents, say, which the models that compare a
+#' child's own waves handle child by child.
 #'
 #' @param path Path to `series_breaks.csv`.
 #' @param exposure_registry The exposure registry.
 #' @return A tibble of `dataset_id`, `exposure`, `day`, `from_year`, `waves`
-#'   (a list of character vectors) and `reason`.
+#'   (a list of character vectors), `scope` and `reason`.
 read_series_breaks <- function(
   path = bp_series_breaks_path(),
   exposure_registry
@@ -33,6 +37,10 @@ read_series_breaks <- function(
   unknown <- setdiff(breaks$day, c(NA, exposure_registry$day))
   if (length(unknown) > 0) {
     fail("not days: ", paste(unknown, collapse = ", "))
+  }
+  unknown <- setdiff(breaks$scope, c(NA, "trend"))
+  if (length(unknown) > 0) {
+    fail("`scope` is blank or `trend`; found ", paste(unknown, collapse = ", "))
   }
   year_text <- breaks$from_year
   breaks$from_year <- suppressWarnings(as.numeric(year_text))

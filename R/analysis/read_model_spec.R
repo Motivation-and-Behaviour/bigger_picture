@@ -22,6 +22,17 @@ read_model_spec <- function(path = bp_models_path()) {
   if (anyDuplicated(spec$model_name) > 0) {
     fail("model names repeat")
   }
+  partner <- sub("_other$", "", grep("_other$", spec$model_name, value = TRUE))
+  if (!all(partner %in% spec$model_name)) {
+    fail("a model named `<model>_other` needs `<model>` in the list")
+  }
+  confirmed <- spec$analysis_class %in% "confirmatory" & spec$tier == "5"
+  if (any(confirmed)) {
+    fail(
+      "confirmatory models take tiers 1 to 4: ",
+      paste(spec$model_name[confirmed], collapse = ", ")
+    )
+  }
   if (!all(grepl("^[a-z][a-z0-9_]*$", spec$model_name))) {
     fail("model names are lower case, digits and underscores")
   }

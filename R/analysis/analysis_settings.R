@@ -16,6 +16,13 @@ analysis_settings <- function() {
     min_unit_rows = 30L,
     # A cell is pooled from this many datasets (DR-0010).
     min_datasets = 3L,
+    # A pooled estimate with fewer robust degrees of freedom than this has
+    # too few studies to say: its interval cannot be relied on. They cannot
+    # exceed the number of datasets less one, and in practice three needs
+    # five or more datasets. In simulation, intervals with three to four
+    # covered the truth as often as those with more (96%), and those with
+    # fewer than two did not (90%).
+    min_robust_df = 3,
     # A categorical column with more distinct values than this is treated as
     # an identifier and not tabulated.
     max_levels = 200L,
@@ -33,6 +40,10 @@ analysis_settings <- function() {
     # A content-class row enters a unit's sum when it is present on at least
     # this share of the unit's rows that have the required rows.
     total_row_min_share = 0.5,
+    # The rest of a child's screen use beside a content class is the total
+    # less the class only where the total is at least the class for this
+    # share of the unit's rows that have both: below that the class was not
+    # asked as part of the total (DR-0013).
     # A part is dropped for its whole when the whole is observed on at least
     # this share of the rows where the part is.
     part_cover_min = 0.9,
@@ -46,8 +57,9 @@ analysis_settings <- function() {
     # known for at least this share of the unit's rows, until missing
     # values are imputed (Step 8).
     covariate_known_min = 0.9,
-    # Cluster-robust standard errors from fewer clusters than this are
-    # flagged: they tend to be too small.
+    # Cluster-robust standard errors from fewer clusters than this tend to
+    # be too small: a slope from fewer is flagged, and a curve is not
+    # fitted.
     min_clusters = 10L,
     # A trend over collection years needs this many datasets, spanning this
     # many years.
@@ -77,6 +89,9 @@ analysis_settings <- function() {
     # hour is compared with. A threshold is the lowest duration whose
     # interval lies beyond `smallest_effect` SD from the reference
     # (provisional until the freeze).
+    # A pair of waves in the longitudinal strand needs this many of a
+    # unit's children (DR-0018).
+    longitudinal_min_pair = 100L,
     curve_knots = c(1, 2, 4),
     curve_boundary = c(0, 6),
     curve_grid = seq(0, 8, by = 0.5),
@@ -86,8 +101,34 @@ analysis_settings <- function() {
     # hour where it has the minimum number of rows within this many hours
     # of it.
     curve_interval_rows = 30L,
+    # A curve is pooled from at least this many datasets: from fewer, the
+    # curve itself moves with the working model (DR-0016).
+    curve_min_datasets = 5L,
+
     curve_window = 0.5,
-    smallest_effect = 0.10
+    smallest_effect = 0.10,
+    # Multiple imputation (ANALYSIS_PLAN.md, Step 8; DR-0019). The number
+    # of imputations is small while the engine is developed, and 50 for
+    # the confirmatory run.
+    imputations = 5L,
+    imputation_iterations = 10L,
+    # A variable is imputed in a unit where it is known for at least this
+    # share of the unit's rows; below that its missingness is not sporadic
+    # (DR-0019).
+    impute_min_observed = 0.7,
+    # And for a child only where it is known for at least this share of
+    # the unit's children of the same age in whole years: an item not
+    # asked of an age group is not imputed for it.
+    impute_min_observed_age = 0.5,
+    # The kinds of stage 1 model whose exposure is imputed. Logistic and
+    # proportional-odds models are fitted on the rows that have the
+    # exposure: complete cases are unbiased for them where missingness
+    # depends on the outcome, and an imputed exposure understates their
+    # standard errors (DR-0019).
+    impute_exposure_models = "linear",
+    # A predictor enters a variable's imputation model where the two
+    # correlate at least this much.
+    impute_min_correlation = 0.05
   )
 }
 

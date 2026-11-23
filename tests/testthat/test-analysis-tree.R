@@ -222,8 +222,9 @@ test_that("a family is the plain average of its specific outcomes", {
 
 test_that("a perfectly correlated pair in two specific outcomes counts once", {
   # The same score sits in two nodes: the family then knows no more than
-  # one node does, so its estimate, standard error, degrees of freedom and
-  # interval are that node's.
+  # one node does. Its estimate is that node's, and its standard error is
+  # no smaller: a family of several specific outcomes takes the jackknife
+  # form of the robust variance, which is a little larger.
   one <- tree_slopes(8, 0.1, "a", "n1", seed = 5)
   two <- one
   two$outcome <- "a_again"
@@ -232,10 +233,28 @@ test_that("a perfectly correlated pair in two specific outcomes counts once", {
   family <- pool_tree_family(dplyr::bind_rows(one, two), groups)
   node <- groups$n1$row
   expect_equal(family$estimate, node$estimate)
-  expect_equal(family$se, node$se)
-  expect_equal(family$df, node$df)
-  expect_equal(family$ci_low, node$ci_low)
-  expect_equal(family$ci_high, node$ci_high)
+  expect_gte(family$se, node$se)
+  expect_lt(family$se, 1.2 * node$se)
+  expect_lte(family$ci_low, node$ci_low)
+  expect_gte(family$ci_high, node$ci_high)
+  # Too few studies to say is judged on the degrees of freedom the
+  # family's own interval uses.
+  between <- analysis_settings()
+  between$min_robust_df <- family$df + 0.01
+  expect_equal(
+    pool_tree_family(dplyr::bind_rows(one, two), groups, between)$status,
+    "too few studies to say"
+  )
+  between$min_robust_df <- family$df - 0.01
+  expect_equal(
+    pool_tree_family(dplyr::bind_rows(one, two), groups, between)$status,
+    "pooled"
+  )
+  # A family of one specific outcome is that outcome exactly.
+  alone <- pool_tree_family(one, groups["n1"])
+  expect_equal(alone$se, node$se)
+  expect_equal(alone$df, node$df)
+  expect_equal(alone$ci_low, node$ci_low)
   expect_true(is.na(family$warning))
   expect_true(family$headline)
 
@@ -626,8 +645,13 @@ test_that("the tree's settings hold everything its functions read", {
     bp_tree_settings()
   )
   expect_true(all(bp_tree_settings() %in% names(analysis_settings())))
-  # Stage 1 and the tier comparison get `bp_model_settings()` only.
-  expect_true(all(design %in% bp_model_settings()))
+  # Stage 1 and the tier comparison get `bp_model_settings()` only, and
+  # stage 1 the imputation settings too where it imputes.
+  expect_true(all(design %in% bp_imputed_model_settings()))
+  expect_setequal(
+    setdiff(design, bp_model_settings()),
+    "impute_exposure_models"
+  )
 })
 
 test_that("uncertainty alone does not keep a family from the headline", {
@@ -841,7 +865,14 @@ test_that("a comparison resting on few studies says so on the test", {
   effects$instrument <- effects$outcome
   out <- moderate_tree_group(effects, "instrument")
   expect_equal(unique(out$status), "compared")
+  # The test has between three and four degrees of freedom: enough under
+  # the minimum of three, and too few under a stricter one.
+  expect_gte(out$equal_df[1], 3)
   expect_lt(out$equal_df[1], 4)
+  expect_equal(unique(out$test_status), "tested")
+  strict <- analysis_settings()
+  strict$min_robust_df <- 4
+  out <- moderate_tree_group(effects, "instrument", settings = strict)
   expect_equal(unique(out$test_status), "too few studies to say")
 })
 
@@ -901,6 +932,12 @@ test_that("every moderator of every specific outcome is on record", {
     total_source = NA
   )
   out <- moderate_tree(stage1, units, registry)
+  # Specific outcomes only, unless the family level is asked for.
+  expect_equal(unique(out$tree_level), "L1")
+  expect_setequal(
+    moderate_tree(stage1, units, registry, levels = c("L1", "L0"))$tree_level,
+    c("L1", "L0")
+  )
   expect_setequal(out$moderator, bp_tree_moderators())
   status <- function(name) unique(out$status[out$moderator == name])
   expect_equal(status("informant"), "compared")
@@ -915,4 +952,177 @@ test_that("every moderator of every specific outcome is on record", {
   expect_equal(same("reporter"), "informant")
   expect_equal(same("instrument"), "informant")
   expect_true(is.na(same("risk_of_bias")))
+})
+
+test_that("a family's moderator test allows for its specific outcomes differing", {
+  # Two specific outcomes 0.3 apart. In each, parent-reported slopes are
+  # 0.1 above self-reported ones; most of the first outcome's slopes are
+  # self-reported and most of the second's parent-reported, so without a
+  # term for the specific outcome the levels would differ by far more.
+  part <- function(mean, outcome, node, k, seed, prefix) {
+    rows <- tree_slopes(k, mean, outcome, node, seed = seed, tau = 0.01)
+    rows$dataset_id <- sub("d", prefix, rows$dataset_id)
+    rows$unit <- sub("d", prefix, rows$unit)
+    rows
+  }
+  effects <- dplyr::bind_rows(
+    part(0.00, "a_self", "n1", 12, 71, "a"),
+    part(0.10, "a_parent", "n1", 4, 72, "b"),
+    part(0.30, "b_self", "n2", 4, 73, "c"),
+    part(0.40, "b_parent", "n2", 12, 74, "e")
+  )
+  effects$informant <- sub("^._", "", effects$outcome)
+  effects <- effects[order(effects$unit), ]
+  crude <- moderate_tree_group(effects, "informant")
+  expect_gt(abs(crude$difference[1]), 0.2)
+  family <- moderate_tree_group(effects, "informant", adjust = "node")
+  expect_equal(family$status[1], "compared")
+  expect_equal(abs(family$difference[1]), 0.10, tolerance = 0.03, scale = 1)
+  expect_lt(family$equal_p[1], 0.01)
+  # The levels' own means belong to one specific outcome, so none is given.
+  expect_true(all(is.na(family$estimate)))
+  expect_equal(unique(family$level_status), "compared")
+  # A label that sorts the slopes as the specific outcomes do is not
+  # tested.
+  effects$sorted <- effects$node
+  apart <- moderate_tree_group(effects, "sorted", adjust = "node")
+  expect_equal(
+    unique(apart$status),
+    "moderator not separable from the specific outcomes"
+  )
+  expect_true(all(is.na(apart$equal_p)))
+  # With one specific outcome the term is not needed, and the result is
+  # the specific outcome's own.
+  one <- effects[effects$node == "n1", ]
+  expect_equal(
+    moderate_tree_group(one, "informant", adjust = "node")$difference,
+    moderate_tree_group(one, "informant")$difference
+  )
+})
+
+test_that("the trend over years is recovered for a specific outcome and a family", {
+  settings <- analysis_settings()
+  # Fourteen datasets over 26 years; the slope falls by 0.05 a decade
+  # between datasets, and the second specific outcome sits 0.3 higher.
+  build <- function(mean, outcome, node, seed) {
+    rows <- tree_slopes(14, mean, outcome, node, seed = seed, tau = 0.01)
+    number <- as.integer(sub("d", "", rows$dataset_id))
+    rows$year <- 1996 + 2 * number
+    rows$estimate <- rows$estimate - 0.05 * (rows$year - 2010) / 10
+    rows$series <- rows$unit
+    rows$age_median <- 12
+    rows$measure_type <- "Continuous"
+    rows$responder <- "Self"
+    rows
+  }
+  first <- build(0, "a", "n1", 81)
+  second <- build(0.3, "b", "n2", 82)
+  node <- trend_tree_group(first, settings = settings)
+  expect_equal(node$status, "fitted")
+  expect_equal(node$between_per_decade, -0.05, tolerance = 0.02, scale = 1)
+  expect_lt(node$between_ci_high, 0)
+  expect_equal(node$k_datasets, 14L)
+  # No series spans more than one year here, so there is no within part.
+  expect_true(is.na(node$within_per_decade))
+  expect_equal(node$k_within, 0L)
+  both <- dplyr::bind_rows(first, second)
+  family <- trend_tree_group(both, settings = settings, adjust = "node")
+  expect_equal(family$between_per_decade, -0.05, tolerance = 0.02, scale = 1)
+  expect_match(family$adjusted_for, "specific outcome")
+  expect_equal(family$k_slopes, 56L)
+  # Too few datasets or too short a span: said, not fitted.
+  few <- trend_tree_group(first[first$year <= 2002, ], settings = settings)
+  expect_equal(few$status, "too few datasets or years")
+  # A within-series trend: each dataset's two units are ten years apart.
+  panel <- first
+  panel$series <- panel$dataset_id
+  second_unit <- duplicated(panel$dataset_id)
+  panel$year[second_unit] <- panel$year[second_unit] + 10
+  panel$estimate[second_unit] <- panel$estimate[second_unit] + 0.08
+  within <- trend_tree_group(panel, settings = settings)
+  expect_equal(within$k_within, 14L)
+  expect_gt(within$within_per_decade, 0)
+})
+
+test_that("moderator tests become rows the results table can count", {
+  moderation <- tibble::tibble(
+    exposure = "st_watch",
+    tree_level = c("L1", "L1", "L1", "L1", "L0", "L0"),
+    family = "wellbeing",
+    node = c("n1", "n1", "n1", "n1", NA, NA),
+    moderator = c(
+      "informant",
+      "informant",
+      "reporter",
+      "instrument",
+      "informant",
+      "informant"
+    ),
+    level = c("parent", "self", "same reporter", "a", "parent", "self"),
+    equal_p = c(0.02, 0.02, 0.4, 0.02, 0.2, 0.2),
+    equal_df = c(8, 8, 2, 8, 9, 9),
+    test_status = c(
+      "tested",
+      "tested",
+      "too few studies to say",
+      "tested",
+      "tested",
+      "tested"
+    ),
+    difference = c(0.1, 0.1, NA, NA, 0.05, 0.05),
+    difference_ci_low = 0,
+    difference_ci_high = 0.2,
+    status = "compared",
+    same_as = c(NA, NA, NA, "informant", NA, NA)
+  )
+  trend <- tibble::tibble(
+    exposure = "st_watch",
+    tree_level = "L1",
+    family = "wellbeing",
+    node = "n1",
+    between_per_decade = -0.05,
+    between_ci_low = -0.09,
+    between_ci_high = -0.01,
+    between_df = 10,
+    between_status = "estimated",
+    within_per_decade = NA_real_,
+    within_ci_low = NA_real_,
+    within_ci_high = NA_real_,
+    within_df = NA_real_,
+    within_status = NA_character_,
+    status = "fitted"
+  )
+  tests <- moderator_tests(moderation, trend)
+  # One row per test: the duplicate label is gone, and the reporter test
+  # is the model list's own row.
+  # The within-series trend is a description and is not a test.
+  expect_equal(nrow(tests), 4)
+  expect_equal(
+    tests$model_name,
+    c(
+      "moderation_study_level",
+      "sens_reporter",
+      "moderation_study_level_family",
+      "year_trend"
+    )
+  )
+  expect_equal(tests$level, c("L1", "L1", "L0", "L1"))
+  expect_equal(tests$term[4], "between datasets")
+  expect_equal(
+    tests$status,
+    c("pooled", "too few studies to say", "pooled", "pooled")
+  )
+  # The trend's p-value is the one its interval and degrees of freedom
+  # give.
+  se <- 0.08 / (2 * stats::qt(0.975, 10))
+  expect_equal(tests$p_test[4], 2 * stats::pt(-0.05 / se, 10))
+  # A trend that was not fitted has no p-value.
+  unfitted <- trend
+  unfitted$between_per_decade <- NA_real_
+  unfitted$between_status <- NA_character_
+  unfitted$status <- "too few datasets or years"
+  none <- moderator_tests(NULL, unfitted)
+  expect_true(is.na(none$p_test))
+  expect_equal(none$status, "too few datasets or years")
+  expect_equal(nrow(moderator_tests(NULL, NULL)), 0)
 })

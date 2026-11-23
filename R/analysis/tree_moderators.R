@@ -22,8 +22,8 @@
 #'   dataset's mapping of the outcome row and of the exposure row, or
 #'   `derived` for a row the analysis computes from other rows, which has no
 #'   mapping of its own.
-#' - `total_source`: for the derived total only, whether the unit's total is
-#'   a dedicated item or a sum.
+#' - `total_source`: for the derived total only, how the unit's total was
+#'   built (`derive_total_screen()`).
 #' - `risk_of_bias`: the dataset's rating, once rated.
 #'
 #' @param effects Rows from `tree_effects()`.

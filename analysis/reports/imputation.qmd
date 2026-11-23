@@ -1,0 +1,188 @@
+---
+title: "Imputation: what was filled in, and whether it looks right"
+subtitle: "Multiple imputation of sporadically missing screen use and covariates, before the freeze"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(dplyr)
+library(ggplot2)
+library(targets)
+
+summary_tables <- tar_read(imputation_summary)
+levels_all <- tar_read(imputation_levels_all)
+units_all <- tar_read(imputation_units_all)
+settings <- tar_read(settings)
+
+fmt <- function(x) format(round(x), big.mark = ",", trim = TRUE)
+theme_set(theme_minimal(base_size = 10))
+options(knitr.kable.NA = "")
+```
+
+Missing covariates are imputed within each unit (dataset by wave by country), and missing screen use within each unit for each outcome's own model, `r settings$imputations` times while the engine is developed and 50 times for the confirmatory run.
+A variable is imputed only where it is known for at least `r 100 * settings$impute_min_observed`% of the unit's rows, and for a child only where it is known for at least `r 100 * settings$impute_min_observed_age`% of the unit's children of the same age in whole years.
+Outcomes are read by the imputation models and never imputed.
+Every dataset's imputations passed the hard checks in `review_imputation()`, or the build would have stopped.
+
+## What was imputed
+
+One line per covariate and what became of its missing values, over all units with any.
+Cells are counted once, not once per imputation.
+
+```{r}
+#| label: variables
+summary_tables$variables |>
+  transmute(
+    Variable = variable,
+    Outcome = outcome,
+    Datasets = datasets,
+    Units = fmt(units),
+    `Cells missing` = fmt(cells_missing),
+    `Cells imputed` = fmt(cells_imputed),
+    `Left: age group not asked` = fmt(cells_age_group)
+  ) |>
+  knitr::kable(align = "llrrrrr")
+```
+
+```{r}
+#| label: failures
+failed <- units_all[
+  !units_all$status %in% "imputed" &
+    !grepl("^too little|^fewer rows|^not needed|^takes one", units_all$status),
+]
+```
+
+`r nrow(failed)` unit and variable pairs failed or were only partly imputed.
+
+```{r}
+#| label: failures-table
+failed |>
+  count(dataset_id, variable, status, name = "units") |>
+  knitr::kable()
+```
+
+## Imputed against observed covariates
+
+An imputed value is one its unit observed, or one recorded for the same child at another wave.
+Imputed values need not have the same distribution as observed ones: they differ where the children with a missing value differ from the rest.
+A large gap is still worth a look.
+
+The share of each category among observed and imputed values, pooled over datasets.
+
+```{r}
+#| label: levels
+levels_all |>
+  summarise(n = sum(n), .by = c(variable, source, level)) |>
+  mutate(share = n / sum(n), .by = c(variable, source)) |>
+  select(variable, level, source, share) |>
+  tidyr::pivot_wider(names_from = source, values_from = share) |>
+  filter(coalesce(observed, 0) >= 0.02 | coalesce(imputed, 0) >= 0.02) |>
+  arrange(variable, desc(observed)) |>
+  transmute(
+    Variable = variable,
+    Category = level,
+    `Observed (%)` = round(100 * observed, 1),
+    `Imputed (%)` = round(100 * imputed, 1)
+  ) |>
+  knitr::kable(align = "llrr")
+```
+
+Categories under 2% of both are not shown.
+
+## What imputation changes for the models
+
+The slopes of the development cells fitted on complete cases and on imputed data, by covariate tier.
+
+```{r}
+#| label: gain
+summary_tables$gain |>
+  transmute(
+    Tier = tier,
+    `Adjusted for other screen use` = ifelse(adjusted_other, "Yes", ""),
+    `Slopes, complete cases` = fmt(slopes_complete),
+    `Slopes, imputed` = fmt(slopes_imputed),
+    `Datasets, complete cases` = datasets_complete,
+    `Datasets, imputed` = datasets_imputed,
+    `Rows, complete cases` = fmt(rows_complete),
+    `Rows, imputed` = fmt(rows_imputed),
+    `Fitted in some imputations only` = slopes_partly_fitted
+  ) |>
+  knitr::kable(align = "r")
+```
+
+A slope fitted in only some imputations is not carried forward.
+
+## How much information is missing
+
+The fraction of information missing for a unit's slope: roughly the share of its variance that comes from not knowing the imputed values.
+It also rises where a slope has few degrees of freedom, so a unit with few clusters can show a large fraction with little imputed.
+
+```{r}
+#| label: fmi
+summary_tables$fmi |>
+  transmute(
+    Tier = tier,
+    `Adjusted for other screen use` = ifelse(adjusted_other, "Yes", ""),
+    Slopes = fmt(slopes),
+    Datasets = datasets,
+    `Nothing imputed` = fmt(nothing_imputed),
+    `Median` = round(fmi_median, 3),
+    `90th percentile` = round(fmi_q90, 3),
+    `Largest` = round(fmi_max, 3),
+    `Over a half` = fmi_over_half,
+    `Design differed between imputations` = design_varied
+  ) |>
+  knitr::kable(align = "r")
+```
+
+## Imputed covariates in the adjusted models
+
+The share of an adjusted model's rows with any of its tier's covariates imputed.
+Sex is not counted: it is in every model.
+It is recorded for every unit slope (`covariate_imputed_share`).
+
+```{r}
+#| label: covariate-share
+summary_tables$fmi |>
+  filter(tier > 1) |>
+  transmute(
+    Tier = tier,
+    Slopes = fmt(slopes),
+    `Median share imputed (%)` = round(100 * covariate_share_median, 1),
+    `90th percentile (%)` = round(100 * covariate_share_q90, 1),
+    `Largest (%)` = round(100 * covariate_share_max, 1)
+  ) |>
+  knitr::kable(align = "r")
+```
+
+## Imputed screen use
+
+Screen use is imputed for one model at a time, from a model that holds that model's outcome, so it is not stored.
+The table counts the slopes that had any screen use imputed, and the share of their rows it was imputed for.
+
+```{r}
+#| label: exposure
+summary_tables$fmi |>
+  transmute(
+    Tier = tier,
+    `Adjusted for other screen use` = ifelse(adjusted_other, "Yes", ""),
+    Slopes = fmt(slopes),
+    `With screen use imputed` = fmt(exposure_imputed),
+    `Draw failed, rows left out` = exposure_failed,
+    `Median share of rows imputed (%)` = round(100 * exposure_share_median, 1),
+    `Largest share (%)` = round(100 * exposure_share_max, 1)
+  ) |>
+  knitr::kable(align = "r")
+```
+
+With `r settings$imputations` imputations these fractions are themselves rough; they settle with 50.

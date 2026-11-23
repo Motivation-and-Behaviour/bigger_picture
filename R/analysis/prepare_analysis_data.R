@@ -30,6 +30,9 @@
 #' @param outcome_registry,exposure_registry,derivations The registries.
 #' @param dataschema The dataschema.
 #' @param exceptions The dataset's analysis exceptions.
+#' @param total_status The harmonisation status of the dataset's `st_total`
+#'   mapping (`total_mapping_status()`); a `partial` one is not a total of
+#'   all screen use (DR-0013).
 #' @param settings From `analysis_settings()`.
 #' @return A named list of the tables above, or NULL when the dataset is not
 #'   included.
@@ -41,7 +44,8 @@ prepare_analysis_data <- function(
   derivations,
   dataschema,
   exceptions,
-  settings = default_analysis_settings()
+  settings = default_analysis_settings(),
+  total_status = NA_character_
 ) {
   all_rows <- included_rows(drop_empty_columns(harmonised), info)
   rm(harmonised)
@@ -68,13 +72,157 @@ prepare_analysis_data <- function(
   kept <- if (all(prepared$keep)) rows else rows[prepared$keep, ]
   rm(rows)
 
+  # A wave no row of the dataset has is a mistake in any exception.
+  named <- exceptions$wave[!is.na(exceptions$wave)]
+  if (!all(named %in% as.character(base$wave))) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": an analysis exception names a wave the dataset does not have: ",
+      paste(setdiff(named, as.character(base$wave)), collapse = ", "),
+      call. = FALSE
+    )
+  }
+  # Exceptions about a screen-time row are for the exposures; the rest are
+  # for the outcomes.
+  on_exposure <- exceptions$variable_name %in% exposure_registry$variable_name
+  misplaced <- on_exposure &
+    !exceptions$action %in% c("exclude", "total_dedicated", "part_of_total")
+  if (any(misplaced)) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": an exception on a screen-time row can only exclude it, say its ",
+      "total is dedicated, or say it is part of the total: ",
+      paste(unique(exceptions$variable_name[misplaced]), collapse = ", "),
+      call. = FALSE
+    )
+  }
+  exposure_exceptions <- exceptions[on_exposure, ]
+  # Saying a total is dedicated only means something for a total mapped as
+  # partial, at a wave the dataset has.
+  made_dedicated <- exposure_exceptions[
+    exposure_exceptions$action %in% "total_dedicated",
+  ]
+  unknown_wave <- setdiff(
+    made_dedicated$wave[!is.na(made_dedicated$wave)],
+    as.character(base$wave)
+  )
+  if (nrow(made_dedicated) > 0 && !total_status %in% "partial") {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": a `total_dedicated` exception needs `st_total` mapped as partial.",
+      call. = FALSE
+    )
+  }
+  # A class is part of a dedicated total: there must be such a total, the
+  # class must have values, and the wave must be one of the dataset's.
+  parts <- exposure_exceptions[
+    exposure_exceptions$action %in% "part_of_total",
+  ]
+  classes <- exposure_registry$variable_name[
+    exposure_registry$unit %in%
+      "hours" &
+      exposure_registry$day %in% "usual" &
+      exposure_registry$context %in% "any" &
+      exposure_registry$axis %in% "activity" &
+      !is.na(exposure_registry$content_class)
+  ]
+  has_total <- if ("st_total" %in% names(kept)) {
+    !is.na(kept$st_total)
+  } else {
+    rep(FALSE, nrow(kept))
+  }
+  total_at <- function(at_wave) {
+    any(has_total & (is.na(at_wave) | as.character(base$wave) %in% at_wave))
+  }
+  bad_part <- nrow(parts) > 0 &&
+    (!all(parts$variable_name %in% intersect(classes, names(kept))) ||
+      !all(vapply(parts$wave, total_at, logical(1))))
+  if (bad_part) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": a `part_of_total` exception needs a dedicated total at its wave ",
+      "and a usual-day content-class row the dataset has.",
+      call. = FALSE
+    )
+  }
+  if (length(unknown_wave) > 0) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": a `total_dedicated` exception names a wave the dataset does not ",
+      "have: ",
+      paste(unknown_wave, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  exceptions <- exceptions[!on_exposure, ]
+  # Waves at which an outcome row was asked differently: kept for the
+  # models that compare a child's waves.
+  series <- exceptions[
+    exceptions$action %in% "own_series",
+    c("variable_name", "wave", "reason")
+  ]
+  if (!all(series$wave %in% as.character(base$wave))) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": an `own_series` exception names a wave the dataset does not have.",
+      call. = FALSE
+    )
+  }
   exposures <- prepare_exposures(
     kept,
     base$wave,
     base$unit,
     exposure_registry,
-    settings
+    settings,
+    total_partial = total_status %in% "partial",
+    dedicated_waves = exposure_exceptions$wave[
+      exposure_exceptions$action %in% "total_dedicated"
+    ],
+    parts = parts[c("variable_name", "wave")],
+    left_out = exposure_exceptions[
+      exposure_exceptions$action %in% "exclude",
+    ]
   )
+  # A line that passes the checks above and still changes nothing is a
+  # mistake too: the part must sit beside a dedicated total it has values
+  # with, and a total said to be dedicated must be there to use.
+  at_wave <- function(wave) {
+    is.na(wave) | as.character(base$wave) %in% wave
+  }
+  made <- exposures$exposures
+  for (i in seq_len(nrow(parts))) {
+    used <- at_wave(parts$wave[i]) &
+      startsWith(dplyr::coalesce(made$total_source, ""), "dedicated") &
+      !is.na(made[[parts$variable_name[i]]])
+    if (!any(used)) {
+      stop(
+        "Dataset ",
+        info$dataset_id[1],
+        ": the `part_of_total` line for `",
+        parts$variable_name[i],
+        "` has no effect: no row at its wave has the class beside a ",
+        "dedicated total.",
+        call. = FALSE
+      )
+    }
+  }
+  for (wave in made_dedicated$wave) {
+    if (!any(at_wave(wave) & made$total_source %in% "dedicated")) {
+      stop(
+        "Dataset ",
+        info$dataset_id[1],
+        ": a `total_dedicated` line has no effect: no row at its wave has ",
+        "the total.",
+        call. = FALSE
+      )
+    }
+  }
   outcomes <- prepare_outcomes(
     kept,
     base,
@@ -84,6 +232,25 @@ prepare_analysis_data <- function(
     exceptions,
     settings
   )
+  has_outcome <- vapply(
+    seq_len(nrow(series)),
+    function(i) {
+      name <- series$variable_name[i]
+      name %in%
+        names(outcomes$outcomes) &&
+        any(!is.na(outcomes$outcomes[[name]][at_wave(series$wave[i])]))
+    },
+    logical(1)
+  )
+  if (!all(has_outcome)) {
+    stop(
+      "Dataset ",
+      info$dataset_id[1],
+      ": an `own_series` exception names an outcome the dataset does not ",
+      "have at that wave.",
+      call. = FALSE
+    )
+  }
 
   screen <- exposure_registry$variable_name[
     exposure_registry$unit %in% c("hours", "index")
@@ -135,6 +302,7 @@ prepare_analysis_data <- function(
     wave_order_declared = isTRUE(nzchar(info[["wave_order"]])),
     repeats = outcomes$repeats,
     nodes = outcomes$nodes,
-    derived = outcomes$derived
+    derived = outcomes$derived,
+    series = series
   )
 }

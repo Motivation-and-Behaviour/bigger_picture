@@ -27,7 +27,7 @@
 #'   slopes per decade with robust intervals and degrees of freedom, the
 #'   number of datasets with a series spanning more than one year, which is
 #'   what the within slope rests on, a status for each slope (`estimated`, or
-#'   `too few studies to say` under four robust degrees of freedom), and
+#'   `too few studies to say` under the minimum robust degrees of freedom), and
 #'   `status`.
 regress_units_on_year <- function(
   units,
@@ -70,40 +70,11 @@ regress_units_on_year <- function(
     return(result("too few datasets or years"))
   }
 
-  dataset_year <- stats::ave(units$year, units$dataset_id, FUN = mean)
-  units$decade_between <- (dataset_year - 2010) / 10
-  series_year <- stats::ave(units$year, units$series, FUN = mean)
-  units$decade_within <- (units$year - series_year) / 10
-  varies_within <- tapply(
-    abs(units$decade_within) > 0.01,
-    units$dataset_id,
-    any
-  )
-  k_within <- sum(varies_within)
-
-  terms <- "decade_between"
-  adjusted <- character()
-  if (k_within > 0) {
-    terms <- c(terms, "decade_within")
-  }
-  if (!anyNA(units$age_median) && stats::sd(units$age_median) > 0) {
-    units$age_c <- units$age_median - mean(units$age_median)
-    terms <- c(terms, "age_c")
-    adjusted <- c(adjusted, "median age")
-  }
-  varying <- function(values) {
-    counts <- table(values)
-    !anyNA(values) && length(counts) > 1 && min(counts) >= 3
-  }
-  if (varying(units$measure_type)) {
-    terms <- c(terms, "measure_type")
-    adjusted <- c(adjusted, "response format")
-  }
-  units$self_report <- ifelse(units$responder %in% "Self", "self", "other")
-  if (!anyNA(units$responder) && varying(units$self_report)) {
-    terms <- c(terms, "self_report")
-    adjusted <- c(adjusted, "who reported")
-  }
+  built <- year_terms(units)
+  units <- built$units
+  terms <- built$terms
+  adjusted <- built$adjusted
+  k_within <- built$k_within
 
   units$vi <- units$sei^2
   nested <- nrow(units) > k_datasets
@@ -151,17 +122,64 @@ regress_units_on_year <- function(
     within_ci_high = pick("decade_within", "CI_U"),
     within_df = pick("decade_within", "df"),
     k_within = as.integer(k_within),
-    between_status = few_to_say(pick("decade_between", "df")),
-    within_status = few_to_say(pick("decade_within", "df")),
+    between_status = few_to_say(
+      pick("decade_between", "df"),
+      settings$min_robust_df
+    ),
+    within_status = few_to_say(
+      pick("decade_within", "df"),
+      settings$min_robust_df
+    ),
     adjusted_for = paste(adjusted, collapse = ", ")
   )
 }
 
-# The stage 2 rule for a robust estimate: under four degrees of freedom there
-# are too few studies to say.
-few_to_say <- function(df) {
+# The stage 2 rule for a robust estimate: under the minimum degrees of
+# freedom there are too few studies to say.
+few_to_say <- function(df, minimum) {
   if (is.na(df)) {
     return(NA_character_)
   }
-  if (df < 4) "too few studies to say" else "estimated"
+  if (df < minimum) "too few studies to say" else "estimated"
+}
+
+# The terms of a regression on collection year, and the columns they need:
+# year between datasets and within series, per decade, the units' median
+# age, and where they vary the response format and who reported.
+year_terms <- function(units) {
+  dataset_year <- stats::ave(units$year, units$dataset_id, FUN = mean)
+  units$decade_between <- (dataset_year - 2010) / 10
+  series_year <- stats::ave(units$year, units$series, FUN = mean)
+  units$decade_within <- (units$year - series_year) / 10
+  varies_within <- tapply(
+    abs(units$decade_within) > 0.01,
+    units$dataset_id,
+    any
+  )
+  k_within <- sum(varies_within)
+
+  terms <- "decade_between"
+  adjusted <- character()
+  if (k_within > 0) {
+    terms <- c(terms, "decade_within")
+  }
+  if (!anyNA(units$age_median) && stats::sd(units$age_median) > 0) {
+    units$age_c <- units$age_median - mean(units$age_median)
+    terms <- c(terms, "age_c")
+    adjusted <- c(adjusted, "median age")
+  }
+  varying <- function(values) {
+    counts <- table(values)
+    !anyNA(values) && length(counts) > 1 && min(counts) >= 3
+  }
+  if (varying(units$measure_type)) {
+    terms <- c(terms, "measure_type")
+    adjusted <- c(adjusted, "response format")
+  }
+  units$self_report <- ifelse(units$responder %in% "Self", "self", "other")
+  if (!anyNA(units$responder) && varying(units$self_report)) {
+    terms <- c(terms, "self_report")
+    adjusted <- c(adjusted, "who reported")
+  }
+  list(units = units, terms = terms, adjusted = adjusted, k_within = k_within)
 }
