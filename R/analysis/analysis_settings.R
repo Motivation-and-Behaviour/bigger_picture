@@ -84,6 +84,10 @@ analysis_settings <- function() {
     # The smallest effect of interest in SD per hour a day: 0.10 SD on the
     # contrast of 1 against 4 hours.
     smallest_effect_per_hour = 0.10 / 3,
+    # The evidence platform's impact bands, in SD on that contrast: the
+    # lower edge of small, moderate and strong (DR-0020). The first is the
+    # smallest effect of interest.
+    rating_bands = c(small = 0.10, moderate = 0.40, strong = 0.70),
     # Curves (ANALYSIS_PLAN.md, Step 11): a natural cubic spline of screen
     # use with knots fixed in hours, so every unit has the same curve terms;
     # the hours a pooled curve is read at; and the low-use reference each

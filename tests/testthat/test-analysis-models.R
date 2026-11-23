@@ -992,6 +992,52 @@ test_that("an outcome's instrument column is found by its stem", {
   expect_equal(longitudinal_measure_column("mh_dep_self", base), "")
 })
 
+test_that("an effect is put in a band from its estimate and interval", {
+  settings <- analysis_settings()
+  rate <- function(estimate, low, high, p_equivalence) {
+    rate_effect(estimate, low, high, p_equivalence, settings)
+  }
+  # Shown to be negligible: no clear relationship.
+  none <- rate(-0.02, -0.06, 0.02, 0.001)
+  expect_equal(none$rating, 0L)
+  expect_equal(none$rating_label, "no clear relationship")
+  # Beyond the smallest effect with an interval that excludes zero: the
+  # band is the estimate's, and the sign is the direction for the child.
+  bands <- rate(
+    c(-0.21, 0.45, -0.75, 0.10),
+    c(-0.30, 0.20, -0.95, 0.01),
+    c(-0.12, 0.70, -0.55, 0.19),
+    rep(0.9, 4)
+  )
+  expect_equal(bands$rating, c(-1L, 2L, -3L, 1L))
+  expect_equal(
+    bands$rating_label,
+    c(
+      "small, harmful",
+      "moderate, beneficial",
+      "strong, harmful",
+      "small, beneficial"
+    )
+  )
+  # Too uncertain to say: an interval that includes zero, or an estimate
+  # under the smallest effect that is not shown to be negligible.
+  unsure <- rate(
+    c(-0.30, -0.08, NA),
+    c(-0.65, -0.15, NA),
+    c(0.05, -0.01, NA),
+    c(0.8, 0.3, NA)
+  )
+  expect_true(all(is.na(unsure$rating)))
+  expect_equal(unique(unsure$rating_label), "not rated: too uncertain to say")
+  # The first band is the smallest effect of interest.
+  wrong <- settings
+  wrong$rating_bands <- c(small = 0.2, moderate = 0.4, strong = 0.7)
+  expect_error(
+    rate_effect(0.3, 0.2, 0.4, 0.9, wrong),
+    "rise from the smallest effect"
+  )
+})
+
 test_that("results are labelled, tested and adjusted in one table", {
   reg <- models_registries()
   spec <- read_model_spec(file.path(repo_root, bp_models_path()))
@@ -1043,6 +1089,11 @@ test_that("results are labelled, tested and adjusted in one table", {
   expect_equal(adjusted$finding, "prereg_secondary")
   expect_equal(out$finding[c(1, 4, 5)], c("finding", "finding", "exploratory"))
   expect_equal(out$contrast_estimate[1], -0.15)
+  # Each aligned estimate is put in a band; here -0.15 with an interval
+  # clear of zero is small and harmful, and a row with too few studies is
+  # not rated.
+  expect_equal(out$rating[1], -1L)
+  expect_equal(out$rating_label[1], "small, harmful")
 
   expect_equal(out$hypothesis[1:3], c("H1", "H2b", "H2c"))
   expect_equal(out$prediction[1:3], c("negative", "negative", "none"))

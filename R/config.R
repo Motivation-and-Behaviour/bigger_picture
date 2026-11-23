@@ -218,7 +218,9 @@ bp_tree_settings <- function() {
     "covariate_known_min",
     "log_odds_per_sd",
     "tree_default_correlation",
-    "smallest_effect_per_hour"
+    "smallest_effect_per_hour",
+    "smallest_effect",
+    "rating_bands"
   )
 }
 

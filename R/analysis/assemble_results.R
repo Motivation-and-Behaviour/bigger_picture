@@ -12,6 +12,8 @@
 #' - `p_equivalence`, the test that the estimate lies within the smallest
 #'   effect of interest (`test_equivalence()`), for estimates in SD per
 #'   hour;
+#' - `rating` and `rating_label`, the evidence platform's impact band for
+#'   the effect on that contrast (`rate_effect()`, DR-0020);
 #' - the preregistered `hypothesis` and `prediction` for the row's exposure
 #'   and family, and for a prediction of no association `q_equivalence`,
 #'   the equivalence p-values adjusted among themselves with the row's
@@ -213,6 +215,27 @@ assemble_results <- function(
   )
   out$p_equivalence <- equivalence$p_equivalence
   out$equivalent <- NA
+  # The platform's impact band, for aligned estimates that have enough
+  # studies to say; row-level estimates are in their own direction and are
+  # not rated.
+  rated <- rate_effect(
+    out$contrast_estimate,
+    out$contrast_low,
+    out$contrast_high,
+    out$p_equivalence,
+    settings
+  )
+  ratable <- in_sd & out$level %in% c("L0", "L1", "L2") & !thin
+  out$rating <- ifelse(ratable, rated$rating, NA_integer_)
+  out$rating_label <- ifelse(
+    ratable,
+    rated$rating_label,
+    ifelse(
+      in_sd & out$level %in% c("L0", "L1", "L2"),
+      "not rated: too uncertain to say",
+      NA_character_
+    )
+  )
 
   # The slope predictions; those about thresholds and moderation attach
   # where those models are assembled.
