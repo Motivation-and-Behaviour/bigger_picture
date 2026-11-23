@@ -3,7 +3,7 @@
   "image": "ghcr.io/tarensanders/r-base:latest",
   "features": {
     "ghcr.io/rocker-org/devcontainer-features/r-packages:1": {
-      "packages": "github::crsh/prereg, github::crsh/papaja, gittargets, mdbr",
+      "packages": "github::crsh/prereg, github::crsh/papaja, gittargets, mdbr, clubSandwich, fixest, glmmTMB, metafor, mice, survey",
       "installSystemRequirements": true
     }
   },
