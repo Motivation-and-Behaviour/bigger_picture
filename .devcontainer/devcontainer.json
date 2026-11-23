@@ -8,7 +8,12 @@
     }
   },
   "mounts": [
-    "source=/mnt/c/Users/TaSandersAdmin/OneDrive - Australian Catholic University/Projects/Bigger Picture - DoE Grant/IPD Component/Datasets,target=/data,type=bind,readonly",
-    "source=claude-code-config-${devcontainerId},target=/home/rstudio/.claude,type=volume"
-  ]
+    "source=${localEnv:HOME}/bp-data,target=/data,type=bind,readonly",
+    "source=claude-code-config-${devcontainerId},target=/home/rstudio/.claude,type=volume",
+    "source=gh-config-${devcontainerId},target=/home/rstudio/.gh,type=volume"
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind,consistency=cached",
+  "workspaceFolder": "${localWorkspaceFolder}",
+  "postCreateCommand": "sudo chown -R $(id -un):$(id -gn) $HOME/.claude $HOME/.gh",
+  "shutdownAction": "none"
 }
