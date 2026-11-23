@@ -43,8 +43,9 @@
 #'   p-value (`p_test`), such as whether a moderator's levels differ. They
 #'   are counted and adjusted with the rest, and have no equivalence test.
 #'   NULL for none.
-#' @param seen The development cells (`read_development_cells()`): the
-#'   exposures and families fitted before the freeze, whose rows are
+#' @param seen The development cells (`read_development_cells()`, with
+#'   `exposure` and `outcome`): the exposures and families fitted before
+#'   the freeze, whose rows are
 #'   marked `seen_before_freeze` whatever `frozen` is. NULL for none.
 #' @param model_spec From `read_model_spec()`.
 #' @param hypotheses From `read_hypotheses()`.
@@ -173,10 +174,7 @@ assemble_results <- function(
   out$seen_before_freeze <- FALSE
   if (!is.null(seen) && nrow(seen) > 0) {
     rows <- outcome_registry$rows
-    seen_family <- dplyr::coalesce(
-      seen$family,
-      rows$prereg_family[match(seen$variable_name, rows$variable_name)]
-    )
+    seen_family <- rows$prereg_family[match(seen$outcome, rows$variable_name)]
     out$seen_before_freeze <- paste(out$exposure, out$family) %in%
       paste(seen$exposure, seen_family)
   }

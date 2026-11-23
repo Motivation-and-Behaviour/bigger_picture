@@ -1111,10 +1111,12 @@ test_that("results are labelled, tested and adjusted in one table", {
   # cells are given; with them, their exposure and families are, whether
   # or not the specification is frozen.
   expect_false(any(out$seen_before_freeze))
+  wellbeing_row <- reg$outcomes$rows$variable_name[
+    reg$outcomes$rows$prereg_family %in% "wellbeing"
+  ][1]
   cells <- tibble::tibble(
     exposure = c("st_watch", "st_game"),
-    family = c("wellbeing", NA),
-    variable_name = c(NA, "acc_graderepeated")
+    outcome = c(wellbeing_row, "acc_graderepeated")
   )
   marked <- assemble_results(
     tree,
