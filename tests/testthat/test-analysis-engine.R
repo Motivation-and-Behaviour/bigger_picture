@@ -1,4 +1,4 @@
-# The model engine (ANALYSIS_PLAN.md, Step 5): one known-answer test per
+# The model engine: one known-answer test per
 # function, on the mock dataset, whose effects are known by construction.
 # Real data can show that an estimate is implausible, never that it is wrong.
 

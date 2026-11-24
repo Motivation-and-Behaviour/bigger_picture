@@ -1,7 +1,7 @@
 #' Attach the stage 2 moderators to aligned slopes
 #'
 #' Each moderator is a label on a slope, taken from the registries or from
-#' the unit the slope was fitted in (ANALYSIS_PLAN.md, Step 7 task 4). A
+#' the unit the slope was fitted in. A
 #' slope a moderator does not apply to has NA for it.
 #'
 #' - `informant`: who reported the outcome row; NA where the row takes any

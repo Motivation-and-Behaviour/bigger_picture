@@ -29,7 +29,7 @@
 #'
 #' `finding` says how a row may be described: `finding` at L0 and L1 of a
 #' confirmatory model, otherwise the model's class, or `exploratory` for
-#' L2 and L3 (ANALYSIS_PLAN.md, Step 10 task 6); `too few studies to say`
+#' L2 and L3; `too few studies to say`
 #' wherever that is the row's status; `not estimated` for a row that
 #' could not be pooled at all; and `specific outcomes disagree` for a
 #' family kept from the headline because they do (DR-0014).

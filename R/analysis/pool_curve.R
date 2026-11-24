@@ -11,7 +11,7 @@
 #' `curve_window` hours of it. The curve is interpretable at an hour inside
 #' the boundary knots (beyond them it is a straight line continued) that at
 #' least the minimum number of datasets support, counting only datasets that
-#' also support the reference (ANALYSIS_PLAN.md, Step 11 task 7).
+#' also support the reference.
 #'
 #' The threshold duration is read two ways (Step 11 task 1; DR-0016), each
 #' the lowest interpretable hour above the reference that meets its rule:

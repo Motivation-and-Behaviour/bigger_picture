@@ -1,6 +1,6 @@
 # DR-0021: How the registered moderation and contrast hypotheses are tested
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-11-24  
 **Decision makers:** Taren  
 **Related issues:** NA

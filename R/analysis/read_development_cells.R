@@ -1,7 +1,7 @@
 #' Read the development cells, expanded to exposure and outcome rows
 #'
 #' The engine is built on real data, so a short list of exposure and outcome
-#' cells is fitted before the freeze (ANALYSIS_PLAN.md, Step 5). These are the
+#' cells is fitted before the freeze. These are the
 #' only associations seen before the specification is frozen, and every
 #' results table marks them. Each line of `development_cells.csv` names an
 #' exposure row and either an outcome family, meaning every pooled outcome

@@ -1,4 +1,4 @@
-# Curves and the threshold duration (ANALYSIS_PLAN.md, Step 11): known-answer
+# Curves and the threshold duration: known-answer
 # tests on simulated units whose curve is set by construction.
 
 skip_unless_engine_needed()

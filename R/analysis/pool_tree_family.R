@@ -2,7 +2,7 @@
 #'
 #' The family's estimate is the plain average of its pooled specific
 #' outcomes, so each specific outcome counts once however many rows,
-#' datasets or participants it has (ANALYSIS_PLAN.md, Step 7 task 1). Each
+#' datasets or participants it has. Each
 #' specific outcome keeps exactly the estimate `pool_tree_group()` gave it:
 #' the slopes are refitted with one mean per specific outcome and each
 #' group's own working covariance.

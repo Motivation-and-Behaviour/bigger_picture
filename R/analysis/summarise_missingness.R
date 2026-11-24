@@ -1,7 +1,7 @@
 #' Sporadic and systematic missingness per dataset and variable
 #'
-#' Missingness is classified by where it sits, not by how it is encoded
-#' (ANALYSIS_PLAN.md, Step 4): a missing or `Unknown` cell is sporadic when its
+#' Missingness is classified by where it sits, not by how it is encoded:
+#' a missing or `Unknown` cell is sporadic when its
 #' unit (wave by country) has real values on that variable, and systematic
 #' when the unit has none, because the harmonisation guide also writes
 #' `Unknown` in waves where an item was not asked. Counted on the primary

@@ -1,9 +1,9 @@
 #' One imputation of a dataset's sporadically missing covariates
 #'
-#' Multiple imputation by chained equations (ANALYSIS_PLAN.md, Step 8;
-#' DR-0019), one stage 1 unit (dataset by wave by country) at a time, so
-#' that every relation it preserves is the unit's own. Each call makes one
-#' imputation; the pipeline calls it once per imputation number.
+#' Multiple imputation by chained equations (DR-0019), one stage 1 unit
+#' (dataset by wave by country) at a time, so that every relation it
+#' preserves is the unit's own. Each call makes one imputation; the
+#' pipeline calls it once per imputation number.
 #'
 #' Sex and the covariates of the further tiers are imputed, by predictive
 #' mean matching, so an imputed value is one the unit observed. Screen use

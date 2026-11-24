@@ -1,10 +1,9 @@
 #' How many rows of each unit have an exposure together with an outcome
 #'
-#' The count behind the feasibility report (ANALYSIS_PLAN.md, Step 7 task
-#' 7): for every exposure and every outcome row a unit holds, the rows and
-#' participants that have both, and whether stage 1 could use them. It fits
-#' no model and shows no association, so it runs on every cell before the
-#' freeze.
+#' The count behind the feasibility report: for every exposure and every
+#' outcome row a unit holds, the rows and participants that have both, and
+#' whether stage 1 could use them. It fits no model and shows no
+#' association, so it runs on every cell before the freeze.
 #'
 #' Counted exposures are the rows the registry includes, the school-context
 #' rows (for the school against home question) and the derived total.

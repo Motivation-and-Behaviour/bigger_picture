@@ -1,9 +1,8 @@
 #' Check a dataset's imputed covariates, and set them beside observed ones
 #'
 #' The checks are hard: any failure stops the build, because an imputation
-#' that breaks one of them is wrong, not merely poor (ANALYSIS_PLAN.md,
-#' Step 8 task 5). They apply to imputed cells only; observed values may
-#' legitimately break them.
+#' that breaks one of them is wrong, not merely poor. They apply to imputed
+#' cells only; observed values may legitimately break them.
 #'
 #' - an imputed cell was missing before, and is imputed once;
 #' - only sex and the tier covariates are imputed here;

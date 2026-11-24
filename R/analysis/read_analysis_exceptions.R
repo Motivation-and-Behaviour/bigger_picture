@@ -2,7 +2,7 @@
 #'
 #' An optional `harmonisation/datasets/BPIPD-<id>/analysis_exceptions.csv`
 #' holds decisions about that dataset which a row-level registry cannot
-#' express, each with a reason (ANALYSIS_PLAN.md, Step 4). Columns:
+#' express, each with a reason. Columns:
 #'
 #' - `variable_name`: the dataschema row the decision is about;
 #' - `wave`: a wave label, or blank for every wave (always blank for `node`

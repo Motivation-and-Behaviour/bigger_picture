@@ -4,8 +4,7 @@
 #' direction) and puts those on one scale and one direction, so rows of a
 #' specific outcome, and specific outcomes of a family, can be averaged:
 #'
-#' - a slope in log odds is divided by pi / sqrt(3) to join the SD scale
-#'   (ANALYSIS_PLAN.md, Step 7 task 3);
+#' - a slope in log odds is divided by pi / sqrt(3) to join the SD scale;
 #' - a slope on a row where higher is worse changes sign, so a positive
 #'   slope always means a better outcome with more screen use.
 #'

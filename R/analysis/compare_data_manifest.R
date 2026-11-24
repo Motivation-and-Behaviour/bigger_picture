@@ -1,7 +1,7 @@
 #' Compare the live data manifest with a recorded one
 #'
-#' Lists every dataset added, removed or changed since the record was made
-#' (ANALYSIS_PLAN.md, Step 9). Before a report is delivered any difference is
+#' Lists every dataset added, removed or changed since the record was made.
+#' Before a report is delivered any difference is
 #' a deviation; afterwards the list is what the reconciliation table explains.
 #'
 #' @param manifest The live manifest.

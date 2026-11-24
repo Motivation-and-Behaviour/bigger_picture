@@ -1,7 +1,6 @@
 #' The outcome tables of one dataset, aligned with its base table
 #'
-#' Applies the outcome rules of the preparation step (ANALYSIS_PLAN.md,
-#' Step 4), in this order:
+#' Applies the outcome rules of the preparation step, in this order:
 #'
 #' 1. score each analysed row (`score_outcome_values()`);
 #' 2. apply the dataset's `exclude` exceptions;

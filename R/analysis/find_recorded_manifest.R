@@ -1,7 +1,7 @@
 #' The recorded manifest a build is compared with, if there is one
 #'
 #' The report's datasets are fixed by recording the data manifest under
-#' the report's label (`record_data_manifest()`; ANALYSIS_PLAN.md, Step 9).
+#' the report's label (`record_data_manifest()`).
 #' From then on the pipeline compares the live manifest with it
 #' (`compare_data_manifest()`).
 #'

@@ -1,5 +1,5 @@
-# The model list and what the confirmatory tiers need beside the engine
-# (ANALYSIS_PLAN.md, Step 7 task 10 and Step 9 tasks 3 to 5): the list and
+# The model list and what the confirmatory tiers need beside the engine:
+# the list and
 # its cells, the tiered false discovery rate, equivalence tests, the
 # adjustment for other screen use and the longitudinal strand.
 

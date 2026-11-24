@@ -2,7 +2,7 @@
 #'
 #' For each exposure and outcome cell, and each pair of waves of a dataset
 #' in which the outcome was measured, three models are fitted on
-#' children seen at both waves (ANALYSIS_PLAN.md, Step 13; DR-0018).
+#' children seen at both waves (DR-0018).
 #' Each gives a slope in SD per hour a day, with the covariates, weights and
 #' standard errors of `fit_stage1_unit()` taken from the earlier wave:
 #'

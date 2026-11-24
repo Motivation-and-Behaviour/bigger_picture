@@ -1,7 +1,7 @@
 #' Settings every analysis step shares
 #'
-#' Kept in one place so a seed or a threshold is never set twice
-#' (ANALYSIS_PLAN.md, Pipeline conventions). They are part of the
+#' Kept in one place so a seed or a threshold is never set twice.
+#' They are part of the
 #' specification fixed at the freeze: a change after it is a deviation and
 #' goes in the ledger.
 #'
@@ -88,7 +88,7 @@ analysis_settings <- function() {
     # lower edge of small, moderate and strong (DR-0020). The first is the
     # smallest effect of interest.
     rating_bands = c(small = 0.10, moderate = 0.40, strong = 0.70),
-    # Curves (ANALYSIS_PLAN.md, Step 11): a natural cubic spline of screen
+    # Curves: a natural cubic spline of screen
     # use with knots fixed in hours, so every unit has the same curve terms;
     # the hours a pooled curve is read at; and the low-use reference each
     # hour is compared with. A threshold is the lowest duration whose
@@ -112,7 +112,7 @@ analysis_settings <- function() {
 
     curve_window = 0.5,
     smallest_effect = 0.10,
-    # Multiple imputation (ANALYSIS_PLAN.md, Step 8; DR-0019). The number
+    # Multiple imputation (DR-0019). The number
     # of imputations is small while the engine is developed, and the
     # preregistered 50 once the specification is frozen
     # (`bp_imputations()`).

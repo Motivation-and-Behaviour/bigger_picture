@@ -1,7 +1,7 @@
 #' Check the harmonised data against the dataschema, as a list of findings
 #'
-#' Never a pipeline failure: the result is a tidy table to review
-#' (ANALYSIS_PLAN.md, Step 3). Every check works from the per-dataset
+#' Never a pipeline failure: the result is a tidy table to review.
+#' Every check works from the per-dataset
 #' summaries, so no row of data is read here. A `review` finding needs a
 #' look; an `advisory` finding is context.
 #'

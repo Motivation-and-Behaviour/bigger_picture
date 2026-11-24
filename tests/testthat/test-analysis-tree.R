@@ -1,4 +1,4 @@
-# Pooling up the outcome tree (ANALYSIS_PLAN.md, Step 7 task 1): known-answer
+# Pooling up the outcome tree: known-answer
 # tests on slopes built by hand, because a wrong pooling rule would not show
 # on real data.
 

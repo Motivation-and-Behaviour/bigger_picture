@@ -1,6 +1,6 @@
 #' Check the rows the harmonisation guide carries within a participant
 #'
-#' Checks the carry-forward and fills nothing (ANALYSIS_PLAN.md, Step 3).
+#' Checks the carry-forward and fills nothing.
 #' `Unknown` counts as missing. Two things can go wrong, and which one applies
 #' depends on the row's `rule` in `invariants.csv`:
 #'

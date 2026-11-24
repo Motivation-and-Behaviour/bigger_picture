@@ -1,6 +1,6 @@
 #' What the signed-off datasets can support, cell by cell
 #'
-#' The feasibility report's tables (ANALYSIS_PLAN.md, Step 7 task 7): for
+#' The feasibility report's tables: for
 #' every exposure and every level of the outcome tree, how many datasets,
 #' units and participants could enter a model, and whether that is enough to
 #' pool; and how many each covariate tier keeps, which moderators have two

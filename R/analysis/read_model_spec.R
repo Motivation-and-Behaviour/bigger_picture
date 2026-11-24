@@ -2,7 +2,7 @@
 #'
 #' `models.csv` has one row per model family: everything the analysis fits
 #' is a row here, and a sensitivity analysis is a further row, not a further
-#' code path (ANALYSIS_PLAN.md, Design principles). A row names sets of
+#' code path. A row names sets of
 #' exposures and outcomes, which `expand_model_cells()` turns into cells
 #' against the registries, so the list stays short.
 #'

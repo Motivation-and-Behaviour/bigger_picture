@@ -1,7 +1,7 @@
 #' Record the current data manifest under a label
 #'
 #' Run by hand for each delivered report and at the freeze, then commit the
-#' file with that state of the code (ANALYSIS_PLAN.md, Step 2). The file holds
+#' file with that state of the code. The file holds
 #' dataset IDs, counts and hashes only.
 #'
 #' @param label Name for the record, such as `doe-report`.

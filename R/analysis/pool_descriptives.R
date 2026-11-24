@@ -3,7 +3,7 @@
 #' A dataset's units are first averaged, weighted by their rows, into one
 #' value per dataset. The pooled figure is then the median of the datasets'
 #' values, with the range the middle half of datasets span, so the largest
-#' surveys do not swamp the picture (ANALYSIS_PLAN.md, Step 6). A result
+#' surveys do not swamp the picture. A result
 #' needs the minimum number of datasets; below that no figure is given.
 #'
 #' Total screen time is never pooled across the ways it was built: a

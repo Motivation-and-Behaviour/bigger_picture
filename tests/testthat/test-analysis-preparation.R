@@ -1,6 +1,5 @@
-# The data manifest, the checks and the preparation step (ANALYSIS_PLAN.md,
-# Steps 2 to 4), on the mock dataset and small hand-made tables, without the
-# data mount.
+# The data manifest, the checks and the preparation step, on the mock
+# dataset and small hand-made tables, without the data mount.
 
 mock <- make_mock_analysis_data(n_per_wave = 120)
 mock_dataset <- function(id) {
