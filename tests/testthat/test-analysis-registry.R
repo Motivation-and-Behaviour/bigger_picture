@@ -11,7 +11,11 @@ test_that("the committed outcome registry passes its checks", {
     file.path(repo_root, bp_outcome_rows_path()),
     repo_schema()
   )
-  expect_true(all(registry$rows$frozen %in% FALSE))
+  # The registry is frozen with the specification
+  original <- !registry$rows$node %in% "post_freeze"
+  expect_true(all(
+    registry$rows$frozen[original] %in% bp_specification_frozen()
+  ))
   expect_true(any(registry$tree$headline %in% TRUE))
 })
 

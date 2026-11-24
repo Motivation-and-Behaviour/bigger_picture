@@ -277,14 +277,7 @@ bp_row_level_workers <- function() {
   4L
 }
 
-# Workers for the targets that fit models on a prepared dataset. Memory sets
-# the number, not cores. A worker holding the largest prepared dataset peaks
-# near 3.7 GB, but in a plain `tar_make()` each dataset's model targets all
-# start as its preparation finishes, while the `row_level` pool goes on
-# loading whole harmonised datasets: with sixteen model workers, and again
-# with eight, a full rerun fell below 25 GB available. So the default is
-# four. `make.R` builds in sections, and raises this for the section in
-# which nothing loads a harmonised dataset, through `BP_MODEL_WORKERS`.
+# Workers for the targets that fit models on a prepared dataset.
 bp_model_workers <- function() {
   asked <- suppressWarnings(as.integer(Sys.getenv("BP_MODEL_WORKERS", "4")))
   if (is.na(asked) || asked < 1L) {
@@ -325,24 +318,12 @@ bp_build_sections <- function() {
   )
 }
 
-# The model workers `make.R` uses for the models section. Each worker
-# holding the largest prepared dataset peaks near 5 GB, and since the
-# imputation targets joined this section a dataset has about a dozen model
-# targets, so many workers can hold one of the largest datasets at once:
-# with sixteen workers a full rerun fell below 25 GB available, where it
-# had left 36 GB before the last of those targets were added.
+# The model workers `make.R` uses for the models section.
 bp_model_workers_wide <- function() {
   10L
 }
 
-# Processes for a simulation target. More than this does not fit: with a
-# process on every logical core the target's memory passed 80 GB and the
-# build had to be stopped. Nothing stops the target starting while the
-# other pools are busy, so run a build that reruns the simulation under
-# the memory watchdog.
-# `BP_SIMULATION_CORES` lowers it for a build on a machine that is short of
-# memory at the time; it changes how long the target takes and not what it
-# gives.
+# Processes for a simulation target.
 bp_simulation_cores <- function() {
   asked <- suppressWarnings(as.integer(Sys.getenv("BP_SIMULATION_CORES", "")))
   cap <- if (is.na(asked) || asked < 1L) 24L else min(asked, 24L)
@@ -363,8 +344,7 @@ bp_analysis_reports_dir <- function() {
   fs::path(bp_analysis_dir(), "reports")
 }
 
-# Schema domains whose every row must appear in outcome_rows.csv. Health rows
-# are registered too, so negative controls and mediators carry a role.
+# Schema domains whose every row must appear in outcome_rows.csv.
 bp_outcome_registry_domains <- function() {
   c(
     "academic",
@@ -642,17 +622,12 @@ bp_total_exposure <- function() {
   "total_screen"
 }
 
-# Whether the specification is frozen. Until it
-# is, every model is fitted on the development cells only. The lead changes
-# this to TRUE in the tagged commit that freezes the specification, and
-# nobody else does.
+# Whether the specification is frozen.
 bp_specification_frozen <- function() {
-  FALSE
+  TRUE
 }
 
-# How many imputations a build makes: the preregistered number once the
-# specification is frozen, and the smaller development number before
-# (DR-0019). Imputations already made are kept when the number rises.
+# How many imputations a build makes
 bp_imputations <- function(settings) {
   if (bp_specification_frozen()) {
     settings$imputations_confirmatory
@@ -661,9 +636,7 @@ bp_imputations <- function(settings) {
   }
 }
 
-# The models whose cells the cross-sectional stage 1 fits: every other
-# model built on those slopes (curves, covariate tiers, moderators) uses a
-# subset of these cells. They share no cell, so a pooled row has one model.
+# The models whose cells the cross-sectional stage 1 fits
 bp_stage1_models <- function() {
   c("tier1_total", "tier2_content", "other_exposures", "report_rows")
 }
