@@ -1,8 +1,9 @@
 #' Settings every analysis step shares
 #'
-#' Kept in one place so a seed or a threshold is never set twice
-#' (ANALYSIS_PLAN.md, Pipeline conventions). The thresholds are provisional
-#' until the freeze.
+#' Kept in one place so a seed or a threshold is never set twice.
+#' They are part of the
+#' specification fixed at the freeze: a change after it is a deviation and
+#' goes in the ledger.
 #'
 #' @return A named list.
 analysis_settings <- function() {
@@ -12,7 +13,7 @@ analysis_settings <- function() {
     age_limit = 19,
     # Screen use above this many hours a day is implausible (DR-0011).
     exposure_max_hours = 24,
-    # A stage 1 unit needs at least this many rows (provisional).
+    # A stage 1 unit needs at least this many rows.
     min_unit_rows = 30L,
     # A cell is pooled from this many datasets (DR-0010).
     min_datasets = 3L,
@@ -78,17 +79,21 @@ analysis_settings <- function() {
     # SD of the standard logistic distribution, pi / sqrt(3).
     log_odds_per_sd = pi / sqrt(3),
     # The correlation between two outcome rows' slopes in one unit, where
-    # the unit's rows give no estimate of it (provisional).
+    # the unit's rows give no estimate of it.
     tree_default_correlation = 0.6,
     # The smallest effect of interest in SD per hour a day: 0.10 SD on the
-    # contrast of 1 against 4 hours (provisional until the freeze).
+    # contrast of 1 against 4 hours.
     smallest_effect_per_hour = 0.10 / 3,
-    # Curves (ANALYSIS_PLAN.md, Step 11): a natural cubic spline of screen
+    # The evidence platform's impact bands, in SD on that contrast: the
+    # lower edge of small, moderate and strong (DR-0020). The first is the
+    # smallest effect of interest.
+    rating_bands = c(small = 0.10, moderate = 0.40, strong = 0.70),
+    # Curves: a natural cubic spline of screen
     # use with knots fixed in hours, so every unit has the same curve terms;
     # the hours a pooled curve is read at; and the low-use reference each
     # hour is compared with. A threshold is the lowest duration whose
     # interval lies beyond `smallest_effect` SD from the reference
-    # (provisional until the freeze).
+    # (DR-0016).
     # A pair of waves in the longitudinal strand needs this many of a
     # unit's children (DR-0018).
     longitudinal_min_pair = 100L,
@@ -107,10 +112,12 @@ analysis_settings <- function() {
 
     curve_window = 0.5,
     smallest_effect = 0.10,
-    # Multiple imputation (ANALYSIS_PLAN.md, Step 8; DR-0019). The number
-    # of imputations is small while the engine is developed, and 50 for
-    # the confirmatory run.
+    # Multiple imputation (DR-0019). The number
+    # of imputations is small while the engine is developed, and the
+    # preregistered 50 once the specification is frozen
+    # (`bp_imputations()`).
     imputations = 5L,
+    imputations_confirmatory = 50L,
     imputation_iterations = 10L,
     # A variable is imputed in a unit where it is known for at least this
     # share of the unit's rows; below that its missingness is not sporadic

@@ -1,0 +1,169 @@
+---
+title: "Analysis codebook"
+---
+
+This page is the codebook for the analysis: which harmonised variables are analysed, how they are grouped, what is derived from them, and which models are fitted.
+It is generated on every site build from the registries in `analysis/`, so it always matches the code.
+The [dataschema](dataschema.qmd) defines the harmonised variables themselves, and the [decision records](../decisions/README.md) give the reasons for the rules.
+
+```{r}
+#| label: setup
+#| include: false
+read <- function(name) {
+  readr::read_csv(
+    file.path("../analysis", name),
+    col_types = readr::cols(.default = readr::col_character()),
+    na = c("", "NA")
+  )
+}
+show <- function(table, page = 15) {
+  DT::datatable(
+    table,
+    filter = "top",
+    rownames = FALSE,
+    options = list(pageLength = page, scrollX = TRUE, autoWidth = FALSE)
+  )
+}
+```
+
+## Outcomes
+
+### The outcome tree
+
+Outcomes are pooled up a tree: each harmonised outcome row belongs to a specific outcome, and each specific outcome to one of the preregistered families.
+`level` is `L0` for a family and `L1` for a specific outcome; `headline` marks the specific outcomes reported first.
+
+```{r}
+#| label: outcome-tree
+#| column: page
+show(read("outcome_tree.csv"))
+```
+
+### Outcome rows
+
+One row per harmonised outcome or health variable.
+`node` is the specific outcome it belongs to, `informant` who reported it, `role` what it is used as (`outcome`, `negative_control`, `mediator`, `covariate` or `measure`), `score_type` how it is modelled, and `direction` whether a higher score is better or worse.
+`use` is `core` for rows in the main analysis, `report` for rows shown in the report without being pooled into a family, and `archive` for rows not used this round; it is blank for rows that are not outcomes.
+`part_of` names a whole that the row is a part of, so the two are never pooled together.
+
+```{r}
+#| label: outcome-rows
+#| column: page
+show(read("outcome_rows.csv"))
+```
+
+### Derived outcomes
+
+Scores the analysis computes from other harmonised rows, where a dataset has the parts and not the whole.
+
+```{r}
+#| label: derivations
+#| column: page
+derivations <- read("derivations.csv")
+show(derivations[setdiff(names(derivations), "dataset_id")])
+```
+
+## Screen use
+
+One row per harmonised screen-time variable.
+`content_class` groups the rows that answer the preregistered questions about types of screen use, `context` says whether the row is about use anywhere or at school, and `day` whether it covers a weekday, a weekend day or a usual day.
+`include` marks the rows analysed as exposures, and `headline` those reported first.
+
+Total screen time is derived by the analysis: a dedicated item where a study asked one, otherwise the sum of its usual-day content-class rows, needing watching and gaming at minimum (DR-0013).
+
+```{r}
+#| label: exposures
+#| column: page
+show(read("exposures.csv"))
+```
+
+## Models
+
+### The model list
+
+One row per family of models.
+`tier` is the preregistered tier whose q-values the model takes, `levels` the levels of the outcome tree it is reported at, and `analysis_class` how its results may be described: confirmatory, preregistered secondary, exploratory or descriptive.
+`built` says whether the code that fits it exists yet; a model that is listed and not yet built is fixed here before it is run.
+
+```{r}
+#| label: models
+#| column: page
+show(read("models.csv"))
+```
+
+### Preregistered predictions
+
+The prediction each registered hypothesis makes, by the test that examines it, the exposure and the outcome family.
+
+```{r}
+#| label: hypotheses
+#| column: page
+show(read("hypotheses.csv"))
+```
+
+### Settings
+
+The thresholds and constants every model shares.
+
+```{r}
+#| label: settings
+source("../R/analysis/analysis_settings.R")
+settings <- analysis_settings()
+knitr::kable(tibble::tibble(
+  setting = names(settings),
+  value = vapply(
+    settings,
+    function(value) {
+      shown <- trimws(format(value, digits = 4))
+      if (!is.null(names(value))) {
+        shown <- paste(names(value), shown, sep = " = ")
+      }
+      paste(shown, collapse = ", ")
+    },
+    character(1)
+  )
+))
+```
+
+## Decisions about single datasets
+
+A decision about one dataset that the registries cannot express is recorded beside that dataset's mapping, with its reason.
+The table lists which decisions exist; the reasons quote study materials and stay with the mappings.
+
+```{r}
+#| label: exceptions
+files <- fs::dir_ls(
+  "../harmonisation/datasets",
+  recurse = 1,
+  glob = "*analysis_exceptions.csv"
+)
+exceptions <- dplyr::bind_rows(lapply(files, function(path) {
+  one <- readr::read_csv(
+    path,
+    col_types = readr::cols(.default = readr::col_character()),
+    na = c("", "NA")
+  )
+  one$dataset_id <- sub("^BPIPD-", "", basename(fs::path_dir(path)))
+  one[c("dataset_id", "variable_name", "wave", "action")]
+}))
+exceptions <- exceptions[order(as.numeric(exceptions$dataset_id)), ]
+show(exceptions)
+```
+
+Where a repeated study changed how it asked about screen use, the change is recorded so that values either side of it are not read as one series.
+
+```{r}
+#| label: series-breaks
+breaks <- read("series_breaks.csv")
+show(dplyr::count(breaks, dataset_id, exposure, name = "recorded_changes"))
+```
+
+## Deviations from the preregistration
+
+Every departure from the registered plan, with its reason and an assessment of what it does to the validity of the findings.
+
+```{r}
+#| label: deviations
+#| column: page
+show(read("deviations.csv"), page = 10)
+```

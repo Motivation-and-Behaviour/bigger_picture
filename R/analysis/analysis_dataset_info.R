@@ -4,7 +4,7 @@
 #' `datasets.csv`, so an edit to another dataset's row leaves it unchanged
 #' and nothing downstream of it reruns.
 #'
-#' Inclusion (ANALYSIS_PLAN.md, Step 2): until any dataset has been signed
+#' Inclusion: until any dataset has been signed
 #' off, every dataset in the pipeline is included; from then on, only
 #' datasets with `signed_off` TRUE.
 #'

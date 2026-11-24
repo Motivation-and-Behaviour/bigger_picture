@@ -18,7 +18,7 @@
 #' robust estimate has fewer than `min_robust_df` degrees of freedom (three,
 #' which in practice needs five or more datasets) the cell is marked
 #' `too few studies to say`, because an interval that wide cannot support
-#' "no clear relationship" either.
+#' "negligible or no relationship" either.
 #'
 #' Standard model-based inference is reported alongside the robust interval,
 #' and the prediction interval is approximate, because dataset sizes vary

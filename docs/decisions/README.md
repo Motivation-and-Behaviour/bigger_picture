@@ -64,6 +64,8 @@ The numeric prefix preserves chronological ordering.
 | DR-0017 | [The tiered false discovery rate, written out as a rule](DR-0017-tiered-false-discovery-rate.md) | Accepted | 2026-11-15 |
 | DR-0018 | [A longitudinal strand of lagged and within-child models](DR-0018-longitudinal-strand.md) | Accepted | 2026-11-15 |
 | DR-0019 | [Covariates are imputed within each unit, and screen use within each model](DR-0019-multiple-imputation.md) | Accepted | 2026-11-16 |
+| DR-0020 | [Pooled effects are put in the evidence platform's impact bands, read from the interval](DR-0020-rating-bands.md) | Accepted | 2026-11-23 |
+| DR-0021 | [How the registered moderation and contrast hypotheses are tested](DR-0021-moderation-and-contrast-tests.md) | Accepted | 2026-11-24 |
 
 When adding a new decision:
 

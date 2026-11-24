@@ -1,4 +1,4 @@
-# The analysis registries (ANALYSIS_PLAN.md, Step 1): the committed spec CSVs
+# The analysis registries: the committed spec CSVs
 # must pass their readers, and each validation rule must catch what it names.
 
 repo_schema <- function() {
@@ -118,7 +118,7 @@ test_that("outcome rows noted 'Derive at analysis' have a derivation rule", {
     ]
     if (length(noted)) paste(id, noted) else NULL
   }))
-  # A warning until Step 4's full pass (ANALYSIS_PLAN.md): dataset branches
+  # A warning until Step 4's full pass: dataset branches
   # never edit analysis/, so a new note must not fail their tests.
   if (length(uncovered) > 0) {
     warning(

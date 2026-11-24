@@ -2,8 +2,8 @@
 #'
 #' Everything the descriptive sections of the reports need, computed within
 #' each stage 1 unit so that no dataset label or row of data leaves this
-#' function, and so that pooling can count each dataset once
-#' (ANALYSIS_PLAN.md, Step 6). Survey weights are used where a unit has
+#' function, and so that pooling can count each dataset once.
+#' Survey weights are used where a unit has
 #' them. A statistic is given only for a group with at least the minimum
 #' number of rows. Screen use and outcomes are described separately: nothing
 #' here relates one to the other.

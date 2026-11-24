@@ -1,7 +1,7 @@
 #' One row per included dataset, for the report's appendix
 #'
 #' Design, countries, collection years, ages, participants and waves, and how
-#' many shared variables the dataset supplies (ANALYSIS_PLAN.md, Step 6).
+#' many shared variables the dataset supplies.
 #' Datasets are identified by number, never by name.
 #'
 #' @param units Combined `units` tables from `describe_dataset()`.

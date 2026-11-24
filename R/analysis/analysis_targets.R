@@ -49,7 +49,7 @@ analysis_targets <- function(harmonise_plan) {
     # number of imputations makes only the new ones.
     targets::tar_target_raw(
       "imputation_index",
-      quote(seq_len(settings$imputations))
+      quote(seq_len(bp_imputations(settings)))
     ),
     targets::tar_target_raw(
       "settings_tree",
@@ -510,6 +510,25 @@ analysis_targets <- function(harmonise_plan) {
       per_dataset[["dataset_summary"]],
       command = quote(combine_data_manifest(bind_part(list(!!!.x), "manifest")))
     ),
+    # The report's recorded manifest, and the datasets added, removed or
+    # changed since. Whether the file exists is worked out when the
+    # pipeline is defined, so recording it for the first time is noticed.
+    targets::tar_target_raw(
+      "report_manifest_file",
+      substitute(
+        find_recorded_manifest(has_manifest = recorded),
+        list(recorded = length(find_recorded_manifest()) > 0)
+      ),
+      format = "file"
+    ),
+    targets::tar_target_raw(
+      "manifest_changes",
+      quote(compare_data_manifest(
+        data_manifest,
+        report_manifest_file,
+        required = bp_specification_frozen()
+      ))
+    ),
     summaries("grain_all", "grain"),
     summaries("numeric_summary_all", "numeric_summary"),
     summaries("level_summary_all", "level_summary"),
@@ -881,7 +900,8 @@ analysis_targets <- function(harmonise_plan) {
         outcome_registry,
         settings_tree,
         frozen = bp_specification_frozen(),
-        tests = moderator_tests(moderation_development, trend_development)
+        tests = moderator_tests(moderation_development, trend_development),
+        seen = development_cells
       ))
     ),
     tarchetypes::tar_combine_raw(

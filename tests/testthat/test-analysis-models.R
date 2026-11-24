@@ -1,5 +1,5 @@
-# The model list and what the confirmatory tiers need beside the engine
-# (ANALYSIS_PLAN.md, Step 7 task 10 and Step 9 tasks 3 to 5): the list and
+# The model list and what the confirmatory tiers need beside the engine:
+# the list and
 # its cells, the tiered false discovery rate, equivalence tests, the
 # adjustment for other screen use and the longitudinal strand.
 
@@ -992,6 +992,61 @@ test_that("an outcome's instrument column is found by its stem", {
   expect_equal(longitudinal_measure_column("mh_dep_self", base), "")
 })
 
+test_that("an effect is put in a band from its estimate and interval", {
+  settings <- analysis_settings()
+  rate <- function(estimate, low, high, p_equivalence) {
+    rate_effect(estimate, low, high, p_equivalence, settings)
+  }
+  # Shown to be negligible: no clear relationship.
+  none <- rate(-0.02, -0.06, 0.02, 0.001)
+  expect_equal(none$rating, 0L)
+  expect_equal(none$rating_label, "negligible or no relationship")
+  # Beyond the smallest effect with an interval that excludes zero: the
+  # band is the estimate's, and the sign is the direction for the child.
+  bands <- rate(
+    c(-0.21, 0.45, -0.75, 0.10),
+    c(-0.30, 0.20, -0.95, 0.01),
+    c(-0.12, 0.70, -0.55, 0.19),
+    rep(0.9, 4)
+  )
+  expect_equal(bands$rating, c(-1L, 2L, -3L, 1L))
+  expect_equal(
+    bands$rating_label,
+    c(
+      "small, harmful",
+      "moderate, beneficial",
+      "strong, harmful",
+      "small, beneficial"
+    )
+  )
+  # Too uncertain to say: an interval that includes zero, or an estimate
+  # under the smallest effect that is not shown to be negligible.
+  unsure <- rate(
+    c(-0.30, -0.08, NA),
+    c(-0.65, -0.15, NA),
+    c(0.05, -0.01, NA),
+    c(0.8, 0.3, NA)
+  )
+  expect_true(all(is.na(unsure$rating)))
+  expect_equal(unique(unsure$rating_label), "not rated: too uncertain to say")
+  # The band's edge must also be the equivalence test's margin.
+  apart <- settings
+  apart$smallest_effect_per_hour <- 0.2 / 3
+  expect_error(
+    rate_effect(0.3, 0.2, 0.4, 0.9, apart),
+    "rise from the smallest effect"
+  )
+  # A band holds its lower edge.
+  expect_equal(rate(0.40, 0.2, 0.6, 0.9)$rating, 2L)
+  # The first band is the smallest effect of interest.
+  wrong <- settings
+  wrong$rating_bands <- c(small = 0.2, moderate = 0.4, strong = 0.7)
+  expect_error(
+    rate_effect(0.3, 0.2, 0.4, 0.9, wrong),
+    "rise from the smallest effect"
+  )
+})
+
 test_that("results are labelled, tested and adjusted in one table", {
   reg <- models_registries()
   spec <- read_model_spec(file.path(repo_root, bp_models_path()))
@@ -1043,6 +1098,50 @@ test_that("results are labelled, tested and adjusted in one table", {
   expect_equal(adjusted$finding, "prereg_secondary")
   expect_equal(out$finding[c(1, 4, 5)], c("finding", "finding", "exploratory"))
   expect_equal(out$contrast_estimate[1], -0.15)
+  # Each aligned estimate is put in a band; here -0.15 with an interval
+  # clear of zero is small and harmful, and a row with too few studies is
+  # not rated.
+  expect_equal(out$rating[1], -1L)
+  expect_equal(out$rating_label[1], "small, harmful")
+  # A registered prediction is supported on the family estimate of its
+  # primary model: a negative one with q below 0.05 here, and the
+  # prediction of no association for gaming and learning, which is
+  # equivalent. Other levels and models say nothing about support.
+  expect_true(out$prediction_supported[1])
+  expect_true(out$prediction_supported[3])
+  expect_true(all(is.na(out$prediction_supported[out$level != "L0"])))
+  expect_true(is.na(adjusted$prediction_supported))
+  expect_equal(
+    out$rating_label[out$family == "cognition"],
+    "not rated: not estimated"
+  )
+  # Nothing is marked as seen before the freeze unless the development
+  # cells are given; with them, their exposure and families are, whether
+  # or not the specification is frozen.
+  expect_false(any(out$seen_before_freeze))
+  wellbeing_row <- reg$outcomes$rows$variable_name[
+    reg$outcomes$rows$prereg_family %in% "wellbeing"
+  ][1]
+  cells <- tibble::tibble(
+    exposure = c("st_watch", "st_game"),
+    outcome = c(wellbeing_row, "acc_graderepeated")
+  )
+  marked <- assemble_results(
+    tree,
+    NULL,
+    spec,
+    hypotheses,
+    reg$outcomes,
+    frozen = TRUE,
+    seen = cells
+  )
+  expect_false(any(marked$development))
+  expect_equal(
+    marked$seen_before_freeze,
+    marked$exposure == "st_watch" &
+      marked$family == "wellbeing" |
+      marked$exposure == "st_game" & marked$family == "learning"
+  )
 
   expect_equal(out$hypothesis[1:3], c("H1", "H2b", "H2c"))
   expect_equal(out$prediction[1:3], c("negative", "negative", "none"))
@@ -1057,6 +1156,8 @@ test_that("results are labelled, tested and adjusted in one table", {
   thin$status[3] <- "too few studies to say"
   thin <- assemble_results(thin, NULL, spec, hypotheses, reg$outcomes)
   expect_true(is.na(thin$equivalent[3]))
+  expect_equal(thin$rating_label[3], "not rated: too few studies to say")
+  expect_true(is.na(thin$rating[3]))
   expect_equal(thin$p_equivalence[3], game$p_equivalence)
   expect_equal(thin$finding[3], "too few studies to say")
   # A row that could not be pooled at all is not a finding either.
@@ -1073,6 +1174,10 @@ test_that("results are labelled, tested and adjusted in one table", {
   split$headline[3] <- FALSE
   split <- assemble_results(split, NULL, spec, hypotheses, reg$outcomes)
   expect_equal(split$finding[3], "specific outcomes disagree")
+  expect_equal(
+    split$rating_label[3],
+    "not rated: specific outcomes disagree"
+  )
   expect_true(is.na(split$q[3]) && is.na(split$equivalent[3]))
   expect_equal(split$k_total[3], game$k_total)
   expect_equal(split$q[-3], out$q[-3])

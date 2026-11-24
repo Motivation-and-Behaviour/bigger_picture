@@ -1,4 +1,4 @@
-# The deviations ledger (ANALYSIS_PLAN.md, Step 0): every entry is complete,
+# The deviations ledger: every entry is complete,
 # rated, and points at decision records that exist.
 
 test_that("deviations.csv entries are complete and rated", {

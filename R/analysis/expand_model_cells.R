@@ -21,8 +21,8 @@
 #' A model named `<model>_other` holds the cells of its sets that `<model>`
 #' does not, so the two never share a cell.
 #'
-#' Until the specification is frozen only the development cells are kept
-#' (ANALYSIS_PLAN.md, Step 5): a model's cells are then the development
+#' Until the specification is frozen only the development cells are kept:
+#' a model's cells are then the development
 #' cells that fall in its sets.
 #'
 #' @param model_spec From `read_model_spec()`.

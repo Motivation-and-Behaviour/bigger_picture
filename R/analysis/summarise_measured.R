@@ -2,7 +2,7 @@
 #'
 #' For the descriptive sections: how many datasets, dataset-waves and scores
 #' stand behind each specific outcome and each screen measure, and which
-#' informants reported it (ANALYSIS_PLAN.md, Step 6). Counts are of what the
+#' informants reported it. Counts are of what the
 #' preparation step used, from the row audit. `scores` adds up the values of
 #' every schema row of a node, so a child with a parent report and a self
 #' report counts twice: it is not a count of children or of observations.

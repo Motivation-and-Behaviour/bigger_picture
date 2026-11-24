@@ -1,6 +1,6 @@
 #' The dataset flow, from spec to inclusion
 #'
-#' The start of the flow diagram (ANALYSIS_PLAN.md, Step 2). It counts what
+#' The start of the flow diagram. It counts what
 #' the repository knows: datasets with a spec, by status; datasets in the
 #' pipeline; and datasets included in the analysis. Datasets identified or
 #' requested but never given a spec are not in the repository and are added

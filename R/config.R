@@ -119,7 +119,7 @@ bp_schema <- function() {
   )
 }
 
-# Analysis registries (ANALYSIS_PLAN.md, Step 1): spec CSVs under analysis/.
+# Analysis registries: spec CSVs under analysis/.
 bp_analysis_dir <- function() {
   "analysis"
 }
@@ -218,7 +218,9 @@ bp_tree_settings <- function() {
     "covariate_known_min",
     "log_odds_per_sd",
     "tree_default_correlation",
-    "smallest_effect_per_hour"
+    "smallest_effect_per_hour",
+    "smallest_effect",
+    "rating_bands"
   )
 }
 
@@ -243,7 +245,7 @@ bp_curve_settings <- function() {
   )
 }
 
-# The categorical stage 2 moderators (ANALYSIS_PLAN.md, Step 7 task 4), as
+# The categorical stage 2 moderators, as
 # columns of `tree_moderators()`.
 bp_tree_moderators <- function() {
   c(
@@ -260,8 +262,7 @@ bp_tree_moderators <- function() {
   )
 }
 
-# The cells fitted before the freeze, to build the engine on real data
-# (ANALYSIS_PLAN.md, Step 5).
+# The cells fitted before the freeze, to build the engine on real data.
 bp_development_cells_path <- function() {
   fs::path(bp_analysis_dir(), "development_cells.csv")
 }
@@ -348,7 +349,12 @@ bp_simulation_cores <- function() {
   max(1L, min(parallel::detectCores() - 2L, cap))
 }
 
-# Recorded data manifests, tracked (ANALYSIS_PLAN.md, Step 2).
+# The manifest that fixes the datasets of the Department report.
+bp_report_manifest_label <- function() {
+  "doe-report"
+}
+
+# Recorded data manifests, tracked.
 bp_manifest_dir <- function() {
   fs::path(bp_analysis_dir(), "manifests")
 }
@@ -548,7 +554,7 @@ bp_airtable_api_url <- function() {
   "https://api.airtable.com/v0"
 }
 
-# The model list (ANALYSIS_PLAN.md, Step 9 task 3; analysis/README.md).
+# The model list (analysis/README.md).
 bp_models_path <- function() {
   fs::path(bp_analysis_dir(), "models.csv")
 }
@@ -636,12 +642,23 @@ bp_total_exposure <- function() {
   "total_screen"
 }
 
-# Whether the specification is frozen (ANALYSIS_PLAN.md, Step 9). Until it
+# Whether the specification is frozen. Until it
 # is, every model is fitted on the development cells only. The lead changes
 # this to TRUE in the tagged commit that freezes the specification, and
 # nobody else does.
 bp_specification_frozen <- function() {
   FALSE
+}
+
+# How many imputations a build makes: the preregistered number once the
+# specification is frozen, and the smaller development number before
+# (DR-0019). Imputations already made are kept when the number rises.
+bp_imputations <- function(settings) {
+  if (bp_specification_frozen()) {
+    settings$imputations_confirmatory
+  } else {
+    settings$imputations
+  }
 }
 
 # The models whose cells the cross-sectional stage 1 fits: every other

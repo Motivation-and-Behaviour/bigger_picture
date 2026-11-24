@@ -42,7 +42,7 @@ and reproducible
 
 ## Repository Structure
 
-``` text
+```text
 .
 ├── _targets.R                     # Main pipeline definition
 ├── R/
@@ -172,7 +172,8 @@ is generated from `dataschema.csv` on every site build.
 
 Recommended workflow is the included devcontainer
 (`.devcontainer/devcontainer.json`), which installs required R packages
-and mounts an external dataset directory to `/data`.
+and mounts `~/bp-data` on the host to `/data`, read-only. Put the
+datasets in that folder, or make it a link to where they are.
 
 ### 2. Run the pipeline
 

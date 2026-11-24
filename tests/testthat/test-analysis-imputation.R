@@ -1,4 +1,4 @@
-# Multiple imputation (ANALYSIS_PLAN.md, Step 8): what is imputed and what
+# Multiple imputation: what is imputed and what
 # is left alone, that an imputation can be made again from its seed, that
 # it removes a bias complete cases have without weakening a slope, and
 # Rubin's rules.

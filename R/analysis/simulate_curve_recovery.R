@@ -26,7 +26,7 @@ curve_truths <- function() {
 
 #' Does the threshold method recover a curve built into real screen use?
 #'
-#' A plasmode simulation (ANALYSIS_PLAN.md, Step 7 task 8). It keeps the
+#' A plasmode simulation. It keeps the
 #' real units of one cell, with their real hours of screen use, ages, sexes
 #' and sizes, and replaces the outcome with one that follows a known curve
 #' plus noise. Datasets differ as real ones do: each has the curve a little

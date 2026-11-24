@@ -1,7 +1,7 @@
 #' Prepare one dataset for modelling
 #'
 #' Turns a dataset's harmonised rows into what the models need, with a fixed
-#' contract, as the tidier does for raw files (ANALYSIS_PLAN.md, Step 4).
+#' contract, as the tidier does for raw files.
 #' Generic rules do almost all of it; the outcome registry holds what is true
 #' of a row everywhere; the dataset's optional exceptions file holds decisions
 #' about this dataset alone.

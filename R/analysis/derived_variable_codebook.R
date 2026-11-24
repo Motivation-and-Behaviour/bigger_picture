@@ -1,7 +1,7 @@
 #' Codebook of the variables the preparation step derives
 #'
 #' One row per derived variable, with the rule that produces it. It later
-#' becomes part of the public codebook (ANALYSIS_PLAN.md, Step 4).
+#' becomes part of the public codebook.
 #'
 #' @param derivations The derivation rules.
 #' @param settings From `analysis_settings()`.

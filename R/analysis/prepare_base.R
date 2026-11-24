@@ -1,6 +1,6 @@
 #' The base table of one dataset: one eligible row per participant and wave
 #'
-#' Applies the row rules of the preparation step (ANALYSIS_PLAN.md, Step 4):
+#' Applies the row rules of the preparation step:
 #'
 #' - rows aged under the limit are kept; older rows and rows with no age are
 #'   dropped (DR-0012);

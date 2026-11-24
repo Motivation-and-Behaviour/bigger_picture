@@ -1,7 +1,7 @@
 #' Confirm the one-stage check's cell is a development cell
 #'
-#' Before the freeze only the development cells may be fitted on real data
-#' (ANALYSIS_PLAN.md, Step 5). The one-stage check names its cell in the
+#' Before the freeze only the development cells may be fitted on real data.
+#' The one-stage check names its cell in the
 #' settings, so this stops the pipeline if that cell is not on the list.
 #'
 #' @param cell A named vector with `exposure` and `outcome`.

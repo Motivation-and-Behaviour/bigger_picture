@@ -2,8 +2,8 @@
 #'
 #' Within each stage 1 unit, regresses an outcome on a natural cubic spline
 #' of screen use with knots fixed in hours (`curve_basis()`), so every unit
-#' estimates the same curve terms and stage 2 can pool them
-#' (ANALYSIS_PLAN.md, Step 11 task 2). Rows, covariates, weights and
+#' estimates the same curve terms and stage 2 can pool them.
+#' Rows, covariates, weights and
 #' clusters are those of the linear stage 1 model at tier 1
 #' (`stage1_design()`).
 #'

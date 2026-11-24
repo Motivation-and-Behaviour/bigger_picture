@@ -1,4 +1,4 @@
-# Pooling up the outcome tree (ANALYSIS_PLAN.md, Step 7 task 1): known-answer
+# Pooling up the outcome tree: known-answer
 # tests on slopes built by hand, because a wrong pooling rule would not show
 # on real data.
 
@@ -622,7 +622,11 @@ test_that("the tree's settings hold everything its functions read", {
       "fit_tree_model.R",
       "tree_moderators.R",
       "moderate_tree_group.R",
-      "moderate_tree.R"
+      "moderate_tree.R",
+      # The results table is assembled with the tree's settings, and rates
+      # each effect with them.
+      "assemble_results.R",
+      "rate_effect.R"
     )
   )
   code <- unlist(lapply(files, readLines))

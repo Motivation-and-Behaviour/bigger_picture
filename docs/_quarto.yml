@@ -48,6 +48,7 @@ website:
       - section: Reference
         contents:
           - reference/dataschema.qmd
+          - reference/codebook.qmd
           - reference/progress.qmd
       - section: Evidence platform
         href: platform/index.qmd

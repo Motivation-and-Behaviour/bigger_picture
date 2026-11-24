@@ -12,10 +12,15 @@
 #' - `p_equivalence`, the test that the estimate lies within the smallest
 #'   effect of interest (`test_equivalence()`), for estimates in SD per
 #'   hour;
+#' - `rating` and `rating_label`, the evidence platform's impact band for
+#'   the effect on that contrast (`rate_effect()`, DR-0020);
 #' - the preregistered `hypothesis` and `prediction` for the row's exposure
 #'   and family, and for a prediction of no association `q_equivalence`,
 #'   the equivalence p-values adjusted among themselves with the row's
-#'   `k_total`, and `equivalent`, TRUE where that is below 0.05.
+#'   `k_total`, and `equivalent`, TRUE where that is below 0.05;
+#' - `prediction_supported`, for the family estimate of a primary model:
+#'   whether its q-value is below 0.05 in the predicted direction, or, for
+#'   a prediction of no association, whether it is `equivalent`.
 #'
 #' Estimates at L0 to L2 are in SD per hour and aligned, positive where
 #' more screen use goes with a better outcome, so a predicted `negative`
@@ -24,7 +29,7 @@
 #'
 #' `finding` says how a row may be described: `finding` at L0 and L1 of a
 #' confirmatory model, otherwise the model's class, or `exploratory` for
-#' L2 and L3 (ANALYSIS_PLAN.md, Step 10 task 6); `too few studies to say`
+#' L2 and L3; `too few studies to say`
 #' wherever that is the row's status; `not estimated` for a row that
 #' could not be pooled at all; and `specific outcomes disagree` for a
 #' family kept from the headline because they do (DR-0014).
@@ -41,6 +46,10 @@
 #'   p-value (`p_test`), such as whether a moderator's levels differ. They
 #'   are counted and adjusted with the rest, and have no equivalence test.
 #'   NULL for none.
+#' @param seen The development cells (`read_development_cells()`, with
+#'   `exposure` and `outcome`): the exposures and families fitted before
+#'   the freeze, whose rows are
+#'   marked `seen_before_freeze` whatever `frozen` is. NULL for none.
 #' @param model_spec From `read_model_spec()`.
 #' @param hypotheses From `read_hypotheses()`.
 #' @param outcome_registry The outcome registry.
@@ -56,7 +65,8 @@ assemble_results <- function(
   outcome_registry,
   settings = default_analysis_settings(),
   frozen = FALSE,
-  tests = NULL
+  tests = NULL,
+  seen = NULL
 ) {
   keep <- c(
     "model_name",
@@ -162,6 +172,15 @@ assemble_results <- function(
     .default = "exploratory"
   )
   out$development <- !frozen
+  # The exposures and families fitted while the code was developed were
+  # seen before the freeze, and stay marked after it (deviation D13).
+  out$seen_before_freeze <- FALSE
+  if (!is.null(seen) && nrow(seen) > 0) {
+    rows <- outcome_registry$rows
+    seen_family <- rows$prereg_family[match(seen$outcome, rows$variable_name)]
+    out$seen_before_freeze <- paste(out$exposure, out$family) %in%
+      paste(seen$exposure, seen_family)
+  }
 
   usable <- !is.na(out$estimate) & !is.na(out$se) & !is.na(out$df) & out$se > 0
   out$p <- NA_real_
@@ -213,6 +232,37 @@ assemble_results <- function(
   )
   out$p_equivalence <- equivalence$p_equivalence
   out$equivalent <- NA
+  # The platform's impact band, for aligned estimates that have enough
+  # studies to say; row-level estimates are in their own direction and are
+  # not rated.
+  rated <- rate_effect(
+    out$contrast_estimate,
+    out$contrast_low,
+    out$contrast_high,
+    out$p_equivalence,
+    settings
+  )
+  # The longitudinal strand's slopes are other estimands (a lagged slope,
+  # a slope of changes), and a null one is not evidence of no effect
+  # (DR-0018), so they are not put in the bands.
+  panel <- model_spec$sample[at] %in% "panel"
+  ratable <- in_sd &
+    out$level %in% c("L0", "L1", "L2") &
+    !thin &
+    !panel &
+    !out$finding %in% "not estimated"
+  out$rating <- ifelse(ratable, rated$rating, NA_integer_)
+  # A row that cannot be rated says why in the words of its `finding`.
+  out$rating_label <- dplyr::case_when(
+    ratable ~ rated$rating_label,
+    !(in_sd & out$level %in% c("L0", "L1", "L2")) ~ NA_character_,
+    panel ~ "not rated: longitudinal models are not rated",
+    out$finding %in% "specific outcomes disagree" ~
+      "not rated: specific outcomes disagree",
+    out$finding %in% "too few studies to say" ~
+      "not rated: too few studies to say",
+    .default = "not rated: not estimated"
+  )
 
   # The slope predictions; those about thresholds and moderation attach
   # where those models are assembled.
@@ -244,6 +294,19 @@ assemble_results <- function(
   # whose specific outcomes disagree, and its adjusted equivalence p-value
   # is below 0.05.
   out$equivalent[none] <- out$q_equivalence[none] < 0.05
+  # Whether a registered prediction is supported is said of the family
+  # estimate of its primary model: a predicted direction with a q-value
+  # below 0.05, or a prediction of no association shown equivalent. The
+  # rating describes the size; this says whether the prediction held.
+  family_test <- !is.na(out$prediction) & out$level %in% "L0" & !thin
+  directional <- family_test & out$prediction %in% c("negative", "positive")
+  out$prediction_supported <- NA
+  out$prediction_supported[directional] <- !is.na(out$q[directional]) &
+    out$q[directional] < 0.05 &
+    sign(out$estimate[directional]) ==
+      ifelse(out$prediction[directional] == "negative", -1, 1)
+  no_effect <- family_test & out$prediction %in% "none"
+  out$prediction_supported[no_effect] <- out$equivalent[no_effect] %in% TRUE
   dplyr::relocate(
     out,
     "model_name",

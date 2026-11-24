@@ -134,7 +134,8 @@ The [harmonisation guide](https://motivation-and-behaviour.github.io/bigger_pict
 
 ### 1. Environment
 
-Recommended workflow is the included devcontainer (`.devcontainer/devcontainer.json`), which installs required R packages and mounts an external dataset directory to `/data`.
+Recommended workflow is the included devcontainer (`.devcontainer/devcontainer.json`), which installs required R packages and mounts `~/bp-data` on the host to `/data`, read-only.
+Put the datasets in that folder, or make it a link to where they are.
 
 ### 2. Run the pipeline
 

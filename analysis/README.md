@@ -91,7 +91,8 @@ Its `rule` says what the guide promises: `constant` (one value per participant, 
 
 - `baseline_wave` is the panel's earliest wave in the data, a trial's pre-intervention wave, or blank;
 - `wave_order` is blank for almost every dataset, whose waves are ordered by median collection year and then median age; where that gives the wrong order it lists the wave labels in time order, separated by `|`;
-- `team_contributed`, `signed_off`, `overlap_group` and `risk_of_bias` are filled at later steps.
+- `team_contributed` is TRUE for a dataset the project's own team collected or supplied, for the preregistered sensitivity analysis that leaves those out; none in the report is.
+- `signed_off`, `overlap_group` and `risk_of_bias` are filled at later steps.
 
 A dataset with no row reads as a blank one, so it has no baseline and is not signed off.
 Dataset branches never edit this folder, so a new dataset gets its row on `main` after it merges; a test warns until it has one.

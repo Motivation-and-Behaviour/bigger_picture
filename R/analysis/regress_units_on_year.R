@@ -2,7 +2,7 @@
 #'
 #' Asks whether an estimate (a stage 1 slope, or a descriptive statistic)
 #' differs with the year the data were collected, with year as a proxy for
-#' what children's screen use consists of (ANALYSIS_PLAN.md, Step 12).
+#' what children's screen use consists of.
 #'
 #' Year is split in two. The between-dataset part is a dataset's mean year:
 #' it compares studies run in different periods, which also differ in

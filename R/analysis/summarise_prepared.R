@@ -1,6 +1,6 @@
 #' A one-row summary of a prepared dataset
 #'
-#' The numbers behind the per-dataset review (ANALYSIS_PLAN.md, Step 4):
+#' The numbers behind the per-dataset review:
 #' rows kept and dropped, what was used, and how the total was built.
 #'
 #' @param prepared Output of `prepare_analysis_data()`.

@@ -1,8 +1,7 @@
 #' The scale of the harmonisation work, counted from the repository
 #'
-#' For the report's account of what the project built (ANALYSIS_PLAN.md,
-#' Step 6). Every number is counted from tracked files or pipeline targets,
-#' never typed.
+#' For the report's account of what the project built. Every number is
+#' counted from tracked files or pipeline targets, never typed.
 #'
 #' @param resource_counts One row per dataset, role and reader, with `files`.
 #' @param mapping_counts One row per dataset and harmonisation status, from

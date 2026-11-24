@@ -1,4 +1,4 @@
-# A mock `analysis_data` with known effects (ANALYSIS_PLAN.md, Step 1 task 8),
+# A mock `analysis_data` with known effects,
 # for testing the analysis engine without /data. Six fictional datasets cover
 # the shapes the engine must handle: two panels (the same participants at two
 # waves), two repeated cross-sections (new participants at each wave) and two

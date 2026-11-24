@@ -1,6 +1,6 @@
 #' Flag what needs a look in a prepared dataset
 #'
-#' Only what a person should check (ANALYSIS_PLAN.md, Step 4). A `review`
+#' Only what a person should check. A `review`
 #' flag ends in an analysis exception, a harmonisation fix or no action; an
 #' `info` flag is context for whoever signs the dataset off.
 #'
