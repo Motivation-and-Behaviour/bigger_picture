@@ -1,11 +1,11 @@
-#' Stage 1 on imputed data: fit each imputation, then combine
+#' Stage 1 on imputed data: fit each imputation
 #'
 #' For each imputation, the dataset's covariates are filled in
 #' (`apply_imputation()`), each model's exposure is imputed for that model
 #' (`impute_cell_exposure()`, through `fit_stage1()`), and the models are
-#' fitted. Each unit's slope is then combined over the imputations by
-#' Rubin's rules (`pool_rubin()`), so that stage 2 pools one slope per unit
-#' as before.
+#' fitted. `combine_stage1_imputations()` then combines each unit's slope
+#' over the imputations by Rubin's rules (`pool_rubin()`), so that stage 2
+#' pools one slope per unit as before.
 #'
 #' Outcomes are never imputed, so a row still needs its outcome to be
 #' analysed.
@@ -25,13 +25,14 @@
 #'   the build when an imputation is wrong. It is asked for so that no
 #'   model is fitted on imputations that have not passed them.
 #' @param indexes The imputation numbers to fit.
-#' @param cells,outcome_registry,dataschema,tiers,adjust_other As for
-#'   `fit_stage1()`.
+#' @param cells,outcome_registry,dataschema,tiers,adjust_other,moderator As
+#'   for `fit_stage1()`.
 #' @param settings From `analysis_settings()`, with the model and the
 #'   imputation settings.
-#' @return The tibble of `fit_stage1()` with `m`, `riv`, `fmi` and
-#'   `design_varied`.
-fit_stage1_imputed <- function(
+#' @return The rows of `fit_stage1()` for each imputation fitted, with
+#'   `imputation`; NULL where nothing was fitted. Combined, they gain `m`,
+#'   `riv`, `fmi` and `design_varied`.
+fit_stage1_imputations <- function(
   prepared,
   imputed,
   review,
@@ -41,13 +42,14 @@ fit_stage1_imputed <- function(
   dataschema,
   settings = default_analysis_settings(),
   tiers = 1L,
-  adjust_other = FALSE
+  adjust_other = FALSE,
+  moderator = NULL
 ) {
   if (is.null(prepared) || nrow(prepared$base) == 0) {
     return(NULL)
   }
   if (is.null(settings$seed)) {
-    stop("fit_stage1_imputed(): `settings` needs a `seed`.", call. = FALSE)
+    stop("fit_stage1_imputations(): `settings` needs a `seed`.", call. = FALSE)
   }
   # The imputations are fitted only once they have passed their checks:
   # taking the review as an argument makes the fit wait for it.
@@ -60,7 +62,7 @@ fit_stage1_imputed <- function(
       )
   ) {
     stop(
-      "fit_stage1_imputed(): needs the dataset's own `review_imputation()`.",
+      "fit_stage1_imputations(): needs the dataset's own `review_imputation()`.",
       call. = FALSE
     )
   }
@@ -68,7 +70,7 @@ fit_stage1_imputed <- function(
   # nothing to fill.
   if (!all(indexes %in% imputed$made)) {
     stop(
-      "fit_stage1_imputed(): imputation ",
+      "fit_stage1_imputations(): imputation ",
       paste(setdiff(indexes, imputed$made), collapse = ", "),
       " is missing for dataset ",
       prepared$base$dataset_id[1],
@@ -76,6 +78,9 @@ fit_stage1_imputed <- function(
       call. = FALSE
     )
   }
+  # One store of each exposure's mean over a child's other waves serves
+  # every imputation (see `fit_stage1()`).
+  other_waves <- new.env(parent = emptyenv())
   fits <- lapply(indexes, function(index) {
     out <- fit_stage1(
       apply_imputation(prepared, imputed, index),
@@ -85,7 +90,12 @@ fit_stage1_imputed <- function(
       settings,
       tiers = tiers,
       adjust_other = adjust_other,
-      imputation = list(index = index, seed = settings$seed)
+      moderator = moderator,
+      imputation = list(
+        index = index,
+        seed = settings$seed,
+        other_waves = other_waves
+      )
     )
     if (!is.null(out)) {
       out$imputation <- rep(index, nrow(out))
@@ -96,8 +106,53 @@ fit_stage1_imputed <- function(
   if (nrow(fits) == 0) {
     return(NULL)
   }
-  key <- paste(fits$unit, fits$exposure, fits$outcome, fits$tier, sep = "\r")
+  fits
+}
+
+#' Combine the fits of a dataset's imputations by Rubin's rules
+#'
+#' @param fits Rows of `fit_stage1_imputations()` for every imputation, as
+#'   one table or a list of tables (one per group of imputations, NULL
+#'   where a group fitted nothing).
+#' @param indexes The imputation numbers there should be.
+#' @return As `fit_stage1_imputed()`, or NULL where nothing was fitted.
+combine_stage1_imputations <- function(fits, indexes) {
+  if (!is.data.frame(fits)) {
+    fits <- dplyr::bind_rows(fits)
+  }
+  if (is.null(fits) || nrow(fits) == 0) {
+    return(NULL)
+  }
+  # Every imputation must be there: a group of them that failed to arrive
+  # would otherwise pass for slopes fitted in too few imputations.
+  if (!setequal(fits$imputation, indexes)) {
+    stop(
+      "combine_stage1_imputations(): the fits hold ",
+      dplyr::n_distinct(fits$imputation),
+      " imputations, not the ",
+      length(indexes),
+      " asked for.",
+      call. = FALSE
+    )
+  }
+  # Nor may one arrive twice.
+  if (
+    anyDuplicated(fits[c(
+      "unit",
+      "exposure",
+      "outcome",
+      "tier",
+      "imputation"
+    )]) >
+      0
+  ) {
+    stop(
+      "combine_stage1_imputations(): an imputation's fits are there twice.",
+      call. = FALSE
+    )
+  }
   m <- length(indexes)
+  key <- paste(fits$unit, fits$exposure, fits$outcome, fits$tier, sep = "\r")
   counts <- c(
     "covariate_imputed_share",
     "n",
@@ -110,6 +165,15 @@ fit_stage1_imputed <- function(
     "n_exposure_imputed"
   )
   design <- c("covariates", "ses_measure", "ethnicity_measure", "n")
+  # A model of moderation also has the rows left out for want of a group,
+  # the measure the groups came from, and the two groups' slopes, which
+  # are averaged over the imputations as the difference between them is.
+  moderated <- "moderator" %in% names(fits)
+  slopes <- c("slope_first", "slope_second")
+  if (moderated) {
+    counts <- c(counts, "n_no_group")
+    design <- c(design, "moderator_measure")
+  }
   combined <- lapply(split(fits, key), function(rows) {
     rows <- rows[order(rows$imputation), ]
     out <- rows[1, setdiff(names(rows), "imputation")]
@@ -129,6 +193,11 @@ fit_stage1_imputed <- function(
       out$riv <- pooled$riv
       out$fmi <- pooled$fmi
       out$status <- "fitted"
+      if (moderated) {
+        for (slope in slopes) {
+          out[[slope]] <- mean(rows[[slope]])
+        }
+      }
       if (!anyNA(rows$tier1_same_rows_estimate)) {
         same <- pool_rubin(
           rows$tier1_same_rows_estimate,
@@ -142,9 +211,49 @@ fit_stage1_imputed <- function(
       out$estimate <- NA_real_
       out$se <- NA_real_
       out$df <- NA_real_
+      if (moderated) {
+        out[slopes] <- NA_real_
+      }
       out$status <- sprintf("fitted in %d of %d imputations", sum(fitted), m)
     }
     out
   })
   dplyr::bind_rows(combined)
+}
+
+#' Fit a dataset's models on every imputation and combine them
+#'
+#' `fit_stage1_imputations()` then `combine_stage1_imputations()`. The
+#' pipeline calls the two apart, so that a dataset's imputations are fitted
+#' in groups on several workers; this is the whole of it in one call.
+#'
+#' @inheritParams fit_stage1_imputations
+#' @return The combined rows; see the documentation above.
+fit_stage1_imputed <- function(
+  prepared,
+  imputed,
+  review,
+  indexes,
+  cells,
+  outcome_registry,
+  dataschema,
+  settings = default_analysis_settings(),
+  tiers = 1L,
+  adjust_other = FALSE,
+  moderator = NULL
+) {
+  fits <- fit_stage1_imputations(
+    prepared,
+    imputed,
+    review,
+    indexes,
+    cells,
+    outcome_registry,
+    dataschema,
+    settings,
+    tiers = tiers,
+    adjust_other = adjust_other,
+    moderator = moderator
+  )
+  combine_stage1_imputations(fits, indexes)
 }

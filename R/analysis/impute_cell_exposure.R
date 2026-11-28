@@ -37,6 +37,9 @@
 #'   `other` where the model adjusts for it.
 #' @param seed An integer seed for this unit, cell and imputation.
 #' @param settings From `analysis_settings()`.
+#' @param moderated TRUE for a model of moderation: `data` then has a
+#'   numeric `moderator`, known on every row, and the exposure's model also
+#'   holds the moderator and its product with the outcome (DR-0019).
 #' @return `data` with imputed values of `x` (and `other`) filled in, and
 #'   the attribute `imputed`, the number of rows whose `x` was imputed. If
 #'   the draw failed nothing is filled, and the attribute `failed` holds
@@ -44,7 +47,8 @@
 impute_cell_exposure <- function(
   data,
   seed,
-  settings = default_analysis_settings()
+  settings = default_analysis_settings(),
+  moderated = FALSE
 ) {
   n <- nrow(data)
   targets <- intersect(c("x", "other"), names(data))
@@ -120,6 +124,14 @@ impute_cell_exposure <- function(
     if (!all(is.na(values))) {
       predictors[[name]] <- dplyr::coalesce(values, "(unknown)")
     }
+  }
+  # A model of moderation estimates how the relation between screen use
+  # and the outcome differs with the moderator, so the exposure's model
+  # holds the outcome's product with it: without that, imputed values
+  # carry one relation for every group and the difference shrinks.
+  if (moderated) {
+    predictors$moderator <- data$moderator
+    predictors$y_moderator <- as.numeric(data$y) * data$moderator
   }
   varies <- vapply(
     predictors,

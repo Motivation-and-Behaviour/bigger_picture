@@ -1,7 +1,7 @@
 # DR-0021: How the registered moderation and contrast hypotheses are tested
 
 **Status:** Accepted  
-**Date:** 2026-11-24  
+**Date:** 2026-11-24 (amended 2026-11-27)  
 **Decision makers:** Taren  
 **Related issues:** NA
 
@@ -90,6 +90,19 @@ One test per family for content type matches a hypothesis that says content type
 ## Implementation
 
 To be built after the freeze, as rows `moderation_sex`, `moderation_ses`, `tier2_content_contrast` and `moderation_location` of `analysis/models.csv`, with their `_other` partners.
+
+Moderation by sex and by socioeconomic position is fitted by the stage 1 model itself, with `moderator = "sex"` or `"ses"` (`fit_stage1()`, `stage1_moderator()`), on imputed data (added 27 November 2026).
+What that fixed beyond the decision above:
+
+- Every socioeconomic measure the schema holds has three ordered categories, so the three groups are always the measure's own lowest, middle and highest; no measure needs splitting into thirds.
+- The three socioeconomic groups enter the model as categories, and only the product with screen use takes the score of −1, 0 and 1.
+  The decision above has the groups enter as the score alone; that was changed on 27 November 2026, after the freeze and before any model of moderation had been fitted on the data (ledger D22).
+  With the score alone the outcome is assumed to step evenly across the three groups, and where it does not and screen use differs between the groups, the uneven step is taken for a difference in slopes: in simulation an estimate of a true difference of −0.08 averaged −0.13, and its interval covered the truth 71% of the time, against −0.08 and 94% with the groups as categories.
+  The estimand and its test are unchanged.
+- A child whose group is unknown after imputation is left out of the model.
+- Each of the two groups compared needs the minimum number of rows, and the minimum number of rows where the exposure varies (DR-0022).
+- The slopes of the two groups compared are kept beside the difference, as estimates without intervals.
+- A missing exposure is imputed with the moderator in its model (DR-0019).
 
 ---
 

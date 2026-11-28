@@ -72,9 +72,18 @@
 #'   list of `index` (the imputation number) and `seed` to first impute the
 #'   exposure missing from a unit's rows for each outcome
 #'   (`impute_cell_exposure()`); `settings` then needs the imputation
-#'   settings. `n_exposure_imputed` counts the rows filled, and
+#'   settings. It may also hold `other_waves`, an environment in which each
+#'   exposure's mean over a child's other waves is kept, so that fits of
+#'   several imputations of one dataset work it out once. `n_exposure_imputed` counts the rows filled, and
 #'   `exposure_imputation_failed` gives the reason where a draw failed and
 #'   the rows were left as they were.
+#' @param moderator NULL, or `"sex"` or `"ses"` for a model of moderation
+#'   (DR-0021): the model then also holds the product of screen use with the
+#'   unit's groups, `estimate` is the first group's slope less the second's
+#'   (girls less boys; the lowest socioeconomic group less the highest),
+#'   and the rows gain `moderator`, `moderator_measure` and the two groups'
+#'   slopes, `slope_first` and `slope_second`. Such a model takes the first
+#'   tier's covariates only.
 #' @return A tibble with one row per unit, cell and tier that has data: the slope
 #'   (`estimate`, `se`), its `effect_measure`, the rows, clusters and degrees
 #'   of freedom behind it, the covariates and engine used, and `status`
@@ -88,10 +97,20 @@ fit_stage1 <- function(
   settings = default_analysis_settings(),
   tiers = 1L,
   adjust_other = FALSE,
-  imputation = NULL
+  imputation = NULL,
+  moderator = NULL
 ) {
   if (is.null(prepared) || nrow(prepared$base) == 0) {
     return(NULL)
+  }
+  if (
+    !is.null(moderator) && (!identical(as.integer(tiers), 1L) || adjust_other)
+  ) {
+    stop(
+      "fit_stage1(): a model of moderation takes the first tier's ",
+      "covariates and no other screen use.",
+      call. = FALSE
+    )
   }
   base <- prepared$base
   cells <- cells[
@@ -106,6 +125,10 @@ fit_stage1 <- function(
   levels_of <- function(variable) schema_level_count(variable, dataschema)
   frame <- stage1_frame(base)
   unit_rows <- split(seq_len(nrow(frame)), frame$unit)
+  # Each exposure's mean over a child's other waves, kept between cells
+  # and, where the caller hands one store to every imputation, between
+  # imputations: imputing covariates does not change an exposure.
+  other_waves <- imputation$other_waves %||% new.env(parent = emptyenv())
 
   results <- list()
   for (i in seq_len(nrow(cells))) {
@@ -127,8 +150,13 @@ fit_stage1 <- function(
     } else {
       prepared$outcomes[[outcome]]
     }
+    # Worked out once for an exposure, not once for each of its cells: it
+    # does not depend on the outcome, and takes seconds in a large dataset.
     x_other_waves <- if (!is.null(imputation)) {
-      stage1_other_waves(x, base$participant_id)
+      if (is.null(other_waves[[exposure]])) {
+        other_waves[[exposure]] <- stage1_other_waves(x, base$participant_id)
+      }
+      other_waves[[exposure]]
     }
     for (unit in names(unit_rows)) {
       index <- unit_rows[[unit]]
@@ -155,28 +183,67 @@ fit_stage1 <- function(
       data <- frame[index, ]
       data$x <- x[index]
       data$y <- y[index]
+      # The rule on rows where the exposure varies is judged on recorded
+      # values, so an imputed value never makes a slope poolable and the
+      # verdict is the same in every imputation.
+      data$x_recorded <- !is.na(data$x)
+      if (!is.null(imputation)) {
+        data$x_other_waves <- x_other_waves[index]
+      }
       if (adjust_other) {
         data$other <- other$value[index]
       }
+      # A model of moderation is fitted to the rows whose group is known,
+      # and its exposure is imputed among them, with the group in the
+      # exposure's model.
+      # The groups are settled here, once, so that they cannot change with
+      # the rows an imputation leaves; a unit without groups keeps its
+      # rows and the reason, and nothing is imputed for it.
+      n_available <- nrow(data)
+      no_groups <- FALSE
+      if (!is.null(moderator)) {
+        groups <- stage1_moderator(data, moderator, settings)
+        data$moderator <- groups$score
+        data$moderator_measure <- rep(groups$measure, nrow(data))
+        data$moderator_status <- rep(groups$status, nrow(data))
+        no_groups <- !is.na(groups$status)
+        if (!no_groups) {
+          data <- data[!is.na(data$moderator), ]
+        }
+      }
+      n_no_group <- n_available - nrow(data)
+      moderated <- !is.null(moderator)
       n_exposure_imputed <- NA_integer_
       exposure_imputation <- NA_character_
-      if (!is.null(imputation) && !stage1_may_impute(data, model, settings)) {
+      if (no_groups) {
+        data <- data[!is.na(data$x), ]
+      } else if (
+        !is.null(imputation) && !stage1_may_impute(data, model, settings)
+      ) {
         n_exposure_imputed <- 0L
         data <- data[!is.na(data$x), ]
       } else if (!is.null(imputation)) {
-        data$x_other_waves <- x_other_waves[index]
         data <- impute_cell_exposure(
           data,
-          imputation_seed(
-            imputation$seed,
-            base$dataset_id[1],
-            unit,
-            exposure,
-            outcome,
-            adjust_other,
-            imputation$index
+          # A model of moderation has draws of its own; the other models'
+          # seeds are as they were.
+          do.call(
+            imputation_seed,
+            c(
+              list(
+                imputation$seed,
+                base$dataset_id[1],
+                unit,
+                exposure,
+                outcome,
+                adjust_other,
+                imputation$index
+              ),
+              moderator
+            )
           ),
-          settings
+          settings,
+          moderated = moderated
         )
         n_exposure_imputed <- attr(data, "imputed")
         exposure_imputation <- attr(data, "failed") %||% NA_character_
@@ -188,8 +255,14 @@ fit_stage1 <- function(
           model,
           settings,
           tier,
-          extra_terms = if (adjust_other) "other" else character()
+          extra_terms = if (adjust_other) "other" else character(),
+          moderator = moderator
         )
+        if (moderated) {
+          # Counted before the rows without a group were left out.
+          fit$n_available <- n_available
+          fit$n_no_group <- n_no_group
+        }
         fit$n_no_other <- if (adjust_other) {
           sum(is.na(data$other))
         } else {
@@ -255,6 +328,110 @@ stage1_may_impute <- function(data, model, settings) {
   nrow(stage1_design(seen, settings, 1L)$data) >= settings$min_unit_rows
 }
 
+# The first of a model's minimums that a set of rows misses, or NA: the
+# rows, variation in the exposure and the outcome, the classes of a binary
+# outcome and the levels of an ordinal one, and the rows where the exposure
+# varies (DR-0022). Used for each group a model of moderation compares;
+# `fit_stage1_unit()` applies the same minimums to the unit as a whole.
+stage1_minimums <- function(x, y, recorded, model, settings) {
+  if (length(x) < settings$min_unit_rows) {
+    return("fewer rows than the minimum unit size")
+  }
+  if (stats::sd(x) == 0) {
+    return("no variation in the exposure")
+  }
+  varying <- recorded
+  varying[recorded] <- exposure_varies(x[recorded])
+  if (model == "linear") {
+    if (stats::sd(y) == 0) {
+      return("no variation in the outcome")
+    }
+  } else if (model == "logistic") {
+    if (min(table(factor(y, levels = c(0, 1)))) < 10) {
+      return("fewer than 10 rows in one class")
+    }
+  } else if (model == "ordinal") {
+    # Every level the unit's model has must be in the group too.
+    if (min(table(y)) < 5) {
+      return("fewer than 5 rows in one level")
+    }
+  }
+  if (sum(varying) < settings$support_min_rows) {
+    return("too few rows where the exposure varies")
+  }
+  if (
+    model == "logistic" &&
+      min(table(factor(y[varying], levels = c(0, 1)))) <
+        settings$support_min_class
+  ) {
+    return("too few of one class where the exposure varies")
+  }
+  NA_character_
+}
+
+# Which values differ from the commonest one. Ties go to the lowest value,
+# so the count does not depend on the order of the rows. Values are
+# compared as numbers: a value read back from a table's labels is rounded
+# to 15 digits and equals none of its own rows.
+exposure_varies <- function(x) {
+  values <- sort(unique(x))
+  commonest <- values[which.max(tabulate(match(x, values)))]
+  x != commonest
+}
+
+# The groups a model of moderation compares in one unit (DR-0021).
+#
+# For sex, girls score 1 and boys 0, and a child recorded as another sex or
+# none has no score. For socioeconomic position the measure is the one the
+# second covariate tier uses in the unit, and its lowest, middle and
+# highest categories score -1, 0 and 1; every measure the schema holds has
+# three ordered categories. `status` says why the unit has no groups, or is
+# NA.
+stage1_moderator <- function(
+  data,
+  moderator,
+  settings = default_analysis_settings()
+) {
+  none <- function(status, measure = NA_character_) {
+    list(score = rep(NA_real_, nrow(data)), measure = measure, status = status)
+  }
+  if (moderator == "sex") {
+    score <- unname(c(Female = 1, Male = 0)[data$sex])
+    if (dplyr::n_distinct(score, na.rm = TRUE) < 2) {
+      return(none("girls and boys are not both recorded in the unit", "sex"))
+    }
+    return(list(score = score, measure = "sex", status = NA_character_))
+  }
+  if (moderator != "ses") {
+    stop("stage1_moderator(): unknown moderator ", moderator, call. = FALSE)
+  }
+  measure <- stage1_design(data, settings, 2L)$ses_measure
+  if (is.na(measure)) {
+    return(none("no socioeconomic measure that varies in the unit"))
+  }
+  score <- unname(bp_ses_scores()[data[[measure]]])
+  if (!all(c(-1, 1) %in% score)) {
+    return(none(
+      "the lowest and highest socioeconomic groups are not both recorded",
+      measure
+    ))
+  }
+  list(score = score, measure = measure, status = NA_character_)
+}
+
+# The score of each category of the socioeconomic measures, lowest to
+# highest. A category not listed, Unknown among them, has no score.
+bp_ses_scores <- function() {
+  c(
+    "Low" = -1,
+    "Medium" = 0,
+    "High" = 1,
+    "Secondary school or less" = -1,
+    "Post-secondary" = 0,
+    "Bachelor degree or higher" = 1
+  )
+}
+
 # A child's mean on a variable over their other rows (their other waves),
 # NA where they have none with a value.
 stage1_other_waves <- function(values, participant) {
@@ -316,12 +493,38 @@ fit_stage1_unit <- function(
   model,
   settings = default_analysis_settings(),
   tier = 1L,
-  extra_terms = character()
+  extra_terms = character(),
+  moderator = NULL
 ) {
   if (!tier %in% 1:3) {
     stop("fit_stage1_unit(): `tier` must be 1, 2 or 3.", call. = FALSE)
   }
+  # The groups of a model of moderation, where the caller has not already
+  # settled them (it does so before imputing an exposure).
+  moderation <- NULL
   available <- nrow(data)
+  if (!is.null(moderator)) {
+    settled <- function(name) {
+      if (name %in% names(data) && nrow(data) > 0) {
+        data[[name]][1]
+      } else {
+        NA_character_
+      }
+    }
+    if ("moderator" %in% names(data)) {
+      moderation <- list(
+        measure = settled("moderator_measure"),
+        status = settled("moderator_status")
+      )
+    } else {
+      moderation <- stage1_moderator(data, moderator, settings)
+      data$moderator <- moderation$score
+    }
+    if (is.na(moderation$status)) {
+      data <- data[!is.na(data$moderator), ]
+    }
+  }
+  n_no_group <- available - nrow(data)
   if (length(extra_terms) > 0) {
     data <- data[stats::complete.cases(data[extra_terms]), ]
   }
@@ -355,9 +558,24 @@ fit_stage1_unit <- function(
         status = status
       )
     )
+    if (!is.null(moderator)) {
+      values <- c(
+        values,
+        list(
+          moderator = moderator,
+          moderator_measure = moderation$measure %||% NA_character_,
+          n_no_group = n_no_group,
+          slope_first = NA_real_,
+          slope_second = NA_real_
+        )
+      )
+    }
     extra <- list(...)
     values[names(extra)] <- extra
     tibble::as_tibble(values)
+  }
+  if (!is.null(moderator) && !is.na(moderation$status)) {
+    return(result(moderation$status))
   }
   if (model == "none") {
     return(result("score type not modelled here"))
@@ -376,6 +594,26 @@ fit_stage1_unit <- function(
   data <- design$data
   terms <- c(design$terms, extra_terms)
   covariates <- c(design$covariates, extra_terms)
+  # The compared groups, and the terms the moderation adds (DR-0021): for
+  # sex, girls against boys, with sex already among the terms; for
+  # socioeconomic position, the three groups as categories and the product
+  # of screen use with their score of -1, 0 and 1. The groups enter as
+  # categories because the outcome need not step evenly across them: with
+  # the score alone, an uneven step is taken for a difference in slopes
+  # wherever screen use differs between the groups.
+  compared <- NULL
+  if (!is.null(moderator)) {
+    compared <- if (moderator == "sex") c(1, 0) else c(-1, 1)
+    terms <- c(
+      terms,
+      if (moderator == "sex") {
+        "x:moderator"
+      } else {
+        c("factor(moderator)", "x:moderator")
+      }
+    )
+    covariates <- c(covariates, paste("screen use by", moderator))
+  }
   weighted <- design$weighted
   ses_measure <- design$ses_measure
   missing_tier <- design$not_fitted
@@ -409,6 +647,9 @@ fit_stage1_unit <- function(
   if (n < settings$min_unit_rows) {
     return(stop_with("fewer rows than the minimum unit size"))
   }
+  if (!is.null(moderator) && moderator == "sex" && !"sex" %in% design$terms) {
+    return(stop_with("sex is not recorded well enough in the unit"))
+  }
   if (stats::sd(data$x) == 0) {
     return(stop_with("no variation in the exposure"))
   }
@@ -434,6 +675,45 @@ fit_stage1_unit <- function(
       return(stop_with("fewer than 5 rows in one level"))
     }
   }
+  # A slope is learned from the rows where the exposure differs: enough of
+  # the model's rows must have a recorded value away from the commonest
+  # one, and for a binary outcome enough of each class among them
+  # (DR-0022).
+  recorded <- if ("x_recorded" %in% names(data)) {
+    data$x_recorded
+  } else {
+    rep(TRUE, n)
+  }
+  varying <- recorded
+  varying[recorded] <- exposure_varies(data$x[recorded])
+  if (sum(varying) < settings$support_min_rows) {
+    return(stop_with("too few rows where the exposure varies"))
+  }
+  # A difference between two slopes is estimated only where each of the
+  # two would be fitted on its own (DR-0021): each compared group meets
+  # the same minimums, on its own rows.
+  if (!is.null(moderator)) {
+    for (group in compared) {
+      rows <- data$moderator == group
+      short <- stage1_minimums(
+        data$x[rows],
+        data$y[rows],
+        recorded[rows],
+        model,
+        settings
+      )
+      if (!is.na(short)) {
+        return(stop_with(paste("in a compared group:", short)))
+      }
+    }
+  }
+  if (
+    model == "logistic" &&
+      min(table(factor(data$y[varying], levels = c(0, 1)))) <
+        settings$support_min_class
+  ) {
+    return(stop_with("too few of one class where the exposure varies"))
+  }
 
   clustering <- stage1_cluster(data)
   cluster <- clustering$cluster
@@ -451,13 +731,16 @@ fit_stage1_unit <- function(
     )
   )
 
+  # The coefficient reported: the slope on screen use, or in a model of
+  # moderation its product with the group.
+  term <- if (is.null(moderator)) "x" else "x:moderator"
   run <- function(formula) {
     tryCatch(
       switch(
         model,
-        linear = stage1_fixest(data, formula, cluster, "linear"),
-        logistic = stage1_fixest(data, formula, cluster, "logistic"),
-        ordinal = stage1_ordinal(data, formula)
+        linear = stage1_fixest(data, formula, cluster, "linear", term),
+        logistic = stage1_fixest(data, formula, cluster, "logistic", term),
+        ordinal = stage1_ordinal(data, formula, term)
       ),
       error = function(e) conditionMessage(e)
     )
@@ -471,6 +754,18 @@ fit_stage1_unit <- function(
   }
   if (is.na(fitted$estimate) || is.na(fitted$se) || fitted$se <= 0) {
     return(stop_with("slope not estimable"))
+  }
+  # The estimand of a model of moderation is the first group's slope less
+  # the second's (DR-0021): girls less boys, which is the product's
+  # coefficient; the lowest socioeconomic group less the highest, which is
+  # minus twice it. The two slopes are kept beside it.
+  if (!is.null(moderator)) {
+    product <- fitted$estimate
+    scale <- compared[1] - compared[2]
+    fitted$estimate <- scale * product
+    fitted$se <- abs(scale) * fitted$se
+    common$slope_first <- fitted$slope + compared[1] * product
+    common$slope_second <- fitted$slope + compared[2] * product
   }
   do.call(
     result,
@@ -504,7 +799,7 @@ fit_stage1_unit <- function(
 # Linear and logistic models, with weights and clustered or robust errors.
 # A logistic fit that stops before converging returns a normal-looking
 # table, so its convergence flag is read.
-stage1_fixest <- function(data, formula, cluster, model) {
+stage1_fixest <- function(data, formula, cluster, model, term = "x") {
   vcov <- if (is.null(cluster)) "hetero" else stats::as.formula("~cluster_id")
   fit <- if (model == "linear") {
     fixest::feols(
@@ -534,20 +829,22 @@ stage1_fixest <- function(data, formula, cluster, model) {
   } else {
     NA_character_
   }
-  if (!"x" %in% rownames(table)) {
+  if (!all(c("x", term) %in% rownames(table))) {
     return(list(
       estimate = NA_real_,
       se = NA_real_,
       df = NA_real_,
+      slope = NA_real_,
       converged = converged,
       engine = "fixest",
       dropped = dropped
     ))
   }
   list(
-    estimate = unname(table["x", "Estimate"]),
-    se = unname(table["x", "Std. Error"]),
+    estimate = unname(table[term, "Estimate"]),
+    se = unname(table[term, "Std. Error"]),
     df = fixest::degrees_freedom(fit, type = "t"),
+    slope = unname(table["x", "Estimate"]),
     converged = converged,
     engine = "fixest",
     dropped = dropped
@@ -557,7 +854,7 @@ stage1_fixest <- function(data, formula, cluster, model) {
 # A proportional-odds model through the survey package, which gives design
 # based errors with weights and clusters. The outcome must be an ordered
 # factor: `svyolr()` accepts an unordered one without complaint.
-stage1_ordinal <- function(data, formula) {
+stage1_ordinal <- function(data, formula, term = "x") {
   stopifnot(is.ordered(data$y))
   design <- survey::svydesign(
     ids = ~cluster_id,
@@ -567,9 +864,10 @@ stage1_ordinal <- function(data, formula) {
   fit <- survey::svyolr(formula, design = design)
   table <- stats::coef(summary(fit))
   list(
-    estimate = unname(table["x", "Value"]),
-    se = unname(table["x", "Std. Error"]),
+    estimate = unname(table[term, "Value"]),
+    se = unname(table[term, "Std. Error"]),
     df = survey::degf(design),
+    slope = unname(table["x", "Value"]),
     converged = TRUE,
     engine = "survey",
     dropped = NA_character_

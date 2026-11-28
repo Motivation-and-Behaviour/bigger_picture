@@ -15,6 +15,12 @@ analysis_settings <- function() {
     exposure_max_hours = 24,
     # A stage 1 unit needs at least this many rows.
     min_unit_rows = 30L,
+    # A slope is fitted only where its model has this many rows with a
+    # recorded exposure away from the commonest value and, for a binary
+    # outcome, this many of each class among them: the minimum unit size and the minimum class
+    # size, applied to the rows a slope is learned from (DR-0022).
+    support_min_rows = 30L,
+    support_min_class = 10L,
     # A cell is pooled from this many datasets (DR-0010).
     min_datasets = 3L,
     # A pooled estimate with fewer robust degrees of freedom than this has

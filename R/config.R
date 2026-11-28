@@ -189,7 +189,15 @@ bp_summary_settings <- function() {
 # The longitudinal strand reads the model settings and its own minimum for
 # a pair of waves.
 bp_longitudinal_settings <- function() {
-  c(bp_model_settings(), "longitudinal_min_pair")
+  c(bp_fit_settings(), "longitudinal_min_pair")
+}
+
+# The settings a unit's model reads: the model settings and the minimums
+# for the rows where the exposure varies (DR-0022). They are kept apart
+# from `bp_model_settings()`, which the counts, the descriptives and the
+# simulation also read and which those two minimums do not concern.
+bp_fit_settings <- function() {
+  c(bp_model_settings(), "support_min_rows", "support_min_class")
 }
 
 bp_model_settings <- function() {
@@ -312,15 +320,53 @@ bp_build_sections <- function() {
       "panel_pairs",
       "imputed",
       "imputation_review",
+      "stage1_imputed_fits",
       "stage1_imputed",
-      "stage1_other_imputed"
+      "stage1_other_imputed_fits",
+      "stage1_other_imputed",
+      "stage1_sex_imputed_fits",
+      "stage1_sex_imputed",
+      "stage1_ses_imputed_fits",
+      "stage1_ses_imputed"
     )
   )
 }
 
 # The model workers `make.R` uses for the models section.
 bp_model_workers_wide <- function() {
-  10L
+  16L
+}
+
+# The model workers `make.R` uses for a dataset whose prepared table is
+# large. Each worker fitting such a dataset holds the whole table and its
+# imputations, about 8 GB for the largest, so sixteen at once do not fit
+# in memory; the other datasets need a fraction of that.
+bp_model_workers_heavy <- function() {
+  6L
+}
+
+# A dataset is fitted with the smaller pool where its stored prepared
+# table is larger than this many bytes.
+bp_heavy_prepared_bytes <- function() {
+  1e8
+}
+
+# The keys of the datasets `make.R` fits with the smaller pool: those
+# whose prepared table, as stored, is over the size above.
+bp_heavy_datasets <- function() {
+  stored <- targets::tar_meta(
+    names = tidyselect::starts_with("prepared_BPIPD_"),
+    fields = tidyselect::all_of("bytes")
+  )
+  stored <- stored[!is.na(stored$bytes), ]
+  sub("^prepared_", "", stored$name[stored$bytes > bp_heavy_prepared_bytes()])
+}
+
+# How many imputations of a dataset one target fits. The fits of a
+# dataset's imputations are split into groups of this size, each a target,
+# so they spread over the model workers.
+bp_imputation_group_size <- function() {
+  5L
 }
 
 # Processes for a simulation target.
@@ -657,7 +703,7 @@ bp_imputation_settings <- function() {
 
 # The settings stage 1 reads when it fits imputed data.
 bp_imputed_model_settings <- function() {
-  union(bp_model_settings(), bp_imputation_settings())
+  union(bp_fit_settings(), bp_imputation_settings())
 }
 
 # The kinds of test a registered prediction is about, and what each may

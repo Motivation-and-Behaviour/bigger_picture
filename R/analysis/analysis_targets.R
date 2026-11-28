@@ -26,6 +26,10 @@ analysis_targets <- function(harmonise_plan) {
       quote(settings[bp_model_settings()])
     ),
     targets::tar_target_raw(
+      "settings_fit",
+      quote(settings[bp_fit_settings()])
+    ),
+    targets::tar_target_raw(
       "settings_longitudinal",
       quote(settings[bp_longitudinal_settings()])
     ),
@@ -50,6 +54,14 @@ analysis_targets <- function(harmonise_plan) {
     targets::tar_target_raw(
       "imputation_index",
       quote(seq_len(bp_imputations(settings)))
+    ),
+    # A dataset's imputations are fitted a few at a time, each group a
+    # target of its own, so that a large dataset's fits spread over the
+    # workers and an interrupted build loses one group, not all of them.
+    targets::tar_target_raw(
+      "imputation_groups",
+      quote(split_imputations(imputation_index)),
+      iteration = "list"
     ),
     targets::tar_target_raw(
       "settings_tree",
@@ -138,6 +150,22 @@ analysis_targets <- function(harmonise_plan) {
         ]))
       ),
       targets::tar_target_raw(
+        "sex_cells",
+        quote(dplyr::distinct(model_cells[
+          model_cells$model_name %in%
+            c("moderation_sex", "moderation_sex_other"),
+          c("exposure", "outcome")
+        ]))
+      ),
+      targets::tar_target_raw(
+        "ses_cells",
+        quote(dplyr::distinct(model_cells[
+          model_cells$model_name %in%
+            c("moderation_ses", "moderation_ses_other"),
+          c("exposure", "outcome")
+        ]))
+      ),
+      targets::tar_target_raw(
         "longitudinal_cells",
         quote(dplyr::distinct(model_cells[
           model_cells$model_name %in% "longitudinal_lagged",
@@ -212,6 +240,45 @@ analysis_targets <- function(harmonise_plan) {
   # garbage collection first, so a worker does not keep each dataset it has
   # loaded for the rest of the run, and they run in the small `row_level`
   # worker pool.
+  # A family of fits on imputed data: the imputations fitted in groups,
+  # one branch a group, then combined by Rubin's rules. `...` goes to
+  # `fit_stage1_imputations()`.
+  imputed_fits <- function(name, cells, ...) {
+    fits <- paste0(name, "_fits")
+    command <- bquote(fit_stage1_imputations(
+      prepared,
+      bind_imputations(imputed),
+      imputation_review,
+      imputation_groups,
+      .(cells),
+      outcome_registry,
+      dataschema,
+      settings_imputed_model
+    ))
+    list(
+      targets::tar_target_raw(
+        fits,
+        as.call(c(as.list(command), list(...))),
+        pattern = quote(map(imputation_groups)),
+        iteration = "list",
+        # Each worker reads the dataset itself. Left to the default, a
+        # branch over a fixed list has its data loaded by the main process
+        # and sent to the worker, and the main process then holds a copy
+        # of the dataset for every branch waiting to start.
+        retrieval = "worker",
+        memory = "transient",
+        garbage_collection = TRUE,
+        resources = model_level
+      ),
+      targets::tar_target_raw(
+        name,
+        bquote(combine_stage1_imputations(.(as.name(fits)), imputation_index)),
+        memory = "transient",
+        garbage_collection = TRUE,
+        resources = model_level
+      )
+    )
+  }
   per_dataset <- tarchetypes::tar_map(
     values = values,
     names = "dataset_key",
@@ -273,7 +340,7 @@ analysis_targets <- function(harmonise_plan) {
         fit_cells,
         outcome_registry,
         dataschema,
-        settings_model
+        settings_fit
       )),
       memory = "transient",
       garbage_collection = TRUE,
@@ -312,7 +379,7 @@ analysis_targets <- function(harmonise_plan) {
         fit_cells,
         outcome_registry,
         dataschema,
-        settings_model,
+        settings_fit,
         tiers = 2:3
       )),
       memory = "transient",
@@ -326,7 +393,7 @@ analysis_targets <- function(harmonise_plan) {
         other_cells,
         outcome_registry,
         dataschema,
-        settings_model,
+        settings_fit,
         adjust_other = TRUE
       )),
       memory = "transient",
@@ -376,40 +443,14 @@ analysis_targets <- function(harmonise_plan) {
       garbage_collection = TRUE,
       resources = model_level
     ),
-    targets::tar_target_raw(
-      "stage1_imputed",
-      quote(fit_stage1_imputed(
-        prepared,
-        bind_imputations(imputed),
-        imputation_review,
-        imputation_index,
-        fit_cells,
-        outcome_registry,
-        dataschema,
-        settings_imputed_model,
-        tiers = 1:3
-      )),
-      memory = "transient",
-      garbage_collection = TRUE,
-      resources = model_level
-    ),
-    targets::tar_target_raw(
+    imputed_fits("stage1_imputed", quote(fit_cells), tiers = 1:3),
+    imputed_fits(
       "stage1_other_imputed",
-      quote(fit_stage1_imputed(
-        prepared,
-        bind_imputations(imputed),
-        imputation_review,
-        imputation_index,
-        other_cells,
-        outcome_registry,
-        dataschema,
-        settings_imputed_model,
-        adjust_other = TRUE
-      )),
-      memory = "transient",
-      garbage_collection = TRUE,
-      resources = model_level
+      quote(other_cells),
+      adjust_other = TRUE
     ),
+    imputed_fits("stage1_sex_imputed", quote(sex_cells), moderator = "sex"),
+    imputed_fits("stage1_ses_imputed", quote(ses_cells), moderator = "ses"),
     targets::tar_target_raw(
       "panel_pairs",
       quote(describe_panel_pairs(
@@ -813,6 +854,36 @@ analysis_targets <- function(harmonise_plan) {
       per_dataset[["stage1_other_imputed"]],
       command = quote(dplyr::bind_rows(!!!.x))
     ),
+    # The models of moderation by sex and by socioeconomic position
+    # (DR-0021): each row is a difference between two groups' slopes.
+    tarchetypes::tar_combine_raw(
+      "stage1_sex_imputed_all",
+      per_dataset[["stage1_sex_imputed"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    tarchetypes::tar_combine_raw(
+      "stage1_ses_imputed_all",
+      per_dataset[["stage1_ses_imputed"]],
+      command = quote(dplyr::bind_rows(!!!.x))
+    ),
+    targets::tar_target_raw(
+      "tree_sex_imputed",
+      quote(pool_tree(
+        stage1_sex_imputed_all,
+        outcome_registry,
+        slope_correlations_all,
+        settings_tree
+      ))
+    ),
+    targets::tar_target_raw(
+      "tree_ses_imputed",
+      quote(pool_tree(
+        stage1_ses_imputed_all,
+        outcome_registry,
+        slope_correlations_all,
+        settings_tree
+      ))
+    ),
     targets::tar_target_raw(
       "imputation_summary",
       quote(summarise_imputation(
@@ -885,7 +956,21 @@ analysis_targets <- function(harmonise_plan) {
             ),
             model_name = "sens_complete_case"
           ),
-          longitudinal_development$tree
+          longitudinal_development$tree,
+          label_moderation(
+            tree_sex_imputed,
+            model_cells,
+            outcome_registry,
+            "moderation_sex",
+            "sex"
+          ),
+          label_moderation(
+            tree_ses_imputed,
+            model_cells,
+            outcome_registry,
+            "moderation_ses",
+            "ses"
+          )
         ),
         dplyr::bind_rows(
           label_models(

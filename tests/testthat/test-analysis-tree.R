@@ -649,12 +649,17 @@ test_that("the tree's settings hold everything its functions read", {
     bp_tree_settings()
   )
   expect_true(all(bp_tree_settings() %in% names(analysis_settings())))
-  # Stage 1 and the tier comparison get `bp_model_settings()` only, and
-  # stage 1 the imputation settings too where it imputes.
+  # Stage 1 gets `bp_fit_settings()`, which adds the minimums for the rows
+  # where the exposure varies to `bp_model_settings()`, and the imputation
+  # settings too where it imputes.
   expect_true(all(design %in% bp_imputed_model_settings()))
   expect_setequal(
-    setdiff(design, bp_model_settings()),
+    setdiff(design, bp_fit_settings()),
     "impute_exposure_models"
+  )
+  expect_setequal(
+    setdiff(bp_fit_settings(), bp_model_settings()),
+    c("support_min_rows", "support_min_class")
   )
 })
 
