@@ -144,6 +144,8 @@ Each per-dataset target reads that dataset's harmonised table and its one-row `d
 | `longitudinal_<key>`, `longitudinal_all`, `longitudinal_development` | The lagged, within-child and matched cross-sectional models per pair of waves (DR-0018), and each pooled per outcome row and up the tree |
 | `imputed_<key>`, `imputation_review_<key>`, `imputation_units_all`, `imputation_levels_all`, `imputation_summary` | Each dataset's imputations of sporadically missing covariates, one branch per imputation (DR-0019); their hard checks; and imputed values set beside observed ones |
 | `stage1_imputed_<key>`, `stage1_imputed_all`, `stage1_other_imputed_<key>`, `stage1_other_imputed_all` | Stage 1 fitted on each imputation, with each model's missing screen use imputed for that model, and combined by Rubin's rules, at covariate tiers 1 to 3 and adjusted for other screen use |
+| `stage1_sex_imputed_<key>`, `stage1_sex_imputed_all`, `stage1_ses_imputed_<key>`, `stage1_ses_imputed_all` | The models of moderation by sex and by socioeconomic position on imputed data: per unit and cell, the difference between two groups' slopes, with the two slopes beside it |
+| `tree_sex_imputed`, `tree_ses_imputed` | Those differences pooled up the outcome tree as slopes are; `label_moderation()` names each row's model in the results, where a difference is tested and never put in the impact bands |
 | `stage2_imputed`, `tree_imputed`, `tree_imputed_tier2`, `tree_imputed_tier3`, `tree_other_imputed` | Those slopes pooled across datasets and up the outcome tree |
 | `panel_pairs_<key>`, `panel_pairs_all` | For each panel and pair of successive waves, the children kept and how the screen use and age of those who stay differ from those who leave (DR-0018); no outcome is read |
 | `results_development` | Every model built so far in one table: estimate, interval, p, tiered q with its K (DR-0017), the 1 against 4 hours contrast, the equivalence test and the preregistered prediction |
@@ -203,6 +205,9 @@ Two-stage is the primary analysis (DR-0010).
 - `fit_stage1()` fits one model per stage 1 unit and cell: a linear model of the standardised score for continuous rows and for ordinal rows with five or more levels, a proportional-odds model for ordinal rows with three or four, and a logistic model for binary rows.
   It uses the unit's weights where it has them, clusters standard errors on the sampling unit or the family, and adjusts for age and sex in the most flexible form the unit's ages allow.
   A unit that cannot be fitted returns a row saying why.
+  A slope is fitted only where at least 30 of the model's rows have a recorded exposure other than the commonest value and, for a binary outcome, at least 10 of each class are among them (DR-0022).
+  With `moderator = "sex"` or `"ses"` the model also holds the product of screen use with the unit's groups, and the estimate is the first group's slope less the second's: girls less boys, the lowest socioeconomic group less the highest (DR-0021).
+- `fit_stage1_imputations()` fits a group of a dataset's imputations and `combine_stage1_imputations()` combines them all by Rubin's rules; the pipeline fits the groups as separate targets (`stage1_imputed_fits_<key>` and the like), so a large dataset's fits spread over the workers.
 - `pool_stage2()` pools a cell's slopes with a multilevel random-effects model, units nested in datasets, and robust small-sample inference; it needs three datasets, and marks an estimate with fewer than three degrees of freedom as too few studies to say.
 - `fit_onestage_check()` fits a single model across datasets for one cell and compares it with a two-stage estimate built the same way.
 

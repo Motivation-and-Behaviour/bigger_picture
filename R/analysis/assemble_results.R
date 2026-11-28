@@ -246,10 +246,14 @@ assemble_results <- function(
   # a slope of changes), and a null one is not evidence of no effect
   # (DR-0018), so they are not put in the bands.
   panel <- model_spec$sample[at] %in% "panel"
+  # Nor is a model of moderation, whose estimate is a difference between
+  # two groups' slopes and not an association (DR-0021).
+  difference <- model_spec$engine[at] %in% "stage1_interaction"
   ratable <- in_sd &
     out$level %in% c("L0", "L1", "L2") &
     !thin &
     !panel &
+    !difference &
     !out$finding %in% "not estimated"
   out$rating <- ifelse(ratable, rated$rating, NA_integer_)
   # A row that cannot be rated says why in the words of its `finding`.
@@ -257,6 +261,7 @@ assemble_results <- function(
     ratable ~ rated$rating_label,
     !(in_sd & out$level %in% c("L0", "L1", "L2")) ~ NA_character_,
     panel ~ "not rated: longitudinal models are not rated",
+    difference ~ "not rated: a difference between two groups' slopes",
     out$finding %in% "specific outcomes disagree" ~
       "not rated: specific outcomes disagree",
     out$finding %in% "too few studies to say" ~
@@ -264,8 +269,12 @@ assemble_results <- function(
     .default = "not rated: not estimated"
   )
 
-  # The slope predictions; those about thresholds and moderation attach
-  # where those models are assembled.
+  # The slope predictions, and those about moderation by sex and by
+  # socioeconomic position, whose test is named after its model; those
+  # about thresholds and location attach where those models are assembled.
+  moderation <- hypotheses[
+    hypotheses$test %in% c("moderation_sex", "moderation_ses"),
+  ]
   hypotheses <- hypotheses[hypotheses$test %in% "slope", ]
   predicted <- match(
     paste(out$exposure, out$family),
@@ -275,6 +284,14 @@ assemble_results <- function(
   predicted[!primary | out$level %in% c("L2", "L3")] <- NA
   out$hypothesis <- hypotheses$hypothesis[predicted]
   out$prediction <- hypotheses$prediction[predicted]
+  moderated <- match(
+    paste(out$model_name, out$exposure, out$family),
+    paste(moderation$test, moderation$exposure, moderation$family)
+  )
+  moderated[out$level %in% c("L2", "L3")] <- NA
+  registered <- !is.na(moderated)
+  out$hypothesis[registered] <- moderation$hypothesis[moderated[registered]]
+  out$prediction[registered] <- moderation$prediction[moderated[registered]]
   out$q_equivalence <- NA_real_
   none <- out$prediction %in%
     "none" &
@@ -299,12 +316,17 @@ assemble_results <- function(
   # below 0.05, or a prediction of no association shown equivalent. The
   # rating describes the size; this says whether the prediction held.
   family_test <- !is.na(out$prediction) & out$level %in% "L0" & !thin
-  directional <- family_test & out$prediction %in% c("negative", "positive")
+  # A prediction that the association is stronger for girls, or for
+  # children of lower socioeconomic position, is that the first group's
+  # aligned slope is the lower of the two: a negative difference (DR-0021).
+  stronger <- c("stronger_for_girls", "stronger_for_lower_ses")
+  directional <- family_test &
+    out$prediction %in% c("negative", "positive", stronger)
   out$prediction_supported <- NA
   out$prediction_supported[directional] <- !is.na(out$q[directional]) &
     out$q[directional] < 0.05 &
     sign(out$estimate[directional]) ==
-      ifelse(out$prediction[directional] == "negative", -1, 1)
+      ifelse(out$prediction[directional] == "positive", 1, -1)
   no_effect <- family_test & out$prediction %in% "none"
   out$prediction_supported[no_effect] <- out$equivalent[no_effect] %in% TRUE
   dplyr::relocate(

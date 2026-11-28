@@ -1,7 +1,7 @@
 # DR-0019: Covariates are imputed within each unit, and screen use within each model
 
 **Status:** Accepted  
-**Date:** 2026-11-16 (amended 2026-11-20)  
+**Date:** 2026-11-16 (amended 2026-11-20 and 2026-11-27)  
 **Decision makers:** Taren  
 **Related issues:** NA
 
@@ -37,6 +37,9 @@ An exposure or a family score the unit knows for too few rows is not in them.
 **Screen use** is imputed for each model separately: among the unit's rows that have the model's outcome, a missing exposure is drawn by predictive mean matching from a model holding that outcome, age, sex, the tier covariates (a covariate's unknown values as a group of their own), the survey weight and, in a panel, the child's mean exposure over their other waves.
 Age enters as the analysis model can take it: a category each for a few distinct ages, a cubic otherwise.
 Where a model also adjusts for the rest of the child's screen use, whichever of the two has gaps is imputed given the other, and where both have gaps the two are imputed in turn.
+In a model of moderation (DR-0021) the exposure's model also holds the moderator's score and its product with the outcome (added 27 November 2026).
+The analysis model there estimates how the relation between screen use and the outcome differs between groups; an imputation model without that product gives the imputed rows one relation for every group, and the difference shrinks.
+In a deletion test on 72 large cells of six real datasets, with a fifth of the exposure deleted and a difference by sex of 0.05 SD per hour added, the unchanged imputation recovered 84 to 85% of the full-data difference, the model with the product 97 to 101%, and the rows that have the exposure alone 95 to 99%.
 An exposure is imputed only where the model's own minimum sizes are met by the rows that have it and that the model would keep, so an imputed exposure does not make a model fittable at the first tier; at a further tier, imputed rows can still raise the share of rows with a covariate known past the minimum.
 
 Screen use is imputed for the linear models only, which are the models of continuous outcomes and of ordinal outcomes with five or more levels.
